@@ -624,6 +624,7 @@ class OfficePageState extends State<OfficePage> {
                                               children: [
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 18,
                                                     Icons.edit_outlined,
                                                   ),
                                                   onPressed: () {
@@ -643,6 +644,7 @@ class OfficePageState extends State<OfficePage> {
                                                 ),
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 18,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,

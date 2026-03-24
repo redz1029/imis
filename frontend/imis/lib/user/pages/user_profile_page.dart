@@ -845,467 +845,6 @@ class UserProfileState extends State<UserProfilePage> {
     );
   }
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   final width = MediaQuery.of(context).size.width;
-  //   final isMobile = width < 600;
-  //   return Scaffold(
-  //     body: Padding(
-  //       padding: const EdgeInsets.all(16),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           const Text(
-  //             "User Information",
-  //             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-  //           ),
-  //           const SizedBox(height: 20),
-  //           Row(
-  //             children: [
-  //               SizedBox(
-  //                 height: 30,
-  //                 width: 300,
-  //                 child: TextField(
-  //                   focusNode: isSearchfocus,
-  //                   controller: searchController,
-  //                   decoration: InputDecoration(
-  //                     enabledBorder: OutlineInputBorder(
-  //                       borderSide: BorderSide(color: lightGrey),
-  //                     ),
-  //                     focusedBorder: OutlineInputBorder(
-  //                       borderSide: BorderSide(color: primaryColor),
-  //                     ),
-  //                     floatingLabelBehavior: FloatingLabelBehavior.never,
-  //                     labelStyle: TextStyle(color: grey, fontSize: 14),
-  //                     labelText: 'Search...',
-  //                     prefixIcon: Icon(
-  //                       Icons.search,
-  //                       color: isSearchfocus.hasFocus ? primaryColor : grey,
-  //                       size: 20,
-  //                     ),
-  //                     border: OutlineInputBorder(
-  //                       borderRadius: BorderRadius.circular(4),
-  //                     ),
-  //                     filled: true,
-  //                     fillColor: secondaryColor,
-  //                     contentPadding: EdgeInsets.symmetric(
-  //                       vertical: 5,
-  //                       horizontal: 5,
-  //                     ),
-  //                   ),
-  //                   onChanged: filterSearchResults,
-  //                 ),
-  //               ),
-  //               const Spacer(),
-  //               if (!isMobile)
-  //                 ElevatedButton.icon(
-  //                   onPressed: () => showFormDialog(),
-  //                   style: ElevatedButton.styleFrom(
-  //                     backgroundColor: primaryColor,
-  //                     padding: const EdgeInsets.symmetric(
-  //                       vertical: 10,
-  //                       horizontal: 16,
-  //                     ),
-  //                     shape: RoundedRectangleBorder(
-  //                       borderRadius: BorderRadius.circular(4),
-  //                     ),
-  //                   ),
-  //                   icon: const Icon(Icons.add, color: Colors.white),
-  //                   label: const Text(
-  //                     'Add New',
-  //                     style: TextStyle(color: Colors.white),
-  //                   ),
-  //                 ),
-  //             ],
-  //           ),
-
-  //           const SizedBox(height: 26),
-  //           Expanded(
-  //             child: Container(
-  //               padding: const EdgeInsets.all(20),
-  //               decoration: BoxDecoration(
-  //                 color: Theme.of(context).cardColor,
-  //                 borderRadius: BorderRadius.circular(20),
-  //                 boxShadow: [
-  //                   BoxShadow(
-  //                     blurRadius: 10,
-  //                     color: Colors.black.withValues(alpha: .05),
-  //                   ),
-  //                 ],
-  //               ),
-  //               child: Column(
-  //                 crossAxisAlignment: CrossAxisAlignment.start,
-  //                 children: [
-  //                   /// DESKTOP HEADER
-  //                   if (!isMobile)
-  //                     Container(
-  //                       padding: const EdgeInsets.symmetric(vertical: 10),
-  //                       decoration: BoxDecoration(
-  //                         border: Border(
-  //                           bottom: BorderSide(color: Colors.grey.shade300),
-  //                         ),
-  //                       ),
-  //                       child: Row(
-  //                         children: const [
-  //                           Expanded(
-  //                             flex: 1,
-  //                             child: Text(
-  //                               "#",
-  //                               style: TextStyle(fontWeight: FontWeight.bold),
-  //                             ),
-  //                           ),
-  //                           Expanded(
-  //                             flex: 3,
-  //                             child: Text(
-  //                               "First Name",
-  //                               style: TextStyle(fontWeight: FontWeight.bold),
-  //                             ),
-  //                           ),
-  //                           Expanded(
-  //                             flex: 2,
-  //                             child: Text(
-  //                               "Middle Name",
-  //                               style: TextStyle(fontWeight: FontWeight.bold),
-  //                             ),
-  //                           ),
-  //                           Expanded(
-  //                             flex: 2,
-  //                             child: Text(
-  //                               "Last Name",
-  //                               style: TextStyle(fontWeight: FontWeight.bold),
-  //                             ),
-  //                           ),
-  //                           Expanded(
-  //                             flex: 2,
-  //                             child: Text(
-  //                               "Position",
-  //                               style: TextStyle(fontWeight: FontWeight.bold),
-  //                             ),
-  //                           ),
-  //                           Expanded(
-  //                             flex: 3,
-  //                             child: Text(
-  //                               "Actions",
-  //                               style: TextStyle(fontWeight: FontWeight.bold),
-  //                             ),
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-
-  //                   const SizedBox(height: 5),
-
-  //                   Expanded(
-  //                     child:
-  //                         _isLoading
-  //                             ? Center(
-  //                               child: CircularProgressIndicator(
-  //                                 color: primaryColor,
-  //                               ),
-  //                             )
-  //                             : ListView.builder(
-  //                               itemCount: filteredList.length,
-  //                               itemBuilder: (context, index) {
-  //                                 final user = filteredList[index];
-  //                                 int itemNumber =
-  //                                     ((_currentPage - 1) * _pageSize) +
-  //                                     index +
-  //                                     1;
-  //                                 if (!isMobile) {
-  //                                   return Container(
-  //                                     padding: const EdgeInsets.symmetric(
-  //                                       vertical: 6,
-  //                                     ),
-  //                                     decoration: BoxDecoration(
-  //                                       border: Border(
-  //                                         bottom: BorderSide(
-  //                                           color: Colors.grey.shade200,
-  //                                         ),
-  //                                       ),
-  //                                     ),
-  //                                     child: Row(
-  //                                       children: [
-  //                                         Expanded(
-  //                                           flex: 1,
-  //                                           child: Text("$itemNumber"),
-  //                                         ),
-  //                                         Expanded(
-  //                                           flex: 3,
-  //                                           child: Text(user.firstName ?? ''),
-  //                                         ),
-  //                                         Expanded(
-  //                                           flex: 2,
-  //                                           child: Text(user.middleName ?? ''),
-  //                                         ),
-  //                                         Expanded(
-  //                                           flex: 2,
-  //                                           child: Text(user.lastName ?? ''),
-  //                                         ),
-  //                                         Expanded(
-  //                                           flex: 2,
-  //                                           child: Text(user.position ?? ''),
-  //                                         ),
-  //                                         Expanded(
-  //                                           flex: 3,
-  //                                           child: Row(
-  //                                             children: [
-  //                                               IconButton(
-  //                                                 icon: const Icon(
-  //                                                   Icons.security_outlined,
-  //                                                   color: Colors.blueAccent,
-  //                                                 ),
-  //                                                 onPressed: () {
-  //                                                   showFormDialogChangePassword(
-  //                                                     id: user.id.toString(),
-  //                                                     userName: user.userName,
-  //                                                     email: user.email,
-  //                                                     password: user.password,
-  //                                                     firstName: user.firstName,
-  //                                                     middleName:
-  //                                                         user.middleName,
-  //                                                     lastName: user.lastName,
-  //                                                     prefix: user.prefix,
-  //                                                     suffix: user.suffix,
-  //                                                     position: user.position,
-  //                                                     fullName:
-  //                                                         '${user.firstName} ${user.middleName} ${user.lastName}'
-  //                                                             .trim()
-  //                                                             .replaceAll(
-  //                                                               RegExp(' +'),
-  //                                                               ' ',
-  //                                                             ),
-  //                                                   );
-  //                                                 },
-  //                                               ),
-  //                                               IconButton(
-  //                                                 icon: const Icon(
-  //                                                   Icons.edit_outlined,
-  //                                                 ),
-  //                                                 onPressed: () {
-  //                                                   showFormDialog(
-  //                                                     id: user.id.toString(),
-  //                                                     userName: user.userName,
-  //                                                     email: user.email,
-  //                                                     password: user.password,
-  //                                                     firstName: user.firstName,
-  //                                                     middleName:
-  //                                                         user.middleName,
-  //                                                     lastName: user.lastName,
-  //                                                     prefix: user.prefix,
-  //                                                     suffix: user.suffix,
-  //                                                     position: user.position,
-  //                                                   );
-  //                                                 },
-  //                                               ),
-  //                                               IconButton(
-  //                                                 icon: const Icon(
-  //                                                   CupertinoIcons
-  //                                                       .delete_simple,
-  //                                                   color: Colors.redAccent,
-  //                                                 ),
-  //                                                 onPressed:
-  //                                                     () => showDeleteDialog(
-  //                                                       user.id.toString(),
-  //                                                     ),
-  //                                               ),
-  //                                             ],
-  //                                           ),
-  //                                         ),
-  //                                       ],
-  //                                     ),
-  //                                   );
-  //                                 }
-
-  //                                 return Container(
-  //                                   padding: const EdgeInsets.symmetric(
-  //                                     vertical: 12,
-  //                                   ),
-  //                                   margin: const EdgeInsets.only(bottom: 12),
-  //                                   decoration: BoxDecoration(
-  //                                     border: Border(
-  //                                       bottom: BorderSide(
-  //                                         color: Colors.grey.shade200,
-  //                                       ),
-  //                                     ),
-  //                                   ),
-  //                                   child: Column(
-  //                                     crossAxisAlignment:
-  //                                         CrossAxisAlignment.start,
-  //                                     children: [
-  //                                       Row(
-  //                                         children: [
-  //                                           Text(
-  //                                             "$itemNumber",
-  //                                             style: const TextStyle(
-  //                                               fontWeight: FontWeight.bold,
-  //                                             ),
-  //                                           ),
-  //                                           const Spacer(),
-  //                                           PopupMenuButton<String>(
-  //                                             color:
-  //                                                 Theme.of(context).cardColor,
-  //                                             icon: const Icon(Icons.more_vert),
-  //                                             onSelected: (value) {
-  //                                               if (value == 'password') {
-  //                                                 showFormDialogChangePassword(
-  //                                                   id: user.id.toString(),
-  //                                                   userName: user.userName,
-  //                                                   email: user.email,
-  //                                                   password: user.password,
-  //                                                   firstName: user.firstName,
-  //                                                   middleName: user.middleName,
-  //                                                   lastName: user.lastName,
-  //                                                   prefix: user.prefix,
-  //                                                   suffix: user.suffix,
-  //                                                   position: user.position,
-  //                                                   fullName:
-  //                                                       '${user.firstName} ${user.middleName} ${user.lastName}'
-  //                                                           .trim()
-  //                                                           .replaceAll(
-  //                                                             RegExp(' +'),
-  //                                                             ' ',
-  //                                                           ),
-  //                                                 );
-  //                                               }
-
-  //                                               if (value == 'edit') {
-  //                                                 showFormDialog(
-  //                                                   id: user.id.toString(),
-  //                                                   userName: user.userName,
-  //                                                   email: user.email,
-  //                                                   password: user.password,
-  //                                                   firstName: user.firstName,
-  //                                                   middleName: user.middleName,
-  //                                                   lastName: user.lastName,
-  //                                                   prefix: user.prefix,
-  //                                                   suffix: user.suffix,
-  //                                                   position: user.position,
-  //                                                 );
-  //                                               }
-
-  //                                               if (value == 'delete') {
-  //                                                 showDeleteDialog(
-  //                                                   user.id.toString(),
-  //                                                 );
-  //                                               }
-  //                                             },
-  //                                             itemBuilder:
-  //                                                 (_) => [
-  //                                                   const PopupMenuItem(
-  //                                                     value: 'password',
-  //                                                     child: Row(
-  //                                                       children: [
-  //                                                         Icon(
-  //                                                           Icons
-  //                                                               .security_outlined,
-  //                                                           size: 18,
-  //                                                           color:
-  //                                                               Colors
-  //                                                                   .blueAccent,
-  //                                                         ),
-  //                                                         SizedBox(width: 8),
-  //                                                         Text('Edit'),
-  //                                                       ],
-  //                                                     ),
-  //                                                   ),
-  //                                                   const PopupMenuItem(
-  //                                                     value: 'edit',
-  //                                                     child: Row(
-  //                                                       children: [
-  //                                                         Icon(
-  //                                                           Icons.edit_outlined,
-  //                                                           size: 18,
-  //                                                         ),
-  //                                                         SizedBox(width: 8),
-  //                                                         Text('Edit'),
-  //                                                       ],
-  //                                                     ),
-  //                                                   ),
-  //                                                   const PopupMenuItem(
-  //                                                     value: 'delete',
-  //                                                     child: Row(
-  //                                                       children: [
-  //                                                         Icon(
-  //                                                           CupertinoIcons
-  //                                                               .delete_simple,
-  //                                                           color: Colors.red,
-  //                                                           size: 18,
-  //                                                         ),
-  //                                                         SizedBox(width: 8),
-  //                                                         Text('Delete'),
-  //                                                       ],
-  //                                                     ),
-  //                                                   ),
-  //                                                 ],
-  //                                           ),
-  //                                         ],
-  //                                       ),
-  //                                       const SizedBox(height: 8),
-
-  //                                       Text(
-  //                                         "First Name: ${user.firstName ?? ''}",
-  //                                       ),
-  //                                       const SizedBox(height: 4),
-
-  //                                       Text(
-  //                                         "Middle Name: ${user.middleName ?? ''}",
-  //                                       ),
-  //                                       const SizedBox(height: 4),
-
-  //                                       Text(
-  //                                         "Last Name: ${user.lastName ?? ''}",
-  //                                       ),
-  //                                       const SizedBox(height: 4),
-
-  //                                       Text(
-  //                                         "Position: ${user.position ?? ''}",
-  //                                       ),
-  //                                     ],
-  //                                   ),
-  //                                 );
-  //                               },
-  //                             ),
-  //                   ),
-
-  //                   Container(
-  //                     padding: const EdgeInsets.all(10),
-  //                     child: Row(
-  //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                       children: [
-  //                         PaginationInfo(
-  //                           currentPage: _currentPage,
-  //                           totalItems: _totalCount,
-  //                           itemsPerPage: _pageSize,
-  //                         ),
-  //                         PaginationControls(
-  //                           currentPage: _currentPage,
-  //                           totalItems: _totalCount,
-  //                           itemsPerPage: _pageSize,
-  //                           isLoading: _isLoading,
-  //                           onPageChanged:
-  //                               (page) => fetchUserProfile(page: page),
-  //                         ),
-  //                         const SizedBox(width: 60),
-  //                       ],
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //     floatingActionButton:
-  //         isMobile
-  //             ? FloatingActionButton(
-  //               backgroundColor: primaryColor,
-  //               onPressed: () => showFormDialog(),
-  //               child: Icon(Icons.add, color: Colors.white),
-  //             )
-  //             : null,
-  //   );
-  // }
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -1397,6 +936,49 @@ class UserProfileState extends State<UserProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Header row (desktop only)
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 4,
+                              child: Text(
+                                "Name",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Position",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
                     Expanded(
                       child:
                           _isLoading
@@ -1410,7 +992,7 @@ class UserProfileState extends State<UserProfilePage> {
                                 separatorBuilder:
                                     (context, index) => Divider(
                                       height: 1,
-                                      color: Colors.grey.withOpacity(0.2),
+                                      color: Colors.grey.withValues(alpha: 0.2),
                                     ),
                                 itemBuilder: (context, index) {
                                   final user = filteredList[index];
@@ -1430,155 +1012,156 @@ class UserProfileState extends State<UserProfilePage> {
                                               .join()
                                               .toUpperCase()
                                           : '?';
+
+                                  final itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+
                                   if (!isMobile) {
-                                    return Padding(
+                                    return Container(
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: 14,
-                                        horizontal: 12,
+                                        vertical: 10,
+                                        horizontal: 4,
                                       ),
                                       child: Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.center,
                                         children: [
-                                          // Avatar
-                                          Container(
-                                            width: 38,
-                                            height: 38,
-                                            decoration: BoxDecoration(
-                                              color: primaryColor.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                                initials,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: primaryColor,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-
+                                          // # Number
                                           Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
+                                          ),
+
+                                          // Name: Avatar + Full Name
+                                          Expanded(
+                                            flex: 4,
+                                            child: Row(
                                               children: [
-                                                Text(
-                                                  fullName,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 14,
+                                                Container(
+                                                  width: 38,
+                                                  height: 38,
+                                                  decoration: BoxDecoration(
+                                                    color: primaryColor
+                                                        .withValues(alpha: 0.1),
+                                                    shape: BoxShape.circle,
                                                   ),
-                                                ),
-                                                if ((user.position ?? '')
-                                                    .isNotEmpty) ...[
-                                                  const SizedBox(height: 5),
-                                                  Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 3,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color: primaryColor
-                                                          .withValues(
-                                                            alpha: 0.07,
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            4,
-                                                          ),
-                                                    ),
+                                                  child: Center(
                                                     child: Text(
-                                                      user.position ?? '',
+                                                      initials,
                                                       style: TextStyle(
-                                                        fontSize: 11,
+                                                        fontSize: 13,
                                                         fontWeight:
-                                                            FontWeight.w500,
+                                                            FontWeight.w600,
                                                         color: primaryColor,
                                                       ),
                                                     ),
                                                   ),
-                                                ],
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Expanded(
+                                                  child: Text(
+                                                    fullName,
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           ),
 
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons.security_outlined,
-                                                  size: 18,
-                                                  color: Colors.blueAccent,
-                                                ),
-                                                onPressed:
-                                                    () =>
-                                                        showFormDialogChangePassword(
-                                                          id:
-                                                              user.id
-                                                                  .toString(),
-                                                          userName:
-                                                              user.userName,
-                                                          email: user.email,
-                                                          password:
-                                                              user.password,
-                                                          firstName:
-                                                              user.firstName,
-                                                          middleName:
-                                                              user.middleName,
-                                                          lastName:
-                                                              user.lastName,
-                                                          prefix: user.prefix,
-                                                          suffix: user.suffix,
-                                                          position:
-                                                              user.position,
-                                                          fullName: fullName,
-                                                        ),
+                                          // Position: plain text
+                                          Expanded(
+                                            flex: 3,
+                                            child: Text(
+                                              user.position ?? '—',
+                                              style: const TextStyle(
+                                                fontSize: 13,
                                               ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons.edit_outlined,
-                                                  size: 18,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+
+                                          // Actions
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.security_outlined,
+                                                    size: 18,
+                                                    color: Colors.blueAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () =>
+                                                          showFormDialogChangePassword(
+                                                            id:
+                                                                user.id
+                                                                    .toString(),
+                                                            userName:
+                                                                user.userName,
+                                                            email: user.email,
+                                                            password:
+                                                                user.password,
+                                                            firstName:
+                                                                user.firstName,
+                                                            middleName:
+                                                                user.middleName,
+                                                            lastName:
+                                                                user.lastName,
+                                                            prefix: user.prefix,
+                                                            suffix: user.suffix,
+                                                            position:
+                                                                user.position,
+                                                            fullName: fullName,
+                                                          ),
                                                 ),
-                                                onPressed:
-                                                    () => showFormDialog(
-                                                      id: user.id.toString(),
-                                                      userName: user.userName,
-                                                      email: user.email,
-                                                      password: user.password,
-                                                      firstName: user.firstName,
-                                                      middleName:
-                                                          user.middleName,
-                                                      lastName: user.lastName,
-                                                      prefix: user.prefix,
-                                                      suffix: user.suffix,
-                                                      position: user.position,
-                                                    ),
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  CupertinoIcons.delete_simple,
-                                                  size: 18,
-                                                  color: Colors.red,
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.edit_outlined,
+                                                    size: 18,
+                                                  ),
+                                                  onPressed:
+                                                      () => showFormDialog(
+                                                        id: user.id.toString(),
+                                                        userName: user.userName,
+                                                        email: user.email,
+                                                        password: user.password,
+                                                        firstName:
+                                                            user.firstName,
+                                                        middleName:
+                                                            user.middleName,
+                                                        lastName: user.lastName,
+                                                        prefix: user.prefix,
+                                                        suffix: user.suffix,
+                                                        position: user.position,
+                                                      ),
                                                 ),
-                                                onPressed:
-                                                    () => showDeleteDialog(
-                                                      user.id.toString(),
-                                                    ),
-                                              ),
-                                            ],
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    size: 18,
+                                                    color: Colors.red,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        user.id.toString(),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ],
                                       ),
                                     );
                                   }
+
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 14,
@@ -1623,34 +1206,14 @@ class UserProfileState extends State<UserProfilePage> {
                                                   fontSize: 14,
                                                 ),
                                               ),
-                                              const SizedBox(height: 5),
                                               if ((user.position ?? '')
                                                   .isNotEmpty) ...[
-                                                const SizedBox(height: 5),
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 3,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: primaryColor
-                                                        .withValues(
-                                                          alpha: 0.07,
-                                                        ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          4,
-                                                        ),
-                                                  ),
-                                                  child: Text(
-                                                    user.position ?? '',
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: primaryColor,
-                                                    ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  user.position ?? '',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey.shade600,
                                                   ),
                                                 ),
                                               ],
@@ -1713,7 +1276,7 @@ class UserProfileState extends State<UserProfilePage> {
                                                             Colors.blueAccent,
                                                       ),
                                                       SizedBox(width: 8),
-                                                      Text('Edit'),
+                                                      Text('Change Password'),
                                                     ],
                                                   ),
                                                 ),
@@ -1734,7 +1297,7 @@ class UserProfileState extends State<UserProfilePage> {
                                                   value: 'delete',
                                                   child: Row(
                                                     children: [
-                                                      Icon(
+                                                      const Icon(
                                                         CupertinoIcons
                                                             .delete_simple,
                                                         color: Colors.redAccent,

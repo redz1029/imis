@@ -341,6 +341,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                                     message: 'Edit',
                                                     child: IconButton(
                                                       icon: const Icon(
+                                                        size: 18,
                                                         Icons.edit_outlined,
                                                       ),
                                                       onPressed: () async {
@@ -403,6 +404,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                                     icon: const Icon(
                                                       CupertinoIcons
                                                           .delete_simple,
+                                                      size: 18,
                                                       color: Colors.redAccent,
                                                     ),
                                                     onPressed:
@@ -418,8 +420,6 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                       ),
                                     );
                                   }
-
-                                  /// MOBILE ROW
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,

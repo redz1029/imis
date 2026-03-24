@@ -605,6 +605,49 @@ class UserOfficePageState extends State<UserOfficePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Header row (desktop only)
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 4,
+                              child: Text(
+                                "Name",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Office",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
                     Expanded(
                       child:
                           _isLoading
@@ -618,7 +661,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                                 separatorBuilder:
                                     (context, index) => Divider(
                                       height: 1,
-                                      color: Colors.grey.withOpacity(0.2),
+                                      color: Colors.grey.withValues(alpha: 0.2),
                                     ),
                                 itemBuilder: (context, index) {
                                   final userOffice = filteredList[index];
@@ -659,8 +702,13 @@ class UserOfficePageState extends State<UserOfficePage> {
                                               .toUpperCase()
                                           : '?';
 
+                                  final itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+
                                   if (!isMobile) {
-                                    return Padding(
+                                    return Container(
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 10,
                                         horizontal: 4,
@@ -669,72 +717,41 @@ class UserOfficePageState extends State<UserOfficePage> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.center,
                                         children: [
-                                          // Avatar
-                                          Container(
-                                            width: 36,
-                                            height: 36,
-                                            decoration: BoxDecoration(
-                                              color: primaryColor.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                                initials,
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: primaryColor,
-                                                ),
-                                              ),
-                                            ),
+                                          // # Number
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
                                           ),
-
-                                          const SizedBox(width: 12),
 
                                           Expanded(
                                             flex: 4,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
+                                            child: Row(
                                               children: [
-                                                Text(
-                                                  userName,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                                const SizedBox(height: 4),
                                                 Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 10,
-                                                        vertical: 4,
-                                                      ),
+                                                  width: 36,
+                                                  height: 36,
                                                   decoration: BoxDecoration(
                                                     color: primaryColor
-                                                        .withValues(
-                                                          alpha: 0.07,
-                                                        ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          4,
-                                                        ),
+                                                        .withValues(alpha: 0.1),
+                                                    shape: BoxShape.circle,
                                                   ),
-                                                  child: Text(
-                                                    officeName,
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: primaryColor,
+                                                  child: Center(
+                                                    child: Text(
+                                                      initials,
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: primaryColor,
+                                                      ),
                                                     ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Expanded(
+                                                  child: Text(
+                                                    userName,
+                                                    style: const TextStyle(),
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                   ),
@@ -743,41 +760,55 @@ class UserOfficePageState extends State<UserOfficePage> {
                                             ),
                                           ),
 
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons.edit_outlined,
-                                                  size: 18,
+                                          Expanded(
+                                            flex: 3,
+                                            child: Text(
+                                              officeName,
+                                              style: const TextStyle(),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+
+                                          // Actions
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.edit_outlined,
+                                                    size: 18,
+                                                  ),
+                                                  onPressed:
+                                                      () => showFormDialog(
+                                                        id:
+                                                            userOffice.id
+                                                                .toString(),
+                                                        selectedUserId:
+                                                            userOffice.userId,
+                                                        selectedOfficeId:
+                                                            userOffice.officeId
+                                                                .toString(),
+                                                        isOfficeHead:
+                                                            userOffice
+                                                                .isOfficeHead,
+                                                      ),
                                                 ),
-                                                onPressed:
-                                                    () => showFormDialog(
-                                                      id:
-                                                          userOffice.id
-                                                              .toString(),
-                                                      selectedUserId:
-                                                          userOffice.userId,
-                                                      selectedOfficeId:
-                                                          userOffice.officeId
-                                                              .toString(),
-                                                      isOfficeHead:
-                                                          userOffice
-                                                              .isOfficeHead,
-                                                    ),
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  CupertinoIcons.delete_simple,
-                                                  size: 18,
-                                                  color: Colors.redAccent,
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    size: 18,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        userOffice.id
+                                                            .toString(),
+                                                      ),
                                                 ),
-                                                onPressed:
-                                                    () => showDeleteDialog(
-                                                      userOffice.id.toString(),
-                                                    ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -825,29 +856,13 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                 userName,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
                                                 ),
                                               ),
-                                              const SizedBox(height: 5),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 3,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: primaryColor
-                                                      .withValues(alpha: 0.07),
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  officeName,
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: primaryColor,
-                                                  ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                officeName,
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade600,
                                                 ),
                                               ),
                                             ],
@@ -898,7 +913,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                   value: 'delete',
                                                   child: Row(
                                                     children: [
-                                                      Icon(
+                                                      const Icon(
                                                         CupertinoIcons
                                                             .delete_simple,
                                                         color: Colors.redAccent,

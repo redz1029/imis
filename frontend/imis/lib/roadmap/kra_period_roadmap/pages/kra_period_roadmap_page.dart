@@ -722,6 +722,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
+                                                      size: 18,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -748,6 +749,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
 
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 18,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,

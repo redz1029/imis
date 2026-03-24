@@ -1,8 +1,14 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
+import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/dynamic_side_column.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../performance_governance_system/enum/pgs_status.dart';
 import '../user/models/user_registration.dart';
 import '../utils/auth_util.dart';
 
@@ -21,11 +27,14 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
   List<String> office = [];
   String firstName = "firstName";
   bool loading = true;
+  List<PgsDeliverables> deliverablesList = [];
+  final dio = Dio();
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
+    loadDeliverables();
   }
 
   @override
@@ -48,6 +57,57 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
     }
   }
 
+  Future<void> loadDeliverables() async {
+    setState(() => deliverablesList = []);
+
+    try {
+      UserRegistration? user = await AuthUtil.fetchLoggedUser();
+      if (user == null) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      final String? selectedRoleName = prefs.getString('selectedRole');
+      final roles = await AuthUtil.fetchRoles();
+
+      if (roles == null || roles.isEmpty) return;
+
+      var currentRole = roles.first;
+
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {
+          // keep first
+        }
+      }
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        "${ApiEndpoint().performancegovernancesystem}/user/${user.id}",
+        queryParameters: {
+          "roleId": currentRole.id,
+          "page": 1,
+          "pageSize": 10000,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List data = response.data;
+
+        final List<PgsDeliverables> allDeliverables =
+            data
+                .expand((item) => (item['pgsDeliverables'] as List))
+                .map((d) => PgsDeliverables.fromJson(d))
+                .toList();
+
+        setState(() {
+          deliverablesList = allDeliverables;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading deliverables");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,15 +123,12 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
     final bool isMobile = width < 800;
 
     if (isMobile) {
-      // MOBILE: stack vertically
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildWelcome(),
           const SizedBox(height: 16),
           _buildInfoCards(),
-          const SizedBox(height: 16),
-          _buildStatsRow(),
           const SizedBox(height: 16),
           DynamicSideColumn1(
             focusedDay: _focusedDay,
@@ -89,6 +146,8 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
               });
             },
           ),
+          const SizedBox(height: 16),
+          _buildStatsRow(),
         ],
       );
     }
@@ -96,7 +155,6 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // LEFT: main content
         Expanded(
           flex: 3,
           child: Column(
@@ -176,11 +234,11 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Flexible(child: _info1(), fit: FlexFit.loose),
+            Flexible(fit: FlexFit.loose, child: _info1()),
             const SizedBox(width: 20),
-            Flexible(child: _info2(), fit: FlexFit.loose),
+            Flexible(fit: FlexFit.loose, child: _info2()),
             const SizedBox(width: 20),
-            Flexible(child: _info3(), fit: FlexFit.loose),
+            Flexible(fit: FlexFit.loose, child: _info3()),
           ],
         );
       },
@@ -386,6 +444,11 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
   }
 
   Widget _buildStatsRow() {
+    int total = deliverablesList.length;
+    int direct = deliverablesList.where((d) => d.isDirect).length;
+    int indirect = deliverablesList.where((d) => !d.isDirect).length;
+    int completed =
+        deliverablesList.where((d) => d.status == PgsStatus.completed).length;
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isNarrow = constraints.maxWidth < 400;
@@ -396,33 +459,34 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
               buildDashboardBox(
                 title: "Total Deliverables",
                 subtitle: office.join(', '),
-                count: "",
+                count: "$total",
                 color: Colors.black,
-                icon: Icons.inventory_outlined,
-                context: context,
+                icon: Icons.show_chart,
               ),
+
               buildDashboardBox(
                 title: "Direct Deliverables",
-                count: "",
+                count: "$direct",
                 color: primaryColor,
                 icon: Icons.directions_outlined,
-                progress: 0,
-                context: context,
+                progress: total > 0 ? direct / total : 0,
               ),
               buildDashboardBox(
                 title: "Indirect Deliverables",
-                count: "",
+                count: "$indirect",
                 color: Colors.orange,
                 icon: Icons.alt_route,
-                progress: 0,
-                context: context,
+                progress: total > 0 ? indirect / total : 0,
               ),
               buildDashboardBox(
-                title: "Completion Rate",
-                count: "0%",
+                title: "Total Deliverables",
+                subtitle: "$completed of $total completed",
+                count:
+                    total > 0
+                        ? "${((completed / total) * 100).toStringAsFixed(0)}%"
+                        : "0%",
                 color: Colors.green,
                 icon: Icons.check_circle_outline,
-                context: context,
               ),
             ],
           );
@@ -433,39 +497,42 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
                 child: buildDashboardBox(
                   title: "Total Deliverables",
                   subtitle: office.join(', '),
-                  count: "",
+                  count: "$total",
                   color: Colors.black,
                   icon: Icons.inventory_outlined,
-                  context: context,
                 ),
               ),
+
               Expanded(
                 child: buildDashboardBox(
                   title: "Direct Deliverables",
-                  count: "",
+                  count: "$direct",
                   color: primaryColor,
                   icon: Icons.directions_outlined,
-                  progress: 0,
-                  context: context,
+                  progress: total > 0 ? direct / total : 0,
                 ),
               ),
+
               Expanded(
                 child: buildDashboardBox(
                   title: "Indirect Deliverables",
-                  count: "",
+                  count: "$indirect",
                   color: Colors.orange,
                   icon: Icons.alt_route,
-                  progress: 0,
-                  context: context,
+                  progress: total > 0 ? indirect / total : 0,
                 ),
               ),
+
               Expanded(
                 child: buildDashboardBox(
                   title: "Completion Rate",
-                  count: "0%",
+                  subtitle: "$completed of $total completed",
+                  count:
+                      total > 0
+                          ? "${((completed / total) * 100).toStringAsFixed(0)}%"
+                          : "0%",
                   color: Colors.green,
                   icon: Icons.check_circle_outline,
-                  context: context,
                 ),
               ),
             ],
@@ -476,7 +543,6 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
   }
 }
 
-/// Dashboard Box Builder
 Widget buildDashboardBox({
   required String title,
   required String count,
@@ -484,19 +550,19 @@ Widget buildDashboardBox({
   required Color color,
   required IconData icon,
   double? progress,
-  required BuildContext context,
 }) {
   return Card(
-    color: Theme.of(context).cardColor,
+    color: mainBgColor,
     elevation: 0,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
-      side: BorderSide(color: Theme.of(context).cardColor, width: 1),
+      side: BorderSide(color: Colors.grey.shade300, width: 1),
     ),
     child: Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 160),
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -511,6 +577,7 @@ Widget buildDashboardBox({
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
+                    color: Color.fromARGB(129, 0, 0, 0),
                   ),
                 ),
               ),
@@ -519,6 +586,7 @@ Widget buildDashboardBox({
             ],
           ),
           const SizedBox(height: 12),
+
           Text(
             count,
             style: TextStyle(
@@ -527,6 +595,7 @@ Widget buildDashboardBox({
               color: color,
             ),
           ),
+
           if (progress != null) ...[
             const SizedBox(height: 8),
             Row(
@@ -543,11 +612,12 @@ Widget buildDashboardBox({
                 const SizedBox(width: 8),
                 Text(
                   "${(progress * 100).toStringAsFixed(1)}%",
-                  style: const TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
                 ),
               ],
             ),
           ],
+
           if (subtitle != null) ...[
             const SizedBox(height: 8),
             Text(

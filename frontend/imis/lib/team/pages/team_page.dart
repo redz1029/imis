@@ -244,7 +244,7 @@ class TeamPageState extends State<TeamPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Team Information",
+              "Auditor's Information",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
@@ -264,8 +264,8 @@ class TeamPageState extends State<TeamPage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: const TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Team',
+                      labelStyle: TextStyle(color: grey, fontSize: 14),
+                      labelText: 'Search...',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -276,7 +276,7 @@ class TeamPageState extends State<TeamPage> {
                       ),
                       filled: true,
                       fillColor: secondaryColor,
-                      contentPadding: const EdgeInsets.symmetric(
+                      contentPadding: EdgeInsets.symmetric(
                         vertical: 5,
                         horizontal: 5,
                       ),
@@ -323,6 +323,42 @@ class TeamPageState extends State<TeamPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Team",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
+
                     Expanded(
                       child:
                           _isLoading
@@ -331,201 +367,160 @@ class TeamPageState extends State<TeamPage> {
                                   color: primaryColor,
                                 ),
                               )
-                              : ListView.separated(
+                              : ListView.builder(
                                 itemCount: filteredList.length,
-                                separatorBuilder:
-                                    (context, index) => Divider(
-                                      height: 1,
-                                      color: Colors.grey.withValues(alpha: 0.2),
-                                    ),
                                 itemBuilder: (context, index) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
                                   final team = filteredList[index];
 
-                                  final initials =
-                                      team.name.trim().isNotEmpty
-                                          ? team.name
-                                              .trim()
-                                              .split(' ')
-                                              .map((e) => e[0])
-                                              .take(2)
-                                              .join()
-                                              .toUpperCase()
-                                          : '?';
                                   if (!isMobile) {
-                                    return Padding(
+                                    return Container(
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: 14,
-                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
                                       ),
                                       child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
                                         children: [
-                                          // Avatar
-                                          Container(
-                                            width: 38,
-                                            height: 38,
-                                            decoration: BoxDecoration(
-                                              color: primaryColor.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                                initials,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: primaryColor,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-
-                                          // Team name
                                           Expanded(
-                                            child: Text(
-                                              team.name,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                              ),
-                                            ),
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
                                           ),
 
-                                          // Actions
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons.edit_outlined,
-                                                  size: 18,
-                                                ),
-                                                onPressed:
-                                                    () => showFormDialog(
-                                                      id: team.id.toString(),
-                                                      name: team.name,
+                                          Expanded(
+                                            flex: 3,
+                                            child: Text(team.name),
+                                          ),
+
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Tooltip(
+                                                  message: 'Edit',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      size: 18,
+                                                      Icons.edit_outlined,
                                                     ),
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  CupertinoIcons.delete_simple,
-                                                  size: 18,
-                                                  color: Colors.redAccent,
+                                                    onPressed: () {
+                                                      showFormDialog(
+                                                        id: team.id.toString(),
+                                                        name: team.name,
+                                                      );
+                                                    },
+                                                  ),
                                                 ),
-                                                onPressed:
-                                                    () => showDeleteDialog(
-                                                      team.id.toString(),
-                                                    ),
-                                              ),
-                                            ],
+
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    size: 18,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        team.id.toString(),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ],
                                       ),
                                     );
                                   }
-                                  return Padding(
+
+                                  return Container(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                      horizontal: 4,
+                                      vertical: 12,
                                     ),
-                                    child: Row(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.center,
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        // Avatar
-                                        Container(
-                                          width: 36,
-                                          height: 36,
-                                          decoration: BoxDecoration(
-                                            color: primaryColor.withValues(
-                                              alpha: 0.1,
-                                            ),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              initials,
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
-                                                color: primaryColor,
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  showFormDialog(
+                                                    id: team.id.toString(),
+                                                    name: team.name,
+                                                  );
+                                                }
 
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                team.name,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
+                                                if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    team.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
 
-                                        PopupMenuButton<String>(
-                                          color: Theme.of(context).cardColor,
-                                          icon: Icon(
-                                            Icons.more_vert,
-                                            color: Colors.grey.shade500,
-                                          ),
-                                          onSelected: (value) {
-                                            if (value == 'edit') {
-                                              showFormDialog(
-                                                id: team.id.toString(),
-                                                name: team.name,
-                                              );
-                                            }
-                                            if (value == 'delete') {
-                                              showDeleteDialog(
-                                                team.id.toString(),
-                                              );
-                                            }
-                                          },
-                                          itemBuilder:
-                                              (_) => [
-                                                PopupMenuItem(
-                                                  value: 'edit',
-                                                  child: Row(
-                                                    children: const [
-                                                      Icon(
-                                                        Icons.edit_outlined,
-                                                        size: 18,
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
                                                       ),
-                                                      SizedBox(width: 8),
-                                                      Text('Edit'),
-                                                    ],
-                                                  ),
-                                                ),
-                                                PopupMenuItem(
-                                                  value: 'delete',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        CupertinoIcons
-                                                            .delete_simple,
-                                                        color: Colors.redAccent,
-                                                        size: 18,
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      const Text('Delete'),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
                                         ),
+                                        const SizedBox(height: 8),
+                                        Text("Name: ${team.name}"),
+                                        const SizedBox(height: 4),
                                       ],
                                     ),
                                   );
@@ -566,11 +561,350 @@ class TeamPageState extends State<TeamPage> {
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
-                child: const Icon(Icons.add, color: Colors.white),
+                child: Icon(Icons.add, color: Colors.white),
               )
               : null,
     );
   }
+  // @override
+  // Widget build(BuildContext context) {
+  //   final width = MediaQuery.of(context).size.width;
+  //   final isMobile = width < 600;
+
+  //   return Scaffold(
+  //     body: Padding(
+  //       padding: const EdgeInsets.all(16),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           const Text(
+  //             "Team Information",
+  //             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+  //           ),
+  //           const SizedBox(height: 20),
+  //           Row(
+  //             children: [
+  //               SizedBox(
+  //                 height: 30,
+  //                 width: 300,
+  //                 child: TextField(
+  //                   focusNode: isSearchfocus,
+  //                   controller: searchController,
+  //                   decoration: InputDecoration(
+  //                     enabledBorder: OutlineInputBorder(
+  //                       borderSide: BorderSide(color: lightGrey),
+  //                     ),
+  //                     focusedBorder: OutlineInputBorder(
+  //                       borderSide: BorderSide(color: primaryColor),
+  //                     ),
+  //                     floatingLabelBehavior: FloatingLabelBehavior.never,
+  //                     labelStyle: const TextStyle(color: grey, fontSize: 14),
+  //                     labelText: 'Search Team',
+  //                     prefixIcon: Icon(
+  //                       Icons.search,
+  //                       color: isSearchfocus.hasFocus ? primaryColor : grey,
+  //                       size: 20,
+  //                     ),
+  //                     border: OutlineInputBorder(
+  //                       borderRadius: BorderRadius.circular(4),
+  //                     ),
+  //                     filled: true,
+  //                     fillColor: secondaryColor,
+  //                     contentPadding: const EdgeInsets.symmetric(
+  //                       vertical: 5,
+  //                       horizontal: 5,
+  //                     ),
+  //                   ),
+  //                   onChanged: filterSearchResults,
+  //                 ),
+  //               ),
+  //               const Spacer(),
+  //               if (!isMobile)
+  //                 ElevatedButton.icon(
+  //                   onPressed: () => showFormDialog(),
+  //                   style: ElevatedButton.styleFrom(
+  //                     backgroundColor: primaryColor,
+  //                     padding: const EdgeInsets.symmetric(
+  //                       vertical: 10,
+  //                       horizontal: 16,
+  //                     ),
+  //                     shape: RoundedRectangleBorder(
+  //                       borderRadius: BorderRadius.circular(4),
+  //                     ),
+  //                   ),
+  //                   icon: const Icon(Icons.add, color: Colors.white),
+  //                   label: const Text(
+  //                     'Add New',
+  //                     style: TextStyle(color: Colors.white),
+  //                   ),
+  //                 ),
+  //             ],
+  //           ),
+  //           const SizedBox(height: 26),
+  //           Expanded(
+  //             child: Container(
+  //               padding: const EdgeInsets.all(20),
+  //               decoration: BoxDecoration(
+  //                 color: Theme.of(context).cardColor,
+  //                 borderRadius: BorderRadius.circular(20),
+  //                 boxShadow: [
+  //                   BoxShadow(
+  //                     blurRadius: 10,
+  //                     color: Colors.black.withValues(alpha: .05),
+  //                   ),
+  //                 ],
+  //               ),
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Expanded(
+  //                     child:
+  //                         _isLoading
+  //                             ? Center(
+  //                               child: CircularProgressIndicator(
+  //                                 color: primaryColor,
+  //                               ),
+  //                             )
+  //                             : ListView.separated(
+  //                               itemCount: filteredList.length,
+  //                               separatorBuilder:
+  //                                   (context, index) => Divider(
+  //                                     height: 1,
+  //                                     color: Colors.grey.withValues(alpha: 0.2),
+  //                                   ),
+  //                               itemBuilder: (context, index) {
+  //                                 final team = filteredList[index];
+
+  //                                 final initials =
+  //                                     team.name.trim().isNotEmpty
+  //                                         ? team.name
+  //                                             .trim()
+  //                                             .split(' ')
+  //                                             .map((e) => e[0])
+  //                                             .take(2)
+  //                                             .join()
+  //                                             .toUpperCase()
+  //                                         : '?';
+  //                                 if (!isMobile) {
+  //                                   return Padding(
+  //                                     padding: const EdgeInsets.symmetric(
+  //                                       vertical: 14,
+  //                                       horizontal: 12,
+  //                                     ),
+  //                                     child: Row(
+  //                                       crossAxisAlignment:
+  //                                           CrossAxisAlignment.center,
+  //                                       children: [
+  //                                         // Avatar
+  //                                         Container(
+  //                                           width: 38,
+  //                                           height: 38,
+  //                                           decoration: BoxDecoration(
+  //                                             color: primaryColor.withValues(
+  //                                               alpha: 0.1,
+  //                                             ),
+  //                                             shape: BoxShape.circle,
+  //                                           ),
+  //                                           child: Center(
+  //                                             child: Text(
+  //                                               initials,
+  //                                               style: TextStyle(
+  //                                                 fontSize: 13,
+  //                                                 fontWeight: FontWeight.w600,
+  //                                                 color: primaryColor,
+  //                                               ),
+  //                                             ),
+  //                                           ),
+  //                                         ),
+  //                                         const SizedBox(width: 12),
+
+  //                                         // Team name
+  //                                         Expanded(
+  //                                           child: Text(
+  //                                             team.name,
+  //                                             style: const TextStyle(
+  //                                               fontWeight: FontWeight.w600,
+  //                                               fontSize: 14,
+  //                                             ),
+  //                                           ),
+  //                                         ),
+
+  //                                         // Actions
+  //                                         Row(
+  //                                           mainAxisSize: MainAxisSize.min,
+  //                                           children: [
+  //                                             IconButton(
+  //                                               icon: Icon(
+  //                                                 Icons.edit_outlined,
+  //                                                 size: 18,
+  //                                               ),
+  //                                               onPressed:
+  //                                                   () => showFormDialog(
+  //                                                     id: team.id.toString(),
+  //                                                     name: team.name,
+  //                                                   ),
+  //                                             ),
+  //                                             IconButton(
+  //                                               icon: Icon(
+  //                                                 CupertinoIcons.delete_simple,
+  //                                                 size: 18,
+  //                                                 color: Colors.redAccent,
+  //                                               ),
+  //                                               onPressed:
+  //                                                   () => showDeleteDialog(
+  //                                                     team.id.toString(),
+  //                                                   ),
+  //                                             ),
+  //                                           ],
+  //                                         ),
+  //                                       ],
+  //                                     ),
+  //                                   );
+  //                                 }
+  //                                 return Padding(
+  //                                   padding: const EdgeInsets.symmetric(
+  //                                     vertical: 14,
+  //                                     horizontal: 4,
+  //                                   ),
+  //                                   child: Row(
+  //                                     crossAxisAlignment:
+  //                                         CrossAxisAlignment.center,
+  //                                     children: [
+  //                                       // Avatar
+  //                                       Container(
+  //                                         width: 36,
+  //                                         height: 36,
+  //                                         decoration: BoxDecoration(
+  //                                           color: primaryColor.withValues(
+  //                                             alpha: 0.1,
+  //                                           ),
+  //                                           shape: BoxShape.circle,
+  //                                         ),
+  //                                         child: Center(
+  //                                           child: Text(
+  //                                             initials,
+  //                                             style: TextStyle(
+  //                                               fontSize: 12,
+  //                                               fontWeight: FontWeight.w600,
+  //                                               color: primaryColor,
+  //                                             ),
+  //                                           ),
+  //                                         ),
+  //                                       ),
+  //                                       const SizedBox(width: 12),
+
+  //                                       Expanded(
+  //                                         child: Column(
+  //                                           crossAxisAlignment:
+  //                                               CrossAxisAlignment.start,
+  //                                           children: [
+  //                                             Text(
+  //                                               team.name,
+  //                                               style: const TextStyle(
+  //                                                 fontWeight: FontWeight.bold,
+  //                                                 fontSize: 14,
+  //                                               ),
+  //                                             ),
+  //                                           ],
+  //                                         ),
+  //                                       ),
+
+  //                                       PopupMenuButton<String>(
+  //                                         color: Theme.of(context).cardColor,
+  //                                         icon: Icon(
+  //                                           Icons.more_vert,
+  //                                           color: Colors.grey.shade500,
+  //                                         ),
+  //                                         onSelected: (value) {
+  //                                           if (value == 'edit') {
+  //                                             showFormDialog(
+  //                                               id: team.id.toString(),
+  //                                               name: team.name,
+  //                                             );
+  //                                           }
+  //                                           if (value == 'delete') {
+  //                                             showDeleteDialog(
+  //                                               team.id.toString(),
+  //                                             );
+  //                                           }
+  //                                         },
+  //                                         itemBuilder:
+  //                                             (_) => [
+  //                                               PopupMenuItem(
+  //                                                 value: 'edit',
+  //                                                 child: Row(
+  //                                                   children: const [
+  //                                                     Icon(
+  //                                                       Icons.edit_outlined,
+  //                                                       size: 18,
+  //                                                     ),
+  //                                                     SizedBox(width: 8),
+  //                                                     Text('Edit'),
+  //                                                   ],
+  //                                                 ),
+  //                                               ),
+  //                                               PopupMenuItem(
+  //                                                 value: 'delete',
+  //                                                 child: Row(
+  //                                                   children: [
+  //                                                     Icon(
+  //                                                       CupertinoIcons
+  //                                                           .delete_simple,
+  //                                                       color: Colors.redAccent,
+  //                                                       size: 18,
+  //                                                     ),
+  //                                                     const SizedBox(width: 8),
+  //                                                     const Text('Delete'),
+  //                                                   ],
+  //                                                 ),
+  //                                               ),
+  //                                             ],
+  //                                       ),
+  //                                     ],
+  //                                   ),
+  //                                 );
+  //                               },
+  //                             ),
+  //                   ),
+  //                   Container(
+  //                     padding: const EdgeInsets.all(10),
+  //                     color: Theme.of(context).cardColor,
+  //                     child: Row(
+  //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                       children: [
+  //                         PaginationInfo(
+  //                           currentPage: _currentPage,
+  //                           totalItems: _totalCount,
+  //                           itemsPerPage: _pageSize,
+  //                         ),
+  //                         PaginationControls(
+  //                           currentPage: _currentPage,
+  //                           totalItems: _totalCount,
+  //                           itemsPerPage: _pageSize,
+  //                           isLoading: _isLoading,
+  //                           onPageChanged: (page) => fetchTeam(page: page),
+  //                         ),
+  //                         const SizedBox(width: 60),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //     floatingActionButton:
+  //         isMobile
+  //             ? FloatingActionButton(
+  //               backgroundColor: primaryColor,
+  //               onPressed: () => showFormDialog(),
+  //               child: const Icon(Icons.add, color: Colors.white),
+  //             )
+  //             : null,
+  //   );
+  // }
 
   void showDeleteDialog(String id) {
     showDialog(

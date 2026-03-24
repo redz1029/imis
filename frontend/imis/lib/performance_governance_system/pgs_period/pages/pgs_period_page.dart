@@ -740,6 +740,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
+                                                      size: 18,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -769,6 +770,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
 
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 18,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,

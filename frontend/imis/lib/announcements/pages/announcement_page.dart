@@ -285,6 +285,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
+                                                      size: 18,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -319,6 +320,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
 
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 18,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,

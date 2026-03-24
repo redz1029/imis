@@ -788,6 +788,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                               children: [
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 18,
                                                     Icons.edit_outlined,
                                                   ),
                                                   onPressed: () {
@@ -812,6 +813,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                                 ),
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 18,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,

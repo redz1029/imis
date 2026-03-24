@@ -589,6 +589,7 @@ class AuditorMainPageState extends State<AuditorPage> {
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
+                                                      size: 18,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -610,6 +611,7 @@ class AuditorMainPageState extends State<AuditorPage> {
 
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 18,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,

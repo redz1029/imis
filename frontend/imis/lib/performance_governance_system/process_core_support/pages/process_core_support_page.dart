@@ -539,6 +539,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                               children: [
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 18,
                                                     Icons.edit_outlined,
                                                   ),
                                                   onPressed: () {
@@ -555,6 +556,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                                 ),
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 18,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,
