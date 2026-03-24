@@ -140,7 +140,7 @@ namespace IMIS.Presentation.KraRoadMapAccomplishmentModule
            .DisableAntiforgery()
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapAccomplishmentPermission.Edit));
 
-            app.MapGet("/kraroadmap-accomplishment/{id:long}/download", async (long id, IKraRoadmapAccomplishmentService service, CancellationToken token) =>
+            app.MapGet("/kraroadmap-accomplishment/{id:long}/preview", async (long id, IKraRoadmapAccomplishmentService service, HttpResponse response, CancellationToken token) =>
             {
                 var accomplishment = await service.GetByIdAsync(id, token);
                 if (accomplishment == null || string.IsNullOrWhiteSpace(accomplishment.AttachmentPath))
@@ -159,7 +159,11 @@ namespace IMIS.Presentation.KraRoadMapAccomplishmentModule
                 }
 
                 var contentType = FTPHelper.GetContentType(fileName);
-                return Results.File(fileBytes, contentType, fileName);
+
+                //Force inline preview
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+
+                return Results.File(fileBytes, contentType);
             })
             .WithTags(_kraRoadMapAccomplishmentTag);
 
