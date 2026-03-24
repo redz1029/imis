@@ -6,7 +6,7 @@ import 'package:imis/performance_governance_system/services/performance_governan
 import 'package:imis/roadmap/models/kra_roadmap_filter.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/accomplishment_pgs_widget.dart';
+import 'package:imis/widgets/accomplishment_pgs_standardUser_widget.dart';
 import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/build_header_cell.dart';
 import 'package:imis/widgets/button_filter.dart';
@@ -707,10 +707,6 @@ class PerformanceGovernanceSystemPageState
     required String pgsId,
     required String userId,
   }) async {
-    if (_isLoading) return null;
-
-    setState(() => _isLoading = true);
-
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
       if (user == null) return null;
@@ -734,10 +730,6 @@ class PerformanceGovernanceSystemPageState
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
     return null;
   }
@@ -1695,6 +1687,7 @@ class PerformanceGovernanceSystemPageState
                                                     message: 'Edit',
                                                     child: IconButton(
                                                       icon: const Icon(
+                                                        size: 18,
                                                         Icons.edit_outlined,
                                                       ),
                                                       onPressed: () async {
@@ -1764,6 +1757,8 @@ class PerformanceGovernanceSystemPageState
                                                   message: 'Print Preview',
                                                   child: IconButton(
                                                     icon: const Icon(
+                                                      size: 18,
+
                                                       Icons
                                                           .description_outlined,
                                                       color: Colors.blueAccent,
@@ -1794,6 +1789,8 @@ class PerformanceGovernanceSystemPageState
                                                             .deletePerformanceGovernanceSystem,
                                                     child: IconButton(
                                                       icon: const Icon(
+                                                        size: 18,
+
                                                         CupertinoIcons
                                                             .delete_simple,
                                                         color: Colors.redAccent,
