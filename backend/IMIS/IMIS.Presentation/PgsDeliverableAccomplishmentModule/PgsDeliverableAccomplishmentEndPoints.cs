@@ -142,8 +142,8 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .DisableAntiforgery()
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.Edit));
-
-            app.MapGet("/{id:long}/download", async (long id, IPgsDeliverableAcomplishmentService service, CancellationToken token) =>
+          
+            app.MapGet("/{id:long}/preview", async (long id, IPgsDeliverableAcomplishmentService service, HttpResponse response, CancellationToken token) =>
             {
                 var accomplishment = await service.GetByIdAsync(id, token);
                 if (accomplishment == null || string.IsNullOrWhiteSpace(accomplishment.AttachmentPath))
@@ -162,10 +162,12 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                 }
 
                 var contentType = FTPHelper.GetContentType(fileName);
-                return Results.File(fileBytes, contentType, fileName);
+
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+
+                return Results.File(fileBytes, contentType);
             })
            .WithTags(_pgsDeliverableAccomplishmentTag);
-
 
             app.MapGet("/page", async (int page, int pageSize, IPgsDeliverableAcomplishmentService service, CancellationToken cancellationToken) =>
             {
