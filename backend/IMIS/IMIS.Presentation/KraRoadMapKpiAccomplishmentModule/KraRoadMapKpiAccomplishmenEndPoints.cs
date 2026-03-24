@@ -1,7 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
-using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadmapKpiAccomplishmentModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -139,8 +138,8 @@ namespace IMIS.Presentation.KraRoadMapKpiAccomplishmentModule
             .WithTags(_kraRoadMapKpiAccomplishmentTag)
             .DisableAntiforgery()
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapKpiAccomplishmentPermission.Edit));
-
-            app.MapGet("/kraroadmapkpi-accomplishment/{id:long}/download", async (long id, IKraRoadmapKpiAccomplishmentService service, CancellationToken token) =>
+           
+            app.MapGet("/kraroadmapkpi-accomplishment/{id:long}/preview", async (long id, IKraRoadmapKpiAccomplishmentService service, HttpResponse response, CancellationToken token) =>
             {
                 var accomplishment = await service.GetByIdAsync(id, token);
                 if (accomplishment == null || string.IsNullOrWhiteSpace(accomplishment.AttachmentPath))
@@ -159,9 +158,13 @@ namespace IMIS.Presentation.KraRoadMapKpiAccomplishmentModule
                 }
 
                 var contentType = FTPHelper.GetContentType(fileName);
-                return Results.File(fileBytes, contentType, fileName);
+
+                //  Force browser preview
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+
+                return Results.File(fileBytes, contentType);
             })
-           .WithTags(_kraRoadMapKpiAccomplishmentTag);
+        .WithTags(_kraRoadMapKpiAccomplishmentTag);
         }
     }
 }
