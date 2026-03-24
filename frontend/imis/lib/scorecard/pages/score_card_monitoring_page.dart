@@ -7,7 +7,6 @@ import 'package:imis/performance_governance_system/process_core_support/models/k
 import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:imis/widgets/scorecard_monitoring_accomplishment_widget.dart';
@@ -33,40 +32,28 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   final ScrollController _headerHorizontalController = ScrollController();
   final ScrollController _kraScrollController = ScrollController();
   final ScrollController _kpiScrollController = ScrollController();
-  final int kraColumns = 4;
-  final int kpiColumns = 2;
 
   final dio = Dio();
   final _commonService = CommonService(Dio());
   final _scorecardService = ScoreCardMonitoringServices(Dio());
   final permissionService = PermissionService();
+
   List<Map<String, dynamic>> kpiList = [];
   List<Map<String, dynamic>> roadmapList = [];
   List<Map<String, dynamic>> filteredList = [];
   String userId = "";
 
-  final List<String> kraHeaders = ["PERIOD", "KRA", "ACTIVITY", "ACTION"];
-
-  final List<String> kpiHeaders = ["KPI", "ACTIONS"];
-
   bool isMenuOpenStartYear = false;
   bool isMenuOpenEndYear = false;
   bool isMenuOpenKra = false;
-  bool isMenuOpenKraKpi = false;
   List<KeyResultArea> kraListOptions = [];
   int? selectedKra;
   List<PgsPeriod> periodList = [];
   int? selectedStartYear;
   int? selectedEndYear;
-  int? selectedPeriodCreateReport;
-  String? selectedPeriodText;
-  String? selectedPeriodTextCreateReport;
   String? selectedStartYearText;
   String? selectedEndYearText;
   bool isLoading = true;
-  int? officeId;
-  int? periodId;
-  bool hasAvailableDeliverables = false;
   bool isAllYearsSelected = false;
 
   @override
@@ -76,9 +63,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
     _horizontalController.addListener(_syncBodyScroll);
 
     () async {
-      setState(() {
-        isLoading = true;
-      });
+      setState(() => isLoading = true);
 
       final period = await _commonService.fetchPgsPeriod();
       final kra = await _commonService.fetchKra();
@@ -125,14 +110,8 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
 
   Future<void> _loadCurrentUserId() async {
     UserRegistration? user = await AuthUtil.processTokenValidity(dio, context);
-
-    setState(() {
-      userId = user!.id ?? "UserId";
-    });
-
-    if (mounted) {
-      setState(() {});
-    }
+    setState(() => userId = user!.id ?? "UserId");
+    if (mounted) setState(() {});
   }
 
   @override
@@ -140,291 +119,231 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
     _verticalController.dispose();
     _horizontalController.dispose();
     _headerHorizontalController.dispose();
+    _kraScrollController.dispose();
+    _kpiScrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchFiltered() async {
+    try {
+      final roadmapData = await _scorecardService.fetchRoadmapFiltered(
+        kraId: selectedKra,
+        fromYear: selectedStartYear,
+        toYear: selectedEndYear,
+      );
+      final kpiData = await _scorecardService.fetchKpiFiltered(
+        kraId: selectedKra,
+        fromYear: selectedStartYear,
+        toYear: selectedEndYear,
+      );
+      if (!mounted) return;
+      setState(() {
+        roadmapList = roadmapData;
+        kpiList = kpiData;
+        filteredList = List.from(roadmapData);
+      });
+    } catch (e) {
+      debugPrint("Error fetching filtered data");
+    }
+  }
+
+  Widget _filterChip({required String label, required bool isActive}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: isActive ? primaryColor.withValues(alpha: 0.08) : Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isActive ? primaryColor : Colors.grey.shade300,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: isActive ? primaryColor : Colors.black87,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(
+            Icons.keyboard_arrow_down,
+            size: 16,
+            color: isActive ? primaryColor : Colors.grey.shade600,
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     bool hasPermission = permissionService.hasPermission(
       AppPermissions.viewKraRoadMap,
     );
 
-    if (!hasPermission) {
-      return noPermissionScreen();
-    }
+    if (!hasPermission) return noPermissionScreen();
+
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        backgroundColor: mainBgColor,
-        title: const Text(
-          'Scorecard Monitoring',
-          style: TextStyle(fontSize: 20),
-        ),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          controller: _verticalController,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                // ── TITLE ──
+                const Text(
+                  'Scorecard Monitoring',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 20),
+
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text('Filter by', style: TextStyle(color: Colors.grey)),
+                      Text(
+                        'Filter by:',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+
+                      PermissionWidget(
+                        permission: AppPermissions.viewKra,
+                        child: PopupMenuButton<int>(
+                          color: Theme.of(context).cardColor,
+                          onSelected: (value) async {
+                            setState(() {
+                              selectedKra = (value == -1) ? null : value;
+                            });
+                            await _fetchFiltered();
+                          },
+                          itemBuilder:
+                              (_) => [
+                                const PopupMenuItem(
+                                  value: -1,
+                                  child: Text('All KRA'),
+                                ),
+                                ...kraListOptions.map(
+                                  (k) => PopupMenuItem(
+                                    value: k.id,
+                                    child: Text(k.name),
+                                  ),
+                                ),
+                              ],
+                          child: _filterChip(
+                            label:
+                                selectedKra == null
+                                    ? 'All KRA'
+                                    : kraListOptions
+                                        .firstWhere((k) => k.id == selectedKra)
+                                        .name,
+                            isActive: isMenuOpenKra,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      PopupMenuButton<int>(
+                        color: Theme.of(context).cardColor,
+                        onSelected: (value) async {
+                          setState(() {
+                            selectedStartYear = value == -1 ? null : value;
+                          });
+                          await _fetchFiltered();
+                        },
+                        itemBuilder:
+                            (_) => [
+                              const PopupMenuItem(
+                                value: -1,
+                                child: Text('All Years'),
+                              ),
+                              ...SwotYear.years.map(
+                                (y) => PopupMenuItem(
+                                  value: int.parse(y),
+                                  child: Text(y),
+                                ),
+                              ),
+                            ],
+                        child: _filterChip(
+                          label: selectedStartYear?.toString() ?? 'Start Year',
+                          isActive: isMenuOpenStartYear,
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      PopupMenuButton<int>(
+                        color: Theme.of(context).cardColor,
+                        onSelected: (value) async {
+                          setState(() {
+                            selectedEndYear = value == -1 ? null : value;
+                          });
+                          await _fetchFiltered();
+                        },
+                        itemBuilder:
+                            (_) => [
+                              const PopupMenuItem(
+                                value: -1,
+                                child: Text('All Years'),
+                              ),
+                              ...SwotYear.years.map(
+                                (y) => PopupMenuItem(
+                                  value: int.parse(y),
+                                  child: Text(y),
+                                ),
+                              ),
+                            ],
+                        child: _filterChip(
+                          label: selectedEndYear?.toString() ?? 'End Year',
+                          isActive: isMenuOpenEndYear,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                PermissionWidget(
-                  permission: AppPermissions.viewKra,
-                  child: PopupMenuButton<int>(
-                    color: mainBgColor,
-                    offset: const Offset(0, 30),
-                    onCanceled: () {
-                      setState(() {
-                        isMenuOpenKra = false;
-                      });
-                    },
-                    onOpened: () {
-                      setState(() {
-                        isMenuOpenKra = true;
-                      });
-                    },
 
-                    onSelected: (int value) async {
-                      setState(() {
-                        selectedKra = (value == -1) ? null : value;
-                        isMenuOpenKra = false;
-                      });
+                const SizedBox(height: 26),
 
-                      try {
-                        final roadmapData = await _scorecardService
-                            .fetchRoadmapFiltered(
-                              kraId: selectedKra,
-                              fromYear: selectedStartYear,
-                              toYear: selectedEndYear,
-                            );
-                        final kpiData = await _scorecardService
-                            .fetchKpiFiltered(
-                              kraId: selectedKra,
-                              fromYear: selectedStartYear,
-                              toYear: selectedEndYear,
-                            );
-                        if (!mounted) return;
-                        setState(() {
-                          roadmapList = roadmapData;
-                          kpiList = kpiData;
-                          filteredList = List.from(roadmapData);
-                        });
-                      } catch (e) {
-                        debugPrint("Error fetching filtered data");
-                      }
-                    },
-                    itemBuilder: (BuildContext context) {
-                      final updatedKraList = [
-                        {'id': -1, 'name': 'All KRA'},
-                        ...kraListOptions.map(
-                          (k) => {
-                            'id': k.id,
-                            'name': k.name,
-                            'remarks': k.remarks,
-                          },
-                        ),
-                      ];
-
-                      return updatedKraList.map<PopupMenuItem<int>>((kra) {
-                        return PopupMenuItem<int>(
-                          value: kra['id'] as int,
-                          child: Text(kra['name'].toString()),
-                        );
-                      }).toList();
-                    },
-                    child: FilterButton(
-                      label:
-                          selectedKra == null
-                              ? 'All KRA'
-                              : kraListOptions
-                                  .firstWhere(
-                                    (kra) => kra.id == selectedKra,
-                                    orElse:
-                                        () => KeyResultArea(
-                                          0,
-                                          'name',
-                                          'remarks',
-                                          'strategic',
-                                          false,
-                                        ),
-                                  )
-                                  .name,
-                      isActive: isMenuOpenKra,
+                isLoading
+                    ? Center(
+                      child: CircularProgressIndicator(color: primaryColor),
+                    )
+                    : isMobile
+                    ? Column(
+                      children: [
+                        _buildKPITable(),
+                        const SizedBox(height: 16),
+                        _buildKRATable(),
+                      ],
+                    )
+                    : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 2, child: _buildKPITable()),
+                        const SizedBox(width: 16),
+                        Expanded(flex: 3, child: _buildKRATable()),
+                      ],
                     ),
-                  ),
-                ),
-                SizedBox(width: 6),
-                PopupMenuButton<int>(
-                  color: mainBgColor,
-                  offset: const Offset(0, 30),
-
-                  onCanceled: () {
-                    setState(() {
-                      isMenuOpenStartYear = false;
-                    });
-                  },
-
-                  onOpened: () {
-                    setState(() {
-                      isMenuOpenStartYear = true;
-                    });
-                  },
-
-                  onSelected: (int value) async {
-                    setState(() {
-                      selectedStartYear = (value == -1) ? null : value;
-                      selectedStartYearText =
-                          (value == -1) ? null : value.toString();
-                      isMenuOpenStartYear = false;
-                      isAllYearsSelected = (value == -1);
-                    });
-                    try {
-                      final roadmapData = await _scorecardService
-                          .fetchRoadmapFiltered(
-                            kraId: selectedKra,
-                            fromYear: selectedStartYear,
-                            toYear: selectedEndYear,
-                          );
-                      final kpiData = await _scorecardService.fetchKpiFiltered(
-                        kraId: selectedKra,
-                        fromYear: selectedStartYear,
-                        toYear: selectedEndYear,
-                      );
-
-                      if (!mounted) return;
-                      setState(() {
-                        roadmapList = roadmapData;
-                        kpiList = kpiData;
-                        filteredList = List.from(roadmapData);
-                      });
-                    } catch (e) {
-                      debugPrint("Error fetching filtered data");
-                    }
-                  },
-
-                  itemBuilder: (BuildContext context) {
-                    final updatedYearList = [
-                      -1,
-                      ...SwotYear.years.map((y) => int.parse(y)),
-                    ];
-
-                    return updatedYearList.map((year) {
-                      return PopupMenuItem<int>(
-                        value: year,
-                        child: Text(year == -1 ? 'All Years' : year.toString()),
-                      );
-                    }).toList();
-                  },
-
-                  child: FilterButton(
-                    label:
-                        selectedStartYear == null
-                            ? (isAllYearsSelected ? 'All Years' : 'Start Year')
-                            : selectedStartYear.toString(),
-                    isActive: isMenuOpenStartYear,
-                  ),
-                ),
-                SizedBox(width: 6),
-                PopupMenuButton<int>(
-                  color: mainBgColor,
-                  offset: const Offset(0, 30),
-
-                  onCanceled: () {
-                    setState(() {
-                      isMenuOpenEndYear = false;
-                    });
-                  },
-
-                  onOpened: () {
-                    setState(() {
-                      isMenuOpenEndYear = true;
-                    });
-                  },
-
-                  onSelected: (int value) async {
-                    setState(() {
-                      selectedEndYear = (value == -1) ? null : value;
-                      selectedEndYearText =
-                          (value == -1) ? null : value.toString();
-                      isMenuOpenEndYear = false;
-                      isAllYearsSelected = (value == -1);
-                    });
-                    try {
-                      final roadmapData = await _scorecardService
-                          .fetchRoadmapFiltered(
-                            kraId: selectedKra,
-                            fromYear: selectedStartYear,
-                            toYear: selectedEndYear,
-                          );
-                      final kpiData = await _scorecardService.fetchKpiFiltered(
-                        kraId: selectedKra,
-                        fromYear: selectedStartYear,
-                        toYear: selectedEndYear,
-                      );
-
-                      if (!mounted) return;
-                      setState(() {
-                        roadmapList = roadmapData;
-                        kpiList = kpiData;
-                        filteredList = List.from(roadmapData);
-                      });
-                    } catch (e) {
-                      debugPrint("Error fetching filtered data");
-                    }
-                  },
-
-                  itemBuilder: (BuildContext context) {
-                    final updatedYearList = [
-                      -1,
-                      ...SwotYear.years.map((y) => int.parse(y)),
-                    ];
-
-                    return updatedYearList.map((year) {
-                      return PopupMenuItem<int>(
-                        value: year,
-                        child: Text(year == -1 ? 'All Years' : year.toString()),
-                      );
-                    }).toList();
-                  },
-
-                  child: FilterButton(
-                    label:
-                        selectedEndYear == null
-                            ? (isAllYearsSelected ? 'All Years' : 'End Year')
-                            : selectedEndYear.toString(),
-                    isActive: isMenuOpenEndYear,
-                  ),
-                ),
               ],
             ),
           ),
-          Expanded(
-            child: SingleChildScrollView(
-              controller: _verticalController,
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildKPITable(),
-                  const SizedBox(height: 32),
-                  _buildKRATable(),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -436,128 +355,134 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
 
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(blurRadius: 10, color: Colors.black.withValues(alpha: .05)),
+        ],
       ),
       child: Column(
         children: [
-          // Title Row
           Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: primaryLightColor,
+              color: primaryColor,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
             ),
-            child: Table(
-              columnWidths: const {0: FlexColumnWidth(1)},
+            child: const Text(
+              'Key Result Areas (KRA)',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Row(
               children: [
-                TableRow(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 20,
-                      ),
-                      child: const Text(
-                        'Key Result Areas (KRA)',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.left,
+                _headerCell('#', flex: 1),
+                _headerCell('Period', flex: 2),
+                _headerCell('KRA', flex: 4),
+                _headerCell('Activity', flex: 5),
+                _headerCell('Action', flex: 2),
+              ],
+            ),
+          ),
+
+          roadmapList.isEmpty
+              ? _emptyState('No KRA data available')
+              : LayoutBuilder(
+                builder: (context, constraints) {
+                  return ConstrainedBox(
+                    constraints: BoxConstraints(
+                      // max height adapts to screen size
+                      maxHeight: MediaQuery.of(context).size.height * 0.6,
+                    ),
+                    child: Scrollbar(
+                      controller: _kraScrollController,
+                      thumbVisibility: true,
+                      child: ListView.separated(
+                        controller: _kraScrollController,
+                        shrinkWrap: true,
+                        physics: const ClampingScrollPhysics(),
+                        itemCount: roadmapList.length,
+                        separatorBuilder:
+                            (_, __) => Divider(
+                              height: 1,
+                              color: Colors.grey.withValues(alpha: 0.2),
+                            ),
+                        itemBuilder: (context, index) {
+                          final item = roadmapList[index];
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 12,
+                            ),
+                            color:
+                                index % 2 == 0
+                                    ? Colors.white
+                                    : Colors.grey.shade50,
+                            child: Row(
+                              children: [
+                                _dataCell('${index + 1}', flex: 1),
+                                const SizedBox(width: 8),
+
+                                _dataCell(item['year'] ?? '', flex: 2),
+                                const SizedBox(width: 8),
+
+                                _dataCell(
+                                  item['kraDescription'] ?? '',
+                                  flex: 4,
+                                ),
+                                const SizedBox(width: 8),
+
+                                _dataCell(
+                                  item['deliverableName'] ?? '',
+                                  flex: 5,
+                                ),
+                                const SizedBox(width: 8),
+
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildActionButton(() async {
+                                    await loadScorecardAccomplishments(
+                                      item['id'],
+                                    );
+                                    showRoadmapAccomplishmentFormDialog(
+                                      context,
+                                      item,
+                                      userId,
+                                    );
+                                  }, enabled: canView),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          // Header (fixed)
-          Container(
-            decoration: BoxDecoration(color: Colors.grey.shade100),
-            child: Table(
-              columnWidths: const {
-                0: FixedColumnWidth(60),
-                1: FlexColumnWidth(2),
-                2: FlexColumnWidth(6),
-                3: FlexColumnWidth(8),
-                4: FixedColumnWidth(200),
-              },
-              children: [
-                TableRow(
-                  children: [
-                    _tableCell('#', isHeader: true),
-                    _tableCell('PERIOD', isHeader: true),
-                    _tableCell('KRA', isHeader: true),
-                    _tableCell('ACTIVITY', isHeader: true),
-                    _tableCell('ACTION', isHeader: true),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(
-            height: 7 * 56.0,
-            child: Scrollbar(
-              controller: _kraScrollController,
-              thumbVisibility: true,
-              child: GestureDetector(
-                onVerticalDragUpdate: (details) {
-                  _kraScrollController.jumpTo(
-                    _kraScrollController.offset - details.delta.dy,
                   );
                 },
-                child: ListView.builder(
-                  controller: _kraScrollController,
-                  physics: const ClampingScrollPhysics(),
-                  itemCount: roadmapList.length,
-                  itemBuilder: (context, index) {
-                    final item = roadmapList[index];
-                    final isEven = index % 2 == 0;
-
-                    return Container(
-                      color: isEven ? Colors.white : Colors.grey.shade50,
-                      child: Table(
-                        columnWidths: const {
-                          0: FixedColumnWidth(60),
-                          1: FlexColumnWidth(2),
-                          2: FlexColumnWidth(6),
-                          3: FlexColumnWidth(8),
-                          4: FixedColumnWidth(200),
-                        },
-                        children: [
-                          TableRow(
-                            children: [
-                              _tableCell('${index + 1}'),
-                              _tableCell(item['year'] ?? ''),
-                              _tableCell(item['kraDescription'] ?? ''),
-                              _tableCell(item['deliverableName'] ?? ''),
-                              _buildActionButton(() async {
-                                await loadScorecardAccomplishments(item['id']);
-                                showRoadmapAccomplishmentFormDialog(
-                                  context,
-                                  item,
-                                  userId,
-                                );
-                              }, enabled: canView),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
               ),
-            ),
-          ),
         ],
       ),
     );
   }
+
+  // ─────────────────────────────────────────────
+  // KPI TABLE
+  // ─────────────────────────────────────────────
 
   Widget _buildKPITable() {
     final canView = permissionService.hasPermission(
@@ -566,186 +491,248 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
 
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(blurRadius: 10, color: Colors.black.withValues(alpha: .05)),
+        ],
       ),
       child: Column(
         children: [
-          // Title Row
+          // Title bar
           Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: primaryLightColor,
+              color: primaryColor,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
             ),
-            child: Table(
-              columnWidths: const {0: FlexColumnWidth(1)},
-              children: [
-                TableRow(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 20,
-                      ),
-                      child: const Text(
-                        'Key Performance Indicators (KPI)',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            child: const Text(
+              'Key Performance Indicators (KPI)',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
-          // Header (fixed)
+
           Container(
-            decoration: BoxDecoration(color: Colors.grey.shade100),
-            child: Table(
-              columnWidths: const {
-                0: FixedColumnWidth(60),
-                1: FlexColumnWidth(5),
-                2: FixedColumnWidth(200),
-              },
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Row(
               children: [
-                TableRow(
-                  children: [
-                    _tableCell('#', isHeader: true),
-                    _tableCell('KPI', isHeader: true),
-                    _tableCell('ACTIONS', isHeader: true),
-                  ],
-                ),
+                _headerCell('#', flex: 1),
+                _headerCell('KPI', flex: 5),
+                _headerCell('Action', flex: 2),
               ],
             ),
           ),
-          // Scrollable data rows
-          SizedBox(
-            height: 7 * 56.0,
-            child: Scrollbar(
-              controller: _kpiScrollController,
-              thumbVisibility: true,
-              child: ListView.builder(
-                controller: _kpiScrollController,
-                itemCount: kpiList.length,
-                itemBuilder: (context, index) {
-                  final item = kpiList[index];
-                  final isEven = index % 2 == 0;
+
+          // Rows
+          kpiList.isEmpty
+              ? _emptyState('No KPI data available')
+              // : Flexible(
+              //   child: Scrollbar(
+              //     controller: _kpiScrollController,
+              //     thumbVisibility: true,
+              //     child: ListView.separated(
+              //       controller: _kpiScrollController,
+              //       shrinkWrap: true,
+              //       itemCount: kpiList.length,
+              //       separatorBuilder:
+              //           (_, __) => Divider(
+              //             height: 1,
+              //             color: Colors.grey.withValues(alpha: 0.2),
+              //           ),
+              //       itemBuilder: (context, index) {
+              //         final item = kpiList[index];
+              //         return Container(
+              //           padding: const EdgeInsets.symmetric(
+              //             vertical: 10,
+              //             horizontal: 12,
+              //           ),
+              //           color:
+              //               index % 2 == 0 ? Colors.white : Colors.grey.shade50,
+              //           child: Row(
+              //             children: [
+              //               _dataCell('${index + 1}', flex: 1),
+              //               SizedBox(width: 8),
+              //               _dataCell(item['kpiDescription'] ?? '', flex: 5),
+              //               Expanded(
+              //                 flex: 2,
+              //                 child: _buildActionButton(() async {
+              //                   await loadKPIAccomplishments(item['id']);
+              //                   showKPIAccomplishmentFormDialog(
+              //                     context,
+              //                     item,
+              //                     userId,
+              //                   );
+              //                 }, enabled: canView),
+              //               ),
+              //             ],
+              //           ),
+              //         );
+              //       },
+              //     ),
+              //   ),
+              // ),
+              : Builder(
+                builder: (context) {
+                  final screenHeight = MediaQuery.of(context).size.height;
+
+                  final tableMaxHeight = screenHeight * 0.55; // safe for mobile
+
                   return Container(
-                    decoration: BoxDecoration(
-                      color: isEven ? Colors.white : Colors.grey.shade50,
-                    ),
-                    child: Table(
-                      columnWidths: const {
-                        0: FixedColumnWidth(60),
-                        1: FlexColumnWidth(5),
-                        2: FixedColumnWidth(200),
-                      },
-                      children: [
-                        TableRow(
-                          children: [
-                            _tableCell('${index + 1}'),
-                            _tableCell(item['kpiDescription'] ?? ''),
-                            _buildActionButton(() async {
-                              await loadKPIAccomplishments(item['id']);
-                              showKPIAccomplishmentFormDialog(
-                                context,
-                                item,
-                                userId,
-                              );
-                            }, enabled: canView),
-                          ],
-                        ),
-                      ],
+                    constraints: BoxConstraints(maxHeight: tableMaxHeight),
+                    child: Scrollbar(
+                      controller: _kpiScrollController,
+                      thumbVisibility: true,
+                      child: ListView.separated(
+                        controller: _kpiScrollController,
+                        physics: const ClampingScrollPhysics(),
+                        itemCount: kpiList.length,
+                        separatorBuilder:
+                            (_, __) => Divider(
+                              height: 1,
+                              color: Colors.grey.withValues(alpha: 0.2),
+                            ),
+                        itemBuilder: (context, index) {
+                          final item = kpiList[index];
+
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 12,
+                            ),
+                            color:
+                                index % 2 == 0
+                                    ? Colors.white
+                                    : Colors.grey.shade50,
+                            child: Row(
+                              children: [
+                                _dataCell('${index + 1}', flex: 1),
+                                const SizedBox(width: 8),
+                                _dataCell(
+                                  item['kpiDescription'] ?? '',
+                                  flex: 5,
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildActionButton(() async {
+                                    await loadKPIAccomplishments(item['id']);
+                                    showKPIAccomplishmentFormDialog(
+                                      context,
+                                      item,
+                                      userId,
+                                    );
+                                  }, enabled: canView),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   );
                 },
               ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _tableCell(String text, {bool isHeader = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      decoration: BoxDecoration(
-        border: Border(
-          right: BorderSide(color: Colors.grey.shade300, width: 0.5),
-        ),
-      ),
+  // ─────────────────────────────────────────────
+  // SHARED HELPERS
+  // ─────────────────────────────────────────────
+
+  Widget _headerCell(String text, {required int flex}) {
+    return Expanded(
+      flex: flex,
       child: Text(
         text,
-        style: TextStyle(
-          fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
-          fontSize: isHeader ? 14 : 14,
-          color: isHeader ? Colors.grey.shade700 : Colors.black87,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
 
-        softWrap: true,
+  Widget _dataCell(String text, {required int flex}) {
+    return Expanded(
+      flex: flex,
+      child: Text(text, style: const TextStyle(fontSize: 13), softWrap: true),
+    );
+  }
+
+  Widget _emptyState(String message) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Center(
+        child: Text(
+          message,
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+        ),
       ),
     );
   }
 
   Widget _buildActionButton(VoidCallback? onPressed, {bool enabled = true}) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      child: Tooltip(
-        message:
-            enabled
-                ? 'Open Accomplishment'
-                : 'You dont have permission to view',
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                enabled ? Colors.transparent : Colors.grey.shade300,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-              side: BorderSide(
-                color: enabled ? Colors.grey : Colors.grey.shade500,
-                width: 1,
-              ),
+    return Tooltip(
+      message:
+          enabled
+              ? 'Open Accomplishment'
+              : 'You don\'t have permission to view',
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: enabled ? Colors.transparent : Colors.grey.shade300,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+            side: BorderSide(
+              color: enabled ? Colors.grey : Colors.grey.shade500,
+              width: 1,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            textStyle: const TextStyle(fontSize: 13),
-            minimumSize: const Size(100, 36),
-          ).copyWith(
-            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (!enabled) return null; // no overlay when disabled
-              if (states.contains(WidgetState.hovered) ||
-                  states.contains(WidgetState.pressed)) {
-                return const Color.fromARGB(255, 221, 221, 221);
-              }
-              return null;
-            }),
           ),
-          onPressed: enabled ? onPressed : null,
-          icon: Icon(
-            Icons.bar_chart_outlined,
-            size: 14,
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          textStyle: const TextStyle(fontSize: 13),
+          minimumSize: const Size(80, 34),
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+            if (!enabled) return null;
+            if (states.contains(WidgetState.hovered) ||
+                states.contains(WidgetState.pressed)) {
+              return const Color.fromARGB(255, 221, 221, 221);
+            }
+            return null;
+          }),
+        ),
+        onPressed: enabled ? onPressed : null,
+        icon: Icon(
+          Icons.bar_chart_outlined,
+          size: 14,
+          color: enabled ? primaryTextColor : Colors.grey.shade600,
+        ),
+        label: Text(
+          'Accomplishment',
+          style: TextStyle(
             color: enabled ? primaryTextColor : Colors.grey.shade600,
-          ),
-          label: Text(
-            'Accomplishment',
-            style: TextStyle(
-              color: enabled ? primaryTextColor : Colors.grey.shade600,
-              fontSize: 10,
-            ),
+            fontSize: 10,
           ),
         ),
       ),
     );
   }
 }
+
+// ─────────────────────────────────────────────
+// ROADMAP ACCOMPLISHMENT DIALOG
+// ─────────────────────────────────────────────
 
 Future<bool?> showRoadmapAccomplishmentFormDialog(
   BuildContext context,
@@ -763,15 +750,14 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
     if (y is String) return int.tryParse(y);
     return null;
   }();
+
   if (startDateStr != null && endDateStr != null) {
     final DateTime? startDt = DateTime.tryParse(startDateStr);
     final DateTime? endDt = DateTime.tryParse(endDateStr);
     if (startDt != null && endDt != null) {
       startYear = deliverableYear ?? startDt.year;
       endYear = endDt.year;
-      if (endYear < startYear) {
-        endYear = startYear;
-      }
+      if (endYear < startYear) endYear = startYear;
     }
   }
 
@@ -806,8 +792,7 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
 
   final bool useYearly =
       startYear != null && endYear != null && endYear >= startYear;
-
-  final List<Map<String, dynamic>> periods = <Map<String, dynamic>>[];
+  final List<Map<String, dynamic>> periods = [];
   if (useYearly) {
     for (int y = startYear; y <= endYear; y++) {
       periods.add({'period': y.toString(), 'year': y});
@@ -821,7 +806,7 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
       final int totalPeriods = periods.length;
       final String headerText =
           useYearly
-              ? 'Accomplishment Form - Years ${startYear ?? ''} to ${endYear ?? ''}'
+              ? 'Accomplishment Form — ${startYear ?? ''} to ${endYear ?? ''}'
               : 'Accomplishment Form';
 
       return Dialog(
@@ -835,7 +820,6 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Scrollable Content
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -859,52 +843,35 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "KRA: ${deliverable['kra'] ?? 'N/A'}",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+
+                        // Info card
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "KRA: ${deliverable['kra'] ?? 'N/A'}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 20),
+
+                        // Tracking label
                         Row(
                           children: [
                             const Icon(Icons.bar_chart_outlined, size: 18),
                             const SizedBox(width: 8),
                             Text(
-                              useYearly
-                                  ? "Yealy KRA and Deliverable Tracking - $totalPeriods year(s)"
-                                  : "Yearly and Deliverable Tracking - $totalPeriods year(s)",
+                              "Yearly KRA & Deliverable Tracking — $totalPeriods year(s)",
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -918,6 +885,7 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                         ),
                         const SizedBox(height: 12),
 
+                        // Tracking table
                         Container(
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.black12),
@@ -925,7 +893,6 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                           ),
                           child: Column(
                             children: [
-                              // Headers
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8,
@@ -938,8 +905,8 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                                     topRight: Radius.circular(8),
                                   ),
                                 ),
-                                child: Row(
-                                  children: const [
+                                child: const Row(
+                                  children: [
                                     Expanded(
                                       flex: 2,
                                       child: Center(
@@ -949,7 +916,6 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                                         ),
                                       ),
                                     ),
-
                                     Expanded(
                                       flex: 2,
                                       child: Center(
@@ -959,7 +925,6 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                                         ),
                                       ),
                                     ),
-
                                     Expanded(
                                       flex: 2,
                                       child: Center(
@@ -1004,7 +969,7 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 PermissionWidget(
                   permission: AppPermissions.addKraRoadMapAccomplishment,
                   child: Row(
@@ -1030,15 +995,15 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                             context: context,
                             builder:
                                 (ctx) => AlertDialog(
-                                  title: Text("Confirm Save"),
-                                  content: Text(
+                                  title: const Text("Confirm Save"),
+                                  content: const Text(
                                     "Are you sure you want to save this data?",
                                   ),
                                   actions: [
                                     TextButton(
                                       onPressed:
                                           () => Navigator.of(ctx).pop(false),
-                                      child: Text(
+                                      child: const Text(
                                         "No",
                                         style: TextStyle(color: primaryColor),
                                       ),
@@ -1046,7 +1011,7 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                                     TextButton(
                                       onPressed:
                                           () => Navigator.of(ctx).pop(true),
-                                      child: Text(
+                                      child: const Text(
                                         "Yes",
                                         style: TextStyle(color: primaryColor),
                                       ),
@@ -1054,10 +1019,9 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                                   ],
                                 ),
                           );
-
                           if (shouldSave != true) return;
                           MotionToast.success(
-                            description: Text('Saved Successfully'),
+                            description: const Text('Saved Successfully'),
                             toastAlignment: Alignment.topCenter,
                           ).show(context);
                           await saveScorecardAccomplishmentData(
@@ -1066,7 +1030,7 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                           );
                           Navigator.of(context).pop(true);
                         },
-                        child: Text(
+                        child: const Text(
                           "Save Accomplishment",
                           style: TextStyle(color: Colors.white),
                         ),
@@ -1082,6 +1046,10 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
     },
   );
 }
+
+// ─────────────────────────────────────────────
+// KPI ACCOMPLISHMENT DIALOG
+// ─────────────────────────────────────────────
 
 Future<bool?> showKPIAccomplishmentFormDialog(
   BuildContext context,
@@ -1099,15 +1067,14 @@ Future<bool?> showKPIAccomplishmentFormDialog(
     if (y is String) return int.tryParse(y);
     return null;
   }();
+
   if (startDateStr != null && endDateStr != null) {
     final DateTime? startDt = DateTime.tryParse(startDateStr);
     final DateTime? endDt = DateTime.tryParse(endDateStr);
     if (startDt != null && endDt != null) {
       startYear = deliverableYear ?? startDt.year;
       endYear = endDt.year;
-      if (endYear < startYear) {
-        endYear = startYear;
-      }
+      if (endYear < startYear) endYear = startYear;
     }
   }
 
@@ -1142,8 +1109,7 @@ Future<bool?> showKPIAccomplishmentFormDialog(
 
   final bool useYearly =
       startYear != null && endYear != null && endYear >= startYear;
-
-  final List<Map<String, dynamic>> periods = <Map<String, dynamic>>[];
+  final List<Map<String, dynamic>> periods = [];
   if (useYearly) {
     for (int y = startYear; y <= endYear; y++) {
       periods.add({'period': y.toString(), 'year': y});
@@ -1157,7 +1123,7 @@ Future<bool?> showKPIAccomplishmentFormDialog(
       final int totalPeriods = periods.length;
       final String headerText =
           useYearly
-              ? 'Accomplishment Form - Years ${startYear ?? ''} to ${endYear ?? ''}'
+              ? 'Accomplishment Form — ${startYear ?? ''} to ${endYear ?? ''}'
               : 'Accomplishment Form';
 
       return Dialog(
@@ -1171,7 +1137,6 @@ Future<bool?> showKPIAccomplishmentFormDialog(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Scrollable Content
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -1195,74 +1160,44 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "KPI: ${deliverable['kpiDescription'] ?? 'N/A'}",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      softWrap: true,
-                                      overflow:
-                                          TextOverflow
-                                              .visible, // ensures wrapping
-                                    ),
-                                  ),
-                                ],
+
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "KPI: ${deliverable['kpiDescription'] ?? 'N/A'}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      "Target: ${deliverable['target'] ?? 'No Target'}",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      softWrap: true,
-                                      overflow: TextOverflow.visible,
-                                    ),
-                                  ),
-                                ],
+                              softWrap: true,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Target: ${deliverable['target'] ?? 'No Target'}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
                               ),
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      "Baseline: ${deliverable['baseLine'] ?? 'No Baseline'}",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      softWrap: true,
-                                      overflow: TextOverflow.visible,
-                                    ),
-                                  ),
-                                ],
+                              softWrap: true,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              "Baseline: ${deliverable['baseLine'] ?? 'No Baseline'}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
+                              softWrap: true,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 20),
+
+                        // Tracking label
                         Row(
                           children: [
                             const Icon(Icons.bar_chart_outlined, size: 18),
                             const SizedBox(width: 8),
                             Text(
-                              useYearly
-                                  ? "Yealy KPI Tracking - $totalPeriods year(s)"
-                                  : "Yearly KPI Tracking - $totalPeriods year(s)",
+                              "Yearly KPI Tracking — $totalPeriods year(s)",
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1275,6 +1210,8 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                           ],
                         ),
                         const SizedBox(height: 12),
+
+                        // Tracking table
                         Container(
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.black12),
@@ -1282,7 +1219,6 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                           ),
                           child: Column(
                             children: [
-                              // Headers
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8,
@@ -1295,8 +1231,8 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                     topRight: Radius.circular(8),
                                   ),
                                 ),
-                                child: Row(
-                                  children: const [
+                                child: const Row(
+                                  children: [
                                     Expanded(
                                       flex: 2,
                                       child: Center(
@@ -1306,7 +1242,6 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                         ),
                                       ),
                                     ),
-
                                     Expanded(
                                       flex: 2,
                                       child: Center(
@@ -1316,7 +1251,6 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                         ),
                                       ),
                                     ),
-
                                     Expanded(
                                       flex: 2,
                                       child: Center(
@@ -1361,7 +1295,7 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 PermissionWidget(
                   permission: AppPermissions.addKraRoadMapKpiAccomplishment,
                   child: Row(
@@ -1387,15 +1321,15 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                             context: context,
                             builder:
                                 (ctx) => AlertDialog(
-                                  title: Text("Confirm Save"),
-                                  content: Text(
+                                  title: const Text("Confirm Save"),
+                                  content: const Text(
                                     "Are you sure you want to save this data?",
                                   ),
                                   actions: [
                                     TextButton(
                                       onPressed:
                                           () => Navigator.of(ctx).pop(false),
-                                      child: Text(
+                                      child: const Text(
                                         "No",
                                         style: TextStyle(color: primaryColor),
                                       ),
@@ -1403,7 +1337,7 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                     TextButton(
                                       onPressed:
                                           () => Navigator.of(ctx).pop(true),
-                                      child: Text(
+                                      child: const Text(
                                         "Yes",
                                         style: TextStyle(color: primaryColor),
                                       ),
@@ -1411,20 +1345,18 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                   ],
                                 ),
                           );
-
                           if (shouldSave != true) return;
                           MotionToast.success(
-                            description: Text('Saved Successfully'),
+                            description: const Text('Saved Successfully'),
                             toastAlignment: Alignment.topCenter,
                           ).show(context);
                           await saveKPIAccomplishmentData(
                             deliverable['id'],
                             userId,
                           );
-
                           Navigator.of(context).pop(true);
                         },
-                        child: Text(
+                        child: const Text(
                           "Save Accomplishment",
                           style: TextStyle(color: Colors.white),
                         ),

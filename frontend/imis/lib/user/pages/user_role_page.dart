@@ -926,6 +926,49 @@ class UserRolePageState extends State<UserRolePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Header row (desktop only)
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Name",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 4,
+                              child: Text(
+                                "Roles",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
                     Expanded(
                       child: ListView.separated(
                         itemCount:
@@ -939,7 +982,7 @@ class UserRolePageState extends State<UserRolePage> {
                         separatorBuilder:
                             (context, index) => Divider(
                               height: 1,
-                              color: Colors.grey.withOpacity(0.2),
+                              color: Colors.grey.withValues(alpha: 0.2),
                             ),
                         itemBuilder: (context, index) {
                           final filteredUsers =
@@ -975,121 +1018,131 @@ class UserRolePageState extends State<UserRolePage> {
                                     return matchedRole.name;
                                   })
                                   .toList();
-                          if (!isMobile) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 14,
-                                horizontal: 12,
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 38,
-                                    height: 38,
-                                    decoration: BoxDecoration(
-                                      color: primaryColor.withOpacity(0.1),
-                                      shape: BoxShape.circle,
+
+                          final initials =
+                              user.fullName.trim().isNotEmpty
+                                  ? user.fullName
+                                      .trim()
+                                      .split(' ')
+                                      .map((e) => e[0])
+                                      .take(2)
+                                      .join()
+                                      .toUpperCase()
+                                  : '?';
+
+                          final itemNumber =
+                              ((_currentPage - 1) * _pageSize) + index + 1;
+
+                          Widget buildRoleChips() => Wrap(
+                            spacing: 5,
+                            runSpacing: 4,
+                            children:
+                                roleChips.map((roleName) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
                                     ),
-                                    child: Center(
-                                      child: Text(
-                                        user.fullName
-                                            .trim()
-                                            .split(' ')
-                                            .map((e) => e[0])
-                                            .take(2)
-                                            .join()
-                                            .toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: primaryColor,
-                                        ),
+                                    decoration: BoxDecoration(
+                                      color: primaryColor.withValues(
+                                        alpha: 0.07,
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      roleName,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: primaryColor,
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
+                                  );
+                                }).toList(),
+                          );
+
+                          if (!isMobile) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                                horizontal: 4,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(flex: 1, child: Text("$itemNumber")),
 
                                   Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                    flex: 3,
+                                    child: Row(
                                       children: [
-                                        Text(
-                                          user.fullName,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: primaryColor.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              initials,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: primaryColor,
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                        const SizedBox(height: 5),
-                                        Wrap(
-                                          spacing: 5,
-                                          runSpacing: 4,
-                                          children:
-                                              roleChips.map((roleName) {
-                                                return Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 3,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: primaryColor
-                                                        .withValues(
-                                                          alpha: 0.07,
-                                                        ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          4,
-                                                        ),
-                                                  ),
-                                                  child: Text(
-                                                    roleName,
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: primaryColor,
-                                                    ),
-                                                  ),
-                                                );
-                                              }).toList(),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            user.fullName,
+
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
 
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.edit_outlined,
-                                          size: 18,
+                                  Expanded(flex: 4, child: buildRoleChips()),
+
+                                  Expanded(
+                                    flex: 2,
+                                    child: Row(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            size: 18,
+                                          ),
+                                          onPressed:
+                                              () => showFormDialog(
+                                                id: user.id,
+                                                selectedUserId: user.id,
+                                              ),
                                         ),
-                                        onPressed:
-                                            () => showFormDialog(
-                                              id: user.id,
-                                              selectedUserId: user.id,
-                                            ),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          CupertinoIcons.delete_simple,
-                                          color: Colors.redAccent,
-                                          size: 18,
+                                        IconButton(
+                                          icon: const Icon(
+                                            CupertinoIcons.delete_simple,
+                                            color: Colors.redAccent,
+                                            size: 18,
+                                          ),
+                                          onPressed:
+                                              () => showDeleteDialog(user.id),
                                         ),
-                                        onPressed:
-                                            () => showDeleteDialog(user.id),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                             );
                           }
 
+                          // Mobile layout
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                               vertical: 14,
@@ -1098,22 +1151,17 @@ class UserRolePageState extends State<UserRolePage> {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
+                                // Avatar
                                 Container(
                                   width: 38,
                                   height: 38,
                                   decoration: BoxDecoration(
-                                    color: primaryColor.withOpacity(0.1),
+                                    color: primaryColor.withValues(alpha: 0.1),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(
                                     child: Text(
-                                      user.fullName
-                                          .trim()
-                                          .split(' ')
-                                          .map((e) => e[0])
-                                          .take(2)
-                                          .join()
-                                          .toUpperCase(),
+                                      initials,
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
@@ -1137,34 +1185,7 @@ class UserRolePageState extends State<UserRolePage> {
                                         ),
                                       ),
                                       const SizedBox(height: 5),
-                                      Wrap(
-                                        spacing: 5,
-                                        runSpacing: 4,
-                                        children:
-                                            roleChips.map((roleName) {
-                                              return Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 3,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: primaryColor
-                                                      .withValues(alpha: 0.07),
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  roleName,
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: primaryColor,
-                                                  ),
-                                                ),
-                                              );
-                                            }).toList(),
-                                      ),
+                                      buildRoleChips(),
                                     ],
                                   ),
                                 ),
@@ -1205,7 +1226,7 @@ class UserRolePageState extends State<UserRolePage> {
                                           value: 'delete',
                                           child: Row(
                                             children: [
-                                              Icon(
+                                              const Icon(
                                                 CupertinoIcons.delete_simple,
                                                 color: Colors.redAccent,
                                                 size: 18,

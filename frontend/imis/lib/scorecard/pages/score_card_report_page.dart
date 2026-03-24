@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
@@ -96,214 +97,238 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
         backgroundColor: mainBgColor,
-        title: Text('Scorecard Report'),
+        title: const Text('Scorecard Report'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // PopupMenuButton<int>(
-                    //   color: mainBgColor,
-                    //   offset: Offset(0, 30),
-                    //   onCanceled: () {
-                    //     setState(() {
-                    //       isMenuOpenYear = false;
-                    //     });
-                    //   },
-                    //   onOpened: () {
-                    //     setState(() {
-                    //       isMenuOpenYear = true;
-                    //     });
-                    //   },
-                    //   onSelected: (int value) async {
-                    //     setState(() {
-                    //       selectedYear = (value == -1) ? null : value;
-                    //       selectedYearText =
-                    //           (value == -1) ? null : value.toString();
-                    //       isMenuOpenYear = false;
-                    //       isAllYearsSelected = (value == -1);
-                    //     });
-                    //     try{
-                    //       final ro
-                    //     }
-                    //   },
-                    // ),
-                    SizedBox(width: 15),
-                  ],
-                ),
-              ],
-            ),
             gap16px,
             Expanded(
-              child: Column(
-                children: [
-                  Container(
-                    color: secondaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text('#', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text('Period', style: TextStyle(color: grey)),
-                        ),
-
-                        Expanded(
-                          flex: 1,
-                          child: Text('Actions', style: TextStyle(color: grey)),
-                        ),
-                      ],
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
                     ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: Column(
-                        children:
-                            filteredList
-                                .asMap()
-                                .map((index, period) {
-                                  int itemNumber =
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header row (desktop only)
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                '#',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 4,
+                              child: Text(
+                                'Period',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                'Actions',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : ListView.separated(
+                                itemCount: filteredList.length,
+                                separatorBuilder:
+                                    (context, index) => Divider(
+                                      height: 1,
+                                      color: Colors.grey.withOpacity(0.2),
+                                    ),
+                                itemBuilder: (context, index) {
+                                  final period = filteredList[index];
+                                  final itemNumber =
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
                                       1;
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                        ),
+                                  final periodText =
+                                      '${LongDateOnlyConverter().toJson(period.startYear)} - ${LongDateOnlyConverter().toJson(period.endYear)}';
+
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                        horizontal: 4,
                                       ),
                                       child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
                                         children: [
+                                          // #
                                           Expanded(
                                             flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                itemNumber.toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
+                                            child: Text('$itemNumber'),
                                           ),
+
+                                          // Period
                                           Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                '${LongDateOnlyConverter().toJson(period.startYear)} - ${LongDateOnlyConverter().toJson(period.endYear)}',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                            flex: 4,
+                                            child: Text(
+                                              periodText,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
 
+                                          // Actions
                                           Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  Tooltip(
-                                                    message: 'Print Preview',
-                                                    child: IconButton(
-                                                      icon: const Icon(
-                                                        Icons
-                                                            .description_outlined,
-                                                      ),
-                                                      onPressed: () async {
-                                                        final kraRoadmapPeriod =
-                                                            period.id
-                                                                .toString();
-
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder:
-                                                                (
-                                                                  context,
-                                                                ) => ProcessCoreSupportPdf(
-                                                                  processCoreId:
-                                                                      kraRoadmapPeriod,
-                                                                ),
-                                                          ),
-                                                        );
-                                                      },
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Tooltip(
+                                                  message: 'Print Preview',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons
+                                                          .description_outlined,
+                                                      size: 18,
+                                                      color: Colors.blueAccent,
                                                     ),
+                                                    onPressed: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (
+                                                                _,
+                                                              ) => ProcessCoreSupportPdf(
+                                                                processCoreId:
+                                                                    period.id
+                                                                        .toString(),
+                                                              ),
+                                                        ),
+                                                      );
+                                                    },
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],
                                       ),
+                                    );
+                                  }
+
+                                  // Mobile layout
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                      horizontal: 4,
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                '$itemNumber. $periodText',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.description_outlined,
+                                            size: 18,
+                                            color: Colors.blueAccent,
+                                          ),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) =>
+                                                        ProcessCoreSupportPdf(
+                                                          processCoreId:
+                                                              period.id
+                                                                  .toString(),
+                                                        ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   );
-                                })
-                                .values
-                                .toList(),
+                                },
+                              ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) => fetchScoredcardReport(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.all(10),
-              color: secondaryColor,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PaginationInfo(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                  ),
-                  PaginationControls(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                    isLoading: _isLoading,
-                    onPageChanged: (page) => fetchScoredcardReport(page: page),
-                  ),
-                  Container(width: 60),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

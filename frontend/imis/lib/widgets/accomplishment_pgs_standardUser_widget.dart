@@ -9,13 +9,10 @@ import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
-import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/auth_util.dart';
-import 'package:imis/widgets/accomplishment_auditor_widget.dart';
+import 'package:imis/widgets/accomplishment_pgs_auditor_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:universal_html/html.dart' as html;
-import 'package:open_file/open_file.dart';
 
 import '../constant/permissions.dart';
 import '../utils/permission_service.dart';
@@ -495,144 +492,306 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
           ),
 
           SizedBox(width: 20),
+
+          // Expanded(
+          //   flex: 2,
+          //   child: Container(
+          //     margin: const EdgeInsets.symmetric(horizontal: 6),
+          //     child:
+          //         widget.row.attachmentPath != null ||
+          //                 webImage != null ||
+          //                 mobileImage != null
+          //             ? Row(
+          //               children: [
+          //                 Expanded(
+          //                   child: GestureDetector(
+          //                     onTap: () async {
+          //                       final loggedUser =
+          //                           await AuthUtil.processTokenValidity(
+          //                             dio,
+          //                             context,
+          //                           );
+          //                       final token = loggedUser?.accessToken;
+          //                       if (token == null) return;
+
+          //                       final fileNameToUse =
+          //                           fileName ??
+          //                           widget.row.attachmentPath
+          //                               ?.split("/")
+          //                               .last ??
+          //                           "download.bin";
+
+          //                       if (kIsWeb) {
+          //                         Uint8List? bytes;
+          //                         if (webImage != null) {
+          //                           bytes = webImage!;
+          //                         } else if (widget.row.accomplishmentId !=
+          //                             null) {
+          //                           final downloadUrl =
+          //                               "${ApiEndpoint.baseUrl}/${widget.row.accomplishmentId}/download";
+          //                           final response = await dio.get<List<int>>(
+          //                             downloadUrl,
+          //                             options: Options(
+          //                               responseType: ResponseType.bytes,
+          //                               headers: {
+          //                                 "Authorization": "Bearer $token",
+          //                               },
+          //                             ),
+          //                           );
+          //                           bytes = Uint8List.fromList(response.data!);
+          //                         }
+
+          //                         if (bytes != null) {
+          //                           final blob = html.Blob([bytes]);
+          //                           final url = html
+          //                               .Url.createObjectUrlFromBlob(blob);
+          //                           final anchor =
+          //                               html.AnchorElement(href: url)
+          //                                 ..setAttribute(
+          //                                   "download",
+          //                                   fileNameToUse,
+          //                                 )
+          //                                 ..click();
+          //                           html.Url.revokeObjectUrl(url);
+          //                         }
+          //                       } else {
+          //                         File? fileToOpen;
+          //                         if (mobileImage != null) {
+          //                           fileToOpen = File(mobileImage!.path);
+          //                         } else if (widget.row.accomplishmentId !=
+          //                             null) {
+          //                           final downloadUrl =
+          //                               "${ApiEndpoint.baseUrl}/${widget.row.accomplishmentId}/download";
+          //                           final tempDir = Directory.systemTemp;
+          //                           final tempFile = File(
+          //                             '${tempDir.path}/$fileNameToUse',
+          //                           );
+
+          //                           await dio.download(
+          //                             downloadUrl,
+          //                             tempFile.path,
+          //                             options: Options(
+          //                               headers: {
+          //                                 "Authorization": "Bearer $token",
+          //                               },
+          //                             ),
+          //                           );
+
+          //                           if (await tempFile.exists()) {
+          //                             fileToOpen = tempFile;
+          //                           }
+          //                         }
+
+          //                         if (fileToOpen != null) {
+          //                           await OpenFile.open(fileToOpen.path);
+          //                         }
+          //                       }
+          //                     },
+          //                     child: Text(
+          //                       fileName ??
+          //                           widget.row.attachmentPath
+          //                               ?.split("/")
+          //                               .last ??
+          //                           "Attachment",
+          //                       style: const TextStyle(
+          //                         color: Colors.blue,
+          //                         decoration: TextDecoration.underline,
+          //                       ),
+          //                     ),
+          //                   ),
+          //                 ),
+          //                 IconButton(
+          //                   icon: const Icon(Icons.delete),
+          //                   onPressed: () {
+          //                     setState(() {
+          //                       if (kIsWeb) webImage = null;
+          //                       if (!kIsWeb) mobileImage = null;
+          //                       fileName = null;
+          //                       widget.row.attachmentPath = null;
+          //                       widget.row.attachmentBytes = null;
+          //                     });
+          //                   },
+          //                   tooltip: "Delete",
+          //                   color: grey,
+          //                 ),
+          //               ],
+          //             )
+          //             : Column(
+          //               children: [
+          //                 IconButton(
+          //                   icon: const Icon(
+          //                     Icons.upload_file_outlined,
+          //                     color: Colors.blue,
+          //                   ),
+          //                   onPressed: canEdit ? pickFile : null,
+          //                 ),
+          //                 Text(
+          //                   'Upload 1 supported file: PDF or image: Max 10 MB',
+          //                   style: TextStyle(color: grey, fontSize: 10),
+          //                 ),
+          //               ],
+          //             ),
+          //   ),
+          // ),
           Expanded(
             flex: 2,
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 6),
-              child:
-                  widget.row.attachmentPath != null ||
-                          webImage != null ||
-                          mobileImage != null
-                      ? Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () async {
-                                final loggedUser =
-                                    await AuthUtil.processTokenValidity(
-                                      dio,
-                                      context,
-                                    );
-                                final token = loggedUser?.accessToken;
-                                if (token == null) return;
+              child: Builder(
+                builder: (context) {
+                  final hasAttachment =
+                      widget.row.attachmentPath != null &&
+                      widget.row.attachmentPath!.isNotEmpty &&
+                      widget.row.accomplishmentId != null;
 
-                                final fileNameToUse =
-                                    fileName ??
-                                    widget.row.attachmentPath
-                                        ?.split("/")
-                                        .last ??
-                                    "download.bin";
+                  final previewUrl =
+                      hasAttachment
+                          ? 'https://localhost:7273/${widget.row.accomplishmentId}/preview'
+                          : null;
 
-                                if (kIsWeb) {
-                                  Uint8List? bytes;
-                                  if (webImage != null) {
-                                    bytes = webImage!;
-                                  } else if (widget.row.accomplishmentId !=
-                                      null) {
-                                    final downloadUrl =
-                                        "${ApiEndpoint.baseUrl}/${widget.row.accomplishmentId}/download";
-                                    final response = await dio.get<List<int>>(
-                                      downloadUrl,
-                                      options: Options(
-                                        responseType: ResponseType.bytes,
-                                        headers: {
-                                          "Authorization": "Bearer $token",
-                                        },
-                                      ),
-                                    );
-                                    bytes = Uint8List.fromList(response.data!);
-                                  }
+                  final fileNameToUse =
+                      fileName ??
+                      widget.row.attachmentPath?.split("/").last ??
+                      "Attachment";
 
-                                  if (bytes != null) {
-                                    final blob = html.Blob([bytes]);
-                                    final url = html
-                                        .Url.createObjectUrlFromBlob(blob);
-                                    final anchor =
-                                        html.AnchorElement(href: url)
-                                          ..setAttribute(
-                                            "download",
-                                            fileNameToUse,
-                                          )
-                                          ..click();
-                                    html.Url.revokeObjectUrl(url);
-                                  }
-                                } else {
-                                  File? fileToOpen;
-                                  if (mobileImage != null) {
-                                    fileToOpen = File(mobileImage!.path);
-                                  } else if (widget.row.accomplishmentId !=
-                                      null) {
-                                    final downloadUrl =
-                                        "${ApiEndpoint.baseUrl}/${widget.row.accomplishmentId}/download";
-                                    final tempDir = Directory.systemTemp;
-                                    final tempFile = File(
-                                      '${tempDir.path}/$fileNameToUse',
-                                    );
+                  final isPdf = fileNameToUse.toLowerCase().endsWith('.pdf');
+                  final isImage = !isPdf;
 
-                                    await dio.download(
-                                      downloadUrl,
-                                      tempFile.path,
-                                      options: Options(
-                                        headers: {
-                                          "Authorization": "Bearer $token",
-                                        },
-                                      ),
-                                    );
-
-                                    if (await tempFile.exists()) {
-                                      fileToOpen = tempFile;
-                                    }
-                                  }
-
-                                  if (fileToOpen != null) {
-                                    await OpenFile.open(fileToOpen.path);
-                                  }
-                                }
-                              },
-                              child: Text(
-                                fileName ??
-                                    widget.row.attachmentPath
-                                        ?.split("/")
-                                        .last ??
-                                    "Attachment",
-                                style: const TextStyle(
-                                  color: Colors.blue,
-                                  decoration: TextDecoration.underline,
+                  if (previewUrl == null) {
+                    return Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.upload_file_outlined,
+                            color: Colors.blue,
+                          ),
+                          onPressed: canEdit ? pickFile : null,
+                        ),
+                        Text(
+                          'Upload 1 supported file: PDF or image (Max 10 MB)',
+                          style: TextStyle(color: grey, fontSize: 10),
+                        ),
+                      ],
+                    );
+                  }
+                  if (isImage) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder:
+                                        (_) => Dialog(
+                                          child: InteractiveViewer(
+                                            child: Image.network(
+                                              previewUrl,
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
+                                  );
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Image.network(
+                                    previewUrl,
+                                    height: 80,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        height: 80,
+                                        color: Colors.grey.shade200,
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.image_not_supported,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              setState(() {
-                                if (kIsWeb) webImage = null;
-                                if (!kIsWeb) mobileImage = null;
-                                fileName = null;
-                                widget.row.attachmentPath = null;
-                                widget.row.attachmentBytes = null;
-                              });
-                            },
-                            tooltip: "Delete",
-                            color: grey,
-                          ),
-                        ],
-                      )
-                      : Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.upload_file_outlined,
-                              color: Colors.blue,
+
+                            const SizedBox(width: 6),
+
+                            // ================= DELETE BUTTON =================
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  webImage = null;
+                                  mobileImage = null;
+                                  fileName = null;
+                                  widget.row.attachmentPath = null;
+                                  widget.row.attachmentBytes = null;
+                                  widget.row.accomplishmentId = null;
+                                });
+                              },
                             ),
-                            onPressed: canEdit ? pickFile : null,
+                          ],
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Text(
+                          fileNameToUse,
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
                           ),
-                          Text(
-                            'Upload 1 supported file: PDF or image: Max 10 MB',
-                            style: TextStyle(color: grey, fontSize: 10),
+                        ),
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      const Icon(Icons.picture_as_pdf, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            final url =
+                                'https://localhost:7273/${widget.row.accomplishmentId}/preview';
+                            html.window.open(url, "_blank");
+                          },
+                          child: Text(
+                            fileNameToUse,
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
+                        ),
                       ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.grey),
+                        onPressed: () {
+                          setState(() {
+                            webImage = null;
+                            mobileImage = null;
+                            fileName = null;
+                            widget.row.attachmentPath = null;
+                            widget.row.attachmentBytes = null;
+                            widget.row.accomplishmentId = null;
+                          });
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
           SizedBox(width: 20),
