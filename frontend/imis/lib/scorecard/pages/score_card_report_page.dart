@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
@@ -104,7 +103,10 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
       backgroundColor: mainBgColor,
       appBar: AppBar(
         backgroundColor: mainBgColor,
-        title: const Text('Scorecard Report'),
+        title: const Text(
+          'Scorecard Report',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -128,7 +130,6 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header row (desktop only)
                     if (!isMobile)
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -177,7 +178,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                 separatorBuilder:
                                     (context, index) => Divider(
                                       height: 1,
-                                      color: Colors.grey.withOpacity(0.2),
+                                      color: Colors.grey.withValues(alpha: 0.2),
                                     ),
                                 itemBuilder: (context, index) {
                                   final period = filteredList[index];
@@ -228,18 +229,9 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                                       color: Colors.blueAccent,
                                                     ),
                                                     onPressed: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (
-                                                                _,
-                                                              ) => ProcessCoreSupportPdf(
-                                                                processCoreId:
-                                                                    period.id
-                                                                        .toString(),
-                                                              ),
-                                                        ),
+                                                      openProcessCoreSupport(
+                                                        period.id.toString(),
+                                                        'Process(Core & Support)',
                                                       );
                                                     },
                                                   ),
@@ -252,7 +244,6 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                     );
                                   }
 
-                                  // Mobile layout
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 14,
@@ -284,17 +275,9 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                             color: Colors.blueAccent,
                                           ),
                                           onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (_) =>
-                                                        ProcessCoreSupportPdf(
-                                                          processCoreId:
-                                                              period.id
-                                                                  .toString(),
-                                                        ),
-                                              ),
+                                            openProcessCoreSupport(
+                                              period.id.toString(),
+                                              'Process(Core & Support)',
                                             );
                                           },
                                         ),

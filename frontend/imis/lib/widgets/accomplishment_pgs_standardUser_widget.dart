@@ -1,4 +1,4 @@
-// ignore_for_file: unused_local_variable, use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, file_names
 
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -13,7 +13,6 @@ import 'package:imis/widgets/accomplishment_pgs_auditor_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:universal_html/html.dart' as html;
-
 import '../constant/permissions.dart';
 import '../utils/permission_service.dart';
 
@@ -493,146 +492,6 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
 
           SizedBox(width: 20),
 
-          // Expanded(
-          //   flex: 2,
-          //   child: Container(
-          //     margin: const EdgeInsets.symmetric(horizontal: 6),
-          //     child:
-          //         widget.row.attachmentPath != null ||
-          //                 webImage != null ||
-          //                 mobileImage != null
-          //             ? Row(
-          //               children: [
-          //                 Expanded(
-          //                   child: GestureDetector(
-          //                     onTap: () async {
-          //                       final loggedUser =
-          //                           await AuthUtil.processTokenValidity(
-          //                             dio,
-          //                             context,
-          //                           );
-          //                       final token = loggedUser?.accessToken;
-          //                       if (token == null) return;
-
-          //                       final fileNameToUse =
-          //                           fileName ??
-          //                           widget.row.attachmentPath
-          //                               ?.split("/")
-          //                               .last ??
-          //                           "download.bin";
-
-          //                       if (kIsWeb) {
-          //                         Uint8List? bytes;
-          //                         if (webImage != null) {
-          //                           bytes = webImage!;
-          //                         } else if (widget.row.accomplishmentId !=
-          //                             null) {
-          //                           final downloadUrl =
-          //                               "${ApiEndpoint.baseUrl}/${widget.row.accomplishmentId}/download";
-          //                           final response = await dio.get<List<int>>(
-          //                             downloadUrl,
-          //                             options: Options(
-          //                               responseType: ResponseType.bytes,
-          //                               headers: {
-          //                                 "Authorization": "Bearer $token",
-          //                               },
-          //                             ),
-          //                           );
-          //                           bytes = Uint8List.fromList(response.data!);
-          //                         }
-
-          //                         if (bytes != null) {
-          //                           final blob = html.Blob([bytes]);
-          //                           final url = html
-          //                               .Url.createObjectUrlFromBlob(blob);
-          //                           final anchor =
-          //                               html.AnchorElement(href: url)
-          //                                 ..setAttribute(
-          //                                   "download",
-          //                                   fileNameToUse,
-          //                                 )
-          //                                 ..click();
-          //                           html.Url.revokeObjectUrl(url);
-          //                         }
-          //                       } else {
-          //                         File? fileToOpen;
-          //                         if (mobileImage != null) {
-          //                           fileToOpen = File(mobileImage!.path);
-          //                         } else if (widget.row.accomplishmentId !=
-          //                             null) {
-          //                           final downloadUrl =
-          //                               "${ApiEndpoint.baseUrl}/${widget.row.accomplishmentId}/download";
-          //                           final tempDir = Directory.systemTemp;
-          //                           final tempFile = File(
-          //                             '${tempDir.path}/$fileNameToUse',
-          //                           );
-
-          //                           await dio.download(
-          //                             downloadUrl,
-          //                             tempFile.path,
-          //                             options: Options(
-          //                               headers: {
-          //                                 "Authorization": "Bearer $token",
-          //                               },
-          //                             ),
-          //                           );
-
-          //                           if (await tempFile.exists()) {
-          //                             fileToOpen = tempFile;
-          //                           }
-          //                         }
-
-          //                         if (fileToOpen != null) {
-          //                           await OpenFile.open(fileToOpen.path);
-          //                         }
-          //                       }
-          //                     },
-          //                     child: Text(
-          //                       fileName ??
-          //                           widget.row.attachmentPath
-          //                               ?.split("/")
-          //                               .last ??
-          //                           "Attachment",
-          //                       style: const TextStyle(
-          //                         color: Colors.blue,
-          //                         decoration: TextDecoration.underline,
-          //                       ),
-          //                     ),
-          //                   ),
-          //                 ),
-          //                 IconButton(
-          //                   icon: const Icon(Icons.delete),
-          //                   onPressed: () {
-          //                     setState(() {
-          //                       if (kIsWeb) webImage = null;
-          //                       if (!kIsWeb) mobileImage = null;
-          //                       fileName = null;
-          //                       widget.row.attachmentPath = null;
-          //                       widget.row.attachmentBytes = null;
-          //                     });
-          //                   },
-          //                   tooltip: "Delete",
-          //                   color: grey,
-          //                 ),
-          //               ],
-          //             )
-          //             : Column(
-          //               children: [
-          //                 IconButton(
-          //                   icon: const Icon(
-          //                     Icons.upload_file_outlined,
-          //                     color: Colors.blue,
-          //                   ),
-          //                   onPressed: canEdit ? pickFile : null,
-          //                 ),
-          //                 Text(
-          //                   'Upload 1 supported file: PDF or image: Max 10 MB',
-          //                   style: TextStyle(color: grey, fontSize: 10),
-          //                 ),
-          //               ],
-          //             ),
-          //   ),
-          // ),
           Expanded(
             flex: 2,
             child: Container(
@@ -722,7 +581,6 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
 
                             const SizedBox(width: 6),
 
-                            // ================= DELETE BUTTON =================
                             IconButton(
                               icon: const Icon(
                                 Icons.delete,

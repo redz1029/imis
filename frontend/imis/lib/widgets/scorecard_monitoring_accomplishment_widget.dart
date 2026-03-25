@@ -8,11 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:dio/dio.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/auth_util.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:open_file/open_file.dart';
 import 'package:universal_html/html.dart' as html;
 import '../performance_governance_system/enum/pgs_status.dart';
 import '../scorecard/services/score_card_monitoring_services.dart';
@@ -36,7 +34,8 @@ class ScorecardMonitoringRowData {
   String? attachmentPath;
   Uint8List? attachmentBytes;
   int? accomplishmentId;
-
+  bool? isKpi;
+  String? fileName;
   ScorecardMonitoringRowData({
     required this.percentageController,
     required this.status,
@@ -44,6 +43,8 @@ class ScorecardMonitoringRowData {
     this.attachmentBytes,
     this.accomplishmentId,
     required this.auditorRemarksController,
+    this.isKpi,
+    this.fileName,
   });
 }
 
@@ -76,10 +77,9 @@ class _ScorecardAccomplishmentRowWidgetState
   Uint8List? webImage;
   String? fileName;
   bool isLoading = false;
+
   Future<void> pickFile() async {
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -101,33 +101,26 @@ class _ScorecardAccomplishmentRowWidgetState
             toastDuration: const Duration(seconds: 3),
             toastAlignment: Alignment.topCenter,
           ).show(context);
-
-          setState(() {
-            isLoading = false;
-          });
+          setState(() => isLoading = false);
           return;
         }
 
+        final row =
+            achievementsList[widget.deliverableId]!.rows[widget.periodIndex];
+
         if (kIsWeb) {
-          Uint8List? bytes = file.bytes;
           setState(() {
-            webImage = bytes;
-            fileName = file.name;
-            final row =
-                achievementsList[widget.deliverableId]!.rows[widget
-                    .periodIndex];
+            webImage = file.bytes;
+            row.fileName = file.name;
             row.attachmentPath = file.name;
-            row.attachmentBytes = bytes;
+            row.attachmentBytes = file.bytes;
           });
         } else {
           File pickedFile = File(file.path!);
           final bytes = await pickedFile.readAsBytes();
           setState(() {
             mobileImage = pickedFile;
-            fileName = file.name;
-            final row =
-                achievementsList[widget.deliverableId]!.rows[widget
-                    .periodIndex];
+            row.fileName = file.name;
             row.attachmentPath = pickedFile.path;
             row.attachmentBytes = bytes;
           });
@@ -136,9 +129,7 @@ class _ScorecardAccomplishmentRowWidgetState
     } catch (e) {
       debugPrint("File picking failed: $e");
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
   }
 
@@ -230,140 +221,233 @@ class _ScorecardAccomplishmentRowWidgetState
           ),
 
           SizedBox(width: 20),
+
           Expanded(
             flex: 2,
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 6),
-              child:
-                  row.attachmentPath != null ||
-                          webImage != null ||
-                          mobileImage != null
-                      ? Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () async {
-                                final loggedUser =
-                                    await AuthUtil.processTokenValidity(
-                                      dio,
-                                      context,
-                                    );
-                                final token = loggedUser?.accessToken;
-                                if (token == null) return;
+              child: Builder(
+                builder: (context) {
+                  final row =
+                      achievementsList[widget.deliverableId]!.rows[widget
+                          .periodIndex];
 
-                                final fileNameToUse =
-                                    fileName ??
-                                    row.attachmentPath?.split("/").last ??
-                                    "download.bin";
+                  final hasAttachment =
+                      (row.accomplishmentId != null &&
+                          row.attachmentPath != null &&
+                          row.attachmentPath!.isNotEmpty) ||
+                      row.attachmentBytes != null;
+                  String? getPreviewUrl() {
+                    if (row.accomplishmentId == null) return null;
+                    if (row.isKpi == true) {
+                      return "${ApiEndpoint.baseUrl}/kraroadmapkpi-accomplishment/${row.accomplishmentId}/preview";
+                    } else {
+                      return "${ApiEndpoint.baseUrl}/kraroadmap-accomplishment/${row.accomplishmentId}/preview";
+                    }
+                  }
 
-                                if (kIsWeb) {
-                                  Uint8List? bytes;
+                  final previewUrl = getPreviewUrl();
 
-                                  if (webImage != null) {
-                                    bytes = webImage!;
-                                  } else if (row.accomplishmentId != null) {
-                                    final downloadUrl =
-                                        "${ApiEndpoint.baseUrl}/${row.accomplishmentId}/download";
-                                    final response = await dio.get<List<int>>(
-                                      downloadUrl,
-                                      options: Options(
-                                        responseType: ResponseType.bytes,
-                                        headers: {
-                                          "Authorization": "Bearer $token",
-                                        },
-                                      ),
-                                    );
-                                    bytes = Uint8List.fromList(response.data!);
-                                  }
+                  final fileNameToUse =
+                      row.fileName ??
+                      row.attachmentPath?.split("/").last ??
+                      "Attachment";
 
-                                  if (bytes != null) {
-                                    final blob = html.Blob([bytes]);
-                                    final url = html
-                                        .Url.createObjectUrlFromBlob(blob);
-                                    final _ =
-                                        html.AnchorElement(href: url)
-                                          ..setAttribute(
-                                            "download",
-                                            fileNameToUse,
+                  final isPdf = fileNameToUse.toLowerCase().endsWith('.pdf');
+
+                  if (!hasAttachment) {
+                    return Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.upload_file_outlined,
+                            color: Colors.blue,
+                          ),
+                          onPressed: canEdit ? pickFile : null,
+                        ),
+                        Text(
+                          'Upload 1 supported file: PDF or image (Max 10 MB)',
+                          style: TextStyle(color: grey, fontSize: 10),
+                        ),
+                      ],
+                    );
+                  }
+
+                  if (!isPdf) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder:
+                                        (_) => Dialog(
+                                          child: InteractiveViewer(
+                                            child:
+                                                previewUrl != null
+                                                    ? Image.network(
+                                                      previewUrl,
+                                                      fit: BoxFit.contain,
+                                                    )
+                                                    : Image.memory(
+                                                      row.attachmentBytes!,
+                                                      fit: BoxFit.contain,
+                                                    ),
+                                          ),
+                                        ),
+                                  );
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(6),
+                                  child:
+                                      previewUrl != null
+                                          ? Image.network(
+                                            previewUrl,
+                                            height: 80,
+                                            width: double.infinity,
+                                            fit: BoxFit.contain,
+                                            loadingBuilder: (
+                                              context,
+                                              child,
+                                              progress,
+                                            ) {
+                                              if (progress == null) {
+                                                return child;
+                                              }
+                                              return const SizedBox(
+                                                height: 60,
+                                                child: Center(
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+                                            errorBuilder:
+                                                (
+                                                  context,
+                                                  error,
+                                                  stackTrace,
+                                                ) => Container(
+                                                  height: 60,
+                                                  color: Colors.grey.shade200,
+                                                  child: const Center(
+                                                    child: Icon(
+                                                      Icons.image_not_supported,
+                                                    ),
+                                                  ),
+                                                ),
                                           )
-                                          ..click();
-                                    html.Url.revokeObjectUrl(url);
-                                  }
-                                } else {
-                                  File? fileToOpen;
-
-                                  if (mobileImage != null) {
-                                    fileToOpen = File(mobileImage!.path);
-                                  } else if (row.accomplishmentId != null) {
-                                    final downloadUrl =
-                                        "${ApiEndpoint.baseUrl}/${row.accomplishmentId}/download";
-                                    final tempDir = Directory.systemTemp;
-                                    final tempFile = File(
-                                      '${tempDir.path}/$fileNameToUse',
-                                    );
-
-                                    await dio.download(
-                                      downloadUrl,
-                                      tempFile.path,
-                                      options: Options(
-                                        headers: {
-                                          "Authorization": "Bearer $token",
-                                        },
-                                      ),
-                                    );
-
-                                    if (await tempFile.exists()) {
-                                      fileToOpen = tempFile;
-                                    }
-                                  }
-
-                                  if (fileToOpen != null) {
-                                    await OpenFile.open(fileToOpen.path);
-                                  }
-                                }
-                              },
-                              child: Text(
-                                fileName ??
-                                    row.attachmentPath?.split("/").last ??
-                                    "Attachment",
-                                style: const TextStyle(
-                                  color: Colors.blue,
-                                  decoration: TextDecoration.underline,
+                                          : Image.memory(
+                                            row.attachmentBytes!,
+                                            height: 80,
+                                            width: double.infinity,
+                                            fit: BoxFit.contain,
+                                            errorBuilder:
+                                                (
+                                                  context,
+                                                  error,
+                                                  stackTrace,
+                                                ) => Container(
+                                                  height: 80,
+                                                  color: Colors.grey.shade200,
+                                                  child: const Center(
+                                                    child: Icon(
+                                                      Icons.image_not_supported,
+                                                    ),
+                                                  ),
+                                                ),
+                                          ),
                                 ),
                               ),
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              setState(() {
-                                if (kIsWeb) webImage = null;
-                                if (!kIsWeb) mobileImage = null;
-                                fileName = null;
-                                row.attachmentPath = null;
-                                row.attachmentBytes = null;
-                              });
-                            },
-                            tooltip: "Delete",
-                            color: grey,
-                          ),
-                        ],
-                      )
-                      : Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.upload_file_outlined,
-                              color: Colors.blue,
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  row.accomplishmentId = null;
+                                  row.attachmentPath = null;
+                                  row.attachmentBytes = null;
+                                  row.fileName = null;
+                                });
+                              },
                             ),
-                            onPressed: canEdit ? pickFile : null,
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          fileNameToUse,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                            fontSize: 11,
                           ),
-                          Text(
-                            'Upload 1 supported file: PDF or image: Max 10 MB',
-                            style: TextStyle(color: grey, fontSize: 10),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.picture_as_pdf, color: Colors.red),
+
+                      const SizedBox(height: 6),
+
+                      GestureDetector(
+                        onTap: () {
+                          if (previewUrl != null) {
+                            html.window.open(previewUrl, "_blank");
+                          } else if (row.attachmentBytes != null && kIsWeb) {
+                            final blob = html.Blob([
+                              row.attachmentBytes!,
+                            ], 'application/pdf');
+                            final url = html.Url.createObjectUrlFromBlob(blob);
+                            html.window.open(url, "_blank");
+                          }
+                        },
+                        child: Text(
+                          fileNameToUse,
+                          textAlign: TextAlign.center, // 👈 CENTER TEXT
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                            fontSize: 11,
                           ),
-                        ],
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
                       ),
+
+                      const SizedBox(height: 4),
+
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.grey),
+                        onPressed: () {
+                          setState(() {
+                            row.accomplishmentId = null;
+                            row.attachmentPath = null;
+                            row.attachmentBytes = null;
+                            row.fileName = null;
+                          });
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
           Expanded(
@@ -432,7 +516,6 @@ Future<void> loadScorecardAccomplishments(int deliverableId) async {
           percentageController.addListener(() {
             final data = achievementsList[deliverableId];
             if (data == null) return;
-
             int sum = 0;
             for (final row in data.rows) {
               sum += int.tryParse(row.percentageController.text) ?? 0;
@@ -441,19 +524,24 @@ Future<void> loadScorecardAccomplishments(int deliverableId) async {
             totalScores[deliverableId]!.value = sum;
           });
 
+          final hasFile =
+              acc.id != null &&
+              acc.attachmentPath != null &&
+              acc.attachmentPath!.isNotEmpty;
+
           return ScorecardMonitoringRowData(
             auditorRemarksController: TextEditingController(text: acc.remarks),
             percentageController: percentageController,
             status: ValueNotifier<PgsStatus>(_deriveStatusFromPercent(percent)),
-            attachmentPath: acc.attachmentPath,
+            attachmentPath: hasFile ? acc.attachmentPath : null,
             attachmentBytes: null,
             accomplishmentId: acc.id,
+            isKpi: false,
           );
         }).toList(),
   );
 
   _ensureTotalNotifier(deliverableId);
-
   int sum = 0;
   for (final row in achievementsList[deliverableId]!.rows) {
     sum += int.tryParse(row.percentageController.text) ?? 0;
@@ -474,7 +562,6 @@ Future<void> loadKPIAccomplishments(int kpi) async {
           percentageController.addListener(() {
             final data = achievementsList[kpi];
             if (data == null) return;
-
             int sum = 0;
             for (final row in data.rows) {
               sum += int.tryParse(row.percentageController.text) ?? 0;
@@ -483,19 +570,24 @@ Future<void> loadKPIAccomplishments(int kpi) async {
             totalScores[kpi]!.value = sum;
           });
 
+          final hasFile =
+              acc.id != null &&
+              acc.attachmentPath != null &&
+              acc.attachmentPath!.isNotEmpty;
+
           return ScorecardMonitoringRowData(
             auditorRemarksController: TextEditingController(text: acc.remarks),
             percentageController: percentageController,
             status: ValueNotifier<PgsStatus>(_deriveStatusFromPercent(percent)),
-            attachmentPath: acc.attachmentPath,
+            attachmentPath: hasFile ? acc.attachmentPath : null,
             attachmentBytes: null,
             accomplishmentId: acc.id,
+            isKpi: true, // ✅
           );
         }).toList(),
   );
 
   _ensureTotalNotifier(kpi);
-
   int sum = 0;
   for (final row in achievementsList[kpi]!.rows) {
     sum += int.tryParse(row.percentageController.text) ?? 0;
