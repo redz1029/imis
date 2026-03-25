@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
-import 'package:imis/navigation/navigation_panel.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -22,35 +21,29 @@ import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 
-class ManageSummaryNarrativeReportPage extends StatefulWidget {
-  const ManageSummaryNarrativeReportPage({super.key});
+class ManageSummaryNarrativeDialog extends StatefulWidget {
+  const ManageSummaryNarrativeDialog({super.key});
 
   @override
-  ManageSummaryNarrativeReportPageState createState() =>
-      ManageSummaryNarrativeReportPageState();
+  State<ManageSummaryNarrativeDialog> createState() =>
+      ManageSummaryNarrativeDialogState();
 }
 
-class ManageSummaryNarrativeReportPageState
-    extends State<ManageSummaryNarrativeReportPage> {
+class ManageSummaryNarrativeDialogState
+    extends State<ManageSummaryNarrativeDialog> {
   final _commonService = CommonService(Dio());
-
   final _dateConverter = const LongDateOnlyConverter();
   final _summaryNarrativeService = SummaryNarrativeService(Dio());
   final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
     Dio(),
   );
   final _formKey = GlobalKey<FormState>();
-  List<PgsSummaryNarrative> reports = [];
   final TextEditingController _findingsController = TextEditingController();
   final TextEditingController _conclusionsController = TextEditingController();
   final TextEditingController _recommendationsController =
       TextEditingController();
-  int periodId = 0;
-  late FilterSearchResultUtil<PgsSummaryNarrative> summarySearchUtil;
   final _paginationUtils = PaginationUtil(Dio());
-  List<PgsPeriod> periodList = [];
   final TextEditingController searchController = TextEditingController();
-  final FocusNode isSearchfocus = FocusNode();
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
@@ -58,18 +51,20 @@ class ManageSummaryNarrativeReportPageState
   List<PgsSummaryNarrative> summaryList = [];
   List<PgsSummaryNarrative> filteredList = [];
   List<Office> officeList = [];
+  List<PgsPeriod> periodList = [];
   String? _selectedPeriod;
   String? _selectedOffice;
   Map<int, String> officeMap = {};
+  int periodId = 0;
+  late FilterSearchResultUtil<PgsSummaryNarrative> summarySearchUtil;
+
   @override
   void initState() {
     super.initState();
-
     () async {
       final period = await _commonService.fetchPgsPeriod();
       final offices = await _deliverableStatusMonitoring.fetchOffices();
       if (!mounted) return;
-
       setState(() {
         officeList = offices;
         periodList = period;
@@ -85,21 +80,27 @@ class ManageSummaryNarrativeReportPageState
     );
   }
 
+  @override
+  void dispose() {
+    _findingsController.dispose();
+    _conclusionsController.dispose();
+    _recommendationsController.dispose();
+    searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> fetchSummaryNarrative({
     int page = 1,
     String? searchQuery,
   }) async {
     if (_isLoading) return;
-
     setState(() => _isLoading = true);
-
     try {
       final pageList = await _summaryNarrativeService.getSummaryNarrative(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
       );
-
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
@@ -111,9 +112,7 @@ class ManageSummaryNarrativeReportPageState
     } catch (e) {
       debugPrint(e.toString());
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -123,7 +122,6 @@ class ManageSummaryNarrativeReportPageState
       orElse:
           () => PgsPeriod(0, false, DateTime.now(), DateTime.now(), 'remarks'),
     );
-
     return "${_dateConverter.toJson(period.startDate)} to ${_dateConverter.toJson(period.endDate)}";
   }
 
@@ -134,261 +132,815 @@ class ManageSummaryNarrativeReportPageState
           .toLowerCase()
           .contains(search.toLowerCase()),
     );
-
-    setState(() {
-      filteredList = results;
-    });
+    setState(() => filteredList = results);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: mainBgColor,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+
+    // Responsive dialog sizing
+    final dialogWidth =
+        isMobile
+            ? screenWidth // full width on mobile
+            : isTablet
+            ? screenWidth * 0.92
+            : screenWidth * 0.80;
+
+    final dialogHeight =
+        isMobile
+            ? screenHeight // full height on mobile
+            : screenHeight * 0.90;
+
+    final horizontalPadding =
+        isMobile
+            ? 0.0
+            : isTablet
+            ? 16.0
+            : 24.0;
+    final verticalPadding = isMobile ? 0.0 : 20.0;
+
+    return Dialog(
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight: dialogHeight,
+          minWidth: isMobile ? screenWidth : 320,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: mainBgColor,
+            // Only round corners on non-mobile
+            borderRadius:
+                isMobile ? BorderRadius.zero : BorderRadius.circular(16),
+            boxShadow:
+                isMobile
+                    ? null
+                    : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+          ),
+          child: Column(
+            children: [
+              // ── Header ──────────────────────────────────────────────
+              _buildHeader(isMobile, isTablet),
+
+              // ── Search bar (separate row on mobile) ─────────────────
+              if (isMobile) _buildMobileSearch(),
+
+              // ── Table ────────────────────────────────────────────────
+              Expanded(
+                child:
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : isMobile
+                        ? _buildMobileList() // Card list on mobile
+                        : _buildDesktopTable(), // DataTable on tablet/desktop
+              ),
+
+              // ── Pagination footer ────────────────────────────────────
+              _buildFooter(isMobile),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Header ──────────────────────────────────────────────────────────────────
+  Widget _buildHeader(bool isMobile, bool isTablet) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: isMobile ? 12 : 16,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius:
+            isMobile
+                ? BorderRadius.zero
+                : const BorderRadius.vertical(top: Radius.circular(16)),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        children: [
+          // Icon badge
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.description_outlined,
+              color: primaryColor,
+              size: isMobile ? 18 : 20,
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // Title — truncates on mobile
+          Expanded(
+            child: Text(
+              isMobile ? 'Auditor Reports' : 'Manage Auditor Reports',
+              style: TextStyle(
+                fontSize: isMobile ? 15 : 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+          // Search inline only on tablet/desktop
+          if (!isMobile) ...[
+            const SizedBox(width: 12),
+            SizedBox(
+              width: isTablet ? 200 : 260,
+              height: 36,
+              child: _searchField(),
+            ),
+            const SizedBox(width: 12),
+          ],
+
+          // Close button
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close, size: 20),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.grey.shade100,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Mobile search row ────────────────────────────────────────────────────────
+  Widget _buildMobileSearch() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: _searchField(),
+    );
+  }
+
+  Widget _searchField() {
+    return TextField(
+      controller: searchController,
+      onChanged: filterSearchResults,
+      decoration: InputDecoration(
+        hintText: 'Search office...',
+        hintStyle: TextStyle(color: grey, fontSize: 13),
+        prefixIcon: const Icon(Icons.search, size: 18),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: primaryColor),
+        ),
+      ),
+    );
+  }
+
+  // ── Desktop / Tablet DataTable ───────────────────────────────────────────────
+  Widget _buildDesktopTable() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: DataTable2(
+        columnSpacing: 12,
+        headingRowColor: WidgetStatePropertyAll(Colors.grey.shade50),
+        dataRowColor: WidgetStatePropertyAll(Colors.white),
+        headingTextStyle: TextStyle(
+          color: Colors.grey.shade600,
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
+        horizontalMargin: 12,
+        minWidth: 560,
+        fixedTopRows: 1,
+        border: TableBorder(
+          horizontalInside: BorderSide(color: Colors.grey.shade100),
+        ),
+        columns: const [
+          DataColumn2(label: Text('#'), fixedWidth: 40),
+          DataColumn2(label: Text('Office'), size: ColumnSize.L),
+          DataColumn2(label: Text('Period'), size: ColumnSize.L),
+          DataColumn(label: Text('Actions')),
+        ],
+        rows:
+            filteredList.asMap().entries.map((entry) {
+              final index = entry.key;
+              final summary = entry.value;
+              final itemNumber = ((_currentPage - 1) * _pageSize) + index + 1;
+
+              return DataRow(
+                cells: [
+                  DataCell(Text(itemNumber.toString())),
+                  DataCell(
+                    Text(
+                      officeMap[summary.officeId] ?? 'Unknown Office',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ),
+                  DataCell(Text(getPeriodLabel(summary.pgsPeriodId))),
+                  DataCell(_actionButtons(summary, index)),
+                ],
+              );
+            }).toList(),
+      ),
+    );
+  }
+
+  // ── Mobile Card List ─────────────────────────────────────────────────────────
+  Widget _buildMobileList() {
+    if (filteredList.isEmpty) {
+      return const Center(
+        child: Text('No records found.', style: TextStyle(color: Colors.grey)),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(12),
+      itemCount: filteredList.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final summary = filteredList[index];
+        final itemNumber = ((_currentPage - 1) * _pageSize) + index + 1;
+
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Number badge
+              Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '$itemNumber',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: primaryColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      officeMap[summary.officeId] ?? 'Unknown Office',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ElevatedButton.icon(
-                          onPressed:
-                              () => Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => const NavigationPanel(
-                                        initialScreenIndex: 16,
-                                      ),
-                                ),
-                                (route) => false,
-                              ),
-                          icon: const Icon(Icons.arrow_back, size: 18),
-                          label: const Text(
-                            "Back",
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: mainBgColor,
-                            foregroundColor: primaryTextColor,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            side: BorderSide(
-                              color: Colors.grey.shade400,
-                              width: 0.8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            elevation: 0,
-                          ),
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 12,
+                          color: Colors.grey.shade500,
                         ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Manage Report',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600,
-                              ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            getPeriodLabel(summary.pgsPeriodId),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
                             ),
-                            gap12px,
-                            SizedBox(
-                              height: 30,
-                              width: 300,
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: lightGrey),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: primaryColor),
-                                  ),
-                                  floatingLabelBehavior:
-                                      FloatingLabelBehavior.never,
-                                  labelText: 'Search...',
-                                  labelStyle: TextStyle(
-                                    color: grey,
-                                    fontSize: 14,
-                                  ),
-                                  prefixIcon: Icon(Icons.search, size: 20),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  filled: true,
-                                  fillColor: secondaryColor,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    vertical: 5,
-                                    horizontal: 5,
-                                  ),
-                                ),
-                                // onChanged: filterSearchResults,
-                              ),
-                            ),
-                          ],
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 8 : 12,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: 700,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
-                    ),
-                    columns: [
-                      DataColumn2(label: const Text('#'), fixedWidth: 40),
-                      DataColumn2(
-                        label: const Text('Office'),
-                        size: ColumnSize.L,
-                      ),
-                      DataColumn2(
-                        label: const Text('Period'),
-                        size: ColumnSize.L,
-                      ),
-                      const DataColumn(label: Text('Actions')),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var summary = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
+              ),
 
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(itemNumber.toString())),
-                              DataCell(
-                                Container(
-                                  constraints: BoxConstraints(
-                                    // minWidth: 100,
-                                    maxWidth: constraints.maxWidth * 0.4,
-                                  ),
-                                  child: Text(
-                                    officeMap[summary.officeId] ??
-                                        'Unknown Office',
-                                    overflow: TextOverflow.ellipsis,
-                                    softWrap: true,
-                                    maxLines: 2,
-                                  ),
-                                ),
-                              ),
-                              DataCell(
-                                Text(getPeriodLabel(summary.pgsPeriodId)),
-                              ),
-                              DataCell(
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () {
-                                        showReportDialog(summary, index);
-                                      },
-                                    ),
-                                    Tooltip(
-                                      message: 'Print Preview',
-
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.description_outlined,
-                                        ),
-
-                                        onPressed: () async {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) => ViewPdfSummary(
-                                                    pgsPeriodId:
-                                                        summary.pgsPeriodId
-                                                            .toString(),
-                                                    officeId:
-                                                        summary.officeId
-                                                            .toString(),
-                                                  ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-
-                                    PermissionWidget(
-                                      permission:
-                                          AppPermissions
-                                              .editPerformanceGovernanceSystem,
-                                      child: IconButton(
-                                        icon: Icon(
-                                          Icons.delete,
-                                          color: Color.fromARGB(
-                                            255,
-                                            221,
-                                            79,
-                                            79,
-                                          ),
-                                        ),
-                                        onPressed:
-                                            () => showDeleteDialog(
-                                              summary.id.toString(),
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                  ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                      ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged:
-                            (page) => fetchSummaryNarrative(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+              // Actions
+              _actionButtons(summary, index, compact: true),
+            ],
+          ),
+        );
+      },
     );
   }
+
+  // ── Shared action buttons ────────────────────────────────────────────────────
+  Widget _actionButtons(
+    PgsSummaryNarrative summary,
+    int index, {
+    bool compact = false,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: Icon(Icons.edit, size: compact ? 16 : 18),
+          tooltip: 'Edit',
+          visualDensity: compact ? VisualDensity.compact : null,
+          onPressed: () => showReportDialog(summary, index),
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.description_outlined,
+            size: compact ? 16 : 18,
+            color: Colors.blueAccent,
+          ),
+          tooltip: 'Print Preview',
+          visualDensity: compact ? VisualDensity.compact : null,
+          onPressed:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => ViewPdfSummary(
+                        pgsPeriodId: summary.pgsPeriodId.toString(),
+                        officeId: summary.officeId.toString(),
+                      ),
+                ),
+              ),
+        ),
+        PermissionWidget(
+          permission: AppPermissions.editPerformanceGovernanceSystem,
+          child: IconButton(
+            icon: Icon(
+              Icons.delete,
+              color: const Color(0xFFDD4F4F),
+              size: compact ? 16 : 18,
+            ),
+            tooltip: 'Delete',
+            visualDensity: compact ? VisualDensity.compact : null,
+            onPressed: () => showDeleteDialog(summary.id.toString()),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Footer ──────────────────────────────────────────────────────────────────
+  Widget _buildFooter(bool isMobile) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: 10,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius:
+            isMobile
+                ? BorderRadius.zero
+                : const BorderRadius.vertical(bottom: Radius.circular(16)),
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child:
+          isMobile
+              // Stack vertically on mobile
+              ? Column(
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  const SizedBox(height: 8),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchSummaryNarrative(page: page),
+                  ),
+                ],
+              )
+              // Side by side on tablet/desktop
+              : Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchSummaryNarrative(page: page),
+                  ),
+                  const SizedBox(width: 60),
+                ],
+              ),
+    );
+  }
+
+  // class ManageSummaryNarrativeReportPage extends StatefulWidget {
+  //   const ManageSummaryNarrativeReportPage({super.key});
+
+  //   @override
+  //   ManageSummaryNarrativeReportPageState createState() =>
+  //       ManageSummaryNarrativeReportPageState();
+  // }
+
+  // class ManageSummaryNarrativeReportPageState
+  //     extends State<ManageSummaryNarrativeReportPage> {
+  //   final _commonService = CommonService(Dio());
+
+  //   final _dateConverter = const LongDateOnlyConverter();
+  //   final _summaryNarrativeService = SummaryNarrativeService(Dio());
+  //   final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
+  //     Dio(),
+  //   );
+  //   final _formKey = GlobalKey<FormState>();
+  //   List<PgsSummaryNarrative> reports = [];
+  //   final TextEditingController _findingsController = TextEditingController();
+  //   final TextEditingController _conclusionsController = TextEditingController();
+  //   final TextEditingController _recommendationsController =
+  //       TextEditingController();
+  //   int periodId = 0;
+  //   late FilterSearchResultUtil<PgsSummaryNarrative> summarySearchUtil;
+  //   final _paginationUtils = PaginationUtil(Dio());
+  //   List<PgsPeriod> periodList = [];
+  //   final TextEditingController searchController = TextEditingController();
+  //   final FocusNode isSearchfocus = FocusNode();
+  //   int _currentPage = 1;
+  //   final int _pageSize = 15;
+  //   int _totalCount = 0;
+  //   bool _isLoading = false;
+  //   List<PgsSummaryNarrative> summaryList = [];
+  //   List<PgsSummaryNarrative> filteredList = [];
+  //   List<Office> officeList = [];
+  //   String? _selectedPeriod;
+  //   String? _selectedOffice;
+  //   Map<int, String> officeMap = {};
+  //   @override
+  //   void initState() {
+  //     super.initState();
+
+  //     () async {
+  //       final period = await _commonService.fetchPgsPeriod();
+  //       final offices = await _deliverableStatusMonitoring.fetchOffices();
+  //       if (!mounted) return;
+
+  //       setState(() {
+  //         officeList = offices;
+  //         periodList = period;
+  //         officeMap = {for (var office in offices) office.id: office.name};
+  //       });
+  //     }();
+  //     fetchSummaryNarrative();
+  //     summarySearchUtil = FilterSearchResultUtil<PgsSummaryNarrative>(
+  //       paginationUtils: _paginationUtils,
+  //       endpoint: ApiEndpoint().useroffice,
+  //       pageSize: _pageSize,
+  //       fromJson: (json) => PgsSummaryNarrative.fromJson(json),
+  //     );
+  //   }
+
+  //   Future<void> fetchSummaryNarrative({
+  //     int page = 1,
+  //     String? searchQuery,
+  //   }) async {
+  //     if (_isLoading) return;
+
+  //     setState(() => _isLoading = true);
+
+  //     try {
+  //       final pageList = await _summaryNarrativeService.getSummaryNarrative(
+  //         page: page,
+  //         pageSize: _pageSize,
+  //         searchQuery: searchQuery,
+  //       );
+
+  //       if (mounted) {
+  //         setState(() {
+  //           _currentPage = pageList.page;
+  //           _totalCount = pageList.totalCount;
+  //           summaryList = pageList.items;
+  //           filteredList = List.from(summaryList);
+  //         });
+  //       }
+  //     } catch (e) {
+  //       debugPrint(e.toString());
+  //     } finally {
+  //       if (mounted) {
+  //         setState(() => _isLoading = false);
+  //       }
+  //     }
+  //   }
+
+  //   String getPeriodLabel(int periodId) {
+  //     final period = periodList.firstWhere(
+  //       (p) => p.id == periodId,
+  //       orElse:
+  //           () => PgsPeriod(0, false, DateTime.now(), DateTime.now(), 'remarks'),
+  //     );
+
+  //     return "${_dateConverter.toJson(period.startDate)} to ${_dateConverter.toJson(period.endDate)}";
+  //   }
+
+  //   Future<void> filterSearchResults(String query) async {
+  //     final results = await summarySearchUtil.filter(
+  //       query,
+  //       (summary, search) => (officeMap[summary.officeId] ?? 'Unknown Office')
+  //           .toLowerCase()
+  //           .contains(search.toLowerCase()),
+  //     );
+
+  //     setState(() {
+  //       filteredList = results;
+  //     });
+  //   }
+
+  //   @override
+  //   Widget build(BuildContext context) {
+  //     return Scaffold(
+  //       backgroundColor: mainBgColor,
+  //       body: LayoutBuilder(
+  //         builder: (context, constraints) {
+  //           bool isMobile = constraints.maxWidth < 600;
+  //           return Padding(
+  //             padding: const EdgeInsets.all(16.0),
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Row(
+  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                   children: [
+  //                     Row(
+  //                       crossAxisAlignment: CrossAxisAlignment.start,
+  //                       children: [
+  //                         ElevatedButton.icon(
+  //                           onPressed:
+  //                               () => Navigator.of(context).pushAndRemoveUntil(
+  //                                 MaterialPageRoute(
+  //                                   builder:
+  //                                       (context) =>
+  //                                           const Sidebar(initialScreenIndex: 16),
+  //                                 ),
+  //                                 (route) => false,
+  //                               ),
+  //                           icon: const Icon(Icons.arrow_back, size: 18),
+  //                           label: const Text(
+  //                             "Back",
+  //                             style: TextStyle(fontWeight: FontWeight.w600),
+  //                           ),
+  //                           style: ElevatedButton.styleFrom(
+  //                             backgroundColor: mainBgColor,
+  //                             foregroundColor: primaryTextColor,
+  //                             padding: const EdgeInsets.symmetric(
+  //                               horizontal: 16,
+  //                               vertical: 10,
+  //                             ),
+  //                             side: BorderSide(
+  //                               color: Colors.grey.shade400,
+  //                               width: 0.8,
+  //                             ),
+  //                             shape: RoundedRectangleBorder(
+  //                               borderRadius: BorderRadius.circular(4),
+  //                             ),
+  //                             elevation: 0,
+  //                           ),
+  //                         ),
+  //                         const SizedBox(width: 16),
+  //                         Column(
+  //                           crossAxisAlignment: CrossAxisAlignment.start,
+  //                           children: [
+  //                             Text(
+  //                               'Manage Report',
+  //                               style: TextStyle(
+  //                                 fontSize: 24,
+  //                                 fontWeight: FontWeight.w600,
+  //                               ),
+  //                             ),
+  //                             gap12px,
+  //                             SizedBox(
+  //                               height: 30,
+  //                               width: 300,
+  //                               child: TextField(
+  //                                 decoration: InputDecoration(
+  //                                   enabledBorder: OutlineInputBorder(
+  //                                     borderSide: BorderSide(color: lightGrey),
+  //                                   ),
+  //                                   focusedBorder: OutlineInputBorder(
+  //                                     borderSide: BorderSide(color: primaryColor),
+  //                                   ),
+  //                                   floatingLabelBehavior:
+  //                                       FloatingLabelBehavior.never,
+  //                                   labelText: 'Search...',
+  //                                   labelStyle: TextStyle(
+  //                                     color: grey,
+  //                                     fontSize: 14,
+  //                                   ),
+  //                                   prefixIcon: Icon(Icons.search, size: 20),
+  //                                   border: OutlineInputBorder(
+  //                                     borderRadius: BorderRadius.circular(4),
+  //                                   ),
+  //                                   filled: true,
+  //                                   fillColor: secondaryColor,
+  //                                   contentPadding: EdgeInsets.symmetric(
+  //                                     vertical: 5,
+  //                                     horizontal: 5,
+  //                                   ),
+  //                                 ),
+  //                                 // onChanged: filterSearchResults,
+  //                               ),
+  //                             ),
+  //                           ],
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(height: 20),
+  //                 Expanded(
+  //                   child: DataTable2(
+  //                     columnSpacing: isMobile ? 8 : 12,
+  //                     headingRowColor: WidgetStatePropertyAll(secondaryColor),
+  //                     dataRowColor: WidgetStatePropertyAll(mainBgColor),
+  //                     headingTextStyle: const TextStyle(color: grey),
+  //                     horizontalMargin: 12,
+  //                     minWidth: 700,
+  //                     fixedTopRows: 1,
+  //                     border: TableBorder(
+  //                       horizontalInside: BorderSide(color: Colors.grey.shade100),
+  //                     ),
+  //                     columns: [
+  //                       DataColumn2(label: const Text('#'), fixedWidth: 40),
+  //                       DataColumn2(
+  //                         label: const Text('Office'),
+  //                         size: ColumnSize.L,
+  //                       ),
+  //                       DataColumn2(
+  //                         label: const Text('Period'),
+  //                         size: ColumnSize.L,
+  //                       ),
+  //                       const DataColumn(label: Text('Actions')),
+  //                     ],
+  //                     rows:
+  //                         filteredList.asMap().entries.map((entry) {
+  //                           int index = entry.key;
+  //                           var summary = entry.value;
+  //                           int itemNumber =
+  //                               ((_currentPage - 1) * _pageSize) + index + 1;
+
+  //                           return DataRow(
+  //                             cells: [
+  //                               DataCell(Text(itemNumber.toString())),
+  //                               DataCell(
+  //                                 Container(
+  //                                   constraints: BoxConstraints(
+  //                                     // minWidth: 100,
+  //                                     maxWidth: constraints.maxWidth * 0.4,
+  //                                   ),
+  //                                   child: Text(
+  //                                     officeMap[summary.officeId] ??
+  //                                         'Unknown Office',
+  //                                     overflow: TextOverflow.ellipsis,
+  //                                     softWrap: true,
+  //                                     maxLines: 2,
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                               DataCell(
+  //                                 Text(getPeriodLabel(summary.pgsPeriodId)),
+  //                               ),
+  //                               DataCell(
+  //                                 Row(
+  //                                   children: [
+  //                                     IconButton(
+  //                                       icon: const Icon(Icons.edit),
+  //                                       onPressed: () {
+  //                                         showReportDialog(summary, index);
+  //                                       },
+  //                                     ),
+  //                                     Tooltip(
+  //                                       message: 'Print Preview',
+
+  //                                       child: IconButton(
+  //                                         icon: const Icon(
+  //                                           Icons.description_outlined,
+  //                                         ),
+
+  //                                         onPressed: () async {
+  //                                           Navigator.push(
+  //                                             context,
+  //                                             MaterialPageRoute(
+  //                                               builder:
+  //                                                   (context) => ViewPdfSummary(
+  //                                                     pgsPeriodId:
+  //                                                         summary.pgsPeriodId
+  //                                                             .toString(),
+  //                                                     officeId:
+  //                                                         summary.officeId
+  //                                                             .toString(),
+  //                                                   ),
+  //                                             ),
+  //                                           );
+  //                                         },
+  //                                       ),
+  //                                     ),
+
+  //                                     PermissionWidget(
+  //                                       permission:
+  //                                           AppPermissions
+  //                                               .editPerformanceGovernanceSystem,
+  //                                       child: IconButton(
+  //                                         icon: Icon(
+  //                                           Icons.delete,
+  //                                           color: Color.fromARGB(
+  //                                             255,
+  //                                             221,
+  //                                             79,
+  //                                             79,
+  //                                           ),
+  //                                         ),
+  //                                         onPressed:
+  //                                             () => showDeleteDialog(
+  //                                               summary.id.toString(),
+  //                                             ),
+  //                                       ),
+  //                                     ),
+  //                                   ],
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           );
+  //                         }).toList(),
+  //                   ),
+  //                 ),
+
+  //                 Container(
+  //                   padding: EdgeInsets.all(10),
+  //                   color: secondaryColor,
+  //                   child: Row(
+  //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                     children: [
+  //                       PaginationInfo(
+  //                         currentPage: _currentPage,
+  //                         totalItems: _totalCount,
+  //                         itemsPerPage: _pageSize,
+  //                       ),
+  //                       PaginationControls(
+  //                         currentPage: _currentPage,
+  //                         totalItems: _totalCount,
+  //                         itemsPerPage: _pageSize,
+  //                         isLoading: _isLoading,
+  //                         onPageChanged:
+  //                             (page) => fetchSummaryNarrative(page: page),
+  //                       ),
+  //                       Container(width: 60),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           );
+  //         },
+  //       ),
+  //     );
+  //   }
 
   void showDeleteDialog(String id) {
     showDialog(

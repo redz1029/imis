@@ -860,36 +860,48 @@ class _DeliverableStatusMonitoringPageState
               ? Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  FloatingActionButton.extended(
-                    heroTag: "create_report",
-                    backgroundColor: primaryColor,
-                    onPressed: () {
-                      showReportDialog();
-                    },
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text(
-                      'Create Report',
-                      style: TextStyle(color: Colors.white),
+                  PermissionWidget(
+                    allowedRoles: [
+                      PermissionString.pgsAuditor,
+                      PermissionString.roleAdmin,
+                    ],
+                    child: FloatingActionButton.extended(
+                      heroTag: "create_report",
+                      backgroundColor: primaryColor,
+                      onPressed: () {
+                        showReportDialog();
+                      },
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text(
+                        'Create Report',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  FloatingActionButton.extended(
-                    heroTag: "manage_audit",
-                    backgroundColor: mainBgColor,
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ManageSummaryNarrativeReportPage(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.description_outlined,
-                      color: primaryTextColor,
-                    ),
-                    label: const Text(
-                      'Manage Audit Reports',
-                      style: TextStyle(color: primaryTextColor),
+                  PermissionWidget(
+                    allowedRoles: [
+                      PermissionString.pgsAuditor,
+                      PermissionString.roleAdmin,
+                    ],
+                    child: FloatingActionButton.extended(
+                      heroTag: "manage_audit",
+                      backgroundColor: mainBgColor,
+                      onPressed:
+                          () => showDialog(
+                            context: context,
+                            barrierDismissible: true,
+                            builder:
+                                (_) => const ManageSummaryNarrativeDialog(),
+                          ),
+                      icon: const Icon(
+                        Icons.description_outlined,
+                        color: primaryTextColor,
+                      ),
+                      label: const Text(
+                        'Manage Audit Reports',
+                        style: TextStyle(color: primaryTextColor),
+                      ),
                     ),
                   ),
                 ],
@@ -929,11 +941,10 @@ class _DeliverableStatusMonitoringPageState
           ],
           child: ElevatedButton.icon(
             onPressed:
-                () => Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (_) => ManageSummaryNarrativeReportPage(),
-                  ),
-                  (route) => false,
+                () => showDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (_) => const ManageSummaryNarrativeDialog(),
                 ),
             icon: const Icon(Icons.description_outlined, color: Colors.black),
             label: const Text(
@@ -1750,7 +1761,7 @@ class _DeliverableStatusMonitoringPageState
             TableRow(
               children: [
                 _tableCell('#', isHeader: true),
-                _tableCell('DETAIS', isHeader: true),
+                _tableCell('DETAILS', isHeader: true),
                 Center(child: _tableCell('ACTIONS', isHeader: true)),
               ],
             ),

@@ -310,7 +310,7 @@ class _ExpandableCell extends StatelessWidget {
                 : Border(right: BorderSide(color: Colors.grey.shade300)),
         borderRadius: bordered ? BorderRadius.circular(4) : null,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 10),
       child: TextField(
         controller: controller,
         maxLines: null,
@@ -714,6 +714,7 @@ class _LargeTableSection extends StatelessWidget {
                         row: row,
                         onDelete: () => onRemoveRow(idx),
                         onEnablerChanged: (v) => onEnablerChanged(idx, v),
+                        index: idx,
                       );
                     }).toList(),
               ),
@@ -764,9 +765,12 @@ class _LargeTableSection extends StatelessWidget {
     required _RowEntry row,
     required VoidCallback onDelete,
     required void Function(bool) onEnablerChanged,
+    required int index,
   }) {
+    final isEven = index % 2 == 0;
     return Container(
       decoration: BoxDecoration(
+        color: isEven ? Colors.white : primaryColor.withValues(alpha: 0.08),
         border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
       ),
       child: IntrinsicHeight(
@@ -2129,6 +2133,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                     ),
                                                   ),
                                                 ),
+
                                                 Tooltip(
                                                   message: 'Print Preview',
                                                   child: IconButton(
@@ -2139,18 +2144,10 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                       color: Colors.blueAccent,
                                                     ),
                                                     onPressed: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (
-                                                                _,
-                                                              ) => PrintRoadmapPage(
-                                                                roadmapId:
-                                                                    roadmap.id
-                                                                        .toString(),
-                                                              ),
-                                                        ),
+                                                      openRoadmapInNewTab(
+                                                        roadmap.id.toString(),
+                                                        roadmap.kra?.name ??
+                                                            "Roadmap Report",
                                                       );
                                                     },
                                                   ),
@@ -2180,7 +2177,6 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                     );
                                   }
 
-                                  // Mobile row
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
@@ -2231,18 +2227,10 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                   );
                                                 }
                                                 if (value == 'preview') {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder:
-                                                          (
-                                                            _,
-                                                          ) => PrintRoadmapPage(
-                                                            roadmapId:
-                                                                roadmap.id
-                                                                    .toString(),
-                                                          ),
-                                                    ),
+                                                  openRoadmapInNewTab(
+                                                    roadmap.id.toString(),
+                                                    roadmap.kra?.name ??
+                                                        "Roadmap Report",
                                                   );
                                                 }
                                                 if (value == 'delete' &&

@@ -1767,16 +1767,9 @@ class PerformanceGovernanceSystemPageState
                                                       final pgsId =
                                                           pgs['id'].toString();
 
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (context) =>
-                                                                  PgsReports(
-                                                                    pgsId:
-                                                                        pgsId,
-                                                                  ),
-                                                        ),
+                                                      await openPGSReportNewTab(
+                                                        pgsId,
+                                                        (pgs['name'] ?? ""),
                                                       );
                                                     },
                                                   ),
@@ -1898,18 +1891,11 @@ class PerformanceGovernanceSystemPageState
                                                 }
 
                                                 if (value == 'preview') {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder:
-                                                          (
-                                                            context,
-                                                          ) => PgsReports(
-                                                            pgsId:
-                                                                pgs['id']
-                                                                    .toString(),
-                                                          ),
-                                                    ),
+                                                  final pgsId =
+                                                      pgs['id'].toString();
+                                                  await openPGSReportNewTab(
+                                                    pgsId,
+                                                    (pgs['name'] ?? ""),
                                                   );
                                                 }
                                                 if (value == 'delete' &&
@@ -1929,7 +1915,7 @@ class PerformanceGovernanceSystemPageState
                                                       child: PermissionWidget(
                                                         permission:
                                                             AppPermissions
-                                                                .viewKraRoadMap,
+                                                                .editPerformanceGovernanceSystem,
                                                         child: Row(
                                                           children: [
                                                             Icon(
@@ -3670,7 +3656,7 @@ class PerformanceGovernanceSystemPageState
                                     borderRadius: BorderRadius.circular(12),
                                     child: ConstrainedBox(
                                       constraints: const BoxConstraints(
-                                        maxWidth: 420,
+                                        maxWidth: 500,
                                         maxHeight: 480,
                                       ),
                                       child: Column(
@@ -3687,7 +3673,7 @@ class PerformanceGovernanceSystemPageState
                                                       .spaceBetween,
                                               children: [
                                                 const Text(
-                                                  'Select KRA from roadmap',
+                                                  'Select a KRA from the roadmap to anchor your entry',
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w600,
@@ -3713,12 +3699,20 @@ class PerformanceGovernanceSystemPageState
                                             child: ListView(
                                               padding: EdgeInsets.zero,
                                               children:
-                                                  data.map((d) {
+                                                  data.asMap().entries.map((
+                                                    entry,
+                                                  ) {
+                                                    final index = entry.key;
+                                                    final d = entry.value;
+
                                                     final desc =
                                                         d['kraDescription'] ??
                                                         '';
+
                                                     return ListTile(
-                                                      title: Text(desc),
+                                                      title: Text(
+                                                        "${index + 1}. $desc",
+                                                      ),
                                                       onTap: () {
                                                         Navigator.of(
                                                           context,
@@ -3888,8 +3882,10 @@ class PerformanceGovernanceSystemPageState
               readOnly: !hasEditPermission,
               controller: kraDescriptionController[index],
               autovalidateMode: AutovalidateMode.onUserInteraction,
+              maxLines: null,
               decoration: const InputDecoration(
-                hintText: "Enter your KRA. (3 to 4 words)",
+                hintText: "Enter your KRA",
+                hintStyle: TextStyle(fontSize: 12),
                 border: OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.grey),
@@ -3901,20 +3897,46 @@ class PerformanceGovernanceSystemPageState
                 }
                 return null;
               },
-              maxLines: 3,
             ),
           ),
-
           gap12px,
-          SelectableText(
-            kraDescriptionRoadmapController[index]!.text.isNotEmpty
-                ? 'Sample KRA: ${kraDescriptionRoadmapController[index]!.text}'
-                : '',
-            style: TextStyle(
-              fontStyle: FontStyle.italic,
-              color: Colors.grey.shade500,
+          if ((selectedDirect[index] ?? false) &&
+              (kraDescriptionRoadmapController[index] != null &&
+                  kraDescriptionRoadmapController[index]!.text.isNotEmpty))
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(top: 6),
+              child: SelectableText.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Sample KRA from Roadmap\n',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '(Copy this if your alignment is direct)\n\n',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                    TextSpan(
+                      text: kraDescriptionRoadmapController[index]!.text,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -5657,7 +5679,7 @@ class PerformanceGovernanceSystemPageState
               deliverablesControllers[index]!.text.isEmpty)
             SelectableText(
               deliverablesRoadmapControllers[index]!.text.isNotEmpty
-                  ? 'Sample deliverable: ${deliverablesRoadmapControllers[index]!.text}'
+                  ? 'Sample deliverable from Roadmap: ${deliverablesRoadmapControllers[index]!.text}'
                   : 'No sample deliverables',
               style: TextStyle(
                 fontStyle: FontStyle.italic,
