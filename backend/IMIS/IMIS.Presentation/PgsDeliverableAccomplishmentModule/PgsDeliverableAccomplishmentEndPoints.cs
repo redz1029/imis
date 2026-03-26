@@ -84,11 +84,8 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsDeliverableAccomplishmentTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
-            
-            app.MapPut("/pgsDeliverableAccomplishment/{id:int}", async (int id, [FromForm] PgsDeliverableAccomplishmentForm form,
-            IPgsDeliverableAcomplishmentService service,
-            IOutputCacheStore cache,
-            CancellationToken cancellationToken) =>
+         
+            app.MapPut("/pgsDeliverableAccomplishment/{id:int}", async (int id, [FromForm] PgsDeliverableAccomplishmentForm form, IPgsDeliverableAcomplishmentService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (form == null)
                     return Results.BadRequest("Form data is required.");
@@ -99,26 +96,50 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
 
                 string? uploadedFilePath = existing.AttachmentPath;
 
-                if (form.File != null)
+                if (form.File != null && form.File.Length > 0)
                 {
                     if (string.IsNullOrWhiteSpace(_ftpBasePath))
                         return Results.BadRequest("FTP base path is missing.");
 
                     var tempPath = Path.GetTempFileName();
+
                     await using (var stream = System.IO.File.Create(tempPath))
                         await form.File.CopyToAsync(stream, cancellationToken);
 
                     var uniqueFileName = $"{Guid.NewGuid()}_{form.File.FileName}";
-                    var result = await FTPHelper.UploadAsync(tempPath, _ftpBasePath, uniqueFileName, cancellationToken);
+
+                    var result = await FTPHelper.UploadAsync(
+                        tempPath,
+                        _ftpBasePath,
+                        uniqueFileName,
+                        cancellationToken);
 
                     System.IO.File.Delete(tempPath);
 
                     if (!result.isSuccess)
                         return Results.BadRequest(result.responseMsg);
+
                     if (result.hasBeenCancelled)
                         return Results.StatusCode(499);
 
                     uploadedFilePath = result.uploadedFilePath;
+                }
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(existing.AttachmentPath))
+                    {
+                        var fullPath = existing.AttachmentPath.Replace("\\", "/");
+
+                        var directory = Path.GetDirectoryName(fullPath)?.Replace("\\", "/");
+                        var fileName = Path.GetFileName(fullPath);
+
+                        if (!string.IsNullOrWhiteSpace(directory) && !string.IsNullOrWhiteSpace(fileName))
+                        {
+                            await FTPHelper.DeleteAsync(directory, fileName, cancellationToken);
+                        }
+                    }
+
+                    uploadedFilePath = null;
                 }
 
                 var dto = new PgsDeliverableAccomplishmentDto
@@ -141,8 +162,8 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .DisableAntiforgery()
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.Edit));
-          
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim,_pgsDeliverableAccomplishmentPermission.Edit));
+
             app.MapGet("/{id:long}/preview", async (long id, IPgsDeliverableAcomplishmentService service, HttpResponse response, CancellationToken token) =>
             {
                 var accomplishment = await service.GetByIdAsync(id, token);
@@ -167,7 +188,8 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
 
                 return Results.File(fileBytes, contentType);
             })
-           .WithTags(_pgsDeliverableAccomplishmentTag);
+           .WithTags(_pgsDeliverableAccomplishmentTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
 
             app.MapGet("/page", async (int page, int pageSize, IPgsDeliverableAcomplishmentService service, CancellationToken cancellationToken) =>
             {

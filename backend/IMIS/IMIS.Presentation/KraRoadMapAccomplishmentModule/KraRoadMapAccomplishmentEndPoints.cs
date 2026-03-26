@@ -82,8 +82,9 @@ namespace IMIS.Presentation.KraRoadMapAccomplishmentModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMapAccomplishmentTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapAccomplishmentPermission.View));
 
-
-            app.MapPut("/kraroadmapAccomplishment/{id:int}", async (int id, [FromForm] KraRoadMapAccomplishmentForm form,
+          
+            app.MapPut("/kraroadmapAccomplishment/{id:int}", async (int id,
+            [FromForm] KraRoadMapAccomplishmentForm form,
             IKraRoadmapAccomplishmentService service,
             IOutputCacheStore cache,
             CancellationToken cancellationToken) =>
@@ -103,22 +104,46 @@ namespace IMIS.Presentation.KraRoadMapAccomplishmentModule
                         return Results.BadRequest("FTP base path is missing.");
 
                     var tempPath = Path.GetTempFileName();
+
                     await using (var stream = System.IO.File.Create(tempPath))
                         await form.File.CopyToAsync(stream, cancellationToken);
 
                     var uniqueFileName = $"{Guid.NewGuid()}_{form.File.FileName}";
-                    var result = await FTPHelper.UploadAsync(tempPath, GetFtpBasePath(), uniqueFileName, cancellationToken);
+
+                    var result = await FTPHelper.UploadAsync(
+                        tempPath,
+                        GetFtpBasePath(),
+                        uniqueFileName,
+                        cancellationToken);
 
                     System.IO.File.Delete(tempPath);
 
                     if (!result.isSuccess)
                         return Results.BadRequest(result.responseMsg);
+
                     if (result.hasBeenCancelled)
                         return Results.StatusCode(499);
 
                     uploadedFilePath = result.uploadedFilePath;
                 }
-                
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(existing.AttachmentPath))
+                    {
+                        var fullPath = existing.AttachmentPath.Replace("\\", "/");
+
+                        var directory = Path.GetDirectoryName(fullPath)?.Replace("\\", "/");
+                        var fileName = Path.GetFileName(fullPath);
+
+                        if (!string.IsNullOrWhiteSpace(directory) && !string.IsNullOrWhiteSpace(fileName))
+                        {
+                            await FTPHelper.DeleteAsync(directory, fileName, cancellationToken);
+                        }
+                    }
+
+                    uploadedFilePath = null;
+                }
+
                 var dto = new KraRoadmapAccomplishmentDto
                 {
                     Id = id,
@@ -136,9 +161,9 @@ namespace IMIS.Presentation.KraRoadMapAccomplishmentModule
 
                 return Results.Ok(dto);
             })
-           .WithTags(_kraRoadMapAccomplishmentTag)
-           .DisableAntiforgery()
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapAccomplishmentPermission.Edit));
+            .WithTags(_kraRoadMapAccomplishmentTag)
+            .DisableAntiforgery()
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim,_kraRoadMapAccomplishmentPermission.Edit));
 
             app.MapGet("/kraroadmap-accomplishment/{id:long}/preview", async (long id, IKraRoadmapAccomplishmentService service, HttpResponse response, CancellationToken token) =>
             {
