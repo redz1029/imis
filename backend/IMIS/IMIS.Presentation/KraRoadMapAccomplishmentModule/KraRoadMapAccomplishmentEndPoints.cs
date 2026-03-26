@@ -165,7 +165,8 @@ namespace IMIS.Presentation.KraRoadMapAccomplishmentModule
 
                 return Results.File(fileBytes, contentType);
             })
-            .WithTags(_kraRoadMapAccomplishmentTag);
+            .WithTags(_kraRoadMapAccomplishmentTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMapAccomplishmentTag), true);
 
         }
     }
