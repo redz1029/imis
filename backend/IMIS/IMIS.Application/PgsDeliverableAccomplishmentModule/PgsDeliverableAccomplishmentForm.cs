@@ -11,5 +11,6 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
         public string? Remarks { get; set; }
         public string? AuditorRemarks { get; set; }
         public IFormFile? File { get; set; }
+        public bool RemoveAttachment { get; set; }
     }
 }
