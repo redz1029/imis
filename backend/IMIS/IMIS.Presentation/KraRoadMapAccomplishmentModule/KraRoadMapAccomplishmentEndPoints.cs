@@ -128,20 +128,27 @@ namespace IMIS.Presentation.KraRoadMapAccomplishmentModule
                 }
                 else
                 {
-                    if (!string.IsNullOrWhiteSpace(existing.AttachmentPath))
+                    if (form.RemoveAttachment)
                     {
-                        var fullPath = existing.AttachmentPath.Replace("\\", "/");
-
-                        var directory = Path.GetDirectoryName(fullPath)?.Replace("\\", "/");
-                        var fileName = Path.GetFileName(fullPath);
-
-                        if (!string.IsNullOrWhiteSpace(directory) && !string.IsNullOrWhiteSpace(fileName))
+                        if (!string.IsNullOrWhiteSpace(existing.AttachmentPath))
                         {
-                            await FTPHelper.DeleteAsync(directory, fileName, cancellationToken);
-                        }
-                    }
+                            var fullPath = existing.AttachmentPath.Replace("\\", "/");
 
-                    uploadedFilePath = null;
+                            var directory = Path.GetDirectoryName(fullPath)?.Replace("\\", "/");
+                            var fileName = Path.GetFileName(fullPath);
+
+                            if (!string.IsNullOrWhiteSpace(directory) && !string.IsNullOrWhiteSpace(fileName))
+                            {
+                                await FTPHelper.DeleteAsync(directory, fileName, cancellationToken);
+                            }
+                        }
+
+                        uploadedFilePath = null;
+                    }
+                    else
+                    {
+                        uploadedFilePath = existing.AttachmentPath;
+                    }
                 }
 
                 var dto = new KraRoadmapAccomplishmentDto

@@ -10,5 +10,6 @@ namespace IMIS.Application.KraRoadmapAccomplishmentModule
         public double PercentAccomplished { get; set; }
         public string? Remarks { get; set; }
         public IFormFile? File { get; set; }
+        public bool RemoveAttachment { get; set; }
     }
 }
