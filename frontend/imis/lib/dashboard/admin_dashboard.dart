@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/constant/constant.dart';
@@ -14,7 +13,6 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/widgets/dynamic_side_column.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../../performance_governance_system/enum/pgs_status.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -478,7 +476,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "Version 4.0  •  ${_formatDate(DateTime.now())}",
+                                "Version 1.0.3  •  ${_formatDate(DateTime.now())}",
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.75),
                                   fontSize: 12,
@@ -786,509 +784,166 @@ class AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildStatsRow() {
+    final stats = [
+      _StatItem(
+        label: "Total Users",
+        count: totalUsers.toString(),
+        icon: Icons.people_alt_outlined,
+        color: primaryColor,
+      ),
+      _StatItem(
+        label: "Total Auditors",
+        count: totalAuditor.toString(),
+        icon: Icons.verified_user_outlined,
+        color: primaryColor,
+      ),
+      _StatItem(
+        label: "Total Teams",
+        count: totalTeam.toString(),
+        icon: Icons.groups_2_outlined,
+        color: primaryColor,
+      ),
+      _StatItem(
+        label: "Total Offices",
+        count: totalOffices.toString(),
+        icon: Icons.apartment_outlined,
+        color: primaryColor,
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isNarrow = constraints.maxWidth < 400;
+        final width = constraints.maxWidth;
 
-        if (isNarrow) {
+        // PHONE (stacked)
+        if (width < 600) {
           return Column(
-            children: [
-              buildDashboardBox(
-                "Total Users",
-                Colors.blue,
-                totalUsers.toString(),
-                'assets/users.png',
-              ),
-              SizedBox(height: 10),
-              buildDashboardBox(
-                "Total Auditors",
-                Colors.green,
-                totalAuditor.toString(),
-                'assets/auditor.png',
-              ),
-              SizedBox(height: 10),
-              buildDashboardBox(
-                "Total Teams",
-                Colors.purple,
-                totalTeam.toString(),
-                'assets/team.png',
-              ),
-              SizedBox(height: 10),
-              buildDashboardBox(
-                "Total Offices",
-                const Color.fromARGB(255, 194, 106, 47),
-                totalOffices.toString(),
-                'assets/office.png',
-              ),
-            ],
-          );
-        } else {
-          return Row(
-            children: [
-              Expanded(
-                child: buildDashboardBox(
-                  "Total Users",
-                  Colors.blue,
-                  totalUsers.toString(),
-                  'assets/users.png',
-                ),
-              ),
-              Expanded(
-                child: buildDashboardBox(
-                  "Total Auditors",
-                  Colors.green,
-                  totalAuditor.toString(),
-                  'assets/auditor.png',
-                ),
-              ),
-              Expanded(
-                child: buildDashboardBox(
-                  "Total Teams",
-                  Colors.purple,
-                  totalTeam.toString(),
-                  'assets/team.png',
-                ),
-              ),
-              Expanded(
-                child: buildDashboardBox(
-                  "Total Offices",
-                  const Color.fromARGB(255, 194, 106, 47),
-                  totalOffices.toString(),
-                  'assets/office.png',
-                ),
-              ),
-            ],
+            children:
+                stats
+                    .map(
+                      (s) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _buildStatCard(s),
+                      ),
+                    )
+                    .toList(),
           );
         }
-      },
-    );
-  }
 
-  Widget _buildPerformanceChart(
-    List<KeyResultArea> kraList,
-    List<PgsDeliverables> deliverablesList,
-  ) {
-    final Map<int, double> kraPercentTotals = {};
-    for (var deliverable in deliverablesList) {
-      kraPercentTotals[deliverable.kra!.id] =
-          (kraPercentTotals[deliverable.kra!.id] ?? 0) +
-          (deliverable.percentDeliverables / 100);
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 600;
-        final chartHeight = isMobile ? 350.0 : 250.0;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8.0),
-              child: Center(
-                child: Text(
-                  'Performance Chart',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
+        // TABLET (2 columns grid)
+        if (width < 1000) {
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 2.8,
             ),
-            Container(
-              height: chartHeight,
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 24 : 8,
-                vertical: 8,
-              ),
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: 100,
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    touchTooltipData: BarTouchTooltipData(
-                      tooltipBgColor: Colors.blueGrey.withAlpha(200),
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        return BarTooltipItem(
-                          '${rod.toY.toStringAsFixed(1)}%',
-                          const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  borderData: FlBorderData(show: true),
-                  gridData: FlGridData(show: true),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 20,
-                        getTitlesWidget: (double value, TitleMeta meta) {
-                          return SideTitleWidget(
-                            axisSide: meta.axisSide,
-                            space: 4,
-                            child: Text(
-                              value.toInt().toString(),
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 1,
-                        reservedSize: 100,
-                        getTitlesWidget: (double value, TitleMeta meta) {
-                          int index = value.toInt();
-                          if (index >= 0 && index < kraList.length) {
-                            final kra = kraList[index];
-                            return Transform.translate(
-                              offset: const Offset(0, 80),
-                              child: Transform.rotate(
-                                angle: -0.872, // ~50° rotation
-                                alignment: Alignment.center,
-                                child: Text(
-                                  kra.name,
-                                  style: TextStyle(
-                                    fontSize: isMobile ? 8 : 10,
-                                    color: Colors.black87,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                  ),
-                  barGroups: List.generate(kraList.length, (index) {
-                    final kra = kraList[index];
-                    double percent = kraPercentTotals[kra.id] ?? 0;
-                    percent = percent.clamp(0.0, 100.0);
+            itemCount: stats.length,
+            itemBuilder: (context, index) {
+              return _buildStatCard(stats[index]);
+            },
+          );
+        }
 
-                    return BarChartGroupData(
-                      x: index,
-                      barRods: [
-                        BarChartRodData(
-                          toY: percent,
-                          color: primaryLightColor,
-                          width: 20,
-                          borderRadius: BorderRadius.circular(4),
-                          backDrawRodData: BackgroundBarChartRodData(
-                            show: true,
-                            toY: 100,
-                            color: Colors.grey.shade200,
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
-              ),
-            ),
-          ],
+        // DESKTOP (single row)
+        return Row(
+          children:
+              stats.map((s) {
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: _buildStatCard(s),
+                  ),
+                );
+              }).toList(),
         );
       },
     );
   }
 
-  Widget _buildStatusWidget(List<PgsDeliverables> deliverablesList) {
-    final statusCounts = countStatuses(deliverablesList);
-
-    int getCount(PgsStatus status) => statusCounts[status] ?? 0;
-
-    final List<PgsStatus> statusesToDisplay = [
-      PgsStatus.notStarted,
-      PgsStatus.onGoing,
-      PgsStatus.completed,
-    ];
-
-    final Map<PgsStatus, Color> statusColors = {
-      PgsStatus.notStarted: Colors.grey.shade700,
-
-      PgsStatus.completed: Colors.green,
-      PgsStatus.onGoing: Colors.deepOrange,
-    };
-
-    List<Widget> buildStatusRows() {
-      List<Widget> rows = [];
-      for (int i = 0; i < statusesToDisplay.length; i += 3) {
-        final status1 = statusesToDisplay[i];
-        final status2 =
-            (i + 1 < statusesToDisplay.length)
-                ? statusesToDisplay[i + 1]
-                : null;
-        final status3 =
-            (i + 2 < statusesToDisplay.length)
-                ? statusesToDisplay[i + 2]
-                : null;
-        final int totalCount = statusesToDisplay.fold(
-          0,
-          (sum, status) => sum + getCount(status),
-        );
-
-        rows.add(
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      getStatusLabel(status1),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: statusColors[status1] ?? Colors.black,
-                      ),
-                    ),
-
-                    Text(
-                      totalCount > 0
-                          ? "${((getCount(status1) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status1)})"
-                          : "0% (0)",
-                      style: const TextStyle(color: Colors.black54),
-                    ),
-                  ],
-                ),
-              ),
-              // Status 2
-              Expanded(
-                child:
-                    status2 != null
-                        ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              getStatusLabel(status2),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: statusColors[status2] ?? Colors.black,
-                              ),
-                            ),
-                            Text(
-                              totalCount > 0
-                                  ? "${((getCount(status2) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status2)})"
-                                  : "0% (0)",
-                              style: const TextStyle(color: Colors.black54),
-                            ),
-                          ],
-                        )
-                        : Container(),
-              ),
-
-              Expanded(
-                child:
-                    status3 != null
-                        ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              getStatusLabel(status3),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: statusColors[status3] ?? Colors.black,
-                              ),
-                            ),
-                            Text(
-                              totalCount > 0
-                                  ? "${((getCount(status3) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status3)})"
-                                  : "0% (0)",
-                              style: const TextStyle(color: Colors.black54),
-                            ),
-                          ],
-                        )
-                        : Container(),
-              ),
-            ],
-          ),
-        );
-        rows.add(const SizedBox(height: 16));
-      }
-      return rows;
-    }
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300, width: 1),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: mainBgColor,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "PGS Status",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  ...buildStatusRows(),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-
-            _buildPieChart(deliverablesList),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPieChart(List<PgsDeliverables> deliverablesList) {
-    final statusCounts = countStatuses(deliverablesList);
-
-    final Map<PgsStatus, Color> statusColors = {
-      PgsStatus.notStarted: Colors.grey.shade300,
-
-      PgsStatus.onGoing: Colors.deepOrange,
-
-      PgsStatus.completed: Colors.green,
-    };
-
-    final List<PgsStatus> statusesToDisplay = [
-      PgsStatus.notStarted,
-      PgsStatus.onGoing,
-      PgsStatus.completed,
-    ];
-
-    final int totalCount = statusesToDisplay.fold(
-      0,
-      (sum, status) => sum + (statusCounts[status] ?? 0),
-    );
-
-    final sections =
-        statusesToDisplay
-            .map((status) {
-              final count = statusCounts[status] ?? 0;
-              final percentage =
-                  totalCount > 0 ? (count / totalCount) * 100 : 0.0;
-              if (count == 0) return null;
-
-              return PieChartSectionData(
-                color: statusColors[status],
-                value: percentage,
-                title: '${percentage.toStringAsFixed(0)}%',
-                radius: 40,
-                titleStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              );
-            })
-            .where((section) => section != null)
-            .toList();
-
-    return SizedBox(
-      width: 200,
-      height: 200,
-      child: PieChart(
-        PieChartData(
-          centerSpaceRadius: 45,
-          sectionsSpace: 3,
-          sections: sections.cast<PieChartSectionData>(),
-        ),
-      ),
-    );
-  }
-}
-
-Widget buildDashboardBox(
-  String title,
-  Color color,
-  String count,
-  String iconAsset,
-) {
-  return Card(
-    elevation: 0,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    child: Container(
-      height: 130,
-      padding: EdgeInsets.all(16),
+  Widget _buildStatCard(_StatItem item) {
+    return Container(
+      height: 110,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade100, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            flex: 2,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  count,
+                  item.count,
                   style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: color,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                    height: 1,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
-                  title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  item.label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  height: 3,
+                  width: 32,
+                  decoration: BoxDecoration(
+                    color: item.color,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
               ],
             ),
           ),
-          Expanded(
-            flex: 1,
-            child: FittedBox(
-              fit: BoxFit.contain,
-              child: Image.asset(iconAsset),
+
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: item.color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Icon(item.icon, color: item.color, size: 22),
           ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }
 
-Map<PgsStatus, int> countStatuses(List<PgsDeliverables> deliverablesList) {
-  final Map<PgsStatus, int> statusCounts = {};
+class _StatItem {
+  final String label;
+  final String count;
+  final IconData icon;
+  final Color color;
 
-  for (var deliverable in deliverablesList) {
-    final status = deliverable.status;
-    statusCounts[status] = (statusCounts[status] ?? 0) + 1;
-  }
-
-  return statusCounts;
-}
-
-String getStatusLabel(PgsStatus status) {
-  switch (status) {
-    case PgsStatus.notStarted:
-      return "Not Started";
-    case PgsStatus.completed:
-      return "Completed";
-    case PgsStatus.onGoing:
-      return "On Going";
-  }
+  const _StatItem({
+    required this.label,
+    required this.count,
+    required this.icon,
+    required this.color,
+  });
 }

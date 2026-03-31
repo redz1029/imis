@@ -448,7 +448,7 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "Version 4.0  •  ${_formatDate(DateTime.now())}",
+                                "Version 1.0.3 •  ${_formatDate(DateTime.now())}",
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.75),
                                   fontSize: 12,

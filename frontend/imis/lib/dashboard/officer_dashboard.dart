@@ -33,16 +33,6 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
     'assets/image3.png',
     'assets/image4.png',
   ];
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) {
-      return 'Good Morning';
-    } else if (hour < 17) {
-      return 'Good Afternoon';
-    } else {
-      return 'Good Evening';
-    }
-  }
 
   @override
   void initState() {
@@ -441,7 +431,7 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "Version 4.0  •  ${_formatDate(DateTime.now())}",
+                                "Version 1.0.3  •  ${_formatDate(DateTime.now())}",
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.75),
                                   fontSize: 12,
@@ -865,26 +855,6 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
       },
     );
   }
-}
-
-Widget _buildStrategicMap() {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      final double maxWidth = constraints.maxWidth;
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              child: Image.asset('assets/strat_map.png', fit: BoxFit.contain),
-            ),
-          ),
-        ],
-      );
-    },
-  );
 }
 
 Widget buildDashboardBox({

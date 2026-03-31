@@ -2,7 +2,6 @@
 
 import 'dart:io';
 import 'dart:ui';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -87,6 +86,116 @@ class SidebarState extends State<Sidebar> {
   void initState() {
     super.initState();
     _initializeDashboard();
+    _checkLoginStatus();
+  }
+
+  void _checkLoginStatus() async {
+    final dio = Dio();
+    final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+
+    if (!mounted) return;
+
+    if (loggedUser == null) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => LoginPage()),
+        (route) => false,
+      );
+    }
+  }
+
+  int _firstPermittedSubPage(int page) {
+    if (page == 0) return 0;
+    if (page == 2) {
+      // SWOT: only certain roles see index 0
+      final allowedSwot = [
+        PermissionString.roleAdmin,
+        PermissionString.roleStandardUser,
+        PermissionString.serviceHead,
+        PermissionString.mcc,
+        PermissionString.coreTeam,
+        PermissionString.osm,
+      ];
+      return allowedSwot.contains(selectedRole) ? 0 : 0;
+    }
+    if (page == 4) return 0; // Settings always starts at 0
+
+    if (page == 1) {
+      // PGS — check each subpage in order and return the first one visible
+      final role = selectedRole;
+
+      // SubPage 0: Roadmaps
+      final canSeeRoadmaps = [
+        PermissionString.roleAdmin,
+        PermissionString.roleStandardUser,
+        PermissionString.mcc,
+        PermissionString.osm,
+        PermissionString.coreTeam,
+        PermissionString.serviceHead,
+        PermissionString.trainingOfficer,
+        PermissionString.hrOfficer,
+        PermissionString.serviceOfficer,
+        PermissionString.financeOfficer,
+        PermissionString.safetyOfficer,
+        PermissionString.facilityOfficer,
+        PermissionString.linkagesOfficer,
+        PermissionString.informationOfficer,
+        PermissionString.researchOfficer,
+        PermissionString.pgsAuditor,
+      ].contains(role);
+      if (canSeeRoadmaps) return 0;
+
+      // SubPage 1: Deliverables
+      final canSeeDeliverables = [
+        PermissionString.roleAdmin,
+        PermissionString.roleStandardUser,
+        PermissionString.serviceHead,
+        PermissionString.mcc,
+        PermissionString.coreTeam,
+        PermissionString.osm,
+      ].contains(role);
+      if (canSeeDeliverables) return 1;
+
+      // SubPage 2: Deliverable Status Monitoring
+      final canSeeMonitoring = [
+        PermissionString.roleAdmin,
+        PermissionString.serviceHead,
+        PermissionString.mcc,
+        PermissionString.osm,
+        PermissionString.pgsAuditor,
+        PermissionString.pgsHead,
+        PermissionString.coreTeam,
+      ].contains(role);
+      if (canSeeMonitoring) return 2;
+
+      // SubPage 3/4: Scorecard
+      final canSeeScorecard = [
+        PermissionString.roleAdmin,
+        PermissionString.trainingOfficer,
+        PermissionString.hrOfficer,
+        PermissionString.serviceOfficer,
+        PermissionString.financeOfficer,
+        PermissionString.safetyOfficer,
+        PermissionString.facilityOfficer,
+        PermissionString.linkagesOfficer,
+        PermissionString.informationOfficer,
+        PermissionString.researchOfficer,
+        PermissionString.coreTeam,
+        PermissionString.mcc,
+        PermissionString.osm,
+        PermissionString.pgsAuditor,
+      ].contains(role);
+      if (canSeeScorecard) return 3;
+
+      // SubPage 5: PGS Auditor Report
+      final canSeeAuditorReport = [
+        PermissionString.headAuditor,
+        PermissionString.roleAdmin,
+      ].contains(role);
+      if (canSeeAuditorReport) return 5;
+    }
+
+    return 0;
   }
 
   Future<void> _loadUserName() async {
@@ -266,7 +375,8 @@ class SidebarState extends State<Sidebar> {
                                                 setState(() {
                                                   selectedRole = role;
                                                   isSwitchingRole = false;
-                                                  selectedSubPage = 0;
+                                                  selectedSubPage =
+                                                      _firstPermittedSubPage(0);
                                                   selectedPage = 0;
                                                   selectedScreen = HomePage();
                                                 });
@@ -553,7 +663,10 @@ class SidebarState extends State<Sidebar> {
                                                       isSwitchingRole = false;
                                                       selectedScreen =
                                                           HomePage();
-                                                      selectedSubPage = 0;
+                                                      selectedSubPage =
+                                                          _firstPermittedSubPage(
+                                                            0,
+                                                          );
                                                       selectedPage = 0;
                                                     });
                                                   },
@@ -1055,7 +1168,23 @@ class SidebarState extends State<Sidebar> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  sidebarIcon(CupertinoIcons.chart_bar, 2, label: 'SWOT'),
+
+                  PermissionWidget(
+                    child:
+                        [
+                              PermissionString.roleAdmin,
+                              PermissionString.roleStandardUser,
+                              PermissionString.serviceHead,
+                              PermissionString.osm,
+                              PermissionString.coreTeam,
+                            ].contains(selectedRole)
+                            ? sidebarIcon(
+                              CupertinoIcons.chart_bar,
+                              2,
+                              label: 'SWOT',
+                            )
+                            : const SizedBox.shrink(),
+                  ),
                   const SizedBox(height: 18),
                   sidebarIcon(Icons.fact_check_outlined, 3, label: 'ISO'),
                   const Spacer(),
@@ -1261,7 +1390,8 @@ class SidebarState extends State<Sidebar> {
 
         setState(() {
           selectedPage = index;
-          selectedSubPage = 0;
+          // selectedSubPage = 0;
+          selectedSubPage = _firstPermittedSubPage(index);
         });
       },
       borderRadius: BorderRadius.circular(30),
@@ -1342,10 +1472,33 @@ class SidebarState extends State<Sidebar> {
                   message: 'Performance Governance System',
                   child: sidebarIcon(Icons.timeline_outlined, 1, label: 'PGS'),
                 ),
-                sidebarIcon(CupertinoIcons.chart_bar, 2, label: 'ISO'),
+                PermissionWidget(
+                  child:
+                      [
+                            PermissionString.roleAdmin,
+                            PermissionString.roleStandardUser,
+                            PermissionString.serviceHead,
+                            PermissionString.osm,
+                            PermissionString.coreTeam,
+                          ].contains(selectedRole)
+                          ? sidebarIcon(
+                            CupertinoIcons.chart_bar,
+                            2,
+                            label: 'SWOT',
+                          )
+                          : const SizedBox.shrink(),
+                ),
                 sidebarIcon(Icons.fact_check_outlined, 3, label: 'ISO'),
-                sidebarIcon(Icons.settings_outlined, 4, label: 'Settings'),
-                sidebarIcon(Icons.logout_outlined, 5, label: 'Logout'),
+                PermissionWidget(
+                  child:
+                      (selectedRole == PermissionString.roleAdmin)
+                          ? sidebarIcon(
+                            Icons.settings_outlined,
+                            4,
+                            label: 'Settings',
+                          )
+                          : SizedBox.shrink(),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -1370,7 +1523,9 @@ class SidebarState extends State<Sidebar> {
                                   selectedRole == PermissionString.mcc ||
                                   selectedRole == PermissionString.osm ||
                                   selectedRole == PermissionString.coreTeam ||
-                                  selectedRole == PermissionString.serviceHead)
+                                  selectedRole ==
+                                      PermissionString.serviceHead ||
+                                  selectedRole == PermissionString.pgsAuditor)
                               ? sidebarSubText(
                                 selectedRole == PermissionString.roleAdmin
                                     ? 'Create/View Roadmaps'

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/user/pages/login_page.dart';
-import 'package:imis/user_guide/user_guide_page.dart';
+import 'package:imis/navigation/sidebar.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -29,9 +28,6 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
-    final uri = Uri.base;
-    final isUserGuidePage = uri.queryParameters['page'] == 'user-guide';
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "CPeMS",
@@ -54,7 +50,7 @@ class _MainAppState extends State<MainApp> {
         hintColor: Colors.grey[400],
       ),
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: isUserGuidePage ? UserGuidePage() : LoginPage(),
+      home: Sidebar(),
     );
   }
 }
