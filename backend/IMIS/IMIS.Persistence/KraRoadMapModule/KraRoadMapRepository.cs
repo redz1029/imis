@@ -107,21 +107,23 @@ namespace IMIS.Persistence.KraRoadMapModule
         {
             return await ReadOnlyDbContext.Set<KraRoadMap>()
                 .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
-        }
-        public async Task<IEnumerable<KraRoadMapDescriptionFilter>> GetKraDescriptionsByKraIdAsync(int kraId,
-        CancellationToken cancellationToken)
+        }       
+        public async Task<IEnumerable<KraRoadMapDescriptionFilter>> GetKraDescriptionsByKraIdAsync(int kraId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<KraRoadMap>()
             .AsNoTracking()
-            .Where(rm => rm.KraId == kraId && rm.Deliverables != null)
+            .Where(rm => rm.KraId == kraId)
             .SelectMany(rm => rm.Deliverables!)
-            .Where(d => !string.IsNullOrEmpty(d.KraDescription))
-            .Select(d => new KraRoadMapDescriptionFilter { KraDescription = d.KraDescription! })
-            .Distinct()
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .Where(d => !string.IsNullOrWhiteSpace(d.KraDescription))
+            .GroupBy(d => d.KraDescription!.Trim())
+            .Where(g => !g.Any(x => x.IsEnabler))
+            .Select(g => new KraRoadMapDescriptionFilter
+            {
+                KraDescription = g.Key,                  
+            })
+            .ToListAsync(cancellationToken);
         }
-        
+
         public async Task<IEnumerable<KraRoadMapFilter>> GetByKraYearAndDescriptionAsync(
         int kraId,
         int year,
@@ -162,7 +164,7 @@ namespace IMIS.Persistence.KraRoadMapModule
             var query = _entities
             .AsNoTracking()
             .Include(x => x.Kra)
-            .Include(x => x.KraRoadMapPeriod)
+            .Include(x => x.KraRoadMapPeriod)   
             .Include(x => x.Deliverables)
             .Include(x => x.Kpis);
 
