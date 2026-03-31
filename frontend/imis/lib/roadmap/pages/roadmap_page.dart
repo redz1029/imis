@@ -427,13 +427,89 @@ class _StrategicSection extends StatelessWidget {
                       idx: idx,
                       kpi: kpi,
                       canDelete: kpis.length > 1,
-                      onDelete: () => onRemoveKpi(idx),
+                      onDelete:
+                          () => showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder:
+                                (ctx) => AlertDialog(
+                                  title: const Text('Confirm Delete'),
+                                  content: const Text(
+                                    'Are you sure you want to remove this KPI? This action cannot be undone.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text(
+                                        'Cancel',
+                                        style: TextStyle(color: primaryColor),
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryColor,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.pop(ctx);
+                                        onRemoveKpi(idx);
+                                      },
+                                      child: const Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                          ),
                     )
                     : _KpiRowLarge(
                       idx: idx,
                       kpi: kpi,
                       canDelete: kpis.length > 1,
-                      onDelete: () => onRemoveKpi(idx),
+                      onDelete:
+                          () => showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder:
+                                (ctx) => AlertDialog(
+                                  title: const Text('Confirm Delete'),
+                                  content: const Text(
+                                    'Are you sure you want to remove this KPI? This action cannot be undone.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text(
+                                        'Cancel',
+                                        style: TextStyle(color: primaryColor),
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryColor,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.pop(ctx);
+                                        onRemoveKpi(idx);
+                                      },
+                                      child: const Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                          ),
                     ),
           );
         }),
@@ -712,7 +788,7 @@ class _LargeTableSection extends StatelessWidget {
                       final row = e.value;
                       return _buildDataRow(
                         row: row,
-                        onDelete: () => onRemoveRow(idx),
+                        onDelete: () => _confirmRemoveRow(context, idx),
                         onEnablerChanged: (v) => onEnablerChanged(idx, v),
                         index: idx,
                       );
@@ -744,6 +820,45 @@ class _LargeTableSection extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _confirmRemoveRow(BuildContext context, int idx) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Confirm Delete'),
+            content: const Text(
+              'Are you sure you want to remove this row? This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: primaryColor),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  onRemoveRow(idx);
+                },
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
     );
   }
 
@@ -930,7 +1045,7 @@ class _RowCard extends StatelessWidget {
                 permission: AppPermissions.editKraRoadMap,
                 child: IconButton(
                   icon: const Icon(
-                    Icons.delete,
+                    CupertinoIcons.delete_simple,
                     color: Colors.redAccent,
                     size: 20,
                   ),
@@ -1258,7 +1373,15 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog> {
                 },
                 onCancel: () => Navigator.pop(context),
                 onSave: () async {
-                  // Validation
+                  setState(() {
+                    _rows.removeWhere((row) {
+                      final kraEmpty = row.kraCtrl.text.trim().isEmpty;
+                      final allYearsEmpty = row.yearCtrls.values.every(
+                        (ctrl) => ctrl.text.trim().isEmpty,
+                      );
+                      return kraEmpty && allYearsEmpty;
+                    });
+                  });
                   final Set<String> kraSet = {};
                   for (final row in _rows) {
                     final kraText = row.kraCtrl.text.trim().toLowerCase();
