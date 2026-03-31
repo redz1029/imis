@@ -28,7 +28,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
   }
 
   @override
@@ -36,24 +35,6 @@ class _LoginPageState extends State<LoginPage> {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  void _checkLoginStatus() async {
-    final dio = Dio();
-    final loggedUser = await AuthUtil.processTokenValidity(dio, context);
-
-    if (!mounted) return;
-
-    if (loggedUser != null) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => Sidebar()),
-        (route) => false,
-      );
-    } else {
-      setState(() {
-        isPageLoaded = true;
-      });
-    }
   }
 
   Future<void> login(BuildContext context, UserLogin user) async {
@@ -174,7 +155,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
 
-        // White diagonal panel
         Positioned.fill(child: CustomPaint(painter: _DiagonalPanelPainter())),
 
         Row(
