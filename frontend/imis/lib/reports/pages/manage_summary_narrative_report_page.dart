@@ -3,6 +3,7 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
@@ -505,7 +506,7 @@ class ManageSummaryNarrativeDialogState
           permission: AppPermissions.editPerformanceGovernanceSystem,
           child: IconButton(
             icon: Icon(
-              Icons.delete,
+              CupertinoIcons.delete_simple,
               color: const Color(0xFFDD4F4F),
               size: compact ? 16 : 18,
             ),
