@@ -9,7 +9,6 @@ import 'package:imis/performance_governance_system/process_core_support/pages/pr
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
-import 'package:imis/reports/pages/manage_summary_narrative_report_page.dart';
 import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/team/pages/team_page.dart';
@@ -51,8 +50,7 @@ class NavigationScreenFactory {
         return UserOfficePage(key: roleKey);
       case 13:
         return UserRolePage(key: roleKey);
-      case 14:
-        return ManageSummaryNarrativeReportPage(key: roleKey);
+
       case 15:
         return ViewSummaryNarrativeReportPage(key: roleKey);
       case 16:
