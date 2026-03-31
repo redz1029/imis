@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, file_names
+// ignore_for_file: file_names
 
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -9,12 +9,14 @@ import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
-import 'package:imis/widgets/accomplishment_pgs_auditor_widget.dart';
+import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
+import 'package:imis/widgets/accomplishment_widget.dart/accomplishment_pgs_auditor_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:universal_html/html.dart' as html;
-import '../constant/permissions.dart';
-import '../utils/permission_service.dart';
+import '../../constant/permissions.dart';
+import '../../utils/permission_service.dart';
 
 final _accomplishmentService = DeliverableStatusMonitoringService(dio);
 final permissionService = PermissionService();
@@ -40,7 +42,51 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
   String? fileName;
   final Dio dio = Dio();
   bool isLoading = false;
+  Uint8List? _serverImageCache;
+
   OverlayEntry? _overlayEntry;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefetchServerImage();
+  }
+
+  Future<void> _prefetchServerImage() async {
+    final row = widget.row;
+    if (row.accomplishmentId == null) return;
+    if (row.attachmentBytes != null) return;
+
+    final name = row.attachmentPath?.split("/").last ?? "";
+    if (name.toLowerCase().endsWith('.pdf')) return;
+    if (name.isEmpty) return;
+
+    try {
+      final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+      final token = loggedUser?.accessToken;
+      if (token == null) return;
+
+      final previewUrl =
+          "${ApiEndpoint.baseUrl}/${row.accomplishmentId}/preview";
+
+      final response = await dio.get<List<int>>(
+        previewUrl,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {"Authorization": "Bearer $token"},
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          _serverImageCache = Uint8List.fromList(response.data!);
+        });
+      }
+    } catch (e) {
+      debugPrint("Thumbnail prefetch failed: $e");
+    }
+  }
+
   Future<void> pickFile() async {
     setState(() {
       isLoading = true;
@@ -95,12 +141,17 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
         }
       }
     } catch (e) {
-      debugPrint("File picking failed: $e");
+      debugPrint("File picking failed:");
     } finally {
       setState(() {
         isLoading = false;
       });
     }
+  }
+
+  Uint8List? get _thumbnailBytes {
+    if (widget.row.attachmentBytes != null) return widget.row.attachmentBytes;
+    return _serverImageCache;
   }
 
   void _showTooltip(BuildContext context, String message) {
@@ -500,23 +551,23 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                 builder: (context) {
                   final hasAttachment =
                       widget.row.attachmentPath != null &&
-                      widget.row.attachmentPath!.isNotEmpty &&
-                      widget.row.accomplishmentId != null;
+                      widget.row.attachmentPath!.isNotEmpty;
 
-                  final previewUrl =
-                      hasAttachment
-                          ? 'https://localhost:7273/${widget.row.accomplishmentId}/preview'
-                          : null;
-
-                  final fileNameToUse =
+                  final rawName =
                       fileName ??
                       widget.row.attachmentPath?.split("/").last ??
                       "Attachment";
 
+                  final fileNameToUse =
+                      rawName.contains('_')
+                          ? rawName.substring(rawName.indexOf('_') + 1)
+                          : rawName;
                   final isPdf = fileNameToUse.toLowerCase().endsWith('.pdf');
                   final isImage = !isPdf;
 
-                  if (previewUrl == null) {
+                  if (!hasAttachment &&
+                      webImage == null &&
+                      mobileImage == null) {
                     return Column(
                       children: [
                         IconButton(
@@ -543,38 +594,60 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                             Expanded(
                               child: GestureDetector(
                                 onTap: () {
+                                  final imageBytes = _thumbnailBytes;
+                                  if (imageBytes == null) return;
                                   showDialog(
                                     context: context,
                                     builder:
                                         (_) => Dialog(
                                           child: InteractiveViewer(
-                                            child: Image.network(
-                                              previewUrl,
+                                            child: Image.memory(
+                                              imageBytes,
                                               fit: BoxFit.contain,
                                             ),
                                           ),
                                         ),
                                   );
                                 },
+                                // child: ClipRRect(
+                                //   borderRadius: BorderRadius.circular(6),
+                                //   child: Image.network(
+                                //     previewUrl,
+                                //     height: 80,
+                                //     width: double.infinity,
+                                //     fit: BoxFit.cover,
+                                //     errorBuilder: (context, error, stackTrace) {
+                                //       return Container(
+                                //         height: 80,
+                                //         color: Colors.grey.shade200,
+                                //         child: const Center(
+                                //           child: Icon(
+                                //             Icons.image_not_supported,
+                                //           ),
+                                //         ),
+                                //       );
+                                //     },
+                                //   ),
+                                // ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(6),
-                                  child: Image.network(
-                                    previewUrl,
-                                    height: 80,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        height: 80,
-                                        color: Colors.grey.shade200,
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.image_not_supported,
+                                  child:
+                                      _thumbnailBytes != null
+                                          ? Image.memory(
+                                            _thumbnailBytes!,
+                                            height: 80,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                          )
+                                          : Container(
+                                            height: 80,
+                                            color: Colors.grey.shade200,
+                                            child: const Center(
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                  ),
                                 ),
                               ),
                             ),
@@ -591,9 +664,11 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                                   webImage = null;
                                   mobileImage = null;
                                   fileName = null;
-                                  widget.row.attachmentPath = null;
+
                                   widget.row.attachmentBytes = null;
-                                  widget.row.accomplishmentId = null;
+                                  widget.row.attachmentPath = null;
+
+                                  widget.row.attachmentDeleted = true;
                                 });
                               },
                             ),
@@ -640,9 +715,11 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                             webImage = null;
                             mobileImage = null;
                             fileName = null;
-                            widget.row.attachmentPath = null;
+
                             widget.row.attachmentBytes = null;
-                            widget.row.accomplishmentId = null;
+                            widget.row.attachmentPath = null;
+
+                            widget.row.attachmentDeleted = true;
                           });
                         },
                       ),
@@ -764,6 +841,7 @@ Future<void> saveAccomplishmentData(
           double.tryParse(row.percentageController.text) ?? 0,
       "remarks": row.remarksController.text,
       "auditorRemarks": row.auditorRemarksController.text,
+      "removeAttachment": row.attachmentDeleted,
     };
 
     final formData = FormData.fromMap({

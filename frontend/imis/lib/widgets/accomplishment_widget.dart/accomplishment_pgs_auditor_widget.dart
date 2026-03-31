@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
@@ -14,8 +13,8 @@ import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:universal_html/html.dart' as html;
-import '../constant/permissions.dart';
-import '../performance_governance_system/enum/pgs_status.dart';
+import '../../constant/permissions.dart';
+import '../../performance_governance_system/enum/pgs_status.dart';
 
 final Dio dio = Dio();
 final _accomplishmentService = DeliverableStatusMonitoringService(dio);
@@ -23,7 +22,6 @@ final Map<int, AchievementPeriodData> achievementsList = {};
 
 class AchievementPeriodData {
   final List<TrackingRowData> rows;
-
   AchievementPeriodData({required this.rows});
 }
 
@@ -35,6 +33,10 @@ class TrackingRowData {
   String? attachmentPath;
   Uint8List? attachmentBytes;
   int? accomplishmentId;
+  bool attachmentDeleted = false;
+  String? existingAttachmentId;
+
+  final ValueNotifier<int> refreshTrigger = ValueNotifier(0);
 
   TrackingRowData({
     required this.remarksController,
@@ -44,6 +46,7 @@ class TrackingRowData {
     this.attachmentBytes,
     this.accomplishmentId,
     required this.auditorRemarksController,
+    this.existingAttachmentId,
   });
 }
 
@@ -60,9 +63,7 @@ Color getStatusColor(String status) {
   }
 }
 
-Color getStatusTextColor(String status) {
-  return Colors.white;
-}
+Color getStatusTextColor(String status) => Colors.white;
 
 class TrackingRowWidget extends StatefulWidget {
   final String period;
@@ -83,19 +84,33 @@ class TrackingRowWidget extends StatefulWidget {
 }
 
 class _TrackingRowWidgetState extends State<TrackingRowWidget> {
-  File? mobileImage;
-  Uint8List? webImage;
   String? fileName;
   bool isLoading = false;
-  bool isLoadingPreview = false;
   Uint8List? _serverImageCache;
   OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _listenToRefreshTrigger();
+      _prefetchServerImage();
+    });
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _prefetchServerImage());
+  void _listenToRefreshTrigger() {
+    final row =
+        achievementsList[widget.deliverableId]?.rows[widget.periodIndex];
+    if (row == null) return;
+
+    row.refreshTrigger.addListener(() {
+      if (!mounted) return;
+      setState(() {
+        _serverImageCache = null;
+        fileName = null;
+      });
+      _prefetchServerImage();
+    });
   }
 
   Future<void> _prefetchServerImage() async {
@@ -103,13 +118,11 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
         achievementsList[widget.deliverableId]?.rows[widget.periodIndex];
     if (row == null) return;
     if (row.accomplishmentId == null) return;
-    if (row.attachmentBytes != null) {
-      return;
-    }
+    if (row.attachmentBytes != null) return;
 
     final name = row.attachmentPath?.split("/").last ?? "";
     if (_isPdf(name)) return;
-    if (_serverImageCache != null) return;
+    if (name.isEmpty) return;
 
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
@@ -126,6 +139,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
           headers: {"Authorization": "Bearer $token"},
         ),
       );
+
       if (mounted) {
         setState(() {
           _serverImageCache = Uint8List.fromList(response.data!);
@@ -137,9 +151,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
   }
 
   Future<void> pickFile() async {
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -161,44 +173,39 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
             toastDuration: const Duration(seconds: 3),
             toastAlignment: Alignment.topCenter,
           ).show(context);
-
-          setState(() {
-            isLoading = false;
-          });
+          setState(() => isLoading = false);
           return;
         }
 
         if (kIsWeb) {
           Uint8List? bytes = file.bytes;
           setState(() {
-            webImage = bytes;
             fileName = file.name;
             final row =
                 achievementsList[widget.deliverableId]!.rows[widget
                     .periodIndex];
             row.attachmentPath = file.name;
             row.attachmentBytes = bytes;
+            row.attachmentDeleted = false;
           });
         } else {
           File pickedFile = File(file.path!);
           final bytes = await pickedFile.readAsBytes();
           setState(() {
-            mobileImage = pickedFile;
             fileName = file.name;
             final row =
                 achievementsList[widget.deliverableId]!.rows[widget
                     .periodIndex];
             row.attachmentPath = pickedFile.path;
             row.attachmentBytes = bytes;
+            row.attachmentDeleted = false;
           });
         }
       }
     } catch (e) {
       debugPrint("File picking failed: $e");
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
   }
 
@@ -364,13 +371,11 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
     final row =
         achievementsList[widget.deliverableId]?.rows[widget.periodIndex];
     if (row?.attachmentBytes != null) return row!.attachmentBytes;
-    if (webImage != null) return webImage;
     return _serverImageCache;
   }
 
   Widget _buildAttachmentCell(TrackingRowData row, bool canEdit) {
-    final hasAttachment =
-        row.attachmentPath != null || webImage != null || mobileImage != null;
+    final hasAttachment = row.attachmentPath != null;
 
     if (!hasAttachment) {
       return Column(
@@ -444,12 +449,11 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                   padding: EdgeInsets.zero,
                   onPressed: () {
                     setState(() {
-                      if (kIsWeb) webImage = null;
-                      if (!kIsWeb) mobileImage = null;
                       fileName = null;
                       row.attachmentPath = null;
                       row.attachmentBytes = null;
                       _serverImageCache = null;
+                      row.attachmentDeleted = true;
                     });
                   },
                   tooltip: "Delete",
@@ -529,14 +533,13 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
             ),
             onTap: () {
               if (status == PgsStatus.onGoing) {
-                _showTooltip(context, 'Enter value from 1–99 only');
+                _showTooltip(context, 'Enter value from 1-99 only');
               } else if (status == PgsStatus.completed) {
-                _showTooltip(context, 'Enter value from 100–999 only');
+                _showTooltip(context, 'Enter value from 100-999 only');
               }
             },
             onChanged: (val) {
               if (val.isEmpty) return;
-
               int parsed = int.tryParse(val) ?? 0;
 
               if (selectedStatus.value == PgsStatus.completed) {
@@ -651,9 +654,11 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
       PgsStatus.completed:
           "Deliverable has been finished and meets PGS requirements",
     };
+
     final canEdit = permissionService.hasPermission(
       AppPermissions.editPgsDeliverableAccomplishment,
     );
+
     final statusDisplayNames = {
       PgsStatus.notStarted: "Not Started",
       PgsStatus.onGoing: "On Going",
@@ -815,6 +820,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
               },
             ),
           ),
+
           Expanded(
             flex: 3,
             child: ConstrainedBox(
@@ -916,13 +922,11 @@ Future<void> saveAccomplishmentData(
   final periodData = achievementsList[currentDeliverableId];
   if (periodData != null) {
     for (var row in periodData.rows) {
-      File? file =
-          (!kIsWeb && row.attachmentPath != null)
-              ? File(row.attachmentPath!)
-              : null;
-      Uint8List? bytes = row.attachmentBytes;
-      final data = {
-        if (row.accomplishmentId != null) "id": row.accomplishmentId,
+      final hasNewFile = row.attachmentBytes != null;
+      final isUpdate = row.accomplishmentId != null;
+
+      final Map<String, dynamic> fields = {
+        if (isUpdate) "id": row.accomplishmentId,
         "pgsDeliverableId": currentDeliverableId,
         "postingDate": DateTime.now().toIso8601String(),
         "userId": userId,
@@ -930,22 +934,37 @@ Future<void> saveAccomplishmentData(
             double.tryParse(row.percentageController.text) ?? 0,
         "remarks": row.remarksController.text,
         "auditorRemarks": row.auditorRemarksController.text,
+        if (row.attachmentDeleted) "removeAttachment": true,
       };
-      final formData = FormData.fromMap({
-        ...data,
-        if (bytes != null)
-          "file": MultipartFile.fromBytes(
-            bytes,
-            filename: row.attachmentPath?.split("/").last ?? "upload.bin",
-          ),
-        if (file != null)
-          "file": await MultipartFile.fromFile(
-            file.path,
-            filename: row.attachmentPath?.split("/").last,
-          ),
-      });
 
+      final Map<String, dynamic> formMap = {...fields};
+
+      if ((!row.attachmentDeleted) &&
+          (hasNewFile || (!kIsWeb && row.attachmentPath != null))) {
+        if (kIsWeb) {
+          final bytesToSend =
+              hasNewFile
+                  ? row.attachmentBytes!
+                  : await File(row.attachmentPath!).readAsBytes();
+          formMap["file"] = MultipartFile.fromBytes(
+            bytesToSend,
+            filename: row.attachmentPath?.split("/").last ?? "upload.bin",
+          );
+        } else {
+          final pathToSend =
+              hasNewFile ? row.attachmentPath! : row.attachmentPath!;
+          formMap["file"] = await MultipartFile.fromFile(
+            pathToSend,
+            filename: pathToSend.split("/").last,
+          );
+        }
+      }
+
+      final formData = FormData.fromMap(formMap);
       await _accomplishmentService.saveAccomplishment(formData);
+
+      row.attachmentBytes = null;
+      row.attachmentDeleted = false;
     }
   }
 }
