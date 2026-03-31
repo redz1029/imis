@@ -45,6 +45,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.only(top: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
@@ -56,17 +57,24 @@ class _AnnouncementListState extends State<AnnouncementList> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(
-                    'Announcements',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: primaryTextColor,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                  child: FutureBuilder<List<Announcement>>(
+                    future: _announcementsFuture,
+                    builder: (context, snapshot) {
+                      final count = snapshot.data?.length ?? 0;
+                      final label =
+                          count == 0 ? 'Announcement' : '$count Announcements';
+                      return Text(
+                        snapshot.hasData ? label : 'Announcements',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: primaryTextColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
                   ),
                 ),
-
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -157,8 +165,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
                           showAnnouncementFormDialog(
                             id: announcement.id.toString(),
                             title: announcement.title,
-                            fromDate: announcement.fromDate,
-                            endDate: announcement.toDate,
+
                             description: announcement.description,
                             isActive: announcement.isActive,
                           );
@@ -261,8 +268,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
                                         showAnnouncementFormDialog(
                                           id: ann.id.toString(),
                                           title: ann.title,
-                                          fromDate: ann.fromDate,
-                                          endDate: ann.toDate,
                                           description: ann.description,
                                           isActive: ann.isActive,
                                           onSaved: () {
@@ -303,8 +308,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
   void showAnnouncementFormDialog({
     String? id,
     String? title,
-    DateTime? fromDate,
-    DateTime? endDate,
     String? description,
     bool isActive = false,
     Function()? onSaved,
@@ -313,8 +316,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
     TextEditingController descriptionController = TextEditingController(
       text: description,
     );
-    DateTime? selectedFromDate = fromDate;
-    DateTime? selectedEndDate = endDate;
+
     bool localIsActive = isActive;
 
     showDialog(
@@ -382,111 +384,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
                     ),
                     const SizedBox(height: 14),
 
-                    // From Date
-                    SizedBox(
-                      width: 450,
-                      child: TextFormField(
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: 'From Date',
-                          suffixIcon: const Icon(Icons.calendar_today),
-                          border: const OutlineInputBorder(),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelStyle: const TextStyle(
-                            color: primaryColor,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Plase select a date';
-                          }
-                          return null;
-                        },
-                        controller: TextEditingController(
-                          text:
-                              selectedFromDate != null
-                                  ? "${selectedFromDate!.toLocal()}".split(
-                                    ' ',
-                                  )[0]
-                                  : '',
-                        ),
-                        onTap: () async {
-                          DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: selectedFromDate ?? DateTime.now(),
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2101),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedFromDate = picked;
-                              if (selectedEndDate != null &&
-                                  selectedEndDate!.isBefore(picked)) {
-                                selectedEndDate = null;
-                              }
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // End Date
-                    SizedBox(
-                      width: 450,
-                      child: TextFormField(
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: 'To Date',
-                          suffixIcon: const Icon(Icons.calendar_today),
-                          border: const OutlineInputBorder(),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelStyle: const TextStyle(
-                            color: primaryColor,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please select a date';
-                          }
-                          return null;
-                        },
-                        controller: TextEditingController(
-                          text:
-                              selectedEndDate != null
-                                  ? "${selectedEndDate?.toLocal()}".split(
-                                    ' ',
-                                  )[0]
-                                  : '',
-                        ),
-                        onTap: () async {
-                          if (selectedFromDate == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please select start date first'),
-                              ),
-                            );
-                            return;
-                          }
-
-                          DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: selectedEndDate ?? DateTime.now(),
-                            firstDate: selectedFromDate!,
-                            lastDate: DateTime(2101),
-                          );
-                          if (picked != null) {
-                            setState(() => selectedEndDate = picked);
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
                     // Description
                     SizedBox(
                       width: 450,
@@ -538,8 +435,8 @@ class _AnnouncementListState extends State<AnnouncementList> {
                       final announcement = Announcement(
                         id: int.tryParse(id ?? '0') ?? 0,
                         title: titleController.text,
-                        fromDate: selectedFromDate!,
-                        toDate: selectedEndDate!,
+                        fromDate: DateTime.now(),
+                        toDate: DateTime.now(),
                         description: descriptionController.text,
                         isActive: localIsActive,
                         isDeleted: false,
@@ -607,58 +504,166 @@ class _AnnouncementCard extends StatelessWidget {
     final fromDateStr = _dateConverter.toJson(announcement.fromDate);
     final toDateStr = _dateConverter.toJson(announcement.toDate);
     final displayDate =
-        fromDateStr == toDateStr ? fromDateStr : '$fromDateStr - $toDateStr';
+        fromDateStr == toDateStr ? fromDateStr : '$fromDateStr – $toDateStr';
+    String getRelativeTime(DateTime date) {
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inSeconds < 60) {
+        return 'Just now';
+      } else if (difference.inMinutes < 60) {
+        final mins = difference.inMinutes;
+        return '$mins ${mins == 1 ? 'minute' : 'minutes'} ago';
+      } else if (difference.inHours < 24) {
+        final hrs = difference.inHours;
+        return '$hrs ${hrs == 1 ? 'hour' : 'hours'} ago';
+      } else if (difference.inDays < 7) {
+        final days = difference.inDays;
+        return '$days ${days == 1 ? 'day' : 'days'} ago';
+      } else {
+        // fallback to actual date if too old
+        return _dateConverter.toJson(date);
+      }
+    }
 
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFFCD2C58).withValues(alpha: 0.05),
-            const Color.fromARGB(255, 102, 209, 241).withValues(alpha: 0.20),
-            const Color(0xFFCD2C58).withValues(alpha: 0.30),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(5),
-        border: const Border(
-          left: BorderSide(color: Color(0xFFCD2C58), width: 4),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade300),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SelectableText(
-            announcement.title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          SelectableText(
-            displayDate,
-            style: const TextStyle(color: Colors.black54, fontSize: 12),
-          ),
-          gap6px,
-          SelectableLinkify(
-            text: announcement.description,
-            style: const TextStyle(fontSize: 14),
-            linkStyle: const TextStyle(
-              color: Colors.blueAccent,
-              decoration: TextDecoration.underline,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Left accent bar
+            Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFCD2C58),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(10),
+                  bottomLeft: Radius.circular(10),
+                ),
+              ),
             ),
-            onOpen: (link) async {
-              final url = Uri.parse(link.url);
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url, mode: LaunchMode.externalApplication);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Could not open link')),
-                );
-              }
-            },
-          ),
-        ],
+
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: SelectableText(
+                            announcement.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: Color(0xFF1A1A2E),
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                        PermissionWidget(
+                          allowedRoles: [
+                            PermissionString.roleAdmin,
+                            PermissionString.mcc,
+                          ],
+                          child: Tooltip(
+                            message: 'Edit announcement',
+                            child: InkWell(
+                              onTap: () => onEdit(announcement),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.edit_outlined,
+                                  size: 15,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time_outlined,
+                          size: 11,
+                          color: const Color(0xFFCD2C58).withValues(alpha: 0.8),
+                        ),
+                        const SizedBox(width: 4),
+                        Tooltip(
+                          message: displayDate,
+                          child: Text(
+                            getRelativeTime(announcement.fromDate),
+                            style: TextStyle(
+                              color: const Color(
+                                0xFFCD2C58,
+                              ).withValues(alpha: 0.8),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Divider(
+                      color: Colors.grey.shade100,
+                      height: 1,
+                      thickness: 1,
+                    ),
+                    const SizedBox(height: 8),
+                    SelectableLinkify(
+                      text: announcement.description,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF4A4A6A),
+                        height: 1.5,
+                      ),
+                      linkStyle: const TextStyle(
+                        color: Colors.lightBlue,
+                        decoration: TextDecoration.underline,
+                        fontSize: 13,
+                      ),
+                      onOpen: (link) async {
+                        final url = Uri.parse(link.url);
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Could not open link'),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,116 +1,3 @@
-// import 'dart:io';
-
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:imis/constant/constant.dart';
-// import 'package:open_file/open_file.dart';
-// import 'package:path_provider/path_provider.dart';
-
-// class StrategyRoadmapPage extends StatefulWidget {
-//   const StrategyRoadmapPage({super.key});
-
-//   @override
-//   State<StrategyRoadmapPage> createState() => _RoadmapState();
-// }
-
-// class _RoadmapState extends State<StrategyRoadmapPage> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: const EdgeInsets.all(16),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Expanded(
-//             child: Container(
-//               padding: const EdgeInsets.all(20),
-//               decoration: BoxDecoration(
-//                 color: Theme.of(context).cardColor,
-//                 borderRadius: BorderRadius.circular(20),
-//                 boxShadow: [
-//                   BoxShadow(
-//                     blurRadius: 10,
-//                     color: Colors.black.withValues(alpha: 0.05),
-//                   ),
-//                 ],
-//               ),
-//               child: Column(
-//                 children: [
-//                   // Export Button
-//                   Align(
-//                     alignment: Alignment.centerRight,
-//                     child: ElevatedButton.icon(
-//                       onPressed: () async {
-//                         try {
-//                           // 1. Load PDF from assets
-//                           final data = await rootBundle.load(
-//                             'assets/strategy_map.pdf',
-//                           );
-//                           final bytes = data.buffer.asUint8List();
-
-//                           // 2. Get temp directory
-//                           final dir = await getTemporaryDirectory();
-
-//                           // 3. Create file
-//                           final file = File('${dir.path}/strat_map.pdf');
-
-//                           // 4. Write file
-//                           await file.writeAsBytes(bytes);
-
-//                           // 5. Open file
-//                           await OpenFile.open(file.path);
-//                         } catch (e) {
-//                           ScaffoldMessenger.of(context).showSnackBar(
-//                             SnackBar(content: Text('Failed to open PDF')),
-//                           );
-//                         }
-//                       },
-//                       style: ElevatedButton.styleFrom(
-//                         backgroundColor: primaryColor,
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(4),
-//                         ),
-//                         padding: const EdgeInsets.symmetric(
-//                           vertical: 12,
-//                           horizontal: 16,
-//                         ),
-//                       ),
-//                       icon: Icon(
-//                         Icons.download_outlined,
-//                         size: 18,
-//                         color: Theme.of(context).cardColor,
-//                       ),
-//                       label: Text(
-//                         "Export as PDF",
-//                         style: TextStyle(
-//                           fontSize: 16,
-//                           color: Theme.of(context).cardColor,
-//                         ),
-//                       ),
-//                     ),
-//                   ),
-//                   const SizedBox(height: 20),
-//                   Expanded(
-//                     child: Center(
-//                       child: InteractiveViewer(
-//                         child: Image.asset(
-//                           'assets/strat_map.png',
-//                           width: double.infinity,
-//                           height: double.infinity,
-//                           fit: BoxFit.contain,
-//                         ),
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -134,7 +21,6 @@ class _RoadmapState extends State<StrategyRoadmapPage> {
       final bytes = data.buffer.asUint8List();
 
       if (kIsWeb) {
-        // ✅ Web: trigger browser download
         final blob = html.Blob([bytes], 'application/pdf');
         final url = html.Url.createObjectUrlFromBlob(blob);
         final anchor =
@@ -157,7 +43,7 @@ class _RoadmapState extends State<StrategyRoadmapPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
