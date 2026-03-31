@@ -44,7 +44,7 @@ Future<void> openPGSReportNewTab(String pgsId, String officeName) async {
       final htmlUrl = html.Url.createObjectUrlFromBlob(htmlBlob);
 
       html.window.open(htmlUrl, "_blank");
-
+      // html.window.open(pdfUrl, "_blank");
       Future.delayed(const Duration(seconds: 15), () {
         html.Url.revokeObjectUrl(pdfUrl);
         html.Url.revokeObjectUrl(htmlUrl);
