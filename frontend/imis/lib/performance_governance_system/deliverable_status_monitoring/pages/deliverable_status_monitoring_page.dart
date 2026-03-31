@@ -24,7 +24,7 @@ import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
 import '../../../utils/date_time_converter.dart';
 import '../../../utils/permission_string.dart';
-import '../../../widgets/accomplishment_pgs_auditor_widget.dart';
+import '../../../widgets/accomplishment_widget.dart/accomplishment_pgs_auditor_widget.dart';
 import '../../../widgets/breakthrough_widget.dart';
 import '../../models/pgs_deliverable_score_history.dart';
 import '../models/pgs_deliverable_accomplishment.dart';

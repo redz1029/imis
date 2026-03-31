@@ -6,7 +6,7 @@ import 'package:imis/performance_governance_system/services/performance_governan
 import 'package:imis/roadmap/models/kra_roadmap_filter.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/accomplishment_pgs_standardUser_widget.dart';
+import 'package:imis/widgets/accomplishment_widget.dart/accomplishment_pgs_standardUser_widget.dart';
 import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/build_header_cell.dart';
 import 'package:imis/widgets/button_filter.dart';
@@ -1682,7 +1682,7 @@ class PerformanceGovernanceSystemPageState
                                                 PermissionWidget(
                                                   permission:
                                                       AppPermissions
-                                                          .editPerformanceGovernanceSystem,
+                                                          .viewPerformanceGovernanceSystem,
                                                   child: Tooltip(
                                                     message: 'Edit',
                                                     child: IconButton(
@@ -1915,7 +1915,7 @@ class PerformanceGovernanceSystemPageState
                                                       child: PermissionWidget(
                                                         permission:
                                                             AppPermissions
-                                                                .editPerformanceGovernanceSystem,
+                                                                .viewPerformanceGovernanceSystem,
                                                         child: Row(
                                                           children: [
                                                             Icon(
@@ -4033,9 +4033,9 @@ class PerformanceGovernanceSystemPageState
             ? 'Please select either Direct or Indirect.'
             : null;
 
-    // bool hasDisapprovePermission = permissionService.hasPermission(
-    //   AppPermissions.disapprovePerformanceGovernanceSystem,
-    // );
+    bool hasDisapprovePermission = permissionService.hasPermission(
+      AppPermissions.disapprovePerformanceGovernanceSystem,
+    );
     Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;
 
     return TableRow(
@@ -4064,9 +4064,10 @@ class PerformanceGovernanceSystemPageState
         ),
         _buildExpandableTextAreaCell(index, id, setDialogState),
         _buildDatePickerCell(index, id, setDialogState),
-        (id == null || orderLevel < 1)
-            ? _buildRemoveButton(index, setDialogState)
-            : _buildApprovedDisapprovedSignatory(index, setDialogState),
+        // (id == null || orderLevel < 1)
+        //     ? _buildRemoveButton(index, setDialogState)
+        //     : _buildApprovedDisapprovedSignatory(index, setDialogState),
+        _buildActionCell(index, setDialogState),
       ],
     );
   }
@@ -5302,47 +5303,200 @@ class PerformanceGovernanceSystemPageState
     });
   }
 
-  Widget _buildRemoveButton(int index, Function setDialogState) {
+  // Widget _buildRemoveButton(int index, Function setDialogState) {
+  //   bool hasDeletePermission = permissionService.hasPermission(
+  //     AppPermissions.deletePerformanceGovernanceSystem,
+  //   );
+
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.center,
+  //     children: [
+  //       gap16px,
+  //       Tooltip(
+  //         message:
+  //             hasDeletePermission ? 'Remove row' : 'No permission to delete',
+  //         child: IconButton(
+  //           icon: Icon(
+  //             Icons.delete,
+  //             color: hasDeletePermission ? Colors.red : Colors.grey,
+  //           ),
+  //           onPressed:
+  //               hasDeletePermission
+  //                   ? () {
+  //                     showDialog(
+  //                       context: context,
+  //                       builder: (BuildContext context) {
+  //                         return AlertDialog(
+  //                           title: const Text('Confirm Delete'),
+  //                           content: const Text(
+  //                             'Are you sure you want to delete this row?',
+  //                           ),
+  //                           actions: [
+  //                             TextButton(
+  //                               onPressed: () => Navigator.pop(context),
+  //                               child: Text(
+  //                                 'Cancel',
+  //                                 style: TextStyle(color: primaryColor),
+  //                               ),
+  //                             ),
+  //                             TextButton(
+  //                               onPressed: () {
+  //                                 Navigator.pop(context);
+  //                                 _removeRowAndRemap(index, setDialogState);
+  //                               },
+  //                               child: const Text(
+  //                                 'Delete',
+  //                                 style: TextStyle(color: Colors.red),
+  //                               ),
+  //                             ),
+  //                           ],
+  //                         );
+  //                       },
+  //                     );
+  //                   }
+  //                   : null,
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
+  Widget _buildActionCell(int index, Function setDialogState) {
+    bool hasDeletePermission = permissionService.hasPermission(
+      AppPermissions.deletePerformanceGovernanceSystem,
+    );
+    bool hasDisapprovePermission = permissionService.hasPermission(
+      AppPermissions.disapprovePerformanceGovernanceSystem,
+    );
+
+    bool? isDisapproved = selectedDisapproved[index];
+    reasonController[index] ??= TextEditingController();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         gap16px,
-        IconButton(
-          tooltip: 'Remove row',
-          icon: Icon(Icons.delete, color: Colors.red),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: const Text('Confirm Delete'),
-                  content: const Text(
-                    'Are you sure you want to delete this row?',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(color: primaryColor),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _removeRowAndRemap(index, setDialogState);
-                      },
-                      child: const Text(
-                        'Delete',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
+        // Remove Button
+        Tooltip(
+          message:
+              hasDeletePermission ? 'Remove row' : 'No permission to delete',
+          child: IconButton(
+            icon: PermissionWidget(
+              permission: AppPermissions.deletePerformanceGovernanceSystem,
+              child: Icon(Icons.delete, color: Colors.red),
+            ),
+            onPressed:
+                hasDeletePermission
+                    ? () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Confirm Delete'),
+                            content: const Text(
+                              'Are you sure you want to delete this row?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(
+                                  'Cancel',
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _removeRowAndRemap(index, setDialogState);
+                                },
+                                child: const Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
+                    : null,
+          ),
         ),
+
+        // Approve/Disapprove Section
+        if (hasDisapprovePermission) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Column(
+                children: [
+                  IconButton(
+                    tooltip: 'Click this to approve the deliverable',
+                    icon: Icon(
+                      Icons.thumb_up,
+                      color:
+                          isDisapproved == false
+                              ? Colors.green
+                              : primaryTextColor,
+                    ),
+                    onPressed: () {
+                      setDialogState(() {
+                        selectedDisapproved[index] = false;
+                        reasonController[index]?.clear();
+                      });
+                    },
+                  ),
+                  const Text("Approve", style: TextStyle(fontSize: 12)),
+                ],
+              ),
+              Column(
+                children: [
+                  IconButton(
+                    tooltip: 'Click this to disapprove the deliverable',
+                    icon: Icon(
+                      Icons.thumb_down,
+                      color:
+                          isDisapproved == true ? Colors.red : primaryTextColor,
+                    ),
+                    onPressed: () {
+                      setDialogState(() {
+                        selectedDisapproved[index] = true;
+                      });
+                    },
+                  ),
+                  const Text("Disapprove", style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
+          if (isDisapproved == true) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Reason:",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: grey),
+                  ),
+                  CustomTooltip(
+                    message: 'State your reason here',
+                    child: TextField(
+                      controller: reasonController[index],
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: primaryColor),
+                        ),
+                      ),
+                      maxLines: 3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ],
     );
   }
@@ -5493,92 +5647,92 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildApprovedDisapprovedSignatory(
-    int index,
-    Function setDialogState,
-  ) {
-    bool? isDisapproved = selectedDisapproved[index];
-    reasonController[index] ??= TextEditingController();
+  // Widget _buildApprovedDisapprovedSignatory(
+  //   int index,
+  //   Function setDialogState,
+  // ) {
+  //   bool? isDisapproved = selectedDisapproved[index];
+  //   reasonController[index] ??= TextEditingController();
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Column(
-              children: [
-                IconButton(
-                  tooltip: 'Click this to approve the deliverable',
-                  icon: Icon(
-                    Icons.thumb_up,
-                    color:
-                        isDisapproved == false
-                            ? Colors.green
-                            : primaryTextColor,
-                  ),
-                  onPressed: () {
-                    setDialogState(() {
-                      selectedDisapproved[index] = false;
-                      reasonController[index]?.clear();
-                    });
-                  },
-                ),
-                const Text("Approve", style: TextStyle(fontSize: 12)),
-              ],
-            ),
-            Column(
-              children: [
-                IconButton(
-                  tooltip: 'Click this to disapprove the deliverable',
+  //   return Column(
+  //     mainAxisSize: MainAxisSize.min,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //         children: [
+  //           Column(
+  //             children: [
+  //               IconButton(
+  //                 tooltip: 'Click this to approve the deliverable',
+  //                 icon: Icon(
+  //                   Icons.thumb_up,
+  //                   color:
+  //                       isDisapproved == false
+  //                           ? Colors.green
+  //                           : primaryTextColor,
+  //                 ),
+  //                 onPressed: () {
+  //                   setDialogState(() {
+  //                     selectedDisapproved[index] = false;
+  //                     reasonController[index]?.clear();
+  //                   });
+  //                 },
+  //               ),
+  //               const Text("Approve", style: TextStyle(fontSize: 12)),
+  //             ],
+  //           ),
+  //           Column(
+  //             children: [
+  //               IconButton(
+  //                 tooltip: 'Click this to disapprove the deliverable',
 
-                  icon: Icon(
-                    Icons.thumb_down,
-                    color:
-                        isDisapproved == true ? Colors.red : primaryTextColor,
-                  ),
-                  onPressed: () {
-                    setDialogState(() {
-                      selectedDisapproved[index] = true;
-                    });
-                  },
-                ),
-                const Text("Disapprove", style: TextStyle(fontSize: 12)),
-              ],
-            ),
-          ],
-        ),
-        if (isDisapproved == true) ...[
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Reason:",
-                  style: TextStyle(fontWeight: FontWeight.bold, color: grey),
-                ),
-                CustomTooltip(
-                  message: 'State your reason here',
-                  child: TextField(
-                    controller: reasonController[index],
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                    maxLines: 3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
+  //                 icon: Icon(
+  //                   Icons.thumb_down,
+  //                   color:
+  //                       isDisapproved == true ? Colors.red : primaryTextColor,
+  //                 ),
+  //                 onPressed: () {
+  //                   setDialogState(() {
+  //                     selectedDisapproved[index] = true;
+  //                   });
+  //                 },
+  //               ),
+  //               const Text("Disapprove", style: TextStyle(fontSize: 12)),
+  //             ],
+  //           ),
+  //         ],
+  //       ),
+  //       if (isDisapproved == true) ...[
+  //         const SizedBox(height: 16),
+  //         Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 20),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               const Text(
+  //                 "Reason:",
+  //                 style: TextStyle(fontWeight: FontWeight.bold, color: grey),
+  //               ),
+  //               CustomTooltip(
+  //                 message: 'State your reason here',
+  //                 child: TextField(
+  //                   controller: reasonController[index],
+  //                   decoration: const InputDecoration(
+  //                     border: OutlineInputBorder(),
+  //                     focusedBorder: OutlineInputBorder(
+  //                       borderSide: BorderSide(color: primaryColor),
+  //                     ),
+  //                   ),
+  //                   maxLines: 3,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ],
+  //   );
+  // }
 
   Widget _buildExpandableTextAreaCell(
     int index,

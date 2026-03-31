@@ -9,7 +9,7 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
-import 'package:imis/widgets/scorecard_monitoring_accomplishment_widget.dart';
+import 'package:imis/widgets/accomplishment_widget.dart/scorecard_monitoring_accomplishment_widget.dart';
 import 'package:imis/scorecard/services/score_card_monitoring_services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -406,7 +406,6 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                 builder: (context, constraints) {
                   return ConstrainedBox(
                     constraints: BoxConstraints(
-                      // max height adapts to screen size
                       maxHeight: MediaQuery.of(context).size.height * 0.6,
                     ),
                     child: Scrollbar(
@@ -825,7 +824,6 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -844,7 +842,6 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                         ),
                         const SizedBox(height: 16),
 
-                        // Info card
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -865,27 +862,73 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                         ),
                         const SizedBox(height: 20),
 
-                        // Tracking label
-                        Row(
-                          children: [
-                            const Icon(Icons.bar_chart_outlined, size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              "Yearly KRA & Deliverable Tracking — $totalPeriods year(s)",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Spacer(),
-                            TotalScoreIndicator(
-                              deliverableId: (deliverable['id'] ?? 0) as int,
-                              totalPeriods: totalPeriods,
-                            ),
-                          ],
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isMobile = constraints.maxWidth < 600;
+                            final trackingLabel =
+                                isMobile
+                                    ? "Tracking — $totalPeriods year(s)"
+                                    : "Yearly KRA & Deliverable Tracking — $totalPeriods year(s)";
+
+                            if (isMobile) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.bar_chart_outlined,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          trackingLabel,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  TotalScoreIndicator(
+                                    deliverableId:
+                                        (deliverable['id'] ?? 0) as int,
+                                    totalPeriods: totalPeriods,
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              children: [
+                                const Icon(Icons.bar_chart_outlined, size: 18),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    trackingLabel,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                SizedBox(
+                                  width: 120,
+                                  child: TotalScoreIndicator(
+                                    deliverableId:
+                                        (deliverable['id'] ?? 0) as int,
+                                    totalPeriods: totalPeriods,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 12),
-
-                        // Tracking table
                         Container(
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.black12),
@@ -893,58 +936,65 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                           ),
                           child: Column(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(8),
-                                    topRight: Radius.circular(8),
-                                  ),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Period",
-                                          style: TextStyle(color: grey),
-                                        ),
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  if (constraints.maxWidth < 600) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                      horizontal: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade50,
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(8),
+                                        topRight: Radius.circular(8),
                                       ),
                                     ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Score",
-                                          style: TextStyle(color: grey),
+                                    child: const Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 2,
+                                          child: Center(
+                                            child: Text(
+                                              "Period",
+                                              style: TextStyle(color: grey),
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Proof",
-                                          style: TextStyle(color: grey),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Center(
+                                            child: Text(
+                                              "Score",
+                                              style: TextStyle(color: grey),
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 3,
-                                      child: Center(
-                                        child: Text(
-                                          "Remarks",
-                                          style: TextStyle(color: grey),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Center(
+                                            child: Text(
+                                              "Proof",
+                                              style: TextStyle(color: grey),
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                        Expanded(
+                                          flex: 3,
+                                          child: Center(
+                                            child: Text(
+                                              "Remarks",
+                                              style: TextStyle(color: grey),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
                               ...periods.asMap().entries.map((entry) {
                                 final index = entry.key;
@@ -1191,27 +1241,74 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                         ),
                         const SizedBox(height: 20),
 
-                        // Tracking label
-                        Row(
-                          children: [
-                            const Icon(Icons.bar_chart_outlined, size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              "Yearly KPI Tracking — $totalPeriods year(s)",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Spacer(),
-                            TotalScoreIndicator(
-                              deliverableId: (deliverable['id'] ?? 0) as int,
-                              totalPeriods: totalPeriods,
-                            ),
-                          ],
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isMobile = constraints.maxWidth < 600;
+                            final trackingLabel =
+                                isMobile
+                                    ? "Tracking — $totalPeriods year(s)"
+                                    : "Yearly KPI Tracking — $totalPeriods year(s)";
+
+                            if (isMobile) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.bar_chart_outlined,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          trackingLabel,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  TotalScoreIndicator(
+                                    deliverableId:
+                                        (deliverable['id'] ?? 0) as int,
+                                    totalPeriods: totalPeriods,
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              children: [
+                                const Icon(Icons.bar_chart_outlined, size: 18),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    trackingLabel,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                SizedBox(
+                                  width: 120,
+                                  child: TotalScoreIndicator(
+                                    deliverableId:
+                                        (deliverable['id'] ?? 0) as int,
+                                    totalPeriods: totalPeriods,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 12),
 
-                        // Tracking table
                         Container(
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.black12),
@@ -1219,58 +1316,65 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                           ),
                           child: Column(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(8),
-                                    topRight: Radius.circular(8),
-                                  ),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Period",
-                                          style: TextStyle(color: grey),
-                                        ),
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  if (constraints.maxWidth < 600) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                      horizontal: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade50,
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(8),
+                                        topRight: Radius.circular(8),
                                       ),
                                     ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Score",
-                                          style: TextStyle(color: grey),
+                                    child: const Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 2,
+                                          child: Center(
+                                            child: Text(
+                                              "Period",
+                                              style: TextStyle(color: grey),
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Proof",
-                                          style: TextStyle(color: grey),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Center(
+                                            child: Text(
+                                              "Score",
+                                              style: TextStyle(color: grey),
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 3,
-                                      child: Center(
-                                        child: Text(
-                                          "Remarks",
-                                          style: TextStyle(color: grey),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Center(
+                                            child: Text(
+                                              "Proof",
+                                              style: TextStyle(color: grey),
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                        Expanded(
+                                          flex: 3,
+                                          child: Center(
+                                            child: Text(
+                                              "Remarks",
+                                              style: TextStyle(color: grey),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
                               ...periods.asMap().entries.map((entry) {
                                 final index = entry.key;
