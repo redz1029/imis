@@ -32,6 +32,7 @@ import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
+import 'package:imis/user_guide/user_guide_page.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -156,6 +157,16 @@ class SidebarState extends State<Sidebar> {
       ].contains(role);
       if (canSeeDeliverables) return 1;
 
+      final canseeSwot = [
+        PermissionString.roleAdmin,
+        PermissionString.roleStandardUser,
+        PermissionString.serviceHead,
+        PermissionString.mcc,
+        PermissionString.coreTeam,
+        PermissionString.osm,
+      ].contains(role);
+      if (canseeSwot) return 2;
+
       // SubPage 2: Deliverable Status Monitoring
       final canSeeMonitoring = [
         PermissionString.roleAdmin,
@@ -166,7 +177,7 @@ class SidebarState extends State<Sidebar> {
         PermissionString.pgsHead,
         PermissionString.coreTeam,
       ].contains(role);
-      if (canSeeMonitoring) return 2;
+      if (canSeeMonitoring) return 3;
 
       // SubPage 3/4: Scorecard
       final canSeeScorecard = [
@@ -185,7 +196,7 @@ class SidebarState extends State<Sidebar> {
         PermissionString.osm,
         PermissionString.pgsAuditor,
       ].contains(role);
-      if (canSeeScorecard) return 3;
+      if (canSeeScorecard) return 4;
 
       // SubPage 5: PGS Auditor Report
       final canSeeAuditorReport = [
@@ -1096,19 +1107,18 @@ class SidebarState extends State<Sidebar> {
     if (selectedPage == 0) {
       if (selectedSubPage == 0) return HomePage();
       if (selectedSubPage == 1) return const StrategyRoadmapPage();
-      // if (selectedSubPage == 2) return const UserGuidePage();
+      if (selectedSubPage == 2) return const UserGuidePage();
     }
     if (selectedPage == 1) {
       if (selectedSubPage == 0) return const RoadmapPage();
       if (selectedSubPage == 1) return const PerformanceGovernanceSystemPage();
-      if (selectedSubPage == 2) return const DeliverableStatusMonitoringPage();
-      if (selectedSubPage == 3) return const ScoreCardMonitoringPage();
-      if (selectedSubPage == 4) return const ScoreCardReportPage();
-      if (selectedSubPage == 5) return const ViewSummaryNarrativeReportPage();
+      if (selectedSubPage == 2) return const SwotPage();
+      if (selectedSubPage == 3) return const DeliverableStatusMonitoringPage();
+      if (selectedSubPage == 4) return const ScoreCardMonitoringPage();
+      if (selectedSubPage == 5) return const ScoreCardReportPage();
+      if (selectedSubPage == 6) return const ViewSummaryNarrativeReportPage();
     }
-    if (selectedPage == 2) {
-      if (selectedSubPage == 0) return const SwotPage();
-    }
+
     if (selectedPage == 4) {
       if (selectedSubPage == 0) return const AnnouncementPage();
       if (selectedSubPage == 1) return const AuditSchedulesPage();
@@ -1169,38 +1179,21 @@ class SidebarState extends State<Sidebar> {
                   ),
                   const SizedBox(height: 18),
 
-                  PermissionWidget(
-                    child:
-                        [
-                              PermissionString.roleAdmin,
-                              PermissionString.roleStandardUser,
-                              PermissionString.serviceHead,
-                              PermissionString.osm,
-                              PermissionString.coreTeam,
-                            ].contains(selectedRole)
-                            ? sidebarIcon(
-                              CupertinoIcons.chart_bar,
-                              2,
-                              label: 'SWOT',
-                            )
-                            : const SizedBox.shrink(),
-                  ),
-                  const SizedBox(height: 18),
-                  sidebarIcon(Icons.fact_check_outlined, 3, label: 'ISO'),
+                  sidebarIcon(Icons.fact_check_outlined, 2, label: 'ISO'),
                   const Spacer(),
                   PermissionWidget(
                     child:
                         (selectedRole == PermissionString.roleAdmin)
                             ? sidebarIcon(
                               Icons.settings_outlined,
-                              4,
+                              3,
                               label: 'Settings',
                             )
                             : SizedBox.shrink(),
                   ),
                   const SizedBox(height: 18),
 
-                  sidebarIcon(Icons.logout_outlined, 5, label: 'Logout'),
+                  sidebarIcon(Icons.logout_outlined, 4, label: 'Logout'),
                   const SizedBox(height: 18),
                 ],
               ),
@@ -1472,22 +1465,7 @@ class SidebarState extends State<Sidebar> {
                   message: 'Performance Governance System',
                   child: sidebarIcon(Icons.timeline_outlined, 1, label: 'PGS'),
                 ),
-                PermissionWidget(
-                  child:
-                      [
-                            PermissionString.roleAdmin,
-                            PermissionString.roleStandardUser,
-                            PermissionString.serviceHead,
-                            PermissionString.osm,
-                            PermissionString.coreTeam,
-                          ].contains(selectedRole)
-                          ? sidebarIcon(
-                            CupertinoIcons.chart_bar,
-                            2,
-                            label: 'SWOT',
-                          )
-                          : const SizedBox.shrink(),
-                ),
+
                 sidebarIcon(Icons.fact_check_outlined, 3, label: 'ISO'),
                 PermissionWidget(
                   child:
@@ -1499,6 +1477,7 @@ class SidebarState extends State<Sidebar> {
                           )
                           : SizedBox.shrink(),
                 ),
+                sidebarIcon(Icons.logout_outlined, 4, label: 'Logout'),
               ],
             ),
             const SizedBox(height: 16),
@@ -1511,7 +1490,7 @@ class SidebarState extends State<Sidebar> {
                   if (selectedPage == 0) ...[
                     sidebarSubText("Overview", 0),
                     sidebarSubText("Strategy Roadmap", 1),
-                    // sidebarSubText("User Guide", 2),
+                    sidebarSubText("User Guide", 2),
                   ],
                   //PGS
                   if (selectedPage == 1) ...[
@@ -1573,7 +1552,27 @@ class SidebarState extends State<Sidebar> {
                               )
                               : SizedBox.shrink(),
                     ),
-
+                    PermissionWidget(
+                      child:
+                          (selectedRole == PermissionString.roleAdmin ||
+                                  selectedRole ==
+                                      PermissionString.roleStandardUser ||
+                                  selectedRole ==
+                                      PermissionString.serviceHead ||
+                                  selectedRole == PermissionString.mcc ||
+                                  selectedRole == PermissionString.coreTeam ||
+                                  selectedRole == PermissionString.osm)
+                              ? sidebarSubText(
+                                selectedRole == PermissionString.roleAdmin
+                                    ? 'Create/View SWOT'
+                                    : selectedRole ==
+                                        PermissionString.roleStandardUser
+                                    ? 'Create SWOT'
+                                    : 'View SWOT',
+                                2,
+                              )
+                              : SizedBox.shrink(),
+                    ),
                     PermissionWidget(
                       child:
                           [
@@ -1587,7 +1586,7 @@ class SidebarState extends State<Sidebar> {
                               ].contains(selectedRole)
                               ? sidebarSubText(
                                 'Deliverable Status Monitoring',
-                                2,
+                                3,
                               )
                               : SizedBox.shrink(),
                     ),
@@ -1613,8 +1612,8 @@ class SidebarState extends State<Sidebar> {
                               ? ExpandableSidebarItem(
                                 title: "Scorecard",
                                 items: [
-                                  {"title": "Monitoring", "index": 3},
-                                  {"title": "Reports", "index": 4},
+                                  {"title": "Monitoring", "index": 4},
+                                  {"title": "Reports", "index": 5},
                                 ],
                                 selectedSubPage: selectedSubPage,
                                 onTap: (index) {
@@ -1631,36 +1630,12 @@ class SidebarState extends State<Sidebar> {
                                 PermissionString.headAuditor,
                                 PermissionString.roleAdmin,
                               ].contains(selectedRole)
-                              ? sidebarSubText("PGS Auditor Report", 5)
+                              ? sidebarSubText("PGS Auditor Report", 6)
                               : SizedBox.shrink(),
                     ),
                   ],
 
-                  if (selectedPage == 2) ...[
-                    PermissionWidget(
-                      child:
-                          (selectedRole == PermissionString.roleAdmin ||
-                                  selectedRole ==
-                                      PermissionString.roleStandardUser ||
-                                  selectedRole ==
-                                      PermissionString.serviceHead ||
-                                  selectedRole == PermissionString.mcc ||
-                                  selectedRole == PermissionString.coreTeam ||
-                                  selectedRole == PermissionString.osm)
-                              ? sidebarSubText(
-                                selectedRole == PermissionString.roleAdmin
-                                    ? 'Create/View SWOT'
-                                    : selectedRole ==
-                                        PermissionString.roleStandardUser
-                                    ? 'Create SWOT'
-                                    : 'View SWOT',
-                                0,
-                              )
-                              : SizedBox.shrink(),
-                    ),
-                  ],
-
-                  if (selectedPage == 4) ...[
+                  if (selectedPage == 3) ...[
                     sidebarSubText("Announcement", 0),
                     sidebarSubText("Audit Schedules", 1),
                     sidebarSubText("Auditor", 2),
