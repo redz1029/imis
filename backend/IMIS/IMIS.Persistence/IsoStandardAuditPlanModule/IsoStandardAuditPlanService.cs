@@ -40,7 +40,7 @@ namespace IMIS.Persistence.IsoStandardAuditPlanModule
             return entity != null ? new IsoStandardAuditPlanDto(entity) : null;
         }
 
-        public async Task<DtoPageList<IsoStandardAuditPlanDto, IsoStandardAuditPlan, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<DtoPageList<IsoStandardAuditPlanDto, IsoStandardAuditPlan, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var pagedEntities = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
 
@@ -49,7 +49,7 @@ namespace IMIS.Persistence.IsoStandardAuditPlanModule
                 return null;
             }
 
-            return DtoPageList<IsoStandardAuditPlanDto, IsoStandardAuditPlan, int>.Create(
+            return DtoPageList<IsoStandardAuditPlanDto, IsoStandardAuditPlan, long>.Create(
                 pagedEntities.Items,
                 page,
                 pageSize,

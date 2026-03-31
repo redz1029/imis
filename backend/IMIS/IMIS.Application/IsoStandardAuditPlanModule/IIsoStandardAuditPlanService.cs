@@ -10,7 +10,7 @@ namespace IMIS.Application.IsoStandardAuditPlanModule
 
         Task<IsoStandardAuditPlanDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
 
-        public Task<DtoPageList<IsoStandardAuditPlanDto, IsoStandardAuditPlan, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        public Task<DtoPageList<IsoStandardAuditPlanDto, IsoStandardAuditPlan, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
 
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }

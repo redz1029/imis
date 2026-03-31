@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore;
 namespace IMIS.Persistence.IsoStandardAuditPlanModule
 {
     public class IsoStandardAuditPlanRepository(ImisDbContext dbContext)
-        : BaseRepository<IsoStandardAuditPlan, int, ImisDbContext, User>(dbContext), IIsoStandardAuditPlanRepository
+        : BaseRepository<IsoStandardAuditPlan, long, ImisDbContext, User>(dbContext), IIsoStandardAuditPlanRepository
     {
-        public async Task<EntityPageList<IsoStandardAuditPlan, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<EntityPageList<IsoStandardAuditPlan, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            return await EntityPageList<IsoStandardAuditPlan, int>
+            return await EntityPageList<IsoStandardAuditPlan, long>
                 .CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken)
                 .ConfigureAwait(false);
         }

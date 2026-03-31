@@ -26,7 +26,7 @@ namespace IMIS.Application.AuditPlanEntryModule
         Task<List<int>> GetExistingIsoAuditorIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken);
         Task AddIsoAuditorsAsync(List<IsoAuditor> auditors, CancellationToken cancellationToken);
 
-        Task<List<int>> GetExistingIsoStandardAuditPlanIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken);
+        Task<List<long>> GetExistingIsoStandardAuditPlanIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken);
         Task AddIsoStandardAuditPlansAsync(List<IsoStandardAuditPlan> standards, CancellationToken cancellationToken);
 
         Task<List<int>> GetExistingAuditPlanProcessIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken);

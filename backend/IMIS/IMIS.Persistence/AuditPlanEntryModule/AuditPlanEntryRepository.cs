@@ -105,7 +105,7 @@ namespace IMIS.Persistence.AuditPlanEntryModule
             await GetDbContext().SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<List<int>> GetExistingIsoStandardAuditPlanIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken)
+        public async Task<List<long>> GetExistingIsoStandardAuditPlanIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken)
         {
             return await _entities
                 .Where(x => x.Id == auditPlanEntryId)

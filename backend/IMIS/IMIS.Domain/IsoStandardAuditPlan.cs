@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace IMIS.Domain
 {
-    public class IsoStandardAuditPlan : Entity<int>
+    public class IsoStandardAuditPlan : Entity<long>
     {
-        public required int? IsoStandardId { get; set; }
+        public required long? IsoStandardId { get; set; }
         public IsoStandard? IsoStandard { get; set; }
 
         public required int? AuditPlanEntryId { get; set; }

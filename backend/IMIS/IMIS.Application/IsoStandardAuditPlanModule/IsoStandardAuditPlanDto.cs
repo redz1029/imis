@@ -4,9 +4,9 @@ using IMIS.Domain;
 
 namespace IMIS.Application.IsoStandardAuditPlanModule // Adjusted namespace to match the entity context
 {
-    public class IsoStandardAuditPlanDto : BaseDto<IsoStandardAuditPlan, int>
+    public class IsoStandardAuditPlanDto : BaseDto<IsoStandardAuditPlan, long>
     {
-        public int IsoStandardId { get; set; }
+        public long IsoStandardId { get; set; }
         public int AuditPlanEntryId { get; set; }
 
         public IsoStandardAuditPlanDto() { }

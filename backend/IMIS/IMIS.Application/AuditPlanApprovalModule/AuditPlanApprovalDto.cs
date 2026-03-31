@@ -7,7 +7,7 @@ namespace IMIS.Application.AuditPlanApprovalModule
     public class AuditPlanApprovalDto : BaseDto<AuditPlanApproval, int>
     {
         public required int AuditPlanId { get; set; }
-        public required int ApproverId { get; set; }
+        public required string AproverId { get; set; }
         public required string Action { get; set; }
         public required DateTime Timestamp { get; set; } 
         public string? Comments { get; set; }
@@ -19,7 +19,6 @@ namespace IMIS.Application.AuditPlanApprovalModule
         {
             Id = approval.Id;
             AuditPlanId = approval.AuditPlanId;
-            ApproverId = approval.ApproverId;
             Action = approval.Action;
             Timestamp = approval.Timestamp;
             Comments = approval.Comments;
@@ -33,7 +32,7 @@ namespace IMIS.Application.AuditPlanApprovalModule
             {
                 Id = Id,
                 AuditPlanId = AuditPlanId,
-                ApproverId = ApproverId,
+                ApproverId = AproverId,
                 Action = Action,
                 Timestamp = Timestamp,
                 Comments = Comments,

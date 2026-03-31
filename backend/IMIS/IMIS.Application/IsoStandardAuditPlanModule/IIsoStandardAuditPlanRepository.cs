@@ -4,12 +4,12 @@ using IMIS.Domain;
 
 namespace IMIS.Application.IsoStandardAuditPlanModule
 {
-    public interface IIsoStandardAuditPlanRepository : IRepository<IsoStandardAuditPlan, int>
+    public interface IIsoStandardAuditPlanRepository : IRepository<IsoStandardAuditPlan, long>
     {
        
         Task<IEnumerable<IsoStandardAuditPlan>> GetAll(CancellationToken cancellationToken);
 
-        Task<EntityPageList<IsoStandardAuditPlan, int>> GetPaginatedAsync( int page,int pageSize,CancellationToken cancellationToken);
+        Task<EntityPageList<IsoStandardAuditPlan, long>> GetPaginatedAsync( int page,int pageSize,CancellationToken cancellationToken);
 
         Task<IsoStandardAuditPlan?> GetWithDetailsAsync(int id, CancellationToken cancellationToken);
 
