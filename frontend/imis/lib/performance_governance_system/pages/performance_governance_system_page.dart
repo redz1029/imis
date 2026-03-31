@@ -5303,63 +5303,6 @@ class PerformanceGovernanceSystemPageState
     });
   }
 
-  // Widget _buildRemoveButton(int index, Function setDialogState) {
-  //   bool hasDeletePermission = permissionService.hasPermission(
-  //     AppPermissions.deletePerformanceGovernanceSystem,
-  //   );
-
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.center,
-  //     children: [
-  //       gap16px,
-  //       Tooltip(
-  //         message:
-  //             hasDeletePermission ? 'Remove row' : 'No permission to delete',
-  //         child: IconButton(
-  //           icon: Icon(
-  //             Icons.delete,
-  //             color: hasDeletePermission ? Colors.red : Colors.grey,
-  //           ),
-  //           onPressed:
-  //               hasDeletePermission
-  //                   ? () {
-  //                     showDialog(
-  //                       context: context,
-  //                       builder: (BuildContext context) {
-  //                         return AlertDialog(
-  //                           title: const Text('Confirm Delete'),
-  //                           content: const Text(
-  //                             'Are you sure you want to delete this row?',
-  //                           ),
-  //                           actions: [
-  //                             TextButton(
-  //                               onPressed: () => Navigator.pop(context),
-  //                               child: Text(
-  //                                 'Cancel',
-  //                                 style: TextStyle(color: primaryColor),
-  //                               ),
-  //                             ),
-  //                             TextButton(
-  //                               onPressed: () {
-  //                                 Navigator.pop(context);
-  //                                 _removeRowAndRemap(index, setDialogState);
-  //                               },
-  //                               child: const Text(
-  //                                 'Delete',
-  //                                 style: TextStyle(color: Colors.red),
-  //                               ),
-  //                             ),
-  //                           ],
-  //                         );
-  //                       },
-  //                     );
-  //                   }
-  //                   : null,
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
   Widget _buildActionCell(int index, Function setDialogState) {
     bool hasDeletePermission = permissionService.hasPermission(
       AppPermissions.deletePerformanceGovernanceSystem,
@@ -5421,8 +5364,6 @@ class PerformanceGovernanceSystemPageState
                     : null,
           ),
         ),
-
-        // Approve/Disapprove Section
         if (hasDisapprovePermission) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

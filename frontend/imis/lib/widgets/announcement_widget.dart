@@ -532,7 +532,7 @@ class _AnnouncementCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: IntrinsicHeight(
         child: Row(

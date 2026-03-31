@@ -3,7 +3,6 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
@@ -1119,7 +1118,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 6) return const ViewSummaryNarrativeReportPage();
     }
 
-    if (selectedPage == 4) {
+    if (selectedPage == 3) {
       if (selectedSubPage == 0) return const AnnouncementPage();
       if (selectedSubPage == 1) return const AuditSchedulesPage();
       if (selectedSubPage == 2) return const AuditorPage();
@@ -1391,7 +1390,6 @@ class SidebarState extends State<Sidebar> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          /// ICON WITH BACKGROUND
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
