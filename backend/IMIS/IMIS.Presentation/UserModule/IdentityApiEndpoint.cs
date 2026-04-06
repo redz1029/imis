@@ -388,7 +388,10 @@ namespace IMIS.Presentation.UserModule
 
             var file = await ReportUtil.GeneratePdfReport("EmployeeListReport", reportData, "Users", cancellationToken).ConfigureAwait(false);
 
-            return Results.File(file, "application/pdf", $"UsersReport_{roleDisplayName}_p{page}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            //return Results.File(file, "application/pdf", $"UsersReport_{roleDisplayName}_p{page}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            var fileName = $"UsersReport_{roleDisplayName}_p{page}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+            response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+            return Results.File(file, "application/pdf");
         }
         private static async Task<IResult> RegisterUser(UserRegistrationDto registration, IServiceProvider sp)
         {
