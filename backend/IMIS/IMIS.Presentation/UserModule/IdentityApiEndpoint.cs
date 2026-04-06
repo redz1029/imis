@@ -4,6 +4,7 @@ using Base.Auths;
 using Base.Auths.Permissions;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths;
+using IMIS.Infrastructure.Reports;
 using IMIS.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -39,7 +40,14 @@ namespace IMIS.Presentation.UserModule
             authGroup.MapDelete("/revokeRefreshToken", RevokeRefreshToken<TUser>);
             authGroup.MapGet("/users", (HttpContext httpContext, IServiceProvider sp) => GetUsers(httpContext, sp));
             authGroup.MapDelete("/deleteUser/{id}", async (string id, IServiceProvider sp) => await DeleteUser(id, sp));
-           
+            authGroup.MapGet("/users/filter", async (string? fullname, string? roleId, int page, int pageSize, IServiceProvider sp) =>
+            {
+                return await GetUsersWithFilter(fullname, roleId, page, pageSize, sp);
+            });
+            authGroup.MapGet("/users-report/pdf", async (string? fullname, string? roleId, int page, int pageSize, IServiceProvider sp, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                return await GenerateUsersReport(fullname, roleId, page, pageSize, sp, response, cancellationToken);
+            });
 
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
@@ -223,6 +231,164 @@ namespace IMIS.Presentation.UserModule
             });
 
             return Results.Ok(userList);
+        }
+      
+        private static async Task<IResult> GetUsersWithFilter(string? fullname, string? roleId, int page, int pageSize, IServiceProvider sp)
+        {
+            var dbContext = sp.GetRequiredService<ImisDbContext>();
+
+            var query = from ur in dbContext.UserRoles
+            join u in dbContext.Users on ur.UserId equals u.Id
+            join r in dbContext.Roles on ur.RoleId equals r.Id
+            select new
+            {
+                UserId = u.Id,
+                u.UserName,
+                u.Email,
+                u.FirstName,
+                u.MiddleName,
+                u.LastName,
+                u.Position,
+                RoleName = r.Name,
+                RoleId = r.Id
+            };
+
+            if (!string.IsNullOrWhiteSpace(roleId))
+            {
+                query = query.Where(x => x.RoleId == roleId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(fullname))
+            {
+                query = query.Where(x =>
+                    (x.FirstName ?? "").Contains(fullname) ||
+                    (x.MiddleName ?? "").Contains(fullname) ||
+                    (x.LastName ?? "").Contains(fullname));
+            }
+
+            var rawData = await query.ToListAsync();
+
+            var groupedData = rawData
+                .GroupBy(x => x.UserId)
+                .Select(g => new
+                {
+                    UserId = g.Key,
+                    UserName = g.First().UserName,
+                    Email = g.First().Email,
+                    FirstName = g.First().FirstName,
+                    MiddleName = g.First().MiddleName,
+                    LastName = g.First().LastName,
+                    Position = g.First().Position,
+
+                    RoleName = string.Join(", ", g.Select(x => x.RoleName).Distinct())
+                })
+                .OrderBy(x => x.LastName)
+                .ToList();
+
+            var total = groupedData.Count;
+
+            var data = groupedData
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return Results.Ok(new
+            {
+                data,
+                total,
+                page,
+                pageSize
+            });
+        }
+
+        private static async Task<IResult> GenerateUsersReport(
+        string? fullname,
+        string? roleId,
+        int page,
+        int pageSize,
+        IServiceProvider sp,
+        HttpResponse response,
+        CancellationToken cancellationToken)
+        {
+            var dbContext = sp.GetRequiredService<ImisDbContext>();
+
+            var query = from ur in dbContext.UserRoles
+                        join u in dbContext.Users on ur.UserId equals u.Id
+                        join r in dbContext.Roles on ur.RoleId equals r.Id
+                        select new
+                        {
+                            UserId = u.Id,
+                            u.UserName,
+                            u.Email,
+                            u.FirstName,
+                            u.MiddleName,
+                            u.LastName,
+                            u.Position,
+                            RoleName = r.Name,
+                            RoleId = r.Id
+                        };
+
+            if (!string.IsNullOrWhiteSpace(roleId))
+            {
+                query = query.Where(x => x.RoleId == roleId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(fullname))
+            {
+                query = query.Where(x =>
+                    (x.FirstName ?? "").Contains(fullname) ||
+                    (x.MiddleName ?? "").Contains(fullname) ||
+                    (x.LastName ?? "").Contains(fullname));
+            }
+
+            var rawData = await query.ToListAsync(cancellationToken);
+
+            var groupedData = rawData
+                .GroupBy(x => x.UserId)
+                .Select(g => new ReportUserDto
+                {
+                    UserId = g.Key,
+                    UserName = g.First().UserName,
+                    Email = g.First().Email,
+                    FirstName = g.First().FirstName,
+                    MiddleName = g.First().MiddleName,
+                    LastName = g.First().LastName,
+                    Position = g.First().Position,
+                    RoleName = string.Join(", ", g.Select(x => x.RoleName).Distinct())
+                })
+                .OrderBy(x => x.LastName)
+                .ToList();
+
+            var total = groupedData.Count;
+
+            var pagedData = groupedData
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var roleDisplayName = string.IsNullOrWhiteSpace(roleId)
+                ? "All"
+                : await dbContext.Roles
+                    .Where(r => r.Id == roleId)
+                    .Select(r => r.Name)
+                    .FirstOrDefaultAsync(cancellationToken) ?? "Unknown";
+
+            var reportData = pagedData.Select(x => new
+            {
+                x.UserId,
+                x.UserName,
+                x.Email,
+                x.FirstName,
+                x.MiddleName,
+                x.LastName,
+                x.Position,
+                x.RoleName,
+                RoleHeader = roleDisplayName 
+            }).ToList();
+
+            var file = await ReportUtil.GeneratePdfReport("EmployeeListReport", reportData, "Users", cancellationToken).ConfigureAwait(false);
+
+            return Results.File(file, "application/pdf", $"UsersReport_{roleDisplayName}_p{page}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
         }
         private static async Task<IResult> RegisterUser(UserRegistrationDto registration, IServiceProvider sp)
         {
