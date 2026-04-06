@@ -1,6 +1,8 @@
-import 'dart:typed_data';
+import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -21,36 +23,21 @@ Future<void> openRoadmapInNewTab(String roadmapId, String kraName) async {
     if (response.statusCode == 200 && response.data != null) {
       final bytes = Uint8List.fromList(response.data);
 
-      final pdfBlob = html.Blob([bytes], 'application/pdf');
-      final pdfUrl = html.Url.createObjectUrlFromBlob(pdfBlob);
-
-      final String htmlContent = '''
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>$kraName</title>
-            <style>
-              body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #525659; }
-              iframe { width: 100%; height: 100%; border: none; }
-            </style>
-          </head>
-          <body>
-            <iframe src="$pdfUrl"></iframe>
-          </body>
-        </html>
-      ''';
-
-      final htmlBlob = html.Blob([htmlContent], 'text/html');
-      final htmlUrl = html.Url.createObjectUrlFromBlob(htmlBlob);
-
-      html.window.open(htmlUrl, "_blank");
-      // html.window.open(pdfUrl, "_blank");
-      Future.delayed(const Duration(seconds: 15), () {
-        html.Url.revokeObjectUrl(pdfUrl);
-        html.Url.revokeObjectUrl(htmlUrl);
-      });
+      if (kIsWeb) {
+        final pdfBlob = html.Blob([bytes], 'application/pdf');
+        final pdfUrl = html.Url.createObjectUrlFromBlob(pdfBlob);
+        html.window.open(pdfUrl, "_blank");
+        Future.delayed(const Duration(seconds: 15), () {
+          html.Url.revokeObjectUrl(pdfUrl);
+        });
+      } else {
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/$kraName.pdf');
+        await file.writeAsBytes(bytes);
+        await OpenFile.open(file.path);
+      }
     }
   } catch (e) {
-    debugPrint("Error opening new tab: $e");
+    debugPrint("Error opening roadmap PDF");
   }
 }
