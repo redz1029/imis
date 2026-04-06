@@ -693,9 +693,25 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () {
+                          onTap: () async {
+                            if (widget.row.attachmentBytes != null) {
+                              final blob = html.Blob([
+                                widget.row.attachmentBytes!,
+                              ], 'application/pdf');
+                              final url = html.Url.createObjectUrlFromBlob(
+                                blob,
+                              );
+                              html.window.open(url, "_blank");
+                              Future.delayed(
+                                const Duration(minutes: 1),
+                                () => html.Url.revokeObjectUrl(url),
+                              );
+                              return;
+                            }
+
+                            if (widget.row.accomplishmentId == null) return;
                             final url =
-                                'https://localhost:7273/${widget.row.accomplishmentId}/preview';
+                                '${ApiEndpoint.baseUrl}/${widget.row.accomplishmentId}/preview';
                             html.window.open(url, "_blank");
                           },
                           child: Text(

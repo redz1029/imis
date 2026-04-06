@@ -749,7 +749,7 @@ class AdminDashboardState extends State<AdminDashboard> {
             gradient: LinearGradient(
               colors: [
                 Color.fromARGB(255, 150, 68, 89),
-                Color.fromARGB(255, 167, 80, 101),
+                Color.fromARGB(255, 180, 91, 112),
                 Color.fromARGB(255, 190, 100, 120),
               ],
             ),

@@ -1106,7 +1106,7 @@ class SidebarState extends State<Sidebar> {
     if (selectedPage == 0) {
       if (selectedSubPage == 0) return HomePage();
       if (selectedSubPage == 1) return const StrategyRoadmapPage();
-      if (selectedSubPage == 2) return const UserGuidePage();
+      // if (selectedSubPage == 2) return const UserGuidePage();
     }
     if (selectedPage == 1) {
       if (selectedSubPage == 0) return const RoadmapPage();
@@ -1375,7 +1375,7 @@ class SidebarState extends State<Sidebar> {
 
     return InkWell(
       onTap: () {
-        if (index == 5) {
+        if (index == 4) {
           _logout(context);
           return;
         }
@@ -1464,13 +1464,13 @@ class SidebarState extends State<Sidebar> {
                   child: sidebarIcon(Icons.timeline_outlined, 1, label: 'PGS'),
                 ),
 
-                sidebarIcon(Icons.fact_check_outlined, 3, label: 'ISO'),
+                sidebarIcon(Icons.fact_check_outlined, 2, label: 'ISO'),
                 PermissionWidget(
                   child:
                       (selectedRole == PermissionString.roleAdmin)
                           ? sidebarIcon(
                             Icons.settings_outlined,
-                            4,
+                            3,
                             label: 'Settings',
                           )
                           : SizedBox.shrink(),
@@ -1488,7 +1488,7 @@ class SidebarState extends State<Sidebar> {
                   if (selectedPage == 0) ...[
                     sidebarSubText("Overview", 0),
                     sidebarSubText("Strategy Roadmap", 1),
-                    sidebarSubText("User Guide", 2),
+                    // sidebarSubText("User Guide", 2),
                   ],
                   //PGS
                   if (selectedPage == 1) ...[
