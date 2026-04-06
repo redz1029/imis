@@ -23,7 +23,7 @@ namespace IMIS.Application.PgsModule
 
         Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserOfficeOnlyAsync(string userid, CancellationToken cancellationToken);
 
-        
+        Task<bool> ExistsByOfficeAndPgsPeriodAsync(int officeId, int pgsPeriodId, CancellationToken cancellationToken);
 
     }
 }

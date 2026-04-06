@@ -506,9 +506,21 @@ namespace IMIS.Persistence.PgsModule
 
             var isDraft = entity.PgsSignatories == null || !entity.PgsSignatories.Any();
             var isNew = entity.Id == 0;
+          
 
             if (isNew)
             {
+                if (entity.PgsPeriod == null)
+                    throw new InvalidOperationException("PGS Period is required.");
+
+                var exists = await _repository.ExistsByOfficeAndPgsPeriodAsync(entity.OfficeId, entity.PgsPeriod.Id, cancellationToken);
+
+                if (exists)
+                {
+                    throw new InvalidOperationException(
+                        $"PGS already exists for Office ID {entity.OfficeId} and Period ID {entity.PgsPeriod.Id}.");
+                }              
+
                 // Add new deliverables
                 foreach (var d in entity.PgsDeliverables ?? Enumerable.Empty<PgsDeliverable>())
                     _repository.GetDbContext().Entry(d).State = EntityState.Added;
