@@ -156,7 +156,6 @@ class ViewSummaryNarrativeReportPageState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// ================= HEADER =================
             const Text(
               "Report Information",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -324,12 +323,44 @@ class ViewSummaryNarrativeReportPageState
 
                     const SizedBox(height: 10),
 
+                    // Expanded(
+                    //   child:
+                    //       _isLoading
+                    //           ? Center(
+                    //             child: CircularProgressIndicator(
+                    //               color: primaryColor,
+                    //             ),
+                    //           )
+                    //           : ListView.builder(
+                    //             itemCount: filteredList.length,
+                    //             itemBuilder: (context, index) {
                     Expanded(
                       child:
                           _isLoading
                               ? Center(
                                 child: CircularProgressIndicator(
                                   color: primaryColor,
+                                ),
+                              )
+                              : filteredList.isEmpty
+                              ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.inbox_outlined,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    const Text(
+                                      "No reports available",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               )
                               : ListView.builder(
