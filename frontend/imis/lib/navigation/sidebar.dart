@@ -557,9 +557,9 @@ class SidebarState extends State<Sidebar> {
         _showRoleSwitchDialog(context);
       } else if (value == "change_password") {
         if (!context.mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
-        );
+        showChangePasswordDialog(
+          context,
+        ); // ← replaces Navigator.pushReplacement
       } else if (value == "logout") {
         if (!context.mounted) return;
         _logout(context);
@@ -1689,39 +1689,6 @@ class SidebarState extends State<Sidebar> {
   }
 }
 
-class SalesPage extends StatelessWidget {
-  const SalesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text("Audit Plan Page", style: TextStyle(fontSize: 30)),
-    );
-  }
-}
-
-class GoalsPage extends StatelessWidget {
-  const GoalsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text("Audit Programme Page", style: TextStyle(fontSize: 30)),
-    );
-  }
-}
-
-class MonthlyTargetPage extends StatelessWidget {
-  const MonthlyTargetPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text("Checklist Page", style: TextStyle(fontSize: 30)),
-    );
-  }
-}
-
 class ExpandableSidebarItem extends StatefulWidget {
   final String title;
   final List<Map<String, dynamic>> items;
@@ -1786,7 +1753,6 @@ class _ExpandableSidebarItemState extends State<ExpandableSidebarItem> {
           ),
         ),
 
-        /// Sub-items
         if (expanded)
           Padding(
             padding: const EdgeInsets.only(left: 20),
