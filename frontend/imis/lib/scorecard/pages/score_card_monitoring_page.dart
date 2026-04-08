@@ -537,51 +537,6 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
           // Rows
           kpiList.isEmpty
               ? _emptyState('No KPI data available')
-              // : Flexible(
-              //   child: Scrollbar(
-              //     controller: _kpiScrollController,
-              //     thumbVisibility: true,
-              //     child: ListView.separated(
-              //       controller: _kpiScrollController,
-              //       shrinkWrap: true,
-              //       itemCount: kpiList.length,
-              //       separatorBuilder:
-              //           (_, __) => Divider(
-              //             height: 1,
-              //             color: Colors.grey.withValues(alpha: 0.2),
-              //           ),
-              //       itemBuilder: (context, index) {
-              //         final item = kpiList[index];
-              //         return Container(
-              //           padding: const EdgeInsets.symmetric(
-              //             vertical: 10,
-              //             horizontal: 12,
-              //           ),
-              //           color:
-              //               index % 2 == 0 ? Colors.white : Colors.grey.shade50,
-              //           child: Row(
-              //             children: [
-              //               _dataCell('${index + 1}', flex: 1),
-              //               SizedBox(width: 8),
-              //               _dataCell(item['kpiDescription'] ?? '', flex: 5),
-              //               Expanded(
-              //                 flex: 2,
-              //                 child: _buildActionButton(() async {
-              //                   await loadKPIAccomplishments(item['id']);
-              //                   showKPIAccomplishmentFormDialog(
-              //                     context,
-              //                     item,
-              //                     userId,
-              //                   );
-              //                 }, enabled: canView),
-              //               ),
-              //             ],
-              //           ),
-              //         );
-              //       },
-              //     ),
-              //   ),
-              // ),
               : Builder(
                 builder: (context) {
                   final screenHeight = MediaQuery.of(context).size.height;
@@ -825,13 +780,14 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              headerText,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Text(
+                                headerText,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             IconButton(
@@ -1192,15 +1148,15 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              headerText,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Text(
+                                headerText,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             IconButton(

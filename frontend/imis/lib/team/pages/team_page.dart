@@ -244,15 +244,15 @@ class TeamPageState extends State<TeamPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Auditor's Information",
+              "Team Information",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Row(
               children: [
                 SizedBox(
-                  height: 30,
-                  width: 300,
+                  height: 36,
+                  width: 250,
                   child: TextField(
                     focusNode: isSearchfocus,
                     controller: searchController,
@@ -264,7 +264,6 @@ class TeamPageState extends State<TeamPage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
                       labelText: 'Search...',
                       prefixIcon: Icon(
                         Icons.search,
@@ -276,7 +275,7 @@ class TeamPageState extends State<TeamPage> {
                       ),
                       filled: true,
                       fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
+                      contentPadding: const EdgeInsets.symmetric(
                         vertical: 5,
                         horizontal: 5,
                       ),

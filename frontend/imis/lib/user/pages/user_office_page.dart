@@ -533,8 +533,8 @@ class UserOfficePageState extends State<UserOfficePage> {
             Row(
               children: [
                 SizedBox(
-                  height: 30,
-                  width: 300,
+                  height: 36,
+                  width: 250,
                   child: TextField(
                     focusNode: isSearchfocus,
                     controller: searchController,
@@ -546,7 +546,6 @@ class UserOfficePageState extends State<UserOfficePage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: const TextStyle(color: grey, fontSize: 14),
                       labelText: 'Search...',
                       prefixIcon: Icon(
                         Icons.search,
