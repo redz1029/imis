@@ -4,6 +4,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
+import 'package:imis/office/models/office.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
@@ -12,9 +13,11 @@ import 'package:imis/user/services/user_role_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:collection/collection.dart';
 import 'package:imis/utils/http_util.dart';
+import 'package:imis/widgets/button_filter.dart';
 import 'package:imis/widgets/dotted_button.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:universal_html/html.dart' as html;
 
 class UserRolePage extends StatefulWidget {
   const UserRolePage({super.key});
@@ -38,11 +41,14 @@ class UserRolePageState extends State<UserRolePage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-
+  String? _selectedRole;
+  List<Office> roleListList = [];
+  bool isLoadingOffices = false;
+  bool isLoadingUsers = false;
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchFocus = FocusNode();
   final dio = Dio();
-
+  String? _filterUserId;
   @override
   void initState() {
     super.initState();
@@ -62,7 +68,6 @@ class UserRolePageState extends State<UserRolePage> {
     setState(() {
       roleList = roles;
       userList = users;
-      _selectedUserId = users.isNotEmpty ? users[0].id : null;
     });
   }
 
@@ -106,24 +111,88 @@ class UserRolePageState extends State<UserRolePage> {
   }
 
   void filterSearchResults(String query) {
-    final lowerQuery = query.toLowerCase().trim();
+    setState(() => _filterUserId = query.trim());
+    filterUsersFromApi();
+  }
 
-    setState(() {
-      if (lowerQuery.isEmpty) {
-        filteredList = List.from(userRoleList);
-      } else {
-        filteredList =
-            _allUserRoles.where((userRole) {
-              final user = userList.firstWhereOrNull(
-                (u) => u.id == userRole.userId,
-              );
+  Future<void> filterUsersFromApi() async {
+    setState(() => _isLoading = true);
+    try {
+      final searchQuery = _filterUserId ?? "";
 
-              if (user == null) return false;
-
-              return user.fullName.toLowerCase().contains(lowerQuery);
-            }).toList();
+      if (searchQuery.isEmpty && _selectedRole == null) {
+        setState(() {
+          filteredList = List.from(_allUserRoles);
+        });
+        return;
       }
-    });
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        '${ApiEndpoint().usersFilter}?fullname=$searchQuery&roleId=${_selectedRole ?? ""}&page=1&pageSize=50',
+      );
+
+      if (response.statusCode == 200) {
+        final List rawData =
+            response.data is List
+                ? response.data
+                : (response.data["data"] ?? []);
+
+        final List<String> returnedUserIds =
+            rawData.map((e) => e['userId'].toString()).toList();
+
+        setState(() {
+          filteredList =
+              _allUserRoles.where((ur) {
+                return returnedUserIds.contains(ur.userId.toString());
+              }).toList();
+        });
+      }
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> exportFilteredPdf() async {
+    try {
+      final searchQuery = _filterUserId ?? "";
+      final roleQuery = _selectedRole ?? "";
+
+      final exportSize =
+          (searchQuery.isEmpty && roleQuery.isEmpty)
+              ? _totalCount
+              : filteredList.length;
+
+      final url =
+          '${ApiEndpoint.baseUrl}/users-report/pdf?fullname=$searchQuery&roleId=$roleQuery&page=1&pageSize=$exportSize';
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        url,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      if (response.statusCode == 200) {
+        final bytes = response.data as List<int>;
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final _ =
+            html.AnchorElement(href: url)
+              ..setAttribute('download', 'user_roles_report.pdf')
+              ..click();
+        html.Url.revokeObjectUrl(url);
+      } else {
+        MotionToast.error(
+          toastAlignment: Alignment.topCenter,
+          description: Text('Failed to export PDF'),
+        ).show(context);
+      }
+    } catch (e) {
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Error exporting PDF: $e'),
+      ).show(context);
+    }
   }
 
   void showFormDialog({String? id, String? selectedUserId}) {
@@ -606,242 +675,6 @@ class UserRolePageState extends State<UserRolePage> {
     );
   }
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   final isMinimized = MediaQuery.of(context).size.width < 600;
-  //   return Scaffold(
-  //     backgroundColor: mainBgColor,
-  //     appBar: AppBar(
-  //       title: Text('User Role Information'),
-  //       backgroundColor: mainBgColor,
-  //     ),
-  //     body: Padding(
-  //       padding: const EdgeInsets.all(20.0),
-  //       child: Column(
-  //         children: [
-  //           Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               SizedBox(
-  //                 height: 30,
-  //                 width: 300,
-  //                 child: TextField(
-  //                   focusNode: isSearchfocus,
-  //                   controller: searchController,
-  //                   decoration: InputDecoration(
-  //                     enabledBorder: OutlineInputBorder(
-  //                       borderSide: BorderSide(color: lightGrey),
-  //                     ),
-  //                     focusedBorder: OutlineInputBorder(
-  //                       borderSide: BorderSide(color: primaryColor),
-  //                     ),
-  //                     floatingLabelBehavior: FloatingLabelBehavior.never,
-  //                     labelStyle: TextStyle(color: grey, fontSize: 14),
-  //                     labelText: 'Search Name',
-  //                     prefixIcon: Icon(
-  //                       Icons.search,
-  //                       color: isSearchfocus.hasFocus ? primaryColor : grey,
-  //                       size: 20,
-  //                     ),
-  //                     border: OutlineInputBorder(
-  //                       borderRadius: BorderRadius.circular(4),
-  //                     ),
-  //                     filled: true,
-  //                     fillColor: secondaryColor,
-  //                     contentPadding: EdgeInsets.symmetric(
-  //                       vertical: 5,
-  //                       horizontal: 5,
-  //                     ),
-  //                   ),
-  //                   onChanged: filterSearchResults,
-  //                 ),
-  //               ),
-  //               if (!isMinimized)
-  //                 ElevatedButton(
-  //                   style: ElevatedButton.styleFrom(
-  //                     backgroundColor: primaryColor,
-  //                     shape: RoundedRectangleBorder(
-  //                       borderRadius: BorderRadius.circular(4),
-  //                     ),
-  //                   ),
-  //                   onPressed: () => showFormDialog(),
-  //                   child: Row(
-  //                     mainAxisSize: MainAxisSize.min,
-  //                     children: [
-  //                       Icon(Icons.add, color: Colors.white),
-  //                       SizedBox(width: 5),
-  //                       Text('Add New', style: TextStyle(color: Colors.white)),
-  //                     ],
-  //                   ),
-  //                 ),
-  //             ],
-  //           ),
-  //           SizedBox(height: 20),
-  //           Expanded(
-  //             child: SingleChildScrollView(
-  //               child: Column(
-  //                 children:
-  //                     userList
-  //                         .where(
-  //                           (user) =>
-  //                               filteredList.any((ur) => ur.userId == user.id),
-  //                         )
-  //                         .map((user) {
-  //                           final userRolesForUser =
-  //                               filteredList
-  //                                   .where((ur) => ur.userId == user.id)
-  //                                   .toList();
-
-  //                           final roleChips =
-  //                               userRolesForUser
-  //                                   .expand((userRole) => userRole.roles ?? [])
-  //                                   .map((assignedRole) {
-  //                                     final matchedRole = roleList.firstWhere(
-  //                                       (r) => r.id == assignedRole.roleId,
-  //                                       orElse:
-  //                                           () => Roles(
-  //                                             'unknown',
-  //                                             'Unknown',
-  //                                             '',
-  //                                             null,
-  //                                           ),
-  //                                     );
-  //                                     return matchedRole.name;
-  //                                   })
-  //                                   .toList();
-
-  //                           return Card(
-  //                             color: secondaryColor,
-  //                             elevation: 0,
-  //                             margin: const EdgeInsets.symmetric(
-  //                               vertical: 4,
-  //                               horizontal: 8,
-  //                             ),
-  //                             shape: RoundedRectangleBorder(
-  //                               borderRadius: BorderRadius.circular(8),
-  //                             ),
-  //                             child: Padding(
-  //                               padding: const EdgeInsets.symmetric(
-  //                                 vertical: 12,
-  //                                 horizontal: 16,
-  //                               ),
-  //                               child: Row(
-  //                                 crossAxisAlignment: CrossAxisAlignment.center,
-  //                                 children: [
-  //                                   // Left: name + role chips
-  //                                   Expanded(
-  //                                     child: Column(
-  //                                       crossAxisAlignment:
-  //                                           CrossAxisAlignment.start,
-  //                                       children: [
-  //                                         Text(
-  //                                           user.fullName,
-  //                                           style: const TextStyle(
-  //                                             fontWeight: FontWeight.bold,
-  //                                             fontSize: 15,
-  //                                           ),
-  //                                         ),
-  //                                         const SizedBox(height: 6),
-  //                                         Wrap(
-  //                                           spacing: 6,
-  //                                           runSpacing: 4,
-  //                                           children:
-  //                                               roleChips.map((roleName) {
-  //                                                 return Chip(
-  //                                                   label: Text(
-  //                                                     roleName,
-  //                                                     style: const TextStyle(
-  //                                                       fontSize: 12,
-  //                                                     ),
-  //                                                   ),
-  //                                                   backgroundColor:
-  //                                                       mainBgColor,
-  //                                                   padding:
-  //                                                       const EdgeInsets.symmetric(
-  //                                                         horizontal: 4,
-  //                                                       ),
-  //                                                   materialTapTargetSize:
-  //                                                       MaterialTapTargetSize
-  //                                                           .shrinkWrap,
-  //                                                   visualDensity:
-  //                                                       VisualDensity.compact,
-  //                                                 );
-  //                                               }).toList(),
-  //                                         ),
-  //                                       ],
-  //                                     ),
-  //                                   ),
-
-  //                                   // Right: edit + delete buttons
-  //                                   Row(
-  //                                     mainAxisSize: MainAxisSize.min,
-  //                                     children: [
-  //                                       IconButton(
-  //                                         icon: const Icon(
-  //                                           Icons.edit,
-  //                                           size: 20,
-  //                                         ),
-  //                                         onPressed:
-  //                                             () => showFormDialog(
-  //                                               id: user.id,
-  //                                               selectedUserId: user.id,
-  //                                             ),
-  //                                       ),
-  //                                       IconButton(
-  //                                         icon: Icon(
-  //                                           Icons.delete,
-  //                                           color: primaryColor,
-  //                                           size: 20,
-  //                                         ),
-  //                                         onPressed:
-  //                                             () => showDeleteDialog(user.id),
-  //                                       ),
-  //                                     ],
-  //                                   ),
-  //                                 ],
-  //                               ),
-  //                             ),
-  //                           );
-  //                         })
-  //                         .toList(),
-  //               ),
-  //             ),
-  //           ),
-  //           Container(
-  //             padding: EdgeInsets.all(10),
-  //             color: secondaryColor,
-  //             child: Row(
-  //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //               children: [
-  //                 PaginationInfo(
-  //                   currentPage: _currentPage,
-  //                   totalItems: _totalCount,
-  //                   itemsPerPage: _pageSize,
-  //                 ),
-  //                 PaginationControls(
-  //                   currentPage: _currentPage,
-  //                   totalItems: _totalCount,
-  //                   itemsPerPage: _pageSize,
-  //                   isLoading: _isLoading,
-  //                   onPageChanged: (page) => fetchUserRoles(page: page),
-  //                 ),
-  //                 Container(width: 60),
-  //               ],
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //     floatingActionButton:
-  //         isMinimized
-  //             ? FloatingActionButton(
-  //               backgroundColor: primaryColor,
-  //               onPressed: () => showFormDialog(),
-  //               child: Icon(Icons.add),
-  //             )
-  //             : null,
-  //   );
-  // }
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -854,64 +687,161 @@ class UserRolePageState extends State<UserRolePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Roadmap Information",
+              "User Role Information",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             gap16px,
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(
-                  height: 30,
-                  width: 300,
-                  child: TextField(
-                    focusNode: isSearchfocus,
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: lightGrey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: const TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Name',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: isSearchfocus.hasFocus ? primaryColor : grey,
-                        size: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      filled: true,
-                      fillColor: secondaryColor,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 5,
+                Row(
+                  children: [
+                    SizedBox(
+                      height: 36,
+                      width: 250,
+                      child: TextField(
+                        focusNode: isSearchfocus,
+                        controller: searchController,
+                        decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: lightGrey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          labelText: 'Search...',
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: isSearchfocus.hasFocus ? primaryColor : grey,
+                            size: 20,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          filled: true,
+                          fillColor: secondaryColor,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 5,
+                            horizontal: 5,
+                          ),
+                        ),
+                        onChanged: filterSearchResults,
                       ),
                     ),
-                    onChanged: filterSearchResults,
-                  ),
+
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      height: 36,
+                      width: 200,
+                      child: GestureDetector(
+                        onTap: () async {
+                          await _commonService.loadData<Roles>(
+                            list: roleList,
+                            fetchFunction: _commonService.fetchRoles,
+                            setLoading:
+                                (value) =>
+                                    setState(() => isLoadingOffices = value),
+                            setList: (data) => setState(() => roleList = data),
+                          );
+                        },
+                        child: SearchableDropdown(
+                          items:
+                              isLoadingOffices
+                                  ? ["Loading roles..."]
+                                  : [
+                                    "All Roles",
+                                    ...roleList.map((o) => o.name),
+                                  ],
+                          selectedItem:
+                              _selectedRole == null
+                                  ? "All Roles"
+                                  : roleList
+                                      .firstWhere(
+                                        (o) => o.id.toString() == _selectedRole,
+                                      )
+                                      .name,
+                          hintText: "Roles",
+                          searchHint: "Search Roles...",
+                          onChanged: (value) async {
+                            setState(() {
+                              _selectedRole =
+                                  value == "All Roles"
+                                      ? null
+                                      : roleList
+                                          .firstWhere((o) => o.name == value)
+                                          .id
+                                          .toString();
+                            });
+                            await filterUsersFromApi();
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                // if (!isMobile)
+                //   ElevatedButton(
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: primaryColor,
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(4),
+                //       ),
+                //     ),
+                //     onPressed: () => showFormDialog(),
+                //     child: const Row(
+                //       mainAxisSize: MainAxisSize.min,
+                //       children: [
+                //         Icon(Icons.add, color: Colors.white),
+                //         SizedBox(width: 5),
+                //         Text('Add New', style: TextStyle(color: Colors.white)),
+                //       ],
+                //     ),
+                //   ),
                 if (!isMobile)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          side: BorderSide(color: Colors.grey.shade400),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        onPressed: exportFilteredPdf,
+                        icon: Icon(
+                          Icons.picture_as_pdf,
+                          color: Colors.grey.shade600,
+                          size: 18,
+                        ),
+                        label: Text(
+                          'Export PDF',
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
                       ),
-                    ),
-                    onPressed: () => showFormDialog(),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, color: Colors.white),
-                        SizedBox(width: 5),
-                        Text('Add New', style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        onPressed: () => showFormDialog(),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.add, color: Colors.white),
+                            SizedBox(width: 5),
+                            Text(
+                              'Add New',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),
@@ -1275,10 +1205,31 @@ class UserRolePageState extends State<UserRolePage> {
       ),
       floatingActionButton:
           isMobile
-              ? FloatingActionButton(
-                backgroundColor: primaryColor,
-                onPressed: () => showFormDialog(),
-                child: const Icon(Icons.add, color: Colors.white),
+              ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FloatingActionButton.small(
+                    heroTag: 'export',
+                    backgroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      side: BorderSide(color: Colors.grey.shade400),
+                    ),
+                    onPressed: exportFilteredPdf,
+                    child: Icon(
+                      Icons.picture_as_pdf,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  FloatingActionButton(
+                    heroTag: 'add',
+                    backgroundColor: primaryColor,
+                    onPressed: () => showFormDialog(),
+                    child: const Icon(Icons.add, color: Colors.white),
+                  ),
+                ],
               )
               : null,
     );
