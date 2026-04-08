@@ -266,7 +266,8 @@ namespace IMIS.Persistence.KraRoadMapModule
                 role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase)
+                role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase)
             )
             {
                 roadmaps = (await _repository.GetAll(cancellationToken))
