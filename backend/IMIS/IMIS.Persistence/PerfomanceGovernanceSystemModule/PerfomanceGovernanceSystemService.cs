@@ -771,24 +771,9 @@ namespace IMIS.Persistence.PgsModule
             var isPgsManager = activeRoleName.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase);
 
             List<PerfomanceGovernanceSystem> filteredEntities;
-
-            //========= ADMINISTRATOR ROLE ============
-            if (isAdmin)
-            {
-                var pgsEntities = await _repository.GetFilteredPGSAsync(filter, userId, cancellationToken).ConfigureAwait(false);
-
-                var processedDtos = new List<PerfomanceGovernanceSystemDto>();
-
-                foreach (var pgs in pgsEntities.Items)
-                {
-                    var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken);
-                    processedDtos.Add(dto);
-                }
-
-                filteredEntities = processedDtos.Select(dto => dto.ToEntity()).ToList();
-            }
-            //========= PGS CORE TEAM ROLE ============
-            else if (isPgsManager)
+           
+            //============== PGS CORE TEAM AND ADMINISTRATOR ROLE ROLE ==============
+            if (isPgsManager || isAdmin)
             {
                 var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false) ?? new List<PerfomanceGovernanceSystemDto>();
 
