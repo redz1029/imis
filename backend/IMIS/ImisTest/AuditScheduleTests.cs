@@ -76,8 +76,6 @@ namespace ImisTest
 
             var auditScheduleFaker = new Faker<AuditScheduleDto>()
                 .RuleFor(a => a.AuditTitle, f => f.Lorem.Text())
-                .RuleFor(a => a.StartDate, startDate)
-                .RuleFor(a => a.EndDate, endDate)
                 .RuleFor(a => a.IsActive, true);
                 //.RuleFor(a => a.Offices, auditableOffices);
 

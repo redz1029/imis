@@ -10,7 +10,7 @@ namespace IMIS.Domain
         public required int DayNumber { get; set; }
         public required DateTime Time { get; set; }
 
-
+        
         public ICollection<IsoAuditProcess>? IsoAuditProcesses { get; set; }
 
         public ICollection<AuditPlanPersonResponsible>? ResponsiblePersons { get; set; }

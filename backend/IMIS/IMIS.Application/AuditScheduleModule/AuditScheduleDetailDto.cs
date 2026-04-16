@@ -4,41 +4,33 @@ using IMIS.Domain;
 
 namespace IMIS.Application.AuditScheduleModule
 {
-    public class AuditScheduleDetailDto : BaseDto<AuditScheduleDetails, int>
-    {    
+    public class AuditScheduleDetailsDto : BaseDto<AuditScheduleDetails, int>
+    {
+        public required int AuditPlanEntryId { get; set; }
         public required int AuditScheduleId { get; set; }
-        public DateTime StartDateTime { get; set; }
-        public DateTime EndDateTime { get; set; }
-        public required int TeamId { get; set; }
-        public string? TeamName { get; set; }
-        public required int OfficeId { get; set; }
-        public string? OfficeName { get; set; }
 
-        public AuditScheduleDetailDto() { }
+        public AuditScheduleDetailsDto() { }
+
         [SetsRequiredMembers]
-        public AuditScheduleDetailDto(AuditScheduleDetails auditableOffices)
+        public AuditScheduleDetailsDto(AuditScheduleDetails entity)
         {
-            this.Id = auditableOffices.Id;
-            this.AuditScheduleId = auditableOffices.AuditScheduleId;
-            this.TeamId = auditableOffices.TeamId;
-            this.StartDateTime = auditableOffices.StartDateTime;
-            this.EndDateTime = auditableOffices.EndDateTime;
-            this.OfficeId = auditableOffices.OfficeId;
-            this.RowVersion = auditableOffices.RowVersion;
+            Id = entity.Id;
+            AuditPlanEntryId = entity.AuditPlanEntryId;
+            AuditScheduleId = entity.AuditScheduleId;
+            IsDeleted = entity.IsDeleted;
+            RowVersion = entity.RowVersion;
         }
+
         public override AuditScheduleDetails ToEntity()
         {
-            return new AuditScheduleDetails() 
-            { 
-                Id = Id, 
-                AuditScheduleId = AuditScheduleId, 
-                TeamId = TeamId, 
-                StartDateTime = StartDateTime, 
-                EndDateTime = EndDateTime,
-                OfficeId = OfficeId,
-                RowVersion = RowVersion,
+            return new AuditScheduleDetails
+            {
+                Id = Id,
+                AuditPlanEntryId = AuditPlanEntryId,
+                AuditScheduleId = AuditScheduleId,
+                IsDeleted = IsDeleted,
+                RowVersion = RowVersion
             };
         }
     }
 }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          

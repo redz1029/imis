@@ -107,8 +107,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IAuditScheduleRepository, AuditScheduleRepository>();
             services.AddScoped<IAuditScheduleService, AuditScheduleService>();
 
-            services.AddScoped<IAuditScheduleDetailRepository, AuditScheduleDetailRepository>();
-            services.AddScoped<IAuditScheduleDetailService, AuditScheduleDetailService>();
+            services.AddScoped<IAuditScheduleDetailsRepository, AuditScheduleDetailsRepository>();
+            services.AddScoped<IAuditScheduleDetailsService, AuditScheduleDetailsService>();
 
             services.AddScoped<IAuditorTeamsRepository, AuditorTeamsRepository>();
             services.AddScoped<IAuditorTeamsService, AuditorTeamsService>();
@@ -172,8 +172,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IAuditPlanEntryRepository, AuditPlanEntryRepository>();
             services.AddScoped<IAuditPlanEntryService, AuditPlanEntryService>();
 
-            services.AddScoped<IAuditScheduleDetailRepository, AuditScheduleDetailRepository>();
-            services.AddScoped<IAuditScheduleDetailService, AuditScheduleDetailService>();
+            services.AddScoped<IAuditScheduleDetailsRepository, AuditScheduleDetailsRepository>();
+            services.AddScoped<IAuditScheduleDetailsService, AuditScheduleDetailsService>();
 
             services.AddScoped<IAuditPlanPersonResponsibleRepository, AuditPlanPersonResponsibleRepository>();
             services.AddScoped<IAuditPlanPersonResponsibleService, AuditPlanPersonResponsibleService>();

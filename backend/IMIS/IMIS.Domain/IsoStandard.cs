@@ -1,5 +1,4 @@
 ﻿using Base.Primitives;
-using FastReport.Utils;
 
 
 namespace IMIS.Domain
@@ -11,7 +10,6 @@ namespace IMIS.Domain
         public StandardVersion? Version { get; set; }
         public required string Particulars { get; set; }
         public required string ClauseRef { get; set; }
-
         public string? Description { get; set; }
         public required bool isActive { get; set; }
     }

@@ -1,57 +1,65 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Base.Primitives;
+﻿using Base.Primitives;
 using IMIS.Application.AuditableOfficesModule;
+using IMIS.Application.AuditorTeamsModule;
 using IMIS.Domain;
-
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace IMIS.Application.AuditScheduleModule
 {
     public class AuditScheduleDto : BaseDto<AuditSchedule, int>
     {
+        public required string Purpose { get; set; }
         public required string AuditTitle { get; set; }
-        public required DateTime StartDate { get; set; }
-        public required DateTime EndDate { get; set; }
-        public required bool IsActive { get; set; }      
+        public required bool IsActive { get; set; }
+
+        // Navigation DTOs
+        public AuditorTeamsDto? AuditorTeams { get; set; }
         public List<AuditableOfficesDto>? AuditableOffices { get; set; }
-        public List<AuditScheduleDetailDto>? AuditSchduleDetails { get; set; }
-        public AuditScheduleDto() { }   
+        public List<AuditScheduleDetailsDto>? AuditScheduleDetails { get; set; }
+
+        public AuditScheduleDto() { }
+
         [SetsRequiredMembers]
-        public AuditScheduleDto(AuditSchedule auditSchedule)
-        {            
-            this.Id = auditSchedule.Id;
-            this.AuditTitle = auditSchedule.AuditTitle;
-            this.StartDate = auditSchedule.StartDate;
-            this.EndDate = auditSchedule.EndDate;
-            this.IsActive = auditSchedule.IsActive;
-          
-            this.AuditableOffices = auditSchedule.AuditableOffices != null
-                ? auditSchedule.AuditableOffices
-                    .Select(o => new AuditableOfficesDto(o))
-                    .ToList()
+        public AuditScheduleDto(AuditSchedule entity)
+        {
+            this.Id = entity.Id;
+            this.Purpose = entity.Purpose;
+            this.AuditTitle = entity.AuditTitle;
+            this.IsActive = entity.IsActive;
+
+            this.AuditorTeams = entity.AuditorTeams != null
+                ? new AuditorTeamsDto(entity.AuditorTeams)
+                : null;
+
+            this.AuditableOffices = entity.AuditableOffices != null
+                ? entity.AuditableOffices.Select(x => new AuditableOfficesDto(x)).ToList()
                 : new List<AuditableOfficesDto>();
 
-            this.AuditSchduleDetails = auditSchedule.AuditSchduleDetails != null
-            ? auditSchedule.AuditSchduleDetails
-                .Select(d => new AuditScheduleDetailDto(d))
-                .ToList()
-            : new List<AuditScheduleDetailDto>();
+            this.AuditScheduleDetails = entity.AuditSchduleDetails != null
+                ? entity.AuditSchduleDetails.Select(x => new AuditScheduleDetailsDto(x)).ToList()
+                : new List<AuditScheduleDetailsDto>();
 
-            this.RowVersion = auditSchedule.RowVersion;
-
-
+            this.RowVersion = entity.RowVersion;
         }
+
         public override AuditSchedule ToEntity()
         {
-            return new AuditSchedule() 
-            { 
-                Id = Id, 
-                AuditTitle = AuditTitle, 
-                StartDate = StartDate, 
-                EndDate = EndDate, 
-                IsActive = IsActive,                                   
-                AuditableOffices = AuditableOffices?.Select(d => d.ToEntity()).ToList(),
-                AuditSchduleDetails = AuditSchduleDetails?.Select(d => d.ToEntity()).ToList(),
-                RowVersion = RowVersion,
+            return new AuditSchedule
+            {
+                Id = this.Id,
+                Purpose = this.Purpose,
+                AuditTitle = this.AuditTitle,
+                IsActive = this.IsActive,
+
+                AuditorTeams = this.AuditorTeams?.ToEntity(),
+
+                AuditableOffices = this.AuditableOffices?.Select(x => x.ToEntity()).ToList(),
+                AuditSchduleDetails = this.AuditScheduleDetails?.Select(x => x.ToEntity()).ToList(),
+
+                RowVersion = this.RowVersion
             };
         }
     }
