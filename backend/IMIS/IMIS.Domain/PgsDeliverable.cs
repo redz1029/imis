@@ -22,6 +22,7 @@ namespace IMIS.Domain
         public DateTime? RemovedAt { get; set; }
       
         public long PerfomanceGovernanceSystemId { get; set; }
+        public int SortOrder { get; set; }
 
         [ForeignKey("PerfomanceGovernanceSystemId")]
         [InverseProperty("PgsDeliverables")]

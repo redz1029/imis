@@ -70,8 +70,13 @@ namespace IMIS.Persistence.PgsModule
             var pgs = await _repository.GetByUserIdAndPgsIdAsync(pgsId, cancellationToken);
             if (pgs == null)
                 return null;
-                  
+         
             var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken);
+
+            dto.PgsDeliverables = dto.PgsDeliverables?
+                   .Where(d => !d.IsDeleted)
+                   .OrderBy(d => d.SortOrder)
+                   .ToList();
 
             var inChildOffice = pgs.Office.UserOffices?.Any(u => u.UserId == userId) == true;
 
@@ -473,7 +478,7 @@ namespace IMIS.Persistence.PgsModule
         {           
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return await currentUserService!.GetCurrentUserAsync();
-        }
+        }      
         public async Task<PerfomanceGovernanceSystemDto> SaveOrUpdateAsync(PerfomanceGovernanceSystemDto pgsDto, CancellationToken cancellationToken)
         {
             if (pgsDto == null)
@@ -489,39 +494,42 @@ namespace IMIS.Persistence.PgsModule
 
             entity.Office = office;
             entity.OfficeId = office.Id;
-            entity.PgsPeriod = pgsPeriod;          
+            entity.PgsPeriod = pgsPeriod;
 
-            if (entity.PgsDeliverables != null)
+            // =========================
+            // NORMALIZE SORT ORDER
+            // =========================
+            if (entity.PgsDeliverables != null && entity.PgsDeliverables.Any())
             {
-                foreach (var d in entity.PgsDeliverables)
-                {
-                    d.Kra = null;
+                int order = 1;
 
-                    if (d.KraId > 0)
+                entity.PgsDeliverables = entity.PgsDeliverables
+                    .OrderBy(d => d.SortOrder)
+                    .Select(d =>
                     {
-                        d.KraId = d.KraId;
-                    }
-                }
+                        d.SortOrder = order++;
+                        d.Kra = null;
+                        return d;
+                    })
+                    .ToList();
             }
 
             var isDraft = entity.PgsSignatories == null || !entity.PgsSignatories.Any();
             var isNew = entity.Id == 0;
-          
 
+            // =========================
+            // CREATE
+            // =========================
             if (isNew)
             {
-                if (entity.PgsPeriod == null)
-                    throw new InvalidOperationException("PGS Period is required.");
-
-                var exists = await _repository.ExistsByOfficeAndPgsPeriodAsync(entity.OfficeId, entity.PgsPeriod.Id, cancellationToken);
+                var exists = await _repository.ExistsByOfficeAndPgsPeriodAsync(
+                    entity.OfficeId,
+                    entity.PgsPeriod.Id,
+                    cancellationToken);
 
                 if (exists)
-                {
-                    throw new InvalidOperationException(
-                        $"PGS already exists for Office ID {entity.OfficeId} and Period ID {entity.PgsPeriod.Id}.");
-                }              
+                    throw new InvalidOperationException("PGS already exists.");
 
-                // Add new deliverables
                 foreach (var d in entity.PgsDeliverables ?? Enumerable.Empty<PgsDeliverable>())
                     _repository.GetDbContext().Entry(d).State = EntityState.Added;
 
@@ -533,29 +541,34 @@ namespace IMIS.Persistence.PgsModule
 
                 _repository.GetDbContext().Add(entity);
             }
+
+            // =========================
+            // UPDATE
+            // =========================
             else
             {
                 var existing = await _repository.GetWithIncludesAsync((int)entity.Id, cancellationToken)
                     ?? throw new InvalidOperationException("PGS record not found.");
 
-                var updatedIds = entity.PgsDeliverables?.Select(d => d.Id).ToList() ?? new();
-                var removedDeliverables = existing.PgsDeliverables!
-                    .Where(d => !updatedIds.Contains(d.Id) && !d.IsDeleted)
+                // REMOVE DELETED
+                var updatedIds = entity.PgsDeliverables?.Select(x => x.Id).ToList() ?? new();
+
+                var removed = existing.PgsDeliverables?
+                    .Where(x => !updatedIds.Contains(x.Id) && !x.IsDeleted)
                     .ToList();
 
                 var currentUser = await GetCurrentUserAsync();
-                var removedByName = currentUser?.Id ?? "UnknownUserId";
+                var removedBy = currentUser?.Id ?? "System";
 
-                foreach (var d in removedDeliverables)
+                foreach (var d in removed ?? new())
                 {
                     d.IsDeleted = true;
-                    d.RemovedBy = removedByName;
+                    d.RemovedBy = removedBy;
                     d.RemovedAt = DateTime.UtcNow;
-                    _repository.GetDbContext().Entry(d).State = EntityState.Modified;
                 }
 
-                var existingDeliverables = existing.PgsDeliverables?.ToList() ?? new List<PgsDeliverable>();
-                foreach (var d in entity.PgsDeliverables ?? new List<PgsDeliverable>())
+                // UPSERT
+                foreach (var d in entity.PgsDeliverables ?? new())
                 {
                     if (d.Id == 0)
                     {
@@ -563,15 +576,19 @@ namespace IMIS.Persistence.PgsModule
                     }
                     else
                     {
-                        var existingDeliverable = existingDeliverables.FirstOrDefault(ed => ed.Id == d.Id);
-                        if (existingDeliverable != null)
+                        var existingItem =
+                            existing.PgsDeliverables?.FirstOrDefault(x => x.Id == d.Id);
+
+                        if (existingItem != null)
                         {
-                            var tempIsDeleted = existingDeliverable.IsDeleted;
+                            var tempDeleted = existingItem.IsDeleted;
 
-                            // Update values
-                            _repository.GetDbContext().Entry(existingDeliverable).CurrentValues.SetValues(d);
+                            _repository.GetDbContext()
+                                .Entry(existingItem)
+                                .CurrentValues
+                                .SetValues(d);
 
-                            existingDeliverable.IsDeleted = tempIsDeleted;
+                            existingItem.IsDeleted = tempDeleted;
                         }
                         else
                         {
@@ -580,76 +597,73 @@ namespace IMIS.Persistence.PgsModule
                     }
                 }
 
+                // SIGNATORIES (UNCHANGED)
                 if (isDraft)
                 {
-
                     if (existing.PgsSignatories?.Any() == true)
                     {
                         foreach (var s in existing.PgsSignatories)
-                        {
                             s.IsDeleted = true;
-                        }
                     }
 
                     entity.PgsSignatories = new List<PgsSignatory>();
                 }
                 else
                 {
+                    var user = await GetCurrentUserAsync();
 
-                    var currentUserorderLevel = await GetCurrentUserAsync();
-                    var isChildOfficeHead = await _userOfficeRepository.IsUserOfficeHeadAsync(currentUserorderLevel!.Id, office.Id, cancellationToken);
-
+                    var isChildOfficeHead =
+                        await _userOfficeRepository.IsUserOfficeHeadAsync(
+                            user!.Id,
+                            office.Id,
+                            cancellationToken);
 
                     if (isChildOfficeHead)
                     {
-
                         foreach (var s in entity.PgsSignatories ?? new List<PgsSignatory>())
                         {
                             s.PgsSignatoryTemplateId = null;
                             s.DateSigned = DateTime.UtcNow;
 
-                            if (existing?.PgsSignatories?.Any(es => es.SignatoryId == s.SignatoryId) != true)
-                            {
-                                existing?.PgsSignatories?.Add(s);
-                            }
+                            if (existing.PgsSignatories?.Any(x => x.SignatoryId == s.SignatoryId) != true)
+                                existing.PgsSignatories!.Add(s);
                         }
                     }
-
                     else
                     {
-
                         foreach (var s in entity.PgsSignatories ?? new List<PgsSignatory>())
                         {
-                            var existingSignatory = existing?.PgsSignatories?
-                                .FirstOrDefault(es => es.Id == s.Id);
+                            var existingSign =
+                                existing.PgsSignatories?.FirstOrDefault(x => x.Id == s.Id);
 
-                            if (existingSignatory != null)
+                            if (existingSign != null)
                             {
-                                existingSignatory.IsDeleted = false;
-                                _repository.GetDbContext().Entry(existingSignatory).CurrentValues.SetValues(s);
+                                existingSign.IsDeleted = false;
+
+                                _repository.GetDbContext()
+                                    .Entry(existingSign)
+                                    .CurrentValues
+                                    .SetValues(s);
                             }
                             else
                             {
-                                existing?.PgsSignatories?.Add(s);
+                                existing.PgsSignatories!.Add(s);
                             }
                         }
                     }
                 }
 
                 _repository.GetDbContext().Entry(existing).CurrentValues.SetValues(entity);
-                existing!.OfficeId = office.Id;
-                existing.PgsPeriod = pgsPeriod;
 
-                if (existing.PgsReadinessRating != null && entity.PgsReadinessRating != null)
-                {
-                    existing.PgsReadinessRating.CompetenceToDeliver = entity.PgsReadinessRating.CompetenceToDeliver;
-                    existing.PgsReadinessRating.ConfidenceToDeliver = entity.PgsReadinessRating.ConfidenceToDeliver;
-                    existing.PgsReadinessRating.ResourceAvailability = entity.PgsReadinessRating.ResourceAvailability;
-                }
+                existing.OfficeId = office.Id;
+                existing.PgsPeriod = pgsPeriod;
             }
 
-            await _repository.SaveOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
-            return new PerfomanceGovernanceSystemDto(entity);
+            await _repository.SaveOrUpdateAsync(entity, cancellationToken);
+
+            var saved = await _repository.GetWithIncludesAsync((int)entity.Id, cancellationToken);
+
+            return new PerfomanceGovernanceSystemDto(saved!);
         }
         // Save or Update
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
