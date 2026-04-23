@@ -70,7 +70,7 @@ namespace IMIS.Persistence.PgsModule
             var pgs = await _repository.GetByUserIdAndPgsIdAsync(pgsId, cancellationToken);
             if (pgs == null)
                 return null;
-
+                  
             var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken);
 
             var inChildOffice = pgs.Office.UserOffices?.Any(u => u.UserId == userId) == true;
@@ -740,8 +740,12 @@ namespace IMIS.Persistence.PgsModule
             pgs.PgsSignatories = new List<PgsSignatoryDto>();
             return await SaveOrUpdateAsync(pgs, cancellationToken).ConfigureAwait(false);
         }
-             
-        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, string roleId, CancellationToken cancellationToken)
+
+        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(
+        PgsFilter filter,
+        string userId,
+        string roleId,
+        CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
@@ -749,7 +753,7 @@ namespace IMIS.Persistence.PgsModule
                 return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
                     .Create(new List<PerfomanceGovernanceSystem>(), filter.Page, filter.PageSize, 0);
             }
-         
+
             var role = await _roleManager.FindByIdAsync(roleId);
             if (role == null)
             {
@@ -765,17 +769,30 @@ namespace IMIS.Persistence.PgsModule
             }
 
             var activeRoleName = role.Name;
-          
-            var isAdmin = activeRoleName!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase);
 
+            var isAdmin = activeRoleName!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase);
             var isPgsManager = activeRoleName.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase);
 
+            // =====================  GET PARENT  CHILD OFFICE IDS =====================
+            var officeIds = new List<int>();
+
+            if (filter.OfficeId.HasValue)
+            {
+                var allOffices = await _officeRepository.GetAll(cancellationToken);
+
+                officeIds = allOffices!
+                    .Where(o => o.Id == filter.OfficeId.Value || o.ParentOfficeId == filter.OfficeId.Value)
+                    .Select(o => o.Id)
+                    .ToList();
+            }
+
             List<PerfomanceGovernanceSystem> filteredEntities;
-           
-            //============== PGS CORE TEAM AND ADMINISTRATOR ROLE ROLE ==============
+
+            // ===================== ADMIN / PGS MANAGER =====================
             if (isPgsManager || isAdmin)
             {
-                var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false) ?? new List<PerfomanceGovernanceSystemDto>();
+                var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false)
+                              ?? new List<PerfomanceGovernanceSystemDto>();
 
                 var filteredDtos = allDtos
                     .Where(dto =>
@@ -783,7 +800,7 @@ namespace IMIS.Persistence.PgsModule
                         bool matches = true;
 
                         if (filter.OfficeId.HasValue)
-                            matches &= dto.Office.Id == filter.OfficeId.Value;
+                            matches &= officeIds.Contains(dto.Office.Id);
 
                         if (filter.FromDate.HasValue)
                             matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
@@ -796,9 +813,14 @@ namespace IMIS.Persistence.PgsModule
                     .ToList();
 
                 var processedDtos = new List<PerfomanceGovernanceSystemDto>();
+
                 foreach (var dto in filteredDtos)
                 {
-                    var processedDto = await ProcessPGSSignatories(dto.ToEntity(), dto.Office.Id.ToString(), cancellationToken);
+                    var processedDto = await ProcessPGSSignatories(
+                        dto.ToEntity(),
+                        dto.Office.Id.ToString(),
+                        cancellationToken);
+
                     processedDtos.Add(processedDto);
                 }
 
@@ -806,10 +828,14 @@ namespace IMIS.Persistence.PgsModule
             }
             else
             {
-                
-                // ========= NORMAL USER / SERVICE HEAD / SIGNATORY ============         
-                var userDtos = await GetByUserIdAsync(currentUser.Id, roleId, filter.Page, filter.PageSize, cancellationToken)
-                    .ConfigureAwait(false) ?? new List<PerfomanceGovernanceSystemDto>();
+                // ===================== NORMAL USER =====================
+                var userDtos = await GetByUserIdAsync(
+                    currentUser.Id,
+                    roleId,
+                    filter.Page,
+                    filter.PageSize,
+                    cancellationToken).ConfigureAwait(false)
+                    ?? new List<PerfomanceGovernanceSystemDto>();
 
                 var filteredDtos = userDtos
                     .Where(dto =>
@@ -817,7 +843,7 @@ namespace IMIS.Persistence.PgsModule
                         bool matches = true;
 
                         if (filter.OfficeId.HasValue)
-                            matches &= dto.Office.Id == filter.OfficeId.Value;
+                            matches &= officeIds.Contains(dto.Office.Id);
 
                         if (filter.FromDate.HasValue)
                             matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
@@ -830,18 +856,17 @@ namespace IMIS.Persistence.PgsModule
                     .ToList();
 
                 filteredEntities = filteredDtos.Select(dto => dto.ToEntity()).ToList();
-
             }
 
             var pagedPgs = DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
                 .Create(filteredEntities, filter.Page, filter.PageSize, filteredEntities.Count);
 
+            // ===================== SIGNATORY PROCESSING =====================
             foreach (var item in pagedPgs.Items)
             {
                 if (item.PgsSignatories == null)
                     item.PgsSignatories = new List<PgsSignatoryDto>();
 
-                // Load signatory details
                 foreach (var signatory in item.PgsSignatories)
                 {
                     if (signatory.PgsSignatoryTemplateId != null)
@@ -857,13 +882,13 @@ namespace IMIS.Persistence.PgsModule
                     var user = await _userManager.FindByIdAsync(signatory.SignatoryId);
                     if (user != null)
                     {
-                        signatory.SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}";
+                        signatory.SignatoryName =
+                            $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}";
                     }
 
                     signatory.IsNextStatus = false;
                 }
 
-                // Determine next signatory
                 var nextSignatory = item.PgsSignatories
                     .Where(s => s.DateSigned == null || s.DateSigned == DateTime.MinValue)
                     .OrderBy(s => s.OrderLevel)
@@ -876,7 +901,9 @@ namespace IMIS.Persistence.PgsModule
                 else
                 {
                     var signatoryTemplates = await GetSignatoryTemplates(item.Office.ToEntity(), cancellationToken);
-                    var maxOrder = item.PgsSignatories.Any() ? item.PgsSignatories.Max(s => s.OrderLevel) : -1;
+                    var maxOrder = item.PgsSignatories.Any()
+                        ? item.PgsSignatories.Max(s => s.OrderLevel)
+                        : -1;
 
                     var nextTemplate = signatoryTemplates
                         .Where(t => t.OrderLevel > maxOrder && t.DefaultSignatoryId == currentUser.Id)
@@ -886,6 +913,7 @@ namespace IMIS.Persistence.PgsModule
                     if (nextTemplate != null)
                     {
                         var user = await _userManager.FindByIdAsync(currentUser.Id);
+
                         if (user != null)
                         {
                             var newSignatory = new PgsSignatoryDto
@@ -897,7 +925,8 @@ namespace IMIS.Persistence.PgsModule
                                 Status = nextTemplate.Status,
                                 Label = nextTemplate.SignatoryLabel,
                                 OrderLevel = nextTemplate.OrderLevel,
-                                SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}",
+                                SignatoryName =
+                                    $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}",
                                 IsNextStatus = true
                             };
 
@@ -907,10 +936,9 @@ namespace IMIS.Persistence.PgsModule
                 }
 
                 item.IsDraft = !item.PgsSignatories.Any(s => s.Id > 0);
-
             }
 
             return pagedPgs;
-        }
+        }       
     }
 }
