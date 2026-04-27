@@ -261,8 +261,9 @@ class PerformanceGovernanceSystemPageState
       final updatedPgsJson = updatePgs.toJson();
       updatedPgsJson['id'] = pgsId;
 
-      updatedPgsJson['pgsSignatories'] =
-          signatoryData.pgsSignatories?.map((s) => s.toJson()).toList();
+      updatedPgsJson['pgsSignatories'] = signatoryData.pgsSignatories
+          ?.map((s) => s.toJson())
+          .toList();
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -333,11 +334,10 @@ class PerformanceGovernanceSystemPageState
         final pgsDataList = data is List ? data : [data];
 
         for (var pgsJson in pgsDataList) {
-          final deliverables =
-              (pgsJson['pgsDeliverables'] as List)
-                  .map((d) => PgsDeliverables.fromJson(d))
-                  .where((d) => d.id != null)
-                  .toList();
+          final deliverables = (pgsJson['pgsDeliverables'] as List)
+              .map((d) => PgsDeliverables.fromJson(d))
+              .where((d) => d.id != null)
+              .toList();
 
           deliverablesList.addAll(deliverables);
         }
@@ -506,22 +506,21 @@ class PerformanceGovernanceSystemPageState
     String userId,
   ) {
     if (pgs.pgsSignatories != null && pgs.pgsSignatories!.isNotEmpty) {
-      signatoryList =
-          pgs.pgsSignatories!
-              .map(
-                (sig) => {
-                  'id': sig.id.toString(),
-                  'signatoryId': sig.signatoryId,
-                  'signatoryName': sig.signatoryName,
-                  'signatoryLabel': sig.label,
-                  'orderLevel': sig.orderLevel,
-                  'defaultSignatoryId': sig.signatoryId,
-                  'officeId': pgs.office.id.toString(),
-                  'isNextStatus': sig.isNextStatus,
-                  'status': sig.status,
-                },
-              )
-              .toList();
+      signatoryList = pgs.pgsSignatories!
+          .map(
+            (sig) => {
+              'id': sig.id.toString(),
+              'signatoryId': sig.signatoryId,
+              'signatoryName': sig.signatoryName,
+              'signatoryLabel': sig.label,
+              'orderLevel': sig.orderLevel,
+              'defaultSignatoryId': sig.signatoryId,
+              'officeId': pgs.office.id.toString(),
+              'isNextStatus': sig.isNextStatus,
+              'status': sig.status,
+            },
+          )
+          .toList();
     }
 
     return {
@@ -579,25 +578,23 @@ class PerformanceGovernanceSystemPageState
         roleIdParam = "&roleId=${currentRole.id}";
       }
 
-      final pageList = await _paginationUtils.fetchPaginatedData<
-        PerformanceGovernanceSystem
-      >(
-        endpoint:
-            "${ApiEndpoint().performancegovernancesystem}/userId/$userId?userId=$userId$roleIdParam",
-        page: page,
-        pageSize: _pageSize,
-        searchQuery: searchQuery,
-        fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
-      );
+      final pageList = await _paginationUtils
+          .fetchPaginatedData<PerformanceGovernanceSystem>(
+            endpoint:
+                "${ApiEndpoint().performancegovernancesystem}/userId/$userId?userId=$userId$roleIdParam",
+            page: page,
+            pageSize: _pageSize,
+            searchQuery: searchQuery,
+            fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
+          );
 
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          deliverableLists =
-              pageList.items
-                  .map((pgs) => _mapPgsToListItem(pgs, userId))
-                  .toList();
+          deliverableLists = pageList.items
+              .map((pgs) => _mapPgsToListItem(pgs, userId))
+              .toList();
           filteredList = List.from(deliverableLists);
         });
       }
@@ -708,15 +705,15 @@ class PerformanceGovernanceSystemPageState
       debugPrint('Query Params: $queryParams');
       if (response.statusCode == 200) {
         final data = response.data;
-        final items =
-            (data['items'] as List)
-                .map((item) => PerformanceGovernanceSystem.fromJson(item))
-                .toList();
+        final items = (data['items'] as List)
+            .map((item) => PerformanceGovernanceSystem.fromJson(item))
+            .toList();
 
         if (mounted) {
           setState(() {
-            deliverableLists =
-                items.map((pgs) => _mapPgsToListItem(pgs, userId)).toList();
+            deliverableLists = items
+                .map((pgs) => _mapPgsToListItem(pgs, userId))
+                .toList();
             filteredList = List.from(deliverableLists);
             _currentPage = data['page'] ?? 1;
             _totalCount = data['totalCount'] ?? 0;
@@ -741,10 +738,9 @@ class PerformanceGovernanceSystemPageState
       var response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
-        List<PgsPeriod> data =
-            (response.data as List)
-                .map((period) => PgsPeriod.fromJson(period))
-                .toList();
+        List<PgsPeriod> data = (response.data as List)
+            .map((period) => PgsPeriod.fromJson(period))
+            .toList();
         if (mounted) {
           setState(() {
             periodList = data.map((period) => period.toJson()).toList();
@@ -823,10 +819,9 @@ class PerformanceGovernanceSystemPageState
       var response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
-        List<PgsDeliverables> data =
-            (response.data as List)
-                .map((deliverable) => PgsDeliverables.fromJson(deliverable))
-                .toList();
+        List<PgsDeliverables> data = (response.data as List)
+            .map((deliverable) => PgsDeliverables.fromJson(deliverable))
+            .toList();
 
         if (mounted) {
           setState(() {
@@ -852,14 +847,13 @@ class PerformanceGovernanceSystemPageState
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
 
-        options =
-            data.map<Map<String, dynamic>>((item) {
-              return {
-                'id': item['id'] as int,
-                'name': item['name'].toString(),
-                'remarks': item['remarks']?.toString() ?? '',
-              };
-            }).toList();
+        options = data.map<Map<String, dynamic>>((item) {
+          return {
+            'id': item['id'] as int,
+            'name': item['name'].toString(),
+            'remarks': item['remarks']?.toString() ?? '',
+          };
+        }).toList();
       } else {
         debugPrint("Failed to load data");
       }
@@ -932,19 +926,19 @@ class PerformanceGovernanceSystemPageState
 
       final kraData = options.firstWhere(
         (option) => option['id'] == kraId,
-        orElse:
-            () => {
-              'id': 1,
-              'name': 'Unknown',
-              'remarks': '',
-              'isDeleted': false,
-              'rowVersion': '',
-            },
+        orElse: () => {
+          'id': 1,
+          'name': 'Unknown',
+          'remarks': '',
+          'isDeleted': false,
+          'rowVersion': '',
+        },
       );
       selectedKRAObjects[index] = kraData;
 
-      final deliverableText =
-          controller.text.isNotEmpty ? controller.text : "No Name";
+      final deliverableText = controller.text.isNotEmpty
+          ? controller.text
+          : "No Name";
       final kraDescriptionText = kraDescriptionController[index]?.text ?? '';
 
       final isDirect = selectedDirect[index] ?? false;
@@ -952,8 +946,8 @@ class PerformanceGovernanceSystemPageState
           DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
       double percentDeliverables =
           (percentageControllers[index]?.text.isNotEmpty ?? false)
-              ? double.tryParse(percentageControllers[index]!.text) ?? 0.0
-              : 0.0;
+          ? double.tryParse(percentageControllers[index]!.text) ?? 0.0
+          : 0.0;
       final disapprovalRemarksText = reasonController[index]?.text ?? '';
       final isDisapproved = selectedDisapproved[index] ?? false;
       final statusIndex =
@@ -1151,8 +1145,9 @@ class PerformanceGovernanceSystemPageState
                                       },
                                       onSelected: (String value) {
                                         setState(() {
-                                          _selectedOfficeId =
-                                              value.isEmpty ? null : value;
+                                          _selectedOfficeId = value.isEmpty
+                                              ? null
+                                              : value;
                                           isMenuOpenOffice = false;
 
                                           fetchPgsFilter();
@@ -1197,8 +1192,8 @@ class PerformanceGovernanceSystemPageState
                                                     isDense: true,
                                                   ),
                                                   onChanged: (value) {
-                                                    searchQuery.value =
-                                                        value.toLowerCase();
+                                                    searchQuery.value = value
+                                                        .toLowerCase();
                                                   },
                                                 ),
                                                 const Divider(
@@ -1210,9 +1205,7 @@ class PerformanceGovernanceSystemPageState
                                           ),
                                           PopupMenuItem<String>(
                                             enabled: false,
-                                            child: ValueListenableBuilder<
-                                              String
-                                            >(
+                                            child: ValueListenableBuilder<String>(
                                               valueListenable: searchQuery,
                                               builder: (context, query, _) {
                                                 final filteredOffices =
@@ -1239,37 +1232,35 @@ class PerformanceGovernanceSystemPageState
                                                     child: Column(
                                                       mainAxisSize:
                                                           MainAxisSize.min,
-                                                      children:
-                                                          filteredOffices
-                                                              .map<Widget>(
-                                                                (
-                                                                  office,
-                                                                ) => ListTile(
-                                                                  dense: true,
-                                                                  title: Text(
-                                                                    office['name']
-                                                                        .toString(),
-                                                                    style: const TextStyle(
-                                                                      color:
-                                                                          Colors
-                                                                              .black,
-                                                                    ),
-                                                                  ),
-                                                                  onTap: () {
-                                                                    Navigator.pop(
-                                                                      context,
-                                                                    );
-                                                                    setState(() {
-                                                                      _selectedOfficeId =
-                                                                          office['id']
-                                                                              .toString();
-
-                                                                      fetchPgsFilter();
-                                                                    });
-                                                                  },
+                                                      children: filteredOffices
+                                                          .map<Widget>(
+                                                            (
+                                                              office,
+                                                            ) => ListTile(
+                                                              dense: true,
+                                                              title: Text(
+                                                                office['name']
+                                                                    .toString(),
+                                                                style: const TextStyle(
+                                                                  color: Colors
+                                                                      .black,
                                                                 ),
-                                                              )
-                                                              .toList(),
+                                                              ),
+                                                              onTap: () {
+                                                                Navigator.pop(
+                                                                  context,
+                                                                );
+                                                                setState(() {
+                                                                  _selectedOfficeId =
+                                                                      office['id']
+                                                                          .toString();
+
+                                                                  fetchPgsFilter();
+                                                                });
+                                                              },
+                                                            ),
+                                                          )
+                                                          .toList(),
                                                     ),
                                                   ),
                                                 );
@@ -1279,22 +1270,19 @@ class PerformanceGovernanceSystemPageState
                                         ];
                                       },
                                       child: FilterButton(
-                                        label:
-                                            _selectedOfficeId == null
-                                                ? 'All Offices'
-                                                : officeList
-                                                    .firstWhere(
-                                                      (office) =>
-                                                          office.id
-                                                              .toString() ==
-                                                          _selectedOfficeId,
-                                                      orElse:
-                                                          () => Office(
-                                                            id: 0,
-                                                            name: 'All Offices',
-                                                          ),
-                                                    )
-                                                    .name,
+                                        label: _selectedOfficeId == null
+                                            ? 'All Offices'
+                                            : officeList
+                                                  .firstWhere(
+                                                    (office) =>
+                                                        office.id.toString() ==
+                                                        _selectedOfficeId,
+                                                    orElse: () => Office(
+                                                      id: 0,
+                                                      name: 'All Offices',
+                                                    ),
+                                                  )
+                                                  .name,
                                         isActive: isMenuOpenOffice,
                                       ),
                                     ),
@@ -1324,16 +1312,16 @@ class PerformanceGovernanceSystemPageState
                                       setState(() {
                                         selectedStartPeriod =
                                             selectedDate.isEmpty
-                                                ? null
-                                                : selectedDate;
+                                            ? null
+                                            : selectedDate;
                                         selectedStartDateText =
                                             selectedStartPeriod == null
-                                                ? 'All Start Date'
-                                                : _dateConverter.toJson(
-                                                  DateTime.parse(
-                                                    selectedStartPeriod!,
-                                                  ),
-                                                );
+                                            ? 'All Start Date'
+                                            : _dateConverter.toJson(
+                                                DateTime.parse(
+                                                  selectedStartPeriod!,
+                                                ),
+                                              );
                                         isMenuOpenStartDate = false;
                                         fetchPgsFilter();
                                       });
@@ -1399,18 +1387,17 @@ class PerformanceGovernanceSystemPageState
                                     },
                                     onSelected: (String selectedDate) {
                                       setState(() {
-                                        selectedEndDate =
-                                            selectedDate.isEmpty
-                                                ? null
-                                                : selectedDate;
+                                        selectedEndDate = selectedDate.isEmpty
+                                            ? null
+                                            : selectedDate;
                                         selectedEndDateText =
                                             selectedEndDate == null
-                                                ? 'All End Date'
-                                                : _dateConverter.toJson(
-                                                  DateTime.parse(
-                                                    selectedEndDate!,
-                                                  ),
-                                                );
+                                            ? 'All End Date'
+                                            : _dateConverter.toJson(
+                                                DateTime.parse(
+                                                  selectedEndDate!,
+                                                ),
+                                              );
                                         isMenuOpenEndDate = false;
                                         fetchPgsFilter();
                                       });
@@ -1544,194 +1531,177 @@ class PerformanceGovernanceSystemPageState
                         size: ColumnSize.M,
                       ),
                     ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var pgsgovernancesystem = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
-                          final isDraft =
-                              pgsgovernancesystem['isDraft'] as bool? ?? false;
+                    rows: filteredList.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      var pgsgovernancesystem = entry.value;
+                      int itemNumber =
+                          ((_currentPage - 1) * _pageSize) + index + 1;
+                      final isDraft =
+                          pgsgovernancesystem['isDraft'] as bool? ?? false;
 
-                          final signatories = List<Map<String, dynamic>>.from(
-                            pgsgovernancesystem['signatories'] ?? [],
-                          );
-                          final deliverables = List<Map<String, dynamic>>.from(
-                            pgsgovernancesystem['pgsDeliverables'] ?? [],
-                          );
-                          String status = 'Draft';
-                          if (deliverables.any(
-                            (d) => d['isDisapproved'] as bool? ?? false,
-                          )) {
-                            status = 'Disapproved';
-                          } else if (isDraft) {
-                            status = 'Draft';
-                          } else {
-                            final hasNextStatus = signatories.any((signatory) {
-                              final isNextStatus = signatory['isNextStatus'];
+                      final signatories = List<Map<String, dynamic>>.from(
+                        pgsgovernancesystem['signatories'] ?? [],
+                      );
+                      final deliverables = List<Map<String, dynamic>>.from(
+                        pgsgovernancesystem['pgsDeliverables'] ?? [],
+                      );
+                      String status = 'Draft';
+                      if (deliverables.any(
+                        (d) => d['isDisapproved'] as bool? ?? false,
+                      )) {
+                        status = 'Disapproved';
+                      } else if (isDraft) {
+                        status = 'Draft';
+                      } else {
+                        final hasNextStatus = signatories.any((signatory) {
+                          final isNextStatus = signatory['isNextStatus'];
 
-                              if (isNextStatus == null) return false;
-                              if (isNextStatus is bool) return isNextStatus;
-                              if (isNextStatus is String) {
-                                return isNextStatus.toLowerCase() == 'true';
-                              }
-                              return false;
-                            });
-
-                            status =
-                                hasNextStatus ? 'For Approval' : 'Approved';
+                          if (isNextStatus == null) return false;
+                          if (isNextStatus is bool) return isNextStatus;
+                          if (isNextStatus is String) {
+                            return isNextStatus.toLowerCase() == 'true';
                           }
+                          return false;
+                        });
 
-                          return DataRow(
-                            cells: [
-                              DataCell(
-                                SizedBox(
-                                  width: 40,
-                                  child: Text(itemNumber.toString()),
-                                ),
-                              ),
-                              DataCell(
-                                Container(
-                                  constraints: BoxConstraints(
-                                    minWidth: 100,
-                                    maxWidth: constraints.maxWidth * 0.4,
-                                  ),
-                                  child: Text(
-                                    pgsgovernancesystem['name'] ?? '',
-                                    overflow: TextOverflow.ellipsis,
-                                    softWrap: true,
-                                    maxLines: 2,
-                                  ),
-                                ),
-                              ),
-                              DataCell(
-                                SizedBox(
-                                  child: Text(
-                                    "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['startDate']))} - ${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['endDate']))}",
-                                  ),
-                                ),
-                              ),
-                              DataCell(SizedBox(child: Text(status))),
-                              DataCell(
-                                SizedBox(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.edit),
+                        status = hasNextStatus ? 'For Approval' : 'Approved';
+                      }
 
-                                        onPressed: () async {
-                                          try {
-                                            await AuthUtil.saveSelectedOfficeId(
-                                              pgsgovernancesystem['officeid']
-                                                  .toString(),
-                                            );
-                                            selectedOffice =
-                                                await AuthUtil.fetchSelectedOfficeId();
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            SizedBox(
+                              width: 40,
+                              child: Text(itemNumber.toString()),
+                            ),
+                          ),
+                          DataCell(
+                            Container(
+                              constraints: BoxConstraints(
+                                minWidth: 100,
+                                maxWidth: constraints.maxWidth * 0.4,
+                              ),
+                              child: Text(
+                                pgsgovernancesystem['name'] ?? '',
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: true,
+                                maxLines: 2,
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            SizedBox(
+                              child: Text(
+                                "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['startDate']))} - ${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['endDate']))}",
+                              ),
+                            ),
+                          ),
+                          DataCell(SizedBox(child: Text(status))),
+                          DataCell(
+                            SizedBox(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit),
 
-                                            final deliverables =
-                                                await fetchDeliverables(
-                                                  pgsId:
-                                                      pgsgovernancesystem['id'],
-                                                );
-                                            final signatory =
-                                                await fetchSignatoryList(
-                                                  pgsId:
-                                                      pgsgovernancesystem['id'],
-                                                );
-                                            await fetchSubmitUserId(
-                                              userId: userId,
+                                    onPressed: () async {
+                                      try {
+                                        await AuthUtil.saveSelectedOfficeId(
+                                          pgsgovernancesystem['officeid']
+                                              .toString(),
+                                        );
+                                        selectedOffice =
+                                            await AuthUtil.fetchSelectedOfficeId();
+
+                                        final deliverables =
+                                            await fetchDeliverables(
                                               pgsId: pgsgovernancesystem['id'],
                                             );
-
-                                            final isDraftValue =
-                                                pgsgovernancesystem['isDraft'] ??
-                                                false;
-
-                                            showFormDialog(
-                                              userId:
-                                                  pgsgovernancesystem['userId'],
-                                              id: pgsgovernancesystem['id'],
-                                              officename:
-                                                  pgsgovernancesystem['name'],
-                                              officenameid:
-                                                  pgsgovernancesystem['officeid'],
-                                              competencescore:
-                                                  pgsgovernancesystem['competencescore'],
-                                              confidencescore:
-                                                  pgsgovernancesystem['confidencescore'],
-                                              resourcescore:
-                                                  pgsgovernancesystem['resourcescore'],
-                                              startDate:
-                                                  pgsgovernancesystem['startDate'],
-                                              endDate:
-                                                  pgsgovernancesystem['endDate'],
-                                              percentDeliverables:
-                                                  pgsgovernancesystem['percentDeliverables'],
-                                              deliverables: deliverables,
-                                              signatories: signatory,
-                                              isDraft: isDraftValue,
-                                              remarks:
-                                                  pgsgovernancesystem['remarks'],
+                                        final signatory =
+                                            await fetchSignatoryList(
+                                              pgsId: pgsgovernancesystem['id'],
                                             );
-                                            // ignore: empty_catches
-                                          } catch (e) {}
-                                        },
-                                      ),
-                                      Tooltip(
-                                        message: 'Print Preview',
+                                        await fetchSubmitUserId(
+                                          userId: userId,
+                                          pgsId: pgsgovernancesystem['id'],
+                                        );
 
-                                        child: IconButton(
-                                          icon: const Icon(
-                                            Icons.description_outlined,
-                                          ),
+                                        final isDraftValue =
+                                            pgsgovernancesystem['isDraft'] ??
+                                            false;
 
-                                          onPressed: () async {
-                                            final pgsId =
-                                                pgsgovernancesystem['id']
-                                                    .toString();
-
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (context) =>
-                                                        ReportViewerPage(
-                                                          pgsId: pgsId,
-                                                        ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                      PermissionWidget(
-                                        permission:
-                                            AppPermissions
-                                                .deletePerformanceGovernanceSystem,
-                                        child: IconButton(
-                                          icon: Icon(
-                                            Icons.delete,
-                                            color: Color.fromARGB(
-                                              255,
-                                              221,
-                                              79,
-                                              79,
-                                            ),
-                                          ),
-                                          onPressed:
-                                              () => showDeleteDialog(
-                                                pgsgovernancesystem['id']
-                                                    .toString(),
-                                              ),
-                                        ),
-                                      ),
-                                    ],
+                                        showFormDialog(
+                                          userId: pgsgovernancesystem['userId'],
+                                          id: pgsgovernancesystem['id'],
+                                          officename:
+                                              pgsgovernancesystem['name'],
+                                          officenameid:
+                                              pgsgovernancesystem['officeid'],
+                                          competencescore:
+                                              pgsgovernancesystem['competencescore'],
+                                          confidencescore:
+                                              pgsgovernancesystem['confidencescore'],
+                                          resourcescore:
+                                              pgsgovernancesystem['resourcescore'],
+                                          startDate:
+                                              pgsgovernancesystem['startDate'],
+                                          endDate:
+                                              pgsgovernancesystem['endDate'],
+                                          percentDeliverables:
+                                              pgsgovernancesystem['percentDeliverables'],
+                                          deliverables: deliverables,
+                                          signatories: signatory,
+                                          isDraft: isDraftValue,
+                                          remarks:
+                                              pgsgovernancesystem['remarks'],
+                                        );
+                                        // ignore: empty_catches
+                                      } catch (e) {}
+                                    },
                                   ),
-                                ),
+                                  Tooltip(
+                                    message: 'Print Preview',
+
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.description_outlined,
+                                      ),
+
+                                      onPressed: () async {
+                                        final pgsId = pgsgovernancesystem['id']
+                                            .toString();
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                ReportViewerPage(pgsId: pgsId),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  PermissionWidget(
+                                    permission: AppPermissions
+                                        .deletePerformanceGovernanceSystem,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.delete,
+                                        color: Color.fromARGB(255, 221, 79, 79),
+                                      ),
+                                      onPressed: () => showDeleteDialog(
+                                        pgsgovernancesystem['id'].toString(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          );
-                        }).toList(),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ),
                 ),
 
@@ -1763,35 +1733,33 @@ class PerformanceGovernanceSystemPageState
         },
       ),
 
-      floatingActionButton:
-          isMinimized
-              ? PermissionWidget(
-                permission: AppPermissions.addPerformanceGovernanceSystem,
-                child: FloatingActionButton(
-                  backgroundColor: primaryColor,
-                  onPressed: () async {
+      floatingActionButton: isMinimized
+          ? PermissionWidget(
+              permission: AppPermissions.addPerformanceGovernanceSystem,
+              child: FloatingActionButton(
+                backgroundColor: primaryColor,
+                onPressed: () async {
+                  selectedOffice = await AuthUtil.fetchSelectedOfficeId();
+
+                  if (selectedOffice == null || selectedOffice!.isEmpty) {
+                    await _selectOffice();
+
                     selectedOffice = await AuthUtil.fetchSelectedOfficeId();
 
-                    if (selectedOffice == null || selectedOffice!.isEmpty) {
-                      await _selectOffice();
-
-                      selectedOffice = await AuthUtil.fetchSelectedOfficeId();
-
-                      if (selectedOffice != null &&
-                          selectedOffice!.isNotEmpty) {
-                        await _loadOfficeName();
-
-                        showFormDialog();
-                      } else {}
-                    } else {
+                    if (selectedOffice != null && selectedOffice!.isNotEmpty) {
                       await _loadOfficeName();
+
                       showFormDialog();
-                    }
-                  },
-                  child: Icon(Icons.add, color: Colors.white),
-                ),
-              )
-              : null,
+                    } else {}
+                  } else {
+                    await _loadOfficeName();
+                    showFormDialog();
+                  }
+                },
+                child: Icon(Icons.add, color: Colors.white),
+              ),
+            )
+          : null,
     );
   }
 
@@ -1844,8 +1812,9 @@ class PerformanceGovernanceSystemPageState
         for (var pgsJson in pgsDataList) {
           final signatoriesJson = pgsJson['pgsSignatories'];
           if (signatoriesJson is List) {
-            final signatories =
-                signatoriesJson.map((d) => PgsSignatory.fromJson(d)).toList();
+            final signatories = signatoriesJson
+                .map((d) => PgsSignatory.fromJson(d))
+                .toList();
 
             displaySignatoryList.addAll(signatories);
           } else {
@@ -2106,9 +2075,8 @@ class PerformanceGovernanceSystemPageState
                                               'A defined timeframe (quarter, semester, or year) used to track, evaluate, and report performance deliverables.',
 
                                           child: DropdownButtonFormField<int>(
-                                            autovalidateMode:
-                                                AutovalidateMode
-                                                    .onUserInteraction,
+                                            autovalidateMode: AutovalidateMode
+                                                .onUserInteraction,
                                             validator: (value) {
                                               if (value == null) {
                                                 return 'Please select a period date';
@@ -2129,69 +2097,67 @@ class PerformanceGovernanceSystemPageState
                                                 borderSide: BorderSide.none,
                                               ),
                                             ),
-                                            onChanged:
-                                                !hasEditPermission
-                                                    ? null
-                                                    : (int? newValue) {
-                                                      setState(() {
-                                                        selectedPeriod =
-                                                            newValue;
+                                            onChanged: !hasEditPermission
+                                                ? null
+                                                : (int? newValue) {
+                                                    setState(() {
+                                                      selectedPeriod = newValue;
 
-                                                        selectedPeriodObject =
-                                                            filteredListPeriod
-                                                                .firstWhere(
-                                                                  (period) =>
-                                                                      period['id'] ==
-                                                                      newValue,
-                                                                  orElse:
-                                                                      () => {},
-                                                                );
+                                                      selectedPeriodObject =
+                                                          filteredListPeriod
+                                                              .firstWhere(
+                                                                (period) =>
+                                                                    period['id'] ==
+                                                                    newValue,
+                                                                orElse: () =>
+                                                                    {},
+                                                              );
 
-                                                        if (selectedPeriodObject!
-                                                            .isNotEmpty) {
-                                                          final start =
-                                                              selectedPeriodObject!['startDate'];
-                                                          final end =
-                                                              selectedPeriodObject!['endDate'];
+                                                      if (selectedPeriodObject!
+                                                          .isNotEmpty) {
+                                                        final start =
+                                                            selectedPeriodObject!['startDate'];
+                                                        final end =
+                                                            selectedPeriodObject!['endDate'];
 
-                                                          selectedPeriodText =
-                                                              "$start - $end";
-                                                        }
-                                                      });
-                                                    },
+                                                        selectedPeriodText =
+                                                            "$start - $end";
+                                                      }
+                                                    });
+                                                  },
 
-                                            selectedItemBuilder: (
-                                              BuildContext context,
-                                            ) {
-                                              return filteredListPeriod.map<
-                                                Widget
-                                              >((period) {
-                                                final start = _dateConverter
-                                                    .toJson(
-                                                      _dateConverter.fromJson(
-                                                        period['startDate'],
+                                            selectedItemBuilder:
+                                                (BuildContext context) {
+                                                  return filteredListPeriod.map<
+                                                    Widget
+                                                  >((period) {
+                                                    final start = _dateConverter
+                                                        .toJson(
+                                                          _dateConverter.fromJson(
+                                                            period['startDate'],
+                                                          ),
+                                                        );
+                                                    final end = _dateConverter
+                                                        .toJson(
+                                                          _dateConverter.fromJson(
+                                                            period['endDate'],
+                                                          ),
+                                                        );
+                                                    return Center(
+                                                      child: Text(
+                                                        "$start to $end",
+                                                        softWrap: true,
+                                                        textAlign:
+                                                            TextAlign.center,
                                                       ),
                                                     );
-                                                final end = _dateConverter
-                                                    .toJson(
-                                                      _dateConverter.fromJson(
-                                                        period['endDate'],
-                                                      ),
-                                                    );
-                                                return Center(
-                                                  child: Text(
-                                                    "$start to $end",
-                                                    softWrap: true,
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                );
-                                              }).toList();
-                                            },
+                                                  }).toList();
+                                                },
 
-                                            items:
-                                                filteredListPeriod.map<
-                                                  DropdownMenuItem<int>
-                                                >((period) {
+                                            items: filteredListPeriod
+                                                .map<DropdownMenuItem<int>>((
+                                                  period,
+                                                ) {
                                                   final start = _dateConverter
                                                       .toJson(
                                                         _dateConverter.fromJson(
@@ -2215,7 +2181,8 @@ class PerformanceGovernanceSystemPageState
                                                       ),
                                                     ),
                                                   );
-                                                }).toList(),
+                                                })
+                                                .toList(),
                                           ),
                                         ),
                                       ),
@@ -2482,31 +2449,19 @@ class PerformanceGovernanceSystemPageState
                                                   >(
                                                     valueListenable:
                                                         competenceScore,
-                                                    builder: (
-                                                      context,
-                                                      comp,
-                                                      __,
-                                                    ) {
+                                                    builder: (context, comp, __) {
                                                       return ValueListenableBuilder<
                                                         double
                                                       >(
                                                         valueListenable:
                                                             resourceScore,
-                                                        builder: (
-                                                          context,
-                                                          res,
-                                                          __,
-                                                        ) {
+                                                        builder: (context, res, __) {
                                                           return ValueListenableBuilder<
                                                             double
                                                           >(
                                                             valueListenable:
                                                                 confidenceScore,
-                                                            builder: (
-                                                              context,
-                                                              conf,
-                                                              __,
-                                                            ) {
+                                                            builder: (context, conf, __) {
                                                               final totalScore =
                                                                   comp +
                                                                   res +
@@ -2526,9 +2481,8 @@ class PerformanceGovernanceSystemPageState
                                                                     fontWeight:
                                                                         FontWeight
                                                                             .bold,
-                                                                    color:
-                                                                        Colors
-                                                                            .black,
+                                                                    color: Colors
+                                                                        .black,
                                                                   ),
                                                                   textAlign:
                                                                       TextAlign
@@ -2787,13 +2741,12 @@ class PerformanceGovernanceSystemPageState
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                      onPressed:
-                          () => handlePgsAction(
-                            context,
-                            id,
-                            orderLevel,
-                            actionType: ActionType.approve,
-                          ),
+                      onPressed: () => handlePgsAction(
+                        context,
+                        id,
+                        orderLevel,
+                        actionType: ActionType.approve,
+                      ),
                       child: Text(
                         'Confirm',
                         style: TextStyle(color: Colors.white),
@@ -2821,8 +2774,9 @@ class PerformanceGovernanceSystemPageState
     );
 
     if (actionType == ActionType.approve) {
-      actionType =
-          isAnyDisapproved ? ActionType.disapprove : ActionType.approve;
+      actionType = isAnyDisapproved
+          ? ActionType.disapprove
+          : ActionType.approve;
     }
 
     String title;
@@ -2852,31 +2806,27 @@ class PerformanceGovernanceSystemPageState
 
     bool? confirm = await showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            title: Text(title),
-            content: Text(content),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text("No", style: TextStyle(color: primaryColor)),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: Text("Yes", style: TextStyle(color: Colors.white)),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text("No", style: TextStyle(color: primaryColor)),
           ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text("Yes", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
 
     if (confirm != true) return;
@@ -2968,12 +2918,9 @@ class PerformanceGovernanceSystemPageState
 
     PerformanceGovernanceSystem pgs = getPgsDetails(
       id: pgsId ?? 0,
-      pgsStatus:
-          actionType == ActionType.draft
-              ? "Draft"
-              : (actionType == ActionType.disapprove
-                  ? "Disapproved"
-                  : "Approved"),
+      pgsStatus: actionType == ActionType.draft
+          ? "Draft"
+          : (actionType == ActionType.disapprove ? "Disapproved" : "Approved"),
     );
 
     try {
@@ -3021,12 +2968,11 @@ class PerformanceGovernanceSystemPageState
       String successMessage;
       switch (actionType) {
         case ActionType.draft:
-          successMessage =
-              isAnyDisapproved
-                  ? "Saved successfully!"
-                  : (id != null && orderLevel >= 1)
-                  ? "Confirm successfully!"
-                  : "Saved successfully!";
+          successMessage = isAnyDisapproved
+              ? "Saved successfully!"
+              : (id != null && orderLevel >= 1)
+              ? "Confirm successfully!"
+              : "Saved successfully!";
           break;
         case ActionType.submit:
           successMessage = "Submitted successfully!";
@@ -3052,8 +2998,9 @@ class PerformanceGovernanceSystemPageState
           errorMessage = "Failed to save draft!";
           break;
         case ActionType.submit:
-          errorMessage =
-              orderLevel >= 1 ? "Failed to Confirm!" : "Failed to submit!";
+          errorMessage = orderLevel >= 1
+              ? "Failed to Confirm!"
+              : "Failed to submit!";
           break;
         case ActionType.approve:
           errorMessage = "Failed to approve!";
@@ -3108,44 +3055,43 @@ class PerformanceGovernanceSystemPageState
             contentPadding: EdgeInsets.all(8.0),
             suffixIcon: Icon(Icons.calendar_today),
           ),
-          onTap:
-              !hasEditPermission
-                  ? null
-                  : () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: primaryColor,
-                              onPrimary: secondaryColor,
-                            ),
-                            textButtonTheme: TextButtonThemeData(
-                              style: TextButton.styleFrom(
-                                foregroundColor: primaryColor,
-                              ),
+          onTap: !hasEditPermission
+              ? null
+              : () async {
+                  DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: ColorScheme.light(
+                            primary: primaryColor,
+                            onPrimary: secondaryColor,
+                          ),
+                          textButtonTheme: TextButtonThemeData(
+                            style: TextButton.styleFrom(
+                              foregroundColor: primaryColor,
                             ),
                           ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (pickedDate != null) {
-                      String formattedDate = DateFormat(
-                        'yyyy-MM-dd',
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (pickedDate != null) {
+                    String formattedDate = DateFormat(
+                      'yyyy-MM-dd',
+                    ).format(pickedDate);
+                    setDialogState(() {
+                      selectedByWhen[index] = formattedDate;
+                      selectedByWhenControllers[index]?.text = DateFormat(
+                        'MMMM yyyy',
                       ).format(pickedDate);
-                      setDialogState(() {
-                        selectedByWhen[index] = formattedDate;
-                        selectedByWhenControllers[index]?.text = DateFormat(
-                          'MMMM yyyy',
-                        ).format(pickedDate);
-                      });
-                    }
-                  },
+                    });
+                  }
+                },
         ),
       ),
     );
@@ -3180,203 +3126,197 @@ class PerformanceGovernanceSystemPageState
                 isExpanded: true,
                 value: selectedKRA[index],
                 hint: const Text('--Select Process--'),
-                onChanged:
-                    !hasEditPermission
-                        ? null
-                        : (int? newValue) async {
-                          if (newValue == null) return;
+                onChanged: !hasEditPermission
+                    ? null
+                    : (int? newValue) async {
+                        if (newValue == null) return;
+
+                        setDialogState(() {
+                          selectedKRA[index] = newValue;
+                          selectedProcessErrors[index] = false;
+                          selectedKRAObjects[index] = options.firstWhere(
+                            (o) => o['id'] == newValue,
+                          );
+                        });
+
+                        final data = await _roadMapService
+                            .getAllKraDescriptions(kraId: newValue);
+
+                        setDialogState(() {
+                          hasDataMap[index] = data.isNotEmpty;
+                          kraDescriptionsByIndex[index] = data;
+                        });
+
+                        if (!hasData) {
+                          setDialogState(() {
+                            deliverablesRoadmapControllers[index]?.clear();
+                            kraDescriptionRoadmapController[index]?.clear();
+                          });
+                        }
+
+                        if (data.isEmpty) return;
+
+                        try {
+                          final key = kraDropdownKeys[index];
+                          final renderBox =
+                              key?.currentContext?.findRenderObject()
+                                  as RenderBox?;
+                          final overlay =
+                              Overlay.of(context).context.findRenderObject()
+                                  as RenderBox;
+
+                          if (renderBox == null) return;
+
+                          renderBox.localToGlobal(
+                            Offset(renderBox.size.width, 0),
+                            ancestor: overlay,
+                          );
+
+                          final selected = await showGeneralDialog<String>(
+                            context: context,
+                            barrierDismissible: false,
+                            barrierLabel: 'KRA Roadmap',
+                            barrierColor: Colors.black.withOpacity(0.4),
+                            transitionDuration: const Duration(
+                              milliseconds: 200,
+                            ),
+                            pageBuilder: (_, __, ___) {
+                              return Center(
+                                child: Material(
+                                  elevation: 8,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 420,
+                                      maxHeight: 480,
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 12,
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Text(
+                                                'Select KRA from roadmap',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.close,
+                                                  size: 20,
+                                                ),
+                                                splashRadius: 18,
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        const Divider(height: 1),
+
+                                        Expanded(
+                                          child: ListView(
+                                            padding: EdgeInsets.zero,
+                                            children: data.map((d) {
+                                              final desc =
+                                                  d['kraDescription'] ?? '';
+                                              return ListTile(
+                                                title: Text(desc),
+                                                onTap: () {
+                                                  Navigator.of(
+                                                    context,
+                                                  ).pop(desc);
+                                                },
+                                              );
+                                            }).toList(),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+
+                          if (selected == null) return;
 
                           setDialogState(() {
-                            selectedKRA[index] = newValue;
-                            selectedProcessErrors[index] = false;
-                            selectedKRAObjects[index] = options.firstWhere(
-                              (o) => o['id'] == newValue,
+                            selectedKRAObjects[index]?['selectedDescription'] =
+                                selected;
+                          });
+
+                          int filterYear = DateTime.now().year;
+                          if (selectedPeriodObject?['startDate'] != null) {
+                            final parsed = DateTime.tryParse(
+                              selectedPeriodObject!['startDate'],
                             );
-                          });
+                            if (parsed != null) filterYear = parsed.year;
+                          }
 
-                          final data = await _roadMapService
-                              .getAllKraDescriptions(kraId: newValue);
+                          final filter = KraRoadmapFilter(
+                            kraId: selectedKRA[index]!,
+                            year: filterYear,
+                            kraDescription: selected,
+                            isDirect: true,
+                          );
 
-                          setDialogState(() {
-                            hasDataMap[index] = data.isNotEmpty;
-                            kraDescriptionsByIndex[index] = data;
-                          });
+                          try {
+                            final result = await _roadMapService
+                                .kraRoadmapFilter(filter);
 
-                          if (!hasData) {
                             setDialogState(() {
                               deliverablesRoadmapControllers[index]?.clear();
                               kraDescriptionRoadmapController[index]?.clear();
-                            });
-                          }
 
-                          if (data.isEmpty) return;
-
-                          try {
-                            final key = kraDropdownKeys[index];
-                            final renderBox =
-                                key?.currentContext?.findRenderObject()
-                                    as RenderBox?;
-                            final overlay =
-                                Overlay.of(context).context.findRenderObject()
-                                    as RenderBox;
-
-                            if (renderBox == null) return;
-
-                            renderBox.localToGlobal(
-                              Offset(renderBox.size.width, 0),
-                              ancestor: overlay,
-                            );
-
-                            final selected = await showGeneralDialog<String>(
-                              context: context,
-                              barrierDismissible: false,
-                              barrierLabel: 'KRA Roadmap',
-                              barrierColor: Colors.black.withOpacity(0.4),
-                              transitionDuration: const Duration(
-                                milliseconds: 200,
-                              ),
-                              pageBuilder: (_, __, ___) {
-                                return Center(
-                                  child: Material(
-                                    elevation: 8,
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                        maxWidth: 420,
-                                        maxHeight: 480,
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 12,
-                                            ),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                const Text(
-                                                  'Select KRA from roadmap',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                                IconButton(
-                                                  icon: const Icon(
-                                                    Icons.close,
-                                                    size: 20,
-                                                  ),
-                                                  splashRadius: 18,
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-
-                                          const Divider(height: 1),
-
-                                          Expanded(
-                                            child: ListView(
-                                              padding: EdgeInsets.zero,
-                                              children:
-                                                  data.map((d) {
-                                                    final desc =
-                                                        d['kraDescription'] ??
-                                                        '';
-                                                    return ListTile(
-                                                      title: Text(desc),
-                                                      onTap: () {
-                                                        Navigator.of(
-                                                          context,
-                                                        ).pop(desc);
-                                                      },
-                                                    );
-                                                  }).toList(),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-
-                            if (selected == null) return;
-
-                            setDialogState(() {
-                              selectedKRAObjects[index]?['selectedDescription'] =
-                                  selected;
-                            });
-
-                            int filterYear = DateTime.now().year;
-                            if (selectedPeriodObject?['startDate'] != null) {
-                              final parsed = DateTime.tryParse(
-                                selectedPeriodObject!['startDate'],
-                              );
-                              if (parsed != null) filterYear = parsed.year;
-                            }
-
-                            final filter = KraRoadmapFilter(
-                              kraId: selectedKRA[index]!,
-                              year: filterYear,
-                              kraDescription: selected,
-                              isDirect: true,
-                            );
-
-                            try {
-                              final result = await _roadMapService
-                                  .kraRoadmapFilter(filter);
-
-                              setDialogState(() {
-                                deliverablesRoadmapControllers[index]?.clear();
-                                kraDescriptionRoadmapController[index]?.clear();
-
-                                if (result.isNotEmpty) {
-                                  if (result.first['deliverableDescription']
-                                          ?.toString()
-                                          .trim()
-                                          .isNotEmpty ==
-                                      true) {
-                                    deliverablesRoadmapControllers[index]!
-                                            .text =
-                                        result.first['deliverableDescription'];
-                                  }
-
-                                  if (result.first['kraDescription']
-                                          ?.toString()
-                                          .trim()
-                                          .isNotEmpty ==
-                                      true) {
-                                    kraDescriptionRoadmapController[index]!
-                                        .text = result.first['kraDescription'];
-                                  }
+                              if (result.isNotEmpty) {
+                                if (result.first['deliverableDescription']
+                                        ?.toString()
+                                        .trim()
+                                        .isNotEmpty ==
+                                    true) {
+                                  deliverablesRoadmapControllers[index]!.text =
+                                      result.first['deliverableDescription'];
                                 }
-                              });
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to filter KRA roadmap'),
-                                ),
-                              );
-                            }
-                          } catch (_) {
-                            // ignore overlay errors
+
+                                if (result.first['kraDescription']
+                                        ?.toString()
+                                        .trim()
+                                        .isNotEmpty ==
+                                    true) {
+                                  kraDescriptionRoadmapController[index]!.text =
+                                      result.first['kraDescription'];
+                                }
+                              }
+                            });
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to filter KRA roadmap'),
+                              ),
+                            );
                           }
-                        },
-                items:
-                    options.map<DropdownMenuItem<int?>>((option) {
-                      return DropdownMenuItem<int?>(
-                        value: option['id'],
-                        child: Text(option['name']),
-                      );
-                    }).toList(),
+                        } catch (_) {
+                          // ignore overlay errors
+                        }
+                      },
+                items: options.map<DropdownMenuItem<int?>>((option) {
+                  return DropdownMenuItem<int?>(
+                    value: option['id'],
+                    child: Text(option['name']),
+                  );
+                }).toList(),
                 validator: (value) {
                   if (value == null) {
                     return "Please select process";
@@ -3621,10 +3561,9 @@ class PerformanceGovernanceSystemPageState
     selectedByWhen.putIfAbsent(index, () => '');
     final isDirectSelected = selectedDirect[index] ?? false;
     final isIndirectSelected = selectedIndirect[index] ?? false;
-    final errorText =
-        (!isDirectSelected && !isIndirectSelected && showErrors)
-            ? 'Please select either Direct or Indirect.'
-            : null;
+    final errorText = (!isDirectSelected && !isIndirectSelected && showErrors)
+        ? 'Please select either Direct or Indirect.'
+        : null;
 
     bool hasDisapprovePermission = permissionService.hasPermission(
       AppPermissions.disapprovePerformanceGovernanceSystem,
@@ -3692,69 +3631,68 @@ class PerformanceGovernanceSystemPageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Tooltip(
-            message:
-                isDirect
-                    ? 'Direct: Indicates if the deliverable is directly managed by the office.'
-                    : 'Indirect: Indicates if the deliverable is indirectly supported by the office.',
+            message: isDirect
+                ? 'Direct: Indicates if the deliverable is directly managed by the office.'
+                : 'Indirect: Indicates if the deliverable is indirectly supported by the office.',
             child: Center(
               child: Checkbox(
                 value: selectedValues[index] ?? false,
-                onChanged:
-                    !hasEditPermission
-                        ? null
-                        : (bool? newValue) async {
-                          if (newValue == null) return;
+                onChanged: !hasEditPermission
+                    ? null
+                    : (bool? newValue) async {
+                        if (newValue == null) return;
 
-                          setDialogState(() {
-                            selectedValues[index] = newValue;
+                        setDialogState(() {
+                          selectedValues[index] = newValue;
 
-                            if (newValue) {
-                              oppositeValues[index] = false;
-                            }
-                          });
-
-                          final bool isDirectValue =
-                              selectedDirect[index] == true;
-
-                          int filterYear = DateTime.now().year;
-                          if (selectedPeriodObject != null &&
-                              selectedPeriodObject!['startDate'] != null) {
-                            final parsed = DateTime.tryParse(
-                              selectedPeriodObject!['startDate'],
-                            );
-                            if (parsed != null) filterYear = parsed.year;
+                          if (newValue) {
+                            oppositeValues[index] = false;
                           }
+                        });
 
-                          final filter = KraRoadmapFilter(
-                            kraId: selectedKRAObjects[index]?['id'] ?? 0,
-                            year: filterYear,
-                            kraDescription:
-                                kraDescriptionRoadmapController[index]?.text ??
-                                '',
-                            // kraDescription:
-                            //     kraDescriptionController[index]?.text ?? '',
-                            isDirect: isDirectValue,
+                        final bool isDirectValue =
+                            selectedDirect[index] == true;
+
+                        int filterYear = DateTime.now().year;
+                        if (selectedPeriodObject != null &&
+                            selectedPeriodObject!['startDate'] != null) {
+                          final parsed = DateTime.tryParse(
+                            selectedPeriodObject!['startDate'],
+                          );
+                          if (parsed != null) filterYear = parsed.year;
+                        }
+
+                        final filter = KraRoadmapFilter(
+                          kraId: selectedKRAObjects[index]?['id'] ?? 0,
+                          year: filterYear,
+                          kraDescription:
+                              kraDescriptionRoadmapController[index]?.text ??
+                              '',
+                          // kraDescription:
+                          //     kraDescriptionController[index]?.text ?? '',
+                          isDirect: isDirectValue,
+                        );
+
+                        try {
+                          final result = await _roadMapService.kraRoadmapFilter(
+                            filter,
                           );
 
-                          try {
-                            final result = await _roadMapService
-                                .kraRoadmapFilter(filter);
-
-                            setDialogState(() {
-                              if (result.isNotEmpty &&
-                                  result.first['kraDescription']
-                                          ?.toString()
-                                          .trim()
-                                          .isNotEmpty ==
-                                      true) {
-                                kraDescriptionRoadmapController[index]!.text =
-                                    result.first['kraDescription'];
-                              }
-                            });
-                          } catch (e) {
-                            //uwu
-                          }
-                        },
+                          setDialogState(() {
+                            if (result.isNotEmpty &&
+                                result.first['kraDescription']
+                                        ?.toString()
+                                        .trim()
+                                        .isNotEmpty ==
+                                    true) {
+                              kraDescriptionRoadmapController[index]!.text =
+                                  result.first['kraDescription'];
+                            }
+                          });
+                        } catch (e) {
+                          //uwu
+                        }
+                      },
                 activeColor: Colors.white,
                 checkColor: Colors.black,
               ),
@@ -4047,29 +3985,30 @@ class PerformanceGovernanceSystemPageState
           SizedBox(
             height: 30,
             child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  side: const BorderSide(color: Colors.black, width: 1),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                textStyle: const TextStyle(fontSize: 13),
-                minimumSize: Size.zero,
-              ).copyWith(
-                overlayColor: MaterialStateProperty.resolveWith<Color?>((
-                  states,
-                ) {
-                  if (states.contains(MaterialState.hovered)) {
-                    return const Color.fromARGB(255, 221, 221, 221);
-                  }
-                  if (states.contains(MaterialState.pressed)) {
-                    return const Color.fromARGB(255, 221, 221, 221);
-                  }
-                  return null; // default
-                }),
-              ),
+              style:
+                  ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      side: const BorderSide(color: Colors.black, width: 1),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    textStyle: const TextStyle(fontSize: 13),
+                    minimumSize: Size.zero,
+                  ).copyWith(
+                    overlayColor: MaterialStateProperty.resolveWith<Color?>((
+                      states,
+                    ) {
+                      if (states.contains(MaterialState.hovered)) {
+                        return const Color.fromARGB(255, 221, 221, 221);
+                      }
+                      if (states.contains(MaterialState.pressed)) {
+                        return const Color.fromARGB(255, 221, 221, 221);
+                      }
+                      return null; // default
+                    }),
+                  ),
 
               onPressed: () async {
                 if (deliverableId == 0) {
@@ -4100,29 +4039,30 @@ class PerformanceGovernanceSystemPageState
           SizedBox(
             height: 30,
             child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  side: const BorderSide(color: Colors.black, width: 1),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                textStyle: const TextStyle(fontSize: 13),
-                minimumSize: Size.zero,
-              ).copyWith(
-                overlayColor: MaterialStateProperty.resolveWith<Color?>((
-                  states,
-                ) {
-                  if (states.contains(MaterialState.hovered)) {
-                    return const Color.fromARGB(255, 221, 221, 221);
-                  }
-                  if (states.contains(MaterialState.pressed)) {
-                    return const Color.fromARGB(255, 221, 221, 221);
-                  }
-                  return null; // default
-                }),
-              ),
+              style:
+                  ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      side: const BorderSide(color: Colors.black, width: 1),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    textStyle: const TextStyle(fontSize: 13),
+                    minimumSize: Size.zero,
+                  ).copyWith(
+                    overlayColor: MaterialStateProperty.resolveWith<Color?>((
+                      states,
+                    ) {
+                      if (states.contains(MaterialState.hovered)) {
+                        return const Color.fromARGB(255, 221, 221, 221);
+                      }
+                      if (states.contains(MaterialState.pressed)) {
+                        return const Color.fromARGB(255, 221, 221, 221);
+                      }
+                      return null; // default
+                    }),
+                  ),
 
               onPressed: () async {
                 if (deliverableId == 0) {
@@ -4176,18 +4116,16 @@ class PerformanceGovernanceSystemPageState
     );
     final startAndEndDates = getPeriodMonths(selectedPeriodData);
     final int? kraId = selectedKRA[index];
-    final String kraName =
-        options.firstWhere(
-          (o) => o['id'] == kraId,
-          orElse:
-              () => {
-                'id': 1,
-                'name': 'Unknown',
-                'remarks': '',
-                'isDeleted': false,
-                'rowVersion': '',
-              },
-        )['name'];
+    final String kraName = options.firstWhere(
+      (o) => o['id'] == kraId,
+      orElse: () => {
+        'id': 1,
+        'name': 'Unknown',
+        'remarks': '',
+        'isDeleted': false,
+        'rowVersion': '',
+      },
+    )['name'];
     final int deliverableId = deliverableIds[index] ?? 0;
     final String deliverableName = deliverablesControllers[index]?.text ?? '';
     final bool isDirect = selectedDirect[index] ?? false;
@@ -4414,31 +4352,28 @@ class PerformanceGovernanceSystemPageState
                         onPressed: () async {
                           final shouldSave = await showDialog<bool>(
                             context: context,
-                            builder:
-                                (ctx) => AlertDialog(
-                                  title: const Text("Confirm Save"),
-                                  content: const Text(
-                                    "Are you sure you want to save this data?",
+                            builder: (ctx) => AlertDialog(
+                              title: const Text("Confirm Save"),
+                              content: const Text(
+                                "Are you sure you want to save this data?",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(ctx).pop(false),
+                                  child: Text(
+                                    "No",
+                                    style: TextStyle(color: primaryColor),
                                   ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.of(ctx).pop(false),
-                                      child: Text(
-                                        "No",
-                                        style: TextStyle(color: primaryColor),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.of(ctx).pop(true),
-                                      child: Text(
-                                        "Yes",
-                                        style: TextStyle(color: primaryColor),
-                                      ),
-                                    ),
-                                  ],
                                 ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(ctx).pop(true),
+                                  child: Text(
+                                    "Yes",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                           if (shouldSave != true) return;
 
@@ -4471,18 +4406,16 @@ class PerformanceGovernanceSystemPageState
     String userId,
   ) {
     final int? kraId = selectedKRA[index];
-    final String kraName =
-        options.firstWhere(
-          (o) => o['id'] == kraId,
-          orElse:
-              () => {
-                'id': 1,
-                'name': 'Unknown',
-                'remarks': '',
-                'isDeleted': false,
-                'rowVersion': '',
-              },
-        )['name'];
+    final String kraName = options.firstWhere(
+      (o) => o['id'] == kraId,
+      orElse: () => {
+        'id': 1,
+        'name': 'Unknown',
+        'remarks': '',
+        'isDeleted': false,
+        'rowVersion': '',
+      },
+    )['name'];
     final int deliverableId = deliverableIds[index] ?? 0;
     final String deliverableName = deliverablesControllers[index]?.text ?? '';
     final bool isDirect = selectedDirect[index] ?? false;
@@ -4716,31 +4649,30 @@ class PerformanceGovernanceSystemPageState
                           onPressed: () async {
                             final shouldSave = await showDialog<bool>(
                               context: context,
-                              builder:
-                                  (ctx) => AlertDialog(
-                                    title: Text("Confirm Save"),
-                                    content: Text(
-                                      "Are you sure you want to save this data?",
+                              builder: (ctx) => AlertDialog(
+                                title: Text("Confirm Save"),
+                                content: Text(
+                                  "Are you sure you want to save this data?",
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
+                                    child: Text(
+                                      "No",
+                                      style: TextStyle(color: primaryColor),
                                     ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed:
-                                            () => Navigator.of(ctx).pop(false),
-                                        child: Text(
-                                          "No",
-                                          style: TextStyle(color: primaryColor),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed:
-                                            () => Navigator.of(ctx).pop(true),
-                                        child: Text(
-                                          "Yes",
-                                          style: TextStyle(color: primaryColor),
-                                        ),
-                                      ),
-                                    ],
                                   ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(true),
+                                    child: Text(
+                                      "Yes",
+                                      style: TextStyle(color: primaryColor),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             );
 
                             if (shouldSave != true) return;
@@ -4859,44 +4791,43 @@ class PerformanceGovernanceSystemPageState
             contentPadding: EdgeInsets.all(8.0),
             suffixIcon: Icon(Icons.calendar_today),
           ),
-          onTap:
-              id != null && orderLevel >= 1
-                  ? null
-                  : () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: primaryColor,
-                              onPrimary: secondaryColor,
-                            ),
-                            textButtonTheme: TextButtonThemeData(
-                              style: TextButton.styleFrom(
-                                foregroundColor: primaryColor,
-                              ),
+          onTap: id != null && orderLevel >= 1
+              ? null
+              : () async {
+                  DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: ColorScheme.light(
+                            primary: primaryColor,
+                            onPrimary: secondaryColor,
+                          ),
+                          textButtonTheme: TextButtonThemeData(
+                            style: TextButton.styleFrom(
+                              foregroundColor: primaryColor,
                             ),
                           ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (pickedDate != null) {
-                      String formattedDate = DateFormat(
-                        'yyyy-MM-dd',
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (pickedDate != null) {
+                    String formattedDate = DateFormat(
+                      'yyyy-MM-dd',
+                    ).format(pickedDate);
+                    setDialogState(() {
+                      selectedByWhen[index] = formattedDate;
+                      selectedByWhenControllers[index]?.text = DateFormat(
+                        'MMMM yyyy',
                       ).format(pickedDate);
-                      setDialogState(() {
-                        selectedByWhen[index] = formattedDate;
-                        selectedByWhenControllers[index]?.text = DateFormat(
-                          'MMMM yyyy',
-                        ).format(pickedDate);
-                      });
-                    }
-                  },
+                    });
+                  }
+                },
         ),
       ),
     );
@@ -5037,8 +4968,8 @@ class PerformanceGovernanceSystemPageState
       for (final map in allMapsToRemap) {
         map.remove(index);
 
-        final keysToRemap =
-            map.keys.where((key) => key > index).toList()..sort();
+        final keysToRemap = map.keys.where((key) => key > index).toList()
+          ..sort();
 
         for (final oldKey in keysToRemap) {
           final value = map.remove(oldKey);
@@ -5260,10 +5191,9 @@ class PerformanceGovernanceSystemPageState
                   tooltip: 'Click this to approve the deliverable',
                   icon: Icon(
                     Icons.thumb_up,
-                    color:
-                        isDisapproved == false
-                            ? Colors.green
-                            : primaryTextColor,
+                    color: isDisapproved == false
+                        ? Colors.green
+                        : primaryTextColor,
                   ),
                   onPressed: () {
                     setDialogState(() {
@@ -5282,8 +5212,9 @@ class PerformanceGovernanceSystemPageState
 
                   icon: Icon(
                     Icons.thumb_down,
-                    color:
-                        isDisapproved == true ? Colors.red : primaryTextColor,
+                    color: isDisapproved == true
+                        ? Colors.red
+                        : primaryTextColor,
                   ),
                   onPressed: () {
                     setDialogState(() {
