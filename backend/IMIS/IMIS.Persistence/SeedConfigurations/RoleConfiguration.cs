@@ -143,6 +143,13 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     Name = "Multi-specialty Governance Council Officer",
                     NormalizedName = "MULTI-SPECIALTY GOVERNANCE COUNCIL OFFICER",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "9d2a6f4b-3c81-4e7a-b5d2-1f8c6a9e2740",
+                    Name = new TWG().Name,
+                    NormalizedName = "TWG",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
                 }
         );
     }

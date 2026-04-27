@@ -128,7 +128,7 @@ namespace IMIS.Infrastructure.Auths
                 new SWOTAnalysisPermission(),
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KraRoadMapKpiAccomplishmentPermission());
+                new KraRoadMapKpiAccomplishmentPermission());   
 
             await PermissionSeeder.SeedPermissionForRole<OSM, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
@@ -157,7 +157,6 @@ namespace IMIS.Infrastructure.Auths
                 new KeyResultAreaPermission(),
                 new KraRoadMapAccomplishmentPermission(),
                 new KraRoadMapKpiAccomplishmentPermission());
-
 
             await PermissionSeeder.SeedPermissionForRole<ResearchOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -214,6 +213,21 @@ namespace IMIS.Infrastructure.Auths
                 new KeyResultAreaPermission(),
                 new KraRoadMapAccomplishmentPermission(),
                 new KraRoadMapKpiAccomplishmentPermission());
+
+            await PermissionSeeder.SeedPermissionForRole<TWG, IdentityRole>(_roleManager,
+              new KeyResultAreaPermission(),
+              new PgsDeliverableAuditorPermission(),
+              new PgsPeriodPermission(),
+              new PgsSignatoryTemplatePermission(),
+              new PgsSummaryNarrativePermissions(),
+              new PerformanceGovernanceSystemPermission(),
+              new OfficePermission(),
+              new PgsDeliverableAccomplishmentPermission(),
+              new SWOTAnalysisPermission(),
+              new KraRoadMapPermission(),
+              new KraRoadMapPeriodPermission(),
+              new KraRoadMapAccomplishmentPermission(),
+              new KraRoadMapKpiAccomplishmentPermission());
 
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
