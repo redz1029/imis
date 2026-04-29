@@ -11,6 +11,7 @@ import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_string.dart';
+import 'package:imis/widgets/filter_widget/button_filter.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
@@ -141,77 +142,16 @@ class SwotDialogResponsiveState extends State<SwotPage> {
     }
 
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "SWOT Analysis Information",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                    color: Theme.of(context).cardColor,
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      dropdownColor: Colors.white,
-                      value: _selectedYear,
-                      isDense: true,
-                      icon: const Icon(Icons.keyboard_arrow_down),
-                      items:
-                          SwotYear.years.map((year) {
-                            return DropdownMenuItem(
-                              value: year.toString(),
-                              child: Text(year.toString()),
-                            );
-                          }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedYear = value!;
-                          fetchSwot();
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                if (!isMobile)
-                  PermissionWidget(
-                    permission: AppPermissions.addKraRoadMap,
-                    child: ElevatedButton.icon(
-                      onPressed: () => showSwotDialog(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      icon: const Icon(Icons.add, color: Colors.white),
-                      label: const Text(
-                        'Add New',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 26),
-            Expanded(
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildPageHeader(isMobile),
+          _buildFilterBar(isMobile),
+          gap4px,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -227,7 +167,6 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// DESKTOP HEADER
                     if (!isMobile)
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -595,8 +534,8 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton:
           isMobile
@@ -606,6 +545,168 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  Widget _buildPageHeader(bool isMobile) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.rocket_launch, color: primaryColor, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "SWOT Information",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1D23),
+                      ),
+                    ),
+                    Text(
+                      "${filteredList.length} SWOT${filteredList.length != 1 ? 's' : ''} found",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isMobile)
+                PermissionWidget(
+                  permission: AppPermissions.addKraRoadMap,
+                  child: ElevatedButton.icon(
+                    onPressed: () => showSwotDialog(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterBar(bool isMobile) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: isMobile ? _buildRoadmapFilter() : _buildDesktopFilters(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoadmapFilter() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: SwotYear.years.map((year) => year.toString()).toList(),
+
+          prefixIcon: Icons.calendar_today,
+
+          selectedItem: _selectedYear,
+
+          hintText: "Filter Year",
+          searchHint: "Search Year...",
+
+          onChanged: (value) {
+            setState(() {
+              _selectedYear = value;
+              fetchSwot();
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  bool get _hasActiveFilters => _selectedYear != "2026";
+  void _resetFilters() {
+    setState(() {
+      _selectedYear = "2026";
+      fetchSwot();
+    });
+  }
+
+  Widget _buildDesktopFilters() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.tune, size: 15, color: Colors.grey.shade600),
+            const SizedBox(width: 6),
+            Text(
+              "Filter by",
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const Spacer(),
+            if (_hasActiveFilters)
+              TextButton.icon(
+                onPressed: _resetFilters,
+                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+                label: Text(
+                  'Clear filters',
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        // 🔥 Ready for multiple filters later
+        Wrap(spacing: 10, runSpacing: 10, children: [_buildRoadmapFilter()]),
+      ],
     );
   }
 
