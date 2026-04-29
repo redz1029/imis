@@ -13,7 +13,7 @@ import 'package:imis/roadmap/models/roadmap_deliverables.dart';
 import 'package:imis/roadmap/pages/print_roadmap_page.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/button_filter.dart';
+import 'package:imis/widgets/filter_widget/button_filter.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
@@ -1995,104 +1995,16 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
             }).toList();
 
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Roadmap Information",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            gap16px,
-            if (isMobile)
-              Row(
-                children: [
-                  const Text(
-                    "Filter by",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: grey,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: SizedBox(
-                      height: 38,
-                      child: SearchableDropdown(
-                        items: [
-                          "All Process (Core&Support)",
-                          ...kraList.map((kra) => kra.name),
-                        ],
-                        selectedItem: selectedFilter,
-                        hintText: "Filter KRA",
-                        searchHint: "Search Process...",
-                        onChanged:
-                            (value) => setState(() => selectedFilter = value),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            else
-              Row(
-                children: [
-                  const Text(
-                    "Filter by",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: grey,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minWidth: 150,
-                      maxWidth: 400,
-                    ),
-                    child: SizedBox(
-                      height: 38,
-                      child: SearchableDropdown(
-                        items: [
-                          "All Process (Core&Support)",
-                          ...kraList.map((kra) => kra.name),
-                        ],
-                        selectedItem: selectedFilter,
-                        hintText: "Filter KRA",
-                        searchHint: "Search Process...",
-                        onChanged:
-                            (value) => setState(() => selectedFilter = value),
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  PermissionWidget(
-                    permission: AppPermissions.addKraRoadMap,
-                    child: ElevatedButton.icon(
-                      onPressed: () => showProcess(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      icon: const Icon(Icons.add, color: Colors.white),
-                      label: const Text(
-                        'Add New',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            const SizedBox(height: 26),
-            Expanded(
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildPageHeader(isMobile),
+          _buildFilterBar(isMobile),
+          gap4px,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -2467,8 +2379,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton:
           isMobile
@@ -2478,6 +2390,198 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                 child: const Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  Widget _buildPageHeader(bool isMobile) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.map, color: primaryColor, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Roadmap Information",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1D23),
+                      ),
+                    ),
+                    Text(
+                      "${filteredList.length} roadmap${filteredList.length != 1 ? 's' : ''} found",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isMobile)
+                PermissionWidget(
+                  permission: AppPermissions.addKraRoadMap,
+                  child: ElevatedButton.icon(
+                    onPressed: () => showProcess(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  bool get _hasActiveFilters => selectedFilter != "All Process (Core&Support)";
+
+  void _resetFilters() {
+    setState(() => selectedFilter = "All Process (Core&Support)");
+  }
+
+  Widget _buildFilterBar(bool isMobile) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopFilters() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.tune, size: 15, color: Colors.grey.shade600),
+            const SizedBox(width: 6),
+            Text(
+              "Filter by",
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const Spacer(),
+            if (_hasActiveFilters)
+              TextButton.icon(
+                onPressed: _resetFilters,
+                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+                label: Text(
+                  'Clear filters',
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(spacing: 10, runSpacing: 10, children: [_buildRoadmapFilter()]),
+      ],
+    );
+  }
+
+  Widget _buildRoadmapFilter() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: [
+            "All Process (Core&Support)",
+            ...kraList.map((kra) => kra.name),
+          ],
+          prefixIcon: Icons.account_tree_outlined,
+          selectedItem: selectedFilter,
+          hintText: "Filter KRA",
+          searchHint: "Search Process...",
+          onChanged: (value) => setState(() => selectedFilter = value),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileFilters() {
+    return Row(
+      children: [
+        const Text(
+          "Filter by",
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SizedBox(
+            height: 38,
+            child: SearchableDropdown(
+              items: [
+                "All Process (Core&Support)",
+                ...kraList.map((kra) => kra.name),
+              ],
+              selectedItem: selectedFilter,
+              hintText: "Filter KRA",
+              searchHint: "Search Process...",
+              onChanged: (value) => setState(() => selectedFilter = value),
+            ),
+          ),
+        ),
+        if (_hasActiveFilters) ...[
+          const SizedBox(width: 4),
+          IconButton(
+            onPressed: _resetFilters,
+            icon: Icon(Icons.refresh, size: 18, color: Colors.red.shade400),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+          ),
+        ],
+      ],
     );
   }
 

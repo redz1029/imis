@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'package:dio/dio.dart';
-import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/user/models/user_registration.dart';
@@ -203,7 +202,7 @@ class UserProfileState extends State<UserProfilePage> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.18),
+                      color: Colors.black.withValues(alpha: 0.18),
                       blurRadius: 32,
                       offset: Offset(0, 8),
                     ),
@@ -276,7 +275,6 @@ class UserProfileState extends State<UserProfilePage> {
                               _passwordField(setDialogState),
                               SizedBox(height: 8),
                               _passwordHints(),
-
                               SizedBox(height: 16),
                             ],
                           ),
@@ -515,7 +513,7 @@ class UserProfileState extends State<UserProfilePage> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.18),
+                      color: Colors.black.withValues(alpha: 0.18),
                       blurRadius: 32,
                       offset: Offset(0, 8),
                     ),
@@ -941,7 +939,7 @@ class UserProfileState extends State<UserProfilePage> {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
@@ -970,7 +968,6 @@ class UserProfileState extends State<UserProfilePage> {
     );
   }
 
-  /// Combo box: pick from list OR type a custom position
   Widget _positionComboBox(StateSetter setDialogState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1000,7 +997,6 @@ class UserProfileState extends State<UserProfilePage> {
             focusNode,
             onFieldSubmitted,
           ) {
-            // Sync external controller → autocomplete's internal controller
             textController.text = positionController.text;
             textController.addListener(() {
               positionController.text = textController.text;

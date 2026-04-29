@@ -23,7 +23,7 @@ class _RoadmapState extends State<StrategyRoadmapPage> {
       if (kIsWeb) {
         final blob = html.Blob([bytes], 'application/pdf');
         final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor =
+        final _ =
             html.AnchorElement(href: url)
               ..setAttribute('download', 'strategy_map.pdf')
               ..click();
