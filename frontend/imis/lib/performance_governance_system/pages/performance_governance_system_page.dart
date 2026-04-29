@@ -9,7 +9,7 @@ import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/accomplishment_widget.dart/accomplishment_pgs_standardUser_widget.dart';
 import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/build_header_cell.dart';
-import 'package:imis/widgets/button_filter.dart';
+import 'package:imis/widgets/filter_widget/button_filter.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
@@ -186,51 +186,92 @@ class PerformanceGovernanceSystemPageState
 
   //Save as draft pgs
 
+  // Future<bool> pgsSaveAsDraft(PerformanceGovernanceSystem audit) async {
+  //   try {
+  //     UserRegistration? user = await AuthUtil.fetchLoggedUser();
+
+  //     if (user == null || user.id == null || user.id!.isEmpty) {
+  //       _lastResponseStatusCode = 401;
+  //       return false;
+  //     }
+
+  //     final prefs = await SharedPreferences.getInstance();
+
+  //     final baseUrl = ApiEndpoint().pgsSaveAsDraft;
+  //     final url = '$baseUrl?userId=${user.id}';
+
+  //     final requestData = audit.toJson();
+  //     final response = await AuthenticatedRequest.post(
+  //       dio,
+  //       url,
+  //       data: requestData,
+  //     );
+
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       debugPrint("PGS data submitted successfully!");
+
+  //       if (mounted) {
+  //         setState(() {
+  //           fetchPgsList();
+  //           // clearAllSelections();
+  //         });
+  //       }
+  //       await prefs.remove('selectedOfficeId');
+  //       await prefs.remove('selectedOfficeName');
+  //       _lastResponseStatusCode = response.statusCode;
+  //       return true;
+  //     } else {
+  //       debugPrint("Failed to submit PGS data");
+  //       _lastResponseStatusCode = response.statusCode;
+  //       return false;
+  //     }
+  //   } on DioException catch (e) {
+  //     debugPrint("Dio Error");
+  //     _lastResponseStatusCode = e.response?.statusCode;
+  //     return false;
+  //   } catch (e) {
+  //     debugPrint("Unexpected Error: $e");
+  //     return false;
+  //   }
+  // }
   Future<bool> pgsSaveAsDraft(PerformanceGovernanceSystem audit) async {
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
-
       if (user == null || user.id == null || user.id!.isEmpty) {
         _lastResponseStatusCode = 401;
         return false;
       }
 
       final prefs = await SharedPreferences.getInstance();
-
-      final baseUrl = ApiEndpoint().pgsSaveAsDraft;
-      final url = '$baseUrl?userId=${user.id}';
-
-      final requestData = audit.toJson();
+      final url = '${ApiEndpoint().pgsSaveAsDraft}?userId=${user.id}';
       final response = await AuthenticatedRequest.post(
         dio,
         url,
-        data: requestData,
+        data: audit.toJson(),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("PGS data submitted successfully!");
+      _lastResponseStatusCode = response.statusCode;
 
-        if (mounted) {
-          setState(() {
-            fetchPgsList();
-            // clearAllSelections();
-          });
-        }
+      // 200, 201 = created/updated  |  409 = duplicate period+office (still saved)
+      if (response.statusCode == 200 ||
+          response.statusCode == 201 ||
+          response.statusCode == 409) {
+        if (mounted) setState(() => fetchPgsList());
         await prefs.remove('selectedOfficeId');
         await prefs.remove('selectedOfficeName');
-        _lastResponseStatusCode = response.statusCode;
         return true;
       } else {
-        debugPrint("Failed to submit PGS data");
-        _lastResponseStatusCode = response.statusCode;
         return false;
       }
     } on DioException catch (e) {
-      debugPrint("Dio Error");
       _lastResponseStatusCode = e.response?.statusCode;
+      // Treat 409 from DioException the same way
+      if (e.response?.statusCode == 409) {
+        if (mounted) setState(() => fetchPgsList());
+        return true;
+      }
       return false;
-    } catch (e) {
-      debugPrint("Unexpected Error: $e");
+    } catch (_) {
       return false;
     }
   }
@@ -1026,10 +1067,7 @@ class PerformanceGovernanceSystemPageState
       final isDirect = selectedDirect[index] ?? false;
       final byWhen =
           DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
-      // double percentDeliverables =
-      //     (percentageControllers[index]?.text.isNotEmpty ?? false)
-      //         ? double.tryParse(percentageControllers[index]!.text) ?? 0.0
-      //         : 0.0;
+
       final disapprovalRemarksText = reasonController[index]?.text ?? '';
       final isDisapproved = selectedDisapproved[index] ?? false;
       final statusIndex =
@@ -1061,6 +1099,7 @@ class PerformanceGovernanceSystemPageState
           isDisapproved,
           status,
           pgsId,
+          index,
           remarks: remarks,
           rowVersion: '',
         ),
@@ -1173,7 +1212,6 @@ class PerformanceGovernanceSystemPageState
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1634,45 +1672,57 @@ class PerformanceGovernanceSystemPageState
                                             child: Text(pgs['name'] ?? ""),
                                           ),
                                           Expanded(
-                                            flex: 2,
-                                            child: Text(
-                                              "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['startDate']))} - "
-                                              "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['endDate']))}",
+                                            flex: 3,
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                  ),
+                                              child: Text(
+                                                "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['startDate']))} - "
+                                                "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['endDate']))}",
+                                              ),
                                             ),
                                           ),
                                           Expanded(
                                             flex: 2,
-                                            child: Row(
-                                              children: [
-                                                // Solid circle with icon
-                                                Container(
-                                                  width: 16,
-                                                  height: 16,
-                                                  margin: EdgeInsets.only(
-                                                    right: 4,
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
                                                   ),
-                                                  decoration: BoxDecoration(
-                                                    color: getStatusColor(
-                                                      status,
-                                                    ), // solid color
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: Center(
-                                                    child: getStatusIcon(
-                                                      status,
-                                                    ), // now perfectly centered
-                                                  ),
-                                                ),
-                                                // Status text
-                                                Text(
-                                                  status,
-                                                  style: TextStyle(
-                                                    color: getStatusColor(
-                                                      status,
+
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    width: 16,
+                                                    height: 16,
+                                                    margin: EdgeInsets.only(
+                                                      right: 4,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: getStatusColor(
+                                                        status,
+                                                      ), // solid color
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: Center(
+                                                      child: getStatusIcon(
+                                                        status,
+                                                      ), // now perfectly centered
                                                     ),
                                                   ),
-                                                ),
-                                              ],
+                                                  // Status text
+                                                  Text(
+                                                    status,
+                                                    style: TextStyle(
+                                                      color: getStatusColor(
+                                                        status,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                           Expanded(
@@ -2720,9 +2770,6 @@ class PerformanceGovernanceSystemPageState
                                           ),
                                       ],
                                     ),
-                                    //End First Tab
-
-                                    //Second Tab  Readiness Rating-Cancer Care
                                     Scaffold(
                                       backgroundColor: mainBgColor,
                                       appBar: AppBar(
@@ -3997,7 +4044,7 @@ class PerformanceGovernanceSystemPageState
   // Sub Header
   TableRow _buildTableSubHeaderStrategic() {
     return TableRow(
-      decoration: BoxDecoration(color: peachLight),
+      decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.2)),
       children: [
         BuildHeaderCell(text: '#'),
         BuildHeaderCell(text: 'PROCESS (CORE & SUPPORT)'),
@@ -4033,7 +4080,7 @@ class PerformanceGovernanceSystemPageState
             ? 'Please select either Direct or Indirect.'
             : null;
 
-    bool hasDisapprovePermission = permissionService.hasPermission(
+    permissionService.hasPermission(
       AppPermissions.disapprovePerformanceGovernanceSystem,
     );
     Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;

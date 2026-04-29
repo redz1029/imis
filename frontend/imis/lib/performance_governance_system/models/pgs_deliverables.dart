@@ -33,6 +33,7 @@ class PgsDeliverables {
   String? rowVersion;
   int? perfomanceGovernanceSystemId;
   List<PgsDeliverableHistory>? pgsDeliverableHistory;
+  int sortOrder;
 
   PgsDeliverables(
     this.id,
@@ -46,7 +47,8 @@ class PgsDeliverables {
     this.disapprovalRemarks,
     this.isDisapproved,
     this.status,
-    this.perfomanceGovernanceSystemId, {
+    this.perfomanceGovernanceSystemId,
+    this.sortOrder, {
     this.pgsDeliverableHistory,
     this.remarks,
     this.rowVersion,
