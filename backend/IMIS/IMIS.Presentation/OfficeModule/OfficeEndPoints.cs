@@ -102,6 +102,15 @@ namespace IMIS.Presentation.OfficeModule
             })
             .WithTags(_officeTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.Edit));
+
+            app.MapGet("/pgs/services", async (IOfficeService service, CancellationToken cancellationToken) =>
+            {
+                var offices = await service.GetAllSpecificServicesAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(offices);
+            })
+            .WithTags(_officeTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
         }
     }
 }

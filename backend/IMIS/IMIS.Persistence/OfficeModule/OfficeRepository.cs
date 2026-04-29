@@ -21,16 +21,27 @@ namespace IMIS.Persistence.OfficeModule
         }
         public async Task<IEnumerable<Office>?> FilterByName(string name, int officeNoOfResults, CancellationToken cancellationToken)
         {
-            return await _entities
+            return await _entities 
                 .Where(a => EF.Functions.Like(a.Name, $"{name}%"))
                 .Take(officeNoOfResults)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
+        
         public async Task<IEnumerable<Office>?> GetAll(CancellationToken cancellationToken)
         {
             return await _entities
+                .Where(o => o.ParentOfficeId != null)
+                .Include(o => o.AuditorOffices)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+        public async Task<IEnumerable<Office>?> GetAllSpecificServicesAsync(CancellationToken cancellationToken)
+        {
+            return await _entities
+                .Where(o => o.ParentOfficeId == null)
                 .Include(o => o.AuditorOffices)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
