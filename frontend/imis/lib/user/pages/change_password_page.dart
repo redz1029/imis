@@ -464,7 +464,7 @@ InputDecoration _inputDeco(String hint) => InputDecoration(
   hintText: hint,
   hintStyle: const TextStyle(color: kHint, fontSize: 14),
   filled: true,
-  fillColor: kBg,
+  fillColor: kBackground,
   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
   border: OutlineInputBorder(
     borderRadius: BorderRadius.circular(10),
