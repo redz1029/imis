@@ -302,12 +302,7 @@ class OfficePageState extends State<OfficePage> {
                         _selectedParentOffice = value?['id'].toString();
                       });
                     },
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Please select parent office';
-                      }
-                      return null;
-                    },
+
                     dropdownDecoratorProps: DropDownDecoratorProps(
                       dropdownSearchDecoration: InputDecoration(
                         labelText: 'Select Parent Office',
@@ -751,12 +746,12 @@ class OfficePageState extends State<OfficePage> {
                                         const SizedBox(height: 4),
 
                                         Text(
-                                          "Last Name: ${(_officeService.getOfficeTypeName(office.officeTypeId ?? 0, officeTypeList),)}",
+                                          "Office Type: ${_officeService.getOfficeTypeName(office.officeTypeId ?? 0, officeTypeList)}",
                                         ),
                                         const SizedBox(height: 4),
 
                                         Text(
-                                          "Position: ${_officeService.getParentOfficeName(office.parentOfficeId, parentOfficeList)}",
+                                          "Parent Office: ${_officeService.getParentOfficeName(office.parentOfficeId, parentOfficeList)}",
                                         ),
                                       ],
                                     ),
