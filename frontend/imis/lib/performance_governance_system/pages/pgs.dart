@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,13 +14,13 @@ import 'package:imis/performance_governance_system/pages/pgs_reports.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
-import 'package:imis/roadmap/models/kra_roadmap_filter.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/filter_widget/button_filter.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
@@ -26,22 +28,13 @@ import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-
 import '../../performance_governance_system/models/pgs_deliverables.dart';
 import '../../performance_governance_system/models/pgs_readiness.dart';
 import '../../performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import '../../utils/auth_util.dart';
 import '../../utils/permission_service.dart';
+import '../../widgets/accomplishment_widget.dart/accomplishment_pgs_standardUser_widget.dart';
 import '../../widgets/custom_tooltip.dart';
-
-const _kPrimaryLight = Color(0xFFD4919E);
-const _kPrimaryBg = Color(0xFFF2D5D9);
-const _kBg = Color(0xFFFAF7F8);
-const _kBorder = Color(0xFFE8D5D8);
-const _kTextDark = Color(0xFF2D1F22);
-const _kTextMid = Color(0xFF6B4E53);
-const _kTextLight = Color(0xFF9E8285);
-const _kAccentDark = Color(0xFF8B3A4A);
 
 const int _fHandle = 2;
 const int _fNo = 2;
@@ -76,8 +69,7 @@ class Pgs extends StatefulWidget {
 
 class _PerformanceGovernanceSystemPageState extends State<Pgs> {
   List<PerformanceGovernanceSystem> pgsList = [];
-  String _searchQuery = '';
-  final _searchCtrl = TextEditingController();
+
   final _commonService = CommonService(Dio());
   String? selectedOffice = "";
   String officeDisplay = "";
@@ -89,15 +81,15 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
   String? selectedStartPeriod;
   String? selectedEndDate;
   String userId = "";
-
+  Map<int, bool?> selectedDisapproved = {};
   List<PgsPeriod> pgsPeriodList = [];
   String? _selectedOfficeId;
+  String? _selectedServiceId;
   bool _isLoading = false;
   final int _pageSize = 15;
   final _paginationUtils = PaginationUtil(Dio());
   List<Map<String, dynamic>> signatoryList = [];
   final dio = Dio();
-
   final _dateConverter = const LongDateOnlyConverter();
   String? selectedEndDateText;
   int? _lastResponseStatusCode;
@@ -105,8 +97,8 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
   List<Map<String, dynamic>> periodList = [];
   List<Map<String, dynamic>> filteredListPeriod = [];
 
-  bool get _isMobile => MediaQuery.sizeOf(context).width < 640;
   List<Office> officeList = [];
+  List<Office> serviceList = [];
   List<Map<String, dynamic>> deliverableLists = [];
   List<Map<String, dynamic>> filteredList = [];
 
@@ -119,7 +111,6 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     fetchPgsList();
   }
 
-  // ---------------------------------------------------------------------------
   Future<void> fetchPgsList({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
     setState(() => _isLoading = true);
@@ -177,9 +168,6 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  //  API: FILTER
-  // ---------------------------------------------------------------------------
   Future<void> fetchPgsFilter({int page = 1, int pageSize = 15}) async {
     if (_isLoading) return;
     setState(() => _isLoading = true);
@@ -213,6 +201,8 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
           ).format(DateTime.parse(selectedEndDate!)),
         if (_selectedOfficeId != null && _selectedOfficeId!.isNotEmpty)
           'OfficeId': _selectedOfficeId,
+        if (_selectedServiceId != null && _selectedServiceId!.isNotEmpty)
+          'OfficeId': _selectedServiceId,
       };
 
       final response = await AuthenticatedRequest.get(
@@ -295,9 +285,6 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     };
   }
 
-  // ---------------------------------------------------------------------------
-  //  API: SAVE AS DRAFT
-  // ---------------------------------------------------------------------------
   Future<bool> pgsSaveAsDraft(PerformanceGovernanceSystem audit) async {
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
@@ -315,10 +302,12 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        if (mounted) setState(() => fetchPgsList());
+        _lastResponseStatusCode = response.statusCode;
         await prefs.remove('selectedOfficeId');
         await prefs.remove('selectedOfficeName');
-        _lastResponseStatusCode = response.statusCode;
+        Future.microtask(() {
+          if (mounted) fetchPgsList();
+        });
         return true;
       } else {
         _lastResponseStatusCode = response.statusCode;
@@ -332,9 +321,6 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  //  API: SUBMIT / APPROVE
-  // ---------------------------------------------------------------------------
   Future<bool> submitPGS({
     String? pgsId,
     required String userId,
@@ -362,12 +348,15 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
       final signatoryData = PerformanceGovernanceSystem.fromJson(
         signatoryResponse.data,
       );
+
       final updatedPgsJson = updatePgs.toJson();
       updatedPgsJson['id'] = pgsId;
+
       updatedPgsJson['pgsSignatories'] =
           signatoryData.pgsSignatories?.map((s) => s.toJson()).toList();
 
-      final prefs = await SharedPreferences.getInstance();
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
       final response = await AuthenticatedRequest.put(
         dio,
         url,
@@ -375,26 +364,28 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        if (mounted) setState(() => fetchPgsList());
+        setState(() {
+          fetchPgsList();
+        });
         await prefs.remove('selectedOfficeId');
         await prefs.remove('selectedOfficeName');
         _lastResponseStatusCode = response.statusCode;
         return true;
       } else {
+        debugPrint("Failed to update PGS");
         _lastResponseStatusCode = response.statusCode;
         return false;
       }
     } on DioException catch (e) {
+      debugPrint("Dio error: ${e.message}");
       _lastResponseStatusCode = e.response?.statusCode;
       return false;
-    } catch (_) {
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
       return false;
     }
   }
 
-  // ---------------------------------------------------------------------------
-  //  API: FETCH DELIVERABLES
-  // ---------------------------------------------------------------------------
   Future<List<PgsDeliverables>> fetchDeliverables({String? pgsId}) async {
     List<PgsDeliverables> list = [];
     final url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
@@ -420,40 +411,6 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     return list;
   }
 
-  Future<Map<String, dynamic>?> fetchSubmitUserId({
-    required String pgsId,
-    required String userId,
-  }) async {
-    try {
-      UserRegistration? user = await AuthUtil.fetchLoggedUser();
-      if (user == null) return null;
-
-      String? token = await AuthUtil.getAccessToken();
-      if (token == null || token.isEmpty) return null;
-
-      final response = await AuthenticatedRequest.get(
-        dio,
-        "${ApiEndpoint().fetchPGSUserId}/${user.id}?pgsId=$pgsId",
-      );
-      if (response.statusCode == 200 && mounted) {
-        final data = response.data;
-
-        return _mapPgsToListItem(
-          PerformanceGovernanceSystem.fromJson(data),
-          userId,
-        );
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-    return null;
-  }
-
-  // ---------------------------------------------------------------------------
-  //  API: FETCH SIGNATORIES
-  // ---------------------------------------------------------------------------
   Future<List<PgsSignatory>> fetchSignatoryList({String? pgsId}) async {
     final url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
     List<PgsSignatory> list = [];
@@ -479,9 +436,39 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     return list;
   }
 
-  // ---------------------------------------------------------------------------
-  //  HANDLE ACTION (draft / submit / approve / disapprove)
-  // ---------------------------------------------------------------------------
+  Future<Map<String, dynamic>> fetchDeliverablesAndSignatories({
+    required String pgsId,
+  }) async {
+    final url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
+    List<PgsDeliverables> deliverables = [];
+    List<PgsSignatory> signatories = [];
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final pgsDataList = data is List ? data : [data];
+        for (var pgsJson in pgsDataList) {
+          final delivs =
+              (pgsJson['pgsDeliverables'] as List? ?? [])
+                  .map((d) => PgsDeliverables.fromJson(d))
+                  .where((d) => d.id != null)
+                  .toList();
+          deliverables.addAll(delivs);
+
+          final sigsJson = pgsJson['pgsSignatories'];
+          if (sigsJson is List) {
+            signatories.addAll(sigsJson.map((d) => PgsSignatory.fromJson(d)));
+          }
+        }
+      }
+    } on DioException {
+      debugPrint("Dio error");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+    return {'deliverables': deliverables, 'signatories': signatories};
+  }
+
   Future<void> handlePgsAction(
     BuildContext context,
     String? id,
@@ -645,7 +632,6 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
 
     final int pgsId = int.tryParse(id ?? '') ?? 0;
 
-    // Build deliverables list
     List<PgsDeliverables> updatedDeliverables = [];
     deliverablesControllers.forEach((index, controller) {
       final existingId = deliverableIds[index] ?? 0;
@@ -692,6 +678,7 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
           isDisapproved,
           PgsStatus.notStarted,
           pgsId,
+          index,
           remarks: remarks,
           rowVersion: '',
         ),
@@ -959,7 +946,7 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
                                 context,
                                 filteredOfficeIds[index],
                               ),
-                          hoverColor: primaryColor.withOpacity(0.1),
+                          hoverColor: primaryColor.withValues(alpha: 0.1),
                         ),
                       );
                     },
@@ -994,8 +981,7 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     try {
       final periods = await _commonService.fetchPgsPeriod();
       final offices = await _commonService.fetchOffices();
-
-      // Also fetch periods for filter dropdowns
+      final services = await _commonService.fetchService();
       var url = ApiEndpoint().pgsperiod;
       final response = await AuthenticatedRequest.get(dio, url);
       if (response.statusCode == 200 && response.data is List) {
@@ -1015,6 +1001,7 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
         setState(() {
           pgsPeriodList = periods;
           officeList = offices;
+          serviceList = services;
         });
       }
     } catch (e) {
@@ -1059,6 +1046,7 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
                 (pgsId, pgs) =>
                     submitPGS(pgsId: pgsId, updatePgs: pgs, userId: userId),
             lastResponseStatusCode: () => _lastResponseStatusCode,
+            userId: userId,
           ),
     );
   }
@@ -1075,19 +1063,16 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     if (!hasPermission) return noPermissionScreen();
 
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Performance Governance Information",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            if (isMobile) _buildMobileFilters() else _buildDesktopFilters(),
-            const SizedBox(height: 26),
-            Expanded(
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildPageHeader(isMobile),
+          _buildFilterBar(isMobile),
+          gap4px,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -1111,8 +1096,8 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton:
           isMobile
@@ -1128,19 +1113,150 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     );
   }
 
+  Widget _buildPageHeader(bool isMobile) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.assessment_outlined,
+                  color: primaryColor,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "PGS Deliverables Information",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1D23),
+                      ),
+                    ),
+                    Text(
+                      "${filteredList.length} PGS deliverable${filteredList.length != 1 ? 's' : ''} found",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isMobile)
+                PermissionWidget(
+                  permission: AppPermissions.addPerformanceGovernanceSystem,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _onAddTap(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _selectedServiceId = null;
+      selectedEndDate = null;
+      selectedStartPeriod = null;
+      _selectedOfficeId = null;
+      selectedStartDateText = "All Start Date";
+      selectedEndDateText = "All End Date";
+    });
+    fetchPgsFilter();
+  }
+
+  Widget _buildFilterBar(bool isMobile) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMobileFilters() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Filter by",
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: grey,
-          ),
+        Row(
+          children: [
+            const Text(
+              "Filter by",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: grey,
+              ),
+            ),
+            const Spacer(),
+            if (_hasActiveFilters)
+              TextButton.icon(
+                onPressed: _resetFilters,
+                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+                label: Text(
+                  'Clear',
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 8),
+        SizedBox(
+          height: 38,
+          child: PermissionWidget(
+            permission: AppPermissions.viewOffice,
+            child: _servicesDropdown(),
+          ),
+        ),
         SizedBox(
           height: 38,
           child: PermissionWidget(
@@ -1156,70 +1272,140 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     );
   }
 
+  bool get _hasActiveFilters =>
+      _selectedServiceId != null ||
+      _selectedOfficeId != null ||
+      selectedStartPeriod != null ||
+      selectedEndDate != null;
+
   Widget _buildDesktopFilters() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Filter by",
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: grey,
-          ),
-        ),
-        const SizedBox(width: 8),
-        _buildDropdown(
-          child: PermissionWidget(
-            permission: AppPermissions.viewOffice,
-            child: _officeDropdown(),
-          ),
-        ),
-        const SizedBox(width: 8),
-        _buildDropdown(child: _startDateDropdown()),
-        const SizedBox(width: 8),
-        _buildDropdown(child: _endDateDropdown()),
-        const Spacer(),
-        PermissionWidget(
-          permission: AppPermissions.addPerformanceGovernanceSystem,
-          child: ElevatedButton.icon(
-            onPressed: _onAddTap,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
+        Row(
+          children: [
+            Icon(Icons.tune, size: 15, color: Colors.grey.shade600),
+            const SizedBox(width: 6),
+            Text(
+              "Filter by",
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
               ),
             ),
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text('Add New', style: TextStyle(color: Colors.white)),
-          ),
+            const Spacer(),
+            if (_hasActiveFilters)
+              TextButton.icon(
+                onPressed: _resetFilters,
+                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+                label: Text(
+                  'Clear filters',
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _buildDropdown(
+              child: PermissionWidget(
+                permission: AppPermissions.viewOffice,
+                child: _servicesDropdown(),
+              ),
+            ),
+            _buildDropdown(
+              child: PermissionWidget(
+                permission: AppPermissions.viewOffice,
+                child: _officeDropdown(),
+              ),
+            ),
+            _buildDropdown(child: _startDateDropdown()),
+            _buildDropdown(child: _endDateDropdown()),
+          ],
         ),
       ],
     );
   }
 
   Widget _officeDropdown() {
-    return SearchableDropdown(
-      items: ["All Offices", ...officeList.map((o) => o.name)],
-      selectedItem:
-          _selectedOfficeId == null
-              ? "All Offices"
-              : (officeList
-                      .where((o) => o.id.toString() == _selectedOfficeId)
-                      .firstOrNull
-                      ?.name ??
-                  "All Offices"),
-      hintText: "Office",
-      searchHint: "Search offices...",
-      onChanged: (value) {
-        setState(() {
-          _selectedOfficeId =
-              value == "All Offices"
-                  ? null
-                  : officeList.firstWhere((o) => o.name == value).id.toString();
-          fetchPgsFilter();
-        });
-      },
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: ["All Offices", ...officeList.map((o) => o.name)],
+          selectedItem:
+              _selectedOfficeId == null
+                  ? "All Offices"
+                  : (officeList
+                          .where((o) => o.id.toString() == _selectedOfficeId)
+                          .firstOrNull
+                          ?.name ??
+                      "All Offices"),
+          hintText: "Office",
+          searchHint: "Search offices...",
+          prefixIcon: Icons.apartment_outlined,
+          onChanged: (value) {
+            setState(() {
+              _selectedOfficeId =
+                  value == "All Offices"
+                      ? null
+                      : officeList
+                          .firstWhere((o) => o.name == value)
+                          .id
+                          .toString();
+              _selectedServiceId = null;
+              fetchPgsFilter();
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _servicesDropdown() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: ["All Services", ...serviceList.map((o) => o.name)],
+          selectedItem:
+              _selectedServiceId == null
+                  ? "All Services"
+                  : (serviceList
+                          .where((o) => o.id.toString() == _selectedServiceId)
+                          .firstOrNull
+                          ?.name ??
+                      "All Services"),
+          hintText: "Service",
+          searchHint: "Search services...",
+          prefixIcon: Icons.miscellaneous_services,
+          onChanged: (value) {
+            setState(() {
+              _selectedServiceId =
+                  value == "All Services"
+                      ? null
+                      : serviceList
+                          .firstWhere((o) => o.name == value)
+                          .id
+                          .toString();
+              _selectedOfficeId = null;
+              fetchPgsFilter();
+            });
+          },
+        ),
+      ),
     );
   }
 
@@ -1231,9 +1417,10 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
           (p) => _dateConverter.toJson(DateTime.parse(p['startDate'])),
         ),
       ],
-      selectedItem: selectedStartDateText ?? "Start Date",
-      hintText: "Start Date",
-      searchHint: "Search...",
+      selectedItem: selectedStartDateText,
+      prefixIcon: Icons.calendar_today_outlined,
+      hintText: "All Start Date",
+      searchHint: "Search start date...",
       onChanged: (value) {
         setState(() {
           if (value == "All Start Date") {
@@ -1262,9 +1449,10 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
           (p) => _dateConverter.toJson(DateTime.parse(p['endDate'])),
         ),
       ],
-      selectedItem: selectedEndDateText ?? "End Date",
-      hintText: "End Date",
-      searchHint: "Search...",
+      selectedItem: selectedEndDateText,
+      hintText: "All End Date",
+      searchHint: "Search end date...",
+      prefixIcon: Icons.calendar_today_outlined,
       onChanged: (value) {
         setState(() {
           if (value == "All End Date") {
@@ -1333,6 +1521,26 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     if (_isLoading) {
       return Center(child: CircularProgressIndicator(color: primaryColor));
     }
+    if (filteredList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.assessment_outlined,
+              size: 48,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'No deliverables found',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       itemCount: filteredList.length,
       itemBuilder: (context, index) {
@@ -1356,8 +1564,9 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
             final isNextStatus = signatory['isNextStatus'];
             if (isNextStatus == null) return false;
             if (isNextStatus is bool) return isNextStatus;
-            if (isNextStatus is String)
+            if (isNextStatus is String) {
               return isNextStatus.toLowerCase() == 'true';
+            }
             return false;
           });
           status = hasNextStatus ? 'For Approval' : 'Approved';
@@ -1412,32 +1621,7 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
                           message: 'Edit',
                           child: IconButton(
                             icon: const Icon(size: 18, Icons.edit_outlined),
-                            onPressed: () async {
-                              try {
-                                await AuthUtil.saveSelectedOfficeId(
-                                  pgs['officeid'].toString(),
-                                );
-                                selectedOffice =
-                                    await AuthUtil.fetchSelectedOfficeId();
-                                final deliverablesList =
-                                    await fetchDeliverables(pgsId: pgs['id']);
-                                final signatory = await fetchSignatoryList(
-                                  pgsId: pgs['id'],
-                                );
-                                await fetchSubmitUserId(
-                                  userId: userId,
-                                  pgsId: pgs['id'],
-                                );
-                                await _loadOfficeName();
-                                _openDialog(
-                                  existingPgs: {
-                                    ...pgs,
-                                    'deliverables': deliverablesList,
-                                    'signatories': signatory,
-                                  },
-                                );
-                              } catch (_) {}
-                            },
+                            onPressed: () => _onEditTap(pgs),
                           ),
                         ),
                       ),
@@ -1479,7 +1663,6 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
           );
         }
 
-        // Mobile card
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           margin: const EdgeInsets.only(bottom: 12),
@@ -1500,25 +1683,7 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
                     color: Theme.of(context).cardColor,
                     icon: const Icon(Icons.more_vert),
                     onSelected: (value) async {
-                      if (value == 'edit') {
-                        try {
-                          await AuthUtil.saveSelectedOfficeId(
-                            pgs['officeid'].toString(),
-                          );
-                          selectedOffice =
-                              await AuthUtil.fetchSelectedOfficeId();
-                          final deliverablesList = await fetchDeliverables(
-                            pgsId: pgs['id'],
-                          );
-                          await _loadOfficeName();
-                          _openDialog(
-                            existingPgs: {
-                              ...pgs,
-                              'deliverables': deliverablesList,
-                            },
-                          );
-                        } catch (_) {}
-                      }
+                      if (value == 'edit') _onEditTap(pgs);
                       if (value == 'preview') {
                         await openPGSReportNewTab(
                           pgs['id'].toString(),
@@ -1628,6 +1793,37 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
     );
   }
 
+  Future<void> _onEditTap(Map<String, dynamic> pgs) async {
+    try {
+      await AuthUtil.saveSelectedOfficeId(pgs['officeid'].toString());
+      selectedOffice = await AuthUtil.fetchSelectedOfficeId();
+
+      final result = await fetchDeliverablesAndSignatories(
+        pgsId: pgs['id'].toString(),
+      );
+      // await fetchSubmitUserId(userId: userId, pgsId: pgs['id']);
+
+      final deliverablesList = result['deliverables'] as List<PgsDeliverables>;
+      final signatory = result['signatories'] as List<PgsSignatory>;
+
+      if (mounted) {
+        setState(() {
+          officeDisplay = pgs['name'] ?? 'No Office';
+          officeIdList = pgs['officeid'].toString();
+        });
+
+        _openDialog(
+          existingPgs: {
+            ...pgs,
+            'deliverables': deliverablesList,
+            'signatories': signatory,
+            'rawSignatories': pgs['signatories'],
+          },
+        );
+      }
+    } catch (_) {}
+  }
+
   Widget _buildPagination() {
     return Container(
       padding: const EdgeInsets.all(10),
@@ -1720,9 +1916,9 @@ class _PerformanceGovernanceSystemPageState extends State<Pgs> {
   }
 }
 
-// ------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 //  FORM DIALOG
-// ------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 class _PgsFormDialog extends StatefulWidget {
   final String officeName;
   final String officeId;
@@ -1734,6 +1930,7 @@ class _PgsFormDialog extends StatefulWidget {
   final Future<bool> Function(PerformanceGovernanceSystem) onDraft;
   final Future<bool> Function(String, PerformanceGovernanceSystem) onSubmit;
   final int? Function() lastResponseStatusCode;
+  final String userId;
 
   const _PgsFormDialog({
     required this.officeName,
@@ -1746,6 +1943,7 @@ class _PgsFormDialog extends StatefulWidget {
     required this.onSubmit,
     required this.lastResponseStatusCode,
     this.existingPgs,
+    required this.userId,
   });
 
   @override
@@ -1757,12 +1955,14 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
   late TabController _tabs;
   int? _selectedPeriodId;
   Map<String, dynamic>? _selectedPeriodObject;
-
+  final Map<int, bool> _savedDisapproved = {};
   double _competence = 0.0, _resource = 0.0, _confidence = 0.0;
   double get _total => _competence + _resource + _confidence;
-
+  final ScrollController _listScrollController = ScrollController();
   final List<_DeliverableRow> _rows = [];
   final Map<int, TextEditingController> _delivCtrl = {};
+  Map<int, TextEditingController> originalDelivCtrl = {};
+  Map<int, bool> clearedOnDisapprove = {};
   final Map<int, TextEditingController> _kraCtrl = {};
   final Map<int, TextEditingController> _kraRoadmapCtrl = {};
   final Map<int, TextEditingController> _delivRoadmapCtrl = {};
@@ -1776,33 +1976,39 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
   final Map<int, bool> _hasDataMap = {};
   final Map<int, List<dynamic>> _kraDescsByIndex = {};
   final List<UniqueKey> _rowKeys = [];
-
+  final Map<int, List<String>> _kraDropdownOptions = {};
+  final Map<int, String> _selectedKRAText = {};
   List<Map<String, dynamic>> _options = [];
   bool _processLoading = false;
   bool _submitting = false;
-
+  final _formKey = GlobalKey<FormState>();
+  final Set<int> _changingKRA = {};
+  final Set<int> _isRetrievedData = {};
   final _permissionService = PermissionService();
   final _roadMapService = RoadmapService(Dio());
   final _dateConverter = const LongDateOnlyConverter();
+
+  // ── KRA description cache: kraId → descriptions ──────────────────────────
+  final Map<int, List<dynamic>> _kraDescCache = {};
 
   bool get _isMobile => MediaQuery.sizeOf(context).width < 640;
   List<PgsPeriod> get _activePeriods =>
       widget.periods.where((p) => !p.isDeleted).toList();
 
+  // ─────────────────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
     _tabs = TabController(length: 3, vsync: this);
-    _loadKraOptions();
     _initFromExisting();
     if (_rows.isEmpty) _addRowInternal();
+    _loadKraOptionsAndThenRowDropdowns();
   }
 
   void _initFromExisting() {
     final pgs = widget.existingPgs;
     if (pgs == null) return;
 
-    // Period
     final startDate = pgs['startDate'];
     final endDate = pgs['endDate'];
     if (startDate != null && endDate != null) {
@@ -1817,12 +2023,10 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       }
     }
 
-    // Readiness
     _competence = double.tryParse(pgs['competencescore'] ?? '') ?? 0.0;
     _resource = double.tryParse(pgs['resourcescore'] ?? '') ?? 0.0;
     _confidence = double.tryParse(pgs['confidencescore'] ?? '') ?? 0.0;
 
-    // Deliverables
     final deliverables = pgs['deliverables'];
     if (deliverables is List && deliverables.isNotEmpty) {
       for (int i = 0; i < deliverables.length; i++) {
@@ -1841,6 +2045,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           _selectedKRA[i] = item.kra?.id;
           _deliverableIds[i] = item.id ?? 0;
           _selectedDisapproved[i] = item.isDisapproved;
+          _savedDisapproved[i] = item.isDisapproved;
           _reasonCtrl[i] = TextEditingController(text: item.disapprovalRemarks);
           _processMap[i] = item.kra?.name ?? '';
           _rowKeys.add(UniqueKey());
@@ -1852,29 +2057,93 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
   @override
   void dispose() {
     _tabs.dispose();
-    for (final c in _delivCtrl.values) c.dispose();
-    for (final c in _kraCtrl.values) c.dispose();
-    for (final c in _kraRoadmapCtrl.values) c.dispose();
-    for (final c in _delivRoadmapCtrl.values) c.dispose();
-    for (final c in _reasonCtrl.values) c.dispose();
+    for (final c in _delivCtrl.values) {
+      c.dispose();
+    }
+    for (final c in _kraCtrl.values) {
+      c.dispose();
+    }
+    for (final c in _kraRoadmapCtrl.values) {
+      c.dispose();
+    }
+    for (final c in _delivRoadmapCtrl.values) {
+      c.dispose();
+    }
+    for (final c in _reasonCtrl.values) {
+      c.dispose();
+    }
+    _listScrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadKraOptions() async {
+  // ── OPTIMIZED: fetch unique kraIds only, share cache across rows ──────────
+  Future<void> _loadKraOptionsAndThenRowDropdowns() async {
     if (_processLoading) return;
     setState(() => _processLoading = true);
+
     try {
+      // Step 1: fetch KRA options list (single call)
       final List<KeyResultArea> result = await widget.commonService.fetchKra();
+      if (!mounted) return;
       setState(() {
         _options =
             result
-                .map((e) => {'id': e.id, 'name': e.name, 'remarks': e.remarks})
+                .map(
+                  (e) => {
+                    'id': e.id,
+                    'name': e.name,
+                    'remarks': e.remarks,
+                    'rowVersion': e.rowVersion ?? '',
+                  },
+                )
                 .toList();
+      });
+
+      // Step 2: collect UNIQUE kraIds across all rows
+      final Map<int, List<int>> kraIdToRowIndexes = {};
+      for (int i = 0; i < _rows.length; i++) {
+        final kraId = _selectedKRA[i];
+        if (kraId != null) {
+          kraIdToRowIndexes.putIfAbsent(kraId, () => []).add(i);
+        }
+      }
+
+      // Step 3: fetch each unique kraId ONCE (in parallel)
+      await Future.wait(
+        kraIdToRowIndexes.keys.map((kraId) async {
+          if (!_kraDescCache.containsKey(kraId)) {
+            final data = await _roadMapService.getAllKraDescriptions(
+              kraId: kraId,
+            );
+            _kraDescCache[kraId] = data;
+          }
+        }),
+      );
+
+      // Step 4: apply cached data to all rows — zero extra API calls
+      if (!mounted) return;
+      setState(() {
+        for (final entry in kraIdToRowIndexes.entries) {
+          final kraId = entry.key;
+          final data = _kraDescCache[kraId] ?? [];
+          final List<String> opts =
+              data
+                  .map<String>((d) => d['kraDescription']?.toString() ?? '')
+                  .where((s) => s.isNotEmpty)
+                  .toList();
+          opts.add('Others');
+
+          for (final i in entry.value) {
+            _hasDataMap[i] = data.isNotEmpty;
+            _kraDescsByIndex[i] = data;
+            _kraDropdownOptions[i] = List.from(opts);
+          }
+        }
         _processLoading = false;
       });
     } catch (e) {
       debugPrint("Fetch KRA Error: $e");
-      setState(() => _processLoading = false);
+      if (mounted) setState(() => _processLoading = false);
     }
   }
 
@@ -1890,7 +2159,18 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     _rowKeys.add(UniqueKey());
   }
 
-  void _addRow() => setState(_addRowInternal);
+  void _addRow() {
+    setState(_addRowInternal);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_listScrollController.hasClients) {
+        _listScrollController.animateTo(
+          _listScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   void _removeRow(int idx) {
     setState(() {
@@ -1911,10 +2191,13 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         _deliverableIds,
         _selectedKRAObjects,
         _selectedDisapproved,
+        originalDelivCtrl,
+        clearedOnDisapprove,
+        _selectedDisapproved,
       ];
-      for (final map in maps) map.remove(idx);
-
-      // Re-key
+      for (final map in maps) {
+        map.remove(idx);
+      }
       for (final map in maps) {
         final keysAbove = map.keys.where((k) => k > idx).toList()..sort();
         for (final k in keysAbove) {
@@ -1946,6 +2229,9 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         _deliverableIds,
         _selectedKRAObjects,
         _selectedDisapproved,
+        clearedOnDisapprove,
+        originalDelivCtrl,
+        _selectedDisapproved,
       ];
       for (final map in maps) {
         final oldMap = Map.from(map);
@@ -1967,10 +2253,16 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     });
   }
 
-  // ---------------------------------------------------------------------------
-  //  SUBMIT ACTION
-  // ---------------------------------------------------------------------------
   Future<void> _submitAction(ActionType actionType) async {
+    final bool isAnyDisapproved = _selectedDisapproved.values.any(
+      (v) => v == true,
+    );
+
+    if (actionType == ActionType.approve) {
+      actionType =
+          isAnyDisapproved ? ActionType.disapprove : ActionType.approve;
+    }
+
     if (_selectedPeriodId == null) {
       MotionToast.warning(
         title: const Text("Missing Fields"),
@@ -2130,6 +2422,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
 
     try {
       bool success = false;
+
       if (actionType == ActionType.draft) {
         for (final d in pgs.pgsDeliverables ?? []) {
           d.isDisapproved = false;
@@ -2148,7 +2441,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           setState(() => _submitting = false);
           return;
         }
-      } else {
+      } else if (actionType == ActionType.submit) {
         for (final d in pgs.pgsDeliverables ?? []) {
           d.isDisapproved = false;
           d.disapprovalRemarks = '';
@@ -2158,22 +2451,51 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           MotionToast.error(
             description: Text(
               widget.lastResponseStatusCode() == 403
-                  ? "You don't have permission."
-                  : "Operation failed!",
+                  ? "You don't have permission to submit."
+                  : "Failed to submit!",
             ),
             toastAlignment: Alignment.center,
           ).show(context);
           setState(() => _submitting = false);
           return;
         }
+      } else {
+        success = await widget.onSubmit(id.toString(), pgs);
+        if (!success) {
+          MotionToast.error(
+            description: Text(
+              widget.lastResponseStatusCode() == 403
+                  ? "You don't have permission to approve/disapprove."
+                  : (actionType == ActionType.approve
+                      ? "Failed to approve!"
+                      : "Failed to disapprove!"),
+            ),
+            toastAlignment: Alignment.center,
+          ).show(context);
+          setState(() => _submitting = false);
+          Navigator.pop(context);
+          return;
+        }
+      }
+
+      String successMessage;
+      switch (actionType) {
+        case ActionType.draft:
+          successMessage = "Saved successfully!";
+          break;
+        case ActionType.submit:
+          successMessage = "Submitted successfully!";
+          break;
+        case ActionType.approve:
+          successMessage = "Approved successfully!";
+          break;
+        case ActionType.disapprove:
+          successMessage = "Disapproved successfully!";
+          break;
       }
 
       MotionToast.success(
-        description: Text(
-          actionType == ActionType.draft
-              ? "Saved successfully!"
-              : "Submitted successfully!",
-        ),
+        description: Text(successMessage),
         toastAlignment: Alignment.center,
       ).show(context);
       widget.onSaved();
@@ -2218,6 +2540,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           _selectedDisapproved[i] ?? false,
           PgsStatus.notStarted,
           pgsId,
+          i,
           remarks: '',
           rowVersion: '',
         ),
@@ -2225,24 +2548,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     }
     return list;
   }
-
-  // ---------------------------------------------------------------------------
-  //  BUILD
-  // ---------------------------------------------------------------------------
-  static const _monthsShort = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -2273,7 +2578,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: primaryColor.withOpacity(.15),
+              color: primaryColor.withValues(alpha: .15),
               blurRadius: 40,
               offset: const Offset(0, 8),
             ),
@@ -2286,13 +2591,16 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             _periodSelector(isMobile),
             _tabBar(isMobile),
             Flexible(
-              child: TabBarView(
-                controller: _tabs,
-                children: [
-                  _tab1Strategic(isMobile),
-                  _tab2Readiness(isMobile),
-                  _tab3Deliverables(isMobile),
-                ],
+              child: Form(
+                key: _formKey,
+                child: TabBarView(
+                  controller: _tabs,
+                  children: [
+                    _tab1Strategic(isMobile),
+                    _tab2Readiness(isMobile),
+                    _tab3Deliverables(isMobile),
+                  ],
+                ),
               ),
             ),
             _footer(isMobile),
@@ -2316,7 +2624,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                 height: isMobile ? 42 : 52,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _kPrimaryBg,
+                  color: kPrimaryBg,
                   border: Border.all(color: primaryColor, width: 2),
                 ),
                 child: ClipOval(
@@ -2342,7 +2650,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: isMobile ? 11 : 14,
-                      color: _kTextDark,
+                      color: kText,
                       letterSpacing: 0.3,
                     ),
                   ),
@@ -2362,15 +2670,11 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           child: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: _kBg,
+              color: kBg,
               shape: BoxShape.circle,
-              border: Border.all(color: _kBorder),
+              border: Border.all(color: kBorder),
             ),
-            child: Icon(
-              Icons.close,
-              size: isMobile ? 16 : 18,
-              color: _kTextMid,
-            ),
+            child: Icon(Icons.close, size: isMobile ? 16 : 18, color: kTextMid),
           ),
         ),
       ],
@@ -2384,6 +2688,10 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       return "$start to $end";
     }
 
+    bool hasEditPermission = _permissionService.hasPermission(
+      AppPermissions.editPerformanceGovernanceSystem,
+    );
+
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 24,
@@ -2392,22 +2700,18 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(width: 6),
           DropdownButton<int>(
             value: _selectedPeriodId,
             hint: Text(
               _activePeriods.isEmpty
                   ? 'No periods available'
                   : 'Select PGS Period',
-              style: TextStyle(
-                fontSize: isMobile ? 11 : 13,
-                color: _kTextLight,
-              ),
+              style: TextStyle(fontSize: isMobile ? 11 : 13, color: kTextLight),
             ),
             underline: const SizedBox(),
             style: TextStyle(
               fontSize: isMobile ? 11 : 13,
-              color: _kTextDark,
+              color: kText,
               fontWeight: FontWeight.w500,
             ),
             items:
@@ -2417,15 +2721,16 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                     child: Text(formatPeriodRange(p)),
                   );
                 }).toList(),
-            onChanged: (v) {
-              setState(() {
-                _selectedPeriodId = v;
-                _selectedPeriodObject = widget.filteredListPeriod.firstWhere(
-                  (p) => p['id'] == v,
-                  orElse: () => {},
-                );
-              });
-            },
+            onChanged:
+                !hasEditPermission
+                    ? null
+                    : (v) {
+                      setState(() {
+                        _selectedPeriodId = v;
+                        _selectedPeriodObject = widget.filteredListPeriod
+                            .firstWhere((p) => p['id'] == v, orElse: () => {});
+                      });
+                    },
           ),
         ],
       ),
@@ -2434,12 +2739,12 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
 
   Widget _tabBar(bool isMobile) => Container(
     decoration: const BoxDecoration(
-      border: Border(bottom: BorderSide(color: _kBorder, width: 1.5)),
+      border: Border(bottom: BorderSide(color: kBorder, width: 1.5)),
     ),
     child: TabBar(
       controller: _tabs,
       labelColor: primaryColor,
-      unselectedLabelColor: _kTextLight,
+      unselectedLabelColor: kTextLight,
       indicatorColor: primaryColor,
       indicatorWeight: 2.5,
       labelStyle: TextStyle(
@@ -2456,15 +2761,54 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
   );
 
   Widget _footer(bool isMobile) {
-    final isEdit = widget.existingPgs != null;
+    final id = widget.existingPgs?['id'];
+    final isDraftSafe = widget.existingPgs?['isDraft'] as bool? ?? true;
+    final isAnyDisapproved = _selectedDisapproved.values.any((v) => v == true);
+    final String currentUserId = widget.userId.trim();
+
+    final rawSignatories =
+        widget.existingPgs?['rawSignatories'] ??
+        widget.existingPgs?['signatories'];
+
+    List<Map<String, dynamic>> pgsSignatories = [];
+    if (rawSignatories is List) {
+      for (final s in rawSignatories) {
+        if (s is Map<String, dynamic>) {
+          pgsSignatories.add(s);
+        } else if (s is PgsSignatory) {
+          pgsSignatories.add(s.toJson());
+        }
+      }
+    }
+
+    Map<String, dynamic>? nextSignatory;
+    for (final s in pgsSignatories) {
+      final isNext = s['isNextStatus'];
+      final isNextBool =
+          isNext is bool ? isNext : isNext?.toString().toLowerCase() == 'true';
+      if (isNextBool == true) {
+        nextSignatory = s;
+        break;
+      }
+    }
+
+    final nextSignatoryId =
+        nextSignatory?['signatoryId']?.toString().trim() ?? '';
+    final isCurrentUserNextSignatory =
+        nextSignatoryId.isNotEmpty && nextSignatoryId == currentUserId;
+
+    final showConfirmButton = !isDraftSafe && isCurrentUserNextSignatory;
+    final showDraftSubmit =
+        pgsSignatories.isEmpty || isAnyDisapproved || id == null;
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 24,
         vertical: isMobile ? 10 : 14,
       ),
       decoration: const BoxDecoration(
-        color: _kBg,
-        border: Border(top: BorderSide(color: _kBorder)),
+        color: kBg,
+        border: Border(top: BorderSide(color: kBorder)),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
       ),
       child: Row(
@@ -2482,64 +2826,109 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                 ),
               ),
             ),
-          OutlinedButton(
-            onPressed:
-                _submitting ? null : () => _submitAction(ActionType.draft),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: primaryColor,
-              side: const BorderSide(color: primaryColor),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 14 : 22,
-                vertical: isMobile ? 8 : 12,
+
+          if (showDraftSubmit)
+            PermissionWidget(
+              permission: AppPermissions.draftPerformanceGovernanceSystem,
+              child: OutlinedButton(
+                onPressed:
+                    _submitting
+                        ? null
+                        : () {
+                          if (!_formKey.currentState!.validate()) return;
+                          _submitAction(ActionType.draft);
+                        },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primaryColor,
+                  side: const BorderSide(color: primaryColor),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 14 : 22,
+                    vertical: isMobile ? 8 : 12,
+                  ),
+                ),
+                child: Text(
+                  'Save as Draft',
+                  style: TextStyle(
+                    fontSize: isMobile ? 11 : 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
-            child: Text(
-              'Save as Draft',
-              style: TextStyle(
-                fontSize: isMobile ? 11 : 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed:
-                _submitting
-                    ? null
-                    : () => _submitAction(
-                      isEdit ? ActionType.approve : ActionType.submit,
+
+          if (showDraftSubmit && id != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: PermissionWidget(
+                permission: AppPermissions.draftPerformanceGovernanceSystem,
+                child: ElevatedButton(
+                  onPressed:
+                      _submitting
+                          ? null
+                          : () => _submitAction(ActionType.submit),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 18 : 28,
-                vertical: isMobile ? 8 : 12,
-              ),
-              elevation: 2,
-            ),
-            child: Text(
-              isEdit ? 'Confirm' : 'Submit',
-              style: TextStyle(
-                fontSize: isMobile ? 11 : 13,
-                fontWeight: FontWeight.w700,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 18 : 28,
+                      vertical: isMobile ? 8 : 12,
+                    ),
+                    elevation: 2,
+                  ),
+                  child: Text(
+                    'Submit',
+                    style: TextStyle(
+                      fontSize: isMobile ? 11 : 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
+
+          if (showConfirmButton)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: PermissionWidget(
+                permission: AppPermissions.confirmPerformanceGovernanceSystem,
+                child: ElevatedButton(
+                  onPressed:
+                      _submitting
+                          ? null
+                          : () => _submitAction(ActionType.approve),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 18 : 28,
+                      vertical: isMobile ? 8 : 12,
+                    ),
+                    elevation: 2,
+                  ),
+                  child: Text(
+                    'Confirm',
+                    style: TextStyle(
+                      fontSize: isMobile ? 11 : 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  // ---------------------------------------------------------------------------
-  //  TABLE CELLS
-  // ---------------------------------------------------------------------------
   Widget _groupCell(String text, int flex, Color bg) => Expanded(
     flex: flex,
     child: Container(
@@ -2564,7 +2953,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
   Widget _subCell(String text, int flex) => Expanded(
     flex: flex,
     child: Container(
-      color: _kPrimaryBg,
+      color: kPrimaryBg,
       padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
       child: Text(
         text,
@@ -2572,7 +2961,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         style: const TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 12,
-          color: _kTextDark,
+          color: kText,
           letterSpacing: 0.4,
         ),
       ),
@@ -2610,13 +2999,13 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _groupCell(
-          officeName.toUpperCase(),
+          'Office: ${officeName.toUpperCase()}',
           _fHandle + _fNo + _fProcess + _fKra,
           primaryColor,
         ),
-        _groupCell('ALIGNMENT', _fDirect + _fIndirect, _kPrimaryLight),
-        _groupCell('PGS DELIVERABLES STATUS', _fDeliv, primaryColor),
-        _groupCell('40%', _fByWhen + _fAction, _kAccentDark),
+        _groupCell('ALIGNMENT', _fDirect + _fIndirect, primaryColor),
+        _groupCell('STRATEGIC CONTRIBUTIONS  ', _fDeliv, primaryColor),
+        _groupCell('40%', _fByWhen + _fAction, primaryColor),
       ],
     ),
   );
@@ -2624,7 +3013,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
   Widget _subHeaderRow({required String actionLabel}) => Container(
     decoration: BoxDecoration(
       border: Border.symmetric(
-        horizontal: BorderSide(color: _kBorder, width: 1),
+        horizontal: BorderSide(color: kBorder, width: 1),
       ),
     ),
     child: IntrinsicHeight(
@@ -2645,9 +3034,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     ),
   );
 
-  // ---------------------------------------------------------------------------
-  //  TAB 1 — STRATEGIC CONTRIBUTIONS
-  // ---------------------------------------------------------------------------
   Widget _tab1Strategic(bool isMobile) {
     if (isMobile) {
       return SingleChildScrollView(
@@ -2667,15 +3053,18 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   _mobileRowCard(i, key: _rowKeys[i]),
               ],
             ),
-            TextButton.icon(
-              onPressed: _addRow,
-              icon: const Icon(Icons.add, size: 16, color: primaryColor),
-              label: const Text(
-                '+ Add Row',
-                style: TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+            PermissionWidget(
+              permission: AppPermissions.editPerformanceGovernanceSystem,
+              child: TextButton.icon(
+                onPressed: _addRow,
+                icon: const Icon(Icons.add, size: 16, color: primaryColor),
+                label: const Text(
+                  'Add Row',
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
@@ -2691,7 +3080,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
           child: Container(
             decoration: BoxDecoration(
-              border: Border.all(color: _kBorder),
+              border: Border.all(color: kBorder),
               borderRadius: BorderRadius.circular(8),
             ),
             clipBehavior: Clip.hardEdge,
@@ -2709,9 +3098,9 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             child: Container(
               decoration: BoxDecoration(
                 border: Border(
-                  left: BorderSide(color: _kBorder),
-                  right: BorderSide(color: _kBorder),
-                  bottom: BorderSide(color: _kBorder),
+                  left: BorderSide(color: kBorder),
+                  right: BorderSide(color: kBorder),
+                  bottom: BorderSide(color: kBorder),
                 ),
                 borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(8),
@@ -2719,6 +3108,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               ),
               clipBehavior: Clip.hardEdge,
               child: ReorderableListView.builder(
+                scrollController: _listScrollController,
                 itemCount: _rows.length,
                 onReorder: _onReorder,
                 proxyDecorator: _proxyDecorator,
@@ -2727,19 +3117,22 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: _addRow,
-              icon: const Icon(Icons.add, size: 16, color: primaryColor),
-              label: const Text(
-                '+ Add Row',
-                style: TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+        PermissionWidget(
+          permission: AppPermissions.editPerformanceGovernanceSystem,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+            child: Align(
+              alignment: Alignment.center,
+              child: TextButton.icon(
+                onPressed: _addRow,
+                icon: const Icon(Icons.add, size: 16, color: primaryColor),
+                label: const Text(
+                  'Add Row',
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
@@ -2759,7 +3152,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         (_, __) => Material(
           color: Colors.transparent,
           elevation: 6,
-          shadowColor: primaryColor.withOpacity(.3),
+          shadowColor: primaryColor.withValues(alpha: .3),
           borderRadius: BorderRadius.circular(8),
           child: Opacity(opacity: .9, child: child),
         ),
@@ -2772,12 +3165,17 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     _delivRoadmapCtrl.putIfAbsent(i, () => TextEditingController());
     _processMap.putIfAbsent(i, () => '');
     final row = _rows[i];
-    final rowColor = i.isEven ? Colors.white : _kBg;
-
+    final rowColor = i.isEven ? Colors.white : kBg;
+    final hasDeletePermission = _permissionService.hasPermission(
+      AppPermissions.deletePerformanceGovernanceSystem,
+    );
+    final hasDisapprovePermission = _permissionService.hasPermission(
+      AppPermissions.disapprovePerformanceGovernanceSystem,
+    );
     return Container(
       key: key,
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: _kBorder, width: 0.8)),
+        border: Border(bottom: BorderSide(color: kBorder, width: 0.8)),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -2792,7 +3190,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                     child: Icon(
                       Icons.drag_indicator,
                       size: 18,
-                      color: _kTextLight,
+                      color: kTextLight,
                     ),
                   ),
                 ),
@@ -2814,9 +3212,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               _fNo,
               rowColor,
             ),
-            // ✅ REVISED: buildProcess-style dropdown with roadmap dialog
             _dataCell(_buildProcessCell(i), _fProcess, rowColor),
-            // ✅ KRA TextField with roadmap sample below
             _dataCell(_buildKraCell(i), _fKra, rowColor),
             _dataCell(
               Center(
@@ -2825,7 +3221,11 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   activeColor: primaryColor,
                   visualDensity: VisualDensity.compact,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  onChanged: (_) => setState(() => row.isDirect = true),
+                  onChanged:
+                      (_) =>
+                          !hasDeletePermission
+                              ? null
+                              : setState(() => row.isDirect = true),
                 ),
               ),
               _fDirect,
@@ -2838,32 +3238,188 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   activeColor: primaryColor,
                   visualDensity: VisualDensity.compact,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  onChanged: (_) => setState(() => row.isDirect = false),
+                  onChanged:
+                      (_) =>
+                          !hasDeletePermission
+                              ? null
+                              : setState(() => row.isDirect = false),
                 ),
               ),
               _fIndirect,
               rowColor,
             ),
-            // ✅ Deliverables with sample below
             _dataCell(_buildDeliverablesCell(i), _fDeliv, rowColor),
             _dataCell(Center(child: _byWhenBtn(i)), _fByWhen, rowColor),
             _dataCell(
-              Center(
-                child: Tooltip(
-                  message: 'Remove row',
-                  child: InkWell(
-                    onTap: () => _removeRow(i),
-                    borderRadius: BorderRadius.circular(4),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(
-                        Icons.delete_outline,
-                        color: primaryColor,
-                        size: 16,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (hasDeletePermission)
+                    Tooltip(
+                      message: 'Remove row',
+                      child: IconButton(
+                        icon: const Icon(
+                          CupertinoIcons.delete_simple,
+                          color: Colors.red,
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder:
+                                (context) => AlertDialog(
+                                  title: const Text('Confirm Delete'),
+                                  content: const Text(
+                                    'Are you sure you want to delete this row?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text(
+                                        'Cancel',
+                                        style: TextStyle(
+                                          color: primaryTextColor,
+                                        ),
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryColor,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 10,
+                                          horizontal: 16,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        _removeRow(i);
+                                      },
+                                      child: const Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                          );
+                        },
                       ),
                     ),
-                  ),
-                ),
+                  if (hasDeletePermission) const SizedBox(height: 8),
+                  if (hasDisapprovePermission)
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: [
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.thumb_up,
+                                color:
+                                    _selectedDisapproved[i] == false
+                                        ? Colors.green
+                                        : grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedDisapproved[i] = false;
+                                  _reasonCtrl[i]?.clear();
+                                });
+                              },
+                            ),
+                            const Text(
+                              'Approve',
+                              style: TextStyle(fontSize: 10),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.thumb_down,
+                                color:
+                                    _selectedDisapproved[i] == true
+                                        ? Colors.red
+                                        : grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedDisapproved[i] = true;
+                                });
+                              },
+                            ),
+                            const Text(
+                              'Disapprove',
+                              style: TextStyle(fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  if (hasDisapprovePermission &&
+                      _selectedDisapproved[i] == true) ...[
+                    gap14px,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Reason for Disapproval",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          TextField(
+                            controller:
+                                _reasonCtrl[i] ??= TextEditingController(),
+                            maxLines: 3,
+                            style: const TextStyle(fontSize: 12),
+                            decoration: InputDecoration(
+                              hintText: "Enter reason...",
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 10,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: Colors.redAccent,
+                                  width: 1.5,
+                                ),
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.info_outline,
+                                size: 18,
+                                color: Colors.redAccent,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
               _fAction,
               rowColor,
@@ -2874,12 +3430,8 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  //  ✅ REVISED: _buildProcessCell — like buildProcess in file 2
-  //    Shows a dropdown that, on selection, opens the KRA roadmap dialog
-  // ---------------------------------------------------------------------------
+  // ── OPTIMIZED: _buildProcessCell uses cache on onChanged ─────────────────
   Widget _buildProcessCell(int i) {
-    final current = _processMap[i] ?? '';
     final hasEditPermission = _permissionService.hasPermission(
       AppPermissions.editPerformanceGovernanceSystem,
     );
@@ -2892,332 +3444,458 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         key: ValueKey('proc_tooltip_$i'),
         maxLines: 5,
         message: tooltipMsg,
-        child: Container(
-          key: _kraDropdownKeys.putIfAbsent(i, () => GlobalKey()),
-          child: DropdownButtonFormField<int?>(
-            dropdownColor: Colors.white,
-            isExpanded: true,
-            value: _selectedKRA[i],
-            hint:
-                _processLoading
-                    ? Row(
-                      children: const [
-                        SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        SizedBox(width: 6),
-                        Text('Loading…', style: TextStyle(fontSize: 11)),
-                      ],
-                    )
-                    : const Text(
-                      '-- Select Process --',
-                      style: TextStyle(fontSize: 11),
-                    ),
-            onChanged:
-                !hasEditPermission
-                    ? null
-                    : (int? newValue) async {
-                      if (newValue == null) return;
+        child: DropdownButtonFormField<int?>(
+          dropdownColor: Colors.white,
+          isExpanded: true,
+          initialValue: _selectedKRA[i],
+          hint:
+              _processLoading
+                  ? const Row(
+                    children: [
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 6),
+                      Text('Loading…', style: TextStyle(fontSize: 11)),
+                    ],
+                  )
+                  : const Text(
+                    '-- Select Process --',
+                    style: TextStyle(fontSize: 11),
+                  ),
+          onChanged:
+              !hasEditPermission
+                  ? null
+                  : (int? newValue) async {
+                    if (newValue == null) return;
+                    setState(() {
+                      _selectedKRA[i] = newValue;
+                      _selectedKRAObjects[i] = _options.firstWhere(
+                        (o) => o['id'] == newValue,
+                        orElse:
+                            () => {'id': newValue, 'name': '', 'remarks': ''},
+                      );
+                      _processMap[i] = _selectedKRAObjects[i]!['name'] ?? '';
+                      _selectedKRAText[i] = '';
+                      _kraCtrl[i]?.clear();
+                      _kraDropdownOptions[i] = [];
+                    });
 
-                      setState(() {
-                        _selectedKRA[i] = newValue;
-                        _selectedKRAObjects[i] = _options.firstWhere(
-                          (o) => o['id'] == newValue,
-                          orElse:
-                              () => {'id': newValue, 'name': '', 'remarks': ''},
-                        );
-                        _processMap[i] = _selectedKRAObjects[i]!['name'] ?? '';
-                      });
-
-                      // Load roadmap descriptions for this KRA
-                      final data = await _roadMapService.getAllKraDescriptions(
+                    // Check cache first — no API call if already fetched
+                    List<dynamic> data;
+                    if (_kraDescCache.containsKey(newValue)) {
+                      data = _kraDescCache[newValue]!;
+                    } else {
+                      data = await _roadMapService.getAllKraDescriptions(
                         kraId: newValue,
                       );
+                      _kraDescCache[newValue] = data;
+                    }
 
-                      setState(() {
-                        _hasDataMap[i] = data.isNotEmpty;
-                        _kraDescsByIndex[i] = data;
-                      });
-
-                      if (data.isEmpty) return;
-
-                      // Show roadmap dialog (same as buildProcess in file 2)
-                      try {
-                        final selected = await showGeneralDialog<String>(
-                          context: context,
-                          barrierDismissible: false,
-                          barrierLabel: 'KRA Roadmap',
-                          barrierColor: Colors.black.withOpacity(0.4),
-                          transitionDuration: const Duration(milliseconds: 200),
-                          pageBuilder: (_, __, ___) {
-                            return Center(
-                              child: Material(
-                                elevation: 8,
-                                borderRadius: BorderRadius.circular(12),
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 500,
-                                    maxHeight: 480,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            const Expanded(
-                                              child: Text(
-                                                'Select a KRA from the roadmap to anchor your entry',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.close,
-                                                size: 20,
-                                              ),
-                                              splashRadius: 18,
-                                              onPressed:
-                                                  () =>
-                                                      Navigator.of(
-                                                        context,
-                                                      ).pop(),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const Divider(height: 1),
-                                      Expanded(
-                                        child: ListView(
-                                          padding: EdgeInsets.zero,
-                                          children:
-                                              data.asMap().entries.map((entry) {
-                                                final idx = entry.key;
-                                                final d = entry.value;
-                                                final desc =
-                                                    d['kraDescription'] ?? '';
-                                                return ListTile(
-                                                  title: Text(
-                                                    "${idx + 1}. $desc",
-                                                  ),
-                                                  onTap:
-                                                      () => Navigator.of(
-                                                        context,
-                                                      ).pop(desc),
-                                                );
-                                              }).toList(),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        );
-
-                        if (selected == null) return;
-
-                        setState(() {
-                          _kraRoadmapCtrl
-                              .putIfAbsent(i, () => TextEditingController())
-                              .text = selected;
-                        });
-
-                        // Filter roadmap to get sample deliverable
-                        int filterYear = DateTime.now().year;
-                        if (_selectedPeriodObject != null &&
-                            _selectedPeriodObject!['startDate'] != null) {
-                          final parsed = DateTime.tryParse(
-                            _selectedPeriodObject!['startDate'],
-                          );
-                          if (parsed != null) filterYear = parsed.year;
-                        }
-
-                        final filter = KraRoadmapFilter(
-                          kraId: newValue,
-                          year: filterYear,
-                          kraDescription: selected,
-                          isDirect: _rows[i].isDirect,
-                        );
-
-                        try {
-                          final result = await _roadMapService.kraRoadmapFilter(
-                            filter,
-                          );
-                          setState(() {
-                            _delivRoadmapCtrl
-                                .putIfAbsent(i, () => TextEditingController())
-                                .clear();
-                            _kraRoadmapCtrl[i]!.clear();
-                            if (result.isNotEmpty) {
-                              if (result.first['deliverableDescription']
-                                      ?.toString()
-                                      .trim()
-                                      .isNotEmpty ==
-                                  true) {
-                                _delivRoadmapCtrl[i]!.text =
-                                    result.first['deliverableDescription'];
-                              }
-                              if (result.first['kraDescription']
-                                      ?.toString()
-                                      .trim()
-                                      .isNotEmpty ==
-                                  true) {
-                                _kraRoadmapCtrl[i]!.text =
-                                    result.first['kraDescription'];
-                              }
-                            }
-                          });
-                        } catch (_) {}
-                      } catch (_) {}
-                    },
-            items:
-                _options.map<DropdownMenuItem<int?>>((option) {
-                  return DropdownMenuItem<int?>(
-                    value: option['id'],
-                    child: Text(
-                      option['name'],
-                      style: const TextStyle(fontSize: 11),
-                    ),
-                  );
-                }).toList(),
-            validator:
-                (value) => value == null ? "Please select process" : null,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            ),
+                    if (!mounted) return;
+                    setState(() {
+                      _hasDataMap[i] = data.isNotEmpty;
+                      _kraDescsByIndex[i] = data;
+                      final List<String> opts =
+                          data
+                              .map<String>(
+                                (d) => d['kraDescription']?.toString() ?? '',
+                              )
+                              .where((s) => s.isNotEmpty)
+                              .toList();
+                      opts.add('Others');
+                      _kraDropdownOptions[i] = opts;
+                    });
+                  },
+          items:
+              _options.map<DropdownMenuItem<int?>>((option) {
+                return DropdownMenuItem<int?>(
+                  value: option['id'],
+                  child: Text(
+                    option['name'],
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                );
+              }).toList(),
+          validator: (value) => value == null ? "Please select process" : null,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           ),
         ),
       ),
     );
   }
 
-  // ---------------------------------------------------------------------------
-  //  ✅ KRA text field with roadmap sample below (like _buildDropdownKraCell)
-  // ---------------------------------------------------------------------------
   Widget _buildKraCell(int i) {
     _kraCtrl.putIfAbsent(i, () => TextEditingController());
     _kraRoadmapCtrl.putIfAbsent(i, () => TextEditingController());
+
     final hasEditPermission = _permissionService.hasPermission(
       AppPermissions.editPerformanceGovernanceSystem,
     );
+
+    final List<String> options = _kraDropdownOptions[i] ?? [];
+    final bool hasOptions = options.isNotEmpty;
+    final String savedKra = _kraCtrl[i]?.text ?? '';
+    if ((_selectedKRAText[i] == null || _selectedKRAText[i]!.isEmpty) &&
+        savedKra.isNotEmpty &&
+        !_changingKRA.contains(i)) {
+      final bool isRoadmapKra = options.contains(savedKra);
+      _selectedKRAText[i] = isRoadmapKra ? savedKra : 'Others';
+      _rows[i].isDirect = isRoadmapKra;
+      _isRetrievedData.add(i);
+    }
+
+    final String currentSelection = _selectedKRAText[i] ?? '';
+    final bool hasSelection = currentSelection.isNotEmpty;
+    final bool isOthers = currentSelection == 'Others';
+    final bool isChanging = _changingKRA.contains(i);
+    final bool isLocked = _isRetrievedData.contains(i);
+
+    Future<void> onChangeKraTapped() async {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder:
+            (ctx) => AlertDialog(
+              title: const Text('Change KRA?'),
+              content: const Text(
+                'Changing the KRA will clear the current selection. Do you want to continue?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: primaryTextColor),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  child: Text(
+                    'Yes, Change',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+      );
+
+      if (confirm == true) {
+        setState(() {
+          _selectedKRAText[i] = '';
+          _kraCtrl[i]?.clear();
+          _rows[i].isDirect = true;
+          _isRetrievedData.remove(i);
+          _changingKRA.add(i);
+        });
+      }
+    }
+
+    final changeKraButton = MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onChangeKraTapped,
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.swap_horiz, color: Colors.blue, size: 15),
+            Text(
+              'Change KRA',
+              style: TextStyle(fontSize: 11, color: Colors.blue),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (!hasOptions && !hasSelection && !isChanging) {
+      return Padding(
+        padding: const EdgeInsets.all(6),
+        child: AbsorbPointer(
+          child: TextFormField(
+            readOnly: true,
+            style: const TextStyle(fontSize: 11),
+            decoration: const InputDecoration(
+              hintText: 'Select a process first…',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (!hasSelection || isChanging) {
+      return Padding(
+        padding: const EdgeInsets.all(6),
+        child: DropdownButtonFormField<String>(
+          key: ValueKey('kra_dropdown_$i'),
+          initialValue: null,
+          isExpanded: true,
+          hint: const Text('-- Select KRA --', style: TextStyle(fontSize: 11)),
+          items:
+              options.map((opt) {
+                final isOthersOpt = opt == 'Others';
+                return DropdownMenuItem(
+                  value: opt,
+                  child: Row(
+                    children: [
+                      if (isOthersOpt)
+                        const Icon(
+                          Icons.edit,
+                          size: 14,
+                          color: Colors.blueAccent,
+                        ),
+                      if (isOthersOpt) const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          opt,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isOthersOpt ? Colors.blueAccent : kText,
+                            fontStyle:
+                                isOthersOpt
+                                    ? FontStyle.italic
+                                    : FontStyle.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+          onChanged:
+              !hasEditPermission
+                  ? null
+                  : (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _selectedKRAText[i] = value;
+                      _changingKRA.remove(i);
+                      _isRetrievedData.remove(i);
+                      if (value == 'Others') {
+                        _rows[i].isDirect = false;
+                        _kraCtrl[i]?.clear();
+                      } else {
+                        _rows[i].isDirect = true;
+                        _kraCtrl[i]?.text = value;
+                      }
+                    });
+                  },
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            isDense: true,
+          ),
+        ),
+      );
+    }
+
+    if (isOthers) {
+      return Padding(
+        padding: const EdgeInsets.all(6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              controller: _kraCtrl[i],
+              readOnly: !hasEditPermission || isLocked,
+              maxLines: null,
+              style: const TextStyle(fontSize: 12),
+              decoration: InputDecoration(
+                hintText: 'Type your KRA here…',
+                border: const OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: primaryColor.withValues(alpha: 0.5),
+                  ),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: primaryColor, width: 1.5),
+                ),
+                prefixIcon: Icon(
+                  isLocked ? Icons.lock_outline : Icons.edit,
+                  size: 14,
+                  color: primaryColor,
+                ),
+              ),
+              validator:
+                  (value) =>
+                      (value == null || value.isEmpty)
+                          ? 'Please type your KRA'
+                          : null,
+            ),
+            if (hasEditPermission) ...[
+              const SizedBox(height: 6),
+              changeKraButton,
+            ],
+          ],
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.all(6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CustomTooltip(
-            message:
-                'Enter a short description of what this KRA focuses on achieving.',
-            child: TextFormField(
-              readOnly: !hasEditPermission,
-              controller: _kraCtrl[i],
-              maxLines: null,
-              style: const TextStyle(fontSize: 11, color: _kTextDark),
-              decoration: const InputDecoration(
-                hintText: 'Enter KRA…',
-                hintStyle: TextStyle(color: _kTextLight, fontSize: 11),
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
-                isDense: true,
+          TextFormField(
+            controller: _kraCtrl[i],
+            readOnly: true,
+            maxLines: null,
+            style: const TextStyle(fontSize: 12),
+            decoration: const InputDecoration(
+              hintText: 'KRA description…',
+              border: OutlineInputBorder(),
+              isDense: true,
+              prefixIcon: Icon(
+                Icons.lock_outline,
+                size: 12,
+                color: primaryColor,
               ),
-              validator:
-                  (value) =>
-                      (value == null || value.isEmpty)
-                          ? "Please enter your KRA"
-                          : null,
             ),
           ),
-          // Sample KRA from roadmap (shown when direct alignment selected)
-          ValueListenableBuilder<TextEditingValue>(
-            valueListenable: _kraRoadmapCtrl.putIfAbsent(
-              i,
-              () => TextEditingController(),
-            ),
-            builder: (context, val, _) {
-              if (val.text.isEmpty || !(_rows[i].isDirect))
-                return const SizedBox.shrink();
-              return Container(
-                margin: const EdgeInsets.only(top: 6),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _kBg,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _kBorder),
-                ),
-                child: SelectableText.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Sample KRA from Roadmap\n',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      TextSpan(
-                        text: '(Copy this if your alignment is direct)\n\n',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.grey.shade500,
-                        ),
-                      ),
-                      TextSpan(
-                        text: val.text,
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 11,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+          if (hasEditPermission) ...[
+            const SizedBox(height: 6),
+            changeKraButton,
+          ],
         ],
       ),
     );
   }
 
-  // ---------------------------------------------------------------------------
-  //  ✅ Deliverables TextField with sample from roadmap below
-  // ---------------------------------------------------------------------------
   Widget _buildDeliverablesCell(int i) {
     _delivCtrl.putIfAbsent(i, () => TextEditingController());
     _delivRoadmapCtrl.putIfAbsent(i, () => TextEditingController());
+    originalDelivCtrl.putIfAbsent(i, () => TextEditingController());
+
     final hasEditPermission = _permissionService.hasPermission(
       AppPermissions.editPerformanceGovernanceSystem,
     );
+
+    final isDisapproved = _savedDisapproved[i] == true;
+
+    if (isDisapproved && clearedOnDisapprove[i] != true) {
+      originalDelivCtrl[i]!.text = _delivCtrl[i]?.text ?? '';
+      _delivCtrl[i]?.clear();
+      clearedOnDisapprove[i] = true;
+    }
 
     return Padding(
       padding: const EdgeInsets.all(6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (isDisapproved) ...[
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2554A).withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFC99591), width: 1),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCC4137),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.warning_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          "Disapproved",
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    "Reason for Disapproval",
+                    style: TextStyle(fontSize: 13, color: Color(0xFFB91C1C)),
+                  ),
+                  const SizedBox(height: 4),
+                  SelectableText(
+                    _reasonCtrl[i]?.text.isNotEmpty == true
+                        ? _reasonCtrl[i]!.text
+                        : 'No reason provided',
+                    style: const TextStyle(fontSize: 13, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(thickness: 0.3),
+                  const SizedBox(height: 6),
+                  const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.article_outlined,
+                        color: Colors.grey,
+                        size: 16,
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        'Original Submission',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B6B6B),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(
+                      minHeight: 60,
+                      maxHeight: 120,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8F8F8),
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '"${originalDelivCtrl[i]?.text.isNotEmpty == true ? originalDelivCtrl[i]!.text : 'No deliverable'}"',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.black87,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
           CustomTooltip(
             message:
                 'Specify the tangible results or outcomes tied to this responsibility.',
@@ -3225,43 +3903,41 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               readOnly: !hasEditPermission,
               controller: _delivCtrl[i],
               maxLines: null,
-              style: const TextStyle(fontSize: 11, color: _kTextDark),
+              style: const TextStyle(fontSize: 12, color: kText),
               decoration: const InputDecoration(
                 hintText: 'Enter deliverable…',
-                hintStyle: TextStyle(color: _kTextLight, fontSize: 11),
                 border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 8,
                   vertical: 8,
                 ),
                 isDense: true,
               ),
-              validator:
-                  (value) =>
-                      (value == null || value.isEmpty)
-                          ? "Please enter your deliverable"
-                          : null,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return isDisapproved
+                      ? "Please revise your deliverable"
+                      : "Please enter your deliverable";
+                }
+                return null;
+              },
             ),
           ),
-          // ✅ Sample deliverable from roadmap shown below
+          const SizedBox(height: 10),
           ValueListenableBuilder<TextEditingValue>(
-            valueListenable: _delivRoadmapCtrl.putIfAbsent(
-              i,
-              () => TextEditingController(),
-            ),
+            valueListenable: _delivRoadmapCtrl[i]!,
             builder: (context, val, _) {
-              if (val.text.isEmpty || (_delivCtrl[i]?.text.isNotEmpty == true))
+              if (val.text.isEmpty ||
+                  (_delivCtrl[i]?.text.isNotEmpty == true)) {
                 return const SizedBox.shrink();
+              }
               return Container(
                 margin: const EdgeInsets.only(top: 6),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _kBg,
+                  color: kBg,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _kBorder),
+                  border: Border.all(color: kBorder),
                 ),
                 child: SelectableText.rich(
                   TextSpan(
@@ -3293,9 +3969,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  //  TAB 2 — READINESS RATING
-  // ---------------------------------------------------------------------------
   Widget _tab2Readiness(bool isMobile) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 8 : 16),
@@ -3308,7 +3981,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               vertical: isMobile ? 10 : 14,
             ),
             decoration: BoxDecoration(
-              color: _kPrimaryLight,
+              color: primaryColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -3316,7 +3989,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
-                fontSize: isMobile ? 11 : 14,
+                fontSize: isMobile ? 11 : 24,
                 letterSpacing: 0.5,
               ),
             ),
@@ -3329,7 +4002,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: isMobile ? 10 : 12,
-                color: _kTextDark,
+                color: kText,
                 letterSpacing: 1.2,
               ),
             ),
@@ -3378,9 +4051,9 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             ),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [_kPrimaryBg, Colors.white],
+                colors: [kPrimaryBg, Colors.white],
               ),
-              border: Border.all(color: _kBorder),
+              border: Border.all(color: kBorder),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -3391,7 +4064,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: isMobile ? 11 : 13,
-                    color: _kTextDark,
+                    color: kText,
                   ),
                 ),
                 Container(
@@ -3404,7 +4077,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryColor.withOpacity(.3),
+                        color: primaryColor.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -3427,6 +4100,32 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     );
   }
 
+  Widget _scoreDropdown(double current, ValueChanged<double> onChange) {
+    return Container(
+      width: 80,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: kBg,
+        border: Border.all(color: kBorder),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<double>(
+          value: current,
+          isExpanded: true,
+          items: const [
+            DropdownMenuItem(value: 0, child: Center(child: Text("0"))),
+            DropdownMenuItem(value: 0.5, child: Center(child: Text("0.5"))),
+            DropdownMenuItem(value: 1, child: Center(child: Text("1"))),
+          ],
+          onChanged: (v) {
+            if (v != null) onChange(v);
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _readinessRow(
     String title,
     List<String> descs,
@@ -3443,7 +4142,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: isMobile ? 10 : 12,
-            color: _kTextDark,
+            color: kText,
             letterSpacing: 0.5,
           ),
         ),
@@ -3453,7 +4152,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               children: [
                 ...List.generate(descs.length, (i) {
                   final val = i * 0.5;
-                  final sel = val == current;
                   return GestureDetector(
                     onTap: () => onChange(val),
                     child: AnimatedContainer(
@@ -3461,12 +4159,9 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                       margin: const EdgeInsets.only(bottom: 6),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: sel ? primaryColor : _kPrimaryBg,
+                        color: ratingBgColor(val),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: sel ? _kAccentDark : _kPrimaryLight,
-                          width: sel ? 2 : 1,
-                        ),
+                        border: Border.all(color: kPrimaryLight),
                       ),
                       child: Row(
                         children: [
@@ -3475,7 +4170,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                             style: TextStyle(
                               fontWeight: FontWeight.w900,
                               fontSize: 18,
-                              color: sel ? Colors.white : primaryColor,
+                              color: ratingTextColor(val),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -3483,11 +4178,10 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                             child: Text(
                               descs[i],
                               style: TextStyle(
-                                fontSize: 10,
-                                color:
-                                    sel
-                                        ? Colors.white.withOpacity(.9)
-                                        : _kTextMid,
+                                fontSize: 12,
+                                color: ratingTextColor(
+                                  val,
+                                ).withValues(alpha: 0.9),
                               ),
                             ),
                           ),
@@ -3502,8 +4196,8 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: _kBg,
-                    border: Border.all(color: _kBorder),
+                    color: kBg,
+                    border: Border.all(color: kBorder),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -3533,17 +4227,16 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          color: sel ? primaryColor : _kPrimaryBg,
+                          color: ratingBgColor(val),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: sel ? _kAccentDark : _kPrimaryLight,
-                            width: sel ? 2 : 1,
-                          ),
+                          border: Border.all(color: kPrimaryLight),
                           boxShadow:
                               sel
                                   ? [
                                     BoxShadow(
-                                      color: primaryColor.withOpacity(.25),
+                                      color: primaryColor.withValues(
+                                        alpha: 0.25,
+                                      ),
                                       blurRadius: 8,
                                     ),
                                   ]
@@ -3556,7 +4249,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                               style: TextStyle(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 22,
-                                color: sel ? Colors.white : primaryColor,
+                                color: ratingTextColor(val),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -3564,11 +4257,10 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                               descs[i],
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 10,
-                                color:
-                                    sel
-                                        ? Colors.white.withOpacity(.9)
-                                        : _kTextMid,
+                                fontSize: 14,
+                                color: ratingTextColor(
+                                  val,
+                                ).withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -3578,36 +4270,13 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   );
                 }),
                 const SizedBox(width: 8),
-                Container(
-                  width: 60,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _kBg,
-                    border: Border.all(color: _kBorder),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    current.toString(),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 17,
-                      color: primaryColor,
-                    ),
-                  ),
-                ),
+                _scoreDropdown(current, onChange),
               ],
             ),
       ],
     );
   }
 
-  // ---------------------------------------------------------------------------
-  //  TAB 3 — PGS DELIVERABLES STATUS (read-only view of Tab 1 data)
-  // ---------------------------------------------------------------------------
   Widget _tab3Deliverables(bool isMobile) {
     if (isMobile) {
       return SingleChildScrollView(
@@ -3630,7 +4299,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
           child: Container(
             decoration: BoxDecoration(
-              border: Border.all(color: _kBorder),
+              border: Border.all(color: kBorder),
               borderRadius: BorderRadius.circular(8),
             ),
             clipBehavior: Clip.hardEdge,
@@ -3648,9 +4317,9 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             child: Container(
               decoration: BoxDecoration(
                 border: Border(
-                  left: BorderSide(color: _kBorder),
-                  right: BorderSide(color: _kBorder),
-                  bottom: BorderSide(color: _kBorder),
+                  left: BorderSide(color: kBorder),
+                  right: BorderSide(color: kBorder),
+                  bottom: BorderSide(color: kBorder),
                 ),
                 borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(8),
@@ -3672,12 +4341,12 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     _delivCtrl.putIfAbsent(i, () => TextEditingController());
     _kraCtrl.putIfAbsent(i, () => TextEditingController());
     final row = _rows[i];
-    final rowColor = i.isEven ? Colors.white : _kBg;
+    final rowColor = i.isEven ? Colors.white : kBg;
 
     return Container(
       key: key,
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: _kBorder, width: 0.8)),
+        border: Border(bottom: BorderSide(color: kBorder, width: 0.8)),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -3685,7 +4354,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           children: [
             _dataCell(
               Center(
-                child: Icon(Icons.drag_indicator, size: 18, color: _kBorder),
+                child: Icon(Icons.drag_indicator, size: 18, color: kBorder),
               ),
               _fHandle,
               rowColor,
@@ -3709,7 +4378,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                 padding: const EdgeInsets.all(6),
                 child: Text(
                   _processMap[i] ?? '',
-                  style: const TextStyle(fontSize: 11, color: _kTextDark),
+                  style: const TextStyle(fontSize: 12, color: kText),
                 ),
               ),
               _fProcess,
@@ -3722,7 +4391,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   _kraCtrl[i]?.text.isEmpty == true
                       ? '—'
                       : (_kraCtrl[i]?.text ?? '—'),
-                  style: const TextStyle(fontSize: 11, color: _kTextDark),
+                  style: const TextStyle(fontSize: 12, color: kText),
                 ),
               ),
               _fKra,
@@ -3735,7 +4404,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                       ? Icons.check_box
                       : Icons.check_box_outline_blank,
                   size: 16,
-                  color: row.isDirect ? primaryColor : _kTextLight,
+                  color: row.isDirect ? primaryColor : kTextLight,
                 ),
               ),
               _fDirect,
@@ -3748,7 +4417,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                       ? Icons.check_box
                       : Icons.check_box_outline_blank,
                   size: 16,
-                  color: !row.isDirect ? primaryColor : _kTextLight,
+                  color: !row.isDirect ? primaryColor : kTextLight,
                 ),
               ),
               _fIndirect,
@@ -3761,7 +4430,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   _delivCtrl[i]?.text.isEmpty == true
                       ? '—'
                       : (_delivCtrl[i]?.text ?? '—'),
-                  style: const TextStyle(fontSize: 11, color: _kTextDark),
+                  style: const TextStyle(fontSize: 12, color: kText),
                 ),
               ),
               _fDeliv,
@@ -3770,8 +4439,12 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             _dataCell(
               Center(
                 child: Text(
-                  row.byWhen.isEmpty ? '—' : row.byWhen,
-                  style: const TextStyle(fontSize: 10, color: _kTextMid),
+                  row.byWhen.isEmpty
+                      ? '—'
+                      : DateFormat(
+                        'MMMM yyyy',
+                      ).format(DateTime.parse(row.byWhen)),
+                  style: const TextStyle(fontSize: 12, color: kTextMid),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -3783,9 +4456,31 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _outlineBtn(Icons.bar_chart, 'Accomplishment'),
-                  const SizedBox(height: 3),
-                  _outlineBtn(Icons.grade_outlined, 'Breakthrough Scoring'),
+                  _outlineBtn(
+                    Icons.bar_chart,
+                    'Accomplishment',
+                    onTap: () => _showAccomplishmentDialog(i),
+                  ),
+                  gap6px,
+                  _outlineBtn(
+                    Icons.grade_outlined,
+                    'Breakthrough Scoring',
+                    onTap: () async {
+                      final deliverableId = _deliverableIds[i] ?? 0;
+                      if (deliverableId == 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Please save your deliverables first before viewing breakthrough scoring',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      await loadBreakThrough(deliverableId);
+                      _showBreakthroughDialog(i);
+                    },
+                  ),
                 ],
               ),
               _fAction,
@@ -3797,9 +4492,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  //  MOBILE HELPERS
-  // ---------------------------------------------------------------------------
   Widget _mobileOfficeHeader() => Container(
     decoration: BoxDecoration(
       color: primaryColor,
@@ -3822,7 +4514,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(.22),
+            color: Colors.white.withValues(alpha: .22),
             borderRadius: BorderRadius.circular(20),
           ),
           child: const Text(
@@ -3844,7 +4536,14 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     _kraRoadmapCtrl.putIfAbsent(i, () => TextEditingController());
     _delivRoadmapCtrl.putIfAbsent(i, () => TextEditingController());
     _processMap.putIfAbsent(i, () => '');
+
     final row = _rows[i];
+    final hasDeletePermission = _permissionService.hasPermission(
+      AppPermissions.deletePerformanceGovernanceSystem,
+    );
+    final hasDisapprovePermission = _permissionService.hasPermission(
+      AppPermissions.disapprovePerformanceGovernanceSystem,
+    );
 
     return Card(
       key: key,
@@ -3852,7 +4551,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(color: _kBorder),
+        side: const BorderSide(color: kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -3870,7 +4569,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                       child: Icon(
                         Icons.drag_indicator,
                         size: 20,
-                        color: _kTextLight,
+                        color: kTextLight,
                       ),
                     ),
                   ),
@@ -3879,7 +4578,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   width: 24,
                   height: 24,
                   decoration: const BoxDecoration(
-                    color: _kPrimaryBg,
+                    color: kPrimaryBg,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -3899,20 +4598,48 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
-                    color: _kTextDark,
+                    color: kText,
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: primaryColor,
-                    size: 18,
+                if (hasDeletePermission)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                      size: 18,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder:
+                            (context) => AlertDialog(
+                              title: const Text('Confirm Delete'),
+                              content: const Text(
+                                'Are you sure you want to delete this row?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    _removeRow(i);
+                                  },
+                                  child: const Text(
+                                    'Delete',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ),
+                      );
+                    },
                   ),
-                  onPressed: () => _removeRow(i),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -3979,6 +4706,131 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                 ),
               ],
             ),
+            if (hasDisapprovePermission) ...[
+              const SizedBox(height: 10),
+              const Divider(),
+              const SizedBox(height: 6),
+              _lbl('Approval'),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedDisapproved[i] = false;
+                          _reasonCtrl[i]?.clear();
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color:
+                              _selectedDisapproved[i] == false
+                                  ? Colors.green.withValues(alpha: 0.1)
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color:
+                                _selectedDisapproved[i] == false
+                                    ? Colors.green
+                                    : Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.thumb_up,
+                              color:
+                                  _selectedDisapproved[i] == false
+                                      ? Colors.green
+                                      : Colors.grey,
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              "Approve",
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedDisapproved[i] = true;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color:
+                              _selectedDisapproved[i] == true
+                                  ? Colors.red.withValues(alpha: 0.1)
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color:
+                                _selectedDisapproved[i] == true
+                                    ? Colors.red
+                                    : Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.thumb_down,
+                              color:
+                                  _selectedDisapproved[i] == true
+                                      ? Colors.red
+                                      : Colors.grey,
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              "Disapprove",
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (_selectedDisapproved[i] == true) ...[
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _reasonCtrl[i] ??= TextEditingController(),
+                  maxLines: 3,
+                  style: const TextStyle(fontSize: 12),
+                  decoration: InputDecoration(
+                    hintText: "Enter reason...",
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.info_outline,
+                      size: 18,
+                      color: Colors.red,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.red),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ],
         ),
       ),
@@ -3995,7 +4847,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(color: _kBorder),
+        side: const BorderSide(color: kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -4008,7 +4860,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   width: 24,
                   height: 24,
                   decoration: const BoxDecoration(
-                    color: _kPrimaryBg,
+                    color: kPrimaryBg,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -4029,7 +4881,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
-                      color: _kTextDark,
+                      color: kText,
                     ),
                   ),
                 ),
@@ -4039,7 +4891,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: row.isDirect ? _kPrimaryBg : const Color(0xFFDEEBFF),
+                    color: row.isDirect ? kPrimaryBg : const Color(0xFFDEEBFF),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -4061,7 +4913,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   : (_kraCtrl[i]?.text ?? ''),
               style: const TextStyle(
                 fontSize: 11,
-                color: _kTextMid,
+                color: kTextMid,
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -4073,7 +4925,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   : (_delivCtrl[i]?.text ?? ''),
               style: const TextStyle(
                 fontSize: 11,
-                color: _kTextMid,
+                color: kTextMid,
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -4101,81 +4953,651 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     style: const TextStyle(
       fontSize: 10,
       fontWeight: FontWeight.w700,
-      color: _kTextMid,
+      color: kTextMid,
       letterSpacing: 0.4,
     ),
   );
 
   Widget _byWhenBtn(int i) {
-    final hasDate = _rows[i].byWhen.isNotEmpty;
-    return Tooltip(
-      message: 'Select date',
-      child: InkWell(
-        onTap: () async {
-          final picked = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2020),
-            lastDate: DateTime(2030),
-            builder:
-                (ctx, child) => Theme(
-                  data: Theme.of(ctx).copyWith(
-                    colorScheme: const ColorScheme.light(primary: primaryColor),
+    final hasEditPermission = _permissionService.hasPermission(
+      AppPermissions.editPerformanceGovernanceSystem,
+    );
+
+    DateTime? safeParse(String? value) {
+      if (value == null || value.isEmpty) return null;
+      try {
+        return DateTime.parse(value);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    Future<void> pickMonth(FormFieldState<String> field) async {
+      if (_selectedPeriodObject == null || _selectedPeriodObject!.isEmpty) {
+        return;
+      }
+
+      final start = safeParse(_selectedPeriodObject?['startDate']);
+      final end = safeParse(_selectedPeriodObject?['endDate']);
+      if (start == null || end == null) return;
+
+      final current = safeParse(field.value);
+      final List<DateTime> months = [];
+      DateTime cursor = DateTime(start.year, start.month);
+      final endMonth = DateTime(end.year, end.month);
+      while (!cursor.isAfter(endMonth)) {
+        months.add(cursor);
+        cursor = DateTime(cursor.year, cursor.month + 1);
+      }
+      if (months.isEmpty) return;
+
+      final DateTime? picked = await showDialog<DateTime>(
+        context: context,
+        builder: (ctx) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 320, maxHeight: 420),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 16,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Select Month',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
                   ),
-                  child: child!,
-                ),
-          );
-          if (picked != null) {
-            setState(
-              () => _rows[i].byWhen = DateFormat('yyyy-MM-dd').format(picked),
-            );
-          }
-        },
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.calendar_month, size: 14, color: primaryColor),
-              Text(
-                hasDate
-                    ? '${_monthsShort[DateTime.parse(_rows[i].byWhen).month - 1]} '
-                        '${DateTime.parse(_rows[i].byWhen).year}'
-                    : 'Pick',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: hasDate ? primaryColor : _kTextLight,
-                  fontWeight: hasDate ? FontWeight.w600 : FontWeight.normal,
-                ),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
+                  Flexible(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: months.length,
+                      separatorBuilder:
+                          (_, __) => const Divider(
+                            height: 1,
+                            indent: 16,
+                            endIndent: 16,
+                          ),
+                      itemBuilder: (_, idx) {
+                        final m = months[idx];
+                        final isSelected =
+                            current != null &&
+                            current.year == m.year &&
+                            current.month == m.month;
+                        return ListTile(
+                          dense: true,
+                          selected: isSelected,
+                          selectedTileColor: kPrimaryBg,
+                          leading: Icon(
+                            Icons.calendar_month,
+                            size: 18,
+                            color: isSelected ? primaryColor : kTextLight,
+                          ),
+                          title: Text(
+                            DateFormat('MMMM yyyy').format(m),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight:
+                                  isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.normal,
+                              color: isSelected ? primaryColor : kText,
+                            ),
+                          ),
+                          trailing:
+                              isSelected
+                                  ? const Icon(
+                                    Icons.check,
+                                    size: 16,
+                                    color: primaryColor,
+                                  )
+                                  : null,
+                          onTap: () => Navigator.pop(ctx, m),
+                        );
+                      },
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: primaryColor),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          );
+        },
+      );
+
+      if (picked != null) {
+        final lastDay = DateTime(picked.year, picked.month + 1, 0);
+        final formatted = DateFormat('yyyy-MM-dd').format(lastDay);
+        setState(() => _rows[i].byWhen = formatted);
+        field.didChange(formatted);
+      }
+    }
+
+    return FormField<String>(
+      initialValue: _rows[i].byWhen,
+      validator: (value) {
+        if (value == null || value.isEmpty) return "Please select a month";
+        return null;
+      },
+      builder: (field) {
+        final hasDate = field.value != null && field.value!.isNotEmpty;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Tooltip(
+              message: 'Select month',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(6),
+                onTap: !hasEditPermission ? null : () => pickMonth(field),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.calendar_month,
+                        size: 14,
+                        color: primaryColor,
+                      ),
+                      Text(
+                        hasDate
+                            ? DateFormat(
+                              'MMMM yyyy',
+                            ).format(DateTime.parse(field.value!))
+                            : 'Pick',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: hasDate ? primaryColor : kTextLight,
+                          fontWeight:
+                              hasDate ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 16,
+              child:
+                  field.hasError
+                      ? Text(
+                        field.errorText!,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      )
+                      : null,
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _outlineBtn(IconData icon, String label) => OutlinedButton.icon(
-    onPressed: () {},
-    icon: Icon(icon, size: 11, color: primaryColor),
-    label: Text(
-      label,
-      style: const TextStyle(
-        fontSize: 9,
-        color: primaryColor,
-        fontWeight: FontWeight.w700,
-      ),
-      overflow: TextOverflow.ellipsis,
-    ),
-    style: OutlinedButton.styleFrom(
-      side: const BorderSide(color: primaryColor),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      minimumSize: Size.zero,
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    ),
-  );
+  Widget _outlineBtn(IconData icon, String label, {VoidCallback? onTap}) =>
+      OutlinedButton.icon(
+        onPressed: onTap ?? () {},
+        icon: Icon(icon, size: 11, color: primaryColor),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 9,
+            color: primaryColor,
+            fontWeight: FontWeight.w700,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: primaryColor),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      );
+
+  void _showAccomplishmentDialog(int index) async {
+    if (_selectedPeriodObject == null || _selectedPeriodObject!.isEmpty) {
+      MotionToast.warning(
+        description: const Text("Please select a period first."),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    final String? byWhen =
+        _rows[index].byWhen.isEmpty ? null : _rows[index].byWhen;
+    if (byWhen == null) {
+      MotionToast.warning(
+        description: const Text("Please set a 'By When' date first."),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    final int deliverableId = _deliverableIds[index] ?? 0;
+    if (deliverableId == 0) {
+      MotionToast.warning(
+        description: const Text(
+          "Please save the record first before adding accomplishments.",
+        ),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    final startDate = DateTime.parse(_selectedPeriodObject!['startDate']);
+    final endDate = DateTime.parse(_selectedPeriodObject!['endDate']);
+
+    final List<DateTime> startAndEndDates = [];
+    DateTime cursor = DateTime(startDate.year, startDate.month);
+    final endMonth = DateTime(endDate.year, endDate.month);
+    while (!cursor.isAfter(endMonth)) {
+      startAndEndDates.add(cursor);
+      cursor = DateTime(cursor.year, cursor.month + 1);
+    }
+
+    final int? kraId = _selectedKRA[index];
+    final String kraName =
+        _options.firstWhere(
+          (o) => o['id'] == kraId,
+          orElse: () => {'id': 0, 'name': 'Unknown'},
+        )['name'];
+
+    final String deliverableName = _delivCtrl[index]?.text ?? '';
+    final bool isDirect = _rows[index].isDirect;
+    final parsedByWhen = DateTime.parse(byWhen);
+    final String formattedByWhen = DateFormat('MMMM yyyy').format(parsedByWhen);
+    final formattedStart = DateFormat.yMMMMd().format(startDate);
+    final formattedEnd = DateFormat.yMMMMd().format(endDate);
+
+    final currentUser = await AuthUtil.fetchLoggedUser();
+    final String userId = currentUser?.id ?? '';
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: mainBgColor,
+          insetPadding: const EdgeInsets.all(20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1500),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "Accomplishment Form - $formattedStart to $formattedEnd",
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(child: Text("KRA: $kraName")),
+                                    Text(
+                                      "Monthly Tracking Periods: ${startAndEndDates.length} month(s)",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        "Deliverable: $deliverableName",
+                                      ),
+                                    ),
+                                    Text("Due: $formattedByWhen"),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Type: ${isDirect ? 'Direct' : 'Indirect'}",
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          const Row(
+                            children: [
+                              Icon(Icons.bar_chart_outlined, size: 18),
+                              SizedBox(width: 8),
+                              Text(
+                                "Monthly Accomplishment Tracking",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                    horizontal: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(8),
+                                      topRight: Radius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Period",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Status",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Percent Accomplishment",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Center(
+                                          child: Text(
+                                            "Remarks (Department Head)",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Proof",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Center(
+                                          child: Text(
+                                            "Remarks (Auditor)",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Divider(height: 1),
+                                AccomplishmentListView(
+                                  index: index,
+                                  startAndEndDates: startAndEndDates,
+                                  deliverableId: deliverableId,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  PermissionWidget(
+                    permission: AppPermissions.addPgsDeliverableAccomplishment,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(color: primaryColor),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final shouldSave = await showDialog<bool>(
+                              context: context,
+                              builder:
+                                  (ctx) => AlertDialog(
+                                    title: const Text("Confirm Save"),
+                                    content: const Text(
+                                      "Are you sure you want to save this data?",
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(ctx).pop(false),
+                                        child: Text(
+                                          "No",
+                                          style: TextStyle(color: primaryColor),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(ctx).pop(true),
+                                        child: Text(
+                                          "Yes",
+                                          style: TextStyle(color: primaryColor),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                            );
+                            if (shouldSave != true) return;
+                            await saveAccomplishmentData(deliverableId, userId);
+                            MotionToast.success(
+                              description: const Text('Saved Successfully'),
+                              toastAlignment: Alignment.topCenter,
+                            ).show(context);
+                            Navigator.of(context).pop(true);
+                          },
+                          child: const Text(
+                            "Save Accomplishment",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showBreakthroughDialog(int index) async {
+    final int deliverableId = _deliverableIds[index] ?? 0;
+    if (deliverableId == 0) {
+      MotionToast.warning(
+        description: const Text(
+          "Please save the record first before adding breakthrough scoring.",
+        ),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    final int? kraId = _selectedKRA[index];
+    final String kraName =
+        _options.firstWhere(
+          (o) => o['id'] == kraId,
+          orElse: () => {'id': 0, 'name': 'Unknown'},
+        )['name'];
+
+    final String deliverableName = _delivCtrl[index]?.text ?? '';
+    final bool isDirect = _rows[index].isDirect;
+
+    await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        final size = MediaQuery.of(dialogContext).size;
+        final isMobile = size.width < 700;
+
+        return Dialog(
+          backgroundColor: const Color(0xFFF3F4F6),
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 0 : 24,
+            vertical: isMobile ? 0 : 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(isMobile ? 0 : 16),
+          ),
+          child: SizedBox(
+            width: isMobile ? size.width : 720,
+            height: isMobile ? size.height : size.height * 0.90,
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                DialogHeader(
+                  isMobile: isMobile,
+                  onClose: () => Navigator.pop(dialogContext),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 14 : 24,
+                      vertical: 16,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        InfoPanel(
+                          kraName: kraName,
+                          deliverableName: deliverableName,
+                          isDirect: isDirect,
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star_outline_rounded,
+                              size: 16,
+                              color: Color(0xFF6B7280),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Breakthrough Scoring',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF374151),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        BreakthroughWidget(deliverableId: deliverableId),
+                      ],
+                    ),
+                  ),
+                ),
+                DialogFooter(
+                  isMobile: isMobile,
+                  dialogContext: dialogContext,
+                  deliverableId: deliverableId,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
