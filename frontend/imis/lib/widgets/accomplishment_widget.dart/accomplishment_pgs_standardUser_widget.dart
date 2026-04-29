@@ -1,4 +1,4 @@
-// ignore_for_file: file_names
+// ignore_for_file: use_build_context_synchronously, file_names
 
 import 'dart:io';
 import 'package:dio/dio.dart';

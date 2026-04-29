@@ -796,9 +796,7 @@ Future<void> loadScorecardAccomplishments(int deliverableId) async {
           });
 
           final hasFile =
-              acc.id != null &&
-              acc.attachmentPath != null &&
-              acc.attachmentPath!.isNotEmpty;
+              acc.attachmentPath != null && acc.attachmentPath!.isNotEmpty;
 
           return ScorecardMonitoringRowData(
             auditorRemarksController: TextEditingController(text: acc.remarks),
@@ -842,9 +840,7 @@ Future<void> loadKPIAccomplishments(int kpi) async {
           });
 
           final hasFile =
-              acc.id != null &&
-              acc.attachmentPath != null &&
-              acc.attachmentPath!.isNotEmpty;
+              acc.attachmentPath != null && acc.attachmentPath!.isNotEmpty;
 
           return ScorecardMonitoringRowData(
             auditorRemarksController: TextEditingController(text: acc.remarks),
