@@ -62,6 +62,8 @@ class ApiEndpoint {
   late String kraroadmapkpiAccomplishment;
   late String kraRoadmapCoreAndSupport;
   late String usersFilter;
+  late String allOffices;
+  late String officeServices;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -122,13 +124,17 @@ class ApiEndpoint {
     kraroadmapkpiAccomplishment = '$baseUrl/kraRoadmapKpiAccomplishment';
     kraRoadmapCoreAndSupport = '$baseUrl/KraRoadmapCoreAndSupport';
     usersFilter = '$baseUrl/users/filter';
+    allOffices = '$baseUrl/office/alloffices';
+    officeServices = '$baseUrl/office/pgs/services';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
       baseUrl = 'https://localhost:7273';
-    } else if (kReleaseMode) {
-      baseUrl = 'https://api.cpems.crmc.ph';
-    } else {
+    }
+    // else if (kReleaseMode) {
+    //   baseUrl = 'https://api.cpems.crmc.ph';
+    // }
+    else {
       throw Exception("Test base Url is not specified!");
     }
   }
