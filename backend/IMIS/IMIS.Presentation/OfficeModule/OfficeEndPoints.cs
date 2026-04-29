@@ -40,6 +40,15 @@ namespace IMIS.Presentation.OfficeModule
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
 
+            app.MapGet("/alloffices", async (IOfficeService service, CancellationToken cancellationToken) =>
+            {
+                var offices = await service.GetAllOfficeAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(offices);
+            })
+            .WithTags(_officeTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
+
             //// Get offices filtered for PGS Auditor
             app.MapGet("/pgs-auditor", async (IOfficeService service, CancellationToken cancellationToken) =>
             {

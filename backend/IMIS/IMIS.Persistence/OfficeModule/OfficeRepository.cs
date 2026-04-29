@@ -38,6 +38,14 @@ namespace IMIS.Persistence.OfficeModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
+        public async Task<IEnumerable<Office>?> GetAllOfficeAsync(CancellationToken cancellationToken)
+        {
+            return await _entities            
+                .Include(o => o.AuditorOffices)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
         public async Task<IEnumerable<Office>?> GetAllSpecificServicesAsync(CancellationToken cancellationToken)
         {
             return await _entities
