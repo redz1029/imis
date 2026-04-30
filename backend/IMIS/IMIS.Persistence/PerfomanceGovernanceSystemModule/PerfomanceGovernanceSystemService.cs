@@ -255,8 +255,8 @@ namespace IMIS.Persistence.PgsModule
 
             return clonedTemplates.OrderBy(t => t.OrderLevel);
         }
-
-        public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(
+        
+        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetByUserIdAsync(
         string userId,
         string roleId,
         int page,
@@ -265,14 +265,17 @@ namespace IMIS.Persistence.PgsModule
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
-                return new List<PerfomanceGovernanceSystemDto>();
+                return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(
+                    new List<PerfomanceGovernanceSystem>(), page, pageSize, 0);
 
             var role = await _roleManager.FindByIdAsync(roleId);
             if (role == null)
-                return new List<PerfomanceGovernanceSystemDto>();
+                return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(
+                    new List<PerfomanceGovernanceSystem>(), page, pageSize, 0);
 
             if (!await _userManager.IsInRoleAsync(currentUser, role.Name!))
-                return new List<PerfomanceGovernanceSystemDto>();
+                return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(
+                    new List<PerfomanceGovernanceSystem>(), page, pageSize, 0);
 
             List<PerfomanceGovernanceSystemDto> dtos;
 
@@ -293,7 +296,7 @@ namespace IMIS.Persistence.PgsModule
             {
                 dtos = await GetStandardUserPgsAsync(userId, cancellationToken);
             }
-           
+
             dtos = dtos
                 .OrderByDescending(d => d.PgsSignatories!
                     .Any(s => s.SignatoryId == userId && s.IsNextStatus))
@@ -303,16 +306,24 @@ namespace IMIS.Persistence.PgsModule
                 .ThenByDescending(d => d.PgsPeriod!.StartDate)
                 .ToList();
 
+            //================= CONVERT TO ENTITY =================
+            var entities = dtos
+                .Select(dto => dto.ToEntity())
+                .ToList();
+
             // ================= PAGINATION =================
-            var pagedDtos = dtos
+            var totalCount = entities.Count;
+
+            var pagedEntities = entities
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
 
-            return pagedDtos;
+            // ================= FINAL =================
+            return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
+                .Create(pagedEntities, page, pageSize, totalCount);
         }
-
-
+        
         private async Task<List<PerfomanceGovernanceSystemDto>> GetServiceHeadPgsAsync(string userId, CancellationToken cancellationToken)
         {
             var records = await _repository.GetByUserIdAsync(userId, cancellationToken);
@@ -842,14 +853,15 @@ namespace IMIS.Persistence.PgsModule
             }
             else
             {
-                // ===================== NORMAL USER =====================
-                var userDtos = await GetByUserIdAsync(
-                    currentUser.Id,
-                    roleId,
-                    filter.Page,
-                    filter.PageSize,
-                    cancellationToken).ConfigureAwait(false)
-                    ?? new List<PerfomanceGovernanceSystemDto>();
+                // ===================== NORMAL USER =====================               
+                var userPage = await GetByUserIdAsync(
+                currentUser.Id,
+                roleId,
+                filter.Page,
+                filter.PageSize,
+                cancellationToken).ConfigureAwait(false);
+
+                var userDtos = userPage.Items; 
 
                 var filteredDtos = userDtos
                     .Where(dto =>
@@ -869,7 +881,10 @@ namespace IMIS.Persistence.PgsModule
                     })
                     .ToList();
 
-                filteredEntities = filteredDtos.Select(dto => dto.ToEntity()).ToList();
+                filteredEntities = filteredDtos
+                    .Select(dto => dto.ToEntity())
+                    .ToList();
+
             }
 
             var pagedPgs = DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
