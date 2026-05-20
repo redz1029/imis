@@ -26,17 +26,12 @@ class DeliverableStatusMonitoringService {
     }
   }
 
-  Future<void> saveAccomplishment(FormData formData) async {
-    final id =
-        formData.fields
-            .firstWhere((f) => f.key == 'id', orElse: () => MapEntry('id', ''))
-            .value;
+  Future<void> saveAccomplishment(FormData formData, {int? id}) async {
     final url =
-        ApiEndpoint().pgsDeliverableAccomplishment +
-        (id.isNotEmpty ? '/$id' : '');
+        ApiEndpoint().pgsDeliverableAccomplishment + (id != null ? '/$id' : '');
 
     final response =
-        id.isNotEmpty
+        id != null
             ? await AuthenticatedRequest.put(dio, url, data: formData)
             : await AuthenticatedRequest.post(dio, url, data: formData);
 
@@ -69,7 +64,7 @@ class DeliverableStatusMonitoringService {
           'attachmentPath': acc.attachmentPath ?? '',
           'deliverableName': acc.deliverableName ?? '',
           'pgsStatus': acc.pgsStatus ?? '',
-          'byWhen': acc.byWhen.toIso8601String(),
+          'byWhen': acc.byWhen?.toIso8601String(),
         },
       ],
     );
