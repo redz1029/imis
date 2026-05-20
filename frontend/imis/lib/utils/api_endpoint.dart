@@ -64,6 +64,12 @@ class ApiEndpoint {
   late String usersFilter;
   late String allOffices;
   late String officeServices;
+  late String accomplishmemnt;
+  late String operationReviewProtocol;
+  late String pgsidlist;
+  late String pgs;
+  late String reportProtocol;
+  late String pgsAccomplishment;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -126,15 +132,20 @@ class ApiEndpoint {
     usersFilter = '$baseUrl/users/filter';
     allOffices = '$baseUrl/office/alloffices';
     officeServices = '$baseUrl/office/pgs/services';
+    accomplishmemnt = '$baseUrl/accomplishments';
+    operationReviewProtocol = '$baseUrl/operationReviewProtocol';
+    pgsidlist = '$baseUrl/pgsidlist';
+    pgs = '$baseUrl/pgs';
+    reportProtocol = '$baseUrl/report/pdf';
+    pgsAccomplishment = '$baseUrl/pgs/accomplishments';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
       baseUrl = 'https://localhost:7273';
-    }
-    // else if (kReleaseMode) {
-    //   baseUrl = 'https://api.cpems.crmc.ph';
-    // }
-    else {
+    } else if (kReleaseMode) {
+      baseUrl = 'https://api.cpems.crmc.ph';
+      // baseUrl = 'http://192.168.0.74';
+    } else {
       throw Exception("Test base Url is not specified!");
     }
   }
