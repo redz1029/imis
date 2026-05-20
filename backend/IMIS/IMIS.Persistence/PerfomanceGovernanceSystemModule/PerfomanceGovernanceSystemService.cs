@@ -753,213 +753,11 @@ namespace IMIS.Persistence.PgsModule
             return await SaveOrUpdateAsync(pgs, cancellationToken).ConfigureAwait(false);
         }
 
-        //public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(
-        //PgsFilter filter,
-        //string userId,
-        //string roleId,
-        //CancellationToken cancellationToken)
-        //{
-        //    var currentUser = await GetCurrentUserAsync();
-        //    if (currentUser == null)
-        //    {
-        //        return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
-        //            .Create(new List<PerfomanceGovernanceSystem>(), filter.Page, filter.PageSize, 0);
-        //    }
-
-        //    var role = await _roleManager.FindByIdAsync(roleId);
-        //    if (role == null)
-        //    {
-        //        return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
-        //            .Create(new List<PerfomanceGovernanceSystem>(), filter.Page, filter.PageSize, 0);
-        //    }
-
-        //    var isUserInRole = await _userManager.IsInRoleAsync(currentUser, role.Name!);
-        //    if (!isUserInRole)
-        //    {
-        //        return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
-        //            .Create(new List<PerfomanceGovernanceSystem>(), filter.Page, filter.PageSize, 0);
-        //    }
-
-        //    var activeRoleName = role.Name;
-
-        //    var isAdmin = activeRoleName!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase);
-        //    var isPgsManager = activeRoleName.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase);
-
-        //    // =====================  GET PARENT  CHILD OFFICE IDS =====================
-        //    var officeIds = new List<int>();
-
-        //    if (filter.OfficeId.HasValue)
-        //    {
-        //        var allOffices = await _officeRepository.GetAll(cancellationToken);
-
-        //        officeIds = allOffices!
-        //            .Where(o => o.Id == filter.OfficeId.Value || o.ParentOfficeId == filter.OfficeId.Value)
-        //            .Select(o => o.Id)
-        //            .ToList();
-        //    }
-
-        //    List<PerfomanceGovernanceSystem> filteredEntities;
-
-        //    // ===================== ADMIN / PGS MANAGER =====================
-        //    if (isPgsManager || isAdmin)
-        //    {
-        //        var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false)
-        //                      ?? new List<PerfomanceGovernanceSystemDto>();
-
-        //        var filteredDtos = allDtos
-        //            .Where(dto =>
-        //            {
-        //                bool matches = true;
-
-        //                if (filter.OfficeId.HasValue)
-        //                    matches &= officeIds.Contains(dto.Office.Id);
-
-        //                if (filter.FromDate.HasValue)
-        //                    matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
-
-        //                if (filter.ToDate.HasValue)
-        //                    matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
-
-        //                return matches;
-        //            })
-        //            .ToList();
-
-        //        var processedDtos = new List<PerfomanceGovernanceSystemDto>();
-
-        //        foreach (var dto in filteredDtos)
-        //        {
-        //            var processedDto = await ProcessPGSSignatories(
-        //                dto.ToEntity(),
-        //                dto.Office.Id.ToString(),
-        //                cancellationToken);
-
-        //            processedDtos.Add(processedDto);
-        //        }
-
-        //        filteredEntities = processedDtos.Select(dto => dto.ToEntity()).ToList();
-        //    }
-        //    else
-        //    {
-        //        // ===================== NORMAL USER =====================
-        //        var userDtos = await GetByUserIdAsync(
-        //            currentUser.Id,
-        //            roleId,
-        //            filter.Page,
-        //            filter.PageSize,
-        //            cancellationToken).ConfigureAwait(false)
-        //            ?? new List<PerfomanceGovernanceSystemDto>();
-
-        //        var filteredDtos = userDtos
-        //            .Where(dto =>
-        //            {
-        //                bool matches = true;
-
-        //                if (filter.OfficeId.HasValue)
-        //                    matches &= officeIds.Contains(dto.Office.Id);
-
-        //                if (filter.FromDate.HasValue)
-        //                    matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
-
-        //                if (filter.ToDate.HasValue)
-        //                    matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
-
-        //                return matches;
-        //            })
-        //            .ToList();
-
-        //        filteredEntities = filteredDtos.Select(dto => dto.ToEntity()).ToList();
-        //    }
-
-        //    var pagedPgs = DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
-        //        .Create(filteredEntities, filter.Page, filter.PageSize, filteredEntities.Count);
-
-        //    // ===================== SIGNATORY PROCESSING =====================
-        //    foreach (var item in pagedPgs.Items)
-        //    {
-        //        if (item.PgsSignatories == null)
-        //            item.PgsSignatories = new List<PgsSignatoryDto>();
-
-        //        foreach (var signatory in item.PgsSignatories)
-        //        {
-        //            if (signatory.PgsSignatoryTemplateId != null)
-        //            {
-        //                var template = await _signatoryTemplateRepository
-        //                    .GetByIdAsync(signatory.PgsSignatoryTemplateId.Value, cancellationToken);
-
-        //                signatory.Label = template.SignatoryLabel;
-        //                signatory.Status = template.Status;
-        //                signatory.OrderLevel = template.OrderLevel;
-        //            }
-
-        //            var user = await _userManager.FindByIdAsync(signatory.SignatoryId);
-        //            if (user != null)
-        //            {
-        //                signatory.SignatoryName =
-        //                    $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}";
-        //            }
-
-        //            signatory.IsNextStatus = false;
-        //        }
-
-        //        var nextSignatory = item.PgsSignatories
-        //            .Where(s => s.DateSigned == null || s.DateSigned == DateTime.MinValue)
-        //            .OrderBy(s => s.OrderLevel)
-        //            .FirstOrDefault();
-
-        //        if (nextSignatory != null)
-        //        {
-        //            nextSignatory.IsNextStatus = true;
-        //        }
-        //        else
-        //        {
-        //            var signatoryTemplates = await GetSignatoryTemplates(item.Office.ToEntity(), cancellationToken);
-        //            var maxOrder = item.PgsSignatories.Any()
-        //                ? item.PgsSignatories.Max(s => s.OrderLevel)
-        //                : -1;
-
-        //            var nextTemplate = signatoryTemplates
-        //                .Where(t => t.OrderLevel > maxOrder && t.DefaultSignatoryId == currentUser.Id)
-        //                .OrderBy(t => t.OrderLevel)
-        //                .FirstOrDefault();
-
-        //            if (nextTemplate != null)
-        //            {
-        //                var user = await _userManager.FindByIdAsync(currentUser.Id);
-
-        //                if (user != null)
-        //                {
-        //                    var newSignatory = new PgsSignatoryDto
-        //                    {
-        //                        Id = 0,
-        //                        PgsId = item.Id,
-        //                        PgsSignatoryTemplateId = nextTemplate.Id,
-        //                        SignatoryId = currentUser.Id,
-        //                        Status = nextTemplate.Status,
-        //                        Label = nextTemplate.SignatoryLabel,
-        //                        OrderLevel = nextTemplate.OrderLevel,
-        //                        SignatoryName =
-        //                            $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}",
-        //                        IsNextStatus = true
-        //                    };
-
-        //                    item.PgsSignatories.Add(newSignatory);
-        //                }
-        //            }
-        //        }
-
-        //        item.IsDraft = !item.PgsSignatories.Any(s => s.Id > 0);
-        //    }
-
-        //    return pagedPgs;
-        //}
-
-
-
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(
-PgsFilter filter,
-string userId,
-string roleId,
-CancellationToken cancellationToken)
+        PgsFilter filter,
+        string userId,
+        string roleId,
+        CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
@@ -983,14 +781,17 @@ CancellationToken cancellationToken)
             }
 
             var activeRoleName = role.Name;
+
             var isAdmin = activeRoleName!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase);
             var isPgsManager = activeRoleName.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase);
 
             // =====================  GET PARENT  CHILD OFFICE IDS =====================
             var officeIds = new List<int>();
+
             if (filter.OfficeId.HasValue)
             {
                 var allOffices = await _officeRepository.GetAll(cancellationToken);
+
                 officeIds = allOffices!
                     .Where(o => o.Id == filter.OfficeId.Value || o.ParentOfficeId == filter.OfficeId.Value)
                     .Select(o => o.Id)
@@ -1009,17 +810,22 @@ CancellationToken cancellationToken)
                     .Where(dto =>
                     {
                         bool matches = true;
+
                         if (filter.OfficeId.HasValue)
                             matches &= officeIds.Contains(dto.Office.Id);
+
                         if (filter.FromDate.HasValue)
                             matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
+
                         if (filter.ToDate.HasValue)
                             matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
+
                         return matches;
                     })
                     .ToList();
 
                 var processedDtos = new List<PerfomanceGovernanceSystemDto>();
+
                 foreach (var dto in filteredDtos)
                 {
                     var processedDto = await ProcessPGSSignatories(
@@ -1047,12 +853,16 @@ CancellationToken cancellationToken)
                     .Where(dto =>
                     {
                         bool matches = true;
+
                         if (filter.OfficeId.HasValue)
                             matches &= officeIds.Contains(dto.Office.Id);
+
                         if (filter.FromDate.HasValue)
                             matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
+
                         if (filter.ToDate.HasValue)
                             matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
+
                         return matches;
                     })
                     .ToList();
@@ -1060,15 +870,8 @@ CancellationToken cancellationToken)
                 filteredEntities = filteredDtos.Select(dto => dto.ToEntity()).ToList();
             }
 
-            // ===================== APPLY PAGING =====================
-            var totalCount = filteredEntities.Count;
-            var pagedEntities = filteredEntities
-                .Skip((filter.Page - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToList();
-
             var pagedPgs = DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
-                .Create(pagedEntities, filter.Page, filter.PageSize, totalCount);
+                .Create(filteredEntities, filter.Page, filter.PageSize, filteredEntities.Count);
 
             // ===================== SIGNATORY PROCESSING =====================
             foreach (var item in pagedPgs.Items)
@@ -1122,6 +925,7 @@ CancellationToken cancellationToken)
                     if (nextTemplate != null)
                     {
                         var user = await _userManager.FindByIdAsync(currentUser.Id);
+
                         if (user != null)
                         {
                             var newSignatory = new PgsSignatoryDto
@@ -1148,11 +952,5 @@ CancellationToken cancellationToken)
 
             return pagedPgs;
         }
-
     }
-
-
-
-
-
 }
