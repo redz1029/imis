@@ -24,11 +24,12 @@ final permissionService = PermissionService();
 class AccomplishmentRowWidget extends StatefulWidget {
   final DateTime date;
   final TrackingRowData row;
-
+  final void Function(PgsStatus newStatus)? onStatusChanged;
   const AccomplishmentRowWidget({
     super.key,
     required this.date,
     required this.row,
+    this.onStatusChanged,
   });
 
   @override
@@ -253,7 +254,6 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                     ),
                   );
                 }
-
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 6),
                   child: DropdownButtonFormField<PgsStatus>(
@@ -276,6 +276,8 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                           percentageController.text == '100') {
                         percentageController.text = '1';
                       }
+
+                      widget.onStatusChanged?.call(newValue);
                     },
                     items:
                         PgsStatus.values.map((value) {
@@ -541,7 +543,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
             ),
           ),
 
-          SizedBox(width: 20),
+          const SizedBox(width: 20),
 
           Expanded(
             flex: 2,
@@ -609,26 +611,6 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                                         ),
                                   );
                                 },
-                                // child: ClipRRect(
-                                //   borderRadius: BorderRadius.circular(6),
-                                //   child: Image.network(
-                                //     previewUrl,
-                                //     height: 80,
-                                //     width: double.infinity,
-                                //     fit: BoxFit.cover,
-                                //     errorBuilder: (context, error, stackTrace) {
-                                //       return Container(
-                                //         height: 80,
-                                //         color: Colors.grey.shade200,
-                                //         child: const Center(
-                                //           child: Icon(
-                                //             Icons.image_not_supported,
-                                //           ),
-                                //         ),
-                                //       );
-                                //     },
-                                //   ),
-                                // ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(6),
                                   child:
@@ -745,7 +727,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
               ),
             ),
           ),
-          SizedBox(width: 20),
+          const SizedBox(width: 20),
           Expanded(
             flex: 3,
             child: Center(
@@ -786,8 +768,10 @@ class _AccomplishmentListViewState extends State<AccomplishmentListView> {
   @override
   void initState() {
     super.initState();
-    loadAccomplishments(widget.deliverableId).then((_) {
-      setState(() {});
+    loadAccomplishments(widget.deliverableId, widget.startAndEndDates).then((
+      _,
+    ) {
+      if (mounted) setState(() {});
     });
   }
 
@@ -800,8 +784,10 @@ class _AccomplishmentListViewState extends State<AccomplishmentListView> {
 
     while (achievementsList[widget.deliverableId]!.rows.length <
         widget.startAndEndDates.length) {
+      final idx = achievementsList[widget.deliverableId]!.rows.length;
       achievementsList[widget.deliverableId]!.rows.add(
         TrackingRowData(
+          date: widget.startAndEndDates[idx],
           remarksController: TextEditingController(),
           percentageController: TextEditingController(text: '0'),
           status: ValueNotifier<PgsStatus>(PgsStatus.notStarted),
@@ -809,6 +795,7 @@ class _AccomplishmentListViewState extends State<AccomplishmentListView> {
         ),
       );
     }
+
     return ListView.builder(
       shrinkWrap: true,
       itemCount: widget.startAndEndDates.length,
@@ -816,7 +803,19 @@ class _AccomplishmentListViewState extends State<AccomplishmentListView> {
         final row = achievementsList[widget.deliverableId]!.rows[i];
         return Column(
           children: [
-            AccomplishmentRowWidget(date: widget.startAndEndDates[i], row: row),
+            AccomplishmentRowWidget(
+              date: widget.startAndEndDates[i],
+              row: row,
+              onStatusChanged: (newStatus) {
+                if (newStatus == PgsStatus.completed) {
+                  final rows = achievementsList[widget.deliverableId]!.rows;
+                  for (int j = i + 1; j < rows.length; j++) {
+                    rows[j].status.value = PgsStatus.completed;
+                    rows[j].percentageController.text = '100';
+                  }
+                }
+              },
+            ),
             if (i != widget.startAndEndDates.length - 1)
               const Divider(height: 1),
           ],
@@ -831,17 +830,21 @@ Future<void> saveAccomplishmentData(
   String userId,
 ) async {
   final periodData = achievementsList[currentDeliverableId];
-
   if (periodData == null) return;
 
   for (var row in periodData.rows) {
+    final postingDate =
+        row.date != null
+            ? DateTime(row.date!.year, row.date!.month, 1).toIso8601String()
+            : null;
+
     MultipartFile? attachment;
-    if (!kIsWeb && row.attachmentPath != null) {
+    if (!kIsWeb && row.attachmentPath != null && !row.attachmentDeleted) {
       attachment = await MultipartFile.fromFile(
         row.attachmentPath!,
         filename: row.attachmentPath!.split("/").last,
       );
-    } else if (row.attachmentBytes != null) {
+    } else if (row.attachmentBytes != null && !row.attachmentDeleted) {
       attachment = MultipartFile.fromBytes(
         row.attachmentBytes!,
         filename: row.attachmentPath?.split("/").last ?? "upload.bin",
@@ -851,8 +854,9 @@ Future<void> saveAccomplishmentData(
     final data = {
       if (row.accomplishmentId != null) "id": row.accomplishmentId,
       "pgsDeliverableId": currentDeliverableId,
-      "postingDate": DateTime.now().toIso8601String(),
+      if (postingDate != null) "postingDate": postingDate,
       "userId": userId,
+      "status": row.status.value.toInt(),
       "percentAccomplished":
           double.tryParse(row.percentageController.text) ?? 0,
       "remarks": row.remarksController.text,
@@ -866,14 +870,20 @@ Future<void> saveAccomplishmentData(
     });
 
     try {
-      await _accomplishmentService.saveAccomplishment(formData);
+      await _accomplishmentService.saveAccomplishment(
+        formData,
+        id: row.accomplishmentId,
+      );
     } catch (e) {
       debugPrint("Failed to save accomplishment: $e");
     }
   }
 }
 
-Future<void> loadAccomplishments(int deliverableId) async {
+Future<void> loadAccomplishments(
+  int deliverableId,
+  List<DateTime> startAndEndDates,
+) async {
   try {
     final accomplishments = await _accomplishmentService.fetchAccomplishments(
       deliverableId,
@@ -881,16 +891,34 @@ Future<void> loadAccomplishments(int deliverableId) async {
 
     achievementsList[deliverableId] = AchievementPeriodData(
       rows:
-          accomplishments.map((acc) {
+          accomplishments.asMap().entries.map((entry) {
+            final i = entry.key;
+            final acc = entry.value;
             final percent = acc.percentAccomplished ?? 0;
 
+            final DateTime rowDate =
+                i < startAndEndDates.length
+                    ? DateTime(
+                      startAndEndDates[i].year,
+                      startAndEndDates[i].month,
+                      1,
+                    )
+                    : (DateTime(
+                      acc.postingDate.year,
+                      acc.postingDate.month,
+                      1,
+                    ));
+
             return TrackingRowData(
+              date: rowDate,
               remarksController: TextEditingController(text: acc.remarks),
               percentageController: TextEditingController(
                 text: percent.toString(),
               ),
               status: ValueNotifier<PgsStatus>(
-                _deriveStatusFromPercent(percent),
+                acc.status != null
+                    ? PgsStatusExtension.fromInt(acc.status!)
+                    : _deriveStatusFromPercent(percent),
               ),
               auditorRemarksController: TextEditingController(
                 text: acc.auditorRemarks,

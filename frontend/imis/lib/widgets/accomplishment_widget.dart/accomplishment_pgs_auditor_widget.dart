@@ -26,6 +26,9 @@ class AchievementPeriodData {
 }
 
 class TrackingRowData {
+  DateTime? date;
+  final int? periodMonth;
+  final int? periodYear;
   final TextEditingController remarksController;
   final TextEditingController auditorRemarksController;
   final TextEditingController percentageController;
@@ -39,6 +42,9 @@ class TrackingRowData {
   final ValueNotifier<int> refreshTrigger = ValueNotifier(0);
 
   TrackingRowData({
+    this.date,
+    this.periodMonth,
+    this.periodYear,
     required this.remarksController,
     required this.percentageController,
     required this.status,
@@ -70,6 +76,8 @@ class TrackingRowWidget extends StatefulWidget {
   final int periodIndex;
   final int totalPeriods;
   final int deliverableId;
+  final int periodMonth;
+  final int periodYear;
 
   const TrackingRowWidget({
     super.key,
@@ -77,6 +85,8 @@ class TrackingRowWidget extends StatefulWidget {
     required this.periodIndex,
     required this.totalPeriods,
     required this.deliverableId,
+    required this.periodMonth,
+    required this.periodYear,
   });
 
   @override
@@ -635,6 +645,8 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
           percentageController: TextEditingController(text: '0'),
           status: ValueNotifier<PgsStatus>(PgsStatus.notStarted),
           auditorRemarksController: TextEditingController(),
+          periodMonth: widget.periodMonth,
+          periodYear: widget.periodYear,
         ),
       );
     }
@@ -708,15 +720,32 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                     ),
                     onChanged: (newValue) {
                       if (newValue == null) return;
-                      selectedStatus.value = newValue;
+
+                      final rows = achievementsList[widget.deliverableId]!.rows;
+
+                      void applyStatus(int index, PgsStatus status) {
+                        final r = rows[index];
+                        r.status.value = status;
+                        if (status == PgsStatus.completed) {
+                          r.percentageController.text = '100';
+                        } else if (status == PgsStatus.notStarted) {
+                          r.percentageController.text = '0';
+                        } else if (status == PgsStatus.onGoing &&
+                            r.percentageController.text == '100') {
+                          r.percentageController.text = '1';
+                        }
+                      }
+
+                      applyStatus(widget.periodIndex, newValue);
 
                       if (newValue == PgsStatus.completed) {
-                        percentageController.text = '100';
-                      } else if (newValue == PgsStatus.notStarted) {
-                        percentageController.text = '0';
-                      } else if (newValue == PgsStatus.onGoing &&
-                          percentageController.text == '100') {
-                        percentageController.text = '1';
+                        for (
+                          int i = widget.periodIndex + 1;
+                          i < rows.length;
+                          i++
+                        ) {
+                          applyStatus(i, PgsStatus.completed);
+                        }
                       }
                     },
                     items:
@@ -883,27 +912,49 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
   }
 }
 
-Future<void> loadAccomplishments(int deliverableId) async {
+/// Pass the monthlyPeriods list so each row knows its month/year for postingDate.
+Future<void> loadAccomplishments(
+  int deliverableId,
+  List<Map<String, dynamic>> monthlyPeriods,
+) async {
   final accomplishments = await _accomplishmentService.fetchAccomplishments(
     deliverableId,
   );
 
   achievementsList[deliverableId] = AchievementPeriodData(
     rows:
-        accomplishments.map((acc) {
+        accomplishments.asMap().entries.map((entry) {
+          final i = entry.key;
+          final acc = entry.value;
           final percent = acc.percentAccomplished ?? 0;
+
+          final int? month =
+              monthlyPeriods.length > i
+                  ? monthlyPeriods[i]['month'] as int?
+                  : null;
+          final int? year =
+              monthlyPeriods.length > i
+                  ? monthlyPeriods[i]['year'] as int?
+                  : null;
+
           return TrackingRowData(
             remarksController: TextEditingController(text: acc.remarks),
             percentageController: TextEditingController(
               text: percent.toString(),
             ),
-            status: ValueNotifier<PgsStatus>(_deriveStatusFromPercent(percent)),
+            status: ValueNotifier<PgsStatus>(
+              acc.status != null
+                  ? PgsStatusExtension.fromInt(acc.status!)
+                  : _deriveStatusFromPercent(percent),
+            ),
             attachmentPath: acc.attachmentPath,
             attachmentBytes: null,
             accomplishmentId: acc.id,
             auditorRemarksController: TextEditingController(
               text: acc.auditorRemarks,
             ),
+            periodMonth: month,
+            periodYear: year,
           );
         }).toList(),
   );
@@ -925,11 +976,19 @@ Future<void> saveAccomplishmentData(
       final hasNewFile = row.attachmentBytes != null;
       final isUpdate = row.accomplishmentId != null;
 
+      final postingDate =
+          DateTime(
+            row.periodYear ?? DateTime.now().year,
+            row.periodMonth ?? DateTime.now().month,
+            1,
+          ).toIso8601String();
+
       final Map<String, dynamic> fields = {
         if (isUpdate) "id": row.accomplishmentId,
         "pgsDeliverableId": currentDeliverableId,
-        "postingDate": DateTime.now().toIso8601String(),
+        "postingDate": postingDate,
         "userId": userId,
+        "status": row.status.value.toInt(),
         "percentAccomplished":
             double.tryParse(row.percentageController.text) ?? 0,
         "remarks": row.remarksController.text,
