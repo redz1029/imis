@@ -18,4 +18,5 @@ class PermissionString {
   static const String linkagesOfficer = 'Linkages Officer';
   static const String informationOfficer = 'Information Officer';
   static const String researchOfficer = 'Research Officer';
+  static const String twg = 'TWG';
 }

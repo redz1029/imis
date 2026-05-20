@@ -18,14 +18,6 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  bool isDarkMode = false;
-
-  void toggleTheme(bool value) {
-    setState(() {
-      isDarkMode = value;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -39,17 +31,6 @@ class _MainAppState extends State<MainApp> {
         cardColor: Colors.white,
         hintColor: Colors.grey,
       ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        textTheme: GoogleFonts.interTextTheme(
-          ThemeData(brightness: Brightness.dark).textTheme,
-        ),
-        scaffoldBackgroundColor: Color(0xFF28282B),
-        primaryColor: primaryColor,
-        cardColor: const Color(0xff1E1E1E),
-        hintColor: Colors.grey[400],
-      ),
-      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: Sidebar(),
     );
   }

@@ -96,7 +96,7 @@ class UserOfficePageState extends State<UserOfficePage> {
     });
 
     () async {
-      final offices = await _commonService.fetchOffices();
+      final offices = await _commonService.fetchAlloffices();
       final users = await _commonService.fetchUsers();
 
       if (!mounted) return;

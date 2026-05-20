@@ -27,7 +27,6 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
   List<KraRoadmapPeriod> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
-
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;

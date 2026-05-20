@@ -11,7 +11,6 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/string_extension.dart';
-import 'package:imis/validator/validator.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -64,14 +63,14 @@ class UserProfileState extends State<UserProfilePage> {
   bool _isLoading = false;
   String? selectedPosition;
 
-  Future<void> fetchUserProfile({int page = 1, String? searchQuery}) async {
+  Future<void> fetchUserProfile({int? page, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
-
+    final targetPage = page ?? _currentPage;
     try {
       final pageList = await _userProfileService.getUsers(
-        page: page,
+        page: targetPage,
         pageSize: _pageSize,
         searchQuery: searchQuery,
       );
@@ -522,7 +521,6 @@ class UserProfileState extends State<UserProfilePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ── Header ──────────────────────────────────────────
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(
@@ -585,7 +583,6 @@ class UserProfileState extends State<UserProfilePage> {
                               _sectionLabel('Personal Information'),
                               SizedBox(height: 12),
 
-                              // Prefix + Suffix row
                               Row(
                                 children: [
                                   Expanded(
@@ -624,7 +621,6 @@ class UserProfileState extends State<UserProfilePage> {
                               ),
                               SizedBox(height: 12),
 
-                              // First + Middle row
                               Row(
                                 children: [
                                   Expanded(
@@ -638,7 +634,7 @@ class UserProfileState extends State<UserProfilePage> {
                                   Expanded(
                                     child: _styledField(
                                       controller: middleNameController,
-                                      label: 'Middle Name',
+                                      label: 'Middle Initial',
                                     ),
                                   ),
                                 ],
@@ -667,7 +663,6 @@ class UserProfileState extends State<UserProfilePage> {
                                 controller: emailController,
                                 label: 'Email',
                                 prefixIcon: Icons.email_outlined,
-                                validator: FormValidator.validateEmail,
                                 keyboardType: TextInputType.emailAddress,
                               ),
                               SizedBox(height: 12),
