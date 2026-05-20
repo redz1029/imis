@@ -32,17 +32,14 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   final ScrollController _headerHorizontalController = ScrollController();
   final ScrollController _kraScrollController = ScrollController();
   final ScrollController _kpiScrollController = ScrollController();
-
   final dio = Dio();
   final _commonService = CommonService(Dio());
   final _scorecardService = ScoreCardMonitoringServices(Dio());
   final permissionService = PermissionService();
-
   List<Map<String, dynamic>> kpiList = [];
   List<Map<String, dynamic>> roadmapList = [];
   List<Map<String, dynamic>> filteredList = [];
   String userId = "";
-
   bool isMenuOpenStartYear = false;
   bool isMenuOpenEndYear = false;
   bool isMenuOpenKra = false;
@@ -195,20 +192,14 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           controller: _verticalController,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── TITLE ──
-                const Text(
-                  'Scorecard Monitoring',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 20),
-
-                SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildPageHeader(isMobile),
+              gap4px,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -285,9 +276,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                           isActive: isMenuOpenStartYear,
                         ),
                       ),
-
                       const SizedBox(width: 8),
-
                       PopupMenuButton<int>(
                         color: Theme.of(context).cardColor,
                         onSelected: (value) async {
@@ -317,33 +306,73 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 26),
-
-                isLoading
-                    ? Center(
-                      child: CircularProgressIndicator(color: primaryColor),
-                    )
-                    : isMobile
-                    ? Column(
-                      children: [
-                        _buildKPITable(),
-                        const SizedBox(height: 16),
-                        _buildKRATable(),
-                      ],
-                    )
-                    : Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(flex: 2, child: _buildKPITable()),
-                        const SizedBox(width: 16),
-                        Expanded(flex: 3, child: _buildKRATable()),
-                      ],
-                    ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 26),
+              isLoading
+                  ? Center(
+                    child: CircularProgressIndicator(color: primaryColor),
+                  )
+                  : isMobile
+                  ? Column(
+                    children: [
+                      _buildKPITable(),
+                      const SizedBox(height: 16),
+                      _buildKRATable(),
+                    ],
+                  )
+                  : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 2, child: _buildKPITable()),
+                      const SizedBox(width: 16),
+                      Expanded(flex: 3, child: _buildKRATable()),
+                    ],
+                  ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPageHeader(bool isMobile) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.map, color: primaryColor, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Scorecard Monitoring",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1D23),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }
@@ -479,15 +508,10 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // KPI TABLE
-  // ─────────────────────────────────────────────
-
   Widget _buildKPITable() {
     final canView = permissionService.hasPermission(
       AppPermissions.viewKraRoadMapKpiAccomplishment,
     );
-
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -602,10 +626,6 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // SHARED HELPERS
-  // ─────────────────────────────────────────────
-
   Widget _headerCell(String text, {required int flex}) {
     return Expanded(
       flex: flex,
@@ -683,10 +703,6 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
     );
   }
 }
-
-// ─────────────────────────────────────────────
-// ROADMAP ACCOMPLISHMENT DIALOG
-// ─────────────────────────────────────────────
 
 Future<bool?> showRoadmapAccomplishmentFormDialog(
   BuildContext context,
@@ -1052,10 +1068,6 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
     },
   );
 }
-
-// ─────────────────────────────────────────────
-// KPI ACCOMPLISHMENT DIALOG
-// ─────────────────────────────────────────────
 
 Future<bool?> showKPIAccomplishmentFormDialog(
   BuildContext context,
