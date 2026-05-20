@@ -39,7 +39,7 @@ class DynamicSideColumn1 extends StatelessWidget {
                 const Divider(height: 8),
                 SizedBox(
                   width: 220,
-                  height: 240,
+                  height: 250,
                   child: TableCalendar(
                     firstDay: DateTime.utc(2020, 1, 1),
                     lastDay: DateTime.utc(2030, 12, 31),
