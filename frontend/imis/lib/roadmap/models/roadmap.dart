@@ -2,6 +2,7 @@ import 'package:imis/performance_governance_system/process_core_support/models/k
 import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
 import 'package:imis/roadmap/models/kpi_roadmap.dart';
 import 'package:imis/roadmap/models/roadmap_deliverables.dart';
+import 'package:imis/roadmap/models/roadmap_gut_check.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'roadmap.g.dart';
@@ -18,6 +19,7 @@ class Roadmap {
   List<DeliverableGroup>? deliverables;
   List<KpiRoadmap>? kpis;
   String roleId;
+  RoadmapGutCheck? roadmapGutCheck;
 
   Roadmap(
     this.id,
@@ -27,6 +29,7 @@ class Roadmap {
     this.deliverables,
     this.kpis,
     this.roleId, {
+    this.roadmapGutCheck,
     this.kra,
     this.rowVersion,
     this.isDeleted,
