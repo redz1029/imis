@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/permission_string.dart';
@@ -172,6 +174,16 @@ RoleInfo getRoleInfo(String role) {
         textColor: Colors.black,
         description:
             "Serve as the point person for research activities and initiatives.",
+      );
+    case PermissionString.twg:
+      return RoleInfo(
+        icon: Icons.support_agent,
+        iconColor: const Color.fromARGB(255, 4, 65, 105),
+        backgroundColor: mainBgColor,
+        borderColor: Colors.grey.shade300,
+        textColor: Colors.black,
+        description:
+            "Supports the planning, implementation, monitoring, and evaluation of organizational performance initiatives.",
       );
     default:
       return RoleInfo(

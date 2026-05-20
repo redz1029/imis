@@ -13,7 +13,7 @@ const grey = Color.fromRGBO(161, 161, 161, 1);
 const lightGrey = Color.fromRGBO(217, 217, 217, 1);
 const lightGrey1 = Color.fromRGBO(245, 245, 245, 1);
 const primaryTextColor = Color.fromRGBO(65, 65, 65, 1);
-
+const scaffoldBackgroundColor = Color(0xffEDEDED);
 const Color kOrange = Color(0xFFF4724A);
 const Color kGreen = Color(0xFF4DC688);
 const Color kDark = Color(0xFF0F0F0F);
@@ -184,7 +184,7 @@ class SwotYear {
 }
 
 Widget getStatusIcon(String status) {
-  double iconSize = 12; // smaller size for all icons
+  double iconSize = 12;
 
   Icon icon;
   Color bgColor = getStatusColor(status);
@@ -216,6 +216,8 @@ Color getStatusColor(String status) {
   switch (status) {
     case 'Draft':
       return Colors.grey[800]!;
+    case 'Pending':
+      return Colors.orange[800]!;
     case 'For Approval':
       return Colors.orange[800]!;
     case 'Approved':
@@ -229,9 +231,9 @@ Color getStatusColor(String status) {
 
 String getGreeting() {
   final hour = DateTime.now().hour;
-  if (hour < 12) return 'Good Morning';
-  if (hour < 17) return 'Good Afternoon';
-  return 'Good Evening';
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
 }
 
 Color ratingBgColor(double val) {

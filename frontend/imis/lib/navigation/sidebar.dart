@@ -10,11 +10,11 @@ import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
-import 'package:imis/dashboard/standard_user_dashboard.dart';
+import 'package:imis/dashboard/strategic_change_agenda.dart';
 import 'package:imis/dashboard/strategy_roadmap_page.dart';
 import 'package:imis/office/pages/office_page.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/pages/deliverable_status_monitoring_page.dart';
-import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
+import 'package:imis/performance_governance_system/pages/performance_governance_system_page..dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/performance_governance_system/process_core_support/pages/process_core_support_page.dart';
@@ -24,6 +24,7 @@ import 'package:imis/roadmap/pages/roadmap_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/scorecard/pages/score_card_monitoring_page.dart';
 import 'package:imis/scorecard/pages/score_card_report_page.dart';
+import 'package:imis/strategy_review_report/pages/strategy_review_report_page.dart';
 import 'package:imis/swot/pages/swot_page.dart';
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/change_password_page.dart';
@@ -31,7 +32,6 @@ import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
-import 'package:imis/user_guide/user_guide_page.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -115,6 +115,7 @@ class SidebarState extends State<Sidebar> {
         PermissionString.mcc,
         PermissionString.coreTeam,
         PermissionString.osm,
+        PermissionString.twg,
       ];
       return allowedSwot.contains(selectedRole) ? 0 : 0;
     }
@@ -142,6 +143,8 @@ class SidebarState extends State<Sidebar> {
         PermissionString.informationOfficer,
         PermissionString.researchOfficer,
         PermissionString.pgsAuditor,
+        PermissionString.headAuditor,
+        PermissionString.twg,
       ].contains(role);
       if (canSeeRoadmaps) return 0;
 
@@ -153,6 +156,7 @@ class SidebarState extends State<Sidebar> {
         PermissionString.mcc,
         PermissionString.coreTeam,
         PermissionString.osm,
+        PermissionString.twg,
       ].contains(role);
       if (canSeeDeliverables) return 1;
 
@@ -163,6 +167,7 @@ class SidebarState extends State<Sidebar> {
         PermissionString.mcc,
         PermissionString.coreTeam,
         PermissionString.osm,
+        PermissionString.twg,
       ].contains(role);
       if (canseeSwot) return 2;
 
@@ -175,6 +180,7 @@ class SidebarState extends State<Sidebar> {
         PermissionString.pgsAuditor,
         PermissionString.pgsHead,
         PermissionString.coreTeam,
+        PermissionString.twg,
       ].contains(role);
       if (canSeeMonitoring) return 3;
 
@@ -194,6 +200,9 @@ class SidebarState extends State<Sidebar> {
         PermissionString.mcc,
         PermissionString.osm,
         PermissionString.pgsAuditor,
+        PermissionString.headAuditor,
+        PermissionString.serviceHead,
+        PermissionString.twg,
       ].contains(role);
       if (canSeeScorecard) return 4;
 
@@ -201,6 +210,7 @@ class SidebarState extends State<Sidebar> {
       final canSeeAuditorReport = [
         PermissionString.headAuditor,
         PermissionString.roleAdmin,
+        PermissionString.twg,
       ].contains(role);
       if (canSeeAuditorReport) return 5;
     }
@@ -292,12 +302,12 @@ class SidebarState extends State<Sidebar> {
       barrierColor: Colors.black.withValues(alpha: 0.1),
       pageBuilder: (context, anim1, anim2) {
         return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Center(
             child: StatefulBuilder(
               builder: (context, setDialogState) {
                 return Dialog(
-                  backgroundColor: Theme.of(context).cardColor,
+                  backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -574,7 +584,7 @@ class SidebarState extends State<Sidebar> {
       barrierColor: Colors.black.withValues(alpha: 0.1),
       pageBuilder: (context, anim1, anim2) {
         return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Center(
             child: StatefulBuilder(
               builder: (context, setDialogState) {
@@ -1105,8 +1115,9 @@ class SidebarState extends State<Sidebar> {
   Widget getCurrentPage() {
     if (selectedPage == 0) {
       if (selectedSubPage == 0) return HomePage();
-      if (selectedSubPage == 1) return const StrategyRoadmapPage();
-      // if (selectedSubPage == 2) return const UserGuidePage();
+      if (selectedSubPage == 1) return HomePage();
+      if (selectedSubPage == 2) return const StrategyRoadmapPage();
+      if (selectedSubPage == 3) return const StrategicChangeAgenda();
     }
     if (selectedPage == 1) {
       if (selectedSubPage == 0) return const RoadmapPage();
@@ -1115,6 +1126,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 3) return const DeliverableStatusMonitoringPage();
       if (selectedSubPage == 4) return const ScoreCardMonitoringPage();
       if (selectedSubPage == 5) return const ScoreCardReportPage();
+      // if (selectedSubPage == 7) return const StrategyReviewReportPage();
       if (selectedSubPage == 6) return const ViewSummaryNarrativeReportPage();
     }
 
@@ -1135,7 +1147,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 13) return const UserOfficePage();
       if (selectedSubPage == 14) return const UserRolePage();
     }
-    return StandardUserDashboard();
+    return HomePage();
   }
 
   @override
@@ -1151,7 +1163,7 @@ class SidebarState extends State<Sidebar> {
           if (!isMobile)
             Container(
               width: 70,
-              color: Theme.of(context).cardColor,
+              color: Colors.white,
               child: Column(
                 children: [
                   const SizedBox(height: 30),
@@ -1209,7 +1221,7 @@ class SidebarState extends State<Sidebar> {
             child: Column(
               children: [
                 Container(
-                  color: Theme.of(context).cardColor,
+                  color: Colors.white,
                   padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
@@ -1330,7 +1342,7 @@ class SidebarState extends State<Sidebar> {
       context: context,
       builder:
           (context) => AlertDialog(
-            backgroundColor: Theme.of(context).cardColor,
+            backgroundColor: Colors.white,
 
             title: const Text('Logout'),
             content: const Text('Are you sure you want to logout?'),
@@ -1360,10 +1372,7 @@ class SidebarState extends State<Sidebar> {
                   );
                 },
 
-                child: Text(
-                  'Logout',
-                  style: TextStyle(color: Theme.of(context).cardColor),
-                ),
+                child: Text('Logout', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -1394,10 +1403,7 @@ class SidebarState extends State<Sidebar> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color:
-                  isActive
-                      ? Theme.of(context).primaryColor
-                      : Colors.transparent,
+              color: isActive ? primaryColor : Colors.transparent,
             ),
             child: Icon(
               icon,
@@ -1430,7 +1436,7 @@ class SidebarState extends State<Sidebar> {
     bool isMobile = MediaQuery.of(context).size.width < 900;
 
     return Container(
-      color: Theme.of(context).cardColor,
+      color: Colors.white,
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1449,15 +1455,6 @@ class SidebarState extends State<Sidebar> {
               runSpacing: 8,
               alignment: WrapAlignment.start,
               children: [
-                // IconButton(
-                //   icon: Icon(
-                //     widget.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                //     color: Colors.grey[700],
-                //   ),
-                //   onPressed: () {
-                //     widget.onThemeToggle(!widget.isDarkMode);
-                //   },
-                // ),
                 sidebarIcon(Icons.dashboard_outlined, 0, label: 'Dashboard'),
                 Tooltip(
                   message: 'Performance Governance System',
@@ -1487,8 +1484,9 @@ class SidebarState extends State<Sidebar> {
                 children: [
                   if (selectedPage == 0) ...[
                     sidebarSubText("Overview", 0),
-                    sidebarSubText("Strategy Roadmap", 1),
-                    // sidebarSubText("User Guide", 2),
+                    sidebarSubText("OSM Calendar of Acticity", 1),
+                    sidebarSubText("Strategy Map", 2),
+                    sidebarSubText("Strategic Change Agenda", 3),
                   ],
                   //PGS
                   if (selectedPage == 1) ...[
@@ -1502,7 +1500,10 @@ class SidebarState extends State<Sidebar> {
                                   selectedRole == PermissionString.coreTeam ||
                                   selectedRole ==
                                       PermissionString.serviceHead ||
-                                  selectedRole == PermissionString.pgsAuditor)
+                                  selectedRole == PermissionString.pgsAuditor ||
+                                  selectedRole ==
+                                      PermissionString.headAuditor ||
+                                  selectedRole == PermissionString.twg)
                               ? sidebarSubText(
                                 selectedRole == PermissionString.roleAdmin
                                     ? 'Create/View Roadmaps'
@@ -1538,7 +1539,8 @@ class SidebarState extends State<Sidebar> {
                                       PermissionString.serviceHead ||
                                   selectedRole == PermissionString.mcc ||
                                   selectedRole == PermissionString.coreTeam ||
-                                  selectedRole == PermissionString.osm)
+                                  selectedRole == PermissionString.osm ||
+                                  selectedRole == PermissionString.twg)
                               ? sidebarSubText(
                                 selectedRole == PermissionString.roleAdmin
                                     ? 'Create/View Deliverables'
@@ -1559,7 +1561,8 @@ class SidebarState extends State<Sidebar> {
                                       PermissionString.serviceHead ||
                                   selectedRole == PermissionString.mcc ||
                                   selectedRole == PermissionString.coreTeam ||
-                                  selectedRole == PermissionString.osm)
+                                  selectedRole == PermissionString.osm ||
+                                  selectedRole == PermissionString.twg)
                               ? sidebarSubText(
                                 selectedRole == PermissionString.roleAdmin
                                     ? 'Create/View SWOT'
@@ -1581,6 +1584,7 @@ class SidebarState extends State<Sidebar> {
                                 PermissionString.pgsAuditor,
                                 PermissionString.pgsHead,
                                 PermissionString.coreTeam,
+                                PermissionString.twg,
                               ].contains(selectedRole)
                               ? sidebarSubText(
                                 'Deliverable Status Monitoring',
@@ -1603,9 +1607,12 @@ class SidebarState extends State<Sidebar> {
                                 PermissionString.informationOfficer,
                                 PermissionString.researchOfficer,
                                 PermissionString.coreTeam,
+                                PermissionString.serviceHead,
+                                PermissionString.headAuditor,
                                 PermissionString.mcc,
                                 PermissionString.osm,
                                 PermissionString.pgsAuditor,
+                                PermissionString.twg,
                               ].contains(selectedRole)
                               ? ExpandableSidebarItem(
                                 title: "Scorecard",
@@ -1622,11 +1629,15 @@ class SidebarState extends State<Sidebar> {
                               )
                               : SizedBox.shrink(),
                     ),
+                    // PermissionWidget(
+                    //   child: sidebarSubText('Strategy Review Report', 7),
+                    // ),
                     PermissionWidget(
                       child:
                           [
                                 PermissionString.headAuditor,
                                 PermissionString.roleAdmin,
+                                PermissionString.twg,
                               ].contains(selectedRole)
                               ? sidebarSubText("PGS Auditor Report", 6)
                               : SizedBox.shrink(),
