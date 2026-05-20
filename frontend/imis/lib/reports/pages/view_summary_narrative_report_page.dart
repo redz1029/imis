@@ -16,7 +16,7 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart' show PaginationUtil;
 import 'package:imis/utils/permission_string.dart';
-import 'package:imis/widgets/filter_button_widget.dart';
+import 'package:imis/widgets/button_widget/filter_button_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -438,26 +438,12 @@ class ViewSummaryNarrativeReportPageState
                                                       color: Colors.blueAccent,
                                                     ),
                                                     onPressed: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (
-                                                                _,
-                                                              ) => ViewPdfSummary(
-                                                                pgsPeriodId:
-                                                                    summary
-                                                                        .pgsPeriodId
-                                                                        .toString(),
-                                                                officeId:
-                                                                    selectedTabIndex ==
-                                                                            0
-                                                                        ? summary
-                                                                            .officeId
-                                                                            .toString()
-                                                                        : null,
-                                                              ),
-                                                        ),
+                                                      viewPdfSummary(
+                                                        summary.pgsPeriodId
+                                                            .toString(),
+                                                        summary.officeId
+                                                            .toString(),
+                                                        context: context,
                                                       );
                                                     },
                                                   ),
@@ -517,38 +503,20 @@ class ViewSummaryNarrativeReportPageState
                                                   }
                                                   if (value == 'preview') {
                                                     if (selectedTabIndex == 1) {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (
-                                                                context,
-                                                              ) => ViewPdfSummary(
-                                                                pgsPeriodId:
-                                                                    summary
-                                                                        .pgsPeriodId
-                                                                        .toString(),
-                                                              ),
-                                                        ),
+                                                      viewPdfSummary(
+                                                        summary.pgsPeriodId
+                                                            .toString(),
+                                                        summary.officeId
+                                                            .toString(),
+                                                        context: context,
                                                       );
                                                     } else {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (
-                                                                context,
-                                                              ) => ViewPdfSummary(
-                                                                pgsPeriodId:
-                                                                    summary
-                                                                        .pgsPeriodId
-                                                                        .toString(),
-                                                                officeId:
-                                                                    summary
-                                                                        .officeId
-                                                                        .toString(),
-                                                              ),
-                                                        ),
+                                                      viewPdfSummary(
+                                                        summary.pgsPeriodId
+                                                            .toString(),
+                                                        summary.officeId
+                                                            .toString(),
+                                                        context: context,
                                                       );
                                                     }
                                                   }
@@ -798,23 +766,14 @@ class ViewSummaryNarrativeReportPageState
                             color: Colors.black87,
                           ),
                         ),
-
                         const Spacer(),
-
                         ElevatedButton.icon(
-                          onPressed: () async {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => ViewPdfSummary(
-                                      pgsPeriodId:
-                                          report.pgsPeriodId.toString(),
-                                      officeId: report.officeId.toString(),
-                                    ),
+                          onPressed:
+                              () => viewPdfSummary(
+                                report.pgsPeriodId.toString(),
+                                report.officeId.toString(),
+                                context: context,
                               ),
-                            );
-                          },
                           icon: const Icon(
                             Icons.description_outlined,
                             size: 18,

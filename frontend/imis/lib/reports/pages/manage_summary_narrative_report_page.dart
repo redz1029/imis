@@ -143,18 +143,14 @@ class ManageSummaryNarrativeDialogState
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
 
-    // Responsive dialog sizing
     final dialogWidth =
         isMobile
-            ? screenWidth // full width on mobile
+            ? screenWidth
             : isTablet
             ? screenWidth * 0.92
             : screenWidth * 0.80;
 
-    final dialogHeight =
-        isMobile
-            ? screenHeight // full height on mobile
-            : screenHeight * 0.90;
+    final dialogHeight = isMobile ? screenHeight : screenHeight * 0.90;
 
     final horizontalPadding =
         isMobile
@@ -198,20 +194,17 @@ class ManageSummaryNarrativeDialogState
               // ── Header ──────────────────────────────────────────────
               _buildHeader(isMobile, isTablet),
 
-              // ── Search bar (separate row on mobile) ─────────────────
               if (isMobile) _buildMobileSearch(),
 
-              // ── Table ────────────────────────────────────────────────
               Expanded(
                 child:
                     _isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : isMobile
-                        ? _buildMobileList() // Card list on mobile
-                        : _buildDesktopTable(), // DataTable on tablet/desktop
+                        ? _buildMobileList()
+                        : _buildDesktopTable(),
               ),
 
-              // ── Pagination footer ────────────────────────────────────
               _buildFooter(isMobile),
             ],
           ),
@@ -220,7 +213,6 @@ class ManageSummaryNarrativeDialogState
     );
   }
 
-  // ── Header ──────────────────────────────────────────────────────────────────
   Widget _buildHeader(bool isMobile, bool isTablet) {
     return Container(
       padding: EdgeInsets.symmetric(
@@ -237,7 +229,6 @@ class ManageSummaryNarrativeDialogState
       ),
       child: Row(
         children: [
-          // Icon badge
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -252,7 +243,6 @@ class ManageSummaryNarrativeDialogState
           ),
           const SizedBox(width: 10),
 
-          // Title — truncates on mobile
           Expanded(
             child: Text(
               isMobile ? 'Auditor Reports' : 'Manage Auditor Reports',
@@ -265,7 +255,6 @@ class ManageSummaryNarrativeDialogState
             ),
           ),
 
-          // Search inline only on tablet/desktop
           if (!isMobile) ...[
             const SizedBox(width: 12),
             SizedBox(
@@ -276,7 +265,6 @@ class ManageSummaryNarrativeDialogState
             const SizedBox(width: 12),
           ],
 
-          // Close button
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close, size: 20),
@@ -292,7 +280,6 @@ class ManageSummaryNarrativeDialogState
     );
   }
 
-  // ── Mobile search row ────────────────────────────────────────────────────────
   Widget _buildMobileSearch() {
     return Container(
       color: Colors.white,
@@ -324,7 +311,6 @@ class ManageSummaryNarrativeDialogState
     );
   }
 
-  // ── Desktop / Tablet DataTable ───────────────────────────────────────────────
   Widget _buildDesktopTable() {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -374,7 +360,6 @@ class ManageSummaryNarrativeDialogState
     );
   }
 
-  // ── Mobile Card List ─────────────────────────────────────────────────────────
   Widget _buildMobileList() {
     if (filteredList.isEmpty) {
       return const Center(
@@ -467,7 +452,6 @@ class ManageSummaryNarrativeDialogState
     );
   }
 
-  // ── Shared action buttons ────────────────────────────────────────────────────
   Widget _actionButtons(
     PgsSummaryNarrative summary,
     int index, {
@@ -491,15 +475,10 @@ class ManageSummaryNarrativeDialogState
           tooltip: 'Print Preview',
           visualDensity: compact ? VisualDensity.compact : null,
           onPressed:
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (_) => ViewPdfSummary(
-                        pgsPeriodId: summary.pgsPeriodId.toString(),
-                        officeId: summary.officeId.toString(),
-                      ),
-                ),
+              () => viewPdfSummary(
+                summary.pgsPeriodId.toString(),
+                summary.officeId.toString(),
+                context: context,
               ),
         ),
         PermissionWidget(
@@ -536,7 +515,6 @@ class ManageSummaryNarrativeDialogState
       ),
       child:
           isMobile
-              // Stack vertically on mobile
               ? Column(
                 children: [
                   PaginationInfo(
@@ -1151,18 +1129,12 @@ class ManageSummaryNarrativeDialogState
                           const Spacer(),
 
                           ElevatedButton.icon(
-                            onPressed: () async {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => ViewPdfSummary(
-                                        pgsPeriodId: _selectedPeriod.toString(),
-                                        officeId: _selectedOffice.toString(),
-                                      ),
+                            onPressed:
+                                () => viewPdfSummary(
+                                  report.pgsPeriodId.toString(),
+                                  report.officeId.toString(),
+                                  context: context,
                                 ),
-                              );
-                            },
                             icon: const Icon(
                               Icons.description_outlined,
                               size: 18,
