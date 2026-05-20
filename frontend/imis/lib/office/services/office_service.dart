@@ -66,7 +66,10 @@ class OfficeService {
   }
 
   Future<List<Office>> getParentOffice() async {
-    final response = await AuthenticatedRequest.get(dio, ApiEndpoint().office);
+    final response = await AuthenticatedRequest.get(
+      dio,
+      ApiEndpoint().allOffices,
+    );
     return (response.data as List).map((e) => Office.fromJson(e)).toList();
   }
 
