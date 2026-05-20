@@ -208,26 +208,27 @@ class SearchableDropdown extends StatelessWidget {
 
       dropdownBuilder: (context, selected) {
         return Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             if (prefixIcon != null) ...[
               Icon(prefixIcon, size: 14, color: contentColor),
               const SizedBox(width: 8),
             ],
-            Text(
-              (selected != null && selected.isNotEmpty) ? selected : hintText,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 13,
-                color: contentColor,
-                fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+
+            Expanded(
+              child: Text(
+                (selected != null && selected.isNotEmpty) ? selected : hintText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: contentColor,
+                  fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+                ),
               ),
             ),
           ],
         );
       },
-
       popupProps: PopupProps.menu(
         showSearchBox: true,
         constraints: const BoxConstraints(maxHeight: 300),
@@ -301,7 +302,6 @@ class SearchableDropdown extends StatelessWidget {
             top: 8,
             bottom: 8,
           ),
-          // ✅ Changed from 20 → 8 to match the image style
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(color: borderColor, width: 0.8),

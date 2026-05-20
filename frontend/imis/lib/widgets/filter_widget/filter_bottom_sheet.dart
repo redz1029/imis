@@ -111,7 +111,7 @@ class FilterChipButton extends StatelessWidget {
         decoration: BoxDecoration(
           color:
               isActive
-                  ? primaryColor.withOpacity(0.08)
+                  ? primaryColor.withValues(alpha: 0.08)
                   : !isEnabled
                   ? Colors.grey.shade50
                   : Colors.white,
@@ -119,7 +119,7 @@ class FilterChipButton extends StatelessWidget {
           border: Border.all(
             color:
                 isActive
-                    ? primaryColor.withOpacity(0.4)
+                    ? primaryColor.withValues(alpha: 0.4)
                     : isRequired && !isActive
                     ? Colors.orangeAccent
                     : Colors.grey.shade300,
