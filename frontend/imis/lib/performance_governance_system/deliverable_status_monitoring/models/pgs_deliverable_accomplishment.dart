@@ -12,7 +12,7 @@ class PgsDeliverableAccomplishment {
   DateTime postingDate;
   String? userId;
   int? status;
-  DateTime byWhen;
+  DateTime? byWhen;
   int? percentAccomplished;
   String? remarks;
   String? attachmentPath;
@@ -27,13 +27,14 @@ class PgsDeliverableAccomplishment {
     this.postingDate,
     this.userId,
     this.status,
-    this.byWhen,
+
     this.percentAccomplished,
     this.remarks,
     this.attachmentPath,
     this.deliverableName,
     this.pgsStatus,
     this.auditorRemarks, {
+    this.byWhen,
     this.isDeleted,
     this.rowVersion,
   });
