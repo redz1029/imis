@@ -45,6 +45,40 @@ class DeliverableStatusMonitoringService {
     }
   }
 
+  Future<void> updateAccomplishmentStatus(
+    PgsDeliverableAccomplishment acc,
+    int newStatus,
+  ) async {
+    final url = ApiEndpoint().pgsAccomplishment;
+
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: [
+        {
+          'id': acc.id,
+          'isDeleted': acc.isDeleted ?? false,
+          'rowVersion': acc.rowVersion,
+          'pgsDeliverableId': acc.pgsDeliverableId,
+          'status': newStatus,
+          'postingDate': acc.postingDate.toIso8601String(),
+          'userId': acc.userId,
+          'percentAccomplished': acc.percentAccomplished ?? 0,
+          'remarks': acc.remarks ?? '',
+          'auditorRemarks': acc.auditorRemarks ?? '',
+          'attachmentPath': acc.attachmentPath ?? '',
+          'deliverableName': acc.deliverableName ?? '',
+          'pgsStatus': acc.pgsStatus ?? '',
+          'byWhen': acc.byWhen.toIso8601String(),
+        },
+      ],
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to update accomplishment status');
+    }
+  }
+
   Future<List<PgsDeliverableAccomplishment>> fetchAccomplishments(
     int deliverableId,
   ) async {

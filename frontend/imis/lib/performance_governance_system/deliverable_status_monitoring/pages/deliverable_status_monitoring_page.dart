@@ -1,5 +1,4 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +10,7 @@ import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/filter_widget/filter_bottom_sheet.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:intl/intl.dart';
@@ -26,7 +26,7 @@ import '../../../utils/auth_util.dart';
 import '../../../utils/date_time_converter.dart';
 import '../../../utils/permission_string.dart';
 import '../../../widgets/accomplishment_widget.dart/accomplishment_pgs_auditor_widget.dart';
-import '../../../widgets/breakthrough_widget.dart';
+import '../../../widgets/accomplishment_widget.dart/breakthrough_widget.dart';
 import '../../models/pgs_deliverable_score_history.dart';
 import '../models/pgs_filter.dart';
 import '../services/deliverable_status_monitoring_service.dart';
@@ -51,14 +51,12 @@ class _DeliverableStatusMonitoringPageState
   TextEditingController scoreRangeFromController = TextEditingController();
   TextEditingController pageController = TextEditingController();
   TextEditingController pageSizeController = TextEditingController();
-
   final TextEditingController _findingsController = TextEditingController();
   final TextEditingController _conclusionsController = TextEditingController();
   final TextEditingController _recommendationsController =
       TextEditingController();
   final _summaryNarrativeService = SummaryNarrativeService(Dio());
   final _formKey = GlobalKey<FormState>();
-
   final dio = Dio();
   final _commonService = CommonService(Dio());
   final permissionService = PermissionService();
@@ -85,7 +83,7 @@ class _DeliverableStatusMonitoringPageState
 
   int currentPage = 1;
   final int pageSize = 15;
-
+  int _totalCount = 0;
   String userId = "";
 
   @override
@@ -115,9 +113,11 @@ class _DeliverableStatusMonitoringPageState
     if (mounted) setState(() => userId = user?.id ?? "UserId");
   }
 
-  Future<void> fetchFilteredPgsList() async {
+  Future<void> fetchFilteredPgsList({int page = 1}) async {
     if (_isLoading) return;
+
     setState(() => _isLoading = true);
+
     try {
       final filter = PgsFilter(
         selectedPeriod,
@@ -130,25 +130,26 @@ class _DeliverableStatusMonitoringPageState
         scoreRangeToController.text.isNotEmpty
             ? int.tryParse(scoreRangeToController.text)
             : null,
-        pageController.text.isNotEmpty
-            ? int.tryParse(pageController.text)
-            : null,
-        pageSizeController.text.isNotEmpty
-            ? int.tryParse(pageSizeController.text)
-            : null,
+        page,
+        pageSize,
       );
+
       final queryParams =
           filter.toJson()..removeWhere((key, value) => value == null);
+
       final response = await AuthenticatedRequest.get(
         dio,
         ApiEndpoint().filterBy,
         queryParameters: queryParams,
       );
+
       if (response.statusCode == 200) {
         final items = (response.data["items"] as List<dynamic>?) ?? [];
+
         final formattedData =
             items.map((item) {
               String formattedByWhen = '';
+
               if (item['byWhen'] != null &&
                   item['byWhen'].toString().isNotEmpty) {
                 try {
@@ -159,6 +160,7 @@ class _DeliverableStatusMonitoringPageState
                   formattedByWhen = item['byWhen'].toString();
                 }
               }
+
               return {
                 'pgsDeliverableId': item['pgsDeliverableId'],
                 'kra': item['keyResultArea'],
@@ -174,13 +176,45 @@ class _DeliverableStatusMonitoringPageState
                 'score': item['score'],
               };
             }).toList();
-        if (mounted) setState(() => deliverableList = formattedData);
+
+        if (mounted) {
+          setState(() {
+            deliverableList = formattedData;
+            currentPage = page;
+            _totalCount = response.data["totalCount"] ?? 0;
+          });
+        }
       }
     } catch (e) {
       debugPrint("Error fetching filtered data: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// Builds the monthly periods list from a deliverable's start/end dates.
+  /// Reused in both _buildActionButtons and showAccomplishmentFormDialog.
+  List<Map<String, dynamic>> _buildMonthlyPeriods(
+    Map<String, dynamic> deliverable,
+  ) {
+    final startDateStr = deliverable['Start Date'] as String? ?? '';
+    final endDateStr = deliverable['End Date'] as String? ?? '';
+    List<Map<String, dynamic>> monthlyPeriods = [];
+    try {
+      final startDate = DateFormat('MMM dd, yyyy').parse(startDateStr);
+      final endDate = DateFormat('MMM dd, yyyy').parse(endDateStr);
+      DateTime current = DateTime(startDate.year, startDate.month);
+      final end = DateTime(endDate.year, endDate.month);
+      while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
+        monthlyPeriods.add({
+          'period': DateFormat('MMMM yyyy').format(current),
+          'month': current.month,
+          'year': current.year,
+        });
+        current = DateTime(current.year, current.month + 1);
+      }
+    } catch (_) {}
+    return monthlyPeriods;
   }
 
   Future<bool> _hasCompleteAccomplishmentData(
@@ -296,9 +330,35 @@ class _DeliverableStatusMonitoringPageState
                       child: _buildTableCard(isMobile),
                     ),
                   ),
+                  _buildPagination(),
                 ],
               ),
       floatingActionButton: isMobile ? _buildMobileFAB() : null,
+    );
+  }
+
+  Widget _buildPagination() {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      color: Theme.of(context).cardColor,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          PaginationInfo(
+            currentPage: currentPage,
+            totalItems: _totalCount,
+            itemsPerPage: pageSize,
+          ),
+          PaginationControls(
+            currentPage: currentPage,
+            totalItems: _totalCount,
+            itemsPerPage: pageSize,
+            isLoading: _isLoading,
+            onPageChanged: (page) => fetchFilteredPgsList(page: page),
+          ),
+          const SizedBox(width: 60),
+        ],
+      ),
     );
   }
 
@@ -328,8 +388,8 @@ class _DeliverableStatusMonitoringPageState
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
+                  children: const [
+                    Text(
                       "Deliverables Status Monitoring",
                       style: TextStyle(
                         fontSize: 20,
@@ -337,13 +397,6 @@ class _DeliverableStatusMonitoringPageState
                         color: Color(0xFF1A1D23),
                       ),
                     ),
-                    // Text(
-                    //   "${deliverableList.length} deliverable${deliverableList.length != 1 ? 's' : ''} found",
-                    //   style: TextStyle(
-                    //     fontSize: 13,
-                    //     color: Colors.grey.shade600,
-                    //   ),
-                    // ),
                   ],
                 ),
               ),
@@ -664,7 +717,6 @@ class _DeliverableStatusMonitoringPageState
                         child: ListView(
                           shrinkWrap: true,
                           children: [
-                            // _officeListTile(null, 'All Office'),
                             ...officeList
                                 .where(
                                   (o) => o.name.toLowerCase().contains(
@@ -1157,7 +1209,7 @@ class _DeliverableStatusMonitoringPageState
           const SizedBox(height: 6),
           Text(
             _selectedOfficeId == null
-                ? 'Use the Office filter above to get started'
+                ? 'Use the filter above to get started'
                 : 'Try adjusting the filters to see more results',
             style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
           ),
@@ -1194,13 +1246,11 @@ class _DeliverableStatusMonitoringPageState
     bool isMobile,
   ) {
     if (isMobile) {
-      // Mobile: card-style stacked layout
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Row number + deliverable name
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1236,7 +1286,6 @@ class _DeliverableStatusMonitoringPageState
               ],
             ),
             const SizedBox(height: 10),
-            // Period badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
@@ -1253,7 +1302,6 @@ class _DeliverableStatusMonitoringPageState
               ),
             ),
             const SizedBox(height: 8),
-            // Info chips
             Wrap(
               spacing: 12,
               runSpacing: 6,
@@ -1285,7 +1333,6 @@ class _DeliverableStatusMonitoringPageState
               ],
             ),
             const SizedBox(height: 12),
-            // Full-width action buttons stacked
             _buildMobileActionButtons(index, d),
           ],
         ),
@@ -1386,24 +1433,9 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  // Desktop action buttons (original column layout)
   Widget _buildActionButtons(int index, Map<String, dynamic> deliverable) {
     final deliverableId = deliverable['pgsDeliverableId'];
-    final startDateStr = deliverable['Start Date'];
-    final endDateStr = deliverable['End Date'];
-
-    int monthCount = 1;
-    try {
-      final startDate = DateFormat('MMM dd, yyyy').parse(startDateStr);
-      final endDate = DateFormat('MMM dd, yyyy').parse(endDateStr);
-      DateTime curr = DateTime(startDate.year, startDate.month);
-      final end = DateTime(endDate.year, endDate.month);
-      monthCount = 0;
-      while (curr.isBefore(end) || curr.isAtSameMomentAs(end)) {
-        monthCount++;
-        curr = DateTime(curr.year, curr.month + 1);
-      }
-    } catch (_) {}
+    final monthlyPeriods = _buildMonthlyPeriods(deliverable);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1413,13 +1445,21 @@ class _DeliverableStatusMonitoringPageState
           label: 'Accomplishment',
           color: primaryColor,
           onTap: () async {
-            await loadAccomplishments(deliverable['pgsDeliverableId']);
-            showAccomplishmentFormDialog(context, deliverable, userId);
+            await loadAccomplishments(deliverableId, monthlyPeriods);
+            showAccomplishmentFormDialog(
+              context,
+              deliverable,
+              userId,
+              monthlyPeriods,
+            );
           },
         ),
         const SizedBox(height: 6),
         FutureBuilder<bool>(
-          future: _hasCompleteAccomplishmentData(deliverableId, monthCount),
+          future: _hasCompleteAccomplishmentData(
+            deliverableId,
+            monthlyPeriods.length,
+          ),
           builder: (ctx, snap) {
             final hasData = snap.data ?? false;
             return Tooltip(
@@ -1451,31 +1491,15 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  // Mobile action buttons — full width, stacked
   Widget _buildMobileActionButtons(
     int index,
     Map<String, dynamic> deliverable,
   ) {
     final deliverableId = deliverable['pgsDeliverableId'];
-    final startDateStr = deliverable['Start Date'];
-    final endDateStr = deliverable['End Date'];
-
-    int monthCount = 1;
-    try {
-      final startDate = DateFormat('MMM dd, yyyy').parse(startDateStr);
-      final endDate = DateFormat('MMM dd, yyyy').parse(endDateStr);
-      DateTime curr = DateTime(startDate.year, startDate.month);
-      final end = DateTime(endDate.year, endDate.month);
-      monthCount = 0;
-      while (curr.isBefore(end) || curr.isAtSameMomentAs(end)) {
-        monthCount++;
-        curr = DateTime(curr.year, curr.month + 1);
-      }
-    } catch (_) {}
+    final monthlyPeriods = _buildMonthlyPeriods(deliverable);
 
     return Column(
       children: [
-        // Full-width accomplishment button
         SizedBox(
           width: double.infinity,
           child: _actionButton(
@@ -1484,15 +1508,22 @@ class _DeliverableStatusMonitoringPageState
             color: primaryColor,
             fullWidth: true,
             onTap: () async {
-              await loadAccomplishments(deliverable['pgsDeliverableId']);
-              showAccomplishmentFormDialog(context, deliverable, userId);
+              await loadAccomplishments(deliverableId, monthlyPeriods);
+              showAccomplishmentFormDialog(
+                context,
+                deliverable,
+                userId,
+                monthlyPeriods,
+              );
             },
           ),
         ),
         const SizedBox(height: 8),
-        // Full-width breakthrough button
         FutureBuilder<bool>(
-          future: _hasCompleteAccomplishmentData(deliverableId, monthCount),
+          future: _hasCompleteAccomplishmentData(
+            deliverableId,
+            monthlyPeriods.length,
+          ),
           builder: (ctx, snap) {
             final hasData = snap.data ?? false;
             return SizedBox(
@@ -1762,7 +1793,6 @@ class _DeliverableStatusMonitoringPageState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
@@ -1824,7 +1854,6 @@ class _DeliverableStatusMonitoringPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Period & Office — responsive row/column
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8F9FB),
@@ -2208,22 +2237,8 @@ Future<bool?> showAccomplishmentFormDialog(
   BuildContext context,
   Map<String, dynamic> deliverable,
   String userId,
+  List<Map<String, dynamic>> monthlyPeriods,
 ) {
-  final startDate = DateFormat('MMM dd, yyyy').parse(deliverable['Start Date']);
-  final endDate = DateFormat('MMM dd, yyyy').parse(deliverable['End Date']);
-
-  List<Map<String, dynamic>> monthlyPeriods = [];
-  DateTime current = DateTime(startDate.year, startDate.month);
-  final end = DateTime(endDate.year, endDate.month);
-  while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
-    monthlyPeriods.add({
-      'period': DateFormat('MMMM yyyy').format(current),
-      'month': current.month,
-      'year': current.year,
-    });
-    current = DateTime(current.year, current.month + 1);
-  }
-
   return showDialog<bool>(
     context: context,
     barrierDismissible: false,
@@ -2251,7 +2266,7 @@ Future<bool?> showAccomplishmentFormDialog(
                             children: [
                               Expanded(
                                 child: Text(
-                                  "Accomplishment Form — ${DateFormat('MMM dd, yyyy').format(startDate)} to ${DateFormat('MMM dd, yyyy').format(endDate)}",
+                                  "Accomplishment Form — ${deliverable['Start Date']} to ${deliverable['End Date']}",
                                   style: const TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
@@ -2432,6 +2447,8 @@ Future<bool?> showAccomplishmentFormDialog(
                                         totalPeriods: monthlyPeriods.length,
                                         deliverableId:
                                             deliverable['pgsDeliverableId'],
+                                        periodMonth: e.value['month'] as int,
+                                        periodYear: e.value['year'] as int,
                                       ),
                                     ],
                                   ),
@@ -2600,7 +2617,6 @@ Future<bool?> showBreakthroughFormDialog(
                               ],
                             ),
                             const SizedBox(height: 4),
-
                             Text(
                               "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
                             ),
@@ -2615,7 +2631,6 @@ Future<bool?> showBreakthroughFormDialog(
                         ),
                       ),
                       const SizedBox(height: 20),
-
                       const Row(
                         children: [
                           Icon(Icons.star_outline, size: 18),
@@ -2627,7 +2642,6 @@ Future<bool?> showBreakthroughFormDialog(
                         ],
                       ),
                       const SizedBox(height: 12),
-
                       BreakthroughWidget(
                         deliverableId: deliverable['pgsDeliverableId'],
                       ),
