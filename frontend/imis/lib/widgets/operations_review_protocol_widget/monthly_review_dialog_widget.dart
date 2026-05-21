@@ -10,6 +10,7 @@ import 'package:imis/performance_governance_system/deliverable_status_monitoring
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/models/operations_review_protocol.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
+import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/operations_review_protocol_widget/operations_review_protocol_widget.dart';
@@ -38,6 +39,8 @@ class MonthlyReviewListDialog extends StatefulWidget {
     String? minutesFileName,
   })
   onSave;
+  final Future<List<PgsDeliverables>> Function(String pgsId)
+  onFetchDeliverables; // ADD THIS
 
   const MonthlyReviewListDialog({
     super.key,
@@ -49,6 +52,7 @@ class MonthlyReviewListDialog extends StatefulWidget {
     required this.onFetchAll,
     required this.onFetchById,
     required this.onSave,
+    required this.onFetchDeliverables,
   });
 
   @override
@@ -125,6 +129,7 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder:
           (ctx) => Dialog(
             insetPadding: const EdgeInsets.all(24),
@@ -248,43 +253,83 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder:
+          (_) => const Center(
+            child: CircularProgressIndicator(color: primaryColor),
+          ),
     );
 
-    final accomplishments = await widget.onFetch(
-      widget.pgsId,
-      month.month.toString(),
-      month.year.toString(),
-    );
+    final results = await Future.wait([
+      widget.onFetch(
+        widget.pgsId,
+        month.month.toString(),
+        month.year.toString(),
+      ),
+      widget.onFetchDeliverables(widget.pgsId),
+    ]);
 
     if (!context.mounted) return;
     Navigator.pop(context);
 
+    final accomplishments = results[0] as List<PgsDeliverableAccomplishment>;
+    final allDeliverables = results[1] as List<PgsDeliverables>;
+
+    if (accomplishments.length < allDeliverables.length) {
+      final missing = allDeliverables.length - accomplishments.length;
+      showDialog(
+        context: context,
+        builder:
+            (_) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange.shade700,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Incomplete accomplishments',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: Text(
+                'All deliverables must have accomplishments recorded for '
+                '${_monthLabel(month)} before creating an Operations Review Protocol.\n\n'
+                '$missing out of ${allDeliverables.length} deliverable(s) '
+                '${missing == 1 ? 'has' : 'have'} no accomplishment yet.\n\n'
+                'Please encode all accomplishments first.',
+                style: const TextStyle(fontSize: 14, height: 1.5),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'Got it',
+                    style: TextStyle(
+                      color: primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+      );
+      return;
+    }
     showDialog(
       context: context,
-      barrierDismissible: true,
+      barrierDismissible: false,
       builder:
-          (_) =>
-          // OperationsReviewDialog(
-          //   data: widget.data,
-          //   accomplishments: accomplishments,
-          //   month: month,
-          //   existingProtocol: null,
-          //   onSave: (
-          //     request, {
-          //     Uint8List? minutesBytes,
-          //     String? minutesFileName,
-          //   }) async {
-          //     final success = await widget.onSave(
-          //       request,
-          //       minutesBytes: minutesBytes,
-          //       minutesFileName: minutesFileName,
-          //     );
-          //     if (success) await _loadProtocols();
-          //     return success;
-          //   },
-          // ),
-          OperationsReviewDialog(
+          (_) => OperationsReviewDialog(
             data: widget.data,
             accomplishments: accomplishments,
             month: month,
@@ -302,7 +347,6 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
               if (success) await _loadProtocols();
               return success;
             },
-
             onSaveAccomplishments: (updates) async {
               try {
                 await Future.wait(
@@ -352,28 +396,7 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
       context: context,
       barrierDismissible: true,
       builder:
-          (_) =>
-          //       OperationsReviewDialog(
-          //         data: widget.data,
-          //         accomplishments: accomplishments,
-          //         month: postingDate,
-          //         existingProtocol: protocol,
-          //         onSave: (
-          //           request, {
-          //           Uint8List? minutesBytes,
-          //           String? minutesFileName,
-          //         }) async {
-          //           final success = await widget.onSave(
-          //             request,
-          //             minutesBytes: minutesBytes,
-          //             minutesFileName: minutesFileName,
-          //           );
-          //           if (success) await _loadProtocols();
-          //           return success;
-          //         },
-          //       ),
-          // );
-          OperationsReviewDialog(
+          (_) => OperationsReviewDialog(
             data: widget.data,
             accomplishments: accomplishments,
             month: postingDate,
@@ -416,7 +439,6 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
     if (p.postingDate == null) return;
 
     final dio = Dio();
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -548,7 +570,6 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Header ────────────────────────────────────────────────
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
@@ -609,7 +630,7 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
                             vertical: 6,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                       ),
@@ -623,7 +644,11 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
                     _isLoading
                         ? const Padding(
                           padding: EdgeInsets.all(40),
-                          child: Center(child: CircularProgressIndicator()),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: primaryColor,
+                            ),
+                          ),
                         )
                         : _protocols.isEmpty
                         ? Padding(

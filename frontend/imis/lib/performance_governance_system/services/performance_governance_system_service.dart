@@ -142,7 +142,7 @@ class PerformanceGovernanceSystemService {
     } on DioException {
       debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     }
     return {'deliverables': deliverables, 'signatories': signatories};
   }
@@ -198,7 +198,7 @@ class PerformanceGovernanceSystemService {
         };
       }
     } catch (e) {
-      debugPrint('fetchFilteredPgsWithCounts error: $e');
+      debugPrint('fetchFilteredPgsWithCounts error:');
     }
 
     return {
@@ -305,10 +305,10 @@ class PerformanceGovernanceSystemService {
             .map((e) => PgsDeliverableAccomplishment.fromJson(e))
             .toList();
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.message}");
+    } on DioException {
+      debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     }
     return [];
   }
@@ -352,11 +352,11 @@ class PerformanceGovernanceSystemService {
               );
 
       return response.statusCode == 200 || response.statusCode == 201;
-    } on DioException catch (e) {
-      debugPrint('Dio error: ${e.message}');
+    } on DioException {
+      debugPrint('Dio error:');
       return false;
     } catch (e) {
-      debugPrint('Unexpected error: $e');
+      debugPrint('Unexpected error:');
       return false;
     }
   }
@@ -408,5 +408,12 @@ class PerformanceGovernanceSystemService {
       debugPrint("Unexpected error fetchProtocolById");
     }
     return null;
+  }
+
+  Future<List<PgsDeliverables>> fetchDeliverablesOnly({
+    required String pgsId,
+  }) async {
+    final result = await fetchDeliverablesAndSignatories(pgsId: pgsId);
+    return result['deliverables'] as List<PgsDeliverables>;
   }
 }

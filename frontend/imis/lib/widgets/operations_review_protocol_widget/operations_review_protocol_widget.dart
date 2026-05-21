@@ -65,7 +65,18 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
   final Dio _dio = Dio();
   String _headName = '—';
   bool _deputyError = false;
+  bool _frequencyScheduleError = false;
+  bool _venueError = false;
+  bool _scoreboardLocationError = false;
+  bool _scoreboardOICError = false;
+  bool _actionPlanError = false;
+  bool _frequencyUpdateError = false;
+  bool _celebrateWinsError = false;
+  bool _recognizeRewardError = false;
+  bool _frequencyError = false;
   bool _documenterError = false;
+  bool _minutesFileError = false;
+  File? _minutesFile;
   bool _isSaving = false;
   final Map<int, PgsStatus> _selectedStatuses = {};
   String get _monthLabel {
@@ -109,7 +120,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     _loadHeadName();
 
     for (var acc in widget.accomplishments) {
-      _selectedStatuses[acc.id!] = _resolveStatus(
+      _selectedStatuses[acc.id] = _resolveStatus(
         pgsStatus: acc.pgsStatus,
         statusInt: acc.status,
       );
@@ -261,7 +272,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'],
+        allowedExtensions: ['jpg', 'jpeg', 'png'],
         allowMultiple: false,
         withData: true,
       );
@@ -457,69 +468,38 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     return false;
   }
 
-  // Future<void> _save() async {
-  //   setState(() {
-  //     _deputyError = _deputyController.text.trim().isEmpty;
-  //     _documenterError = _documenterController.text.trim().isEmpty;
-  //   });
-
-  //   if (_deputyError || _documenterError) return;
-
-  //   setState(() => _isSaving = true);
-
-  //   final user = await AuthUtil.fetchLoggedUser();
-  //   if (user == null) return;
-
-  //   final request = OperationsReviewProtocol(
-  //     widget.existingProtocol?.id ?? 0,
-  //     widget.data.office.id,
-  //     widget.data.office.officeTypeId,
-  //     user.id,
-  //     _deputyController.text.trim(),
-  //     _documenterController.text.trim(),
-  //     widget.data.id,
-  //     _venueController.text.trim(),
-  //     _scoreboardLocationController.text.trim(),
-  //     _scoreboardOICController.text.trim(),
-  //     _actionPointsController.text.trim(),
-  //     _celebrateWinsController.text.trim(),
-  //     _recognizeRewardController.text.trim(),
-  //     null,
-  //     _frequencyScheduleController.text.trim(),
-  //     _frequencyUpdateController.text.trim(),
-  //     _frequencyController.text.trim(),
-  //     _minutesDeleted ? '' : (_existingMinutesPath ?? ''),
-  //     widget.month,
-  //     false,
-  //   );
-
-  //   final success = await widget.onSave(
-  //     request,
-  //     minutesBytes: _minutesBytes,
-  //     minutesFileName: _minutesFileName,
-  //   );
-
-  //   if (!mounted) return;
-  //   setState(() => _isSaving = false);
-
-  //   if (success) {
-  //     Navigator.pop(context);
-  //     ScaffoldMessenger.of(
-  //       context,
-  //     ).showSnackBar(const SnackBar(content: Text('Saved successfully.')));
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Failed to save. Please try again.')),
-  //     );
-  //   }
-  // }
   Future<void> _save() async {
     setState(() {
       _deputyError = _deputyController.text.trim().isEmpty;
       _documenterError = _documenterController.text.trim().isEmpty;
+      _frequencyError = _frequencyController.text.trim().isEmpty;
+      _frequencyScheduleError =
+          _frequencyScheduleController.text.trim().isEmpty;
+      _venueError = _venueController.text.trim().isEmpty;
+      _scoreboardLocationError =
+          _scoreboardLocationController.text.trim().isEmpty;
+      _scoreboardOICError = _scoreboardOICController.text.trim().isEmpty;
+      _actionPlanError = _actionPointsController.text.trim().isEmpty;
+      _frequencyUpdateError = _frequencyUpdateController.text.trim().isEmpty;
+      _celebrateWinsError = _celebrateWinsController.text.trim().isEmpty;
+      _recognizeRewardError = _recognizeRewardController.text.trim().isEmpty;
+      _minutesFileError = !_hasMinutesAttachment;
     });
 
-    if (_deputyError || _documenterError) return;
+    if (_deputyError ||
+        _documenterError ||
+        _frequencyError ||
+        _frequencyScheduleError ||
+        _venueError ||
+        _scoreboardLocationError ||
+        _scoreboardOICError ||
+        _actionPlanError ||
+        _frequencyUpdateError ||
+        _celebrateWinsError ||
+        _recognizeRewardError ||
+        _minutesFileError) {
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -549,13 +529,11 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       false,
     );
 
-    // Build the accomplishment status updates
     final accomplishmentUpdates =
         _selectedStatuses.entries.map((entry) {
           return (id: entry.key, status: _pgsStatusToInt(entry.value));
         }).toList();
 
-    // Run both saves concurrently
     final results = await Future.wait([
       widget.onSave(
         request,
@@ -567,22 +545,21 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
 
     if (!mounted) return;
     setState(() => _isSaving = false);
-
     final allSuccess = results.every((r) => r);
-
     if (allSuccess) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Saved successfully.')));
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Saved successfully'),
+      ).show(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save. Please try again.')),
-      );
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed to save'),
+      ).show(context);
     }
   }
 
-  // ADD THIS helper
   int _pgsStatusToInt(PgsStatus status) {
     switch (status) {
       case PgsStatus.notStarted:
@@ -690,23 +667,42 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
       color: primaryColor,
-      child: Column(
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          const Text(
-            'OPERATIONS REVIEW PROTOCOL',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-              letterSpacing: 1,
-            ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'OPERATIONS REVIEW PROTOCOL',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _monthLabel,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            _monthLabel,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 13,
+
+          Positioned(
+            right: 0,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              splashRadius: 18,
             ),
           ),
         ],
@@ -716,7 +712,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
 
   Widget _buildTopInfo(bool isMobile) {
     final office = widget.data.office;
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(),
@@ -869,21 +864,17 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                                       acc.deliverableName ?? '—',
                                     ),
                                     _readOnlyField('By When', byWhen),
-                                    // _readOnlyFieldWithBadge(
-                                    //   'Status',
-                                    //   _statusLabel(status),
-                                    //   _statusColor(status),
-                                    // ),
+
                                     _statusDropdown(
                                       label: 'Status',
                                       value:
-                                          _selectedStatuses[acc.id!] ??
+                                          _selectedStatuses[acc.id] ??
                                           PgsStatus.notStarted,
                                       onChanged: (value) {
                                         if (value == null) return;
 
                                         setState(() {
-                                          _selectedStatuses[acc.id!] = value;
+                                          _selectedStatuses[acc.id] = value;
                                         });
                                       },
                                     ),
@@ -908,11 +899,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       flex: 2,
-                                      // child: _readOnlyFieldWithBadge(
-                                      //   'Status',
-                                      //   _statusLabel(status),
-                                      //   _statusColor(status),
-                                      // ),
+
                                       child: _statusDropdown(
                                         label: 'Status',
                                         value:
@@ -949,9 +936,10 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                   _sectionTitle('CONVERSATION'),
                   _inputField('Venue', controller: _venueController),
                   _buildMinutesAttachmentField(),
-                  _inputField(
-                    'Frequency & Schedule',
+                  _requiredInputField(
+                    label: 'Frequency & Schedule',
                     controller: _frequencyScheduleController,
+                    hasError: _frequencyScheduleError,
                   ),
                 ],
               )
@@ -963,7 +951,11 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     child: Column(
                       children: [
                         _sectionTitle('CONVERSATION'),
-                        _inputField('Venue', controller: _venueController),
+                        _requiredInputField(
+                          label: 'Venue',
+                          controller: _venueController,
+                          hasError: _venueError,
+                        ),
                         _buildMinutesAttachmentField(),
                       ],
                     ),
@@ -973,9 +965,10 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     child: Column(
                       children: [
                         const SizedBox(height: 38),
-                        _inputField(
-                          'Frequency & Schedule',
+                        _requiredInputField(
+                          label: 'Frequency & Schedule',
                           controller: _frequencyScheduleController,
+                          hasError: _frequencyScheduleError,
                         ),
                       ],
                     ),
@@ -1031,14 +1024,30 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: const Icon(Icons.upload_file_outlined, color: Colors.blue),
+          icon: Icon(
+            Icons.upload_file_outlined,
+            color: _minutesFileError ? Colors.red : Colors.blue,
+          ),
           onPressed: _pickMinutesFile,
         ),
+
         Text(
-          'Upload 1 supported file: PDF or image. Max 10 MB',
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+          'Upload 1 supported file: Image only. Max 10 MB',
+          style: TextStyle(
+            color: _minutesFileError ? Colors.red : Colors.grey.shade500,
+            fontSize: 10,
+          ),
           textAlign: TextAlign.center,
         ),
+
+        if (_minutesFileError)
+          const Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Text(
+              'Minutes file is required',
+              style: TextStyle(color: Colors.red, fontSize: 11),
+            ),
+          ),
       ],
     );
   }
@@ -1167,22 +1176,27 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
               ? Column(
                 children: [
                   _sectionTitle('FEEDBACK'),
-                  _inputField(
-                    'Scoreboard Location',
+
+                  _requiredInputField(
+                    label: 'Scoreboard Location',
                     controller: _scoreboardLocationController,
+                    hasError: _scoreboardLocationError,
                   ),
-                  _inputField(
-                    'Scoreboard OIC',
+                  _requiredInputField(
+                    label: 'Scoreboard OIC',
                     controller: _scoreboardOICController,
+                    hasError: _scoreboardOICError,
                   ),
-                  _inputField(
-                    'Action Points',
+                  _requiredInputField(
+                    label: 'Action Plan/Point',
                     controller: _actionPointsController,
                     maxLines: 4,
+                    hasError: _actionPlanError,
                   ),
-                  _inputField(
-                    'Frequency of Update',
+                  _requiredInputField(
+                    label: 'Frequency of Update',
                     controller: _frequencyUpdateController,
+                    hasError: _frequencyUpdateError,
                   ),
                 ],
               )
@@ -1194,18 +1208,21 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     child: Column(
                       children: [
                         _sectionTitle('FEEDBACK'),
-                        _inputField(
-                          'Scoreboard Location',
+                        _requiredInputField(
+                          label: 'Scoreboard Location',
                           controller: _scoreboardLocationController,
+                          hasError: _scoreboardLocationError,
                         ),
-                        _inputField(
-                          'Scoreboard OIC',
+                        _requiredInputField(
+                          label: 'Scoreboard OIC',
                           controller: _scoreboardOICController,
+                          hasError: _scoreboardOICError,
                         ),
-                        _inputField(
-                          'Action Points',
+                        _requiredInputField(
+                          label: 'Action Plan/Point',
                           controller: _actionPointsController,
                           maxLines: 4,
+                          hasError: _actionPlanError,
                         ),
                       ],
                     ),
@@ -1215,9 +1232,10 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     child: Column(
                       children: [
                         const SizedBox(height: 38),
-                        _inputField(
-                          'Frequency of Update',
+                        _requiredInputField(
+                          label: 'Frequency of Update',
                           controller: _frequencyUpdateController,
+                          hasError: _frequencyUpdateError,
                         ),
                       ],
                     ),
@@ -1236,17 +1254,24 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
               ? Column(
                 children: [
                   _sectionTitle('RECOGNITION'),
-                  _inputField(
-                    'How do we celebrate wins as a unit?',
+                  _requiredInputField(
+                    label: 'How do we celebrate wins as a unit?',
                     controller: _celebrateWinsController,
+                    hasError: _celebrateWinsError,
                     maxLines: 3,
                   ),
-                  _inputField(
-                    'How do we recognize and reward the best performing members?',
+                  _requiredInputField(
+                    label:
+                        'How do we recognize and reward the best performing members?',
                     controller: _recognizeRewardController,
+                    hasError: _recognizeRewardError,
                     maxLines: 3,
                   ),
-                  _inputField('Frequency', controller: _frequencyController),
+                  _requiredInputField(
+                    label: 'Frequency',
+                    controller: _frequencyController,
+                    hasError: _frequencyError,
+                  ),
                 ],
               )
               : Row(
@@ -1257,15 +1282,18 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     child: Column(
                       children: [
                         _sectionTitle('RECOGNITION'),
-                        _inputField(
-                          'How do we celebrate wins as a unit?',
+                        _requiredInputField(
+                          label: 'How do we celebrate wins as a unit?',
                           controller: _celebrateWinsController,
                           maxLines: 3,
+                          hasError: _celebrateWinsError,
                         ),
-                        _inputField(
-                          'How do we recognize and reward the best performing members?',
+                        _requiredInputField(
+                          label:
+                              'How do we recognize and reward the best performing members?',
                           controller: _recognizeRewardController,
                           maxLines: 3,
+                          hasError: _recognizeRewardError,
                         ),
                       ],
                     ),
@@ -1275,9 +1303,10 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     child: Column(
                       children: [
                         const SizedBox(height: 38),
-                        _inputField(
-                          'Frequency',
+                        _requiredInputField(
+                          label: 'Frequency',
                           controller: _frequencyController,
+                          hasError: _frequencyError,
                         ),
                       ],
                     ),
@@ -1307,24 +1336,14 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
           const SizedBox(width: 12),
           ElevatedButton.icon(
             onPressed: _isSaving ? null : _save,
-            icon:
-                _isSaving
-                    ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                    : const Icon(Icons.save, size: 16),
+
             label: Text(_isSaving ? 'Saving...' : 'Save'),
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
           ),
@@ -1357,56 +1376,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
               border: Border.all(color: Colors.grey.shade200),
             ),
             child: Text(value, style: const TextStyle(fontSize: 14)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _readOnlyFieldWithBadge(String label, String value, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

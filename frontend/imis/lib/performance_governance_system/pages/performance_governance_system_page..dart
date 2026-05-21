@@ -185,7 +185,7 @@ class _PerformanceGovernanceSystemPageState
     } on DioException {
       debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -1942,13 +1942,19 @@ class _PerformanceGovernanceSystemPageState
                                     pgsId: pgs.id.toString(),
                                     startDate: pgs.pgsPeriod.startDate,
                                     endDate: pgs.pgsPeriod.endDate,
-                                    data: pgs, // ← add this
+                                    data: pgs,
                                     onFetch:
                                         (id, month, year) =>
                                             _pgsService.fetchIdDeliverable(
                                               pgsId: id,
                                               month: month,
                                               year: year,
+                                            ),
+                                    onFetchDeliverables:
+                                        (pgsId) =>
+                                            _pgsService.fetchDeliverablesOnly(
+                                              // ADD THIS
+                                              pgsId: pgsId,
                                             ),
                                     onFetchAll:
                                         (pgsId) => _pgsService
