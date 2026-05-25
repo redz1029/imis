@@ -12,7 +12,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/filter_widget/button_filter.dart';
-import 'package:imis/widgets/no_permission_widget.dart';
+import 'package:imis/widgets/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:intl/intl.dart';

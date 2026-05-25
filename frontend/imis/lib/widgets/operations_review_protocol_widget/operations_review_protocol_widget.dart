@@ -76,7 +76,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
   bool _frequencyError = false;
   bool _documenterError = false;
   bool _minutesFileError = false;
-  File? _minutesFile;
   bool _isSaving = false;
   final Map<int, PgsStatus> _selectedStatuses = {};
   String get _monthLabel {

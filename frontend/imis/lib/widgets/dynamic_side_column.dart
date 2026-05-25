@@ -48,11 +48,9 @@ class DynamicSideColumn1 extends StatelessWidget {
                     selectedDayPredicate: (day) => isSameDay(selectedDay, day),
                     onDaySelected: onDaySelected,
                     onFormatChanged: onFormatChanged,
-                    rowHeight: 28, // smaller row height
+                    rowHeight: 28,
                     calendarStyle: CalendarStyle(
-                      defaultTextStyle: const TextStyle(
-                        fontSize: 10,
-                      ), // small numbers
+                      defaultTextStyle: const TextStyle(fontSize: 10),
                       weekendTextStyle: const TextStyle(fontSize: 10),
                       selectedDecoration: BoxDecoration(
                         color: primaryTextColor,

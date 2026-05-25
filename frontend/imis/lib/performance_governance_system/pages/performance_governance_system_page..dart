@@ -1,7 +1,5 @@
-// ignore_for_file: use_build_context_synchronously
-
+// ignore_for_file: file_names, use_build_context_synchronously
 import 'dart:typed_data';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +10,7 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_action_type.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
-import 'package:imis/performance_governance_system/pages/pgs_reports.dart';
+import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
@@ -23,7 +21,7 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/accomplishment_widget.dart/breakthrough_widget.dart';
 import 'package:imis/widgets/filter_widget/button_filter.dart';
-import 'package:imis/widgets/no_permission_widget.dart';
+import 'package:imis/widgets/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/operations_review_protocol_widget/monthly_review_dialog_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
@@ -195,7 +193,6 @@ class _PerformanceGovernanceSystemPageState
     if (_isLoading) return;
     setState(() => _isLoading = true);
     final targetPage = page ?? _currentPage;
-
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
       if (user == null) return;
@@ -245,7 +242,6 @@ class _PerformanceGovernanceSystemPageState
   Future<bool> pgsSaveAsDraft(PerformanceGovernanceSystem pgs) async {
     final statusCode = await _pgsService.saveAsDraft(pgs);
     _lastResponseStatusCode = statusCode;
-
     if (statusCode == 200 || statusCode == 201) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('selectedOfficeId');
@@ -816,12 +812,10 @@ class _PerformanceGovernanceSystemPageState
                               'Unknown';
 
                           final bool isLast = index == signatories.length - 1;
-
                           return IntrinsicHeight(
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Timeline line + dot
                                 SizedBox(
                                   width: 28,
                                   child: Column(
@@ -1140,7 +1134,7 @@ class _PerformanceGovernanceSystemPageState
         });
       }
     } catch (e) {
-      debugPrint("Error loading data: $e");
+      debugPrint("Error loading data");
     }
   }
 
@@ -1391,7 +1385,7 @@ class _PerformanceGovernanceSystemPageState
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        gap8px,
         SizedBox(
           height: 38,
           child: PermissionWidget(
@@ -1406,9 +1400,10 @@ class _PerformanceGovernanceSystemPageState
             child: _officeDropdown(),
           ),
         ),
-        const SizedBox(height: 8),
+        gap8px,
         SizedBox(height: 38, child: _startDateDropdown()),
-        const SizedBox(height: 8),
+        gap8px,
+
         SizedBox(height: 38, child: _endDateDropdown()),
       ],
     );
@@ -1614,50 +1609,6 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  // Widget _buildDesktopHeader() {
-  //   return Container(
-  //     padding: const EdgeInsets.symmetric(vertical: 10),
-  //     decoration: BoxDecoration(
-  //       border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-  //     ),
-  //     child: Row(
-  //       children: const [
-  //         Expanded(
-  //           flex: 1,
-  //           child: Text("#", style: TextStyle(fontWeight: FontWeight.bold)),
-  //         ),
-  //         Expanded(
-  //           flex: 3,
-  //           child: Text(
-  //             "Office",
-  //             style: TextStyle(fontWeight: FontWeight.bold),
-  //           ),
-  //         ),
-  //         Expanded(
-  //           flex: 2,
-  //           child: Text(
-  //             "Period",
-  //             style: TextStyle(fontWeight: FontWeight.bold),
-  //           ),
-  //         ),
-  //         Expanded(
-  //           flex: 2,
-  //           child: Text(
-  //             "Status",
-  //             style: TextStyle(fontWeight: FontWeight.bold),
-  //           ),
-  //         ),
-  //         Expanded(
-  //           flex: 2,
-  //           child: Text(
-  //             "Actions",
-  //             style: TextStyle(fontWeight: FontWeight.bold),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
   Widget _buildDesktopHeader() {
     return Column(
       children: [
@@ -1953,7 +1904,6 @@ class _PerformanceGovernanceSystemPageState
                                     onFetchDeliverables:
                                         (pgsId) =>
                                             _pgsService.fetchDeliverablesOnly(
-                                              // ADD THIS
                                               pgsId: pgsId,
                                             ),
                                     onFetchAll:
@@ -2222,7 +2172,7 @@ class _PerformanceGovernanceSystemPageState
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              gap8px,
               Row(
                 children: [
                   Container(
@@ -2238,14 +2188,14 @@ class _PerformanceGovernanceSystemPageState
                   Text(status, style: TextStyle(color: getStatusColor(status))),
                 ],
               ),
-              const SizedBox(height: 4),
+              gap4px,
               Row(
                 children: [
                   const Text("Office: ", style: TextStyle(color: Colors.grey)),
                   Expanded(child: Text(officeName)),
                 ],
               ),
-              const SizedBox(height: 4),
+              gap4px,
               Row(
                 children: [
                   const Text("Period: ", style: TextStyle(color: Colors.grey)),
@@ -4067,7 +4017,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     );
   }
 
-  // ── OPTIMIZED: _buildProcessCell uses cache on onChanged ─────────────────
   Widget _buildProcessCell(int i) {
     final hasEditPermission = _permissionService.hasPermission(
       AppPermissions.editPerformanceGovernanceSystem,
@@ -4404,10 +4353,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               ),
             ),
           ),
-          if (hasEditPermission) ...[
-            const SizedBox(height: 6),
-            changeKraButton,
-          ],
+          if (hasEditPermission) ...[gap6px, changeKraButton],
         ],
       ),
     );
@@ -4471,21 +4417,21 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  gap12px,
                   const Text(
                     "Reason for Disapproval",
                     style: TextStyle(fontSize: 13, color: Color(0xFFB91C1C)),
                   ),
-                  const SizedBox(height: 4),
+                  gap4px,
                   SelectableText(
                     _reasonCtrl[i]?.text.isNotEmpty == true
                         ? _reasonCtrl[i]!.text
                         : 'No reason provided',
                     style: const TextStyle(fontSize: 13, color: Colors.black87),
                   ),
-                  const SizedBox(height: 12),
+                  gap12px,
                   const Divider(thickness: 0.3),
-                  const SizedBox(height: 6),
+                  gap6px,
                   const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -4504,7 +4450,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  gap6px,
                   Container(
                     width: double.infinity,
                     constraints: const BoxConstraints(
@@ -4646,7 +4592,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               ),
             ),
           ),
-          const SizedBox(height: 6),
+          gap6px,
           _readinessRow(
             'COMPETENCE TO DELIVER',
             [
@@ -4682,7 +4628,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             (v) => setState(() => _confidence = v),
             isMobile,
           ),
-          const SizedBox(height: 14),
+          gap14px,
           Container(
             padding: EdgeInsets.symmetric(
               horizontal: isMobile ? 14 : 20,
@@ -4785,7 +4731,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 6),
+        gap6px,
         isMobile
             ? Column(
               children: [
@@ -4891,7 +4837,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                                 color: ratingTextColor(val),
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            gap4px,
                             Text(
                               descs[i],
                               textAlign: TextAlign.center,
@@ -4924,7 +4870,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _mobileOfficeHeader(),
-            const SizedBox(height: 6),
+            gap6px,
             ...List.generate(_rows.length, (i) => _mobileDeliverableCard(i)),
           ],
         ),

@@ -9,13 +9,13 @@ import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
-import 'package:imis/reports/pages/view_pdf_summary.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart' show PaginationUtil;
 import 'package:imis/utils/permission_string.dart';
+import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/button_widget/filter_button_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
@@ -63,7 +63,6 @@ class ViewSummaryNarrativeReportPageState
   @override
   void initState() {
     super.initState();
-    // _fetchReports();
     () async {
       final period = await _commonService.fetchPgsPeriod();
       final offices = await _commonService.fetchOffices();
@@ -438,7 +437,7 @@ class ViewSummaryNarrativeReportPageState
                                                       color: Colors.blueAccent,
                                                     ),
                                                     onPressed: () {
-                                                      viewPdfSummary(
+                                                      viewAuditorSummaryNarrativeReport(
                                                         summary.pgsPeriodId
                                                             .toString(),
                                                         summary.officeId
@@ -503,7 +502,7 @@ class ViewSummaryNarrativeReportPageState
                                                   }
                                                   if (value == 'preview') {
                                                     if (selectedTabIndex == 1) {
-                                                      viewPdfSummary(
+                                                      viewAuditorSummaryNarrativeReport(
                                                         summary.pgsPeriodId
                                                             .toString(),
                                                         summary.officeId
@@ -511,7 +510,7 @@ class ViewSummaryNarrativeReportPageState
                                                         context: context,
                                                       );
                                                     } else {
-                                                      viewPdfSummary(
+                                                      viewAuditorSummaryNarrativeReport(
                                                         summary.pgsPeriodId
                                                             .toString(),
                                                         summary.officeId
@@ -769,7 +768,7 @@ class ViewSummaryNarrativeReportPageState
                         const Spacer(),
                         ElevatedButton.icon(
                           onPressed:
-                              () => viewPdfSummary(
+                              () => viewAuditorSummaryNarrativeReport(
                                 report.pgsPeriodId.toString(),
                                 report.officeId.toString(),
                                 context: context,

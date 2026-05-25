@@ -12,12 +12,12 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
-import 'package:imis/reports/pages/view_pdf_summary.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -475,7 +475,7 @@ class ManageSummaryNarrativeDialogState
           tooltip: 'Print Preview',
           visualDensity: compact ? VisualDensity.compact : null,
           onPressed:
-              () => viewPdfSummary(
+              () => viewAuditorSummaryNarrativeReport(
                 summary.pgsPeriodId.toString(),
                 summary.officeId.toString(),
                 context: context,
@@ -1130,7 +1130,7 @@ class ManageSummaryNarrativeDialogState
 
                           ElevatedButton.icon(
                             onPressed:
-                                () => viewPdfSummary(
+                                () => viewAuditorSummaryNarrativeReport(
                                   report.pgsPeriodId.toString(),
                                   report.officeId.toString(),
                                   context: context,

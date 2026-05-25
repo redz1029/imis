@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
 import 'package:imis/roadmap/kra_period_roadmap/services/kra_period_roadmap_service.dart';
-import 'package:imis/scorecard/pages/process_core_support_pdf.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 
 class ScoreCardReportPage extends StatefulWidget {
@@ -228,7 +228,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                                       color: Colors.blueAccent,
                                                     ),
                                                     onPressed: () {
-                                                      openProcessCoreSupport(
+                                                      openProcessCoreSupportPrintPreview(
                                                         period.id.toString(),
                                                         'Process(Core & Support)',
                                                       );
@@ -274,7 +274,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                             color: Colors.blueAccent,
                                           ),
                                           onPressed: () {
-                                            openProcessCoreSupport(
+                                            openProcessCoreSupportPrintPreview(
                                               period.id.toString(),
                                               'Process(Core & Support)',
                                             );

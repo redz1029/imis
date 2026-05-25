@@ -7,7 +7,7 @@ import 'package:imis/performance_governance_system/process_core_support/models/k
 import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/no_permission_widget.dart';
+import 'package:imis/widgets/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:imis/widgets/accomplishment_widget.dart/scorecard_monitoring_accomplishment_widget.dart';
 import 'package:imis/scorecard/services/score_card_monitoring_services.dart';

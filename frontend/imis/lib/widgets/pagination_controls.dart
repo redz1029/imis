@@ -60,7 +60,6 @@ class PaginationControls extends StatelessWidget {
   List<Widget> _buildPageButtons(int totalPages) {
     final buttons = <Widget>[];
 
-    // Always show first page
     if (currentPage > 2) {
       buttons.add(_buildPageButton(1));
       if (currentPage > 3) {
@@ -68,7 +67,6 @@ class PaginationControls extends StatelessWidget {
       }
     }
 
-    // Show pages around current page
     int startPage = currentPage - 1;
     int endPage = currentPage + 1;
 
@@ -79,7 +77,6 @@ class PaginationControls extends StatelessWidget {
       buttons.add(_buildPageButton(i));
     }
 
-    // Always show last page if not in current range
     if (currentPage < totalPages - 1) {
       if (currentPage < totalPages - 2) {
         buttons.add(const Text('...', style: TextStyle(color: grey)));

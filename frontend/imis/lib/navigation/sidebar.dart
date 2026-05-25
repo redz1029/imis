@@ -24,7 +24,6 @@ import 'package:imis/roadmap/pages/roadmap_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/scorecard/pages/score_card_monitoring_page.dart';
 import 'package:imis/scorecard/pages/score_card_report_page.dart';
-import 'package:imis/strategy_review_report/pages/strategy_review_report_page.dart';
 import 'package:imis/swot/pages/swot_page.dart';
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/change_password_page.dart';
