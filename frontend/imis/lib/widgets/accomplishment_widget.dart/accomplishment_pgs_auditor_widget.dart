@@ -9,6 +9,7 @@ import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
@@ -98,7 +99,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
   bool isLoading = false;
   Uint8List? _serverImageCache;
   OverlayEntry? _overlayEntry;
-
+  bool _serverImageFetchAttempted = false;
   @override
   void initState() {
     super.initState();
@@ -127,17 +128,28 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
     final row =
         achievementsList[widget.deliverableId]?.rows[widget.periodIndex];
     if (row == null) return;
-    if (row.accomplishmentId == null) return;
-    if (row.attachmentBytes != null) return;
+    if (row.accomplishmentId == null) {
+      setState(() => _serverImageFetchAttempted = true);
+      return;
+    }
+    if (row.attachmentBytes != null) {
+      setState(() => _serverImageFetchAttempted = true);
+      return;
+    }
 
     final name = row.attachmentPath?.split("/").last ?? "";
-    if (_isPdf(name)) return;
-    if (name.isEmpty) return;
+    if (name.isEmpty || _isPdf(name)) {
+      setState(() => _serverImageFetchAttempted = true);
+      return;
+    }
 
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
       final token = loggedUser?.accessToken;
-      if (token == null) return;
+      if (token == null) {
+        setState(() => _serverImageFetchAttempted = true);
+        return;
+      }
 
       final previewUrl =
           "${ApiEndpoint.baseUrl}/${row.accomplishmentId}/preview";
@@ -153,10 +165,12 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
       if (mounted) {
         setState(() {
           _serverImageCache = Uint8List.fromList(response.data!);
+          _serverImageFetchAttempted = true;
         });
       }
     } catch (e) {
       debugPrint("Thumbnail prefetch failed: $e");
+      if (mounted) setState(() => _serverImageFetchAttempted = true);
     }
   }
 
@@ -384,21 +398,42 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
     return _serverImageCache;
   }
 
-  Widget _buildAttachmentCell(TrackingRowData row, bool canEdit) {
+  Widget _buildAttachmentCell(TrackingRowData row) {
     final hasAttachment = row.attachmentPath != null;
 
     if (!hasAttachment) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
-            icon: const Icon(Icons.upload_file_outlined, color: Colors.blue),
-            onPressed: canEdit ? pickFile : null,
+          PermissionWidget(
+            allowedRoles: [
+              PermissionString.roleAdmin,
+              PermissionString.roleStandardUser,
+            ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.upload_file_outlined,
+                    color: Colors.blue,
+                  ),
+                  onPressed: pickFile,
+                ),
+                Text(
+                  'Upload 1 supported file: PDF or image. Max 10 MB',
+                  style: TextStyle(color: grey, fontSize: 10),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
-          Text(
-            'Upload 1 supported file: PDF or image. Max 10 MB',
-            style: TextStyle(color: grey, fontSize: 10),
-            textAlign: TextAlign.center,
+          PermissionWidget(
+            allowedRoles: [PermissionString.pgsAuditor],
+            child: Text(
+              'No attachment',
+              style: TextStyle(color: grey, fontSize: 12),
+            ),
           ),
         ],
       );
@@ -450,8 +485,12 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                 ),
               ),
             ),
-            if (canEdit)
-              SizedBox(
+            PermissionWidget(
+              allowedRoles: [
+                PermissionString.roleAdmin,
+                PermissionString.roleStandardUser,
+              ],
+              child: SizedBox(
                 width: 28,
                 height: 28,
                 child: IconButton(
@@ -469,6 +508,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                   tooltip: "Delete",
                 ),
               ),
+            ),
           ],
         ),
       ],
@@ -698,77 +738,88 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
             child: ValueListenableBuilder<PgsStatus>(
               valueListenable: selectedStatus,
               builder: (context, status, _) {
-                if (!canEdit) {
-                  return Center(
-                    child: Tooltip(
-                      message:
-                          statusDescriptions[status] ??
-                          statusDisplayNames[status]!,
-                      child: Text(statusDisplayNames[status]!),
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PermissionWidget(
+                      allowedRoles: [PermissionString.pgsAuditor],
+                      child: Center(
+                        child: Tooltip(
+                          message: statusDescriptions[status] ?? '',
+                          child: Text(
+                            statusDisplayNames[status]!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ),
                     ),
-                  );
-                }
 
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  child: DropdownButtonFormField<PgsStatus>(
-                    initialValue: status,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.all(8.0),
+                    PermissionWidget(
+                      allowedRoles: [
+                        PermissionString.roleAdmin,
+                        PermissionString.roleStandardUser,
+                      ],
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        child: DropdownButtonFormField<PgsStatus>(
+                          value: status,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.all(8.0),
+                          ),
+                          onChanged: (newValue) {
+                            if (newValue == null) return;
+                            final rows =
+                                achievementsList[widget.deliverableId]!.rows;
+
+                            void applyStatus(int index, PgsStatus s) {
+                              final r = rows[index];
+                              r.status.value = s;
+                              if (s == PgsStatus.completed) {
+                                r.percentageController.text = '100';
+                              } else if (s == PgsStatus.notStarted) {
+                                r.percentageController.text = '0';
+                              } else if (s == PgsStatus.onGoing &&
+                                  r.percentageController.text == '100') {
+                                r.percentageController.text = '1';
+                              }
+                            }
+
+                            applyStatus(widget.periodIndex, newValue);
+
+                            if (newValue == PgsStatus.completed) {
+                              for (
+                                int i = widget.periodIndex + 1;
+                                i < rows.length;
+                                i++
+                              ) {
+                                applyStatus(i, PgsStatus.completed);
+                              }
+                            }
+                          },
+                          items:
+                              PgsStatus.values.map((value) {
+                                return DropdownMenuItem<PgsStatus>(
+                                  value: value,
+                                  child: Tooltip(
+                                    message: statusDescriptions[value] ?? '',
+                                    child: Text(
+                                      statusDisplayNames[value]!,
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+                      ),
                     ),
-                    onChanged: (newValue) {
-                      if (newValue == null) return;
-
-                      final rows = achievementsList[widget.deliverableId]!.rows;
-
-                      void applyStatus(int index, PgsStatus status) {
-                        final r = rows[index];
-                        r.status.value = status;
-                        if (status == PgsStatus.completed) {
-                          r.percentageController.text = '100';
-                        } else if (status == PgsStatus.notStarted) {
-                          r.percentageController.text = '0';
-                        } else if (status == PgsStatus.onGoing &&
-                            r.percentageController.text == '100') {
-                          r.percentageController.text = '1';
-                        }
-                      }
-
-                      applyStatus(widget.periodIndex, newValue);
-
-                      if (newValue == PgsStatus.completed) {
-                        for (
-                          int i = widget.periodIndex + 1;
-                          i < rows.length;
-                          i++
-                        ) {
-                          applyStatus(i, PgsStatus.completed);
-                        }
-                      }
-                    },
-                    items:
-                        PgsStatus.values.map((value) {
-                          return DropdownMenuItem<PgsStatus>(
-                            value: value,
-                            child: Tooltip(
-                              message:
-                                  statusDescriptions[value] ??
-                                  statusDisplayNames[value],
-                              child: Text(
-                                statusDisplayNames[value]!,
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                  ),
+                  ],
                 );
               },
             ),
           ),
-
           Expanded(
             flex: 2,
             child: ValueListenableBuilder<PgsStatus>(
@@ -828,16 +879,32 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                               width: 40,
                               height: 40,
                               child: Center(
-                                child:
-                                    canEdit
-                                        ? _buildEditablePercentage(status)
-                                        : Text(
-                                          '${value.text}%',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Auditor → text only
+                                    PermissionWidget(
+                                      allowedRoles: [
+                                        PermissionString.pgsAuditor,
+                                      ],
+                                      child: Text(
+                                        '${value.text}%',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
                                         ),
+                                      ),
+                                    ),
+                                    // Admin / Standard User → editable
+                                    PermissionWidget(
+                                      allowedRoles: [
+                                        PermissionString.roleAdmin,
+                                        PermissionString.roleStandardUser,
+                                      ],
+                                      child: _buildEditablePercentage(status),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -871,7 +938,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
             flex: 2,
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 6),
-              child: _buildAttachmentCell(row, canEdit),
+              child: _buildAttachmentCell(row),
             ),
           ),
 
@@ -912,7 +979,6 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
   }
 }
 
-/// Pass the monthlyPeriods list so each row knows its month/year for postingDate.
 Future<void> loadAccomplishments(
   int deliverableId,
   List<Map<String, dynamic>> monthlyPeriods,
