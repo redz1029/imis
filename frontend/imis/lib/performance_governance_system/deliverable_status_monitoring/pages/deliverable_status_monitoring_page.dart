@@ -9,7 +9,7 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/filter_widget/filter_bottom_sheet.dart';
-import 'package:imis/widgets/no_permission_widget.dart';
+import 'package:imis/widgets/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:imis/constant/constant.dart';
@@ -1567,42 +1567,48 @@ class _DeliverableStatusMonitoringPageState
     bool disabled = false,
     bool fullWidth = false,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: fullWidth ? double.infinity : null,
-        padding: EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: fullWidth ? 10 : 6,
-        ),
-        decoration: BoxDecoration(
-          color: disabled ? Colors.grey.shade50 : color.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color:
-                disabled ? Colors.grey.shade200 : color.withValues(alpha: 0.3),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: fullWidth ? double.infinity : null,
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: fullWidth ? 10 : 6,
           ),
-        ),
-        child: Row(
-          mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
-          mainAxisAlignment:
-              fullWidth ? MainAxisAlignment.center : MainAxisAlignment.start,
-          children: [
-            Icon(
-              icon,
-              size: 13,
-              color: disabled ? Colors.grey.shade400 : color,
+          decoration: BoxDecoration(
+            color:
+                disabled ? Colors.grey.shade50 : color.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color:
+                  disabled
+                      ? Colors.grey.shade200
+                      : color.withValues(alpha: 0.3),
             ),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
+          ),
+          child: Row(
+            mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisAlignment:
+                fullWidth ? MainAxisAlignment.center : MainAxisAlignment.start,
+            children: [
+              Icon(
+                icon,
+                size: 13,
                 color: disabled ? Colors.grey.shade400 : color,
-                fontWeight: FontWeight.w600,
               ),
-            ),
-          ],
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: disabled ? Colors.grey.shade400 : color,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
