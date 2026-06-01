@@ -19,7 +19,7 @@ namespace IMIS.Application.KraRoadMapModule
         Task<List<KraRoadMapKpi>> GetKpisByRoleAsync(int? kraid, string roleId, int? fromYear, int? toYear, CancellationToken cancellationToken);
         Task<List<(long KraRoadMapId, DateTime StartYear, DateTime EndYear)>> GetRoadMapPeriodsAsync(List<KraRoadMapDeliverable> deliverables, CancellationToken cancellationToken);
         Task<List<(long KraRoadMapId, DateTime StartYear, DateTime EndYear)>> GetRoadMapPeriodsForKpisAsync(List<KraRoadMapKpi> kpis, CancellationToken cancellationToken);
-        Task<List<KraRoadMapRole>> GetStrategyReviewRoadmapForUserAsync(List<string> roleNames, long pgsRoadMapPeriodId, CancellationToken cancellationToken);
         Task<List<KraRoadMapRole>> GetStrategyReviewRoadmapByRoleAsync(string roleId, long pgsRoadMapPeriodId, CancellationToken cancellationToken);
+        Task<List<KraRoadMapRole>> GetAllStrategyReviewRoadmapAsync(long pgsRoadMapPeriodId, CancellationToken cancellationToken);
     }
 }

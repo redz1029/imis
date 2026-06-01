@@ -59,7 +59,7 @@ namespace IMIS.Persistence.KraRoadMapModule
                 role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase))
             {
-                data = await _repository.GetStrategyReviewRoadmapForUserAsync(userRoles.ToList(), pgsRoadMapPeriodId, cancellationToken);
+                data = await _repository.GetAllStrategyReviewRoadmapAsync(pgsRoadMapPeriodId, cancellationToken);
             }
             else
             {

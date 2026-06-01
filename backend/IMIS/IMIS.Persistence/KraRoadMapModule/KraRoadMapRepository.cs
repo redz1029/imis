@@ -34,17 +34,13 @@ namespace IMIS.Persistence.KraRoadMapModule
                 .ConfigureAwait(false);
         }
 
-
-        public async Task<List<KraRoadMapRole>> GetStrategyReviewRoadmapForUserAsync(List<string> roleNames, long pgsRoadMapPeriodId, CancellationToken cancellationToken)
+        public async Task<List<KraRoadMapRole>> GetAllStrategyReviewRoadmapAsync(long pgsRoadMapPeriodId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<KraRoadMap>()
                 .AsNoTracking()
                 .Include(x => x.Kra)
                 .Include(x => x.Role)
-                .Where(x =>
-                    x.KraRoadMapPeriodId == pgsRoadMapPeriodId &&
-                    x.Role != null &&
-                    roleNames.Contains(x.Role.Name!))
+                .Where(x => x.KraRoadMapPeriodId == pgsRoadMapPeriodId)
                 .Select(x => new KraRoadMapRole
                 {
                     Id = (int)x.Id,
@@ -55,8 +51,7 @@ namespace IMIS.Persistence.KraRoadMapModule
                 })
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-        }
-
+        }     
         //// ====== Get specific deliverables for a Role ======       
         public async Task<List<KraRoadMapDeliverable>> GetDeliverablesByRoleAsync(int? kraId, int? fromYear, int? toYear, string roleId, CancellationToken cancellationToken)
         {
