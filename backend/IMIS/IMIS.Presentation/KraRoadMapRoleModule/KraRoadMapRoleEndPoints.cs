@@ -1,4 +1,5 @@
 ﻿using Carter;
+using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapRoleAssignmentModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -29,6 +30,16 @@ namespace IMIS.Presentation.KraRoadMapRoleModule
             app.MapGet("/roleid", async (IKraRoadMapRoleService service, CancellationToken cancellationToken) =>
             {
                 var kraRoadMapRoleDto = await service.GetAllRoadmapForUserAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(kraRoadMapRoleDto);
+            })
+            .WithTags(_kraRoadmapRole)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadmapRole), true);
+
+            app.MapGet("/strategyreview/roleid/{pgsRoadMapPeriodId}", async (long pgsRoadMapPeriodId, IKraRoadMapService service, CancellationToken cancellationToken) =>
+            {
+                var kraRoadMapRoleDto = await service
+                    .GetStrategyReviewRoadmapForUserAsync(pgsRoadMapPeriodId, cancellationToken).ConfigureAwait(false);
+
                 return Results.Ok(kraRoadMapRoleDto);
             })
             .WithTags(_kraRoadmapRole)

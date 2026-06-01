@@ -6,6 +6,7 @@ using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
+using IMIS.Application.KraRoadMapRoleAssignmentModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.RoadmapGutCheckModule;
 using IMIS.Domain;
@@ -33,7 +34,50 @@ namespace IMIS.Persistence.KraRoadMapModule
             _kraRoadMapPeriodRepository = kraRoadMapPeriodRepository;
             _userManager = userManager;
             _roleManager = roleManager;
-        }     
+        }
+        
+        public async Task<List<KraRoadMapRoleDto>> GetStrategyReviewRoadmapForUserAsync(long pgsRoadMapPeriodId, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+                return new List<KraRoadMapRoleDto>();
+
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
+            if (!userRoles.Any())
+                return new List<KraRoadMapRoleDto>();
+
+            var roleName = userRoles.First();
+            var role = await _roleManager.FindByNameAsync(roleName);
+
+            if (role == null)
+                return new List<KraRoadMapRoleDto>();
+
+            List<KraRoadMapRole> data;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                data = await _repository.GetStrategyReviewRoadmapForUserAsync(userRoles.ToList(), pgsRoadMapPeriodId, cancellationToken);
+            }
+            else
+            {
+                data = await _repository.GetStrategyReviewRoadmapByRoleAsync(role.Id, pgsRoadMapPeriodId, cancellationToken);
+            }
+
+            if (!data.Any())
+                return new List<KraRoadMapRoleDto>();
+
+            return data.Select(x => new KraRoadMapRoleDto
+            {
+                Id = x.Id,
+                KraId = x.KraId,
+                RoleId = x.RoleId,
+                KraName = x.Kra?.Name,
+                StrategicObjectives = x.Kra?.StrategicObjective
+            }).ToList();
+        }
         public async Task<List<FilterKraPeriodKraDeliverableDto>> GetGroupedDeliverablesAsync(
         int? kraid,
         int? fromYear,

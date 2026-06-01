@@ -13,6 +13,50 @@ namespace IMIS.Persistence.KraRoadMapModule
         {
         }
 
+        public async Task<List<KraRoadMapRole>> GetStrategyReviewRoadmapByRoleAsync(string roleId, long pgsRoadMapPeriodId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<KraRoadMap>()
+                .AsNoTracking()
+                .Include(x => x.Kra)
+                .Include(x => x.Role)
+                .Where(x =>
+                    x.KraRoadMapPeriodId == pgsRoadMapPeriodId &&
+                    x.RoleId == roleId)
+                .Select(x => new KraRoadMapRole
+                {
+                    Id = (int)x.Id,
+                    KraId = x.KraId,
+                    RoleId = x.RoleId,
+                    Kra = x.Kra,
+                    Role = x.Role
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+
+        public async Task<List<KraRoadMapRole>> GetStrategyReviewRoadmapForUserAsync(List<string> roleNames, long pgsRoadMapPeriodId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<KraRoadMap>()
+                .AsNoTracking()
+                .Include(x => x.Kra)
+                .Include(x => x.Role)
+                .Where(x =>
+                    x.KraRoadMapPeriodId == pgsRoadMapPeriodId &&
+                    x.Role != null &&
+                    roleNames.Contains(x.Role.Name!))
+                .Select(x => new KraRoadMapRole
+                {
+                    Id = (int)x.Id,
+                    KraId = x.KraId,
+                    RoleId = x.RoleId,
+                    Kra = x.Kra,
+                    Role = x.Role
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         //// ====== Get specific deliverables for a Role ======       
         public async Task<List<KraRoadMapDeliverable>> GetDeliverablesByRoleAsync(int? kraId, int? fromYear, int? toYear, string roleId, CancellationToken cancellationToken)
         {
