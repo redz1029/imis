@@ -1,6 +1,5 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.KraRoadMapModule

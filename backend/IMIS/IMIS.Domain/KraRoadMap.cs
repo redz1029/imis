@@ -13,5 +13,7 @@ namespace IMIS.Domain
         public List<KraRoadMapKpi>? Kpis { get; set; }      
         public string? RoleId { get; set; }
         public IdentityRole? Role { get; set; }
+        public int? RoadmapGutCheckId { get; set; }
+        public RoadmapGutCheck? RoadmapGutCheck { get; set; }
     }
 }

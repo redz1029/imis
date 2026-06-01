@@ -4,6 +4,7 @@ using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.PgsKraModule;
+using IMIS.Application.RoadmapGutCheckModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.KraRoadMapModule
@@ -42,6 +43,16 @@ namespace IMIS.Application.KraRoadMapModule
 
         public string? Kpi1Description => Kpi1?.KpiDescription;
         public string? Kpi2Description => Kpi2?.KpiDescription;
+
+        public RoadmapGutCheckDto? RoadmapGutCheck { get; set; }
+        public double Ownership => RoadmapGutCheck!.Ownership;
+        public double Alignment => RoadmapGutCheck!.Alignment;  
+        public double Contribution => RoadmapGutCheck!.Contribution;
+        public double Measurement => RoadmapGutCheck!.Measurement;
+        public double Adaptability => RoadmapGutCheck!.Adaptability;
+        public double Coherence => RoadmapGutCheck!.Coherence;
+        public double Commitment => RoadmapGutCheck!.Commitment;
+        public double TotalScore => RoadmapGutCheck!.TotalScore;
 
         public required string UserId { get; set; }
 
@@ -82,6 +93,10 @@ namespace IMIS.Application.KraRoadMapModule
                 .ToList();
 
             UserId = entity.RoleId!;
+
+            RoadmapGutCheck = entity.RoadmapGutCheck != null
+          ? new RoadmapGutCheckDto(entity.RoadmapGutCheck)
+          : null;
         }
 
         public override KraRoadMap ToEntity()
@@ -93,8 +108,10 @@ namespace IMIS.Application.KraRoadMapModule
                 KraRoadMapPeriodId = KraRoadMapPeriodId,
                 Deliverables = Deliverables?.SelectMany(g => g.Items).ToList(),
                 Kpis = Kpis?.Select(k => k.ToEntity()).ToList(),
-                RoleId = UserId
+                RoleId = UserId,
+                RoadmapGutCheck = RoadmapGutCheck?.ToEntity()
             };
+
         }
     }
 }

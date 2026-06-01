@@ -178,6 +178,7 @@ namespace IMIS.Persistence.KraRoadMapModule
                 .Include(x => x.KraRoadMapPeriod)
                 .Include(x => x.Deliverables)
                 .Include(x => x.Kpis)
+                .Include(x => x.RoadmapGutCheck)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
                 .ConfigureAwait(false);
 
