@@ -1,4 +1,4 @@
-﻿using Base.Primitives;
+﻿ using Base.Primitives;
 
 namespace IMIS.Domain
 {
@@ -13,9 +13,6 @@ namespace IMIS.Domain
 
         public required OrganizationImprovementType ImprovementType { get; set; }
         public ICollection<Auditor>? Auditors { get; set; }
-
-
-
     }
 }
 

@@ -43,7 +43,10 @@ namespace IMIS.Persistence
         public DbSet<IsoStandard> IsoStandards { get; set; }
         public DbSet<ImprovementType> ImprovementType { get; set; }
         public DbSet<IsoAuditProcess> IsoAuditProcess { get; set; }
-        public DbSet<AuditPlanEntry>AuditPlanEntries { get; set; }
+        public DbSet<AuditPlanEntry> AuditPlanEntries { get; set; }
+        public DbSet<AuditProgramme> AuditProgramme { get; set; }
+        public DbSet<AuditChecklist> AuditChecklist { get; set; }
+        public DbSet<AuditChecklistQNA> AuditChecklistQNA { get; set; }
 
 
         // Audit Plan entities
@@ -53,6 +56,15 @@ namespace IMIS.Persistence
         public DbSet<AuditPlanApproval> AuditPlanApprovals { get; set; }
         public DbSet<IsoAuditor> IsoAuditors { get; set; }
         public DbSet<IsoStandardAuditPlan> IsoStandardAuditPlans { get; set; }
+        public DbSet<AuditPlanStatus> AuditPlanStatus { get; set; }
+
+        //Audit Report entities
+
+        public DbSet<AuditReport> AuditReports { get; set; }
+        public DbSet<AuditComFindings> AuditComFindings { get; set; }
+        public DbSet<AuditScope> AuditScope { get; set; }
+        public DbSet<AuditSummaryFIndings> AuditSummaryFIndings { get; set; }
+        public DbSet<AuditNcarStatus> AuditNcarStatus { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
@@ -118,7 +130,7 @@ namespace IMIS.Persistence
                    .OnDelete(DeleteBehavior.NoAction);
 
                 builder.Entity<PgsSignatoryTemplate>()
-                    .HasOne(p => p.Office)
+                    .HasOne(p => p.Office )
                     .WithMany(o => o.SignatoryTemplates)
                     .HasForeignKey(p => p.OfficeId)
                     .OnDelete(DeleteBehavior.NoAction);
@@ -160,13 +172,13 @@ namespace IMIS.Persistence
                 builder.ApplyConfiguration(new AuditorTeamsConfiguration());
                 builder.ApplyConfiguration(new KraRoadMapRoleConfiguration());
                 builder.ApplyConfiguration(new KraRoadMapPeriodConfiguration());
+                builder.ApplyConfiguration(new AuditChecklistQNAConfiguration());
+
+            // Audit Plan configurations
 
 
-                // Audit Plan configurations
-
-
-                // ISO Standard configurations
-                builder.ApplyConfiguration(new IsoStandardConfigurations());
+            // ISO Standard configurations
+            builder.ApplyConfiguration(new IsoStandardConfigurations());
 
                 // Apply global query filter for soft deletion
                 // This will ensure that all entities implementing ISoftDeletable are filtered by IsDeleted = false

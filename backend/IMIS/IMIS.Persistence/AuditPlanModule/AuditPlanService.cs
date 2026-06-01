@@ -2,12 +2,6 @@
 using Base.Primitives;
 using IMIS.Application.AuditPlanModule;
 using IMIS.Domain;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace IMIS.Application.AuditPlanModule
 {
     public class AuditPlanService : IAuditPlanService
@@ -119,7 +113,6 @@ namespace IMIS.Application.AuditPlanModule
             //    await dbContext.SaveChangesAsync(cancellationToken);
             //}
         }
-        // Other retrieval methods...
         public async Task<List<AuditPlanDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var entities = await _repository.GetAllAsync(cancellationToken);
@@ -161,3 +154,4 @@ namespace IMIS.Application.AuditPlanModule
         }
     }
 }
+

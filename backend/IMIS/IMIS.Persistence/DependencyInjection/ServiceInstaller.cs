@@ -1,13 +1,22 @@
 ﻿using IMIS.Application.AnnouncementModule;
+using IMIS.Application.AuditChecklistModule;
+using IMIS.Application.AuditChecklistQNAModule;
+using IMIS.Application.AuditComFindingsModule;
+using IMIS.Application.AuditNcarStatusModule;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.AuditorOfficesModule;
 using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditPlanApprovalModule;
 using IMIS.Application.AuditPlanEntryModule;
 using IMIS.Application.AuditPlanModule;
+using IMIS.Application.AuditReportModule;
 using IMIS.Application.AuditPlanPersonResponsibleModule;
 using IMIS.Application.AuditPlanProcessModule;
+using IMIS.Application.AuditPlanStatusModule;
+using IMIS.Application.AuditProgrammeModule;
 using IMIS.Application.AuditScheduleModule;
+using IMIS.Application.AuditScopeModule;
+using IMIS.Application.AuditSummaryFindingsModule;
 using IMIS.Application.BreakThroughScoringModule;
 using IMIS.Application.ImprovementTypeModule;
 using IMIS.Application.IsoAuditorModule;
@@ -33,15 +42,24 @@ using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Persistence.AnnouncementModule;
+using IMIS.Persistence.AuditChecklistModule;
+using IMIS.Persistence.AuditChecklistQNAModule;
+using IMIS.Persistence.AuditComFindingsModule;
+using IMIS.Persistence.AuditNcarStatusModule;
 using IMIS.Persistence.AuditorModule;
 using IMIS.Persistence.AuditorOfficesModule;
 using IMIS.Persistence.AuditorTeamsModule;
 using IMIS.Persistence.AuditPlanApprovalModule;
 using IMIS.Persistence.AuditPlanEntryModule;
 using IMIS.Persistence.AuditPlanModule;
+using IMIS.Persistence.AuditReportModule;
 using IMIS.Persistence.AuditPlanPersonResponsibleModule;
 using IMIS.Persistence.AuditPlanProcessModule;
+using IMIS.Persistence.AuditPlanStatusModule;
+using IMIS.Persistence.AuditProgrammeModule;
 using IMIS.Persistence.AuditScheduleModule;
+using IMIS.Persistence.AuditScopeModule;
+using IMIS.Persistence.AuditSummaryFindingsModule;
 using IMIS.Persistence.BreakThroughScoringModule;
 using IMIS.Persistence.ImprovementTypeModule;
 using IMIS.Persistence.IsoAuditorModule;
@@ -190,9 +208,35 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IIsoStandardAuditPlanService, IsoStandardAuditPlanService>();
             services.AddScoped<IIsoStandardAuditPlanRepository, IsoStandardAuditPlanRepository>();
 
+            services.AddScoped<IAuditPlanStatusService, AuditPlanStatusService>();
+            services.AddScoped<IAuditPlanStatusRepository, AuditPlanStatusRepository>();
 
+            services.AddScoped<IAuditProgrammeService, AuditProgrammeService>();
+            services.AddScoped<IAuditProgrammeRepository, AuditProgrammeRepository>();
 
+            //checklist module registrations
 
+            services.AddScoped<IAuditChecklistService, AuditChecklistService>();
+            services.AddScoped<IAuditChecklistRepository, AuditChecklistRepository>();
+
+            services.AddScoped<IAuditChecklistQNAService, AuditChecklistQNAService>();
+            services.AddScoped<IAuditChecklistQNARepository, AuditChecklistQNARepository>();
+
+            //audit report module registrations
+            services.AddScoped<IAuditReportService, AuditReportService>();
+            services.AddScoped<IAuditReportRepository, AuditReportRepository>();
+
+            services.AddScoped<IAuditScopeService, AuditScopeService>();
+            services.AddScoped<IAuditScopeRepository, AuditScopeRepository>();
+
+            services.AddScoped<IAuditComFindingsService, AuditComFindingsService>();
+            services.AddScoped<IAuditComFindingsRepository, AuditComFindingsRepository>();
+
+            services.AddScoped<IAuditSummaryFindingsService, AuditSummaryFindingsService>();
+            services.AddScoped<IAuditSummaryFindingsRepository, AuditSummaryFindingsRepository>();
+
+            services.AddScoped<IAuditNcarStatusService, AuditNcarStatusService>();
+            services.AddScoped<IAuditNcarStatusRepository, AuditNcarStatusRepository>();
 
 
 

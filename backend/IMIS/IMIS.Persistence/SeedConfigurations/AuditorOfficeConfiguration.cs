@@ -76,7 +76,7 @@ namespace IMIS.Persistence.SeedConfigurations
             // Team 9 - Pay Admitting Unit
             new AuditorOffices { Id = 51, AuditorId = 55, OfficeId = 169, IsDeleted = false, PgsPeriodId = 1, IsOfficeHead = true },
             new AuditorOffices { Id = 52, AuditorId = 59, OfficeId = 169, IsDeleted = false, PgsPeriodId = 1, IsOfficeHead = true },
-            new AuditorOffices { Id = 53, AuditorId = 37, OfficeId = 169, IsDeleted = false, PgsPeriodId = 1, IsOfficeHead = true },
+            new AuditorOffices { Id = 53, AuditorId = 37, OfficeId = 169, IsDeleted = false, PgsPeriodId = 1, IsOfficeHead = true }, 
             new AuditorOffices { Id = 54, AuditorId = 12, OfficeId = 169, IsDeleted = false, PgsPeriodId = 1, IsOfficeHead = true },
             new AuditorOffices { Id = 55, AuditorId = 10, OfficeId = 169, IsDeleted = false, PgsPeriodId = 1, IsOfficeHead = true },
             new AuditorOffices { Id = 56, AuditorId = 68, OfficeId = 169, IsDeleted = false, PgsPeriodId = 1, IsOfficeHead = true },

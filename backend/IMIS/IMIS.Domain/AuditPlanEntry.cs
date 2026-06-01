@@ -4,6 +4,7 @@ namespace IMIS.Domain
 {
     public class AuditPlanEntry : Entity<int>
     {
+        
         public required int AuditPlanId { get; set; }
         public AuditPlan? AuditPlan { get; set; }
 

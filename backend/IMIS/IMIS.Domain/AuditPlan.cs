@@ -5,12 +5,20 @@ namespace IMIS.Domain
   
     public class AuditPlan : Entity<int>
     {
+        public enum AuditPlanStatus 
+        { 
+            Approval=1, 
+            PendingApproval=2
+        }
+
         public required DateTime StartDate { get; set; }
         public required DateTime EndDate { get; set; } // IQA Lead Auditor
         public IsoAuditor? Preparer { get; set; }
+        
         public required string PlanStatus { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? LastModifiedDate { get; set; }
+
 
 
         // Navigation properties

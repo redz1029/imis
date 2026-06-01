@@ -167,6 +167,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     Particulars = "",
                     Description = "Determine sequence and interaction of processes;",
                     isActive = true
+
                 },
 
                 new IsoStandard
@@ -823,317 +824,313 @@ namespace IMIS.Persistence.SeedConfigurations
                     ParentID = null
                 },
 
-    // 8.4.1 General
-    new IsoStandard
-    {
-        Id = 223,
-        VersionID = 1,
-        Particulars = "The organization shall ensure that externally provided processes, products and services conform to requirements." +
-        "The organization shall determine and apply criteria for the evaluation, selection, monitoring of performance, and re-evaluation of external providers, " +
-        "based on their ability to provide processes or products and services in accordance with requirements. " +
-        "The organization shall retain documented information of these activities and any necessary actions arising from the evaluations.",
-        ClauseRef = "8.4.1",
-        Description = "General",
-        isActive = true,
-        ParentID = 222
-    },
-    new IsoStandard { Id = 224, VersionID = 1, Particulars = "", ClauseRef = "8.4.1.a", Description = "Products and services intended for incorporation into the organization’s own products and services; ", isActive = true, ParentID = 223 },
-    new IsoStandard { Id = 225, VersionID = 1, Particulars = "", ClauseRef = "8.4.1.b", Description = "Products and services provided directly to customers by external providers on behalf of the organization; ", isActive = true, ParentID = 223 },
-    new IsoStandard { Id = 226, VersionID = 1, Particulars = "", ClauseRef = "8.4.1.c", Description = "A process, or part of a process, provided by an external provider as a result of a decision by the organization. ", isActive = true, ParentID = 223 },
+                // 8.4.1 General
+                new IsoStandard
+                {
+                    Id = 223,
+                    VersionID = 1,
+                    Particulars = "The organization shall ensure that externally provided processes, products and services conform to requirements." +
+                    "The organization shall determine and apply criteria for the evaluation, selection, monitoring of performance, and re-evaluation of external providers, " +
+                    "based on their ability to provide processes or products and services in accordance with requirements. " +
+                    "The organization shall retain documented information of these activities and any necessary actions arising from the evaluations.",
+                    ClauseRef = "8.4.1",
+                    Description = "General",
+                    isActive = true,
+                    ParentID = 222
+                },
+                new IsoStandard { Id = 224, VersionID = 1, Particulars = "", ClauseRef = "8.4.1.a", Description = "Products and services intended for incorporation into the organization’s own products and services; ", isActive = true, ParentID = 223 },
+                new IsoStandard { Id = 225, VersionID = 1, Particulars = "", ClauseRef = "8.4.1.b", Description = "Products and services provided directly to customers by external providers on behalf of the organization; ", isActive = true, ParentID = 223 },
+                new IsoStandard { Id = 226, VersionID = 1, Particulars = "", ClauseRef = "8.4.1.c", Description = "A process, or part of a process, provided by an external provider as a result of a decision by the organization. ", isActive = true, ParentID = 223 },
 
-    // 8.4.2 Type and extent of control
-    new IsoStandard
-    {
-        Id = 227,
-        VersionID = 1,
-        Particulars = "The organization shall ensure that externally provided processes, products and services do not adversely affect the organization’s ability to consistently deliver conforming products and services to its customers.",
-        ClauseRef = "8.4.2",
-        Description = "Type and extent of control",
-        isActive = true,
-        ParentID = 222
-    },
-    new IsoStandard { Id = 228, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.a", Description = "ensure that externally provided processes remain within the control of its quality management system;", isActive = true, ParentID = 227 },
-    new IsoStandard { Id = 229, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.b", Description = "define both the controls that it intends to apply to an external provider and those it intends to apply to the resulting output;", isActive = true, ParentID = 227 },
-    new IsoStandard { Id = 230, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.c", Description = "Take into consideration:", isActive = true, ParentID = 227 },
-    new IsoStandard { Id = 231, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.c.1", Description = "the potential impact of the externally provided processes, products and services on the organization’s ability to consistently meet customer and applicable statutory and regulatory requirements;", isActive = true, ParentID = 230 },
-    new IsoStandard { Id = 232, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.c.2", Description = "Effectiveness of controls applied by the external provide;r", isActive = true, ParentID = 230 },
-    new IsoStandard { Id = 233, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.d", Description = "determine the verification, or other activities, necessary to ensure that the externally provided processes, products and services meet requirements.", isActive = true, ParentID = 227 },
+                // 8.4.2 Type and extent of control
+                new IsoStandard
+                {
+                    Id = 227,
+                    VersionID = 1,
+                    Particulars = "The organization shall ensure that externally provided processes, products and services do not adversely affect the organization’s ability to consistently deliver conforming products and services to its customers.",
+                    ClauseRef = "8.4.2",
+                    Description = "Type and extent of control",
+                    isActive = true,
+                    ParentID = 222
+                },
+                new IsoStandard { Id = 228, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.a", Description = "ensure that externally provided processes remain within the control of its quality management system;", isActive = true, ParentID = 227 },
+                new IsoStandard { Id = 229, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.b", Description = "define both the controls that it intends to apply to an external provider and those it intends to apply to the resulting output;", isActive = true, ParentID = 227 },
+                new IsoStandard { Id = 230, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.c", Description = "Take into consideration:", isActive = true, ParentID = 227 },
+                new IsoStandard { Id = 231, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.c.1", Description = "the potential impact of the externally provided processes, products and services on the organization’s ability to consistently meet customer and applicable statutory and regulatory requirements;", isActive = true, ParentID = 230 },
+                new IsoStandard { Id = 232, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.c.2", Description = "Effectiveness of controls applied by the external provide;r", isActive = true, ParentID = 230 },
+                new IsoStandard { Id = 233, VersionID = 1, Particulars = "", ClauseRef = "8.4.2.d", Description = "determine the verification, or other activities, necessary to ensure that the externally provided processes, products and services meet requirements.", isActive = true, ParentID = 227 },
 
-    // 8.4.3 Information for external providers
-    new IsoStandard
-    {
-        Id = 234,
-        VersionID = 1,
-        Particulars = "The organization shall ensure adequacy of requirements prior to communication to external providers.",
-        ClauseRef = "8.4.3",
-        Description = "Information for external providers",
-        isActive = true,
-        ParentID = 222
-    },
-    new IsoStandard { Id = 235, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.a", Description = "Processes, products and services to be provided", isActive = true, ParentID = 234 },
-    new IsoStandard { Id = 236, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.b", Description = "the approval of:", isActive = true, ParentID = 234 },
-    new IsoStandard { Id = 237, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.b.1", Description = "Products and services", isActive = true, ParentID = 236 },
-    new IsoStandard { Id = 238, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.b.2", Description = "Methods, processes and equipment", isActive = true, ParentID = 236 },
-    new IsoStandard { Id = 239, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.b.3", Description = "the release of products and services", isActive = true, ParentID = 236 },
-    new IsoStandard { Id = 240, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.c", Description = "Competence, including qualification of persons", isActive = true, ParentID = 234 },
-    new IsoStandard { Id = 241, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.d", Description = "External providers’ interactions with the organization", isActive = true, ParentID = 234 },
-    new IsoStandard { Id = 242, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.e", Description = "control and monitoring of the external providers’ performance to be applied by the organization;", isActive = true, ParentID = 234 },
-    new IsoStandard { Id = 243, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.f", Description = "verification or validation activities that the organization, or its customer, intends to perform at the external providers’ premises.", isActive = true, ParentID = 234 },
+                // 8.4.3 Information for external providers
+                new IsoStandard
+                {
+                    Id = 234,
+                    VersionID = 1,
+                    Particulars = "The organization shall ensure adequacy of requirements prior to communication to external providers.",
+                    ClauseRef = "8.4.3",
+                    Description = "Information for external providers",
+                    isActive = true,
+                    ParentID = 222
+                },
+                new IsoStandard { Id = 235, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.a", Description = "Processes, products and services to be provided", isActive = true, ParentID = 234 },
+                new IsoStandard { Id = 236, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.b", Description = "the approval of:", isActive = true, ParentID = 234 },
+                new IsoStandard { Id = 237, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.b.1", Description = "Products and services", isActive = true, ParentID = 236 },
+                new IsoStandard { Id = 238, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.b.2", Description = "Methods, processes and equipment", isActive = true, ParentID = 236 },
+                new IsoStandard { Id = 239, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.b.3", Description = "the release of products and services", isActive = true, ParentID = 236 },
+                new IsoStandard { Id = 240, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.c", Description = "Competence, including qualification of persons", isActive = true, ParentID = 234 },
+                new IsoStandard { Id = 241, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.d", Description = "External providers’ interactions with the organization", isActive = true, ParentID = 234 },
+                new IsoStandard { Id = 242, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.e", Description = "control and monitoring of the external providers’ performance to be applied by the organization;", isActive = true, ParentID = 234 },
+                new IsoStandard { Id = 243, VersionID = 1, Particulars = "", ClauseRef = "8.4.3.f", Description = "verification or validation activities that the organization, or its customer, intends to perform at the external providers’ premises.", isActive = true, ParentID = 234 },
 
-    // 8.5 Production and service provision
-    new IsoStandard
-    {
-        Id = 244,
-        VersionID = 1,
-        Particulars = "",
-        ClauseRef = "8.5",
-        Description = "Production and service provision",
-        isActive = true,
-        ParentID = null
-    },
-// 8.5.1
-new IsoStandard { Id = 245, VersionID = 1, ClauseRef = "8.5.1", Description = "Control of production and service provision", Particulars = "The organization shall implement production and service provision under controlled conditions. Controlled conditions shall include, as applicable:", isActive = true, ParentID = 244 },
+                // 8.5 Production and service provision
+                new IsoStandard
+                {
+                    Id = 244,
+                    VersionID = 1,
+                    Particulars = "",
+                    ClauseRef = "8.5",
+                    Description = "Production and service provision",
+                    isActive = true,
+                    ParentID = null
+                },
+            // 8.5.1
+            new IsoStandard { Id = 245, VersionID = 1, ClauseRef = "8.5.1", Description = "Control of production and service provision", Particulars = "The organization shall implement production and service provision under controlled conditions. Controlled conditions shall include, as applicable:", isActive = true, ParentID = 244 },
 
-new IsoStandard { Id = 246, VersionID = 1, ClauseRef = "8.5.1.a", Description = "the availability of documented information that defines:", Particulars = "", isActive = true, ParentID = 245 },
+            new IsoStandard { Id = 246, VersionID = 1, ClauseRef = "8.5.1.a", Description = "the availability of documented information that defines:", Particulars = "", isActive = true, ParentID = 245 },
 
-new IsoStandard { Id = 247, VersionID = 1, ClauseRef = "8.5.1.a.1", Description = "the characteristics of the products to be produced, the services to be provided, or the activities to be performed;", Particulars = "", isActive = true, ParentID = 246 },
+            new IsoStandard { Id = 247, VersionID = 1, ClauseRef = "8.5.1.a.1", Description = "the characteristics of the products to be produced, the services to be provided, or the activities to be performed;", Particulars = "", isActive = true, ParentID = 246 },
 
-new IsoStandard { Id = 248, VersionID = 1, ClauseRef = "8.5.1.a.2", Description = "the results to be achieved;", Particulars = "", isActive = true, ParentID = 246 },
+            new IsoStandard { Id = 248, VersionID = 1, ClauseRef = "8.5.1.a.2", Description = "the results to be achieved;", Particulars = "", isActive = true, ParentID = 246 },
 
-new IsoStandard { Id = 249, VersionID = 1, ClauseRef = "8.5.1.b", Description = "the availability and use of suitable monitoring and measuring resources;", Particulars = "", isActive = true, ParentID = 245 },
+            new IsoStandard { Id = 249, VersionID = 1, ClauseRef = "8.5.1.b", Description = "the availability and use of suitable monitoring and measuring resources;", Particulars = "", isActive = true, ParentID = 245 },
 
-new IsoStandard { Id = 250, VersionID = 1, ClauseRef = "8.5.1.c", Description = "the implementation of monitoring and measurement activities at appropriate stages to verify that criteria for control of processes or outputs, and acceptance criteria for products and services, have been met;", Particulars = "", isActive = true, ParentID = 245 },
+            new IsoStandard { Id = 250, VersionID = 1, ClauseRef = "8.5.1.c", Description = "the implementation of monitoring and measurement activities at appropriate stages to verify that criteria for control of processes or outputs, and acceptance criteria for products and services, have been met;", Particulars = "", isActive = true, ParentID = 245 },
 
-new IsoStandard { Id = 251, VersionID = 1, ClauseRef = "8.5.1.d", Description = "the use of suitable infrastructure and environment for the operation of processes;", Particulars = "", isActive = true, ParentID = 245 },
+            new IsoStandard { Id = 251, VersionID = 1, ClauseRef = "8.5.1.d", Description = "the use of suitable infrastructure and environment for the operation of processes;", Particulars = "", isActive = true, ParentID = 245 },
 
-new IsoStandard { Id = 252, VersionID = 1, ClauseRef = "8.5.1.e", Description = "the appointment of competent persons, including any required qualification;", Particulars = "", isActive = true, ParentID = 245 },
+            new IsoStandard { Id = 252, VersionID = 1, ClauseRef = "8.5.1.e", Description = "the appointment of competent persons, including any required qualification;", Particulars = "", isActive = true, ParentID = 245 },
 
-new IsoStandard { Id = 253, VersionID = 1, ClauseRef = "8.5.1.f", Description = "the validation, and periodic revalidation, of the ability to achieve planned results of the processes for production and service provision, where the resulting output cannot be verified by subsequent monitoring or measurement;", Particulars = "", isActive = true, ParentID = 245 },
+            new IsoStandard { Id = 253, VersionID = 1, ClauseRef = "8.5.1.f", Description = "the validation, and periodic revalidation, of the ability to achieve planned results of the processes for production and service provision, where the resulting output cannot be verified by subsequent monitoring or measurement;", Particulars = "", isActive = true, ParentID = 245 },
 
-new IsoStandard { Id = 254, VersionID = 1, ClauseRef = "8.5.1.g", Description = "the implementation of actions to prevent human error;", Particulars = "", isActive = true, ParentID = 245 },
+            new IsoStandard { Id = 254, VersionID = 1, ClauseRef = "8.5.1.g", Description = "the implementation of actions to prevent human error;", Particulars = "", isActive = true, ParentID = 245 },
 
-new IsoStandard { Id = 255, VersionID = 1, ClauseRef = "8.5.1.h", Description = "the implementation of release, delivery and post-delivery activities.", Particulars = "", isActive = true, ParentID = 245 },
+            new IsoStandard { Id = 255, VersionID = 1, ClauseRef = "8.5.1.h", Description = "the implementation of release, delivery and post-delivery activities.", Particulars = "", isActive = true, ParentID = 245 },
 
-// 8.5.2
-new IsoStandard { Id = 256, VersionID = 1, ClauseRef = "8.5.2", Description = "Identification and traceability", Particulars = "The organization shall use suitable means to identify outputs when it is necessary to ensure the conformity of products and services. " +
-"The organization shall identify the status of outputs with respect to monitoring and measurement requirements throughout production and service provision. " +
-"The organization shall control the unique identification of the outputs when traceability is a requirement, " +
-"and shall retain the documented information necessary to enable traceability.", isActive = true, ParentID = 244 },
+            // 8.5.2
+            new IsoStandard { Id = 256, VersionID = 1, ClauseRef = "8.5.2", Description = "Identification and traceability", Particulars = "The organization shall use suitable means to identify outputs when it is necessary to ensure the conformity of products and services. " +
+            "The organization shall identify the status of outputs with respect to monitoring and measurement requirements throughout production and service provision. " +
+            "The organization shall control the unique identification of the outputs when traceability is a requirement, " +
+            "and shall retain the documented information necessary to enable traceability.", isActive = true, ParentID = 244 },
 
-// 8.5.3
-new IsoStandard { Id = 257, VersionID = 1, ClauseRef = "8.5.3", Description = "Property belonging to customers or external providers", Particulars = "The organization shall exercise care with property belonging to customers or external providers while it is under the organization’s control or being used by the organization. " +
-"The organization shall identify, verify, protect and safeguard customers’ or external providers’ property provided for use or incorporation into the products and services. " +
-"When the property of a customer or external provider is lost, damaged or otherwise found to be unsuitable for use," +
-" the organization shall report this to the customer or external provider and retain documented information on what has occurred.", isActive = true, ParentID = 244 },
+            // 8.5.3
+            new IsoStandard { Id = 257, VersionID = 1, ClauseRef = "8.5.3", Description = "Property belonging to customers or external providers", Particulars = "The organization shall exercise care with property belonging to customers or external providers while it is under the organization’s control or being used by the organization. " +
+            "The organization shall identify, verify, protect and safeguard customers’ or external providers’ property provided for use or incorporation into the products and services. " +
+            "When the property of a customer or external provider is lost, damaged or otherwise found to be unsuitable for use," +
+            " the organization shall report this to the customer or external provider and retain documented information on what has occurred.", isActive = true, ParentID = 244 },
 
-// 8.5.4
-new IsoStandard { Id = 258, VersionID = 1, ClauseRef = "8.5.4", Description = "Preservation", Particulars = "The organization shall preserve the outputs during production and service provision, to the extent necessary to ensure conformity to requirements.", isActive = true, ParentID = 244 },
+            // 8.5.4
+            new IsoStandard { Id = 258, VersionID = 1, ClauseRef = "8.5.4", Description = "Preservation", Particulars = "The organization shall preserve the outputs during production and service provision, to the extent necessary to ensure conformity to requirements.", isActive = true, ParentID = 244 },
 
-// 8.5.5
-new IsoStandard { Id = 259, VersionID = 1, ClauseRef = "8.5.5", Description = "Post-delivery activities", Particulars = "The organization shall meet requirements for post-delivery activities associated with the products and services. In determining the extent of post-delivery activities that are required, the organization shall consider:", isActive = true, ParentID = 244 },
+            // 8.5.5
+            new IsoStandard { Id = 259, VersionID = 1, ClauseRef = "8.5.5", Description = "Post-delivery activities", Particulars = "The organization shall meet requirements for post-delivery activities associated with the products and services. In determining the extent of post-delivery activities that are required, the organization shall consider:", isActive = true, ParentID = 244 },
 
-new IsoStandard { Id = 260, VersionID = 1, ClauseRef = "8.5.5.a", Description = "statutory and regulatory requirements;", Particulars = "", isActive = true, ParentID = 259 },
+            new IsoStandard { Id = 260, VersionID = 1, ClauseRef = "8.5.5.a", Description = "statutory and regulatory requirements;", Particulars = "", isActive = true, ParentID = 259 },
 
-new IsoStandard { Id = 261, VersionID = 1, ClauseRef = "8.5.5.b", Description = "the potential undesired consequences associated with its products and services;", Particulars = "", isActive = true, ParentID = 259 },
+            new IsoStandard { Id = 261, VersionID = 1, ClauseRef = "8.5.5.b", Description = "the potential undesired consequences associated with its products and services;", Particulars = "", isActive = true, ParentID = 259 },
 
-new IsoStandard { Id = 262, VersionID = 1, ClauseRef = "8.5.5.c", Description = "the nature, use and intended lifetime of its products and services;", Particulars = "", isActive = true, ParentID = 259 },
+            new IsoStandard { Id = 262, VersionID = 1, ClauseRef = "8.5.5.c", Description = "the nature, use and intended lifetime of its products and services;", Particulars = "", isActive = true, ParentID = 259 },
 
-new IsoStandard { Id = 263, VersionID = 1, ClauseRef = "8.5.5.d", Description = "customer requirements;", Particulars = "", isActive = true, ParentID = 259 },
+            new IsoStandard { Id = 263, VersionID = 1, ClauseRef = "8.5.5.d", Description = "customer requirements;", Particulars = "", isActive = true, ParentID = 259 },
 
-new IsoStandard { Id = 264, VersionID = 1, ClauseRef = "8.5.5.e", Description = "customer feedback.", Particulars = "", isActive = true, ParentID = 259 },
-// 8.5.6
-new IsoStandard
-{
-    Id = 265,
-    VersionID = 1,
-    ClauseRef = "8.5.6",
-    Description = "Control of changes",
-    Particulars = "The organization shall review and control changes for production or service provision, to the extent necessary to ensure continuing conformity with requirements. The organization shall retain documented information describing the results of the review of changes, the person(s) authorizing the change, and any necessary actions arising from the review.",
-    isActive = true,
-    ParentID = 244
-},
+            new IsoStandard { Id = 264, VersionID = 1, ClauseRef = "8.5.5.e", Description = "customer feedback.", Particulars = "", isActive = true, ParentID = 259 },
+            // 8.5.6
+            new IsoStandard
+            {
+                Id = 265,
+                VersionID = 1,
+                ClauseRef = "8.5.6",
+                Description = "Control of changes",
+                Particulars = "The organization shall review and control changes for production or service provision, to the extent necessary to ensure continuing conformity with requirements. The organization shall retain documented information describing the results of the review of changes, the person(s) authorizing the change, and any necessary actions arising from the review.",
+                isActive = true,
+                ParentID = 244
+            },
 
-// 8.6
-new IsoStandard
-{
-    Id = 266,
-    VersionID = 1,
-    ClauseRef = "8.6",
-    Description = "Release of products and services",
-    Particulars = "The organization shall implement planned arrangements, at appropriate stages, to verify that the product and service requirements have been met. The release of products and services to the customer shall not proceed until the planned arrangements have been satisfactorily completed, unless otherwise approved by a relevant authority and, as applicable, by the customer. The organization shall retain documented information on the release of products and services. The documented information shall include:",
-    isActive = true,
-    ParentID = 244
-},
+            // 8.6
+            new IsoStandard
+            {
+                Id = 266,
+                VersionID = 1,
+                ClauseRef = "8.6",
+                Description = "Release of products and services",
+                Particulars = "The organization shall implement planned arrangements, at appropriate stages, to verify that the product and service requirements have been met. The release of products and services to the customer shall not proceed until the planned arrangements have been satisfactorily completed, unless otherwise approved by a relevant authority and, as applicable, by the customer. The organization shall retain documented information on the release of products and services. The documented information shall include:",
+                isActive = true,
+                ParentID = 244
+            },
 
-new IsoStandard
-{
-    Id = 267,
-    VersionID = 1,
-    ClauseRef = "8.6.a",
-    Description = "evidence of conformity with the acceptance criteria;",
-    Particulars = "",
-    isActive = true,
-    ParentID = 266
-},
+            new IsoStandard
+            {
+                Id = 267,
+                VersionID = 1,
+                ClauseRef = "8.6.a",
+                Description = "evidence of conformity with the acceptance criteria;",
+                Particulars = "",
+                isActive = true,
+                ParentID = 266
+            },
 
-new IsoStandard
-{
-    Id = 268,
-    VersionID = 1,
-    ClauseRef = "8.6.b",
-    Description = "traceability to the person(s) authorizing the release.",
-    Particulars = "",
-    isActive = true,
-    ParentID = 266
-},
+            new IsoStandard
+            {
+                Id = 268,
+                VersionID = 1,
+                ClauseRef = "8.6.b",
+                Description = "traceability to the person(s) authorizing the release.",
+                Particulars = "",
+                isActive = true,
+                ParentID = 266
+            },
 
-// 8.7
-new IsoStandard
-{
-    Id = 269,
-    VersionID = 1,
-    ClauseRef = "8.7",
-    Description = "Control of nonconforming outputs",
-    Particulars = "",
-    isActive = true,
-    ParentID = 244
-},
+            // 8.7
+            new IsoStandard
+            {
+                Id = 269,
+                VersionID = 1,
+                ClauseRef = "8.7",
+                Description = "Control of nonconforming outputs",
+                Particulars = "",
+                isActive = true,
+                ParentID = 244
+            },
 
-new IsoStandard
-{
-    Id = 270,
-    VersionID = 1,
-    ClauseRef = "8.7.1",
-    Description = "",
-    Particulars = "The organization shall ensure that outputs that do not conform to their requirements are identified and controlled to prevent their unintended use or delivery. The organization shall take appropriate action based on the nature of the nonconformity and its effect on the conformity of products and services. This shall also apply to nonconforming products and services detected after delivery of products, during or after the provision of services. Conformity to the requirements shall be verified when nonconforming outputs are corrected. The organization shall deal with nonconforming outputs in one or more of the following ways:",
-    isActive = true,
-    ParentID = 269
-},
+            new IsoStandard
+            {
+                Id = 270,
+                VersionID = 1,
+                ClauseRef = "8.7.1",
+                Description = "",
+                Particulars = "The organization shall ensure that outputs that do not conform to their requirements are identified and controlled to prevent their unintended use or delivery. The organization shall take appropriate action based on the nature of the nonconformity and its effect on the conformity of products and services. This shall also apply to nonconforming products and services detected after delivery of products, during or after the provision of services. Conformity to the requirements shall be verified when nonconforming outputs are corrected. The organization shall deal with nonconforming outputs in one or more of the following ways:",
+                isActive = true,
+                ParentID = 269
+            },
 
-new IsoStandard { Id = 271, VersionID = 1, ClauseRef = "8.7.1.a", Description = "Correction;", Particulars = "", isActive = true, ParentID = 270 },
+            new IsoStandard { Id = 271, VersionID = 1, ClauseRef = "8.7.1.a", Description = "Correction;", Particulars = "", isActive = true, ParentID = 270 },
 
-new IsoStandard { Id = 272, VersionID = 1, ClauseRef = "8.7.1.b", Description = "segregation, containment, return or suspension of provision of products and services;", Particulars = "", isActive = true, ParentID = 270 },
+            new IsoStandard { Id = 272, VersionID = 1, ClauseRef = "8.7.1.b", Description = "segregation, containment, return or suspension of provision of products and services;", Particulars = "", isActive = true, ParentID = 270 },
 
-new IsoStandard { Id = 273, VersionID = 1, ClauseRef = "8.7.1.c", Description = "informing the customer;", Particulars = "", isActive = true, ParentID = 270 },
+            new IsoStandard { Id = 273, VersionID = 1, ClauseRef = "8.7.1.c", Description = "informing the customer;", Particulars = "", isActive = true, ParentID = 270 },
 
-new IsoStandard { Id = 274, VersionID = 1, ClauseRef = "8.7.1.d", Description = "obtaining authorization for acceptance under concession.", Particulars = "", isActive = true, ParentID = 270 },
+            new IsoStandard { Id = 274, VersionID = 1, ClauseRef = "8.7.1.d", Description = "obtaining authorization for acceptance under concession.", Particulars = "", isActive = true, ParentID = 270 },
 
-new IsoStandard
-{
-    Id = 275,
-    VersionID = 1,
-    ClauseRef = "8.7.2",
-    Description = "",
-    Particulars = "The organization shall retain documented information that:",
-    isActive = true,
-    ParentID = 269
-},
+            new IsoStandard
+            {
+                Id = 275,
+                VersionID = 1,
+                ClauseRef = "8.7.2",
+                Description = "",
+                Particulars = "The organization shall retain documented information that:",
+                isActive = true,
+                ParentID = 269
+            },
 
-new IsoStandard { Id = 276, VersionID = 1, ClauseRef = "8.7.2.a", Description = "describes the nonconformity;", Particulars = "", isActive = true, ParentID = 275 },
+            new IsoStandard { Id = 276, VersionID = 1, ClauseRef = "8.7.2.a", Description = "describes the nonconformity;", Particulars = "", isActive = true, ParentID = 275 },
 
-new IsoStandard { Id = 277, VersionID = 1, ClauseRef = "8.7.2.b", Description = "describes the actions taken;", Particulars = "", isActive = true, ParentID = 275 },
+            new IsoStandard { Id = 277, VersionID = 1, ClauseRef = "8.7.2.b", Description = "describes the actions taken;", Particulars = "", isActive = true, ParentID = 275 },
 
-new IsoStandard { Id = 278, VersionID = 1, ClauseRef = "8.7.2.c", Description = "describes any concessions obtained;", Particulars = "", isActive = true, ParentID = 275 },
+            new IsoStandard { Id = 278, VersionID = 1, ClauseRef = "8.7.2.c", Description = "describes any concessions obtained;", Particulars = "", isActive = true, ParentID = 275 },
 
-new IsoStandard { Id = 279, VersionID = 1, ClauseRef = "8.7.2.d", Description = "identifies the authority deciding the action in respect of the nonconformity.", Particulars = "", isActive = true, ParentID = 275 },
-new IsoStandard { Id = 280, VersionID = 1, ClauseRef = "9", Description = "Performance evaluation", Particulars = "", ParentID = null, isActive = true },
+            new IsoStandard { Id = 279, VersionID = 1, ClauseRef = "8.7.2.d", Description = "identifies the authority deciding the action in respect of the nonconformity.", Particulars = "", isActive = true, ParentID = 275 },
+            new IsoStandard { Id = 280, VersionID = 1, ClauseRef = "9", Description = "Performance evaluation", Particulars = "", ParentID = null, isActive = true },
 
     // 9.1
-    new IsoStandard { Id = 281, VersionID = 1, ClauseRef = "9.1", Description = "Monitoring, measurement, analysis and evaluation", Particulars = "", ParentID = 280, isActive = true },
+            new IsoStandard { Id = 281, VersionID = 1, ClauseRef = "9.1", Description = "Monitoring, measurement, analysis and evaluation", Particulars = "", ParentID = 280, isActive = true },
 
-    new IsoStandard { Id = 282, VersionID = 1, ClauseRef = "9.1.1", Description = "General", Particulars = "The organization shall evaluate the performance and the effectiveness of the quality management system. The organization shall retain appropriate documented information as evidence of the results. The organization shall determine:", ParentID = 281, isActive = true },
+            new IsoStandard { Id = 282, VersionID = 1, ClauseRef = "9.1.1", Description = "General", Particulars = "The organization shall evaluate the performance and the effectiveness of the quality management system. The organization shall retain appropriate documented information as evidence of the results. The organization shall determine:", ParentID = 281, isActive = true },
 
-    new IsoStandard { Id = 283, VersionID = 1, ClauseRef = "9.1.1.a", Description = "what needs to be monitored and measured;", Particulars = "", ParentID = 282, isActive = true },
-    new IsoStandard { Id = 284, VersionID = 1, ClauseRef = "9.1.1.b", Description = "the methods for monitoring, measurement, analysis and evaluation needed to ensure valid results;", Particulars = "", ParentID = 282, isActive = true },
-    new IsoStandard { Id = 285, VersionID = 1, ClauseRef = "9.1.1.c", Description = "when the monitoring and measuring shall be performed;", Particulars = "", ParentID = 282, isActive = true },
-    new IsoStandard { Id = 286, VersionID = 1, ClauseRef = "9.1.1.d", Description = "when the results from monitoring and measurement shall be analysed and evaluated.", Particulars = "", ParentID = 282, isActive = true },
+            new IsoStandard { Id = 283, VersionID = 1, ClauseRef = "9.1.1.a", Description = "what needs to be monitored and measured;", Particulars = "", ParentID = 282, isActive = true },
+            new IsoStandard { Id = 284, VersionID = 1, ClauseRef = "9.1.1.b", Description = "the methods for monitoring, measurement, analysis and evaluation needed to ensure valid results;", Particulars = "", ParentID = 282, isActive = true },
+            new IsoStandard { Id = 285, VersionID = 1, ClauseRef = "9.1.1.c", Description = "when the monitoring and measuring shall be performed;", Particulars = "", ParentID = 282, isActive = true },
+            new IsoStandard { Id = 286, VersionID = 1, ClauseRef = "9.1.1.d", Description = "when the results from monitoring and measurement shall be analysed and evaluated.", Particulars = "", ParentID = 282, isActive = true },
 
-    new IsoStandard { Id = 287, VersionID = 1, ClauseRef = "9.1.2", Description = "Customer satisfaction", Particulars = "The organization shall monitor customers’ perceptions of the degree to which their needs and expectations have been fulfilled. The organization shall determine the methods for obtaining, monitoring and reviewing this information.", ParentID = 281, isActive = true },
+            new IsoStandard { Id = 287, VersionID = 1, ClauseRef = "9.1.2", Description = "Customer satisfaction", Particulars = "The organization shall monitor customers’ perceptions of the degree to which their needs and expectations have been fulfilled. The organization shall determine the methods for obtaining, monitoring and reviewing this information.", ParentID = 281, isActive = true },
 
-    new IsoStandard { Id = 288, VersionID = 1, ClauseRef = "9.1.3", Description = "Analysis and evaluation", Particulars = "The organization shall analyse and evaluate appropriate data and information arising from monitoring and measurement. The results of analysis shall be used to evaluate:", ParentID = 281, isActive = true },
+            new IsoStandard { Id = 288, VersionID = 1, ClauseRef = "9.1.3", Description = "Analysis and evaluation", Particulars = "The organization shall analyse and evaluate appropriate data and information arising from monitoring and measurement. The results of analysis shall be used to evaluate:", ParentID = 281, isActive = true },
 
-    new IsoStandard { Id = 289, VersionID = 1, ClauseRef = "9.1.3.a", Description = "conformity of products and services;", Particulars = "", ParentID = 288, isActive = true },
-    new IsoStandard { Id = 290, VersionID = 1, ClauseRef = "9.1.3.b", Description = "the degree of customer satisfaction;", Particulars = "", ParentID = 288, isActive = true },
-    new IsoStandard { Id = 291, VersionID = 1, ClauseRef = "9.1.3.c", Description = "the performance and effectiveness of the quality management system;", Particulars = "", ParentID = 288, isActive = true },
-    new IsoStandard { Id = 292, VersionID = 1, ClauseRef = "9.1.3.d", Description = "if planning has been implemented effectively;", Particulars = "", ParentID = 288, isActive = true },
-    new IsoStandard { Id = 293, VersionID = 1, ClauseRef = "9.1.3.e", Description = "the effectiveness of actions taken to address risks and opportunities;", Particulars = "", ParentID = 288, isActive = true },
-    new IsoStandard { Id = 294, VersionID = 1, ClauseRef = "9.1.3.f", Description = "the performance of external providers;", Particulars = "", ParentID = 288, isActive = true },
-    new IsoStandard { Id = 295, VersionID = 1, ClauseRef = "9.1.3.g", Description = "the need for improvements to the quality management system.", Particulars = "", ParentID = 288, isActive = true },
+            new IsoStandard { Id = 289, VersionID = 1, ClauseRef = "9.1.3.a", Description = "conformity of products and services;", Particulars = "", ParentID = 288, isActive = true },
+            new IsoStandard { Id = 290, VersionID = 1, ClauseRef = "9.1.3.b", Description = "the degree of customer satisfaction;", Particulars = "", ParentID = 288, isActive = true },
+            new IsoStandard { Id = 291, VersionID = 1, ClauseRef = "9.1.3.c", Description = "the performance and effectiveness of the quality management system;", Particulars = "", ParentID = 288, isActive = true },
+            new IsoStandard { Id = 292, VersionID = 1, ClauseRef = "9.1.3.d", Description = "if planning has been implemented effectively;", Particulars = "", ParentID = 288, isActive = true },
+            new IsoStandard { Id = 293, VersionID = 1, ClauseRef = "9.1.3.e", Description = "the effectiveness of actions taken to address risks and opportunities;", Particulars = "", ParentID = 288, isActive = true },
+            new IsoStandard { Id = 294, VersionID = 1, ClauseRef = "9.1.3.f", Description = "the performance of external providers;", Particulars = "", ParentID = 288, isActive = true },
+            new IsoStandard { Id = 295, VersionID = 1, ClauseRef = "9.1.3.g", Description = "the need for improvements to the quality management system.", Particulars = "", ParentID = 288, isActive = true },
 
-    // 9.2 Internal audit
-    new IsoStandard { Id = 296, VersionID = 1, ClauseRef = "9.2", Description = "Internal audit", Particulars = "", ParentID = 280, isActive = true },
-    new IsoStandard { Id = 297, VersionID = 1, ClauseRef = "9.2.1", Description = "", Particulars = "The organization shall conduct internal audits at planned intervals to provide information on whether the quality management system:", ParentID = 296, isActive = true },
-    new IsoStandard { Id = 298, VersionID = 1, ClauseRef = "9.2.1.a", Description = "conforms to:", Particulars = "", ParentID = 297, isActive = true },
-    new IsoStandard { Id = 299, VersionID = 1, ClauseRef = "9.2.1.a.1", Description = "the organization’s own requirements for its quality management system;", Particulars = "", ParentID = 298, isActive = true },
-    new IsoStandard { Id = 300, VersionID = 1, ClauseRef = "9.2.1.a.2", Description = "the requirements of this International Standard;", Particulars = "", ParentID = 298, isActive = true },
-    new IsoStandard { Id = 301, VersionID = 1, ClauseRef = "9.2.1.b", Description = "is effectively implemented and maintained.", Particulars = "", ParentID = 297, isActive = true },
-    new IsoStandard { Id = 302, VersionID = 1, ClauseRef = "9.2.2", Description = "", Particulars = "The organization shall:", ParentID = 296, isActive = true },
-    new IsoStandard { Id = 303, VersionID = 1, ClauseRef = "9.2.2.a", Description = "plan, establish, implement and maintain an audit programme(s) including the frequency, methods, responsibilities, planning requirements and reporting, which shall take into consideration the importance of the processes concerned, changes affecting the organization, and the results of previous audits;", Particulars = "", ParentID = 302, isActive = true },
+            // 9.2 Internal audit
+            new IsoStandard { Id = 296, VersionID = 1, ClauseRef = "9.2", Description = "Internal audit", Particulars = "", ParentID = 280, isActive = true },
+            new IsoStandard { Id = 297, VersionID = 1, ClauseRef = "9.2.1", Description = "", Particulars = "The organization shall conduct internal audits at planned intervals to provide information on whether the quality management system:", ParentID = 296, isActive = true },
+            new IsoStandard { Id = 298, VersionID = 1, ClauseRef = "9.2.1.a", Description = "conforms to:", Particulars = "", ParentID = 297, isActive = true },
+            new IsoStandard { Id = 299, VersionID = 1, ClauseRef = "9.2.1.a.1", Description = "the organization’s own requirements for its quality management system;", Particulars = "", ParentID = 298, isActive = true },
+            new IsoStandard { Id = 300, VersionID = 1, ClauseRef = "9.2.1.a.2", Description = "the requirements of this International Standard;", Particulars = "", ParentID = 298, isActive = true },
+            new IsoStandard { Id = 301, VersionID = 1, ClauseRef = "9.2.1.b", Description = "is effectively implemented and maintained.", Particulars = "", ParentID = 297, isActive = true },
+            new IsoStandard { Id = 302, VersionID = 1, ClauseRef = "9.2.2", Description = "", Particulars = "The organization shall:", ParentID = 296, isActive = true },
+            new IsoStandard { Id = 303, VersionID = 1, ClauseRef = "9.2.2.a", Description = "plan, establish, implement and maintain an audit programme(s) including the frequency, methods, responsibilities, planning requirements and reporting, which shall take into consideration the importance of the processes concerned, changes affecting the organization, and the results of previous audits;", Particulars = "", ParentID = 302, isActive = true },
 
-// 9.2.2.b to 9.3.2.c.6 continuation
-new IsoStandard { Id = 304, VersionID = 1, Particulars = "", ClauseRef = "9.2.2.b", Description = "define the audit criteria and scope for each audit;", isActive = true, ParentID = 302 },
-new IsoStandard { Id = 305, VersionID = 1, Particulars = "", ClauseRef = "9.2.2.c", Description = "select auditors and conduct audits to ensure objectivity and the impartiality of the audit process;", isActive = true, ParentID = 279 },
-new IsoStandard { Id = 306, VersionID = 1, Particulars = "", ClauseRef = "9.2.2.d", Description = "ensure that the results of the audits are reported to relevant management;", isActive = true, ParentID = 302 },
-new IsoStandard { Id = 307, VersionID = 1, Particulars = "", ClauseRef = "9.2.2.e", Description = "take appropriate correction and corrective actions without undue delay;", isActive = true, ParentID = 302 },
-new IsoStandard { Id = 308, VersionID = 1, Particulars = "", ClauseRef = "9.2.2.f", Description = "retain documented information as evidence of the implementation of the audit programme and the audit results.", isActive = true, ParentID = 302 },
+            // 9.2.2.b to 9.3.2.c.6 continuation
+            new IsoStandard { Id = 304, VersionID = 1, Particulars = "", ClauseRef = "9.2.2.b", Description = "define the audit criteria and scope for each audit;", isActive = true, ParentID = 302 },
+            new IsoStandard { Id = 305, VersionID = 1, Particulars = "", ClauseRef = "9.2.2.c", Description = "select auditors and conduct audits to ensure objectivity and the impartiality of the audit process;", isActive = true, ParentID = 279 },
+            new IsoStandard { Id = 306, VersionID = 1, Particulars = "", ClauseRef = "9.2.2.d", Description = "ensure that the results of the audits are reported to relevant management;", isActive = true, ParentID = 302 },
+            new IsoStandard { Id = 307, VersionID = 1, Particulars = "", ClauseRef = "9.2.2.e", Description = "take appropriate correction and corrective actions without undue delay;", isActive = true, ParentID = 302 },
+            new IsoStandard { Id = 308, VersionID = 1, Particulars = "", ClauseRef = "9.2.2.f", Description = "retain documented information as evidence of the implementation of the audit programme and the audit results.", isActive = true, ParentID = 302 },
 
-// 9.3 Management review
-new IsoStandard { Id = 309, VersionID = 1, Particulars = "", ClauseRef = "9.3", Description = "Management review", isActive = true, ParentID = 280 },
+            // 9.3 Management review
+            new IsoStandard { Id = 309, VersionID = 1, Particulars = "", ClauseRef = "9.3", Description = "Management review", isActive = true, ParentID = 280 },
 
-new IsoStandard { Id = 310, VersionID = 1, Particulars = "Top management shall review the organization’s quality management system, at planned intervals, to ensure its continuing suitability, adequacy, effectiveness and alignment with the strategic direction of the organization.", ClauseRef = "9.3.1", Description = "General", isActive = true, ParentID = 309 },
+            new IsoStandard { Id = 310, VersionID = 1, Particulars = "Top management shall review the organization’s quality management system, at planned intervals, to ensure its continuing suitability, adequacy, effectiveness and alignment with the strategic direction of the organization.", ClauseRef = "9.3.1", Description = "General", isActive = true, ParentID = 309 },
 
-new IsoStandard { Id = 311, VersionID = 1, Particulars = "The management review shall be planned and carried out taking into consideration:", ClauseRef = "9.3.2", Description = "Management review inputs", isActive = true, ParentID =309 },
+            new IsoStandard { Id = 311, VersionID = 1, Particulars = "The management review shall be planned and carried out taking into consideration:", ClauseRef = "9.3.2", Description = "Management review inputs", isActive = true, ParentID =309 },
 
-new IsoStandard { Id = 312, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.a", Description = "the status of actions from previous management reviews;", isActive = true, ParentID = 311 },
-new IsoStandard { Id = 313, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.b", Description = "changes in external and internal issues that are relevant to the quality management system;", isActive = true, ParentID = 311 },
-new IsoStandard { Id = 314, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c", Description = "information on the performance and effectiveness of the quality management system, including trends in:", isActive = true, ParentID = 311 },
+            new IsoStandard { Id = 312, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.a", Description = "the status of actions from previous management reviews;", isActive = true, ParentID = 311 },
+            new IsoStandard { Id = 313, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.b", Description = "changes in external and internal issues that are relevant to the quality management system;", isActive = true, ParentID = 311 },
+            new IsoStandard { Id = 314, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c", Description = "information on the performance and effectiveness of the quality management system, including trends in:", isActive = true, ParentID = 311 },
 
-new IsoStandard { Id = 315, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.1", Description = "customer satisfaction and feedback from relevant interested parties;", isActive = true, ParentID = 314 },
-new IsoStandard { Id = 316, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.2", Description = "the extent to which quality objectives have been met;", isActive = true, ParentID = 314 },
-new IsoStandard { Id = 317, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.3", Description = "process performance and conformity of products and services;", isActive = true, ParentID = 314 },
-new IsoStandard { Id = 318, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.4", Description = "nonconformities and corrective actions;", isActive = true, ParentID = 314 },
-new IsoStandard { Id = 319, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.5", Description = "monitoring and measurement results;", isActive = true, ParentID = 314 },
-new IsoStandard { Id = 320, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.6", Description = "audit results;", isActive = true, ParentID = 314 },
-// 9.3.2.c.7 to 10.3
-new IsoStandard { Id = 321, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.7", Description = "the performance of external providers", isActive = true, ParentID = 314 },
-new IsoStandard { Id = 322, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.d", Description = "the adequacy of resources;", isActive = true, ParentID = 311 },
-new IsoStandard { Id = 323, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.e", Description = "the effectiveness of actions taken to address risks and opportunities (see 6.1);", isActive = true, ParentID = 311 },
-new IsoStandard { Id = 324, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.f", Description = "opportunities for improvement", isActive = true, ParentID = 311 },
+            new IsoStandard { Id = 315, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.1", Description = "customer satisfaction and feedback from relevant interested parties;", isActive = true, ParentID = 314 },
+            new IsoStandard { Id = 316, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.2", Description = "the extent to which quality objectives have been met;", isActive = true, ParentID = 314 },
+            new IsoStandard { Id = 317, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.3", Description = "process performance and conformity of products and services;", isActive = true, ParentID = 314 },
+            new IsoStandard { Id = 318, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.4", Description = "nonconformities and corrective actions;", isActive = true, ParentID = 314 },
+            new IsoStandard { Id = 319, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.5", Description = "monitoring and measurement results;", isActive = true, ParentID = 314 },
+            new IsoStandard { Id = 320, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.6", Description = "audit results;", isActive = true, ParentID = 314 },
+            // 9.3.2.c.7 to 10.3
+            new IsoStandard { Id = 321, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.c.7", Description = "the performance of external providers", isActive = true, ParentID = 314 },
+            new IsoStandard { Id = 322, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.d", Description = "the adequacy of resources;", isActive = true, ParentID = 311 },
+            new IsoStandard { Id = 323, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.e", Description = "the effectiveness of actions taken to address risks and opportunities (see 6.1);", isActive = true, ParentID = 311 },
+            new IsoStandard { Id = 324, VersionID = 1, Particulars = "", ClauseRef = "9.3.2.f", Description = "opportunities for improvement", isActive = true, ParentID = 311 },
 
-new IsoStandard { Id = 325, VersionID = 1, Particulars = "The organization shall retain documented information as evidence of the results of management reviews. The outputs of the management review shall include decisions and actions related to:", ClauseRef = "9.3.3", Description = "Management review outputs", isActive = true, ParentID = 309 },
-new IsoStandard { Id = 326, VersionID = 1, Particulars = "", ClauseRef = "9.3.3.a", Description = "opportunities for improvement;", isActive = true, ParentID = 325 },
-new IsoStandard { Id = 327, VersionID = 1, Particulars = "", ClauseRef = "9.3.3.b", Description = "any need for changes to the quality management system;", isActive = true, ParentID = 325 },
-new IsoStandard { Id = 328, VersionID = 1, Particulars = "", ClauseRef = "9.3.3.c", Description = "resource needs.", isActive = true, ParentID = 325 },
+            new IsoStandard { Id = 325, VersionID = 1, Particulars = "The organization shall retain documented information as evidence of the results of management reviews. The outputs of the management review shall include decisions and actions related to:", ClauseRef = "9.3.3", Description = "Management review outputs", isActive = true, ParentID = 309 },
+            new IsoStandard { Id = 326, VersionID = 1, Particulars = "", ClauseRef = "9.3.3.a", Description = "opportunities for improvement;", isActive = true, ParentID = 325 },
+            new IsoStandard { Id = 327, VersionID = 1, Particulars = "", ClauseRef = "9.3.3.b", Description = "any need for changes to the quality management system;", isActive = true, ParentID = 325 },
+            new IsoStandard { Id = 328, VersionID = 1, Particulars = "", ClauseRef = "9.3.3.c", Description = "resource needs.", isActive = true, ParentID = 325 },
 
-// 10 – Improvement
-new IsoStandard { Id = 329, VersionID = 1, Particulars = "", ClauseRef = "10", Description = "Improvement", isActive = true, ParentID = null },
-new IsoStandard { Id = 330, VersionID = 1, Particulars = "The organization shall determine and select opportunities for improvement and implement any necessary actions to meet customer requirements and enhance customer satisfaction. These shall include:", ClauseRef = "10.1", Description = "General", isActive = true, ParentID = 329 },
-new IsoStandard { Id = 331, VersionID = 1, Particulars = "", ClauseRef = "10.1.1.a", Description = "improving products and services to meet requirements as well as to address future needs and expectations;", isActive = true, ParentID = 330 },
-new IsoStandard { Id = 332, VersionID = 1, Particulars = "", ClauseRef = "10.1.1.b", Description = "correcting, preventing or reducing undesired effects;", isActive = true, ParentID = 330 },
-new IsoStandard { Id = 333, VersionID = 1, Particulars = "", ClauseRef = "10.1.1.c", Description = "improving the performance and effectiveness of the quality management system.", isActive = true, ParentID = 330 },
+            // 10 – Improvement
+            new IsoStandard { Id = 329, VersionID = 1, Particulars = "", ClauseRef = "10", Description = "Improvement", isActive = true, ParentID = null },
+            new IsoStandard { Id = 330, VersionID = 1, Particulars = "The organization shall determine and select opportunities for improvement and implement any necessary actions to meet customer requirements and enhance customer satisfaction. These shall include:", ClauseRef = "10.1", Description = "General", isActive = true, ParentID = 329 },
+            new IsoStandard { Id = 331, VersionID = 1, Particulars = "", ClauseRef = "10.1.1.a", Description = "improving products and services to meet requirements as well as to address future needs and expectations;", isActive = true, ParentID = 330 },
+            new IsoStandard { Id = 332, VersionID = 1, Particulars = "", ClauseRef = "10.1.1.b", Description = "correcting, preventing or reducing undesired effects;", isActive = true, ParentID = 330 },
+            new IsoStandard { Id = 333, VersionID = 1, Particulars = "", ClauseRef = "10.1.1.c", Description = "improving the performance and effectiveness of the quality management system.", isActive = true, ParentID = 330 },
 
-new IsoStandard { Id = 334, VersionID = 1, Particulars = "", ClauseRef = "10.2", Description = "Nonconformity and corrective action", isActive = true, ParentID = 329 },
-new IsoStandard { Id = 335, VersionID = 1, Particulars = "Corrective actions shall be appropriate to the effects of the nonconformities encountered. When a nonconformity occurs, including any arising from complaints, the organization shall:", ClauseRef = "10.2.1", Description = "", isActive = true, ParentID = 334 },
-new IsoStandard { Id = 336, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.a", Description = "react to the nonconformity and, as applicable:", isActive = true, ParentID = 335 },
-new IsoStandard { Id = 337, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.a.1", Description = "take action control and correct it;", isActive = true, ParentID = 336 },
-new IsoStandard { Id = 338, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.a.2", Description = "deal with the consequences;", isActive = true, ParentID = 336 },
-new IsoStandard { Id = 339, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.b", Description = "evaluate the need for action to eliminate the cause(s) of the nonconformity, in order that it does not recur or occur elsewhere, by:", isActive = true, ParentID = 335 },
-new IsoStandard { Id = 340, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.b.1", Description = "reviewing and analysing the nonconformity;", isActive = true, ParentID = 339 },
-new IsoStandard { Id = 341, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.b.2", Description = "determining the causes of the nonconformity;", isActive = true, ParentID = 339 },
-new IsoStandard { Id = 342, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.b.3", Description = "determining if similar nonconformities exist, or could potentially occur;", isActive = true, ParentID = 335 },
-new IsoStandard { Id = 343, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.c", Description = "implement any action needed;", isActive = true, ParentID = 335 },
-new IsoStandard { Id = 344, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.d", Description = "review the effectiveness of any corrective action taken;", isActive = true, ParentID = 335 },
-new IsoStandard { Id = 345, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.e", Description = "update risks and opportunities determined during planning, if necessary;", isActive = true, ParentID = 335 },
-new IsoStandard { Id = 346, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.f", Description = "make changes to the quality management system, if necessary.", isActive = true, ParentID = 335 },
-new IsoStandard { Id = 347, VersionID = 1, Particulars = "The organization shall retain documented information as evidence of:", ClauseRef = "10.2.2", Description = "", isActive = true, ParentID = 334 },
-new IsoStandard { Id = 348, VersionID = 1, Particulars = "", ClauseRef = "10.2.2.a", Description = "the nature of the nonconformities and any subsequent actions taken;", isActive = true, ParentID = 347 },
-new IsoStandard { Id = 349, VersionID = 1, Particulars = "", ClauseRef = "10.2.2.b", Description = "the results of any corrective action.", isActive = true, ParentID = 347 },
+            new IsoStandard { Id = 334, VersionID = 1, Particulars = "", ClauseRef = "10.2", Description = "Nonconformity and corrective action", isActive = true, ParentID = 329 },
+            new IsoStandard { Id = 335, VersionID = 1, Particulars = "Corrective actions shall be appropriate to the effects of the nonconformities encountered. When a nonconformity occurs, including any arising from complaints, the organization shall:", ClauseRef = "10.2.1", Description = "", isActive = true, ParentID = 334 },
+            new IsoStandard { Id = 336, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.a", Description = "react to the nonconformity and, as applicable:", isActive = true, ParentID = 335 },
+            new IsoStandard { Id = 337, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.a.1", Description = "take action control and correct it;", isActive = true, ParentID = 336 },
+            new IsoStandard { Id = 338, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.a.2", Description = "deal with the consequences;", isActive = true, ParentID = 336 },
+            new IsoStandard { Id = 339, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.b", Description = "evaluate the need for action to eliminate the cause(s) of the nonconformity, in order that it does not recur or occur elsewhere, by:", isActive = true, ParentID = 335 },
+            new IsoStandard { Id = 340, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.b.1", Description = "reviewing and analysing the nonconformity;", isActive = true, ParentID = 339 },
+            new IsoStandard { Id = 341, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.b.2", Description = "determining the causes of the nonconformity;", isActive = true, ParentID = 339 },
+            new IsoStandard { Id = 342, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.b.3", Description = "determining if similar nonconformities exist, or could potentially occur;", isActive = true, ParentID = 335 },
+            new IsoStandard { Id = 343, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.c", Description = "implement any action needed;", isActive = true, ParentID = 335 },
+            new IsoStandard { Id = 344, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.d", Description = "review the effectiveness of any corrective action taken;", isActive = true, ParentID = 335 },
+            new IsoStandard { Id = 345, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.e", Description = "update risks and opportunities determined during planning, if necessary;", isActive = true, ParentID = 335 },
+            new IsoStandard { Id = 346, VersionID = 1, Particulars = "", ClauseRef = "10.2.1.f", Description = "make changes to the quality management system, if necessary.", isActive = true, ParentID = 335 },
+            new IsoStandard { Id = 347, VersionID = 1, Particulars = "The organization shall retain documented information as evidence of:", ClauseRef = "10.2.2", Description = "", isActive = true, ParentID = 334 },
+            new IsoStandard { Id = 348, VersionID = 1, Particulars = "", ClauseRef = "10.2.2.a", Description = "the nature of the nonconformities and any subsequent actions taken;", isActive = true, ParentID = 347 },
+            new IsoStandard { Id = 349, VersionID = 1, Particulars = "", ClauseRef = "10.2.2.b", Description = "the results of any corrective action.", isActive = true, ParentID = 347 },
 
-new IsoStandard { Id = 350, VersionID = 1, Particulars = "The organization shall continually improve the suitability, adequacy and effectiveness of the quality management system. The organization shall consider the results of analysis and evaluation, and the outputs from management review, to determine if there are needs or opportunities that shall be addressed as part of continual improvement.", ClauseRef = "10.3", Description = "Continual improvement", isActive = true, ParentID = 329 }
-
-
-
-
+            new IsoStandard { Id = 350, VersionID = 1, Particulars = "The organization shall continually improve the suitability, adequacy and effectiveness of the quality management system. The organization shall consider the results of analysis and evaluation, and the outputs from management review, to determine if there are needs or opportunities that shall be addressed as part of continual improvement.", ClauseRef = "10.3", Description = "Continual improvement", isActive = true, ParentID = 329 }
 
 
 
