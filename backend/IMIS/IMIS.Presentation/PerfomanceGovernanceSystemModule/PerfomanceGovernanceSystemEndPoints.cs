@@ -132,6 +132,70 @@ namespace IMIS.Presentation.PgsModuleAPIs
             .WithTags(_pgsTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
+            app.MapGet("/specificpgsdelivrable/pdf/{id}", async (int id, IPerfomanceGovernanceSystemService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                var file = await ReportUtil.GeneratePdfReport<ReportPerfomanceGovernanceSystemDto>(
+                    "SpecificPerfomanceGovernanceSystemReport",
+                    new List<ReportPerfomanceGovernanceSystemDto> { performanceGovernanceSystem! },
+                    "PerfomanceGovernanceSystem",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                //Force inline rendering in browser with dynamic timestamp filename
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+           .WithTags(_pgsTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
+
+            app.MapGet("/pgsreadiness/pdf/{id}", async (int id, IPerfomanceGovernanceSystemService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                var file = await ReportUtil.GeneratePdfReport<ReportPerfomanceGovernanceSystemDto>(
+                    "PgsReadinessReport",
+                    new List<ReportPerfomanceGovernanceSystemDto> { performanceGovernanceSystem! },
+                    "PerfomanceGovernanceSystem",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                //Force inline rendering in browser with dynamic timestamp filename
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+           .WithTags(_pgsTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
+            app.MapGet("/pgsdeliverablestatus/pdf/{id}", async (int id, IPerfomanceGovernanceSystemService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                var file = await ReportUtil.GeneratePdfReport<ReportPerfomanceGovernanceSystemDto>(
+                    "PgsDeliverableStatusReport",
+                    new List<ReportPerfomanceGovernanceSystemDto> { performanceGovernanceSystem! },
+                    "PerfomanceGovernanceSystem",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                //Force inline rendering in browser with dynamic timestamp filename
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+          .WithTags(_pgsTag)
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
 
             app.MapGet("/page", async (int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
