@@ -1,11 +1,12 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Base.Primitives;
-using IMIS.Domain;
-
-namespace IMIS.Application.PgsDeliverableAccomplishmentModule
+﻿namespace IMIS.Application.OperationReviewProtocolModule
 {
-    public class PgsDeliverableAccomplishmentDto : BaseDto<PgsDeliverableAccomplishment, long>
+    using System.Diagnostics.CodeAnalysis;
+    using Base.Primitives;
+    using IMIS.Domain;
+
+    public class ORPPgsDeliverableAccomplishmentDto : BaseDto<PgsDeliverableAccomplishment, long>
     {
+
         public required long PgsDeliverableId { get; set; }
         public required PgsStatus Status { get; set; }
         public DateTime PostingDate { get; set; }
@@ -15,9 +16,12 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
         public string? AuditorRemarks { get; set; }
         public string? AttachmentPath { get; set; }
 
-        public PgsDeliverableAccomplishmentDto() { }
+        public string? DeliverableName { get; set; }
+        public string? PgsStatus { get; set; }
+        public DateTime? ByWhen { get; set; }
+        public ORPPgsDeliverableAccomplishmentDto() { }
         [SetsRequiredMembers]
-        public PgsDeliverableAccomplishmentDto(PgsDeliverableAccomplishment pgsDeliverableAccomplishment)
+        public ORPPgsDeliverableAccomplishmentDto(PgsDeliverableAccomplishment pgsDeliverableAccomplishment)
         {
             this.Id = pgsDeliverableAccomplishment.Id;
             this.PgsDeliverableId = pgsDeliverableAccomplishment.PgsDeliverableId;
@@ -28,6 +32,9 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
             this.Remarks = pgsDeliverableAccomplishment?.Remarks;
             this.AuditorRemarks = pgsDeliverableAccomplishment?.AuditorRemarks;
             this.AttachmentPath = pgsDeliverableAccomplishment!.AttachmentPath;
+            this.DeliverableName = pgsDeliverableAccomplishment.PgsDeliverable?.DeliverableName;
+            this.PgsStatus = pgsDeliverableAccomplishment.Status.ToString();
+            this.ByWhen = pgsDeliverableAccomplishment.PgsDeliverable?.ByWhen;
         }
 
         public override PgsDeliverableAccomplishment ToEntity()
@@ -42,8 +49,8 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
                 PercentAccomplished = PercentAccomplished,
                 Remarks = Remarks,
                 AuditorRemarks = AuditorRemarks,
-                AttachmentPath = AttachmentPath,               
+                AttachmentPath = AttachmentPath,
             };
-        }    
+        }
     }
 }

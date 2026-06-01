@@ -1,7 +1,9 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.BreakThroughScoringModule;
+using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
+using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Identity;
 
@@ -10,14 +12,37 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
     public class PgsDeliverableAccomplishmentService : IPgsDeliverableAcomplishmentService
     {
         private readonly IPgsDeliverableAccomplishmentRepository _repository;
+        private readonly IPGSDeliverableRepository _deliverablerepository;
         private readonly IBreakThroughScoringRepository _breakThroughrepository;
         private readonly UserManager<User> _userManager;       
 
-        public PgsDeliverableAccomplishmentService(IPgsDeliverableAccomplishmentRepository repository, UserManager<User> userManager, IBreakThroughScoringRepository breakThrough)
+        public PgsDeliverableAccomplishmentService(IPgsDeliverableAccomplishmentRepository repository, UserManager<User> userManager, IBreakThroughScoringRepository breakThrough, IPGSDeliverableRepository deliverablerepository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _breakThroughrepository = breakThrough ?? throw new ArgumentNullException(nameof(breakThrough));
+            _deliverablerepository = deliverablerepository ?? throw new ArgumentNullException(nameof(deliverablerepository));
+        }
+
+        public async Task<bool> UpdateAccomplishmentsAsync(List<ORPPgsDeliverableAccomplishmentDto> request, CancellationToken cancellationToken)
+        {
+            foreach (var item in request)
+            {
+                var entity = await _repository.GetByIdAsync(item.Id, cancellationToken);
+
+                if (entity == null)
+                    continue;
+
+                entity.Status = item.Status;
+                entity.PercentAccomplished = item.PercentAccomplished;
+                entity.Remarks = item.Remarks;
+                entity.AuditorRemarks = item.AuditorRemarks;
+                entity.AttachmentPath = item.AttachmentPath;
+            }
+
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
+
+            return true;
         }
         public async Task<DtoPageList<PgsDeliverableAccomplishmentDto, PgsDeliverableAccomplishment, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
@@ -53,7 +78,8 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
             entity.AttachmentPath = attachmentPath;
             await _repository.UpdateAsync(entity, id, cancellationToken);
             await _repository.SaveOrUpdateAsync(entity, cancellationToken);
-        }      
+        }
+          
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             if (dto is PgsDeliverableAccomplishmentDto accomplishmentDto)
@@ -61,19 +87,21 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
                 var accomplishment = accomplishmentDto.ToEntity();
 
                 if (accomplishment.Id == 0)
+                {
                     _repository.Add(accomplishment);
+                }
                 else
-                    await _repository.UpdateAsync(accomplishment, accomplishment.Id, cancellationToken)
-                        .ConfigureAwait(false);
+                {
+                    await _repository.UpdateAsync(accomplishment, accomplishment.Id, cancellationToken).ConfigureAwait(false);
+                }
 
-                await _repository.SaveOrUpdateAsync(accomplishment, cancellationToken)
-                    .ConfigureAwait(false);
+                await _repository.SaveOrUpdateAsync(accomplishment, cancellationToken).ConfigureAwait(false);
 
+                // UPDATE BREAKTHROUGH SCORING
                 if (accomplishment.PercentAccomplished > 0)
                 {
                     var existingBreakThrough = await _breakThroughrepository
-                        .GetByDeliverableIdAsync(accomplishment.PgsDeliverableId, cancellationToken)
-                        .ConfigureAwait(false);
+                        .GetByDeliverableIdAsync(accomplishment.PgsDeliverableId,cancellationToken).ConfigureAwait(false);
 
                     if (existingBreakThrough == null)
                     {
@@ -83,6 +111,7 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
                             PgsDeliverableId = accomplishment.PgsDeliverableId,
                             PercentAccomplishment = accomplishment.PercentAccomplished
                         };
+
                         _breakThroughrepository.Add(existingBreakThrough);
                     }
                     else
@@ -90,12 +119,19 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
                         existingBreakThrough.PercentAccomplishment = accomplishment.PercentAccomplished;
                     }
 
-                    await _breakThroughrepository.SaveOrUpdateAsync(existingBreakThrough, cancellationToken)
-                        .ConfigureAwait(false);
+                    await _breakThroughrepository.SaveOrUpdateAsync(existingBreakThrough, cancellationToken).ConfigureAwait(false);
                 }
-                else
+
+                // UPDATE DELIVERABLE STATUS
+                var deliverable = await _deliverablerepository.GetByIdAsync(accomplishment.PgsDeliverableId, cancellationToken).ConfigureAwait(false);
+
+                if (deliverable != null)
                 {
-                   
+                    deliverable.Status = accomplishment.Status;
+                
+                    await _deliverablerepository.UpdateAsync(deliverable, deliverable.Id, cancellationToken).ConfigureAwait(false);
+
+                    await _deliverablerepository.SaveOrUpdateAsync(deliverable, cancellationToken).ConfigureAwait(false);
                 }
             }
         }

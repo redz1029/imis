@@ -1,5 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsDeliverableAccomplishmentModule
@@ -11,5 +12,6 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
         Task UpdateAsync(PgsDeliverableAccomplishmentDto accomplishment, CancellationToken cancellationToken);
         Task UpdateAttachmentPathAsync(long id, string attachmentPath, CancellationToken cancellationToken);
         public Task<DtoPageList<PgsDeliverableAccomplishmentDto, PgsDeliverableAccomplishment, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        Task<bool> UpdateAccomplishmentsAsync(List<ORPPgsDeliverableAccomplishmentDto> request, CancellationToken cancellationToken);
     }
 }

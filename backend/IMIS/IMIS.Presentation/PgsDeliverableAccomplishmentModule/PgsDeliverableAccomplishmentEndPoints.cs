@@ -57,6 +57,7 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                 {
                     Id = 0,
                     PgsDeliverableId = form.PgsDeliverableId,
+                    Status = form.Status,
                     PostingDate = form.PostingDate,
                     UserId = form.UserId,
                     PercentAccomplished = form.PercentAccomplished,
@@ -155,6 +156,7 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                 {
                     Id = id,
                     PgsDeliverableId = form.PgsDeliverableId,
+                    Status = form.Status,
                     PostingDate = form.PostingDate,
                     UserId = form.UserId,
                     PercentAccomplished = form.PercentAccomplished,
