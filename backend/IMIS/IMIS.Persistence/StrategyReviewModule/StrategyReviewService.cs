@@ -26,7 +26,16 @@ namespace IMIS.Persistence.StrategyReviewModule
             _kraRoadMapDeliverableRepository = kraRoadMapDeliverableRepository;
         }
 
-        
+        public async Task<List<StrategyReviewDto>?> GetAll(CancellationToken cancellationToken)
+        {
+            var strategyReviewDto = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+
+            if (strategyReviewDto == null)
+                return null;
+
+            return strategyReviewDto.Select(o => new StrategyReviewDto(o)).ToList();
+        }
+
         public async Task<StrategyReviewDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);

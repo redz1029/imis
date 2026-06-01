@@ -10,6 +10,13 @@ namespace IMIS.Persistence.StrategyReviewModule
         public StrategyReviewRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+        public async Task<IEnumerable<StrategyReview>> GetAll(CancellationToken cancellationToken)
+        {
+            return await _entities
+            .AsNoTracking()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        }
 
         public async Task<StrategyReview?> GetByIdWithChildrenAsync(long id,  CancellationToken cancellationToken)
         {            

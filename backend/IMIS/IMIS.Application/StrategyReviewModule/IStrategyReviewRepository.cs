@@ -7,5 +7,6 @@ namespace IMIS.Application.StrategyReviewModule
     {
         Task<StrategyReview?> GetByIdWithChildrenAsync(long id,  CancellationToken cancellationToken);
         Task<List<string>> GetOfficeNamesByKraRoadMapIdAsync(long kraRoadMapId, CancellationToken cancellationToken);
+        Task<IEnumerable<StrategyReview>> GetAll(CancellationToken cancellationToken);
     }
 }
