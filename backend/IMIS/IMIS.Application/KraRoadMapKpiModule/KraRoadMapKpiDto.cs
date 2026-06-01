@@ -9,6 +9,7 @@ namespace IMIS.Application.KraRoadMapKpiModule
         public string? KpiDescription { get; set; }
         public string? Target { get; set; }
         public string? BaseLine { get; set; }
+        public long KraRoadMapId { get; set; }
 
         public KraRoadMapKpiDto() { }
         [SetsRequiredMembers]
@@ -18,6 +19,7 @@ namespace IMIS.Application.KraRoadMapKpiModule
             this.KpiDescription = kraRoadMapKpiDto.KpiDescription;   
             this.Target = kraRoadMapKpiDto.Target;
             this.BaseLine = kraRoadMapKpiDto?.BaseLine;
+            this.KraRoadMapId = kraRoadMapKpiDto!.KraRoadMapId;
         }
         public override KraRoadMapKpi ToEntity()
         {
