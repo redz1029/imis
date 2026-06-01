@@ -99,7 +99,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
   bool isLoading = false;
   Uint8List? _serverImageCache;
   OverlayEntry? _overlayEntry;
-  bool _serverImageFetchAttempted = false;
+  bool serverImageFetchAttempted = false;
   @override
   void initState() {
     super.initState();
@@ -129,17 +129,17 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
         achievementsList[widget.deliverableId]?.rows[widget.periodIndex];
     if (row == null) return;
     if (row.accomplishmentId == null) {
-      setState(() => _serverImageFetchAttempted = true);
+      setState(() => serverImageFetchAttempted = true);
       return;
     }
     if (row.attachmentBytes != null) {
-      setState(() => _serverImageFetchAttempted = true);
+      setState(() => serverImageFetchAttempted = true);
       return;
     }
 
     final name = row.attachmentPath?.split("/").last ?? "";
     if (name.isEmpty || _isPdf(name)) {
-      setState(() => _serverImageFetchAttempted = true);
+      setState(() => serverImageFetchAttempted = true);
       return;
     }
 
@@ -147,7 +147,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
       final token = loggedUser?.accessToken;
       if (token == null) {
-        setState(() => _serverImageFetchAttempted = true);
+        setState(() => serverImageFetchAttempted = true);
         return;
       }
 
@@ -165,12 +165,12 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
       if (mounted) {
         setState(() {
           _serverImageCache = Uint8List.fromList(response.data!);
-          _serverImageFetchAttempted = true;
+          serverImageFetchAttempted = true;
         });
       }
     } catch (e) {
       debugPrint("Thumbnail prefetch failed: $e");
-      if (mounted) setState(() => _serverImageFetchAttempted = true);
+      if (mounted) setState(() => serverImageFetchAttempted = true);
     }
   }
 
