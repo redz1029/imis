@@ -2,6 +2,7 @@
 
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
@@ -169,7 +170,7 @@ class AuditPlanPageState extends State<AuditPlanPage> {
 
                                 IconButton(
                                   icon: const Icon(
-                                    Icons.delete,
+                                    CupertinoIcons.delete_simple,
                                     color: primaryColor,
                                   ),
                                   onPressed: () {

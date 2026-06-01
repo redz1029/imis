@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 //REUSABLE CODE//
 
 //Colors
-const primaryColor = Color.fromRGBO(192, 80, 77, 1);
+const primaryColor = Color.fromARGB(255, 150, 68, 89);
 const secondaryBgButton = Color.fromRGBO(192, 74, 74, 0.226);
 const primaryLightColor = Color.fromRGBO(192, 74, 74, 0.644);
 const maroon = Color.fromRGBO(117, 38, 38, 1);
@@ -14,6 +14,15 @@ const lightGrey = Color.fromRGBO(217, 217, 217, 1);
 const lightGrey1 = Color.fromRGBO(245, 245, 245, 1);
 const primaryTextColor = Color.fromRGBO(65, 65, 65, 1);
 const Color peachLight = Color.fromARGB(255, 255, 225, 224);
+
+const Color kOrange = Color(0xFFF4724A);
+const Color kGreen = Color(0xFF4DC688);
+const Color kDark = Color(0xFF0F0F0F);
+const Color kText = Color(0xFF111827);
+const Color kMuted = Color(0xFF6B7280);
+const Color kBorder = Color(0xFFE5E7EB);
+const Color kBackground = Color(0xFFFAFAFA);
+
 //Sizing
 const gap4px = SizedBox(height: 4);
 const gap6px = SizedBox(height: 6);
@@ -155,4 +164,55 @@ class JobPositions {
 
 class SwotYear {
   static const List<String> years = ['2026', '2027', '2028', '2029', '2030'];
+}
+
+Widget getStatusIcon(String status) {
+  double iconSize = 12; // smaller size for all icons
+
+  Icon icon;
+  Color bgColor = getStatusColor(status);
+
+  switch (status) {
+    case 'Draft':
+      icon = Icon(Icons.circle, size: iconSize, color: Colors.white);
+      break;
+    case 'For Approval':
+      icon = Icon(Icons.access_time, size: iconSize, color: Colors.white);
+      break;
+    case 'Approved':
+      icon = Icon(Icons.check, size: iconSize, color: Colors.white);
+      break;
+    case 'Disapproved':
+      icon = Icon(Icons.close, size: iconSize, color: Colors.white);
+      break;
+    default:
+      icon = Icon(Icons.circle, size: iconSize, color: Colors.white);
+  }
+
+  return Container(
+    decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
+    child: icon,
+  );
+}
+
+Color getStatusColor(String status) {
+  switch (status) {
+    case 'Draft':
+      return Colors.grey[800]!;
+    case 'For Approval':
+      return Colors.orange[800]!;
+    case 'Approved':
+      return Colors.green[800]!;
+    case 'Disapproved':
+      return Colors.red[800]!;
+    default:
+      return Colors.grey[800]!;
+  }
+}
+
+String getGreeting() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'Good Morning';
+  if (hour < 17) return 'Good Afternoon';
+  return 'Good Evening';
 }
