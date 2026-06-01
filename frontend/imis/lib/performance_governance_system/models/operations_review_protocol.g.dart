@@ -34,6 +34,9 @@ OperationsReviewProtocol _$OperationsReviewProtocolFromJson(
   json['removeAttachment'] as bool?,
   isDeleted: json['isDeleted'] as bool?,
   rowVersion: json['rowVersion'] as String?,
+  departmentName: json['departmentName'] as String?,
+  divisionName: json['divisionName'] as String?,
+  fullName: json['fullName'] as String?,
 );
 
 Map<String, dynamic> _$OperationsReviewProtocolToJson(
@@ -57,6 +60,9 @@ Map<String, dynamic> _$OperationsReviewProtocolToJson(
   'frequencyUpdate': instance.frequencyUpdate,
   'frequency': instance.frequency,
   'minutesAttachmentPath': instance.minutesAttachmentPath,
+  'departmentName': instance.departmentName,
+  'divisionName': instance.divisionName,
+  'fullName': instance.fullName,
   'postingDate': _$JsonConverterToJson<String, DateTime>(
     instance.postingDate,
     const DateTimeConverter().toJson,

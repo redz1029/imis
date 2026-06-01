@@ -22,6 +22,9 @@ class OperationsReviewProtocol {
   String? frequencyUpdate;
   String? frequency;
   String? minutesAttachmentPath;
+  String? departmentName;
+  String? divisionName;
+  String? fullName;
 
   @JsonKey()
   @DateTimeConverter()
@@ -54,6 +57,9 @@ class OperationsReviewProtocol {
     this.removeAttachment, {
     this.isDeleted,
     this.rowVersion,
+    this.departmentName,
+    this.divisionName,
+    this.fullName,
   });
 
   factory OperationsReviewProtocol.fromJson(Map<String, dynamic> json) =>
