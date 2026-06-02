@@ -6,7 +6,6 @@ import 'package:imis/strategy_review_report/models/strategy_review_deliverable.d
 import 'package:imis/strategy_review_report/models/strategy_review_kpi.dart';
 import 'package:imis/strategy_review_report/models/strategy_review_report.dart';
 import 'package:imis/strategy_review_report/services/strategy_review_report_services.dart';
-import 'package:imis/widgets/status_dropdown.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class StrategyReviewReportFormData {
@@ -163,7 +162,7 @@ class StrategyReviewReportDialogState
             );
             if (match != null) {
               _measureActualCtrls[i].text = match.actualDate ?? '';
-              _measureStatuses[i] = PgsStatus.values[match.status ?? 0];
+              _measureStatuses[i] = PgsStatus.values[match.status];
             }
           }
 
@@ -174,7 +173,7 @@ class StrategyReviewReportDialogState
             );
             if (match != null) {
               _kraActualCtrls[i].text = match.actualDate ?? '';
-              _kraStatuses[i] = PgsStatus.values[match.status ?? 0];
+              _kraStatuses[i] = PgsStatus.values[match.status];
             }
           }
         }
@@ -205,79 +204,6 @@ class StrategyReviewReportDialogState
     super.dispose();
   }
 
-  // Future<void> _submit() async {
-  //   if (!_formKey.currentState!.validate()) return;
-
-  //   final request = StrategyReviewSaveRequest(
-  //     id: widget.existingReview?.id ?? 0,
-  //     isDeleted: false,
-  //     rowVersion: widget.existingReview?.rowVersion,
-  //     postingDate: DateTime.now().toUtc().toIso8601String(),
-  //     kraRoadMapId: widget.kraRoadMapId,
-  //     strategicObjective: _strategicObjective, // ← use getter
-  //     officeNames: _contributingUnitsCtrl.text.trim(),
-  //     strategyReviewDeliverableKpi: List.generate(_kpiItems.length, (i) {
-  //       final existing = widget.existingReview?.strategyReviewDeliverableKpi
-  //           ?.firstWhere(
-  //             (k) => k.kpiId == _kpiItems[i].id,
-  //             orElse: () => StrategyReviewDeliverableKpiRequest.empty(),
-  //           );
-  //       return StrategyReviewDeliverableKpiRequest(
-  //         id: existing?.id ?? 0,
-  //         strategyReviewId: widget.existingReview?.id ?? 0,
-  //         isDeleted: false,
-  //         rowVersion: existing?.rowVersion,
-  //         kpiId: _kpiItems[i].id,
-  //         actualDate: _measureActualCtrls[i].text.trim(),
-  //         status: _measureStatuses[i].index,
-  //       );
-  //     }),
-  //     strategyReviewDeliverable: List.generate(_deliverableItems.length, (i) {
-  //       final existing = widget.existingReview?.strategyReviewDeliverable
-  //           ?.firstWhere(
-  //             (d) => d.kraRoadmapid == _deliverableItems[i].id,
-  //             orElse: () => StrategyReviewDeliverableRequest.empty(),
-  //           );
-  //       return StrategyReviewDeliverableRequest(
-  //         id: existing?.id ?? 0,
-  //         isDeleted: false,
-  //         rowVersion: existing?.rowVersion,
-  //         strategyReviewId: widget.existingReview?.id ?? 0,
-  //         kraRoadmapid: _deliverableItems[i].id,
-  //         actualDate: _kraActualCtrls[i].text.trim(),
-  //         status: _kraStatuses[i].index,
-  //       );
-  //     }),
-  //     continueText: _continueCtrl.text.trim(),
-  //     stop: _stopCtrl.text.trim(),
-  //     start: _startCtrl.text.trim(),
-  //   );
-
-  //   setState(() => _isSaving = true);
-  //   try {
-  //     await _service.saveStrategyReview(request);
-  //     if (!mounted) return;
-  //     MotionToast.success(
-  //       toastAlignment: Alignment.topCenter,
-  //       description: Text(
-  //         widget.existingReview != null
-  //             ? 'Strategy review updated successfully'
-  //             : 'Strategy review saved successfully',
-  //       ),
-  //     ).show(context);
-  //     await Future.delayed(const Duration(milliseconds: 800));
-  //     if (!mounted) return;
-  //     Navigator.of(context).pop();
-  //   } catch (e) {
-  //     debugPrint('Submit error: $e');
-  //     if (!mounted) return;
-  //     setState(() => _isSaving = false);
-  //     MotionToast.error(
-  //       toastAlignment: Alignment.topCenter,
-  //       description: Text('Failed to save: $e'),
-  //     ).show(context);
-  //   }
-  // }
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -1038,7 +964,6 @@ class StrategyReviewReportDialogState
     );
   }
 
-  /// Compact dropdown used inside table rows (no label above)
   Widget _inlineStatusDropdown({
     required PgsStatus value,
     required ValueChanged<PgsStatus?> onChanged,

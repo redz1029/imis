@@ -521,7 +521,6 @@ class _AnnouncementCard extends StatelessWidget {
         final days = difference.inDays;
         return '$days ${days == 1 ? 'day' : 'days'} ago';
       } else {
-        // fallback to actual date if too old
         return _dateConverter.toJson(date);
       }
     }
@@ -594,9 +593,7 @@ class _AnnouncementCard extends StatelessWidget {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 4),
-
                     Row(
                       children: [
                         Icon(

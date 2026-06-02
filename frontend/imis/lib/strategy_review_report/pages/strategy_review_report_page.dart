@@ -478,9 +478,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                           strategicObjectives:
                                               kra.strategicObjectives ?? '',
                                         );
-                                    if (result != null) {
-                                      // handle result
-                                    }
+                                    if (result != null) {}
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -742,7 +740,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                       size: 18,
                                                     ),
                                                     onPressed: () async {
-                                                      // Fetch full review data first
                                                       final existing =
                                                           await _strategyReviewReport
                                                               .getStrategyReviewById(
@@ -789,6 +786,18 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                     },
                                                   ),
                                                 ),
+                                                Tooltip(
+                                                  message: 'Print preview',
+                                                  child: IconButton(
+                                                    onPressed: () {},
+                                                    icon: Icon(
+                                                      Icons
+                                                          .description_outlined,
+                                                      size: 18,
+                                                      color: Colors.blueAccent,
+                                                    ),
+                                                  ),
+                                                ),
                                                 IconButton(
                                                   icon: const Icon(
                                                     CupertinoIcons
@@ -808,8 +817,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                       ),
                                     );
                                   }
-
-                                  // Mobile card
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
@@ -932,7 +939,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
           isMobile
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
-                onPressed: () => showPeriodPanel(), // ← updated
+                onPressed: () => showPeriodPanel(),
                 child: const Icon(Icons.add, color: Colors.white),
               )
               : null,
@@ -988,7 +995,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                 PermissionWidget(
                   permission: AppPermissions.addKraRoadMap,
                   child: ElevatedButton.icon(
-                    onPressed: () => showPeriodPanel(), // ← updated
+                    onPressed: () => showPeriodPanel(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(
@@ -1143,7 +1150,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
           (context) => AlertDialog(
             title: const Text("Confirm Delete"),
             content: const Text(
-              "Are you sure you want to delete this Roadmap? This action cannot be undone.",
+              "Are you sure you want to delete this Strategy review report? This action cannot be undone.",
             ),
             actions: [
               TextButton(

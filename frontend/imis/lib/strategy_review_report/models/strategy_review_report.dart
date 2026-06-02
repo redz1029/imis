@@ -58,7 +58,6 @@ class StrategyReviewDeliverableKpiRequest {
     required this.status,
   });
 
-  // ← add this
   factory StrategyReviewDeliverableKpiRequest.empty() =>
       StrategyReviewDeliverableKpiRequest(
         id: 0,
