@@ -1,0 +1,150 @@
+import 'package:json_annotation/json_annotation.dart';
+part 'strategy_review_report.g.dart';
+
+@JsonSerializable()
+class StrategyReviewSaveRequest {
+  final int id;
+  final bool? isDeleted;
+  final String? rowVersion;
+  final String postingDate;
+  final int kraRoadMapId;
+  final String? strategicObjective;
+  final String? officeNames;
+  final List<StrategyReviewDeliverableKpiRequest> strategyReviewDeliverableKpi;
+  final List<StrategyReviewDeliverableRequest> strategyReviewDeliverable;
+  @JsonKey(name: 'continue')
+  final String? continueText;
+  final String? start;
+  final String? stop;
+
+  StrategyReviewSaveRequest({
+    required this.id,
+    this.isDeleted,
+    this.rowVersion,
+    required this.postingDate,
+    required this.kraRoadMapId,
+    this.strategicObjective,
+    this.officeNames,
+    required this.strategyReviewDeliverableKpi,
+    required this.strategyReviewDeliverable,
+    this.continueText,
+    this.start,
+    this.stop,
+  });
+
+  factory StrategyReviewSaveRequest.fromJson(Map<String, dynamic> json) =>
+      _$StrategyReviewSaveRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$StrategyReviewSaveRequestToJson(this);
+}
+
+@JsonSerializable()
+class StrategyReviewDeliverableKpiRequest {
+  final int id;
+  final bool? isDeleted;
+  final String? rowVersion;
+  final int strategyReviewId;
+  final int kpiId;
+  final String? actualDate;
+  final int status;
+
+  StrategyReviewDeliverableKpiRequest({
+    required this.id,
+    this.isDeleted,
+    this.rowVersion,
+    required this.strategyReviewId,
+    required this.kpiId,
+    this.actualDate,
+    required this.status,
+  });
+
+  // ← add this
+  factory StrategyReviewDeliverableKpiRequest.empty() =>
+      StrategyReviewDeliverableKpiRequest(
+        id: 0,
+        strategyReviewId: 0,
+        kpiId: 0,
+        status: 0,
+      );
+
+  factory StrategyReviewDeliverableKpiRequest.fromJson(
+    Map<String, dynamic> json,
+  ) => _$StrategyReviewDeliverableKpiRequestFromJson(json);
+
+  Map<String, dynamic> toJson() =>
+      _$StrategyReviewDeliverableKpiRequestToJson(this);
+}
+
+@JsonSerializable()
+class StrategyReviewDeliverableRequest {
+  final int id;
+  final bool? isDeleted;
+  final String? rowVersion;
+  final int strategyReviewId;
+  final int kraRoadmapid;
+  final String? actualDate;
+  final int status;
+
+  StrategyReviewDeliverableRequest({
+    required this.id,
+    this.isDeleted,
+    this.rowVersion,
+    required this.strategyReviewId,
+    required this.kraRoadmapid,
+    this.actualDate,
+    required this.status,
+  });
+
+  // ← add this
+  factory StrategyReviewDeliverableRequest.empty() =>
+      StrategyReviewDeliverableRequest(
+        id: 0,
+        strategyReviewId: 0,
+        kraRoadmapid: 0,
+        status: 0,
+      );
+
+  factory StrategyReviewDeliverableRequest.fromJson(
+    Map<String, dynamic> json,
+  ) => _$StrategyReviewDeliverableRequestFromJson(json);
+
+  Map<String, dynamic> toJson() =>
+      _$StrategyReviewDeliverableRequestToJson(this);
+}
+
+@JsonSerializable()
+class StrategyReviewReport {
+  final int id;
+  final bool isDeleted;
+  final String? rowVersion;
+  final String postingDate;
+  final int kraRoadMapId;
+  final String? strategicObjective;
+  final String? officeNames;
+  @JsonKey(name: 'continue')
+  final String? continueText;
+  final String? start;
+  final String? stop;
+  final List<StrategyReviewDeliverableKpiRequest>? strategyReviewDeliverableKpi;
+  final List<StrategyReviewDeliverableRequest>? strategyReviewDeliverable;
+
+  StrategyReviewReport({
+    required this.id,
+    required this.isDeleted,
+    this.rowVersion,
+    required this.postingDate,
+    required this.kraRoadMapId,
+    this.strategicObjective,
+    this.officeNames,
+    this.continueText,
+    this.start,
+    this.stop,
+    this.strategyReviewDeliverableKpi,
+    this.strategyReviewDeliverable,
+  });
+
+  factory StrategyReviewReport.fromJson(Map<String, dynamic> json) =>
+      _$StrategyReviewReportFromJson(json);
+
+  Map<String, dynamic> toJson() => _$StrategyReviewReportToJson(this);
+}
