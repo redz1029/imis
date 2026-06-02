@@ -2417,6 +2417,27 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                   color: primaryColor,
                                 ),
                               )
+                              : filteredList.isEmpty
+                              ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.map,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    const Text(
+                                      "No roadmap available",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
                               : ListView.separated(
                                 itemCount: filteredRoadmaps.length,
                                 separatorBuilder:
@@ -2437,6 +2458,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         (kra) => kra.kraId == roadmap.kraId,
                                         orElse:
                                             () => KraRoadmapRole(
+                                              id: 0,
                                               kraId: 0,
                                               roleId: 'roleId',
                                               kraName: matchedKra.name,
