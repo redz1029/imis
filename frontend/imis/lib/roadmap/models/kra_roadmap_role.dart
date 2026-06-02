@@ -4,7 +4,7 @@ part 'kra_roadmap_role.g.dart';
 
 @JsonSerializable()
 class KraRoadmapRole {
-  int? id;
+  int id;
   int kraId;
   String roleId;
   String kraName;
@@ -13,7 +13,7 @@ class KraRoadmapRole {
   String? strategicObjectives;
 
   KraRoadmapRole({
-    this.id,
+    required this.id,
     this.rowVersion,
     this.isDeleted,
     required this.kraId,
