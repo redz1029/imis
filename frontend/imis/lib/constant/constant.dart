@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 
 //REUSABLE CODE//
 
@@ -246,4 +247,26 @@ Color ratingTextColor(double val) {
   if (val == 1.0) return Colors.white;
   if (val == 0.5) return Colors.white;
   return kText;
+}
+
+Color statusColor(PgsStatus status) {
+  switch (status) {
+    case PgsStatus.notStarted:
+      return Colors.red;
+    case PgsStatus.onGoing:
+      return Colors.deepOrange;
+    case PgsStatus.completed:
+      return Colors.green;
+  }
+}
+
+String statusLabel(PgsStatus status) {
+  switch (status) {
+    case PgsStatus.notStarted:
+      return 'Not Started';
+    case PgsStatus.onGoing:
+      return 'On Going';
+    case PgsStatus.completed:
+      return 'Completed';
+  }
 }
