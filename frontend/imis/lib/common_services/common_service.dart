@@ -3,9 +3,10 @@ import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/auditor_team/models/auditor_team.dart';
 import 'package:imis/iso_standard/models/iso_standard.dart';
 import 'package:imis/office/models/office.dart';
-import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
+import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
+import 'package:imis/roles/models/roles.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -32,8 +33,37 @@ class CommonService {
     }
   }
 
+  Future<void> loadData<T>({
+    required List<T> list,
+    required Future<List<T>> Function() fetchFunction,
+    required Function(bool) setLoading,
+    required Function(List<T>) setList,
+  }) async {
+    if (list.isNotEmpty) return;
+
+    setLoading(true);
+
+    try {
+      final response = await fetchFunction();
+      setList(response);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   Future<List<Office>> fetchOffices() => _fetchList(
     ApiEndpoint().office,
+    (e) => Office.fromJson(e),
+    'Failed to fetch offices',
+  );
+  Future<List<Office>> fetchAlloffices() => _fetchList(
+    ApiEndpoint().allOffices,
+    (e) => Office.fromJson(e),
+    'Failed to fetch offices',
+  );
+
+  Future<List<Office>> fetchService() => _fetchList(
+    ApiEndpoint().officeServices,
     (e) => Office.fromJson(e),
     'Failed to fetch offices',
   );
@@ -85,9 +115,15 @@ class CommonService {
     'Failed to fetch kra period',
   );
 
-  Future<List<IsoStandard>> fetchIsoStandards() => _fetchList(
-    ApiEndpoint().isoStandard,
-    (e) => IsoStandard.fromJson(e),
-    'Failed to Iso',
+  Future<List<Roles>> fetchRoles() => _fetchList(
+    ApiEndpoint().roles,
+    (e) => Roles.fromJson(e),
+    'Failed to fetch roles',
+  );
+
+  Future<List<PgsPeriod>> fetchPeriod() => _fetchList(
+    ApiEndpoint().pgsperiod,
+    (e) => PgsPeriod.fromJson(e),
+    'Failed to fetch kra period',
   );
 }

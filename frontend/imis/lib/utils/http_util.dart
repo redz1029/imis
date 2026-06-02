@@ -47,28 +47,36 @@ class AuthenticatedRequest {
     return e.response!;
   }
 
+  /// Merges the Authorization header into any caller-supplied Options,
+  /// preserving responseType, validateStatus, Accept, and other headers.
+  static Options _mergeOptions(String accessToken, [Options? options]) {
+    final existingHeaders = Map<String, dynamic>.from(
+      options?.headers as Map? ?? {},
+    );
+    existingHeaders['Authorization'] = 'Bearer $accessToken';
+    return (options ?? Options()).copyWith(headers: existingHeaders);
+  }
+
   static Future<Response<dynamic>> get(
     Dio dio,
     String url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     BuildContext? context,
     CancelToken? cancelToken,
     ProgressCallback? onReceiveProgress,
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
-      var response = await dio.get(
+      return await dio.get(
         url,
-        options: Options(
-          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
-        ),
+        options: _mergeOptions(loggedUser!.accessToken!, options),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
         onReceiveProgress: onReceiveProgress,
       );
-      return response;
     } on DioException catch (e) {
       return _onRequestError(e, context: context);
     }
@@ -79,6 +87,7 @@ class AuthenticatedRequest {
     String url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     BuildContext? context,
     CancelToken? cancelToken,
     ProgressCallback? onSendProgress,
@@ -87,23 +96,19 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+      final merged = _mergeOptions(loggedUser!.accessToken!, options);
+      final headers = Map<String, dynamic>.from(merged.headers as Map? ?? {});
+      headers.putIfAbsent(Headers.contentTypeHeader, () => contentType);
 
-      var response = await dio.post(
+      return await dio.post(
         url,
-        options: Options(
-          headers: {
-            "Authorization": "Bearer ${loggedUser!.accessToken}",
-            Headers.contentTypeHeader: contentType,
-          },
-        ),
+        options: merged.copyWith(headers: headers),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
         onSendProgress: onSendProgress,
         onReceiveProgress: onReceiveProgress,
       );
-
-      return response;
     } on DioException catch (e) {
       return _onRequestError(e, context: context);
     }
@@ -114,6 +119,7 @@ class AuthenticatedRequest {
     String url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     BuildContext? context,
     CancelToken? cancelToken,
     ProgressCallback? onSendProgress,
@@ -121,20 +127,15 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
-
-      var response = await dio.put(
+      return await dio.put(
         url,
-        options: Options(
-          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
-        ),
+        options: _mergeOptions(loggedUser!.accessToken!, options),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
         onSendProgress: onSendProgress,
         onReceiveProgress: onReceiveProgress,
       );
-
-      return response;
     } on DioException catch (e) {
       return _onRequestError(e, context: context);
     }
@@ -145,22 +146,19 @@ class AuthenticatedRequest {
     String url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     BuildContext? context,
     CancelToken? cancelToken,
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
-      var response = await dio.delete(
+      return await dio.delete(
         url,
-        options: Options(
-          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
-        ),
+        options: _mergeOptions(loggedUser!.accessToken!, options),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
       );
-
-      return response;
     } on DioException catch (e) {
       return _onRequestError(e, context: context);
     }
@@ -171,6 +169,7 @@ class AuthenticatedRequest {
     String url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     BuildContext? context,
     CancelToken? cancelToken,
     ProgressCallback? onSendProgress,
@@ -178,19 +177,15 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
-      var response = await dio.patch(
+      return await dio.patch(
         url,
-        options: Options(
-          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
-        ),
+        options: _mergeOptions(loggedUser!.accessToken!, options),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
         onSendProgress: onSendProgress,
         onReceiveProgress: onReceiveProgress,
       );
-
-      return response;
     } on DioException catch (e) {
       return _onRequestError(e, context: context);
     }

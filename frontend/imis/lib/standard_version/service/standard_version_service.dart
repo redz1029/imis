@@ -77,19 +77,25 @@ class StandardVersionService {
 
     try {
       final Map<String, dynamic> requestData = standardVersion.toJson();
-      
+
       // Keep id field (backend DTO requires it), only remove optional fields
       if (standardVersion.id == 0) {
         requestData.remove('rowVersion');
         requestData.remove('isoStandards');
         requestData.remove('isDeleted');
       }
-      
-      final response = await AuthenticatedRequest.post(dio, url, data: requestData);
-      
+
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: requestData,
+      );
+
       // Check response
       if (response.statusCode != 200 && response.statusCode != 201) {
-        throw Exception('Failed to save StandardVersion: ${response.statusCode}');
+        throw Exception(
+          'Failed to save StandardVersion: ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('StandardVersionService.createOrUpdateStandardVersion error: $e');

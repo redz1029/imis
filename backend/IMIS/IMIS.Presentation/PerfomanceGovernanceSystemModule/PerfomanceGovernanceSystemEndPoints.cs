@@ -83,15 +83,18 @@ namespace IMIS.Presentation.PgsModuleAPIs
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
-            app.MapGet("userId/{id}", async (string userId, string roleId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            
+            app.MapGet("user/{userId}", async (string userId, string roleId, int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
-                var performanceGovernanceSystem = await service.GetByUserIdAsync(userId, roleId, cancellationToken).ConfigureAwait(false);
-                return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
+                var result = await service.GetByUserIdAsync(userId, roleId, page, pageSize, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return Results.Ok(result);
             })
-           .WithTags(_pgsTag)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.View))
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+            .WithTags(_pgsTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
 
             app.MapPut("/{id}", async (int id, [FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -128,6 +131,70 @@ namespace IMIS.Presentation.PgsModuleAPIs
             })
             .WithTags(_pgsTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
+            app.MapGet("/specificpgsdelivrable/pdf/{id}", async (int id, IPerfomanceGovernanceSystemService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                var file = await ReportUtil.GeneratePdfReport<ReportPerfomanceGovernanceSystemDto>(
+                    "SpecificPerfomanceGovernanceSystemReport",
+                    new List<ReportPerfomanceGovernanceSystemDto> { performanceGovernanceSystem! },
+                    "PerfomanceGovernanceSystem",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                //Force inline rendering in browser with dynamic timestamp filename
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+           .WithTags(_pgsTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
+
+            app.MapGet("/pgsreadiness/pdf/{id}", async (int id, IPerfomanceGovernanceSystemService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                var file = await ReportUtil.GeneratePdfReport<ReportPerfomanceGovernanceSystemDto>(
+                    "PgsReadinessReport",
+                    new List<ReportPerfomanceGovernanceSystemDto> { performanceGovernanceSystem! },
+                    "PerfomanceGovernanceSystem",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                //Force inline rendering in browser with dynamic timestamp filename
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+           .WithTags(_pgsTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
+            app.MapGet("/pgsdeliverablestatus/pdf/{id}", async (int id, IPerfomanceGovernanceSystemService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                var file = await ReportUtil.GeneratePdfReport<ReportPerfomanceGovernanceSystemDto>(
+                    "PgsDeliverableStatusReport",
+                    new List<ReportPerfomanceGovernanceSystemDto> { performanceGovernanceSystem! },
+                    "PerfomanceGovernanceSystem",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                //Force inline rendering in browser with dynamic timestamp filename
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+          .WithTags(_pgsTag)
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
 
             app.MapGet("/page", async (int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>

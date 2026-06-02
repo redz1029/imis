@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="05/07/2026 09:30:21" ReportInfo.CreatorVersion="2025.2.0.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+namespace FastReport
+{
+  public class ReportScript
+  {       
+   
+    private bool isDirectValue; 
+
+    private void txtDirectStatus_BeforePrint(object sender, EventArgs e)
+    {
+      TextObject txt = sender as TextObject;
+
+      // Get IsDirect value and store it
+      isDirectValue = Convert.ToBoolean(Report.GetColumnValue(&quot;ReportPerfomanceGovernanceSystemDto.PgsDeliverables.IsDirect&quot;));
+
+      // Check if direct
+      txt.Text = isDirectValue ? &quot;✓&quot; : &quot;&quot;;     
+    }
+
+    private void txtIndirectStatus_BeforePrint(object sender, EventArgs e)
+    {
+      TextObject txt = sender as TextObject;
+
+      // Inverse of IsDirect
+      txt.Text = !isDirectValue ? &quot;✓&quot; : &quot;&quot;;     
+    }
+    
+    private void txtPGSYearStatus_BeforePrint(object sender, EventArgs e)
+    {
+      TextObject txt = sender as TextObject;
+      object dateObj = Report.GetColumnValue(&quot;ReportPerfomanceGovernanceSystemDto.StartDate&quot;);
+
+      DateTime dt;
+
+      if (dateObj != null &amp;&amp; DateTime.TryParse(dateObj.ToString(), out dt))
+      {
+        txt.Text = &quot;PGS DELIVERABLES &quot; + dt.Year.ToString() + &quot; STATUS&quot;;
+      }
+      else
+      {
+        txt.Text = &quot;&quot;;
+      }
+    }
+
+
+  
+    
+
+   }  
+}</ScriptText>
+  <Dictionary>
+    <BusinessObjectDataSource Name="ReportPerfomanceGovernanceSystemDto" ReferenceName="PerfomanceGovernanceSystem" DataType="System.Int32" Enabled="true">
+      <Column Name="Id" DataType="System.Int64"/>
+      <Column Name="Remarks" DataType="System.String"/>
+      <Column Name="PercentDeliverables" DataType="System.Double"/>
+      <Column Name="PgsStatus" DataType="System.String"/>
+      <Column Name="OfficeName" DataType="System.String"/>
+      <Column Name="StartDate" DataType="System.Int32"/>
+      <Column Name="EndDate" DataType="System.Int32"/>
+      <Column Name="PgsPeriodRemarks" DataType="System.String"/>
+      <Column Name="PgsSignatoryLabel1" DataType="System.String"/>
+      <Column Name="PgsSignatoryLabel2" DataType="System.String"/>
+      <Column Name="PgsSignatoryLabel3" DataType="System.String"/>
+      <Column Name="PgsSignatoryLabel4" DataType="System.String"/>
+      <Column Name="PgsSignatoryLabel5" DataType="System.String"/>
+      <Column Name="PgsSignatoryId1" DataType="System.String"/>
+      <Column Name="PgsSignatoryId2" DataType="System.String"/>
+      <Column Name="PgsSignatoryId3" DataType="System.String"/>
+      <Column Name="PgsSignatoryId4" DataType="System.String"/>
+      <Column Name="PgsSignatoryId5" DataType="System.String"/>
+      <Column Name="PgsSignatoryPosition1" DataType="System.String"/>
+      <Column Name="PgsSignatoryPosition2" DataType="System.String"/>
+      <Column Name="PgsSignatoryPosition3" DataType="System.String"/>
+      <Column Name="PgsSignatoryPosition4" DataType="System.String"/>
+      <Column Name="PgsSignatoryPosition5" DataType="System.String"/>
+      <Column Name="CompetenceToDeliver" DataType="System.Double"/>
+      <Column Name="ResourceAvailability" DataType="System.Double"/>
+      <Column Name="ConfidenceToDeliver" DataType="System.Double"/>
+      <BusinessObjectDataSource Name="PgsDeliverables" ReferenceName="PgsDeliverables" DataType="System.Int32" Enabled="true">
+        <Column Name="KraId" DataType="System.Int32"/>
+        <Column Name="KraName" DataType="System.String"/>
+        <Column Name="KraDescription" DataType="System.String"/>
+        <Column Name="DeliverableName" DataType="System.String"/>
+        <Column Name="IsDirect" DataType="System.Boolean"/>
+        <Column Name="ByWhen" DataType="System.DateTime"/>
+        <Column Name="PercentDeliverables" DataType="System.Double"/>
+        <Column Name="Status" DataType="System.Int32"/>
+        <Column Name="Remarks" DataType="System.String"/>
+        <Column Name="StrategicObjective" DataType="System.String"/>
+      </BusinessObjectDataSource>
+    </BusinessObjectDataSource>
+  </Dictionary>
+  <ReportPage Name="Page3" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt">
+    <PageHeaderBand Name="PageHeader3" Width="1047.06" Height="203.1">
+      <ShapeObject Name="Shape24" Left="43.15" Top="84.5" Width="957.1" Height="70.8" Fill.Color="White"/>
+      <TextObject Name="Text66" Left="314.1" Top="87.5" Width="291.05" Height="63.9" Border.Color="Transparent" Text="Strategic Contribution" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <TextObject Name="Text67" Left="47.6" Top="154.75" Width="94.15" Height="46.9" Text="KRA&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <TextObject Name="Text68" Left="146.1" Top="181.55" Width="74.35" Height="14.9" Text="Direct" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <TextObject Name="Text69" Left="224.25" Top="182.1" Width="85.35" Height="14.55" Text="Indirect" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <TextObject Name="Text70" Left="317.2" Top="157.3" Width="286.6" Height="39.35" Text="Deliverables" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <TextObject Name="Text71" Left="613.4" Top="88.5" Width="114.9" Height="62.55" Text="Percentage:" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <TextObject Name="Text72" Left="146.65" Top="156.3" Width="163.4" Height="17.9" Text="Alignment" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <LineObject Name="Line32" Left="609.2" Top="85.05" Height="118" Diagonal="true"/>
+      <LineObject Name="Line33" Left="144.35" Top="154.85" Height="47.45"/>
+      <LineObject Name="Line34" Left="43.7" Top="154.3" Height="48.45"/>
+      <LineObject Name="Line35" Left="144.8" Top="177.75" Width="166.3" Diagonal="true"/>
+      <LineObject Name="Line36" Left="221.85" Top="177.85" Height="24.45"/>
+      <LineObject Name="Line37" Left="311.35" Top="85.5" Height="117.15"/>
+      <LineObject Name="Line38" Left="999.2" Top="154.05" Height="49" Diagonal="true"/>
+      <TextObject Name="txtPGSYearStatus" Left="44.6" Top="43.7" Width="953" Height="19.8" BeforePrintEvent="txtPGSYearStatus_BeforePrint" Text="PGS DELIVERABLES [ReportPerfomanceGovernanceSystemDto.StartDate] STATUS" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 12pt"/>
+      <TextObject Name="txtOfficeStatus" Left="47.25" Top="86.95" Width="260.25" Height="64.8" Text="Office: [ReportPerfomanceGovernanceSystemDto.OfficeName]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <LineObject Name="Line39" Left="718.2" Top="154.2" Height="48.45"/>
+      <LineObject Name="Line40" Left="831.6" Top="154.65" Height="48.45"/>
+      <TextObject Name="Text76" Left="614.25" Top="158.65" Width="100.15" Height="36.9" Text="When" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <TextObject Name="Text77" Left="722.65" Top="158.65" Width="104.15" Height="36.9" Text="Status" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <TextObject Name="Text78" Left="835.5" Top="157.65" Width="158.15" Height="42.9" Text="Remarks" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <TextObject Name="txtPercentStatus" Left="734.55" Top="88.95" Width="254.8" Height="61.9" BeforePrintEvent="txtPercentStatus_BeforePrint" Text="[ReportPerfomanceGovernanceSystemDto.PercentDeliverables] %" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" VertAlign="Center" WordWrap="false" Font="Avenir Book, 10pt" Trimming="EllipsisCharacter"/>
+    </PageHeaderBand>
+    <DataBand Name="Data4" Top="207.1" Width="1047.06" DataSource="ReportPerfomanceGovernanceSystemDto">
+      <DataBand Name="Data5" Top="211.1" Width="1047.06" Height="36.35" CanGrow="true" DataSource="PgsDeliverables">
+        <ShapeObject Name="Shape25" Left="43.25" Top="-0.55" Width="957.2" Height="36.9" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+        <TextObject Name="txtKraAndDescriptionStatus" Left="46.7" Top="1.45" Width="95.6" Height="30.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.KraName]&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
+        <LineObject Name="Line41" Left="144.55" Height="35.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+        <LineObject Name="Line42" Left="222.15" Top="-0.55" Height="35.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+        <TextObject Name="txtDirectStatus" Left="146.2" Top="0.45" Width="75.15" Height="33.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtDirectStatus_BeforePrint" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.IsDirect]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
+        <LineObject Name="Line43" Left="311.4" Height="34.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+        <TextObject Name="txtIndirectStatus" Left="223.8" Top="1.45" Width="86.05" Height="31.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtIndirectStatus_BeforePrint" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
+        <TextObject Name="txtDeliverableNameStatus" Left="314" Top="1.45" Width="292.5" Height="31.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.DeliverableName]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
+        <LineObject Name="Line44" Left="609.15" Height="35.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+        <LineObject Name="Line45" Left="718" Height="35.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+        <LineObject Name="Line46" Left="831.6" Height="35.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+        <TextObject Name="txtByWhenStatus" Left="612.25" Top="1.45" Width="103.5" Height="31.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.ByWhen]" Format="Date" Format.Format="MMMM yyyy" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
+        <TextObject Name="txtPgsStatus" Left="720.65" Top="0.9" Width="108.5" Height="31.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.Status]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
+        <TextObject Name="txtRemarksStatus" Left="835.05" Top="1.45" Width="158.5" Height="30.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.Remarks]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
+      </DataBand>
+    </DataBand>
+    <PageFooterBand Name="PageFooter3" Top="251.45" Width="1047.06" Height="39.45" Guides="0">
+      <TextObject Name="Text79" Left="46.7" Top="1.45" Width="255.15" Height="35.9" CanGrow="true" GrowToBottom="true" Text="PGS Auditor" VertAlign="Center" Font="Avenir Book, 10pt, style=Bold"/>
+      <LineObject Name="Line48" Left="43.8" Top="-0.55" Height="39.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+      <LineObject Name="Line49" Left="999.8" Top="-0.55" Height="39.65" CanGrow="true" CanShrink="true" GrowToBottom="true" Diagonal="true"/>
+      <LineObject Name="Line50" Left="609.25" Top="-0.55" Height="39.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+      <LineObject Name="Line51" Left="831.6" Top="-0.55" Height="40" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+      <LineObject Name="Line47" Left="43.15" Top="38.9" Width="957.1" Diagonal="true"/>
+      <LineObject Name="Line52" Left="44.25" Width="956.1" Diagonal="true"/>
+      <TextObject Name="Text80" Left="612.7" Top="3" Width="78.4" Height="32.9" CanGrow="true" GrowToBottom="true" Text="Signature" VertAlign="Center" Font="Avenir Book, 10pt, style=Bold"/>
+      <TextObject Name="Text81" Left="836.05" Top="2.45" Width="50.05" Height="32.9" CanGrow="true" GrowToBottom="true" Text="Date" VertAlign="Center" Font="Avenir Book, 10pt, style=Bold"/>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

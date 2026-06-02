@@ -6,10 +6,13 @@ using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
+using IMIS.Application.KraRoadMapRoleAssignmentModule;
 using IMIS.Application.PgsKraModule;
+using IMIS.Application.RoadmapGutCheckModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.KraRoadMapModule
 {
@@ -31,6 +34,150 @@ namespace IMIS.Persistence.KraRoadMapModule
             _kraRoadMapPeriodRepository = kraRoadMapPeriodRepository;
             _userManager = userManager;
             _roleManager = roleManager;
+        }
+        
+        public async Task<List<KraRoadMapRoleDto>> GetStrategyReviewRoadmapForUserAsync(long pgsRoadMapPeriodId, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+                return new List<KraRoadMapRoleDto>();
+
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
+            if (!userRoles.Any())
+                return new List<KraRoadMapRoleDto>();
+
+            var roleName = userRoles.First();
+            var role = await _roleManager.FindByNameAsync(roleName);
+
+            if (role == null)
+                return new List<KraRoadMapRoleDto>();
+
+            List<KraRoadMapRole> data;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                data = await _repository.GetAllStrategyReviewRoadmapAsync(pgsRoadMapPeriodId, cancellationToken);
+            }
+            else
+            {
+                data = await _repository.GetStrategyReviewRoadmapByRoleAsync(role.Id, pgsRoadMapPeriodId, cancellationToken);
+            }
+
+            if (!data.Any())
+                return new List<KraRoadMapRoleDto>();
+
+            return data.Select(x => new KraRoadMapRoleDto
+            {
+                Id = x.Id,
+                KraId = x.KraId,
+                RoleId = x.RoleId,
+                KraName = x.Kra?.Name,
+                StrategicObjectives = x.Kra?.StrategicObjective
+            }).ToList();
+        }
+        public async Task<List<FilterKraPeriodKraDeliverableDto>> GetGroupedDeliverablesAsync(
+        int? kraid,
+        int? fromYear,
+        int? toYear,
+        CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+                return new List<FilterKraPeriodKraDeliverableDto>();
+
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
+            if (!userRoles.Any())
+                return new List<FilterKraPeriodKraDeliverableDto>();
+
+            var roleName = userRoles.First();
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role == null)
+                return new List<FilterKraPeriodKraDeliverableDto>();
+
+            List<KraRoadMapDeliverable> deliverables;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                deliverables = await _repository.GetDeliverablesAsync(kraid, fromYear, toYear, cancellationToken);
+            }
+            else
+            {
+                deliverables = await _repository.GetDeliverablesByRoleAsync(kraid, fromYear, toYear, role.Id, cancellationToken);
+            }
+
+            if (!deliverables.Any())
+                return new List<FilterKraPeriodKraDeliverableDto>();
+
+            var roadmapPeriods = await _repository.GetRoadMapPeriodsAsync(deliverables, cancellationToken);
+
+            var grouped = deliverables.GroupBy(d => roadmapPeriods.First(r => r.KraRoadMapId == d.KraRoadMapId))
+                .Select(g => new FilterKraPeriodKraDeliverableDto
+                {
+                    StartDate = DateOnly.FromDateTime(g.Key.StartYear),
+                    EndDate = DateOnly.FromDateTime(g.Key.EndYear),
+                    Deliverables = g.Select(d => new KraRoadMapDeliverableDto(d)).ToList()
+                })
+                .OrderBy(x => x.StartDate)
+                .ToList();
+
+            return grouped;
+        }
+
+        public async Task<List<KraRoadMapKpiDeliverableFilterDto>> GetKpiDeliverableAsync(
+        int? kraid,
+        int? fromYear,
+        int? toYear,
+        CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+                return new List<KraRoadMapKpiDeliverableFilterDto>();
+
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
+            if (!userRoles.Any())
+                return new List<KraRoadMapKpiDeliverableFilterDto>();
+
+            var roleName = userRoles.First();
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role == null)
+                return new List<KraRoadMapKpiDeliverableFilterDto>();
+
+            List<KraRoadMapKpi> kpis;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                kpis = await _repository.GetKpisAsync(kraid, fromYear, toYear, cancellationToken);
+            }
+            else
+            {
+                kpis = await _repository.GetKpisByRoleAsync(kraid, role.Id, fromYear, toYear, cancellationToken);
+            }
+
+            if (!kpis.Any())
+                return new List<KraRoadMapKpiDeliverableFilterDto>();
+
+            var roadmapPeriods = await _repository.GetRoadMapPeriodsForKpisAsync(kpis, cancellationToken);
+
+            var grouped = kpis.GroupBy(k => roadmapPeriods.First(r => r.KraRoadMapId == k.KraRoadMapId))
+                .Select(g => new KraRoadMapKpiDeliverableFilterDto
+                {
+                    StartDate = DateOnly.FromDateTime(g.Key.StartYear),
+                    EndDate = DateOnly.FromDateTime(g.Key.EndYear),
+                    KpiDeliverable = g.Select(k => new KraRoadMapKpiDto(k)).ToList()
+                })
+                .OrderBy(x => x.StartDate)
+                .ToList();
+
+            return grouped;
         }
 
         public async Task<ReportKraRoadMapDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
@@ -91,10 +238,16 @@ namespace IMIS.Persistence.KraRoadMapModule
                 {
                     Id = k.Id,
                     KpiDescription = k.KpiDescription,
+                    Target = k.Target,
+                    BaseLine = k.BaseLine,
                     IsDeleted = false,
                     RowVersion = k.RowVersion
                 })
                 .ToList();
+
+            dto.RoadmapGutCheck = entity.RoadmapGutCheck != null
+                ? new RoadmapGutCheckDto(entity.RoadmapGutCheck)
+                : null;
 
             return dto;
         }
@@ -163,7 +316,9 @@ namespace IMIS.Persistence.KraRoadMapModule
                 role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase)
+                role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase)
             )
             {
                 roadmaps = (await _repository.GetAll(cancellationToken))
@@ -178,7 +333,6 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             return roadmaps.Select(MapToDto).ToList();
         }
-
 
         public async Task<List<KraRoadMapDto>?> GetAll(CancellationToken cancellationToken)
         {
@@ -195,51 +349,157 @@ namespace IMIS.Persistence.KraRoadMapModule
             return groups.SelectMany(g => g.Items ?? new List<KraRoadMapDeliverable>()).ToList();
         }
 
-        public async Task<KraRoadMapDto> SaveOrUpdateAsync(KraRoadMapDto dto, CancellationToken cancellationToken)
+       
+        public async Task<KraRoadMapDto> SaveOrUpdateAsync(
+         KraRoadMapDto dto,
+         CancellationToken cancellationToken)
         {
-            var flattenedDeliverables = FlattenDeliverableGroups(dto.Deliverables);
+            var currentUser = await GetCurrentUserAsync();
 
-            var entity = dto.ToEntity();
-            entity.Deliverables = flattenedDeliverables; 
+            if (currentUser == null)
+                throw new UnauthorizedAccessException("User not found.");
 
-            var kra = await _kraRepository.GetByIdAsync(entity.KraId!.Value, cancellationToken)
-                      ?? throw new InvalidOperationException("Invalid KRA Id");
+            var userRoleNames = await _userManager.GetRolesAsync(currentUser);
 
-            var period = await _kraRoadMapPeriodRepository.GetByIdAsync(entity.KraRoadMapPeriodId, cancellationToken)
-                         ?? throw new InvalidOperationException("Invalid RoadMap Period Id");
+            bool isAdmin = userRoleNames.Any(r =>
+                r.Equals(new AdministratorRole().Name,
+                    StringComparison.OrdinalIgnoreCase));
 
-            entity.Kra = kra;
-            entity.KraRoadMapPeriod = period;
+            bool isNew = dto.Id == 0;
 
-            bool isNew = entity.Id == 0;
+            KraRoadMap entity;
 
+            // ======================================================
+            // CREATE
+            // ======================================================
             if (isNew)
             {
+                entity = dto.ToEntity();
+
+                var flattenedDeliverables = FlattenDeliverableGroups(dto.Deliverables);
+                entity.Deliverables = flattenedDeliverables;
+
+                if (!isAdmin)
+                {
+                    if (string.IsNullOrEmpty(dto.RoleId))
+                        throw new InvalidOperationException("RoleId is required.");
+
+                    await ValidateUserRoleAsync(dto.RoleId, userRoleNames);
+
+                    entity.RoleId = dto.RoleId;
+                }
+
+                if (dto.RoadmapGutCheck != null)
+                {
+                    entity.RoadmapGutCheck = new RoadmapGutCheck
+                    {
+                        Id = 0,
+                        Ownership = dto.RoadmapGutCheck.Ownership,
+                        Alignment = dto.RoadmapGutCheck.Alignment,
+                        Contribution = dto.RoadmapGutCheck.Contribution,
+                        Measurement = dto.RoadmapGutCheck.Measurement,
+                        Adaptability = dto.RoadmapGutCheck.Adaptability,
+                        Coherence = dto.RoadmapGutCheck.Coherence,
+                        Commitment = dto.RoadmapGutCheck.Commitment,
+                    };
+                }
+
+                var kra = await _kraRepository.GetByIdAsync(entity.KraId!.Value, cancellationToken)
+                    ?? throw new InvalidOperationException("Invalid KRA Id");
+
+                var period = await _kraRoadMapPeriodRepository.GetByIdAsync(entity.KraRoadMapPeriodId, cancellationToken)
+                    ?? throw new InvalidOperationException("Invalid RoadMap Period Id");
+
+                entity.Kra = kra;
+                entity.KraRoadMapPeriod = period;
+
                 _repository.GetDbContext().Add(entity);
                 await _repository.SaveOrUpdateAsync(entity, cancellationToken);
             }
+
+            // ======================================================
+            // UPDATE
+            // ======================================================
             else
             {
-                var existing = await _repository
-                    .GetByIdWithChildrenAsync(entity.Id, cancellationToken)
+                entity = await _repository.GetByIdWithChildrenAsync(dto.Id, cancellationToken)
                     ?? throw new InvalidOperationException("KraRoadMap record not found.");
 
-                _repository.GetDbContext().Entry(existing).CurrentValues.SetValues(entity);
-                existing.KraId = kra.Id;
-                existing.KraRoadMapPeriodId = period.Id;
+                var originalRoleId = entity.RoleId;
+                var dbContext = _repository.GetDbContext();
 
-                UpdateDeliverables(existing, entity);
-                UpdateKpis(existing, entity);
+                entity.KraId = dto.KraId;
+                entity.KraRoadMapPeriodId = dto.KraRoadMapPeriodId;
+                entity.RoleId = isAdmin ? originalRoleId : dto.RoleId;
 
-                await _repository.SaveOrUpdateAsync(existing, cancellationToken);
+                if (!isAdmin && string.IsNullOrEmpty(dto.RoleId))
+                    throw new InvalidOperationException("RoleId is required.");
 
-                entity = existing;
+                if (!isAdmin)
+                    await ValidateUserRoleAsync(dto.RoleId!, userRoleNames);
+
+                var kra = await _kraRepository.GetByIdAsync(dto.KraId!.Value, cancellationToken)
+                    ?? throw new InvalidOperationException("Invalid KRA Id");
+
+                var period = await _kraRoadMapPeriodRepository.GetByIdAsync(dto.KraRoadMapPeriodId, cancellationToken)
+                    ?? throw new InvalidOperationException("Invalid RoadMap Period Id");
+
+                entity.Kra = kra;
+                entity.KraRoadMapPeriod = period;
+
+                // ======================================================
+                // GUT CHECK UPDATE
+                // ======================================================
+                if (dto.RoadmapGutCheck != null)
+                {
+                    if (entity.RoadmapGutCheck == null)
+                    {
+                        entity.RoadmapGutCheck = new RoadmapGutCheck
+                        {
+                            Id = 0,
+                            Ownership = dto.RoadmapGutCheck.Ownership,
+                            Alignment = dto.RoadmapGutCheck.Alignment,
+                            Contribution = dto.RoadmapGutCheck.Contribution,
+                            Measurement = dto.RoadmapGutCheck.Measurement,
+                            Adaptability = dto.RoadmapGutCheck.Adaptability,
+                            Coherence = dto.RoadmapGutCheck.Coherence,
+                            Commitment = dto.RoadmapGutCheck.Commitment,
+                        };
+                    }
+                    else
+                    {
+                        entity.RoadmapGutCheck.Ownership = dto.RoadmapGutCheck.Ownership;
+                        entity.RoadmapGutCheck.Alignment = dto.RoadmapGutCheck.Alignment;
+                        entity.RoadmapGutCheck.Contribution = dto.RoadmapGutCheck.Contribution;
+                        entity.RoadmapGutCheck.Measurement = dto.RoadmapGutCheck.Measurement;
+                        entity.RoadmapGutCheck.Adaptability = dto.RoadmapGutCheck.Adaptability;
+                        entity.RoadmapGutCheck.Coherence = dto.RoadmapGutCheck.Coherence;
+                        entity.RoadmapGutCheck.Commitment = dto.RoadmapGutCheck.Commitment;
+                    }
+                }
+
+                var updatedEntity = dto.ToEntity();
+                UpdateDeliverables(entity, updatedEntity);
+                UpdateKpis(entity, updatedEntity);
+
+                await _repository.SaveOrUpdateAsync(entity, cancellationToken);
             }
 
             return new KraRoadMapDto(entity)
             {
                 Id = entity.Id
             };
+        }
+        private async Task ValidateUserRoleAsync(string roleId, IList<string> userRoleNames)
+        {
+            var roleEntities = await _roleManager.Roles
+                .Where(r => userRoleNames.Contains(r.Name!))
+                .ToListAsync();
+
+            if (!roleEntities.Any(r => r.Id == roleId))
+            {
+                throw new UnauthorizedAccessException("Invalid role assignment.");
+            }
         }
 
         private void UpdateDeliverables(KraRoadMap existing, KraRoadMap incoming)
@@ -251,6 +511,8 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             foreach (var d in incoming.Deliverables ?? new List<KraRoadMapDeliverable>())
             {
+                d.KraRoadMapId = existing.Id;
+
                 if (d.Id == 0)
                 {
                     existing.Deliverables!.Add(d);
@@ -263,6 +525,7 @@ namespace IMIS.Persistence.KraRoadMapModule
                     bool wasDeleted = match.IsDeleted;
                     _repository.GetDbContext().Entry(match).CurrentValues.SetValues(d);
                     match.IsDeleted = wasDeleted;
+                    match.KraRoadMapId = existing.Id;
                 }
             }
         }
@@ -276,6 +539,8 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             foreach (var k in incoming.Kpis ?? new List<KraRoadMapKpi>())
             {
+                k.KraRoadMapId = existing.Id;
+
                 if (k.Id == 0)
                 {                                
                     existing.Kpis!.Add(k);
@@ -288,6 +553,8 @@ namespace IMIS.Persistence.KraRoadMapModule
                     bool wasDeleted = match.IsDeleted;
                     _repository.GetDbContext().Entry(match).CurrentValues.SetValues(k);
                     match.IsDeleted = wasDeleted;
+
+                    match.KraRoadMapId = existing.Id;
                 }
             }
         }

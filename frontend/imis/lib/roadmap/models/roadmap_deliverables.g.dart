@@ -34,11 +34,13 @@ DeliverableGroup _$DeliverableGroupFromJson(Map<String, dynamic> json) =>
     DeliverableGroup(
       id: (json['id'] as num).toInt(),
       kraDescription: json['kraDescription'] as String?,
-      items: (json['items'] as List<dynamic>?)
-          ?.map(
-            (e) => RoadmapDeliverableItem.fromJson(e as Map<String, dynamic>),
-          )
-          .toList(),
+      items:
+          (json['items'] as List<dynamic>?)
+              ?.map(
+                (e) =>
+                    RoadmapDeliverableItem.fromJson(e as Map<String, dynamic>),
+              )
+              .toList(),
       isDeleted: json['isDeleted'] as bool?,
       rowVersion: json['rowVersion'] as String?,
     );

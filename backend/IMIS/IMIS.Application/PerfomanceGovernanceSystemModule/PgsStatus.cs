@@ -8,6 +8,6 @@
         public const string ApprovedBy = "Approved By";
         public const string Disapproved = "Disapproved";
         public const string PreparedBy = "Prepared By";       
-        public static string OfficeHead { get; set; } = "Office Head";
+        public static string OfficeHead { get; set; } = "Prepared By";
     }
 }

@@ -10,18 +10,20 @@ IsoStandard _$IsoStandardFromJson(Map<String, dynamic> json) => IsoStandard(
   id: (json['id'] as num).toInt(),
   parentID: (json['parentID'] as num?)?.toInt(),
   versionID: (json['versionID'] as num).toInt(),
-  version: json['version'] == null
-      ? null
-      : StandardVersion.fromJson(json['version'] as Map<String, dynamic>),
+  version:
+      json['version'] == null
+          ? null
+          : StandardVersion.fromJson(json['version'] as Map<String, dynamic>),
   particulars: json['particulars'] as String,
   clauseRef: json['clauseRef'] as String,
   description: json['description'] as String?,
   rowVersion: json['rowVersion'] as String?,
   isDeleted: json['isDeleted'] as bool? ?? false,
   isActive: json['isActive'] as bool? ?? true,
-  children: (json['children'] as List<dynamic>?)
-      ?.map((e) => IsoStandard.fromJson(e as Map<String, dynamic>))
-      .toList(),
+  children:
+      (json['children'] as List<dynamic>?)
+          ?.map((e) => IsoStandard.fromJson(e as Map<String, dynamic>))
+          .toList(),
 );
 
 Map<String, dynamic> _$IsoStandardToJson(IsoStandard instance) =>

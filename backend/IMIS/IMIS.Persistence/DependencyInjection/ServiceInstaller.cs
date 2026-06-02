@@ -24,12 +24,15 @@ using IMIS.Application.IsoAuditProcessModule;
 using IMIS.Application.IsoStandardAuditPlanModule;
 using IMIS.Application.IsoStandardModule;
 using IMIS.Application.KraRoadMapDeliverableModule;
+using IMIS.Application.KraRoadmapKpiAccomplishmentModule;
 using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
+using IMIS.Application.KraRoadmapProcessKraAssignmentModule;
 using IMIS.Application.KraRoadMapRoleAssignmentModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
+using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
@@ -38,6 +41,7 @@ using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.StandardVersionModule;
+using IMIS.Application.StrategyReviewModule;
 using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
@@ -67,13 +71,18 @@ using IMIS.Persistence.IsoAuditProcessModule;
 using IMIS.Persistence.IsoStandardAuditPlanModule;
 using IMIS.Persistence.IsoStandardModule;
 using IMIS.Persistence.KraModule;
+using IMIS.Persistence.KraRoadMapAccomplishmentModule;
+using IMIS.Persistence.KraRoadmapCoreSupportProcessModule;
 using IMIS.Persistence.KraRoadMapDeliverableModule;
+using IMIS.Persistence.KraRoadMapKpiAccomplishmentModule;
 using IMIS.Persistence.KraRoadMapKpiModule;
 using IMIS.Persistence.KraRoadMapModule;
 using IMIS.Persistence.KraRoadMapPeriodModule;
+using IMIS.Persistence.KraRoadmapProcessKraAssignmentModule;
 using IMIS.Persistence.KraRoadMapRoleModule;
 using IMIS.Persistence.OfficeModule;
 using IMIS.Persistence.OfficeTypeModule;
+using IMIS.Persistence.OperationReviewProtocolModule;
 using IMIS.Persistence.PgsDeliverableAccomplishmentModule;
 using IMIS.Persistence.PgsModule;
 using IMIS.Persistence.PGSModules;
@@ -82,12 +91,11 @@ using IMIS.Persistence.PGSReadinessRatingCancerCareModule;
 using IMIS.Persistence.PgsSignatoryTemplateModule;
 using IMIS.Persistence.PgsSummaryNarrativeModule;
 using IMIS.Persistence.StandardVersionModule;
+using IMIS.Persistence.StrategyReviewModule;
 using IMIS.Persistence.SWOTAnalysisModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
 using Microsoft.Extensions.DependencyInjection;
-
-
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -172,6 +180,24 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IKraRoadMapRoleRepository, KraRoadMapRoleRepository>();
             services.AddScoped<IKraRoadMapRoleService, KraRoadMapRoleService>();
+
+            services.AddScoped<IKraRoadmapAccomplishmentRepository, KraRoadMapAccomplishmentRepository>();
+            services.AddScoped<IKraRoadmapAccomplishmentService, KraRoadMapAccomplishmentService>();
+
+            services.AddScoped<IKraRoadmapKpiAccomplishmentRepository, KraRoadMapKpiAccomplishmentRepository>();
+            services.AddScoped<IKraRoadmapKpiAccomplishmentService, KraRoadMapKpiAccomplishmentService>();
+
+            services.AddScoped<IKraRoadmapCoreSupportProcessRepository, KraRoadmapCoreSupportProcessRepository>();
+            services.AddScoped<IKraRoadmapCoreSupportProcessService, KraRoadmapCoreSupportProcessService>();
+
+            services.AddScoped<IKraRoadmapProcessKraAssignmentRepository, KraRoadmapProcessKraAssignmentRepository>();
+            services.AddScoped<IKraRoadmapProcessKraAssignmentService, KraRoadmapProcessKraAssignmentService>();
+
+            services.AddScoped<IOperationReviewProtocolRepository, OperationReviewProtocolRepository>();
+            services.AddScoped<IOperationReviewProtocolService, OperationReviewProtocolService>();
+
+            services.AddScoped<IStrategyReviewRepository, StrategyReviewRepository>();
+            services.AddScoped<IStrategyReviewService, StrategyReviewService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

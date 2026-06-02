@@ -28,13 +28,17 @@ namespace IMIS.Persistence.KraModule
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-        }
+        }   
         public async Task<IEnumerable<KeyResultArea>> GetAll(CancellationToken cancellationToken)
         {
             return await _entities
-               .AsNoTracking()            
-               .ToListAsync(cancellationToken)
-               .ConfigureAwait(false);
-        }                   
-    }
+                .AsNoTracking()
+                .OrderBy(x => ReadOnlyDbContext.Set<KraRoadmapProcessKraAssignment>()
+                    .Where(a => a.KraId == x.Id)
+                    .Select(a => (int?) a.Id)
+                    .FirstOrDefault() ?? int.MaxValue)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            }
+        }
 }

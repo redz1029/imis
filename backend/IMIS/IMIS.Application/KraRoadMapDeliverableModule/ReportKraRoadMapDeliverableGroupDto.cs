@@ -22,23 +22,29 @@ namespace IMIS.Application.KraRoadMapDeliverableModule
         public string? Year5Deliverable { get; set; }
 
         [SetsRequiredMembers]
-        public ReportKraRoadMapDeliverableGroupDto(List<KraRoadMapDeliverable> items, List<int>? allYears)
+        public ReportKraRoadMapDeliverableGroupDto(
+            List<KraRoadMapDeliverable> items,
+            List<int>? allYears)
         {
             if (items == null || items.Count == 0)
                 return;
 
             Items = items.OrderBy(x => x.Year).ToList();
+
             KraDescription = items[0].KraDescription;
             Id = items[0].Id;
 
-            IsEnabler = Items.Any(x => x.IsEnabler);         
+            // ---------------- Determine Enabler ----------------
+            IsEnabler = items.Any(x => x.IsEnabler);
 
+            // ---------------- Assign Years ----------------
             Year1 = allYears?.ElementAtOrDefault(0);
             Year2 = allYears?.ElementAtOrDefault(1);
             Year3 = allYears?.ElementAtOrDefault(2);
             Year4 = allYears?.ElementAtOrDefault(3);
             Year5 = allYears?.ElementAtOrDefault(4);
 
+            // ---------------- Deliverables per Year ----------------
             Year1Deliverable = Items.FirstOrDefault(x => x.Year == Year1)?.DeliverableDescription;
             Year2Deliverable = Items.FirstOrDefault(x => x.Year == Year2)?.DeliverableDescription;
             Year3Deliverable = Items.FirstOrDefault(x => x.Year == Year3)?.DeliverableDescription;
@@ -46,6 +52,9 @@ namespace IMIS.Application.KraRoadMapDeliverableModule
             Year5Deliverable = Items.FirstOrDefault(x => x.Year == Year5)?.DeliverableDescription;
         }
 
-        public override KraRoadMapDeliverable ToEntity() => Items.First();
+        public override KraRoadMapDeliverable ToEntity()
+        {
+            return Items.First();
+        }
     }
 }

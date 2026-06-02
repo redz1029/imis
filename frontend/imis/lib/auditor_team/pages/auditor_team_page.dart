@@ -271,7 +271,7 @@ List<User> userList = [];
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                value: selectTeam,
+                                initialValue: selectTeam,
                                 items:
                                     teamList.map((team) {
                                       return DropdownMenuItem<int>(
@@ -599,15 +599,28 @@ List<User> userList = [];
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                  
-                    // Filter Dropdown
-                    Container(
-                      height: 30,
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: secondaryColor,
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    focusNode: isSearchfocus,
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: lightGrey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      labelStyle: TextStyle(color: grey, fontSize: 14),
+                      labelText: 'Search...',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: isSearchfocus.hasFocus ? primaryColor : grey,
+                        size: 20,
+                      ),
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(color: lightGrey),
                       ),

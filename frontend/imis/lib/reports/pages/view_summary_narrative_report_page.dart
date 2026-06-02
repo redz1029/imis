@@ -1,21 +1,22 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
-import 'package:imis/reports/pages/view_pdf_summary.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart' show PaginationUtil;
 import 'package:imis/utils/permission_string.dart';
-import 'package:imis/widgets/filter_button_widget.dart';
+import 'package:imis/utils/print_preview_util.dart';
+import 'package:imis/widgets/button_widget/filter_button_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -62,7 +63,6 @@ class ViewSummaryNarrativeReportPageState
   @override
   void initState() {
     super.initState();
-    // _fetchReports();
     () async {
       final period = await _commonService.fetchPgsPeriod();
       final offices = await _commonService.fetchOffices();
@@ -144,393 +144,508 @@ class ViewSummaryNarrativeReportPageState
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Scaffold(
       backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: const Text('Report Information'),
-        backgroundColor: mainBgColor,
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 16, top: 8, right: 16),
+
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Report Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 24),
+
+            Row(
+              children: List.generate(tabs.length, (index) {
+                final isSelected = selectedTabIndex == index;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedTabIndex = index;
+                    });
+                    fetchReportsForSelectedTab();
+                  },
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE9E9EC),
-                      borderRadius: BorderRadius.circular(12),
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
                     ),
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: List.generate(tabs.length, (index) {
-                        final bool isSelected = selectedTabIndex == index;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 6.0),
-                          child: GestureDetector(
-                            onTap: () async {
-                              setState(() => selectedTabIndex = index);
-                              await fetchReportsForSelectedTab();
-                            },
-
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 18,
-                              ),
-                              child: Text(
-                                tabs[index],
-                                style: TextStyle(
-                                  color:
-                                      isSelected
-                                          ? primaryTextColor
-                                          : Colors.grey.shade700,
-
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
+                    decoration: BoxDecoration(
+                      color: isSelected ? primaryColor : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      tabs[index],
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black,
+                      ),
                     ),
                   ),
-                ),
-                gap24px,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      height: 30,
-                      width: 300,
-                      child: TextField(
-                        focusNode: isSearchfocus,
-                        controller: searchController,
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: lightGrey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelBehavior: FloatingLabelBehavior.never,
-                          labelStyle: TextStyle(color: grey, fontSize: 14),
-                          labelText: 'Search...',
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: isSearchfocus.hasFocus ? primaryColor : grey,
-                            size: 20,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          filled: true,
-                          fillColor: secondaryColor,
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: 5,
-                            horizontal: 5,
-                          ),
-                        ),
-                        onChanged: filterSearchResults,
+                );
+              }),
+            ),
+
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    focusNode: isSearchfocus,
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: lightGrey),
                       ),
-                    ),
-
-                    Flexible(fit: FlexFit.tight, child: Container()),
-                    if (selectedTabIndex == 0)
-                      PermissionWidget(
-                        allowedRoles: [
-                          PermissionString.headAuditor,
-                          PermissionString.roleAdmin,
-                        ],
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  PopupMenuButton<String>(
-                                    color: mainBgColor,
-                                    offset: const Offset(0, 30),
-                                    onCanceled: () {
-                                      setState(() {
-                                        isMenuOpenPeriod = false;
-                                      });
-                                    },
-                                    onOpened: () {
-                                      setState(() {
-                                        isMenuOpenPeriod = true;
-                                      });
-                                    },
-                                    onSelected: (String value) {
-                                      setState(() {
-                                        selectedPeriod = value;
-
-                                        final selected = _periods.firstWhere(
-                                          (period) =>
-                                              period.id.toString() ==
-                                              selectedPeriod,
-                                          orElse:
-                                              () => PgsPeriod(
-                                                0,
-                                                false,
-                                                DateTime.now(),
-                                                DateTime.now(),
-                                                'remarks',
-                                              ),
-                                        );
-
-                                        selectedPeriodText =
-                                            "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
-                                      });
-                                    },
-                                    itemBuilder: (BuildContext context) {
-                                      return _periods.map<
-                                        PopupMenuItem<String>
-                                      >((period) {
-                                        final formattedStart = _dateConverter
-                                            .toJson(period.startDate);
-                                        final formattedEnd = _dateConverter
-                                            .toJson(period.endDate);
-
-                                        return PopupMenuItem<String>(
-                                          value: period.id.toString(),
-                                          child: Text(
-                                            '$formattedStart - $formattedEnd',
-                                            style: const TextStyle(
-                                              color: Colors.black,
-                                            ),
-                                          ),
-                                        );
-                                      }).toList();
-                                    },
-                                    child: FilterButton(
-                                      label: selectedPeriodText,
-                                      isActive: isMenuOpenPeriod,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
-                              onPressed:
-                                  selectedPeriod != null
-                                      ? () async {
-                                        showRemarksDialog();
-                                      }
-                                      : null,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.add, color: Colors.white),
-                                  SizedBox(width: 5),
-                                  Text(
-                                    'Create Overall Report',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 8 : 12,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: 700,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
+                      labelText: 'Search...',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: isSearchfocus.hasFocus ? primaryColor : grey,
+                        size: 20,
+                      ),
+                      filled: true,
+                      fillColor: secondaryColor,
                     ),
-                    columns: [
-                      DataColumn2(label: const Text('#'), fixedWidth: 40),
+                    onChanged: filterSearchResults,
+                  ),
+                ),
 
-                      if (selectedTabIndex == 0) ...[
-                        DataColumn2(
-                          label: const Text('Office'),
-                          size: ColumnSize.L,
-                        ),
-                        DataColumn2(
-                          label: const Text('Period'),
-                          size: ColumnSize.L,
-                        ),
-                      ] else ...[
-                        DataColumn2(
-                          label: const Text('Report (Period)'),
-                          size: ColumnSize.L,
-                        ),
-                      ],
+                const Spacer(),
 
-                      const DataColumn(label: Text('Actions')),
+                if (selectedTabIndex == 0)
+                  PermissionWidget(
+                    allowedRoles: [
+                      PermissionString.headAuditor,
+                      PermissionString.roleAdmin,
                     ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var summary = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
+                    child: Row(
+                      children: [
+                        PopupMenuButton<String>(
+                          color: mainBgColor,
+                          onSelected: (value) {
+                            setState(() {
+                              selectedPeriod = value;
+                            });
+                          },
+                          itemBuilder:
+                              (_) =>
+                                  _periods.map((period) {
+                                    return PopupMenuItem(
+                                      value: period.id.toString(),
+                                      child: Text(
+                                        '${_dateConverter.toJson(period.startDate)} - ${_dateConverter.toJson(period.endDate)}',
+                                      ),
+                                    );
+                                  }).toList(),
+                          child: FilterButton(
+                            label: selectedPeriodText,
+                            isActive: isMenuOpenPeriod,
+                          ),
+                        ),
 
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(itemNumber.toString())),
+                        const SizedBox(width: 10),
 
-                              if (selectedTabIndex == 0) ...[
-                                DataCell(
-                                  Container(
-                                    constraints: BoxConstraints(
-                                      minWidth: 100,
-                                      maxWidth: constraints.maxWidth * 0.4,
-                                    ),
-                                    child: Text(
-                                      officeMap[summary.officeId] ??
-                                          'Unknown Office',
-                                      overflow: TextOverflow.ellipsis,
-                                      softWrap: true,
-                                      maxLines: 2,
-                                    ),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(getPeriodLabel(summary.pgsPeriodId)),
-                                ),
-                              ] else ...[
-                                DataCell(
-                                  Text(
-                                    "Report - ${getPeriodLabel(summary.pgsPeriodId)}",
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 2,
-                                  ),
+                        PermissionWidget(
+                          permission: AppPermissions.addPgsSummaryNarrative,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            onPressed:
+                                selectedPeriod != null
+                                    ? () => showRemarksDialog()
+                                    : null,
+                            child: Row(
+                              children: [
+                                Icon(Icons.add, color: Colors.white, size: 18),
+                                SizedBox(width: 6),
+                                const Text(
+                                  'Create Overall Report',
+                                  style: TextStyle(color: Colors.white),
                                 ),
                               ],
-
-                              DataCell(
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () {
-                                        if (selectedTabIndex == 0) {
-                                          showReportDialog(summary);
-                                        } else {
-                                          showRemarksDialog(summary);
-                                        }
-                                      },
-                                    ),
-                                    Tooltip(
-                                      message: 'Print Preview',
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.description_outlined,
-                                        ),
-                                        onPressed: () async {
-                                          if (selectedTabIndex == 1) {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (context) => ViewPdfSummary(
-                                                      pgsPeriodId:
-                                                          summary.pgsPeriodId
-                                                              .toString(),
-                                                    ),
-                                              ),
-                                            );
-                                          } else {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (context) => ViewPdfSummary(
-                                                      pgsPeriodId:
-                                                          summary.pgsPeriodId
-                                                              .toString(),
-                                                      officeId:
-                                                          summary.officeId
-                                                              .toString(),
-                                                    ),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                    if (selectedTabIndex == 1)
-                                      IconButton(
-                                        onPressed:
-                                            () => showDeleteDialog(
-                                              summary.id.toString(),
-                                            ),
-                                        icon: Icon(
-                                          Icons.delete,
-                                          color: primaryColor,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                      ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged:
-                            (page) => fetchReportsForSelectedTab(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
-                  ),
-                ),
               ],
             ),
-          );
-        },
+
+            const SizedBox(height: 20),
+
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+
+                child: Column(
+                  children: [
+                    if (!isMobile)
+                      Row(
+                        children: [
+                          const Expanded(flex: 1, child: Text("#")),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              selectedTabIndex == 0 ? "Office" : "Report",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const Expanded(flex: 2, child: Text("Period")),
+                          const Expanded(flex: 2, child: Text("Actions")),
+                        ],
+                      ),
+
+                    const SizedBox(height: 10),
+
+                    // Expanded(
+                    //   child:
+                    //       _isLoading
+                    //           ? Center(
+                    //             child: CircularProgressIndicator(
+                    //               color: primaryColor,
+                    //             ),
+                    //           )
+                    //           : ListView.builder(
+                    //             itemCount: filteredList.length,
+                    //             itemBuilder: (context, index) {
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : filteredList.isEmpty
+                              ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.inbox_outlined,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    const Text(
+                                      "No reports available",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final summary = filteredList[index];
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  if (!isMobile) {
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 10),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
+                                          ),
+
+                                          Expanded(
+                                            flex: 3,
+                                            child: Text(
+                                              selectedTabIndex == 0
+                                                  ? (officeMap[summary
+                                                          .officeId] ??
+                                                      'Unknown Office')
+                                                  : "Report - ${getPeriodLabel(summary.pgsPeriodId)}",
+                                            ),
+                                          ),
+
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              getPeriodLabel(
+                                                summary.pgsPeriodId,
+                                              ),
+                                            ),
+                                          ),
+
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.edit,
+                                                    size: 18,
+                                                  ),
+                                                  onPressed: () {
+                                                    selectedTabIndex == 0
+                                                        ? showReportDialog(
+                                                          summary,
+                                                        )
+                                                        : showRemarksDialog(
+                                                          summary,
+                                                        );
+                                                  },
+                                                ),
+
+                                                Tooltip(
+                                                  message: 'Print preview',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons
+                                                          .description_outlined,
+                                                      size: 18,
+                                                      color: Colors.blueAccent,
+                                                    ),
+                                                    onPressed: () {
+                                                      viewAuditorSummaryNarrativeReport(
+                                                        summary.pgsPeriodId
+                                                            .toString(),
+                                                        summary.officeId
+                                                            .toString(),
+                                                        context: context,
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  if (isMobile) {
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 10),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          /// TOP ROW
+                                          Row(
+                                            children: [
+                                              Text(
+                                                "$itemNumber",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const Spacer(),
+
+                                              PopupMenuButton<String>(
+                                                color:
+                                                    Theme.of(context).cardColor,
+                                                icon: const Icon(
+                                                  Icons.more_vert,
+                                                ),
+                                                onSelected: (value) async {
+                                                  if (value == 'edit' &&
+                                                      permissionService
+                                                          .hasPermission(
+                                                            AppPermissions
+                                                                .editPgsSummaryNarrative,
+                                                          )) {
+                                                    if (selectedTabIndex == 0) {
+                                                      showReportDialog(summary);
+                                                    } else {
+                                                      showRemarksDialog(
+                                                        summary,
+                                                      );
+                                                    }
+                                                  }
+                                                  if (value == 'preview') {
+                                                    if (selectedTabIndex == 1) {
+                                                      viewAuditorSummaryNarrativeReport(
+                                                        summary.pgsPeriodId
+                                                            .toString(),
+                                                        summary.officeId
+                                                            .toString(),
+                                                        context: context,
+                                                      );
+                                                    } else {
+                                                      viewAuditorSummaryNarrativeReport(
+                                                        summary.pgsPeriodId
+                                                            .toString(),
+                                                        summary.officeId
+                                                            .toString(),
+                                                        context: context,
+                                                      );
+                                                    }
+                                                  }
+                                                },
+                                                itemBuilder:
+                                                    (_) => [
+                                                      PopupMenuItem(
+                                                        value: 'edit',
+                                                        child: PermissionWidget(
+                                                          permission:
+                                                              AppPermissions
+                                                                  .viewKraRoadMap,
+                                                          child: const Row(
+                                                            children: [
+                                                              Icon(
+                                                                Icons
+                                                                    .edit_outlined,
+                                                                size: 18,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 8,
+                                                              ),
+                                                              Text('Edit'),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const PopupMenuItem(
+                                                        value: 'preview',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .description_outlined,
+                                                              size: 18,
+                                                              color:
+                                                                  Colors
+                                                                      .blueAccent,
+                                                            ),
+                                                            SizedBox(width: 8),
+                                                            Text(
+                                                              'Print preview',
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      PopupMenuItem(
+                                                        value: 'delete',
+                                                        child: PermissionWidget(
+                                                          permission:
+                                                              AppPermissions
+                                                                  .editKraRoadMap,
+                                                          child: const Row(
+                                                            children: [
+                                                              Icon(
+                                                                CupertinoIcons
+                                                                    .delete_simple,
+                                                                color:
+                                                                    Colors.red,
+                                                                size: 18,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 8,
+                                                              ),
+                                                              Text('Delete'),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                              ),
+                                            ],
+                                          ),
+
+                                          const SizedBox(height: 6),
+
+                                          Text(
+                                            selectedTabIndex == 0
+                                                ? (officeMap[summary
+                                                        .officeId] ??
+                                                    'Unknown Office')
+                                                : "Report - ${getPeriodLabel(summary.pgsPeriodId)}",
+                                          ),
+
+                                          const SizedBox(height: 4),
+
+                                          Text(
+                                            getPeriodLabel(summary.pgsPeriodId),
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  return null;
+                                },
+                              ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            Container(
+              padding: const EdgeInsets.all(10),
+              color: Theme.of(context).cardColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged:
+                        (page) => fetchReportsForSelectedTab(page: page),
+                  ),
+                  const SizedBox(width: 60),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -650,23 +765,14 @@ class ViewSummaryNarrativeReportPageState
                             color: Colors.black87,
                           ),
                         ),
-
                         const Spacer(),
-
                         ElevatedButton.icon(
-                          onPressed: () async {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => ViewPdfSummary(
-                                      pgsPeriodId:
-                                          report.pgsPeriodId.toString(),
-                                      officeId: report.officeId.toString(),
-                                    ),
+                          onPressed:
+                              () => viewAuditorSummaryNarrativeReport(
+                                report.pgsPeriodId.toString(),
+                                report.officeId.toString(),
+                                context: context,
                               ),
-                            );
-                          },
                           icon: const Icon(
                             Icons.description_outlined,
                             size: 18,

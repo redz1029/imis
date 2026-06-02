@@ -24,9 +24,7 @@ void main() async {
         final variableName = _toCamelCase(
           permission.toString(),
         ).replaceAll(' ', '');
-        buffer.writeln(
-          "  static const String ${variableName} = '$permission';",
-        );
+        buffer.writeln("  static const String $variableName = '$permission';");
       }
 
       buffer.writeln('}');

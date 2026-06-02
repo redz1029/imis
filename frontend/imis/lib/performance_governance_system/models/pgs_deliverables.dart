@@ -1,5 +1,5 @@
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
-import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
+import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -33,6 +33,7 @@ class PgsDeliverables {
   String? rowVersion;
   int? perfomanceGovernanceSystemId;
   List<PgsDeliverableHistory>? pgsDeliverableHistory;
+  int sortOrder;
 
   PgsDeliverables(
     this.id,
@@ -46,7 +47,8 @@ class PgsDeliverables {
     this.disapprovalRemarks,
     this.isDisapproved,
     this.status,
-    this.perfomanceGovernanceSystemId, {
+    this.perfomanceGovernanceSystemId,
+    this.sortOrder, {
     this.pgsDeliverableHistory,
     this.remarks,
     this.rowVersion,

@@ -32,7 +32,13 @@ namespace IMIS.Application.PgsModule
             this.PgsPeriod = new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod);
             this.Office = new OfficeDto(perfomanceGovernanceSystem.Office);
             this.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto(perfomanceGovernanceSystem.PgsReadinessRating) : null;
-            this.PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(d => new PGSDeliverableDto(d)).ToList();
+            this.PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables == null
+            ? new List<PGSDeliverableDto>()
+            : perfomanceGovernanceSystem.PgsDeliverables
+                .Where(d => !d.IsDeleted)
+                .OrderBy(d => d.SortOrder)
+                .Select(d => new PGSDeliverableDto(d))
+                .ToList();
             this.PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?.Select(s => new PgsSignatoryDto
             {
                 Id = s.Id,

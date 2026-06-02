@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:imis/user/services/roles_permission_service.dart';
 
 class PermissionService {
@@ -19,14 +17,6 @@ class PermissionService {
         perm['permission'] as String: perm['isAssigned'] as bool,
     };
     _roleName = roleName;
-
-    debugPrint('===== PERMISSIONS LOADED =====');
-    debugPrint('Role: $_roleName');
-    debugPrint('Total permissions loaded: ${_permissions.length}');
-    _permissions.forEach((key, value) {
-      debugPrint('  $key: $value');
-    });
-    debugPrint('=============================');
   }
 
   bool hasPermission(String permission, {List<String>? allowedRoles}) {

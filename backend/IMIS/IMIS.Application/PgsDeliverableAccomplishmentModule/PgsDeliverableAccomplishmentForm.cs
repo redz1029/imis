@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using IMIS.Domain;
+using Microsoft.AspNetCore.Http;
 
 namespace IMIS.Application.PgsDeliverableAccomplishmentModule
 {
@@ -6,10 +7,12 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
     {
         public long PgsDeliverableId { get; set; }
         public DateTime PostingDate { get; set; }
+        public PgsStatus Status { get; set; }
         public string UserId { get; set; } = null!;
         public double PercentAccomplished { get; set; }
         public string? Remarks { get; set; }
         public string? AuditorRemarks { get; set; }
         public IFormFile? File { get; set; }
+        public bool RemoveAttachment { get; set; }
     }
 }

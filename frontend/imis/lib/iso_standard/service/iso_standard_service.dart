@@ -59,15 +59,16 @@ class IsoStandardService {
   Future<void> bulkCreateIsoStandards(List<IsoStandard> isoStandards) async {
     var url = ApiEndpoint().isoStandard;
     try {
-      final List<Map<String, dynamic>> requestData = isoStandards.map((iso) {
-        final json = iso.toJson();
-        // Remove nested version object - backend only needs versionID
-        json.remove('version');
-        if (iso.id == 0) {
-          json.remove('rowVersion');
-        }
-        return json;
-      }).toList();
+      final List<Map<String, dynamic>> requestData =
+          isoStandards.map((iso) {
+            final json = iso.toJson();
+            // Remove nested version object - backend only needs versionID
+            json.remove('version');
+            if (iso.id == 0) {
+              json.remove('rowVersion');
+            }
+            return json;
+          }).toList();
 
       // Backend expects List<IsoStandardDto> directly
       final response = await AuthenticatedRequest.post(

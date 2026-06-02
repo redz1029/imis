@@ -29,12 +29,13 @@ namespace IMIS.Persistence.AnnouncementModule
         {
             return await ReadOnlyDbContext.Set<Announcement>()
                 .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
-        }
+        }      
         public async Task<IEnumerable<Announcement>?> GetAllActive(CancellationToken cancellationToken)
         {
             return await _entities
                 .AsNoTracking()
                 .Where(a => a.IsActive)
+                .OrderByDescending(a => a.Id)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }

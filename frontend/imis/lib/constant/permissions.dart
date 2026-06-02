@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-01-22 13:39:20.282441
+// Last synced: 2026-05-19 16:16:23.497244
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -42,6 +42,9 @@ class AppPermissions {
   static const String addPerformanceGovernanceSystem = 'Add Performance Governance System';
   static const String viewPerformanceGovernanceSystem = 'View Performance Governance System';
   static const String editPerformanceGovernanceSystem = 'Edit Performance Governance System';
+  static const String addOperationReviewProtocol = 'Add Operation Review Protocol';
+  static const String viewOperationReviewProtocol = 'View Operation Review Protocol';
+  static const String editOperationReviewProtocol = 'Edit Operation Review Protocol';
   static const String addOfficeType = 'Add Office Type';
   static const String viewOfficeType = 'View Office Type';
   static const String editOfficeType = 'Edit Office Type';
@@ -54,6 +57,15 @@ class AppPermissions {
   static const String addKraRoadMap = 'Add Kra Road Map';
   static const String viewKraRoadMap = 'View Kra Road Map';
   static const String editKraRoadMap = 'Edit Kra Road Map';
+  static const String addKraRoadMapKpiAccomplishment = 'Add Kra Road Map Kpi Accomplishment';
+  static const String viewKraRoadMapKpiAccomplishment = 'View Kra Road Map Kpi Accomplishment';
+  static const String editKraRoadMapKpiAccomplishment = 'Edit Kra Road Map Kpi Accomplishment';
+  static const String addKraRoadMapAccomplishment = 'Add Kra Road Map Accomplishment';
+  static const String viewKraRoadMapAccomplishment = 'View Kra Road Map Accomplishment';
+  static const String editKraRoadMapAccomplishment = 'Edit Kra Road Map Accomplishment';
+  static const String addIsoStandard = 'Add Iso Standard';
+  static const String viewIsoStandard = 'View Iso Standard';
+  static const String editIsoStandard = 'Edit Iso Standard';
   static const String addBreakThroughScoring = 'Add Break Through Scoring';
   static const String viewBreakThroughScoring = 'View Break Through Scoring';
   static const String editBreakThroughScoring = 'Edit Break Through Scoring';

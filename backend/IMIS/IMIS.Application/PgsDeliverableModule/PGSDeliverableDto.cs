@@ -22,6 +22,8 @@ namespace IMIS.Application.PgsModule
 
         public long PerfomanceGovernanceSystemId { get; set; }
 
+        public int SortOrder { get; set; }
+
         public PGSDeliverableDto() {}
 
         [SetsRequiredMembers]
@@ -47,6 +49,7 @@ namespace IMIS.Application.PgsModule
             this.DisapprovalRemarks = pgsDeliverable.DisapprovalRemarks;
             this.IsDisapproved = pgsDeliverable.IsDisapproved;
             this.PerfomanceGovernanceSystemId = pgsDeliverable.PerfomanceGovernanceSystemId;
+            this.SortOrder = pgsDeliverable.SortOrder;
         }
 
         public override PgsDeliverable ToEntity()
@@ -65,7 +68,8 @@ namespace IMIS.Application.PgsModule
                 Remarks = Remarks,
                 DisapprovalRemarks = DisapprovalRemarks,
                 IsDisapproved = IsDisapproved,
-                PerfomanceGovernanceSystemId = PerfomanceGovernanceSystemId
+                PerfomanceGovernanceSystemId = PerfomanceGovernanceSystemId,
+                SortOrder = SortOrder,
 
             };
         }

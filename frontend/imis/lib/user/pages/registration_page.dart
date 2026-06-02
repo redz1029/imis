@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/user/models/user_registration.dart';
+import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/string_extension.dart';
 import 'package:imis/validator/validator.dart';
@@ -275,7 +275,7 @@ class RegistrationPageState extends State<RegistrationPage> {
               SizedBox(
                 height: 65,
                 child: DropdownButtonFormField<String>(
-                  value:
+                  initialValue:
                       prefixController.text.isNotEmpty
                           ? prefixController.text
                           : null,

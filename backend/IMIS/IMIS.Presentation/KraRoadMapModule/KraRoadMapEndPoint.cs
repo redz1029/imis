@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
+
 namespace IMIS.Presentation.KraRoadMapModule
 {
     public class KraRoadMapEndPoint : CarterModule
@@ -18,6 +19,7 @@ namespace IMIS.Presentation.KraRoadMapModule
         public KraRoadMapEndPoint() : base("/kraRoadMap")
         {
         }
+
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
 
@@ -114,7 +116,7 @@ namespace IMIS.Presentation.KraRoadMapModule
                     cancellationToken
                 ).ConfigureAwait(false);
 
-                //Force inline rendering in browser with dynamic timestamp filename
+                //////Force inline rendering in browser with dynamic timestamp filename
                 var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
                 return Results.File(file, "application/pdf");
@@ -136,6 +138,25 @@ namespace IMIS.Presentation.KraRoadMapModule
             .WithTags(_kraRoadMap)
             .RequireAuthorization(e =>  e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMap), true);
+         
+            app.MapGet("/deliverable/filter/kra-year", async ([FromQuery] int? kraid, [FromQuery] int? fromYear, [FromQuery] int? toYear, IKraRoadMapService service,
+            CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetGroupedDeliverablesAsync(kraid, fromYear, toYear, cancellationToken);
+
+                return Results.Ok(new { deliverables = result });
+            })
+            .WithTags(_kraRoadMap)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
+           
+            app.MapGet("/Kpi/filter/kra", async ([FromQuery] int? kraid, [FromQuery] int? fromYear, [FromQuery] int? toYear, IKraRoadMapService service,
+            CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetKpiDeliverableAsync(kraid, fromYear, toYear, cancellationToken);
+                return Results.Ok(new { deliverables = result });
+            })
+            .WithTags(_kraRoadMap)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));           
         }
     }
 }

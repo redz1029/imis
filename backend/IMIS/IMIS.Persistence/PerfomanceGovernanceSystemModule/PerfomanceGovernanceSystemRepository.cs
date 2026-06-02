@@ -10,11 +10,30 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
 
+    public async Task<bool> ExistsByOfficeAndPgsPeriodAsync(int officeId, int pgsPeriodId, CancellationToken cancellationToken)
+    {
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+            .AnyAsync(x => x.OfficeId == officeId
+                        && x.PgsPeriod != null
+                        && x.PgsPeriod.Id == pgsPeriodId
+                        && !x.IsDeleted,
+                      cancellationToken);
+    }
+
     public async Task<PerfomanceGovernanceSystem?> GetByIdForSoftDeleteAsync(int deliverableId, CancellationToken cancellationToken)
     {
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
             .FirstOrDefaultAsync(d => d.Id == deliverableId, cancellationToken);
+    }  
+    public async Task<List<PgsSignatoryTemplate>> GetTemplatesByServiceHeadAsync(string userId,  CancellationToken cancellationToken)
+    {
+        return await ReadOnlyDbContext.Set<PgsSignatoryTemplate>()
+            .Include(pt => pt.Office)
+               .ThenInclude(o => o!.UserOffices)
+            .Where(pt => pt.DefaultSignatoryId == userId && pt.OrderLevel == 1)
+            .ToListAsync(cancellationToken);
     }
+
     public async Task<List<PerfomanceGovernanceSystem>> GetByOfficeIdsAsync(List<int> officeIds, CancellationToken cancellationToken)
     {
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
@@ -36,7 +55,30 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                .Include(p => p.Office)
                .Include(p => p.PgsPeriod)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-    }   
+    }
+
+    public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserOfficeOnlyAsync(string userId, CancellationToken cancellationToken)
+    {
+        var userOfficeIds = await ReadOnlyDbContext.Set<UserOffices>()
+            .Where(u => u.UserId == userId)
+            .Select(u => u.OfficeId)
+            .ToListAsync(cancellationToken);
+
+        if (!userOfficeIds.Any())
+            return Enumerable.Empty<PerfomanceGovernanceSystem>();
+
+        return await _entities
+            .Where(p => userOfficeIds.Contains(p.OfficeId))
+            .Include(p => p.PgsPeriod)
+            .Include(p => p.Office)
+             .ThenInclude(o => o.UserOffices)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories)
+            .Include(p => p.PgsDeliverables)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
     {      
         var userOfficeIds = await ReadOnlyDbContext.Set<UserOffices>()
@@ -92,33 +134,22 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Include(p => p.PgsSignatories!)                
         .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
-    public async Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
+   
+    public async Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(int pgsId, CancellationToken cancellationToken)
     {
-        var pgs = await _entities
-         .Where(p => p.Id == pgsId)
-         .Include(p => p.PgsPeriod)
-         .Include(p => p.PgsReadinessRating)
-         .Include(p => p.PgsSignatories)
-         .Include(p => p.PgsDeliverables)
-             .ThenInclude(d => d.Kra)
-         .Include(p => p.Office)
-             .ThenInclude(o => o.UserOffices)
-         .Include(p => p.Office)
-             .ThenInclude(o => o.ParentOffice)
-                 .ThenInclude(po => po!.UserOffices)
-         .FirstOrDefaultAsync(cancellationToken);
-        
-        if (pgs != null)
-        {
-            var inChildOffice = pgs.Office.UserOffices!.Any(u => u.UserId == userId);
-            var inParentOffice = pgs.Office.ParentOffice?.UserOffices!.Any(u => u.UserId == userId) == true;
-
-            if (!inChildOffice && !inParentOffice)
-                return null;
-        }
-
-        return pgs;
-
+        return await _entities
+            .Where(p => p.Id == pgsId)
+            .Include(p => p.PgsPeriod)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories)
+            .Include(p => p.PgsDeliverables)
+                .ThenInclude(d => d.Kra)
+            .Include(p => p.Office)
+                .ThenInclude(o => o.UserOffices)
+            .Include(p => p.Office)
+                .ThenInclude(o => o.ParentOffice)
+                    .ThenInclude(po => po!.UserOffices)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     //Get Pgs Report: Filter by Id
@@ -159,13 +190,21 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .AsNoTracking()
         .ToListAsync(cancellationToken);
     }
-    // Get Pgs, Filter by all Paginated
+    // Get Pgs, Filter by all Paginated 
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
-       
-       return await EntityPageList<PerfomanceGovernanceSystem, long>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
-        
+        var query = _entities
+            .AsNoTracking()
+           .Include(p => p.PgsPeriod)
+            .Include(p => p.Office)
+                .ThenInclude(o => o.UserOffices)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories)
+            .Include(p => p.PgsDeliverables);
+
+        return await EntityPageList<PerfomanceGovernanceSystem, long>.CreateAsync(query, page, pageSize, cancellationToken);
     }
+
     // Get Pgs, Filter by Pgs Period Id with pagination
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(
     long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)

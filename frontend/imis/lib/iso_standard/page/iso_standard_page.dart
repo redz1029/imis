@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// // ignore_for_file: use_build_context_synchronously
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -30,9 +30,9 @@ class _IsoNode {
 class IsoStandardPage extends StatefulWidget {
   const IsoStandardPage({super.key});
 
-  @override
-  IsoStandardPageState createState() => IsoStandardPageState();
-}
+//   @override
+//   IsoStandardPageState createState() => IsoStandardPageState();
+// }
 
 class IsoStandardPageState extends State<IsoStandardPage> {
   final _isoStandardService = IsoStandardService(Dio());
@@ -70,7 +70,7 @@ class IsoStandardPageState extends State<IsoStandardPage> {
   bool get hasEditPermission =>
       isAdmin || permissionService.hasPermission(AppPermissions.editIso);
 
-  final dio = Dio();
+//   final dio = Dio();
 
   @override
   void initState() {
@@ -159,14 +159,14 @@ class IsoStandardPageState extends State<IsoStandardPage> {
   Future<void> fetchIsoStandards({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
-    setState(() => _isLoading = true);
+//     setState(() => _isLoading = true);
 
-    try {
-      final pageList = await _isoStandardService.getIsoStandards(
-        page: page,
-        pageSize: _pageSize,
-        searchQuery: searchQuery,
-      );
+//     try {
+//       final pageList = await _isoStandardService.getIsoStandards(
+//         page: page,
+//         pageSize: _pageSize,
+//         searchQuery: searchQuery,
+//       );
 
       if (mounted) {
         setState(() {
@@ -267,12 +267,12 @@ class IsoStandardPageState extends State<IsoStandardPage> {
     }
   }
 
-  @override
-  void dispose() {
-    isSearchfocus.dispose();
-    searchController.dispose();
-    super.dispose();
-  }
+//   @override
+//   void dispose() {
+//     isSearchfocus.dispose();
+//     searchController.dispose();
+//     super.dispose();
+//   }
 
   // Helper node removed; top-level _IsoNode is used instead
 

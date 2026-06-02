@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
@@ -275,174 +275,340 @@ class RolesPageState extends State<RolesPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: const Text('Role Information'),
-        backgroundColor: mainBgColor,
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Role Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      height: 30,
-                      width: 300,
-                      child: TextField(
-                        focusNode: isSearchfocus,
-                        controller: searchController,
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: lightGrey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelBehavior: FloatingLabelBehavior.never,
-                          labelStyle: TextStyle(color: grey, fontSize: 14),
-                          labelText: 'Search Role',
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: isSearchfocus.hasFocus ? primaryColor : grey,
-                            size: 20,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          filled: true,
-                          fillColor: secondaryColor,
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: 5,
-                            horizontal: 5,
-                          ),
-                        ),
-                        onChanged: filterSearchResults,
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    focusNode: isSearchfocus,
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: lightGrey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      labelStyle: const TextStyle(color: grey, fontSize: 14),
+                      labelText: 'Search...',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: isSearchfocus.hasFocus ? primaryColor : grey,
+                        size: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      filled: true,
+                      fillColor: secondaryColor,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 5,
+                        horizontal: 5,
                       ),
                     ),
-                    if (!isMinimized)
-                      ElevatedButton.icon(
-                        onPressed: () => showFormDialog(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        label: const Text(
-                          'Add New',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                  ],
+                    onChanged: filterSearchResults,
+                  ),
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 16 : 40,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: constraints.maxWidth,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
+                const Spacer(),
+                if (!isMobile)
+                  ElevatedButton.icon(
+                    onPressed: () => showFormDialog(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                    columns: const [
-                      DataColumn(label: Text('#')),
-                      DataColumn2(label: Text('Role'), size: ColumnSize.L),
-                      DataColumn(label: Text('Actions')),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var role = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
-
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(itemNumber.toString())),
-                              DataCell(Text(role.name)),
-                              DataCell(
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () {
-                                        showFormDialog(
-                                          id: role.id.toString(),
-                                          name: role.name,
-                                        );
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: primaryColor,
-                                      ),
-                                      onPressed: () {
-                                        showDeleteDialog(role.id.toString());
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                      ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged: (page) => fetchRoles(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
-                  ),
-                ),
               ],
             ),
-          );
-        },
-      ),
+            const SizedBox(height: 26),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : ListView.separated(
+                                itemCount: filteredList.length,
+                                separatorBuilder:
+                                    (context, index) => Divider(
+                                      height: 1,
+                                      color: Colors.grey.withValues(alpha: 0.2),
+                                    ),
+                                itemBuilder: (context, index) {
+                                  final roles = filteredList[index];
 
+                                  final initials =
+                                      roles.name.trim().isNotEmpty
+                                          ? roles.name
+                                              .trim()
+                                              .split(' ')
+                                              .map((e) => e[0])
+                                              .take(2)
+                                              .join()
+                                              .toUpperCase()
+                                          : '?';
+                                  if (!isMobile) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 14,
+                                        horizontal: 12,
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          // Avatar
+                                          Container(
+                                            width: 38,
+                                            height: 38,
+                                            decoration: BoxDecoration(
+                                              color: primaryColor.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                initials,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: primaryColor,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+
+                                          Expanded(
+                                            child: Text(
+                                              roles.name,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Actions
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.edit_outlined,
+                                                  size: 18,
+                                                ),
+                                                onPressed:
+                                                    () => showFormDialog(
+                                                      id: roles.id.toString(),
+                                                      name: roles.name,
+                                                    ),
+                                              ),
+                                              IconButton(
+                                                icon: Icon(
+                                                  CupertinoIcons.delete_simple,
+                                                  size: 18,
+                                                  color: Colors.redAccent,
+                                                ),
+                                                onPressed:
+                                                    () => showDeleteDialog(
+                                                      roles.id.toString(),
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                      horizontal: 4,
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        // Avatar
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: primaryColor.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              initials,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: primaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                roles.name,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 5),
+                                            ],
+                                          ),
+                                        ),
+
+                                        PopupMenuButton<String>(
+                                          color: Theme.of(context).cardColor,
+                                          icon: Icon(
+                                            Icons.more_vert,
+                                            color: Colors.grey.shade500,
+                                          ),
+                                          onSelected: (value) {
+                                            if (value == 'edit') {
+                                              showFormDialog(
+                                                id: roles.id.toString(),
+                                                name: roles.name,
+                                              );
+                                            }
+                                            if (value == 'delete') {
+                                              showDeleteDialog(
+                                                roles.id.toString(),
+                                              );
+                                            }
+                                          },
+                                          itemBuilder:
+                                              (_) => [
+                                                PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(
+                                                        Icons.edit_outlined,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Edit'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        CupertinoIcons
+                                                            .delete_simple,
+                                                        color: Colors.redAccent,
+                                                        size: 18,
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      const Text('Delete'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged: (page) => fetchRoles(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton:
-          isMinimized
+          isMobile
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
-                child: Icon(Icons.add, color: Colors.white),
+                child: const Icon(Icons.add, color: Colors.white),
               )
               : null,
     );

@@ -9,6 +9,7 @@ namespace IMIS.Domain
 
         [ForeignKey(nameof(PgsDeliverableId))]
         public virtual PgsDeliverable? PgsDeliverable { get; set; }
+        public required PgsStatus Status { get; set; }
 
         public DateTime PostingDate { get; set; }
 
@@ -22,5 +23,6 @@ namespace IMIS.Domain
         public string? AuditorRemarks { get; set; }
 
         public string? AttachmentPath { get; set; }
+      
     }
 }

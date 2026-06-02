@@ -1,5 +1,6 @@
 ﻿using Base.Primitives;
 using IMIS.Application.KraRoadMapKpiModule;
+using IMIS.Application.KraRoadMapModule;
 
 namespace IMIS.Persistence.KraRoadMapKpiModule
 {
@@ -10,7 +11,34 @@ namespace IMIS.Persistence.KraRoadMapKpiModule
         {
             _repository = repository;
         }
-      
+
+        public async Task<List<KraRoadMapKpiDeliverableFilterDto>> GetKpiByRoadMapIdAsync(long kraRoadMapId, int year, CancellationToken cancellationToken)
+        {
+            var kpis = await _repository.GetKpisByRoadMapIdAsync(kraRoadMapId, year, cancellationToken);
+
+            if (!kpis.Any())
+                return new List<KraRoadMapKpiDeliverableFilterDto>();
+
+            var roadmapPeriods = await _repository.GetRoadMapPeriodsForKpisAsync(kpis, cancellationToken);
+            var grouped = kpis
+                .GroupBy(k =>
+                    roadmapPeriods.First(r =>
+                        r.KraRoadMapId == k.KraRoadMapId))
+                .Select(g => new KraRoadMapKpiDeliverableFilterDto
+                {
+                    StartDate = DateOnly.FromDateTime(g.Key.StartYear),
+                    EndDate = DateOnly.FromDateTime(g.Key.EndYear),
+
+                    KpiDeliverable = g
+                        .Select(k => new KraRoadMapKpiDto(k))
+                        .ToList()
+                })
+                .OrderBy(x => x.StartDate)
+                .ToList();
+
+            return grouped;
+        }
+
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var ODto = dto as KraRoadMapKpiDto;

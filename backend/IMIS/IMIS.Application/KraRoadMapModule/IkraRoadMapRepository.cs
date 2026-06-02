@@ -13,5 +13,13 @@ namespace IMIS.Application.KraRoadMapModule
         Task<IEnumerable<KraRoadMapFilter>>GetByKraYearAndDescriptionAsync(int kraId, int year, string kraDescription, bool isDirect, CancellationToken cancellationToken);
         Task<IEnumerable<KraRoadMapDescriptionFilter>> GetKraDescriptionsByKraIdAsync(int kraId, CancellationToken cancellationToken);
         Task<List<KraRoadMap>> GetAllForUserIdAsync(string roleid, CancellationToken cancellationToken);
+        Task<List<KraRoadMapDeliverable>> GetDeliverablesAsync(int? kraid, int? fromYear, int? toYear, CancellationToken cancellationToken);
+        Task<List<KraRoadMapDeliverable>> GetDeliverablesByRoleAsync(int? kraId, int? fromYear, int? toYear, string roleId, CancellationToken cancellationToken);
+        Task<List<KraRoadMapKpi>> GetKpisAsync(int? kraid, int? fromYear, int? toYear, CancellationToken cancellationToken);  
+        Task<List<KraRoadMapKpi>> GetKpisByRoleAsync(int? kraid, string roleId, int? fromYear, int? toYear, CancellationToken cancellationToken);
+        Task<List<(long KraRoadMapId, DateTime StartYear, DateTime EndYear)>> GetRoadMapPeriodsAsync(List<KraRoadMapDeliverable> deliverables, CancellationToken cancellationToken);
+        Task<List<(long KraRoadMapId, DateTime StartYear, DateTime EndYear)>> GetRoadMapPeriodsForKpisAsync(List<KraRoadMapKpi> kpis, CancellationToken cancellationToken);
+        Task<List<KraRoadMapRole>> GetStrategyReviewRoadmapByRoleAsync(string roleId, long pgsRoadMapPeriodId, CancellationToken cancellationToken);
+        Task<List<KraRoadMapRole>> GetAllStrategyReviewRoadmapAsync(long pgsRoadMapPeriodId, CancellationToken cancellationToken);
     }
 }

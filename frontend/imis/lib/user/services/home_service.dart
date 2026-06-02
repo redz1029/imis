@@ -5,7 +5,7 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
-import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
+import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/utils/http_util.dart';
 
 class HomeService {

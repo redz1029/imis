@@ -22,6 +22,12 @@ Roadmap _$RoadmapFromJson(Map<String, dynamic> json) => Roadmap(
       ?.map((e) => KpiRoadmap.fromJson(e as Map<String, dynamic>))
       .toList(),
   json['roleId'] as String,
+  roadmapGutCheck:
+      json['roadmapGutCheck'] == null
+          ? null
+          : RoadmapGutCheck.fromJson(
+            json['roadmapGutCheck'] as Map<String, dynamic>,
+          ),
   kra:
       json['kra'] == null
           ? null
@@ -41,4 +47,5 @@ Map<String, dynamic> _$RoadmapToJson(Roadmap instance) => <String, dynamic>{
   'deliverables': instance.deliverables,
   'kpis': instance.kpis,
   'roleId': instance.roleId,
+  'roadmapGutCheck': instance.roadmapGutCheck,
 };

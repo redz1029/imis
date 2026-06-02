@@ -1,8 +1,10 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
+import 'package:imis/office/models/office.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
@@ -11,9 +13,11 @@ import 'package:imis/user/services/user_role_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:collection/collection.dart';
 import 'package:imis/utils/http_util.dart';
-import 'package:imis/widgets/dotted_button.dart';
+import 'package:imis/widgets/filter_widget/button_filter.dart';
+import 'package:imis/widgets/button_widget/dotted_button.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:universal_html/html.dart' as html;
 
 class UserRolePage extends StatefulWidget {
   const UserRolePage({super.key});
@@ -37,11 +41,14 @@ class UserRolePageState extends State<UserRolePage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-
+  String? _selectedRole;
+  List<Office> roleListList = [];
+  bool isLoadingOffices = false;
+  bool isLoadingUsers = false;
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchFocus = FocusNode();
   final dio = Dio();
-
+  String? _filterUserId;
   @override
   void initState() {
     super.initState();
@@ -61,7 +68,6 @@ class UserRolePageState extends State<UserRolePage> {
     setState(() {
       roleList = roles;
       userList = users;
-      _selectedUserId = users.isNotEmpty ? users[0].id : null;
     });
   }
 
@@ -105,24 +111,88 @@ class UserRolePageState extends State<UserRolePage> {
   }
 
   void filterSearchResults(String query) {
-    final lowerQuery = query.toLowerCase().trim();
+    setState(() => _filterUserId = query.trim());
+    filterUsersFromApi();
+  }
 
-    setState(() {
-      if (lowerQuery.isEmpty) {
-        filteredList = List.from(userRoleList);
-      } else {
-        filteredList =
-            _allUserRoles.where((userRole) {
-              final user = userList.firstWhereOrNull(
-                (u) => u.id == userRole.userId,
-              );
+  Future<void> filterUsersFromApi() async {
+    setState(() => _isLoading = true);
+    try {
+      final searchQuery = _filterUserId ?? "";
 
-              if (user == null) return false;
-
-              return user.fullName.toLowerCase().contains(lowerQuery);
-            }).toList();
+      if (searchQuery.isEmpty && _selectedRole == null) {
+        setState(() {
+          filteredList = List.from(_allUserRoles);
+        });
+        return;
       }
-    });
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        '${ApiEndpoint().usersFilter}?fullname=$searchQuery&roleId=${_selectedRole ?? ""}&page=1&pageSize=50',
+      );
+
+      if (response.statusCode == 200) {
+        final List rawData =
+            response.data is List
+                ? response.data
+                : (response.data["data"] ?? []);
+
+        final List<String> returnedUserIds =
+            rawData.map((e) => e['userId'].toString()).toList();
+
+        setState(() {
+          filteredList =
+              _allUserRoles.where((ur) {
+                return returnedUserIds.contains(ur.userId.toString());
+              }).toList();
+        });
+      }
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> exportFilteredPdf() async {
+    try {
+      final searchQuery = _filterUserId ?? "";
+      final roleQuery = _selectedRole ?? "";
+
+      final exportSize =
+          (searchQuery.isEmpty && roleQuery.isEmpty)
+              ? _totalCount
+              : filteredList.length;
+
+      final url =
+          '${ApiEndpoint.baseUrl}/users-report/pdf?fullname=$searchQuery&roleId=$roleQuery&page=1&pageSize=$exportSize';
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        url,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      if (response.statusCode == 200) {
+        final bytes = response.data as List<int>;
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final _ =
+            html.AnchorElement(href: url)
+              ..setAttribute('download', 'user_roles_report.pdf')
+              ..click();
+        html.Url.revokeObjectUrl(url);
+      } else {
+        MotionToast.error(
+          toastAlignment: Alignment.topCenter,
+          description: Text('Failed to export PDF'),
+        ).show(context);
+      }
+    } catch (e) {
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Error exporting PDF: $e'),
+      ).show(context);
+    }
   }
 
   void showFormDialog({String? id, String? selectedUserId}) {
@@ -536,7 +606,7 @@ class UserRolePageState extends State<UserRolePage> {
 
                         await _userRoleService.updatePermission(
                           userId,
-                          roleId,
+                          '',
                           roleId,
                           permissions,
                         );
@@ -567,7 +637,7 @@ class UserRolePageState extends State<UserRolePage> {
 
                                       await _userRoleService.updatePermission(
                                         userId,
-                                        roleId,
+                                        '',
                                         roleId,
                                         permissions,
                                       );
@@ -607,148 +677,378 @@ class UserRolePageState extends State<UserRolePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: Text('User Role Information'),
-        backgroundColor: mainBgColor,
-      ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              "User Role Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            gap16px,
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(
-                  height: 30,
-                  width: 300,
-                  child: TextField(
-                    focusNode: isSearchfocus,
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: lightGrey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Name',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: isSearchfocus.hasFocus ? primaryColor : grey,
-                        size: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      filled: true,
-                      fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 5,
+                Row(
+                  children: [
+                    SizedBox(
+                      height: 36,
+                      width: 250,
+                      child: TextField(
+                        focusNode: isSearchfocus,
+                        controller: searchController,
+                        decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: lightGrey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          labelText: 'Search...',
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: isSearchfocus.hasFocus ? primaryColor : grey,
+                            size: 20,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          filled: true,
+                          fillColor: secondaryColor,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 5,
+                            horizontal: 5,
+                          ),
+                        ),
+                        onChanged: filterSearchResults,
                       ),
                     ),
-                    onChanged: filterSearchResults,
-                  ),
+
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      height: 36,
+                      width: 200,
+                      child: GestureDetector(
+                        onTap: () async {
+                          await _commonService.loadData<Roles>(
+                            list: roleList,
+                            fetchFunction: _commonService.fetchRoles,
+                            setLoading:
+                                (value) =>
+                                    setState(() => isLoadingOffices = value),
+                            setList: (data) => setState(() => roleList = data),
+                          );
+                        },
+                        child: SearchableDropdown(
+                          items:
+                              isLoadingOffices
+                                  ? ["Loading roles..."]
+                                  : [
+                                    "All Roles",
+                                    ...roleList.map((o) => o.name),
+                                  ],
+                          selectedItem:
+                              _selectedRole == null
+                                  ? "All Roles"
+                                  : roleList
+                                      .firstWhere(
+                                        (o) => o.id.toString() == _selectedRole,
+                                      )
+                                      .name,
+                          hintText: "Roles",
+                          searchHint: "Search Roles...",
+                          onChanged: (value) async {
+                            setState(() {
+                              _selectedRole =
+                                  value == "All Roles"
+                                      ? null
+                                      : roleList
+                                          .firstWhere((o) => o.name == value)
+                                          .id
+                                          .toString();
+                            });
+                            await filterUsersFromApi();
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                if (!isMinimized)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                // if (!isMobile)
+                //   ElevatedButton(
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: primaryColor,
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(4),
+                //       ),
+                //     ),
+                //     onPressed: () => showFormDialog(),
+                //     child: const Row(
+                //       mainAxisSize: MainAxisSize.min,
+                //       children: [
+                //         Icon(Icons.add, color: Colors.white),
+                //         SizedBox(width: 5),
+                //         Text('Add New', style: TextStyle(color: Colors.white)),
+                //       ],
+                //     ),
+                //   ),
+                if (!isMobile)
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          side: BorderSide(color: Colors.grey.shade400),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        onPressed: exportFilteredPdf,
+                        icon: Icon(
+                          Icons.picture_as_pdf,
+                          color: Colors.grey.shade600,
+                          size: 18,
+                        ),
+                        label: Text(
+                          'Export PDF',
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
                       ),
-                    ),
-                    onPressed: () => showFormDialog(),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, color: Colors.white),
-                        SizedBox(width: 5),
-                        Text('Add New', style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        onPressed: () => showFormDialog(),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.add, color: Colors.white),
+                            SizedBox(width: 5),
+                            Text(
+                              'Add New',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 26),
             Expanded(
-              child: SingleChildScrollView(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Column(
-                  children:
-                      userList
-                          .where(
-                            (user) =>
-                                filteredList.any((ur) => ur.userId == user.id),
-                          )
-                          .map((user) {
-                            final userRolesForUser =
-                                filteredList
-                                    .where((ur) => ur.userId == user.id)
-                                    .toList();
-                            return Card(
-                              color: mainBgColor,
-                              elevation: 0,
-                              margin: EdgeInsets.symmetric(
-                                vertical: 4,
-                                horizontal: 8,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header row (desktop only)
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              child: Theme(
-                                data: Theme.of(
-                                  context,
-                                ).copyWith(dividerColor: Colors.transparent),
-                                child: ExpansionTile(
-                                  collapsedBackgroundColor: secondaryColor,
-                                  backgroundColor: secondaryBgButton,
-                                  tilePadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Name",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 4,
+                              child: Text(
+                                "Roles",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount:
+                            userList
+                                .where(
+                                  (user) => filteredList.any(
+                                    (ur) => ur.userId == user.id,
                                   ),
-                                  childrenPadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  title: Text(user.fullName),
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children:
-                                          userRolesForUser.expand((userRole) {
-                                            return userRole.roles!.map((
-                                              assignedRole,
-                                            ) {
-                                              final matchedRole = roleList
-                                                  .firstWhere(
-                                                    (r) =>
-                                                        r.id ==
-                                                        assignedRole.roleId,
-                                                    orElse:
-                                                        () => Roles(
-                                                          'unknown',
-                                                          'Unknown',
-                                                          '',
-                                                          null,
-                                                        ),
-                                                  );
-                                              return Container(
-                                                width: double.infinity,
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: 4,
-                                                  horizontal: 16,
-                                                ),
-                                                child: Text(matchedRole.name),
-                                              );
-                                            });
-                                          }).toList(),
+                                )
+                                .length,
+                        separatorBuilder:
+                            (context, index) => Divider(
+                              height: 1,
+                              color: Colors.grey.withValues(alpha: 0.2),
+                            ),
+                        itemBuilder: (context, index) {
+                          final filteredUsers =
+                              userList
+                                  .where(
+                                    (user) => filteredList.any(
+                                      (ur) => ur.userId == user.id,
                                     ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
+                                  )
+                                  .toList();
+
+                          final user = filteredUsers[index];
+
+                          final userRolesForUser =
+                              filteredList
+                                  .where((ur) => ur.userId == user.id)
+                                  .toList();
+
+                          final roleChips =
+                              userRolesForUser
+                                  .expand((userRole) => userRole.roles ?? [])
+                                  .map((assignedRole) {
+                                    final matchedRole = roleList.firstWhere(
+                                      (r) => r.id == assignedRole.roleId,
+                                      orElse:
+                                          () => Roles(
+                                            'unknown',
+                                            'Unknown',
+                                            '',
+                                            null,
+                                          ),
+                                    );
+                                    return matchedRole.name;
+                                  })
+                                  .toList();
+
+                          final initials =
+                              user.fullName.trim().isNotEmpty
+                                  ? user.fullName
+                                      .trim()
+                                      .split(' ')
+                                      .map((e) => e[0])
+                                      .take(2)
+                                      .join()
+                                      .toUpperCase()
+                                  : '?';
+
+                          final itemNumber =
+                              ((_currentPage - 1) * _pageSize) + index + 1;
+
+                          Widget buildRoleChips() => Wrap(
+                            spacing: 5,
+                            runSpacing: 4,
+                            children:
+                                roleChips.map((roleName) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: primaryColor.withValues(
+                                        alpha: 0.07,
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      roleName,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: primaryColor,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                          );
+
+                          if (!isMobile) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                                horizontal: 4,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(flex: 1, child: Text("$itemNumber")),
+
+                                  Expanded(
+                                    flex: 3,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: primaryColor.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              initials,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: primaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            user.fullName,
+
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  Expanded(flex: 4, child: buildRoleChips()),
+
+                                  Expanded(
+                                    flex: 2,
+                                    child: Row(
                                       children: [
                                         IconButton(
-                                          icon: Icon(Icons.edit, size: 20),
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            size: 18,
+                                          ),
                                           onPressed:
                                               () => showFormDialog(
                                                 id: user.id,
@@ -756,55 +1056,180 @@ class UserRolePageState extends State<UserRolePage> {
                                               ),
                                         ),
                                         IconButton(
-                                          icon: Icon(
-                                            Icons.delete,
-                                            color: primaryColor,
+                                          icon: const Icon(
+                                            CupertinoIcons.delete_simple,
+                                            color: Colors.redAccent,
+                                            size: 18,
                                           ),
                                           onPressed:
                                               () => showDeleteDialog(user.id),
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             );
-                          })
-                          .toList(),
+                          }
+
+                          // Mobile layout
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 14,
+                              horizontal: 4,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Avatar
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: primaryColor.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      initials,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        user.fullName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      buildRoleChips(),
+                                    ],
+                                  ),
+                                ),
+
+                                PopupMenuButton<String>(
+                                  color: Theme.of(context).cardColor,
+                                  icon: Icon(
+                                    Icons.more_vert,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                  onSelected: (value) {
+                                    if (value == 'edit') {
+                                      showFormDialog(
+                                        id: user.id,
+                                        selectedUserId: user.id,
+                                      );
+                                    }
+                                    if (value == 'delete') {
+                                      showDeleteDialog(user.id.toString());
+                                    }
+                                  },
+                                  itemBuilder:
+                                      (_) => [
+                                        PopupMenuItem(
+                                          value: 'edit',
+                                          child: Row(
+                                            children: const [
+                                              Icon(
+                                                Icons.edit_outlined,
+                                                size: 18,
+                                              ),
+                                              SizedBox(width: 8),
+                                              Text('Edit'),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                CupertinoIcons.delete_simple,
+                                                color: Colors.redAccent,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              const Text('Delete'),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged: (page) => fetchUserRoles(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.all(10),
-              color: secondaryColor,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PaginationInfo(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                  ),
-                  PaginationControls(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                    isLoading: _isLoading,
-                    onPageChanged: (page) => fetchUserRoles(page: page),
-                  ),
-                  Container(width: 60),
-                ],
               ),
             ),
           ],
         ),
       ),
       floatingActionButton:
-          isMinimized
-              ? FloatingActionButton(
-                backgroundColor: primaryColor,
-                onPressed: () => showFormDialog(),
-                child: Icon(Icons.add),
+          isMobile
+              ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FloatingActionButton.small(
+                    heroTag: 'export',
+                    backgroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      side: BorderSide(color: Colors.grey.shade400),
+                    ),
+                    onPressed: exportFilteredPdf,
+                    child: Icon(
+                      Icons.picture_as_pdf,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  FloatingActionButton(
+                    heroTag: 'add',
+                    backgroundColor: primaryColor,
+                    onPressed: () => showFormDialog(),
+                    child: const Icon(Icons.add, color: Colors.white),
+                  ),
+                ],
               )
               : null,
     );
