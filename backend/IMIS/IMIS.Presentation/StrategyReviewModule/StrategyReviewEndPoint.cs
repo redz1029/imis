@@ -1,10 +1,13 @@
-﻿using Base.Auths.Permissions;
+﻿using Azure;
+using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapModule;
+using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -52,6 +55,39 @@ namespace IMIS.Presentation.StrategyReviewModule
            .WithTags(_strategyReview)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_strategyReview), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.View));
+
+            app.MapGet("/pdf/{id:long}", async (long id, IStrategyReviewService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var operationReviewProtocolReport = await service.ReportGetByIdAsync(id, cancellationToken);
+
+                if (operationReviewProtocolReport == null)
+                    return Results.NotFound();
+
+                var file = await ReportUtil.GeneratePdfReport<ReportStrategyReviewDto>("StrategyReviewReport",
+                    new List<ReportStrategyReviewDto>
+                    {
+                        operationReviewProtocolReport
+                    },
+                    "StrategyReview", cancellationToken).ConfigureAwait(false);
+
+                // FORCE INLINE PDF VIEW IN BROWSER
+                var fileName = $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"StrategyReview_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                //var result = await service.ReportGetByIdAsync(id, pgsId, month, year, cancellationToken).ConfigureAwait(false);
+                //return result != null ? Results.Ok(result) : Results.NotFound();
+
+                //var result = await service.ReportGetByIdAsync(id, cancellationToken);
+
+                //if (result == null)
+                //    return Results.NotFound();
+                //return Results.Ok(result);
+            })
+           .WithTags(_strategyReview)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_strategyReview), true);
 
             app.MapPut("/update", async ([FromBody] StrategyReviewDto dto, IStrategyReviewService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

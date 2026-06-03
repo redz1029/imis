@@ -83,7 +83,7 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                 return Results.Ok(result);
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsDeliverableAccomplishmentTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
          
             app.MapPut("/pgsDeliverableAccomplishment/{id:int}", async (int id, [FromForm] PgsDeliverableAccomplishmentForm form, IPgsDeliverableAcomplishmentService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>

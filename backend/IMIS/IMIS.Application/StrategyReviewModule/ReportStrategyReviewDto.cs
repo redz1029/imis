@@ -1,0 +1,52 @@
+﻿using System.Diagnostics.CodeAnalysis;
+using Base.Primitives;
+using IMIS.Application.StrategyReviewDeliverableModule;
+using IMIS.Domain;
+
+namespace IMIS.Application.StrategyReviewModule
+{
+    public class ReportStrategyReviewDto : BaseDto<StrategyReview, long>
+    {
+        public DateTime PostingDate { get; set; }
+        public long KraRoadMapId { get; set; }
+        public string? StrategicObjective { get; set; }
+        public string? OfficeNames { get; set; }
+        public List<StrategyReviewDeliverableKpiDto>? StrategyReviewDeliverableKpi { get; set; }
+        public List<StrategyReviewDeliverableDto>? StrategyReviewDeliverable { get; set; }
+        public string? Continue { get; set; }
+        public string? Start { get; set; }
+        public string? Stop { get; set; }
+
+        public ReportStrategyReviewDto() { }
+
+        [SetsRequiredMembers]
+        public ReportStrategyReviewDto(StrategyReview strategyReview)
+        {
+            this.Id = strategyReview.Id;
+            this.PostingDate = strategyReview.PostingDate;
+            this.KraRoadMapId = strategyReview.KraRoadMapId;
+            this.Continue = strategyReview.Continue;
+            this.Start = strategyReview.Start;
+            this.Stop = strategyReview.Stop;
+            this.StrategyReviewDeliverableKpi = strategyReview.StrategyReviewDeliverableKpi?
+                .Select(x => new StrategyReviewDeliverableKpiDto(x)).ToList();
+            this.StrategyReviewDeliverable = strategyReview.StrategyReviewDeliverable?
+                .Select(x => new StrategyReviewDeliverableDto(x)).ToList();
+            
+        }
+
+        public override StrategyReview ToEntity() => new()
+        {
+            Id = this.Id,
+            PostingDate = this.PostingDate,
+            KraRoadMapId = this.KraRoadMapId,
+            Continue = this.Continue,
+            Start = this.Start,
+            Stop = this.Stop,
+            StrategyReviewDeliverableKpi = this.StrategyReviewDeliverableKpi?
+                .Select(x => x.ToEntity()).ToList(),
+            StrategyReviewDeliverable = this.StrategyReviewDeliverable?
+                .Select(x => x.ToEntity()).ToList(),
+        };
+    }
+}

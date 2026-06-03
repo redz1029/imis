@@ -34,7 +34,7 @@ namespace IMIS.Persistence.StrategyReviewModule
                 return null;
 
             return strategyReviewDto.Select(o => new StrategyReviewDto(o)).ToList();
-        }
+        }  
 
         public async Task<StrategyReviewDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
         {
@@ -111,6 +111,84 @@ namespace IMIS.Persistence.StrategyReviewModule
             }
             return dto;
         }
+
+
+        public async Task<ReportStrategyReviewDto?> ReportGetByIdAsync(long id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
+
+            if (entity == null)
+                return null;
+
+            string? strategicObjective = null;
+            List<string> officeNames = new();
+
+            // GET KRA ROADMAP
+            var kraRoadMap = await _kraRoadMapRepository.GetByIdAsync(entity.KraRoadMapId, cancellationToken).ConfigureAwait(false);
+
+            if (kraRoadMap == null)
+                return new ReportStrategyReviewDto(entity);
+
+            // GET KRA
+            if (kraRoadMap.KraId.HasValue)
+            {
+                var kra = await _kraRepository.GetByIdAsync(kraRoadMap.KraId.Value, cancellationToken).ConfigureAwait(false);
+                strategicObjective = kra?.StrategicObjective;
+            }
+
+            // GET OFFICES
+            officeNames = await _repository.GetOfficeNamesByKraRoadMapIdAsync(kraRoadMap.Id, cancellationToken).ConfigureAwait(false);
+
+            // KPI IDS
+            var kpiIds = entity.StrategyReviewDeliverableKpi?.Select(x => x.KraRoadmapid).Distinct().ToList() ?? new List<long>();
+
+            // DELIVERABLE IDS
+            var deliverableIds = entity.StrategyReviewDeliverable?.Select(x => x.KraRoadmapid).Distinct().ToList() ?? new List<long>();
+
+            // GET KPI DATA
+            var kpis = await _kraRoadMapKpiRepository.GetKpisByIdsAsync(kpiIds, cancellationToken).ConfigureAwait(false);
+
+            // GET DELIVERABLE DATA
+            var deliverables = await _kraRoadMapDeliverableRepository.GetDeliverablesByIdsAsync(deliverableIds, cancellationToken).ConfigureAwait(false);
+
+            // MAP DTO
+            var dto = new ReportStrategyReviewDto(entity)
+            {
+                KraRoadMapId = entity.KraRoadMapId,
+                StrategicObjective = strategicObjective,
+                OfficeNames = string.Join(", ", officeNames)
+            };
+
+            // MAP KPI DETAILS
+            if (dto.StrategyReviewDeliverableKpi != null)
+            {
+                foreach (var item in dto.StrategyReviewDeliverableKpi)
+                {
+                    var kpi = kpis.FirstOrDefault(x => x.Id == item.KpiId);
+
+                    if (kpi != null)
+                    {
+                        item.KpiDetails = new KraRoadMapKpiDto(kpi);
+                    }
+                }
+            }
+            // MAP DELIVERABLE DETAILS
+            if (dto.StrategyReviewDeliverable != null)
+            {
+                foreach (var item in dto.StrategyReviewDeliverable)
+                {
+                    var deliverable = deliverables.FirstOrDefault(x => x.Id == item.KraRoadmapid);
+
+                    if (deliverable != null)
+                    {
+                        item.KraRoadMapDeliverableDetails =
+                            new KraRoadMapDeliverableDto(deliverable);
+                    }
+                }
+            }
+            return dto;
+        }
+
 
         public async Task<StrategyReviewDto> SaveOrUpdateAsync(StrategyReviewDto dto, CancellationToken cancellationToken)
         {

@@ -19,6 +19,8 @@ public class StrategyReviewDeliverableKpiDto : BaseDto<StrategyReviewDeliverable
         KpiId = entity.KraRoadmapid; 
         ActualDate = entity.ActualDate;
         Status = entity.Status;
+        KpiDetails = null;
+
     }
 
     public override StrategyReviewDeliverableKpi ToEntity()
