@@ -12,6 +12,12 @@ namespace IMIS.Persistence.OperationReviewProtocolModule
         {
         }
 
+        public async Task<OperationReviewProtocol?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<OperationReviewProtocol>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
+
         public async Task<List<PgsDeliverableAccomplishment>> GetDeliverableByIdAsync(long pgsId, int month, int year, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<PgsDeliverableAccomplishment>()

@@ -20,7 +20,21 @@ namespace IMIS.Persistence.OperationReviewProtocolModule
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _ftpBasePath = $"{FTPCredentials.FTPRootFolderPath}/sample";
         }
-       
+
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var entities = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (entities == null)
+                return false;
+
+            entities.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+
         public async Task<List<ORPPgsDeliverableAccomplishmentDto>> GetDeliverableByIdAsync(long id, int month, int year, CancellationToken cancellationToken)
         {
             var entities = await _repository.GetDeliverableByIdAsync(id, month, year, cancellationToken);

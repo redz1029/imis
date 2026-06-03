@@ -5,6 +5,7 @@ using Carter;
 using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsModule;
+using IMIS.Application.TeamModule;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -115,7 +116,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                 return Results.Ok(result);
             })
             .WithTags(_operationReviewProtocol)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_operationReviewProtocol))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol))
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
 
             app.MapGet("/pgsiddiverable/{id}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
@@ -124,7 +125,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                 return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
             })
             .WithTags(_operationReviewProtocol)          
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_operationReviewProtocol), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
 
             app.MapGet("/pgs/{id:long}/accomplishments", async (long id, int month, int year,  IOperationReviewProtocolService service, CancellationToken cancellationToken) =>
@@ -136,7 +137,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                     : Results.NotFound();
             })
             .WithTags(_operationReviewProtocol)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_operationReviewProtocol), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
 
             app.MapPut("/pgs/accomplishments", async (
@@ -337,7 +338,19 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                 //return result != null ? Results.Ok(result) : Results.NotFound();
             })
             .WithTags(_operationReviewProtocol)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_operationReviewProtocol), true);         
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
+
+            app.MapDelete("/{id:int}", async (int id, IOperationReviewProtocolService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_operationReviewProtocol, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Successfully deleted." })
+                              : Results.NotFound(new { message = "Template not found." });
+            })
+           .WithTags(_operationReviewProtocol)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
         }
     }
 }
