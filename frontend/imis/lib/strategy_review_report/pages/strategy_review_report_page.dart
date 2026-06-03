@@ -188,6 +188,29 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
   List<StrategyReviewReport> _strategyReviewList = [];
   final _dateConverter = const LongDateOnlyConverter();
   bool _isLoadingReviews = false;
+
+  // ── Filtered getter ────────────────────────────────────────────────────────
+  List<StrategyReviewReport> get _filteredReviews {
+    if (selectedFilter == "All Process (Core&Support)") {
+      return _strategyReviewList;
+    }
+    return _strategyReviewList.where((review) {
+      final matchedKra = kraListRoadmap.firstWhere(
+        (k) => k.kraId == review.kraRoadMapId,
+        orElse:
+            () => KraRoadmapRole(
+              id: 0,
+              kraId: 0,
+              roleId: '',
+              kraName: '',
+              strategicObjectives: '',
+            ),
+      );
+      return matchedKra.kraName.trim().toLowerCase() ==
+          selectedFilter.trim().toLowerCase();
+    }).toList();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -568,24 +591,15 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
 
     if (!hasPermission) return noPermissionScreen();
 
-    List<Roadmap> filteredRoadmaps =
-        selectedFilter == "All Process (Core&Support)"
-            ? roadmapList
-            : roadmapList.where((roadmap) {
-              final kra = kraList.firstWhere(
-                (k) => k.id == roadmap.kraId,
-                orElse: () => KeyResultArea(0, '', '', '', false),
-              );
-              return kra.name.trim().toLowerCase() ==
-                  selectedFilter.trim().toLowerCase();
-            }).toList();
+    // ── Use _filteredReviews so the filter actually applies ──────────────────
+    final displayList = _filteredReviews;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildPageHeader(isMobile),
+          _buildPageHeader(isMobile, displayList.length),
           _buildFilterBar(isMobile),
           gap4px,
           Expanded(
@@ -626,11 +640,10 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                             Expanded(
                               flex: 3,
                               child: Text(
-                                "KRA Name",
+                                "Process (Core & Support)",
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-
                             Expanded(
                               flex: 2,
                               child: Text(
@@ -657,7 +670,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                   color: primaryColor,
                                 ),
                               )
-                              : _strategyReviewList.isEmpty
+                              : displayList.isEmpty
                               ? Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -679,14 +692,14 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                 ),
                               )
                               : ListView.separated(
-                                itemCount: _strategyReviewList.length,
+                                itemCount: displayList.length,
                                 separatorBuilder:
                                     (_, __) => Divider(
                                       height: 1,
                                       color: Colors.grey.withValues(alpha: .2),
                                     ),
                                 itemBuilder: (context, index) {
-                                  final review = _strategyReviewList[index];
+                                  final review = displayList[index];
                                   final itemNumber = index + 1;
 
                                   final matchedKra = kraListRoadmap.firstWhere(
@@ -790,7 +803,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                   message: 'Print preview',
                                                   child: IconButton(
                                                     onPressed: () {},
-                                                    icon: Icon(
+                                                    icon: const Icon(
                                                       Icons
                                                           .description_outlined,
                                                       size: 18,
@@ -817,6 +830,8 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                       ),
                                     );
                                   }
+
+                                  // ── Mobile card ──────────────────────────
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
@@ -906,28 +921,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                 },
                               ),
                     ),
-                    // Container(
-                    //   padding: const EdgeInsets.all(10),
-                    //   color: Theme.of(context).cardColor,
-                    //   child: Row(
-                    //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //     children: [
-                    //       PaginationInfo(
-                    //         currentPage: _currentPage,
-                    //         totalItems: _totalCount,
-                    //         itemsPerPage: _pageSize,
-                    //       ),
-                    //       PaginationControls(
-                    //         currentPage: _currentPage,
-                    //         totalItems: _totalCount,
-                    //         itemsPerPage: _pageSize,
-                    //         isLoading: _isLoading,
-                    //         onPageChanged: (page) => fetchRoadmap(page: page),
-                    //       ),
-                    //       const SizedBox(width: 60),
-                    //     ],
-                    //   ),
-                    // ),
                   ],
                 ),
               ),
@@ -946,7 +939,8 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
     );
   }
 
-  Widget _buildPageHeader(bool isMobile) {
+  // ── Updated to accept count so the header stays accurate ──────────────────
+  Widget _buildPageHeader(bool isMobile, int count) {
     return Container(
       width: double.infinity,
       color: Colors.white,
@@ -982,7 +976,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                       ),
                     ),
                     Text(
-                      "${filteredList.length} roadmap${filteredList.length != 1 ? 's' : ''} found",
+                      "$count report${count != 1 ? 's' : ''} found",
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade600,
@@ -1171,7 +1165,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                   Navigator.pop(context);
                   try {
                     await _roadmapService.deleteRoadmap(id);
-                    // await fetchRoadmap();
+                    await fetchStrategyReviews();
                     MotionToast.success(
                       toastAlignment: Alignment.topCenter,
                       description: const Text('Deleted successfully'),
