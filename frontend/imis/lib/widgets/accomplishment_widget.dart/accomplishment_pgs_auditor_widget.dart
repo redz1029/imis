@@ -782,7 +782,9 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                               } else if (s == PgsStatus.notStarted) {
                                 r.percentageController.text = '0';
                               } else if (s == PgsStatus.onGoing &&
-                                  r.percentageController.text == '100') {
+                                  (int.tryParse(r.percentageController.text) ??
+                                          0) >=
+                                      100) {
                                 r.percentageController.text = '1';
                               }
                             }
@@ -796,6 +798,28 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                                 i++
                               ) {
                                 applyStatus(i, PgsStatus.completed);
+                              }
+                            } else if (newValue == PgsStatus.onGoing) {
+                              for (
+                                int i = widget.periodIndex + 1;
+                                i < rows.length;
+                                i++
+                              ) {
+                                if (rows[i].status.value !=
+                                    PgsStatus.completed) {
+                                  applyStatus(i, PgsStatus.onGoing);
+                                }
+                              }
+                            } else if (newValue == PgsStatus.notStarted) {
+                              for (
+                                int i = widget.periodIndex + 1;
+                                i < rows.length;
+                                i++
+                              ) {
+                                if (rows[i].status.value ==
+                                    PgsStatus.notStarted) {
+                                  applyStatus(i, PgsStatus.notStarted);
+                                }
                               }
                             }
                           },
