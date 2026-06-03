@@ -1,4 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:imis/strategy_review_report/models/strategy_review_kpi.dart';
+import 'package:imis/strategy_review_report/models/strategy_review_deliverable.dart';
 part 'strategy_review_report.g.dart';
 
 @JsonSerializable()
@@ -47,6 +49,7 @@ class StrategyReviewDeliverableKpiRequest {
   final int kpiId;
   final String? actualDate;
   final int status;
+  final StrategyReviewKpi? kpiDetails;
 
   StrategyReviewDeliverableKpiRequest({
     required this.id,
@@ -56,6 +59,7 @@ class StrategyReviewDeliverableKpiRequest {
     required this.kpiId,
     this.actualDate,
     required this.status,
+    this.kpiDetails,
   });
 
   factory StrategyReviewDeliverableKpiRequest.empty() =>
@@ -83,6 +87,7 @@ class StrategyReviewDeliverableRequest {
   final int kraRoadmapid;
   final String? actualDate;
   final int status;
+  final StrategyReviewDeliverable? kraRoadMapDeliverableDetails;
 
   StrategyReviewDeliverableRequest({
     required this.id,
@@ -92,9 +97,9 @@ class StrategyReviewDeliverableRequest {
     required this.kraRoadmapid,
     this.actualDate,
     required this.status,
+    this.kraRoadMapDeliverableDetails,
   });
 
-  // ← add this
   factory StrategyReviewDeliverableRequest.empty() =>
       StrategyReviewDeliverableRequest(
         id: 0,
