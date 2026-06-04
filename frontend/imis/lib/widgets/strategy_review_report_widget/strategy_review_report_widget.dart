@@ -52,14 +52,13 @@ Future<StrategyReviewReportFormData?> showStrategyReviewReportDialog(
   return showDialog<StrategyReviewReportFormData>(
     context: context,
     barrierDismissible: false,
-    builder:
-        (_) => StrategyReviewReportDialog(
-          kraRoadMapId: kraRoadMapId,
-          year: year,
-          kraName: kraName,
-          strategicObjectives: strategicObjectives,
-          existingReview: existingReview,
-        ),
+    builder: (_) => StrategyReviewReportDialog(
+      kraRoadMapId: kraRoadMapId,
+      year: year,
+      kraName: kraName,
+      strategicObjectives: strategicObjectives,
+      existingReview: existingReview,
+    ),
   );
 }
 
@@ -114,6 +113,88 @@ class StrategyReviewReportDialogState
 
   Future<void> _fetchData() async {
     try {
+      final existing = widget.existingReview;
+
+      if (existing != null) {
+        // ── Edit mode: skip API calls, just populate from existingReview ──
+        if (!mounted) return;
+        setState(() {
+          _contributingUnitsCtrl.text = existing.officeNames ?? '';
+          _continueCtrl.text = existing.continueText ?? '';
+          _stopCtrl.text = existing.stop ?? '';
+          _startCtrl.text = existing.start ?? '';
+
+          _kpiItems =
+              existing.strategyReviewDeliverableKpi
+                  ?.map(
+                    (k) => StrategyReviewKpi(
+                      k.kpiId,
+                      kpiDescription: k.kpiDetails?.kpiDescription,
+                      target: k.kpiDetails?.target,
+                    ),
+                  )
+                  .toList() ??
+              [];
+
+          _deliverableItems =
+              existing.strategyReviewDeliverable
+                  ?.map(
+                    (d) => StrategyReviewDeliverable(
+                      d.kraRoadmapid,
+                      kraDescription:
+                          d.kraRoadMapDeliverableDetails?.kraDescription,
+                      deliverableDescription: d
+                          .kraRoadMapDeliverableDetails
+                          ?.deliverableDescription,
+                    ),
+                  )
+                  .toList() ??
+              [];
+
+          _measureActualCtrls = List.generate(
+            _kpiItems.length,
+            (_) => TextEditingController(),
+          );
+          _measureStatuses = List.generate(
+            _kpiItems.length,
+            (_) => PgsStatus.notStarted,
+          );
+          _kraActualCtrls = List.generate(
+            _deliverableItems.length,
+            (_) => TextEditingController(),
+          );
+          _kraStatuses = List.generate(
+            _deliverableItems.length,
+            (_) => PgsStatus.notStarted,
+          );
+
+          for (int i = 0; i < _kpiItems.length; i++) {
+            final match = existing.strategyReviewDeliverableKpi?.firstWhere(
+              (k) => k.kpiId == _kpiItems[i].id,
+              orElse: () => StrategyReviewDeliverableKpiRequest.empty(),
+            );
+            if (match != null) {
+              _measureActualCtrls[i].text = match.actualDate ?? '';
+              _measureStatuses[i] = PgsStatus.values[match.status];
+            }
+          }
+
+          for (int i = 0; i < _deliverableItems.length; i++) {
+            final match = existing.strategyReviewDeliverable?.firstWhere(
+              (d) => d.kraRoadmapid == _deliverableItems[i].id,
+              orElse: () => StrategyReviewDeliverableRequest.empty(),
+            );
+            if (match != null) {
+              _kraActualCtrls[i].text = match.actualDate ?? '';
+              _kraStatuses[i] = PgsStatus.values[match.status];
+            }
+          }
+
+          _isLoading = false;
+        });
+        return;
+      }
+
       final results = await Future.wait([
         _service.getStrategyReviewDeliverables(
           widget.kraRoadMapId,
@@ -147,36 +228,6 @@ class StrategyReviewReportDialogState
           _kpiItems.length,
           (_) => PgsStatus.notStarted,
         );
-
-        final existing = widget.existingReview;
-        if (existing != null) {
-          _contributingUnitsCtrl.text = existing.officeNames ?? '';
-          _continueCtrl.text = existing.continueText ?? '';
-          _stopCtrl.text = existing.stop ?? '';
-          _startCtrl.text = existing.start ?? '';
-
-          for (int i = 0; i < _kpiItems.length; i++) {
-            final match = existing.strategyReviewDeliverableKpi?.firstWhere(
-              (k) => k.kpiId == _kpiItems[i].id,
-              orElse: () => StrategyReviewDeliverableKpiRequest.empty(),
-            );
-            if (match != null) {
-              _measureActualCtrls[i].text = match.actualDate ?? '';
-              _measureStatuses[i] = PgsStatus.values[match.status];
-            }
-          }
-
-          for (int i = 0; i < _deliverableItems.length; i++) {
-            final match = existing.strategyReviewDeliverable?.firstWhere(
-              (d) => d.kraRoadmapid == _deliverableItems[i].id,
-              orElse: () => StrategyReviewDeliverableRequest.empty(),
-            );
-            if (match != null) {
-              _kraActualCtrls[i].text = match.actualDate ?? '';
-              _kraStatuses[i] = PgsStatus.values[match.status];
-            }
-          }
-        }
 
         _isLoading = false;
       });
@@ -287,8 +338,9 @@ class StrategyReviewReportDialogState
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 600;
-    final dialogWidth =
-        isMobile ? width * 0.95 : (width * 0.85).clamp(0.0, 900.0).toDouble();
+    final dialogWidth = isMobile
+        ? width * 0.95
+        : (width * 0.85).clamp(0.0, 900.0).toDouble();
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -301,58 +353,60 @@ class StrategyReviewReportDialogState
           children: [
             _buildDialogHeader(),
             Flexible(
-              child:
-                  _isLoading
-                      ? const Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                      : _errorMessage != null
-                      ? Padding(
-                        padding: const EdgeInsets.all(24),
+              child: _isLoading
+                  ? const Padding(
+                      padding: EdgeInsets.all(40),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : _errorMessage != null
+                  ? Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _errorMessage!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _isLoading = true;
+                                _errorMessage = null;
+                              });
+                              _fetchData();
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      child: Form(
+                        key: _formKey,
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _errorMessage!,
-                              style: const TextStyle(color: Colors.red),
-                            ),
+                            const SizedBox(height: 20),
+                            _buildSection1(isMobile),
                             const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isLoading = true;
-                                  _errorMessage = null;
-                                });
-                                _fetchData();
-                              },
-                              child: const Text('Retry'),
-                            ),
+                            _buildSection2(isMobile),
+                            const SizedBox(height: 16),
+                            _buildSection3(isMobile),
+                            const SizedBox(height: 16),
+                            _buildSection4(isMobile),
+                            const SizedBox(height: 24),
                           ],
                         ),
-                      )
-                      : SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 20),
-                              _buildSection1(isMobile),
-                              const SizedBox(height: 16),
-                              _buildSection2(isMobile),
-                              const SizedBox(height: 16),
-                              _buildSection3(isMobile),
-                              const SizedBox(height: 16),
-                              _buildSection4(isMobile),
-                              const SizedBox(height: 24),
-                            ],
-                          ),
-                        ),
                       ),
+                    ),
             ),
-            Padding(padding: const EdgeInsets.all(8.0), child: _buildActions()),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: _buildActions(widget.existingReview?.id.toString()),
+            ),
           ],
         ),
       ),
@@ -429,8 +483,8 @@ class StrategyReviewReportDialogState
 
   String get _strategicObjective =>
       widget.existingReview?.strategicObjective?.isNotEmpty == true
-          ? widget.existingReview!.strategicObjective!
-          : widget.strategicObjectives;
+      ? widget.existingReview!.strategicObjective!
+      : widget.strategicObjectives;
   Widget _buildSection1(bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,35 +493,30 @@ class StrategyReviewReportDialogState
         const SizedBox(height: 8),
         isMobile
             ? Column(
-              children: [
-                _readOnlyField('Objective', _strategicObjective),
-                const SizedBox(height: 10),
-                _labeledField(
-                  'Contributing Units',
-                  _contributingUnitsCtrl,
-                  maxLines: 3,
-                ),
-              ],
-            )
-            : Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _readOnlyField(
-                    'Objective',
-                    _strategicObjective,
-                  ), // ← and here
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _labeledField(
+                children: [
+                  _readOnlyField('Objective', _strategicObjective),
+                  const SizedBox(height: 10),
+                  _readOnlyField(
                     'Contributing Units',
-                    _contributingUnitsCtrl,
-                    maxLines: 3,
+                    _contributingUnitsCtrl.text,
                   ),
-                ),
-              ],
-            ),
+                ],
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _readOnlyField('Objective', _strategicObjective),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _readOnlyField(
+                      'Contributing Units',
+                      _contributingUnitsCtrl.text,
+                    ),
+                  ),
+                ],
+              ),
       ],
     );
   }
@@ -750,56 +799,56 @@ class StrategyReviewReportDialogState
         if (!isMobile) _sectionHeader(['Continue', 'Stop', 'Start'], [1, 1, 1]),
         isMobile
             ? Column(
-              children: [
-                _labeledField('Continue', _continueCtrl, maxLines: 3),
-                const SizedBox(height: 10),
-                _labeledField('Stop', _stopCtrl, maxLines: 3),
-                const SizedBox(height: 10),
-                _labeledField('Start', _startCtrl, maxLines: 3),
-              ],
-            )
+                children: [
+                  _labeledField('Continue', _continueCtrl, maxLines: 3),
+                  const SizedBox(height: 10),
+                  _labeledField('Stop', _stopCtrl, maxLines: 3),
+                  const SizedBox(height: 10),
+                  _labeledField('Start', _startCtrl, maxLines: 3),
+                ],
+              )
             : Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(6),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(6),
+                  ),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _compactField(
+                        _continueCtrl,
+                        'Enter continue actions...',
+                        maxLines: 4,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _compactField(
+                        _stopCtrl,
+                        'Enter stop actions...',
+                        maxLines: 4,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _compactField(
+                        _startCtrl,
+                        'Enter start actions...',
+                        maxLines: 4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              padding: const EdgeInsets.all(8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _compactField(
-                      _continueCtrl,
-                      'Enter continue actions...',
-                      maxLines: 4,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _compactField(
-                      _stopCtrl,
-                      'Enter stop actions...',
-                      maxLines: 4,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _compactField(
-                      _startCtrl,
-                      'Enter start actions...',
-                      maxLines: 4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
       ],
     );
   }
 
-  Widget _buildActions() {
+  Widget _buildActions(String? id) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -807,9 +856,57 @@ class StrategyReviewReportDialogState
           onPressed: () => Navigator.pop(context),
           child: Text('Cancel', style: TextStyle(color: primaryTextColor)),
         ),
+
         const SizedBox(width: 12),
+
         ElevatedButton(
-          onPressed: _isSaving ? null : _submit,
+          onPressed: _isSaving
+              ? null
+              : () async {
+                  if (_formKey.currentState!.validate()) {
+                    bool? confirmAction = await showDialog<bool>(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text(
+                            id == null ? "Confirm Save" : "Confirm Update",
+                          ),
+                          content: Text(
+                            id == null
+                                ? "Are you sure you want to save this record?"
+                                : "Are you sure you want to update this record?",
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(
+                                "No",
+                                style: TextStyle(color: primaryColor),
+                              ),
+                            ),
+
+                            TextButton(
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  Navigator.pop(context, true);
+                                }
+                              },
+                              child: Text(
+                                "Yes",
+                                style: TextStyle(color: primaryColor),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+
+                    if (confirmAction == true) {
+                      await _submit();
+                    }
+                  }
+                },
+
           style: ElevatedButton.styleFrom(
             backgroundColor: primaryColor,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -817,17 +914,20 @@ class StrategyReviewReportDialogState
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          child:
-              _isSaving
-                  ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                  : const Text('Save', style: TextStyle(color: Colors.white)),
+
+          child: _isSaving
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(
+                  id == null ? 'Save' : 'Update',
+                  style: const TextStyle(color: Colors.white),
+                ),
         ),
       ],
     );
@@ -991,32 +1091,31 @@ class StrategyReviewReportDialogState
           borderSide: BorderSide(color: primaryColor, width: 2),
         ),
       ),
-      items:
-          PgsStatus.values.map((status) {
-            return DropdownMenuItem<PgsStatus>(
-              value: status,
-              child: Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: statusColor(status),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      statusLabel(status),
-                      style: const TextStyle(fontSize: 12),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+      items: PgsStatus.values.map((status) {
+        return DropdownMenuItem<PgsStatus>(
+          value: status,
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: statusColor(status),
+                  shape: BoxShape.circle,
+                ),
               ),
-            );
-          }).toList(),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  statusLabel(status),
+                  style: const TextStyle(fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
       onChanged: onChanged,
     );
   }
