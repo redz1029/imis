@@ -10,6 +10,65 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
 
+
+    // GET ALL AUDITOR PGS DELIVERABLES    
+    public async Task<List<PerfomanceGovernanceSystem>>
+    GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+            .AsNoTracking()
+            .Include(x => x.Office)
+            .Include(x => x.PgsPeriod)
+            .Include(x => x.PgsReadinessRating)
+            .Include(x => x.PgsDeliverables)
+            .Include(x => x.PgsSignatories)
+            .Where(x => !x.IsDeleted && (!officeId.HasValue || x.OfficeId == officeId.Value) && (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value))
+            .ToListAsync(cancellationToken);
+    }
+
+    // GET BY USER   
+    public async Task<List<PerfomanceGovernanceSystem>>GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(string userId, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        var auditor = await ReadOnlyDbContext.Set<Auditor>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted, cancellationToken);
+
+        if (auditor == null)
+            return [];
+
+        var officeIds = await ReadOnlyDbContext.Set<AuditorOffices>()
+            .AsNoTracking()
+            .Where(x => x.AuditorId == auditor.Id && !x.IsDeleted)
+            .Select(x => x.OfficeId)
+            .ToListAsync(cancellationToken);
+
+        if (!officeIds.Any())
+            return [];
+
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+            .AsNoTracking()
+            .Include(x => x.Office)
+            .Include(x => x.PgsPeriod)
+            .Include(x => x.PgsReadinessRating)
+            .Include(x => x.PgsDeliverables)
+            .Include(x => x.PgsSignatories)
+            .Where(x => !x.IsDeleted && officeIds.Contains(x.OfficeId) && (!officeId.HasValue || x.OfficeId == officeId.Value) && (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+            .AsNoTracking()
+            .Include(x => x.Office)
+            .Include(x => x.PgsPeriod)
+            .Include(x => x.PgsReadinessRating)
+            .Include(x => x.PgsDeliverables)
+            .Include(x => x.PgsSignatories)
+            .Where(x => !x.IsDeleted && (!officeId.HasValue || x.OfficeId == officeId.Value) && (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value)) 
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> ExistsByOfficeAndPgsPeriodAsync(int officeId, int pgsPeriodId, CancellationToken cancellationToken)
     {
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()

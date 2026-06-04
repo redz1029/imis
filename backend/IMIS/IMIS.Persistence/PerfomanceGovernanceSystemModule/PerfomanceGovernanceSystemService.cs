@@ -40,7 +40,36 @@ namespace IMIS.Persistence.PgsModule
             _userOfficeRepository = userOfficeRepository;
             _roleManager = roleManager;
 
+        }       
+        public async Task<List<PerfomanceGovernanceSystemDto>> GetAuditorPgsDeliverableAsync(string roleId, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+                return [];
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+                return [];
+
+            List<PerfomanceGovernanceSystem> systems;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                systems = await _repository.GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(officeId, pgsPeriodId, cancellationToken);
+            }          
+            else
+            {
+                systems = await _repository.GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(currentUser.Id, officeId, pgsPeriodId, cancellationToken);
+            }
+
+            return systems.Select(x => new PerfomanceGovernanceSystemDto(x)).ToList();
         }
+
+
         public async Task<bool> SoftDeleteDeliverableAsync(int deliverableId, CancellationToken cancellationToken)
         {
             var deliverable = await _repository.GetByIdForSoftDeleteAsync(deliverableId, cancellationToken);

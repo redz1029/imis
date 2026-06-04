@@ -56,7 +56,8 @@ namespace IMIS.Infrastructure.Auths
                 new OfficePermission(),
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new PgsSummaryNarrativePermissions());
+                new PgsSummaryNarrativePermissions(),
+                new OperationReviewProtocolPermission());
 
             // This will seed specific permission to disapprove for MCC role
             // This is only a sample implementation, @Wilbur please adjust as needed.

@@ -351,6 +351,16 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
             })
            .WithTags(_operationReviewProtocol)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
+          
+            app.MapGet("/pgsAuditor/operationReview/{roleId}", async (string roleId, long? officeId, long? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetAuditorPgsDeliverableAsync(roleId, officeId, pgsPeriodId, cancellationToken).ConfigureAwait(false);
+
+                return Results.Ok(result);
+            })
+            .WithTags(_operationReviewProtocol)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
         }
     }
 }

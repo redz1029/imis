@@ -20,10 +20,11 @@ namespace IMIS.Application.PgsModule
         Task<List<PerfomanceGovernanceSystem>> GetByOfficeIdsAsync(List<int> officeIds, CancellationToken cancellationToken);
         Task<PerfomanceGovernanceSystem?> GetByIdForSoftDeleteAsync(int deliverableId, CancellationToken cancellationToken);
         Task<List<PgsSignatoryTemplate>> GetTemplatesByServiceHeadAsync(string userId, CancellationToken cancellationToken);
-
         Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserOfficeOnlyAsync(string userid, CancellationToken cancellationToken);
-
         Task<bool> ExistsByOfficeAndPgsPeriodAsync(int officeId, int pgsPeriodId, CancellationToken cancellationToken);
+        Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken);  
+        Task<List<PerfomanceGovernanceSystem>>GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken);
+        Task<List<PerfomanceGovernanceSystem>>GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(string userId, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken);
 
     }
 }

@@ -19,7 +19,7 @@ namespace IMIS.Application.PgsModule
         Task<PerfomanceGovernanceSystemDto> Submit(PerfomanceGovernanceSystemDto pgs, string userId, CancellationToken cancellationToken);
         Task<PerfomanceGovernanceSystemDto> Draft(PerfomanceGovernanceSystemDto pgs, string userId, CancellationToken cancellationToken);
         Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, string roleid, CancellationToken cancellationToken);
-        Task<bool> SoftDeleteDeliverableAsync(int deliverableId, CancellationToken cancellationToken);
-
+        Task<bool> SoftDeleteDeliverableAsync(int deliverableId, CancellationToken cancellationToken);    
+        Task<List<PerfomanceGovernanceSystemDto>>GetAuditorPgsDeliverableAsync(string roleId, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken);
     }
 }
