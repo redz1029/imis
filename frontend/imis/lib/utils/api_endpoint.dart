@@ -71,6 +71,7 @@ class ApiEndpoint {
   late String reportProtocol;
   late String pgsAccomplishment;
   late String pgsRoadMapPeriodId;
+  late String strategyReview;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -140,6 +141,7 @@ class ApiEndpoint {
     reportProtocol = '$baseUrl/report/pdf';
     pgsAccomplishment = '$baseUrl/pgs/accomplishments';
     pgsRoadMapPeriodId = '$baseUrl/KRARoadmapRole/strategyreview/roleid';
+    strategyReview = '$baseUrl/strategyReview';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
