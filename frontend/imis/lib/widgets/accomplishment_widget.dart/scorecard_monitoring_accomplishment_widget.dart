@@ -37,6 +37,8 @@ class ScorecardMonitoringRowData {
   bool? isKpi;
   bool attachmentDeleted = false;
   String? fileName;
+  int? year;
+
   ScorecardMonitoringRowData({
     required this.percentageController,
     required this.status,
@@ -46,6 +48,7 @@ class ScorecardMonitoringRowData {
     required this.auditorRemarksController,
     this.isKpi,
     this.fileName,
+    this.year,
   });
 }
 
@@ -261,6 +264,7 @@ class _ScorecardAccomplishmentRowWidgetState
         auditorRemarksController: TextEditingController(),
         percentageController: TextEditingController(text: ''),
         status: ValueNotifier<PgsStatus>(PgsStatus.notStarted),
+        year: int.tryParse(widget.period),
       );
       row.percentageController.addListener(() {
         _notifyTotalScore();
@@ -631,6 +635,7 @@ Future<void> loadScorecardAccomplishments(int deliverableId) async {
             attachmentBytes: null,
             accomplishmentId: acc.id,
             isKpi: false,
+            year: acc.postingDate.year == 1 ? null : acc.postingDate.year,
           );
         }).toList(),
   );
@@ -675,6 +680,7 @@ Future<void> loadKPIAccomplishments(int kpi) async {
             attachmentBytes: null,
             accomplishmentId: acc.id,
             isKpi: true,
+            year: acc.postingDate.year == 1 ? null : acc.postingDate.year,
           );
         }).toList(),
   );
@@ -711,10 +717,13 @@ Future<void> saveScorecardAccomplishmentData(
             : null;
     Uint8List? bytes = row.attachmentBytes;
 
+    final postingDate =
+        row.year != null ? DateTime(row.year!, 1, 1).toIso8601String() : null;
+
     final data = {
       if (row.accomplishmentId != null) "id": row.accomplishmentId,
       "kraRoadMapDeliverableId": kraRoadMapDeliverableId,
-      "postingDate": DateTime.now().toIso8601String(),
+      if (postingDate != null) "postingDate": postingDate,
       "userId": userId,
       "percentAccomplished":
           double.tryParse(row.percentageController.text) ?? 0,
@@ -757,10 +766,13 @@ Future<void> saveKPIAccomplishmentData(
             : null;
     Uint8List? bytes = row.attachmentBytes;
 
+    final postingDate =
+        row.year != null ? DateTime(row.year!, 1, 1).toIso8601String() : null;
+
     final data = {
       if (row.accomplishmentId != null) "id": row.accomplishmentId,
       "kraRoadMapKpiId": kpiRoadMapDeliverableId,
-      "postingDate": DateTime.now().toIso8601String(),
+      if (postingDate != null) "postingDate": postingDate,
       "userId": userId,
       "percentAccomplished":
           double.tryParse(row.percentageController.text) ?? 0,
