@@ -416,4 +416,9 @@ class PerformanceGovernanceSystemService {
     final result = await fetchDeliverablesAndSignatories(pgsId: pgsId);
     return result['deliverables'] as List<PgsDeliverables>;
   }
+
+  Future<void> deleteOperationReviewProtocol(String id) async {
+    final url = '${ApiEndpoint.baseUrl}/$id';
+    await AuthenticatedRequest.delete(dio, url);
+  }
 }
