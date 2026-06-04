@@ -5,11 +5,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/models/pgs_deliverable_accomplishment.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/models/operations_review_protocol.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/widgets/permission_widget.dart';
+import 'package:imis/widgets/status_dropdown.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:universal_html/html.dart' as html;
@@ -148,87 +151,25 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
   }
 
   Future<void> _loadHeadName() async {
-    final user = await AuthUtil.fetchLoggedUser();
-    if (user != null && mounted) {
-      setState(() {
-        final first = user.firstName ?? '';
-        final middle = user.middleName ?? '';
-        final last = user.lastName ?? '';
-        _headName = [
-          first,
-          middle.isNotEmpty ? '${middle[0]}.' : '',
-          last,
-        ].where((s) => s.isNotEmpty).join(' ');
-      });
+    final existing = widget.existingProtocol;
+    if (existing?.fullName != null && existing!.fullName!.isNotEmpty) {
+      setState(() => _headName = existing.fullName!);
+      return;
     }
-  }
 
-  Widget _statusDropdown({
-    required String label,
-    required PgsStatus value,
-    required Function(PgsStatus?) onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          DropdownButtonFormField<PgsStatus>(
-            value: value,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.grey.shade50,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(color: primaryColor, width: 2),
-              ),
-            ),
-            items:
-                PgsStatus.values.map((status) {
-                  return DropdownMenuItem<PgsStatus>(
-                    value: status,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: _statusColor(status),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(_statusLabel(status)),
-                      ],
-                    ),
-                  );
-                }).toList(),
-            onChanged: onChanged,
-          ),
-        ],
-      ),
-    );
+    final user = await AuthUtil.fetchLoggedUser();
+    if (user == null || !mounted) return;
+
+    setState(() {
+      final first = user.firstName ?? '';
+      final middle = user.middleName ?? '';
+      final last = user.lastName ?? '';
+      _headName = [
+        first,
+        middle.isNotEmpty ? '${middle[0]}.' : '',
+        last,
+      ].where((s) => s.isNotEmpty).join(' ');
+    });
   }
 
   bool _isPdf(String? name) =>
@@ -261,7 +202,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
         });
       }
     } catch (e) {
-      debugPrint('Minutes thumbnail prefetch failed: $e');
+      debugPrint('Minutes thumbnail prefetch failed');
     }
   }
 
@@ -586,28 +527,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     return PgsStatus.notStarted;
   }
 
-  String _statusLabel(PgsStatus status) {
-    switch (status) {
-      case PgsStatus.notStarted:
-        return 'Not Started';
-      case PgsStatus.onGoing:
-        return 'On Going';
-      case PgsStatus.completed:
-        return 'Completed';
-    }
-  }
-
-  Color _statusColor(PgsStatus status) {
-    switch (status) {
-      case PgsStatus.notStarted:
-        return Colors.red;
-      case PgsStatus.onGoing:
-        return Colors.deepOrange;
-      case PgsStatus.completed:
-        return Colors.green;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -710,66 +629,72 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
   }
 
   Widget _buildTopInfo(bool isMobile) {
+    final p = widget.existingProtocol;
     final office = widget.data.office;
+
+    final departmentLabel = p?.departmentName ?? office.name;
+    final divisionLabel =
+        p?.divisionName ?? office.officeTypeId?.toString() ?? '—';
+    final bool showHead = p != null;
+
+    if (isMobile) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: _cardDecoration(),
+        child: Column(
+          children: [
+            _readOnlyField('Department', departmentLabel),
+            _readOnlyField('Division', divisionLabel),
+            if (showHead) _readOnlyField('Head', p.fullName ?? _headName),
+            _requiredInputField(
+              label: 'Deputy',
+              controller: _deputyController,
+              hasError: _deputyError,
+            ),
+            _requiredInputField(
+              label: 'Documenter',
+              controller: _documenterController,
+              hasError: _documenterError,
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(),
-      child:
-          isMobile
-              ? Column(
-                children: [
-                  _readOnlyField('Department', office?.name ?? '—'),
-                  _readOnlyField(
-                    'Division',
-                    office?.officeTypeId?.toString() ?? '—',
-                  ),
-                  _readOnlyField('Head', _headName),
-                  _requiredInputField(
-                    label: 'Deputy',
-                    controller: _deputyController,
-                    hasError: _deputyError,
-                  ),
-                  _requiredInputField(
-                    label: 'Documenter',
-                    controller: _documenterController,
-                    hasError: _documenterError,
-                  ),
-                ],
-              )
-              : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        _readOnlyField('Department', office?.name ?? '—'),
-                        _readOnlyField(
-                          'Division',
-                          office?.officeTypeId?.toString() ?? '—',
-                        ),
-                        _requiredInputField(
-                          label: 'Deputy',
-                          controller: _deputyController,
-                          hasError: _deputyError,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        _readOnlyField('Head', _headName),
-                        _requiredInputField(
-                          label: 'Documenter',
-                          controller: _documenterController,
-                          hasError: _documenterError,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              children: [
+                _readOnlyField('Department', departmentLabel),
+                _readOnlyField('Division', divisionLabel),
+                _requiredInputField(
+                  label: 'Deputy',
+                  controller: _deputyController,
+                  hasError: _deputyError,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              children: [
+                if (showHead) _readOnlyField('Head', p.fullName ?? _headName),
+                _requiredInputField(
+                  label: 'Documenter',
+                  controller: _documenterController,
+                  hasError: _documenterError,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -846,7 +771,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     accomplishments.map((acc) {
                       final byWhen =
                           acc.byWhen != null ? fmt.format(acc.byWhen!) : '—';
-                      final status = _resolveStatus(
+                      _resolveStatus(
                         pgsStatus: acc.pgsStatus,
                         statusInt: acc.status,
                       );
@@ -864,7 +789,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                                     ),
                                     _readOnlyField('By When', byWhen),
 
-                                    _statusDropdown(
+                                    statusDropdown(
                                       label: 'Status',
                                       value:
                                           _selectedStatuses[acc.id] ??
@@ -899,16 +824,16 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                                     Expanded(
                                       flex: 2,
 
-                                      child: _statusDropdown(
+                                      child: statusDropdown(
                                         label: 'Status',
                                         value:
-                                            _selectedStatuses[acc.id!] ??
+                                            _selectedStatuses[acc.id] ??
                                             PgsStatus.notStarted,
                                         onChanged: (value) {
                                           if (value == null) return;
 
                                           setState(() {
-                                            _selectedStatuses[acc.id!] = value;
+                                            _selectedStatuses[acc.id] = value;
                                           });
                                         },
                                       ),
@@ -1333,17 +1258,100 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
             ),
           ),
           const SizedBox(width: 12),
-          ElevatedButton.icon(
-            onPressed: _isSaving ? null : _save,
+          PermissionWidget(
+            permission: AppPermissions.addOperationReviewProtocol,
+            child: ElevatedButton(
+              onPressed:
+                  _isSaving
+                      ? null
+                      : () async {
+                        setState(() {
+                          _deputyError = _deputyController.text.trim().isEmpty;
+                          _documenterError =
+                              _documenterController.text.trim().isEmpty;
+                          _frequencyError =
+                              _frequencyController.text.trim().isEmpty;
+                          _frequencyScheduleError =
+                              _frequencyScheduleController.text.trim().isEmpty;
+                          _venueError = _venueController.text.trim().isEmpty;
+                          _scoreboardLocationError =
+                              _scoreboardLocationController.text.trim().isEmpty;
+                          _scoreboardOICError =
+                              _scoreboardOICController.text.trim().isEmpty;
+                          _actionPlanError =
+                              _actionPointsController.text.trim().isEmpty;
+                          _frequencyUpdateError =
+                              _frequencyUpdateController.text.trim().isEmpty;
+                          _celebrateWinsError =
+                              _celebrateWinsController.text.trim().isEmpty;
+                          _recognizeRewardError =
+                              _recognizeRewardController.text.trim().isEmpty;
+                          _minutesFileError = !_hasMinutesAttachment;
+                        });
 
-            label: Text(_isSaving ? 'Saving...' : 'Save'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
+                        if (_deputyError ||
+                            _documenterError ||
+                            _frequencyError ||
+                            _frequencyScheduleError ||
+                            _venueError ||
+                            _scoreboardLocationError ||
+                            _scoreboardOICError ||
+                            _actionPlanError ||
+                            _frequencyUpdateError ||
+                            _celebrateWinsError ||
+                            _recognizeRewardError ||
+                            _minutesFileError) {
+                          return;
+                        }
+
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder:
+                              (ctx) => AlertDialog(
+                                title: Text(
+                                  widget.existingProtocol != null
+                                      ? 'Confirm Update'
+                                      : 'Confirm Save',
+                                ),
+                                content: Text(
+                                  widget.existingProtocol != null
+                                      ? 'Are you sure you want to update this record?'
+                                      : 'Are you sure you want to save this record?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: Text(
+                                      'No',
+                                      style: TextStyle(color: primaryColor),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: Text(
+                                      'Yes',
+                                      style: TextStyle(color: primaryColor),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                        );
+
+                        if (confirmed == true) await _save();
+                      },
+
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
+              child: Text(_isSaving ? 'Saving...' : 'Save'),
             ),
           ),
         ],
