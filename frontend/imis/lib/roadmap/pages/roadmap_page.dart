@@ -1670,7 +1670,6 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
       kraSet.add(kraText);
     }
 
-    // KPI count check
     final filledKpiCount =
         _kpis.where((k) => k.kpiCtrl.text.trim().isNotEmpty).length;
     if (filledKpiCount < 1) {
@@ -1715,7 +1714,6 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
 
     if (confirm != true) return;
 
-    // Build gut check from current ratings
     final gutCheck = _buildGutCheck();
 
     Navigator.pop(context);

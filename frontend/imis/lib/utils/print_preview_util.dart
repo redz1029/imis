@@ -174,3 +174,14 @@ Future<void> openProcessCoreSupportPrintPreview(
   name: processCoreSupport,
   context: context,
 );
+
+Future<void> openStrategyReviewReportPreview(
+  String strategyReviewId,
+  String strategyReviewReport, {
+  BuildContext? context,
+}) => _openPdfPreview(
+  webEndpoint: "${ApiEndpoint().strategyReview}/pdf/$strategyReviewId",
+  id: strategyReviewId,
+  name: strategyReviewReport,
+  context: context,
+);

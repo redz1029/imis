@@ -16,6 +16,7 @@ import 'package:imis/roadmap/models/roadmap.dart';
 import 'package:imis/roadmap/models/roadmap_deliverables.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/utils/permission_service.dart';
+import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/filter_widget/button_filter.dart';
 import 'package:imis/widgets/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
@@ -802,7 +803,14 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                 Tooltip(
                                                   message: 'Print preview',
                                                   child: IconButton(
-                                                    onPressed: () {},
+                                                    onPressed: () {
+                                                      openStrategyReviewReportPreview(
+                                                        review.id.toString(),
+                                                        review.kraRoadMapId
+                                                            .toString(),
+                                                        context: context,
+                                                      );
+                                                    },
                                                     icon: const Icon(
                                                       Icons
                                                           .description_outlined,
@@ -831,7 +839,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                     );
                                   }
 
-                                  // ── Mobile card ──────────────────────────
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
@@ -896,17 +903,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                        if (review.strategicObjective !=
-                                            null) ...[
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            "Objective: ${review.strategicObjective}",
-                                            style: TextStyle(
-                                              color: Colors.grey.shade600,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ],
+
                                         const SizedBox(height: 4),
                                         Text(
                                           "Date: $postingDate",
