@@ -1881,59 +1881,63 @@ class _PerformanceGovernanceSystemPageState
                           ),
                         ),
                       ),
-                      Tooltip(
-                        message: 'Operations Review Protocol',
-                        child: IconButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              barrierDismissible: true,
-                              builder:
-                                  (_) => MonthlyReviewListDialog(
-                                    pgsId: pgs.id.toString(),
-                                    startDate: pgs.pgsPeriod.startDate,
-                                    endDate: pgs.pgsPeriod.endDate,
-                                    data: pgs,
-                                    onFetch:
-                                        (id, month, year) =>
-                                            _pgsService.fetchIdDeliverable(
-                                              pgsId: id,
-                                              month: month,
-                                              year: year,
-                                            ),
-                                    onFetchDeliverables:
-                                        (pgsId) =>
-                                            _pgsService.fetchDeliverablesOnly(
-                                              pgsId: pgsId,
-                                            ),
-                                    onFetchAll:
-                                        (pgsId) => _pgsService
-                                            .fetchAllOperationReviewProtocols(
-                                              pgsId: pgsId,
-                                            ),
-                                    onFetchById:
-                                        (id) => _pgsService
-                                            .fetchOperationReviewProtocolById(
-                                              id: id,
-                                            ),
-                                    onSave:
-                                        (
-                                          request, {
-                                          Uint8List? minutesBytes,
-                                          String? minutesFileName,
-                                        }) => _pgsService
-                                            .saveOperationReviewProtocol(
-                                              request: request,
-                                              minutesBytes: minutesBytes,
-                                              minutesFileName: minutesFileName,
-                                            ),
-                                  ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.reviews_outlined,
-                            size: 18,
-                            color: Colors.deepOrangeAccent,
+                      PermissionWidget(
+                        permission: AppPermissions.viewOperationReviewProtocol,
+                        child: Tooltip(
+                          message: 'Operations Review Protocol',
+                          child: IconButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: true,
+                                builder:
+                                    (_) => MonthlyReviewListDialog(
+                                      pgsId: pgs.id.toString(),
+                                      startDate: pgs.pgsPeriod.startDate,
+                                      endDate: pgs.pgsPeriod.endDate,
+                                      data: pgs,
+                                      onFetch:
+                                          (id, month, year) =>
+                                              _pgsService.fetchIdDeliverable(
+                                                pgsId: id,
+                                                month: month,
+                                                year: year,
+                                              ),
+                                      onFetchDeliverables:
+                                          (pgsId) =>
+                                              _pgsService.fetchDeliverablesOnly(
+                                                pgsId: pgsId,
+                                              ),
+                                      onFetchAll:
+                                          (pgsId) => _pgsService
+                                              .fetchAllOperationReviewProtocols(
+                                                pgsId: pgsId,
+                                              ),
+                                      onFetchById:
+                                          (id) => _pgsService
+                                              .fetchOperationReviewProtocolById(
+                                                id: id,
+                                              ),
+                                      onSave:
+                                          (
+                                            request, {
+                                            Uint8List? minutesBytes,
+                                            String? minutesFileName,
+                                          }) => _pgsService
+                                              .saveOperationReviewProtocol(
+                                                request: request,
+                                                minutesBytes: minutesBytes,
+                                                minutesFileName:
+                                                    minutesFileName,
+                                              ),
+                                    ),
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.reviews_outlined,
+                              size: 18,
+                              color: Colors.deepOrangeAccent,
+                            ),
                           ),
                         ),
                       ),
@@ -2039,6 +2043,50 @@ class _PerformanceGovernanceSystemPageState
                     icon: const Icon(Icons.more_vert),
                     onSelected: (value) async {
                       if (value == 'edit') _onEditTap(pgs);
+                      if (value == 'operationReviewProtocol') {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          builder:
+                              (_) => MonthlyReviewListDialog(
+                                pgsId: pgs.id.toString(),
+                                startDate: pgs.pgsPeriod.startDate,
+                                endDate: pgs.pgsPeriod.endDate,
+                                data: pgs,
+                                onFetch:
+                                    (id, month, year) =>
+                                        _pgsService.fetchIdDeliverable(
+                                          pgsId: id,
+                                          month: month,
+                                          year: year,
+                                        ),
+                                onFetchDeliverables:
+                                    (pgsId) => _pgsService
+                                        .fetchDeliverablesOnly(pgsId: pgsId),
+                                onFetchAll:
+                                    (pgsId) => _pgsService
+                                        .fetchAllOperationReviewProtocols(
+                                          pgsId: pgsId,
+                                        ),
+                                onFetchById:
+                                    (id) => _pgsService
+                                        .fetchOperationReviewProtocolById(
+                                          id: id,
+                                        ),
+                                onSave:
+                                    (
+                                      request, {
+                                      Uint8List? minutesBytes,
+                                      String? minutesFileName,
+                                    }) =>
+                                        _pgsService.saveOperationReviewProtocol(
+                                          request: request,
+                                          minutesBytes: minutesBytes,
+                                          minutesFileName: minutesFileName,
+                                        ),
+                              ),
+                        );
+                      }
 
                       if (value == 'delete' &&
                           status != 'Approved' &&
@@ -2063,8 +2111,24 @@ class _PerformanceGovernanceSystemPageState
                               ),
                             ),
                           ),
-
-                          // Print Preview — nested popup with sub-options
+                          PopupMenuItem(
+                            value: 'operationReviewProtocol',
+                            child: PermissionWidget(
+                              permission:
+                                  AppPermissions.viewOperationReviewProtocol,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.reviews_outlined,
+                                    size: 18,
+                                    color: Colors.deepOrangeAccent,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Operation Review Protocol'),
+                                ],
+                              ),
+                            ),
+                          ),
                           PopupMenuItem(
                             padding: EdgeInsets.zero,
                             child: PopupMenuButton<String>(
@@ -2072,7 +2136,6 @@ class _PerformanceGovernanceSystemPageState
                               tooltip: '',
                               offset: const Offset(180, 0),
                               onSelected: (value) async {
-                                // Close the parent menu first
                                 Navigator.of(context).pop();
                                 if (value == 'DeliverablesOnly') {
                                   await openDeliverablesOnlyPreview(
