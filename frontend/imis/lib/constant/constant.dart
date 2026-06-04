@@ -254,7 +254,7 @@ Color statusColor(PgsStatus status) {
     case PgsStatus.notStarted:
       return Colors.red;
     case PgsStatus.onGoing:
-      return Colors.deepOrange;
+      return Colors.orange;
     case PgsStatus.completed:
       return Colors.green;
   }
