@@ -351,10 +351,10 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
             })
            .WithTags(_operationReviewProtocol)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
-          
-            app.MapGet("/pgsAuditor/operationReview/{roleId}", async (string roleId, long? officeId, long? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            
+            app.MapGet("/pgsAuditor/operationReview/{roleId}", async (string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
-                var result = await service.GetAuditorPgsDeliverableAsync(roleId, officeId, pgsPeriodId, cancellationToken).ConfigureAwait(false);
+                var result = await service.GetAuditorPgsDeliverableAsync(roleId, officeId, pgsPeriodId, page, pageSize, cancellationToken).ConfigureAwait(false);
 
                 return Results.Ok(result);
             })
