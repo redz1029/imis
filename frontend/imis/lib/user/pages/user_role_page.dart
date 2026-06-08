@@ -513,7 +513,7 @@ class UserRolePageState extends State<UserRolePage> {
                             description: Text('Updated successfully'),
                           ).show(context);
                         }
-                        await fetchUserRoles();
+                        await fetchUserRoles(page: _currentPage);
                         Navigator.pop(context);
                       }
                     }

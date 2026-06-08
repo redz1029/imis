@@ -477,7 +477,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                         try {
                           await _userOfficeService.addOrUpdateUserOffice(user);
                           setState(() {
-                            fetchUserOffice();
+                            fetchUserOffice(page: _currentPage);
                           });
 
                           MotionToast.success(
