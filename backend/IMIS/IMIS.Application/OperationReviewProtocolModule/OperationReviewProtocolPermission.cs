@@ -6,5 +6,6 @@ namespace IMIS.Application.OperationReviewProtocolModule
     {
         public override string ModuleName => "OperationReviewProtocol";
         public override string PermissionGroup => PermissionGrouper.Transaction;
+        public string Delete => $"Delete{ModuleName}";
     }
 }

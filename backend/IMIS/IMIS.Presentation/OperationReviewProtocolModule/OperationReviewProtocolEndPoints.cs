@@ -5,7 +5,6 @@ using Carter;
 using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsModule;
-using IMIS.Application.TeamModule;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -350,7 +349,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                               : Results.NotFound(new { message = "Template not found." });
             })
            .WithTags(_operationReviewProtocol)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.Delete));
             
             app.MapGet("/pgsAuditor/operationReview/{roleId}", async (string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
