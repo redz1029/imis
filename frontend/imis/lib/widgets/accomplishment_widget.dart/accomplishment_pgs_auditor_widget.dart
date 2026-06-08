@@ -205,8 +205,9 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
           Uint8List? bytes = file.bytes;
           setState(() {
             fileName = file.name;
-            final row = achievementsList[widget.deliverableId]!
-                .rows[widget.periodIndex];
+            final row =
+                achievementsList[widget.deliverableId]!.rows[widget
+                    .periodIndex];
             row.attachmentPath = file.name;
             row.attachmentBytes = bytes;
             row.attachmentDeleted = false;
@@ -216,8 +217,9 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
           final bytes = await pickedFile.readAsBytes();
           setState(() {
             fileName = file.name;
-            final row = achievementsList[widget.deliverableId]!
-                .rows[widget.periodIndex];
+            final row =
+                achievementsList[widget.deliverableId]!.rows[widget
+                    .periodIndex];
             row.attachmentPath = pickedFile.path;
             row.attachmentBytes = bytes;
             row.attachmentDeleted = false;
@@ -331,56 +333,61 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
   ) {
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        backgroundColor: Colors.black87,
-        insetPadding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+      builder:
+          (_) => Dialog(
+            backgroundColor: Colors.black87,
+            insetPadding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
+                ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.75,
+                    maxWidth: MediaQuery.of(context).size.width,
                   ),
-                ],
-              ),
-            ),
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.75,
-                maxWidth: MediaQuery.of(context).size.width,
-              ),
-              child: InteractiveViewer(
-                child: Image(
-                  image: image,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text(
-                      "Unable to load image.",
-                      style: TextStyle(color: Colors.white70),
+                  child: InteractiveViewer(
+                    child: Image(
+                      image: image,
+                      fit: BoxFit.contain,
+                      errorBuilder:
+                          (_, __, ___) => const Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Text(
+                              "Unable to load image.",
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                          ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+              ],
             ),
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -445,17 +452,18 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
           onTap: () => _openPreview(context: context, row: row),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(6),
-            child: isPdf
-                ? _buildPdfThumbnail(attachName)
-                : thumbBytes != null
-                ? Image.memory(
-                    thumbBytes,
-                    width: 70,
-                    height: 70,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _buildImageErrorBox(),
-                  )
-                : _buildImageLoadingBox(),
+            child:
+                isPdf
+                    ? _buildPdfThumbnail(attachName)
+                    : thumbBytes != null
+                    ? Image.memory(
+                      thumbBytes,
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _buildImageErrorBox(),
+                    )
+                    : _buildImageLoadingBox(),
           ),
         ),
         const SizedBox(height: 4),
@@ -622,31 +630,35 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
     final offset = renderBox.localToGlobal(Offset.zero);
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        left: offset.dx - 20,
-        top: offset.dy - 40,
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black87,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
+      builder:
+          (context) => Positioned(
+            left: offset.dx - 20,
+            top: offset.dy - 40,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
                 ),
-              ],
-            ),
-            child: Text(
-              message,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 6,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  message,
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
     );
 
     Overlay.of(context).insert(_overlayEntry!);
@@ -811,18 +823,19 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                               }
                             }
                           },
-                          items: PgsStatus.values.map((value) {
-                            return DropdownMenuItem<PgsStatus>(
-                              value: value,
-                              child: Tooltip(
-                                message: statusDescriptions[value] ?? '',
-                                child: Text(
-                                  statusDisplayNames[value]!,
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                          items:
+                              PgsStatus.values.map((value) {
+                                return DropdownMenuItem<PgsStatus>(
+                                  value: value,
+                                  child: Tooltip(
+                                    message: statusDescriptions[value] ?? '',
+                                    child: Text(
+                                      statusDisplayNames[value]!,
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
                         ),
                       ),
                     ),
@@ -957,30 +970,31 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
             flex: 3,
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 50.0),
-              child: canEdit
-                  ? TextField(
-                      controller: remarksControllerAuditor,
-                      maxLines: null,
-                      keyboardType: TextInputType.multiline,
-                      style: const TextStyle(fontSize: 14.0),
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(color: grey),
+              child:
+                  canEdit
+                      ? TextField(
+                        controller: remarksControllerAuditor,
+                        maxLines: null,
+                        keyboardType: TextInputType.multiline,
+                        style: const TextStyle(fontSize: 14.0),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: grey),
+                          ),
+                          contentPadding: const EdgeInsets.all(8.0),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
                         ),
-                        contentPadding: const EdgeInsets.all(8.0),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
+                      )
+                      : Center(
+                        child: Text(
+                          remarksControllerAuditor.text.isEmpty
+                              ? "No remarks"
+                              : remarksControllerAuditor.text,
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ),
-                    )
-                  : Center(
-                      child: Text(
-                        remarksControllerAuditor.text.isEmpty
-                            ? "No remarks"
-                            : remarksControllerAuditor.text,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
             ),
           ),
         ],
@@ -998,36 +1012,41 @@ Future<void> loadAccomplishments(
   );
 
   achievementsList[deliverableId] = AchievementPeriodData(
-    rows: accomplishments.asMap().entries.map((entry) {
-      final i = entry.key;
-      final acc = entry.value;
-      final percent = acc.percentAccomplished ?? 0;
+    rows:
+        accomplishments.asMap().entries.map((entry) {
+          final i = entry.key;
+          final acc = entry.value;
+          final percent = acc.percentAccomplished ?? 0;
 
-      final int? month = monthlyPeriods.length > i
-          ? monthlyPeriods[i]['month'] as int?
-          : null;
-      final int? year = monthlyPeriods.length > i
-          ? monthlyPeriods[i]['year'] as int?
-          : null;
+          final int? month =
+              monthlyPeriods.length > i
+                  ? monthlyPeriods[i]['month'] as int?
+                  : null;
+          final int? year =
+              monthlyPeriods.length > i
+                  ? monthlyPeriods[i]['year'] as int?
+                  : null;
 
-      return TrackingRowData(
-        remarksController: TextEditingController(text: acc.remarks),
-        percentageController: TextEditingController(text: percent.toString()),
-        status: ValueNotifier<PgsStatus>(
-          acc.status != null
-              ? PgsStatusExtension.fromInt(acc.status!)
-              : _deriveStatusFromPercent(percent),
-        ),
-        attachmentPath: acc.attachmentPath,
-        attachmentBytes: null,
-        accomplishmentId: acc.id,
-        auditorRemarksController: TextEditingController(
-          text: acc.auditorRemarks,
-        ),
-        periodMonth: month,
-        periodYear: year,
-      );
-    }).toList(),
+          return TrackingRowData(
+            remarksController: TextEditingController(text: acc.remarks),
+            percentageController: TextEditingController(
+              text: percent.toString(),
+            ),
+            status: ValueNotifier<PgsStatus>(
+              acc.status != null
+                  ? PgsStatusExtension.fromInt(acc.status!)
+                  : _deriveStatusFromPercent(percent),
+            ),
+            attachmentPath: acc.attachmentPath,
+            attachmentBytes: null,
+            accomplishmentId: acc.id,
+            auditorRemarksController: TextEditingController(
+              text: acc.auditorRemarks,
+            ),
+            periodMonth: month,
+            periodYear: year,
+          );
+        }).toList(),
   );
 }
 
@@ -1037,67 +1056,6 @@ PgsStatus _deriveStatusFromPercent(int percent) {
   return PgsStatus.notStarted;
 }
 
-// Future<void> saveAccomplishmentData(
-//   int currentDeliverableId,
-//   String userId,
-// ) async {
-//   final periodData = achievementsList[currentDeliverableId];
-//   if (periodData != null) {
-//     for (var row in periodData.rows) {
-//       final hasNewFile = row.attachmentBytes != null;
-//       final isUpdate = row.accomplishmentId != null;
-
-//       final postingDate =
-//           DateTime(
-//             row.periodYear ?? DateTime.now().year,
-//             row.periodMonth ?? DateTime.now().month,
-//             1,
-//           ).toIso8601String();
-
-//       final Map<String, dynamic> fields = {
-//         if (isUpdate) "id": row.accomplishmentId,
-//         "pgsDeliverableId": currentDeliverableId,
-//         "postingDate": postingDate,
-//         "userId": userId,
-//         "status": row.status.value.toInt(),
-//         "percentAccomplished":
-//             double.tryParse(row.percentageController.text) ?? 0,
-//         "remarks": row.remarksController.text,
-//         "auditorRemarks": row.auditorRemarksController.text,
-//         if (row.attachmentDeleted) "removeAttachment": true,
-//       };
-
-//       final Map<String, dynamic> formMap = {...fields};
-
-//       if ((!row.attachmentDeleted) &&
-//           (hasNewFile || (!kIsWeb && row.attachmentPath != null))) {
-//         if (kIsWeb) {
-//           final bytesToSend =
-//               hasNewFile
-//                   ? row.attachmentBytes!
-//                   : await File(row.attachmentPath!).readAsBytes();
-//           formMap["file"] = MultipartFile.fromBytes(
-//             bytesToSend,
-//             filename: row.attachmentPath?.split("/").last ?? "upload.bin",
-//           );
-//         } else {
-//           final pathToSend =
-//               hasNewFile ? row.attachmentPath! : row.attachmentPath!;
-//           formMap["file"] = await MultipartFile.fromFile(
-//             pathToSend,
-//             filename: pathToSend.split("/").last,
-//           );
-//         }
-//       }
-
-//       final formData = FormData.fromMap(formMap);
-//       await _accomplishmentService.saveAccomplishment(formData);
-
-//       row.attachmentBytes = null;
-//       row.attachmentDeleted = false;
-//     }
-//   }
-// }
 Future<void> saveAccomplishmentData(
   int currentDeliverableId,
   String userId,
@@ -1106,9 +1064,10 @@ Future<void> saveAccomplishmentData(
   if (periodData == null) return;
 
   for (var row in periodData.rows) {
-    final postingDate = (row.periodYear != null && row.periodMonth != null)
-        ? DateTime(row.periodYear!, row.periodMonth!, 1).toIso8601String()
-        : null;
+    final postingDate =
+        (row.periodYear != null && row.periodMonth != null)
+            ? DateTime(row.periodYear!, row.periodMonth!, 1).toIso8601String()
+            : null;
 
     MultipartFile? attachment;
     if (!row.attachmentDeleted) {

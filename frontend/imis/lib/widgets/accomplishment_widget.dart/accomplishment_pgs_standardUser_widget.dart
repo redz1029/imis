@@ -127,6 +127,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
               fileName = pickedFile.name;
               widget.row.attachmentPath = pickedFile.name;
               widget.row.attachmentBytes = bytes;
+              widget.row.attachmentDeleted = false;
             });
           }
         } else {
@@ -138,6 +139,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
             fileName = pickedFile.name;
             widget.row.attachmentPath = file.path;
             widget.row.attachmentBytes = bytes;
+            widget.row.attachmentDeleted = false;
           });
         }
       }
@@ -847,6 +849,60 @@ class _AccomplishmentListViewState extends State<AccomplishmentListView> {
   }
 }
 
+// Future<void> saveAccomplishmentData(
+//   int currentDeliverableId,
+//   String userId,
+// ) async {
+//   final periodData = achievementsList[currentDeliverableId];
+//   if (periodData == null) return;
+
+//   for (var row in periodData.rows) {
+//     final postingDate =
+//         row.date != null
+//             ? DateTime(row.date!.year, row.date!.month, 1).toIso8601String()
+//             : null;
+
+//     MultipartFile? attachment;
+//     if (!kIsWeb && row.attachmentPath != null && !row.attachmentDeleted) {
+//       attachment = await MultipartFile.fromFile(
+//         row.attachmentPath!,
+//         filename: row.attachmentPath!.split("/").last,
+//       );
+//     } else if (row.attachmentBytes != null && !row.attachmentDeleted) {
+//       attachment = MultipartFile.fromBytes(
+//         row.attachmentBytes!,
+//         filename: row.attachmentPath?.split("/").last ?? "upload.bin",
+//       );
+//     }
+
+//     final data = {
+//       if (row.accomplishmentId != null) "id": row.accomplishmentId,
+//       "pgsDeliverableId": currentDeliverableId,
+//       if (postingDate != null) "postingDate": postingDate,
+//       "userId": userId,
+//       "status": row.status.value.toInt(),
+//       "percentAccomplished":
+//           double.tryParse(row.percentageController.text) ?? 0,
+//       "remarks": row.remarksController.text,
+//       "auditorRemarks": row.auditorRemarksController.text,
+//       "removeAttachment": row.attachmentDeleted,
+//     };
+
+//     final formData = FormData.fromMap({
+//       ...data,
+//       if (attachment != null) "file": attachment,
+//     });
+
+//     try {
+//       await _accomplishmentService.saveAccomplishment(
+//         formData,
+//         id: row.accomplishmentId,
+//       );
+//     } catch (e) {
+//       debugPrint("Failed to save accomplishment: $e");
+//     }
+//   }
+// }
 Future<void> saveAccomplishmentData(
   int currentDeliverableId,
   String userId,
@@ -860,17 +916,21 @@ Future<void> saveAccomplishmentData(
             ? DateTime(row.date!.year, row.date!.month, 1).toIso8601String()
             : null;
 
+    final hasNewFile = row.attachmentBytes != null;
+
     MultipartFile? attachment;
-    if (!kIsWeb && row.attachmentPath != null && !row.attachmentDeleted) {
-      attachment = await MultipartFile.fromFile(
-        row.attachmentPath!,
-        filename: row.attachmentPath!.split("/").last,
-      );
-    } else if (row.attachmentBytes != null && !row.attachmentDeleted) {
-      attachment = MultipartFile.fromBytes(
-        row.attachmentBytes!,
-        filename: row.attachmentPath?.split("/").last ?? "upload.bin",
-      );
+    if (hasNewFile) {
+      if (!kIsWeb && row.attachmentPath != null) {
+        attachment = await MultipartFile.fromFile(
+          row.attachmentPath!,
+          filename: row.attachmentPath!.split("/").last,
+        );
+      } else if (kIsWeb) {
+        attachment = MultipartFile.fromBytes(
+          row.attachmentBytes!,
+          filename: row.attachmentPath?.split("/").last ?? "upload.bin",
+        );
+      }
     }
 
     final data = {
@@ -883,7 +943,7 @@ Future<void> saveAccomplishmentData(
           double.tryParse(row.percentageController.text) ?? 0,
       "remarks": row.remarksController.text,
       "auditorRemarks": row.auditorRemarksController.text,
-      "removeAttachment": row.attachmentDeleted,
+      "removeAttachment": row.attachmentDeleted && !hasNewFile,
     };
 
     final formData = FormData.fromMap({

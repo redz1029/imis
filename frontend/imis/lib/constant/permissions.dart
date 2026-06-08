@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-06-03 17:42:09.610390
+// Last synced: 2026-06-04 16:10:53.317526
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
