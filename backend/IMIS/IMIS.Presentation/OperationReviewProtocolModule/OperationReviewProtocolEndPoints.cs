@@ -2,6 +2,7 @@
 using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsModule;
@@ -360,6 +361,17 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
             .WithTags(_operationReviewProtocol)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
+
+            app.MapGet("office/{id}/parent", async (int id, IOfficeService service, CancellationToken cancellationToken) =>
+            {
+                var parentOfficeName = await service.GetParentOfficeNameAsync(id, cancellationToken).ConfigureAwait(false);
+
+                return parentOfficeName != null
+                    ? Results.Ok(parentOfficeName)
+                    : Results.NotFound();
+            })
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View))
+           .WithTags(_operationReviewProtocol).CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
         }
     }
 }
