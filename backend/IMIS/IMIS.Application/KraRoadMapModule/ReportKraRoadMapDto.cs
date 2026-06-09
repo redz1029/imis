@@ -44,15 +44,15 @@ namespace IMIS.Application.KraRoadMapModule
         public string? Kpi1Description => Kpi1?.KpiDescription;
         public string? Kpi2Description => Kpi2?.KpiDescription;
 
-        public RoadmapGutCheckDto? RoadmapGutCheck { get; set; }
-        public double Ownership => RoadmapGutCheck!.Ownership;
-        public double Alignment => RoadmapGutCheck!.Alignment;  
-        public double Contribution => RoadmapGutCheck!.Contribution;
-        public double Measurement => RoadmapGutCheck!.Measurement;
-        public double Adaptability => RoadmapGutCheck!.Adaptability;
-        public double Coherence => RoadmapGutCheck!.Coherence;
-        public double Commitment => RoadmapGutCheck!.Commitment;
-        public double TotalScore => RoadmapGutCheck!.TotalScore;
+        public RoadmapGutCheckDto? RoadmapGutCheck { get; set; }        
+        public double Ownership => RoadmapGutCheck?.Ownership ?? 0;
+        public double Alignment => RoadmapGutCheck?.Alignment ?? 0;
+        public double Contribution => RoadmapGutCheck?.Contribution ?? 0;
+        public double Measurement => RoadmapGutCheck?.Measurement ?? 0;
+        public double Adaptability => RoadmapGutCheck?.Adaptability ?? 0;
+        public double Coherence => RoadmapGutCheck?.Coherence ?? 0;
+        public double Commitment => RoadmapGutCheck?.Commitment ?? 0;
+        public double TotalScore => RoadmapGutCheck?.TotalScore ?? 0;
 
         public required string UserId { get; set; }
 
