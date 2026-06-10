@@ -66,6 +66,7 @@ class ApiEndpoint {
   late String officeServices;
   late String accomplishmemnt;
   late String operationReviewProtocol;
+  late String pgsAuditorOperationReview;
   late String pgsidlist;
   late String pgs;
   late String reportProtocol;
@@ -136,6 +137,7 @@ class ApiEndpoint {
     officeServices = '$baseUrl/office/pgs/services';
     accomplishmemnt = '$baseUrl/accomplishments';
     operationReviewProtocol = '$baseUrl/operationReviewProtocol';
+    pgsAuditorOperationReview = '$baseUrl/pgsAuditor/operationReview';
     pgsidlist = '$baseUrl/pgsidlist';
     pgs = '$baseUrl/pgs';
     reportProtocol = '$baseUrl/report/pdf';
