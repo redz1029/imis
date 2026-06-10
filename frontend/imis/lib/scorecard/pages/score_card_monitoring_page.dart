@@ -565,7 +565,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                 builder: (context) {
                   final screenHeight = MediaQuery.of(context).size.height;
 
-                  final tableMaxHeight = screenHeight * 0.55; // safe for mobile
+                  final tableMaxHeight = screenHeight * 0.55;
 
                   return Container(
                     constraints: BoxConstraints(maxHeight: tableMaxHeight),
@@ -704,11 +704,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   }
 }
 
-Future<bool?> showRoadmapAccomplishmentFormDialog(
-  BuildContext context,
-  Map<String, dynamic> deliverable,
-  String userId,
-) {
+_PeriodRange _buildPeriods(Map<String, dynamic> deliverable) {
   int? startYear;
   int? endYear;
 
@@ -766,6 +762,46 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
   if (useYearly) {
     for (int y = startYear; y <= endYear; y++) {
       periods.add({'period': y.toString(), 'year': y});
+    }
+  }
+
+  return _PeriodRange(
+    startYear: startYear,
+    endYear: endYear,
+    periods: periods,
+    useYearly: useYearly,
+  );
+}
+
+class _PeriodRange {
+  final int? startYear;
+  final int? endYear;
+  final List<Map<String, dynamic>> periods;
+  final bool useYearly;
+
+  _PeriodRange({
+    required this.startYear,
+    required this.endYear,
+    required this.periods,
+    required this.useYearly,
+  });
+}
+
+Future<bool?> showRoadmapAccomplishmentFormDialog(
+  BuildContext context,
+  Map<String, dynamic> deliverable,
+  String userId,
+) {
+  final pr = _buildPeriods(deliverable);
+  final periods = pr.periods;
+  final startYear = pr.startYear;
+  final endYear = pr.endYear;
+  final useYearly = pr.useYearly;
+
+  final kraData = achievementsList[(deliverable['id'] ?? 0) as int];
+  if (kraData != null) {
+    for (int i = 0; i < kraData.rows.length && i < periods.length; i++) {
+      kraData.rows[i].year ??= periods[i]['year'] as int?;
     }
   }
 
@@ -1074,63 +1110,16 @@ Future<bool?> showKPIAccomplishmentFormDialog(
   Map<String, dynamic> deliverable,
   String userId,
 ) {
-  int? startYear;
-  int? endYear;
+  final pr = _buildPeriods(deliverable);
+  final periods = pr.periods;
+  final startYear = pr.startYear;
+  final endYear = pr.endYear;
+  final useYearly = pr.useYearly;
 
-  final String? startDateStr = deliverable['startDate']?.toString();
-  final String? endDateStr = deliverable['endDate']?.toString();
-  final int? deliverableYear = () {
-    final dynamic y = deliverable['year'];
-    if (y is int) return y;
-    if (y is String) return int.tryParse(y);
-    return null;
-  }();
-
-  if (startDateStr != null && endDateStr != null) {
-    final DateTime? startDt = DateTime.tryParse(startDateStr);
-    final DateTime? endDt = DateTime.tryParse(endDateStr);
-    if (startDt != null && endDt != null) {
-      startYear = deliverableYear ?? startDt.year;
-      endYear = endDt.year;
-      if (endYear < startYear) endYear = startYear;
-    }
-  }
-
-  if (startYear == null || endYear == null) {
-    if (deliverableYear != null) {
-      startYear = deliverableYear;
-      endYear = deliverableYear;
-    } else {
-      final String? fallbackYearStr = deliverable['year']?.toString();
-      if (fallbackYearStr != null && fallbackYearStr.isNotEmpty) {
-        final RegExpMatch? rangeMatch = RegExp(
-          r'^(\d{4})(?:\s*-\s*(\d{4}))?$',
-        ).firstMatch(fallbackYearStr.trim());
-        if (rangeMatch != null) {
-          startYear = int.tryParse(rangeMatch.group(1)!);
-          endYear = int.tryParse(rangeMatch.group(2) ?? rangeMatch.group(1)!);
-        } else {
-          final List<int> years =
-              RegExp(r'\d{4}')
-                  .allMatches(fallbackYearStr)
-                  .map((m) => int.tryParse(m.group(0)!))
-                  .whereType<int>()
-                  .toList();
-          if (years.isNotEmpty) {
-            startYear = years.first;
-            endYear = years.length > 1 ? years.last : years.first;
-          }
-        }
-      }
-    }
-  }
-
-  final bool useYearly =
-      startYear != null && endYear != null && endYear >= startYear;
-  final List<Map<String, dynamic>> periods = [];
-  if (useYearly) {
-    for (int y = startYear; y <= endYear; y++) {
-      periods.add({'period': y.toString(), 'year': y});
+  final kpiData = achievementsList[(deliverable['id'] ?? 0) as int];
+  if (kpiData != null) {
+    for (int i = 0; i < kpiData.rows.length && i < periods.length; i++) {
+      kpiData.rows[i].year ??= periods[i]['year'] as int?;
     }
   }
 
@@ -1208,7 +1197,6 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                           ],
                         ),
                         const SizedBox(height: 20),
-
                         LayoutBuilder(
                           builder: (context, constraints) {
                             final isMobile = constraints.maxWidth < 600;
