@@ -63,7 +63,7 @@ class CommonService {
   Future<List<Office>> fetchService() => _fetchList(
     ApiEndpoint().officeServices,
     (e) => Office.fromJson(e),
-    'Failed to fetch offices',
+    'Failed to fetch service',
   );
 
   Future<List<User>> fetchUsers() => _fetchList(
@@ -113,4 +113,15 @@ class CommonService {
     (e) => PgsPeriod.fromJson(e),
     'Failed to fetch kra period',
   );
+  Future<Office?> getParentOffice(int officeId) async {
+    final response = await dio.get(
+      '${ApiEndpoint.baseUrl}/office/$officeId/parent',
+    );
+
+    if (response.statusCode == 200) {
+      return Office.fromJson(response.data);
+    }
+
+    return null;
+  }
 }
