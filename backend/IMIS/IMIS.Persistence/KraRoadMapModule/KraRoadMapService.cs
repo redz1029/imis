@@ -57,7 +57,8 @@ namespace IMIS.Persistence.KraRoadMapModule
             if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase))
             {
                 data = await _repository.GetAllStrategyReviewRoadmapAsync(pgsRoadMapPeriodId, cancellationToken);
             }
@@ -102,7 +103,8 @@ namespace IMIS.Persistence.KraRoadMapModule
             if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase))
             {
                 deliverables = await _repository.GetDeliverablesAsync(kraid, fromYear, toYear, cancellationToken);
             }
@@ -153,7 +155,8 @@ namespace IMIS.Persistence.KraRoadMapModule
             if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase))
             {
                 kpis = await _repository.GetKpisAsync(kraid, fromYear, toYear, cancellationToken);
             }
