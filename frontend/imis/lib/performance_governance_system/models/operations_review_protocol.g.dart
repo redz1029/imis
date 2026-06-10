@@ -11,7 +11,6 @@ OperationsReviewProtocol _$OperationsReviewProtocolFromJson(
 ) => OperationsReviewProtocol(
   (json['id'] as num).toInt(),
   (json['departmentId'] as num?)?.toInt(),
-  (json['divisionId'] as num?)?.toInt(),
   json['userId'] as String?,
   json['deputy'] as String?,
   json['documenter'] as String?,
@@ -34,6 +33,7 @@ OperationsReviewProtocol _$OperationsReviewProtocolFromJson(
   json['removeAttachment'] as bool?,
   isDeleted: json['isDeleted'] as bool?,
   rowVersion: json['rowVersion'] as String?,
+  divisionId: (json['divisionId'] as num?)?.toInt(),
   departmentName: json['departmentName'] as String?,
   divisionName: json['divisionName'] as String?,
   fullName: json['fullName'] as String?,

@@ -87,7 +87,7 @@ class DynamicSideColumn1 extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        // const SizedBox(height: 20),
         Card(
           color: Theme.of(context).cardColor,
           elevation: 0,
@@ -97,7 +97,7 @@ class DynamicSideColumn1 extends StatelessWidget {
           ),
           child: Padding(
             padding: const EdgeInsets.all(10.0),
-            child: SizedBox(width: 280, height: 350, child: AnnouncementList()),
+            child: SizedBox(width: 280, height: 450, child: AnnouncementList()),
           ),
         ),
       ],

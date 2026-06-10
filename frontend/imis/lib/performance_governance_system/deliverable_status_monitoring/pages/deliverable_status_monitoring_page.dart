@@ -192,8 +192,6 @@ class _DeliverableStatusMonitoringPageState
     }
   }
 
-  /// Builds the monthly periods list from a deliverable's start/end dates.
-  /// Reused in both _buildActionButtons and showAccomplishmentFormDialog.
   List<Map<String, dynamic>> _buildMonthlyPeriods(
     Map<String, dynamic> deliverable,
   ) {

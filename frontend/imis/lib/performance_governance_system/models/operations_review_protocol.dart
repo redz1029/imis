@@ -37,7 +37,6 @@ class OperationsReviewProtocol {
   OperationsReviewProtocol(
     this.id,
     this.departmentId,
-    this.divisionId,
     this.userId,
     this.deputy,
     this.documenter,
@@ -57,6 +56,7 @@ class OperationsReviewProtocol {
     this.removeAttachment, {
     this.isDeleted,
     this.rowVersion,
+    this.divisionId,
     this.departmentName,
     this.divisionName,
     this.fullName,
