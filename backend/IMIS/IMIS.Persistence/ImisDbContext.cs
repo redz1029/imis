@@ -47,6 +47,7 @@ namespace IMIS.Persistence
         public DbSet<StrategyReview> StrategyReview { get; set; }
         public DbSet<StrategyReviewDeliverableKpi> StrategyReviewDeliverableKpi { get; set; }
         public DbSet<StrategyReviewDeliverable> StrategyReviewDeliverable { get; set; }
+        public DbSet<StrategyReviewPeriod> StrategyReviewPeriod { get; set; }
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
         public DbSet<IsoStandard> IsoStandards { get; set; }
@@ -57,7 +58,7 @@ namespace IMIS.Persistence
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            
+           
             base.OnModelCreating(builder);
         
             builder.Entity<User>().ToTable("AspNetUsers");
@@ -77,6 +78,15 @@ namespace IMIS.Persistence
                   .WithMany(o => o.AuditorOffices)
                   .HasForeignKey(x => x.OfficeId);             
             });
+
+            builder.Entity<StrategyReview>(entity =>
+            {
+                entity.HasOne(x => x.StrategyReviewPeriod)
+                      .WithMany()
+                      .HasForeignKey(x => x.StrategyReviewPeriodId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
 
             builder.Entity<AuditorTeams>()
                 .HasKey(at => at.Id);
