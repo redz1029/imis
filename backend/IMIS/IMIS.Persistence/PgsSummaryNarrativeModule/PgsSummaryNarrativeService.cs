@@ -67,7 +67,8 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
             if (userRoles.Any(r =>
                     r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                     r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                    r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase)))
+                    r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase)||
+                    r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase)))
             {
                 
                 entities = await _repository.GetAllFilteredNarrativeForHeadsAsync(periodId, office, cancellationToken);
@@ -103,7 +104,8 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
 
             if (!userRoles.Any(r => r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) || 
                                     r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                                    r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase)))
+                                    r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                                    r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase)))
                 return Enumerable.Empty<PGSSummaryNarrativeDto>();
 
             var entities = await _repository.GetAllForAuditorHeadAsync(periodId, office, cancellationToken);
