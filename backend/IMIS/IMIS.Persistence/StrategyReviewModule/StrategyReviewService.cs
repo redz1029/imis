@@ -237,6 +237,7 @@ namespace IMIS.Persistence.StrategyReviewModule
 
                 // UPDATE ======
                 entity.PostingDate = dto.PostingDate;
+                entity.StrategyReviewPeriodId = dto.StrategyReviewPeriodId;
                 entity.KraRoadMapId = dto.KraRoadMapId;
                 entity.Continue = dto.Continue;
                 entity.Start = dto.Start;

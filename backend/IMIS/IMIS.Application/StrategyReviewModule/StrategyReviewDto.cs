@@ -7,22 +7,25 @@ namespace IMIS.Application.StrategyReviewModule
 {
     public class StrategyReviewDto : BaseDto<StrategyReview, long>
     {
+     
+        public int StrategyReviewPeriodId { get; set; }
         public DateTime PostingDate { get; set; }
         public long KraRoadMapId { get; set; }
         public string? StrategicObjective { get; set; }
         public string? OfficeNames { get; set; }
         public List<StrategyReviewDeliverableKpiDto>? StrategyReviewDeliverableKpi { get; set; }
         public List<StrategyReviewDeliverableDto>? StrategyReviewDeliverable { get; set; }
-        public string? Continue { get; set; }  
+        public string? Continue { get; set; }
         public string? Start { get; set; }
         public string? Stop { get; set; }
-     
+
         public StrategyReviewDto() { }
 
         [SetsRequiredMembers]
         public StrategyReviewDto(StrategyReview strategyReview)
         {
             this.Id = strategyReview.Id;
+            this.StrategyReviewPeriodId = strategyReview.StrategyReviewPeriodId;
             this.PostingDate = strategyReview.PostingDate;
             this.KraRoadMapId = strategyReview.KraRoadMapId;
             this.Continue = strategyReview.Continue;
@@ -37,6 +40,7 @@ namespace IMIS.Application.StrategyReviewModule
         public override StrategyReview ToEntity() => new()
         {
             Id = this.Id,
+            StrategyReviewPeriodId = this.StrategyReviewPeriodId,           
             PostingDate = this.PostingDate,
             KraRoadMapId = this.KraRoadMapId,
             Continue = this.Continue,

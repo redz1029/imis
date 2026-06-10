@@ -1,12 +1,8 @@
-﻿using Azure;
-using Base.Auths.Permissions;
+﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
-using IMIS.Application.KraRoadMapModule;
-using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.StrategyReviewModule;
-using IMIS.Domain;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

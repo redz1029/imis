@@ -3,7 +3,9 @@
 namespace IMIS.Domain
 {
     public class StrategyReview : Entity<long>
-    {      
+    {
+        public int StrategyReviewPeriodId { get; set; }
+        public StrategyReviewPeriod StrategyReviewPeriod { get; set; } = null!;
         public DateTime PostingDate { get; set; }
         public long KraRoadMapId { get; set; }
         public  KraRoadMap? KraRoadMap { get; set; }

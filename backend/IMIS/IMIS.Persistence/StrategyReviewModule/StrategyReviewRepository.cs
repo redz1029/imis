@@ -24,6 +24,7 @@ namespace IMIS.Persistence.StrategyReviewModule
                 .AsNoTracking()
                 .Include(x => x.StrategyReviewDeliverableKpi)
                 .Include(x => x.StrategyReviewDeliverable)
+                 .Include(x => x.StrategyReviewPeriod)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
         public async Task<List<string>> GetOfficeNamesByKraRoadMapIdAsync(long kraRoadMapId, CancellationToken cancellationToken)
