@@ -154,7 +154,8 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapPeriodPermission(),
                 new KraRoadMapKpiAccomplishmentPermission(),
                 new OperationReviewProtocolPermission(),
-                new StrategyReviewPermission());
+                new StrategyReviewPermission(),
+                new SWOTAnalysisPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorHead, IdentityRole>(_roleManager,
                 new PgsSummaryNarrativePermissions(),
