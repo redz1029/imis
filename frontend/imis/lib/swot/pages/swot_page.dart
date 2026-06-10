@@ -218,6 +218,28 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                   color: primaryColor,
                                 ),
                               )
+                              : filteredList.isEmpty
+                              ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+
+                                  children: [
+                                    Icon(
+                                      Icons.rocket_launch,
+                                      color: Colors.grey.shade400,
+                                      size: 50,
+                                    ),
+                                    SizedBox(height: 10),
+                                    Text(
+                                      "No SWOT available",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
                               : ListView.builder(
                                 itemCount: filteredList.length,
                                 itemBuilder: (context, index) {
