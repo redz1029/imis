@@ -375,9 +375,11 @@ namespace IMIS.Persistence.PgsModule
 
             List<PerfomanceGovernanceSystemDto> dtos;
 
-            // ================= ADMIN / PGS CORE TEAM =================
+            // ================= ADMIN / PGS CORE TEAM / TWG / OSM =================
             if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase))
             {
                 var allRecords = (await _repository.GetAll(cancellationToken)).ToList();
                 dtos = await BuildDtos(allRecords, userId, cancellationToken);
@@ -884,6 +886,7 @@ namespace IMIS.Persistence.PgsModule
             var isAdmin = activeRoleName!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase);
             var isPgsManager = activeRoleName.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase);
             var isTWG = activeRoleName.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase);
+            var isOSM = activeRoleName.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase);
 
             // =====================  GET PARENT  CHILD OFFICE IDS =====================
             var officeIds = new List<int>();
@@ -899,7 +902,7 @@ namespace IMIS.Persistence.PgsModule
             List<PerfomanceGovernanceSystem> filteredEntities;
 
             // ===================== ADMIN / PGS MANAGER / isTWG =====================
-            if (isPgsManager || isAdmin || isTWG)
+            if (isPgsManager || isAdmin || isTWG || isOSM)
             {
                 var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false)
                               ?? new List<PerfomanceGovernanceSystemDto>();
