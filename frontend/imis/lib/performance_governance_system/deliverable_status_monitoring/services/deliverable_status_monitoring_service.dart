@@ -14,8 +14,8 @@ class DeliverableStatusMonitoringService {
     await AuthenticatedRequest.put(dio, url, data: {'items': items});
   }
 
-  Future<List<Office>> fetchOffices() async {
-    var url = ApiEndpoint().officePgsAuditor;
+  Future<List<Office>> fetchOffices({required String? roleId}) async {
+    var url = '${ApiEndpoint().officePgsAuditor}/$roleId';
 
     final response = await AuthenticatedRequest.get(dio, url);
 

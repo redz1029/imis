@@ -31,3 +31,10 @@ class FilterButton extends StatelessWidget {
     );
   }
 }
+
+Widget buildDropdown({required Widget child}) {
+  return ConstrainedBox(
+    constraints: const BoxConstraints(minWidth: 150, maxWidth: 250),
+    child: SizedBox(height: 38, child: child),
+  );
+}
