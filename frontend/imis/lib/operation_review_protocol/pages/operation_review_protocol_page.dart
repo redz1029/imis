@@ -9,6 +9,7 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/operation_review_protocol/services/operation_review_protocol_services.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
+import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
@@ -45,7 +46,8 @@ class OperationReviewProtocolPageState
   String _roleId = '';
   List<PerformanceGovernanceSystem> operationReviewprotocolList = [];
   List<PerformanceGovernanceSystem> filteredList = [];
-
+  String? _selectedPeriodId; // ← new
+  List<PgsPeriod> pgsPeriodList = [];
   final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
     Dio(),
   );
@@ -89,7 +91,7 @@ class OperationReviewProtocolPageState
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
           operationReviewprotocolList = pageList.items;
-          _applyFilters(pageList.items);
+          filteredList = List.from(operationReviewprotocolList);
         });
       }
     } catch (e) {
@@ -101,24 +103,33 @@ class OperationReviewProtocolPageState
     }
   }
 
-  void _applyFilters(List<PerformanceGovernanceSystem> source) {
-    var result = List<PerformanceGovernanceSystem>.from(source);
+  Future<void> fetchFilter({int? page, int pageSize = 15}) async {
+    if (_isLoading) return;
 
-    if (_selectedOfficeId != null) {
-      result =
-          result
-              .where((pgs) => pgs.office.id.toString() == _selectedOfficeId)
-              .toList();
+    setState(() => _isLoading = true);
+
+    try {
+      final targetPage = page ?? _currentPage;
+      final roleIdParam = await _getRoleId();
+
+      final result = await _operationReviewProtocolService
+          .getOperationReviewProtocolList(
+            roleId: roleIdParam,
+            page: targetPage,
+            pageSize: pageSize,
+            officeId: _selectedOfficeId,
+            periodId: _selectedPeriodId,
+          );
+
+      setState(() {
+        operationReviewprotocolList = result.items;
+        filteredList = result.items;
+        _currentPage = result.page;
+        _totalCount = result.totalCount;
+      });
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    if (_selectedServiceId != null) {
-      result =
-          result
-              .where((pgs) => pgs.office.id.toString() == _selectedServiceId)
-              .toList();
-    }
-
-    filteredList = result;
   }
 
   Future<String> _getRoleId() async {
@@ -139,14 +150,19 @@ class OperationReviewProtocolPageState
 
   Future<void> _initialize() async {
     setState(() => _isLoading = true);
-    final offices = await _commonService.fetchOffices();
+    final roleId = await _getRoleId();
+    final offices = await _deliverableStatusMonitoring.fetchOffices(
+      roleId: roleId,
+    );
     final services = await _commonService.fetchService();
+    final periods = await _commonService.fetchPgsPeriod();
     await _commonService.fetchPgsPeriod();
 
     if (!mounted) return;
     setState(() {
       officeList = offices;
-      serviceList = services; // ← added
+      serviceList = services;
+      pgsPeriodList = periods;
       _isLoading = false;
     });
     await fetchOperationReview();
@@ -607,7 +623,8 @@ class OperationReviewProtocolPageState
                       ),
                     ),
                     Text(
-                      "${filteredList.length} operation review protocol${filteredList.length != 1 ? 's' : ''} found",
+                      "$_totalCount operation review protocol${_totalCount != 1 ? 's' : ''} found",
+
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade600,
@@ -624,16 +641,18 @@ class OperationReviewProtocolPageState
     );
   }
 
-  // ← now checks both filters
   bool get _hasActiveFilters =>
-      _selectedOfficeId != null || _selectedServiceId != null;
-
+      _selectedOfficeId != null ||
+      _selectedServiceId != null ||
+      _selectedPeriodId != null;
   void _resetFilters() {
     setState(() {
       _selectedOfficeId = null;
-      _selectedServiceId = null; // ← added
+      _selectedServiceId = null;
+      _selectedPeriodId = null;
       filteredList = List.from(operationReviewprotocolList);
     });
+    fetchOperationReview();
   }
 
   Widget _buildFilterBar(bool isMobile) {
@@ -690,13 +709,14 @@ class OperationReviewProtocolPageState
           spacing: 10,
           runSpacing: 10,
           children: [
-            buildDropdown(child: _serviceDropdown()),
+            // buildDropdown(child: _serviceDropdown()),
             buildDropdown(
               child: PermissionWidget(
                 permission: AppPermissions.viewOffice,
                 child: _officeDropdown(),
               ),
             ),
+            buildDropdown(child: _periodDropdown()),
           ],
         ),
       ],
@@ -745,8 +765,8 @@ class OperationReviewProtocolPageState
             child: _officeDropdown(),
           ),
         ),
-        gap8px,
-        SizedBox(height: 38, child: _serviceDropdown()),
+        // gap8px,
+        // SizedBox(height: 38, child: _serviceDropdown()),
       ],
     );
   }
@@ -779,42 +799,56 @@ class OperationReviewProtocolPageState
                           .id
                           .toString();
             });
-            fetchOperationReview(page: 1);
+            fetchFilter();
           },
         ),
       ),
     );
   }
 
-  Widget _serviceDropdown() {
+  Widget _periodDropdown() {
+    final converter = LongDateOnlyConverter();
+    final items = pgsPeriodList.where((p) => !p.isDeleted).toList();
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
       child: SizedBox(
         height: 38,
         child: SearchableDropdown(
-          items: ["All Services", ...serviceList.map((s) => s.name)],
+          items: [
+            "All Periods",
+            ...items.map(
+              (p) =>
+                  "${converter.toJson(p.startDate)} - ${converter.toJson(p.endDate)}",
+            ),
+          ],
           selectedItem:
-              _selectedServiceId == null
-                  ? "All Services"
-                  : (serviceList
-                          .where((s) => s.id.toString() == _selectedServiceId)
-                          .firstOrNull
-                          ?.name ??
-                      "All Services"),
-          hintText: "Service",
-          searchHint: "Search services...",
-          prefixIcon: Icons.miscellaneous_services_outlined,
+              _selectedPeriodId == null
+                  ? "All Periods"
+                  : (() {
+                    final match =
+                        items
+                            .where((p) => p.id.toString() == _selectedPeriodId)
+                            .firstOrNull;
+                    if (match == null) return "All Periods";
+                    return "${converter.toJson(match.startDate)} - ${converter.toJson(match.endDate)}";
+                  })(),
+          hintText: "Period",
+          searchHint: "Search periods...",
+          prefixIcon: Icons.calendar_today_outlined,
           onChanged: (value) {
             setState(() {
-              _selectedServiceId =
-                  value == "All Services"
-                      ? null
-                      : serviceList
-                          .firstWhere((s) => s.name == value)
-                          .id
-                          .toString();
+              if (value == "All Periods") {
+                _selectedPeriodId = null;
+              } else {
+                final selected = items.firstWhere(
+                  (p) =>
+                      "${converter.toJson(p.startDate)} - ${converter.toJson(p.endDate)}" ==
+                      value,
+                );
+                _selectedPeriodId = selected.id.toString();
+              }
             });
-            fetchOperationReview(page: 1);
+            fetchFilter();
           },
         ),
       ),

@@ -13,13 +13,20 @@ class OperationReviewProtocolServices {
     int pageSize = 15,
     String? searchQuery,
     required String roleId,
+    String? officeId,
+    String? periodId,
   }) async {
     final paginationUtil = PaginationUtil(dio);
+
     return await paginationUtil.fetchPaginatedData(
       endpoint: '${ApiEndpoint().pgsAuditorOperationReview}/$roleId',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
+      additionalParams: {
+        if (officeId != null) 'officeId': officeId,
+        if (periodId != null) 'pgsPeriodId': periodId,
+      },
       fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
     );
   }
