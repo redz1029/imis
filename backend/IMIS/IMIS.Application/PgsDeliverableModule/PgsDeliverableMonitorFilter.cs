@@ -2,6 +2,7 @@
 {
     public record PgsDeliverableMonitorFilter
     {
+        public string? RoleId { get; set; }
         public int? PgsPeriodId { get; set; }
         public int? OfficeId { get; set; }    
         public bool? IsDirect { get; set; }
@@ -11,9 +12,10 @@
         public int Page { get; set; }
         public int PageSize { get; set; }               
 
-        public PgsDeliverableMonitorFilter(int? pgsPeriodId, int? officeId, bool? isDirect, int? kraId, 
+        public PgsDeliverableMonitorFilter(string? roleId, int? pgsPeriodId, int? officeId, bool? isDirect, int? kraId, 
             int? scoreRangeFrom, int? scoreRangeTo, int page = 1, int pageSize = 25) 
         {
+            this.RoleId = roleId;
             this.PgsPeriodId = pgsPeriodId;
             this.OfficeId = officeId;          
             this.IsDirect = isDirect;

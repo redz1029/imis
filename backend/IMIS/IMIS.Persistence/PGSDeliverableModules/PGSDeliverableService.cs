@@ -16,15 +16,17 @@ namespace IMIS.Persistence.PGSModules
     {
         private readonly IPGSDeliverableRepository _repository;
         private readonly IKeyResultAreaRepository _kraRepository;
-        private readonly UserManager<User> _userManager;    
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
         private const string PgsDeliverableScoreHistoryTag = "PgsDeliverableScoreHistory";
        
-        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository, UserManager<User> userManager)
+        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _kraRepository = kraRepository ?? throw new ArgumentNullException(nameof(kraRepository));
             _userManager = userManager;
+            _roleManager = roleManager;
 
         }       
         public async Task<DtoPageList<PGSDeliverableDto, PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
@@ -85,71 +87,57 @@ namespace IMIS.Persistence.PGSModules
         {
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return await currentUserService!.GetCurrentUserAsync();
-        }      
+        }
+       
+
         public async Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
+
             if (currentUser == null)
-                return PgsDeliverableMonitorPageList.Create(new List<PgsDeliverable>(), filter.Page, filter.PageSize, 0);
-          
+                return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
+
+            if (string.IsNullOrWhiteSpace(filter.RoleId))
+                return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
+
+            var role = await _roleManager.FindByIdAsync(filter.RoleId);
+
+            if (role == null)
+                return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
+
             if (!filter.PgsPeriodId.HasValue)
             {
-                int currentYear = DateTime.Now.Year;
+                var currentPeriodId = await _repository.GetCurrentYearPeriodIdAsync(DateTime.Now.Year,cancellationToken);
 
-                var currentYearPeriodId = await _repository
-                    .GetCurrentYearPeriodIdAsync(currentYear, cancellationToken);
+                if (currentPeriodId == null)
+                    return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
 
-                if (currentYearPeriodId != null)
-                {
-                    filter.PgsPeriodId = (int?)currentYearPeriodId;
-                }
-                else
-                {
-                    return PgsDeliverableMonitorPageList.Create(
-                        new List<PgsDeliverable>(), filter.Page, filter.PageSize, 0
-                    );
-                }
+                filter.PgsPeriodId = (int?)currentPeriodId;
             }
-          
-            var userRoles = await _userManager.GetRolesAsync(currentUser);
-            var filtered = await _repository.GetFilteredAsync(filter, cancellationToken);
 
-            if (!userRoles.Any(r =>
-                r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                r.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                r.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
-                r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase)))
+            bool hasFullAccess =
+                role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase);
+
+            List<int>? officeIds = null;
+
+            if (!hasFullAccess)
             {
-                var userOfficeIds = await _repository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
+                officeIds = await _repository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
 
-                if (userOfficeIds.Any())
-                {
-                    filtered.Items = filtered.Items
-                        .Where(d => d.PerfomanceGovernanceSystem != null &&
-                                    userOfficeIds.Contains(d.PerfomanceGovernanceSystem.Office.Id))
-                        .ToList();
-                }
-                else
-                {
-                    filtered.Items = new List<PgsDeliverable>();
-                }
-
-                return PgsDeliverableMonitorPageList.Create(
-                     filtered.Items,
-                     filter.Page,
-                     filter.PageSize,
-                     filtered.TotalCount
-                );
+                if (!officeIds.Any())
+                    return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
             }
 
-            return PgsDeliverableMonitorPageList.Create(
-                 filtered.Items,
-                 filter.Page,
-                 filter.PageSize,
-                 filtered.TotalCount);
+            var filtered = await _repository.GetFilteredAsync(filter, officeIds, cancellationToken);
+
+            return PgsDeliverableMonitorPageList.Create(filtered.Items, filter.Page, filter.PageSize, filtered.TotalCount);
         }
 
         public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(
