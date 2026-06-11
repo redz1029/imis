@@ -10,7 +10,7 @@ namespace IMIS.Application.OfficeModule
         Task<List<OfficeDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<List<OfficeDto>?> GetAllOfficeAsync(CancellationToken cancellationToken);
         Task<List<OfficeDto>?> GetAllSpecificServicesAsync(CancellationToken cancellationToken);
-        Task<List<OfficeDto>> GetOfficesForPgsAuditorAsync(CancellationToken cancellationToken);
+        Task<List<OfficeDto>> GetOfficesForPgsAuditorAsync(string roleId, CancellationToken cancellationToken);
         Task<OfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<List<OfficeDto>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);
         Task<List<OfficeDto>?> GetNonAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);

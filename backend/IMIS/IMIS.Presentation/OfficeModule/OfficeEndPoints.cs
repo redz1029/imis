@@ -49,16 +49,16 @@ namespace IMIS.Presentation.OfficeModule
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
 
-            //// Get offices filtered for PGS Auditor
-            app.MapGet("/pgs-auditor", async (IOfficeService service, CancellationToken cancellationToken) =>
+            //// Get offices filtered for PGS Auditor           
+            app.MapGet("/pgs-auditor/{roleId}", async (string roleId, IOfficeService service, CancellationToken cancellationToken) =>
             {
-                var offices = await service.GetOfficesForPgsAuditorAsync(cancellationToken).ConfigureAwait(false);
+                var offices = await service.GetOfficesForPgsAuditorAsync(roleId, cancellationToken);
                 return Results.Ok(offices);
             })
             .WithTags(_officeTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_officeTag), true);
-         
+
             app.MapGet("/filter/{name}", async (string name, IOfficeService service, CancellationToken cancellationToken) =>
             {
                 int officeNoOfResults = 10;
