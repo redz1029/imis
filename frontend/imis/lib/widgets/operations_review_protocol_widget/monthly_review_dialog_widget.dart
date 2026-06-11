@@ -2,8 +2,10 @@
 
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/models/pgs_deliverable_accomplishment.dart';
@@ -11,10 +13,12 @@ import 'package:imis/performance_governance_system/deliverable_status_monitoring
 import 'package:imis/performance_governance_system/models/operations_review_protocol.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
+import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/operations_review_protocol_widget/operations_review_protocol_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_html/html.dart' as html;
@@ -40,7 +44,7 @@ class MonthlyReviewListDialog extends StatefulWidget {
   })
   onSave;
   final Future<List<PgsDeliverables>> Function(String pgsId)
-  onFetchDeliverables; // ADD THIS
+  onFetchDeliverables;
 
   const MonthlyReviewListDialog({
     super.key,
@@ -78,6 +82,7 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
     'November',
     'December',
   ];
+  final _pgsService = PerformanceGovernanceSystemService(Dio());
 
   @override
   void initState() {
@@ -544,6 +549,67 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
     }
   }
 
+  void _showDeleteDialog(OperationsReviewProtocol p) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text("Confirm Delete"),
+            content: Text(
+              "Are you sure you want to delete the protocol for "
+              "${p.postingDate != null ? _monthLabel(p.postingDate!) : 'this record'}? "
+              "This action cannot be undone.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  "Cancel",
+                  style: TextStyle(color: primaryTextColor),
+                ),
+              ),
+              TextButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  try {
+                    await _pgsService.deleteOperationReviewProtocol(
+                      p.id.toString(),
+                    );
+                    await _loadProtocols();
+                    if (mounted) {
+                      MotionToast.success(
+                        toastAlignment: Alignment.topCenter,
+                        description: const Text('Deleted successfully'),
+                      ).show(context);
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      MotionToast.error(
+                        description: const Text('Failed to delete'),
+                      ).show(context);
+                    }
+                  }
+                },
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -666,7 +732,7 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'No protocols yet.\nTap "Add New" to create one.',
+                                'No operation review protocols yet.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.grey.shade500,
@@ -697,6 +763,7 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
                                   p.postingDate == null
                                       ? null
                                       : () => _openPrintPreview(p),
+                              onDelete: () => _showDeleteDialog(p),
                             );
                           },
                         ),
@@ -707,15 +774,53 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
                   color: Colors.grey.shade100,
                   border: Border(top: BorderSide(color: Colors.grey.shade300)),
                 ),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Close',
-                      style: TextStyle(color: primaryTextColor),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () async {
+                        final byteData = await rootBundle.load(
+                          'assets/opsreviewguide.pdf',
+                        );
+                        final bytes = byteData.buffer.asUint8List();
+                        if (kIsWeb) {
+                          final blob = html.Blob([bytes], 'application/pdf');
+                          final url = html.Url.createObjectUrlFromBlob(blob);
+                          html.window.open(url, '_blank');
+                          Future.delayed(const Duration(seconds: 15), () {
+                            html.Url.revokeObjectUrl(url);
+                          });
+                        } else {
+                          final tempDir = await getTemporaryDirectory();
+                          final file = File(
+                            '${tempDir.path}/opsreviewguide.pdf',
+                          );
+                          await file.writeAsBytes(bytes);
+                          await OpenFile.open(file.path);
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.menu_book_outlined,
+                        size: 16,
+                        color: primaryColor,
+                      ),
+                      label: const Text(
+                        'View Guide',
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
+                    // existing Close button
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'Close',
+                        style: TextStyle(color: primaryTextColor),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -730,11 +835,13 @@ class _SavedMonthRow extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final VoidCallback? onPrintPreview;
+  final VoidCallback? onDelete; // ← new
 
   const _SavedMonthRow({
     required this.label,
     required this.onTap,
     this.onPrintPreview,
+    this.onDelete, // ← new
   });
 
   @override
@@ -772,6 +879,20 @@ class _SavedMonthRow extends StatelessWidget {
                     Icons.description_outlined,
                     size: 20,
                     color: Colors.blueAccent,
+                  ),
+                ),
+              ),
+              PermissionWidget(
+                permission: AppPermissions.deleteOperationReviewProtocol,
+                child: Tooltip(
+                  message: 'Delete',
+                  child: IconButton(
+                    onPressed: onDelete,
+                    icon: const Icon(
+                      CupertinoIcons.delete_simple,
+                      size: 20,
+                      color: Colors.red,
+                    ),
                   ),
                 ),
               ),

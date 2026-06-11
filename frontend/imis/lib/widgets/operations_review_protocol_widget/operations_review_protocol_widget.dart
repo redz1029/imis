@@ -48,6 +48,7 @@ class OperationsReviewDialog extends StatefulWidget {
 }
 
 class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
+  String _serviceName = '—';
   final _deputyController = TextEditingController();
   final _documenterController = TextEditingController();
   final _venueController = TextEditingController();
@@ -120,12 +121,36 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     super.initState();
     _populateExistingData();
     _loadHeadName();
+    _loadParentService();
 
     for (var acc in widget.accomplishments) {
       _selectedStatuses[acc.id] = _resolveStatus(
         pgsStatus: acc.pgsStatus,
         statusInt: acc.status,
       );
+    }
+  }
+
+  Future<void> _loadParentService() async {
+    try {
+      final loggedUser = await AuthUtil.processTokenValidity(_dio, context);
+      final token = loggedUser?.accessToken;
+      if (token == null) return;
+
+      final response = await _dio.get<String>(
+        '${ApiEndpoint.baseUrl}/office/${widget.data.office.id}/parent',
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _serviceName = (response.data ?? '').replaceAll('"', '');
+      });
+    } catch (e) {
+      debugPrint('Failed to load parent service: $e');
     }
   }
 
@@ -449,7 +474,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     final request = OperationsReviewProtocol(
       widget.existingProtocol?.id ?? 0,
       widget.data.office.id,
-      widget.data.office.officeTypeId,
       user.id,
       _deputyController.text.trim(),
       _documenterController.text.trim(),
@@ -633,8 +657,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     final office = widget.data.office;
 
     final departmentLabel = p?.departmentName ?? office.name;
-    final divisionLabel =
-        p?.divisionName ?? office.officeTypeId?.toString() ?? '—';
+
     final bool showHead = p != null;
 
     if (isMobile) {
@@ -644,17 +667,19 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
         child: Column(
           children: [
             _readOnlyField('Department', departmentLabel),
-            _readOnlyField('Division', divisionLabel),
+
+            _readOnlyField('Service', _serviceName),
+
             if (showHead) _readOnlyField('Head', p.fullName ?? _headName),
-            _requiredInputField(
-              label: 'Deputy',
-              controller: _deputyController,
-              hasError: _deputyError,
-            ),
             _requiredInputField(
               label: 'Documenter',
               controller: _documenterController,
               hasError: _documenterError,
+            ),
+            _requiredInputField(
+              label: 'Deputy',
+              controller: _deputyController,
+              hasError: _deputyError,
             ),
           ],
         ),
@@ -671,12 +696,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
             child: Column(
               children: [
                 _readOnlyField('Department', departmentLabel),
-                _readOnlyField('Division', divisionLabel),
-                _requiredInputField(
-                  label: 'Deputy',
-                  controller: _deputyController,
-                  hasError: _deputyError,
-                ),
+                _readOnlyField('Service', _serviceName),
               ],
             ),
           ),
@@ -689,6 +709,11 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                   label: 'Documenter',
                   controller: _documenterController,
                   hasError: _documenterError,
+                ),
+                _requiredInputField(
+                  label: 'Deputy',
+                  controller: _deputyController,
+                  hasError: _deputyError,
                 ),
               ],
             ),
@@ -732,7 +757,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                   flex: 2,
                   child: Center(
                     child: Text(
-                      'BY WHEN',
+                      'DUE',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -787,8 +812,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                                       'Deliverable',
                                       acc.deliverableName ?? '—',
                                     ),
-                                    _readOnlyField('By When', byWhen),
-
+                                    _readOnlyField('DUE', byWhen),
                                     statusDropdown(
                                       label: 'Status',
                                       value:
@@ -818,7 +842,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       flex: 2,
-                                      child: _readOnlyField('By When', byWhen),
+                                      child: _readOnlyField('Due', byWhen),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
@@ -858,44 +882,47 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
               ? Column(
                 children: [
                   _sectionTitle('CONVERSATION'),
-                  _inputField('Venue', controller: _venueController),
-                  _buildMinutesAttachmentField(),
+                  _requiredInputField(
+                    label: 'Venue',
+                    controller: _venueController,
+                    hasError: _venueError,
+                  ),
                   _requiredInputField(
                     label: 'Frequency & Schedule',
                     controller: _frequencyScheduleController,
                     hasError: _frequencyScheduleError,
                   ),
+                  _buildMinutesAttachmentField(),
                 ],
               )
-              : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              : Column(
                 children: [
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      children: [
-                        _sectionTitle('CONVERSATION'),
-                        _requiredInputField(
-                          label: 'Venue',
-                          controller: _venueController,
-                          hasError: _venueError,
+                  _sectionTitle('CONVERSATION'),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          children: [
+                            _requiredInputField(
+                              label: 'Venue',
+                              controller: _venueController,
+                              hasError: _venueError,
+                            ),
+                            _buildMinutesAttachmentField(),
+                          ],
                         ),
-                        _buildMinutesAttachmentField(),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 38),
-                        _requiredInputField(
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _requiredInputField(
                           label: 'Frequency & Schedule',
                           controller: _frequencyScheduleController,
                           hasError: _frequencyScheduleError,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1100,7 +1127,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
               ? Column(
                 children: [
                   _sectionTitle('FEEDBACK'),
-
                   _requiredInputField(
                     label: 'Scoreboard Location',
                     controller: _scoreboardLocationController,
@@ -1118,51 +1144,51 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     hasError: _actionPlanError,
                   ),
                   _requiredInputField(
-                    label: 'Frequency of Update',
+                    label: 'Frequency of update',
                     controller: _frequencyUpdateController,
                     hasError: _frequencyUpdateError,
                   ),
                 ],
               )
-              : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              : Column(
                 children: [
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      children: [
-                        _sectionTitle('FEEDBACK'),
-                        _requiredInputField(
-                          label: 'Scoreboard Location',
-                          controller: _scoreboardLocationController,
-                          hasError: _scoreboardLocationError,
+                  _sectionTitle('FEEDBACK'), // ← shared header
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          children: [
+                            _requiredInputField(
+                              label: 'Scoreboard Location',
+                              controller: _scoreboardLocationController,
+                              hasError: _scoreboardLocationError,
+                            ),
+                            _requiredInputField(
+                              label: 'Scoreboard OIC',
+                              controller: _scoreboardOICController,
+                              hasError: _scoreboardOICError,
+                            ),
+                            _requiredInputField(
+                              label: 'Action Plan/Point',
+                              controller: _actionPointsController,
+                              maxLines: 4,
+                              hasError: _actionPlanError,
+                            ),
+                          ],
                         ),
-                        _requiredInputField(
-                          label: 'Scoreboard OIC',
-                          controller: _scoreboardOICController,
-                          hasError: _scoreboardOICError,
-                        ),
-                        _requiredInputField(
-                          label: 'Action Plan/Point',
-                          controller: _actionPointsController,
-                          maxLines: 4,
-                          hasError: _actionPlanError,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 38),
-                        _requiredInputField(
-                          label: 'Frequency of Update',
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _requiredInputField(
+                          // ← aligned with Scoreboard Location
+                          label: 'Frequency of update',
                           controller: _frequencyUpdateController,
                           hasError: _frequencyUpdateError,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1198,42 +1224,41 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                   ),
                 ],
               )
-              : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              : Column(
                 children: [
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      children: [
-                        _sectionTitle('RECOGNITION'),
-                        _requiredInputField(
-                          label: 'How do we celebrate wins as a unit?',
-                          controller: _celebrateWinsController,
-                          maxLines: 3,
-                          hasError: _celebrateWinsError,
+                  _sectionTitle('RECOGNITION'),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          children: [
+                            _requiredInputField(
+                              label: 'How do we celebrate wins as a unit?',
+                              controller: _celebrateWinsController,
+                              maxLines: 3,
+                              hasError: _celebrateWinsError,
+                            ),
+                            _requiredInputField(
+                              label:
+                                  'How do we recognize and reward the best performing members?',
+                              controller: _recognizeRewardController,
+                              maxLines: 3,
+                              hasError: _recognizeRewardError,
+                            ),
+                          ],
                         ),
-                        _requiredInputField(
-                          label:
-                              'How do we recognize and reward the best performing members?',
-                          controller: _recognizeRewardController,
-                          maxLines: 3,
-                          hasError: _recognizeRewardError,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 38),
-                        _requiredInputField(
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _requiredInputField(
                           label: 'Frequency',
                           controller: _frequencyController,
                           hasError: _frequencyError,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1362,29 +1387,31 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
   Widget _readOnlyField(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
+      child: TextField(
+        controller: TextEditingController(text: value),
+        readOnly: true,
+        decoration: InputDecoration(
+          labelText: label,
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
           ),
-          const SizedBox(height: 4),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Text(value, style: const TextStyle(fontSize: 14)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: Colors.grey.shade300),
           ),
-        ],
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: primaryColor, width: 2),
+          ),
+        ),
       ),
     );
   }
@@ -1454,42 +1481,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
             color: Colors.white,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.8,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _inputField(
-    String label, {
-    required TextEditingController controller,
-    int? maxLines,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: TextField(
-        controller: controller,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          labelText: label,
-          alignLabelWithHint: (maxLines ?? 1) > 1,
-          filled: true,
-          fillColor: Colors.grey.shade50,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: primaryColor, width: 2),
           ),
         ),
       ),
