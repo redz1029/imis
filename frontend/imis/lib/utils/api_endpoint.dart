@@ -73,6 +73,8 @@ class ApiEndpoint {
   late String pgsAccomplishment;
   late String pgsRoadMapPeriodId;
   late String strategyReview;
+  late String strategyReviewPeriod;
+  late String performanceValidationToolPeriod;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -144,6 +146,9 @@ class ApiEndpoint {
     pgsAccomplishment = '$baseUrl/pgs/accomplishments';
     pgsRoadMapPeriodId = '$baseUrl/KRARoadmapRole/strategyreview/roleid';
     strategyReview = '$baseUrl/strategyReview';
+    strategyReviewPeriod = '$baseUrl/strategyReviewPeriod';
+    performanceValidationToolPeriod =
+        '$baseUrl/performanceValidationToolPeriod';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
