@@ -1,12 +1,23 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/strategy_review_report/models/strategy_review_deliverable.dart';
 import 'package:imis/strategy_review_report/models/strategy_review_kpi.dart';
 import 'package:imis/strategy_review_report/models/strategy_review_report.dart';
 import 'package:imis/strategy_review_report/services/strategy_review_report_services.dart';
+import 'package:imis/strategy_review_report/strategy_review_period/models/strategy_review_period.dart';
+import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:universal_html/html.dart' as html;
 
 class StrategyReviewReportFormData {
   String objective = '';
@@ -52,13 +63,14 @@ Future<StrategyReviewReportFormData?> showStrategyReviewReportDialog(
   return showDialog<StrategyReviewReportFormData>(
     context: context,
     barrierDismissible: false,
-    builder: (_) => StrategyReviewReportDialog(
-      kraRoadMapId: kraRoadMapId,
-      year: year,
-      kraName: kraName,
-      strategicObjectives: strategicObjectives,
-      existingReview: existingReview,
-    ),
+    builder:
+        (_) => StrategyReviewReportDialog(
+          kraRoadMapId: kraRoadMapId,
+          year: year,
+          kraName: kraName,
+          strategicObjectives: strategicObjectives,
+          existingReview: existingReview,
+        ),
   );
 }
 
@@ -86,7 +98,7 @@ class StrategyReviewReportDialogState
     extends State<StrategyReviewReportDialog> {
   final _formKey = GlobalKey<FormState>();
   final _service = StrategyReviewReportServices(Dio());
-
+  final _commonService = CommonService(Dio());
   final _contributingUnitsCtrl = TextEditingController();
   final _continueCtrl = TextEditingController();
   final _stopCtrl = TextEditingController();
@@ -100,6 +112,9 @@ class StrategyReviewReportDialogState
 
   List<StrategyReviewKpi> _kpiItems = [];
   List<StrategyReviewDeliverable> _deliverableItems = [];
+
+  List<StrategyReviewPeriod> _periods = [];
+  StrategyReviewPeriod? _selectedPeriod;
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -116,9 +131,21 @@ class StrategyReviewReportDialogState
       final existing = widget.existingReview;
 
       if (existing != null) {
-        // ── Edit mode: skip API calls, just populate from existingReview ──
+        final periods = await _commonService.fetchSrategyPeriod();
+
         if (!mounted) return;
         setState(() {
+          _periods = periods;
+
+          if (existing.strategyReviewPeriodId != null) {
+            _selectedPeriod = periods.firstWhere(
+              (p) => p.id == existing.strategyReviewPeriodId,
+              orElse: () => periods.isNotEmpty ? periods.first : periods.first,
+            );
+          } else if (periods.isNotEmpty) {
+            _selectedPeriod = periods.first;
+          }
+
           _contributingUnitsCtrl.text = existing.officeNames ?? '';
           _continueCtrl.text = existing.continueText ?? '';
           _stopCtrl.text = existing.stop ?? '';
@@ -143,9 +170,10 @@ class StrategyReviewReportDialogState
                       d.kraRoadmapid,
                       kraDescription:
                           d.kraRoadMapDeliverableDetails?.kraDescription,
-                      deliverableDescription: d
-                          .kraRoadMapDeliverableDetails
-                          ?.deliverableDescription,
+                      deliverableDescription:
+                          d
+                              .kraRoadMapDeliverableDetails
+                              ?.deliverableDescription,
                     ),
                   )
                   .toList() ??
@@ -196,6 +224,7 @@ class StrategyReviewReportDialogState
       }
 
       final results = await Future.wait([
+        _commonService.fetchSrategyPeriod(),
         _service.getStrategyReviewDeliverables(
           widget.kraRoadMapId,
           widget.year,
@@ -203,12 +232,16 @@ class StrategyReviewReportDialogState
         _service.getStrategyReviewKpis(widget.kraRoadMapId, widget.year),
       ]);
 
-      final deliverablesResponse = results[0] as StrategyReviewDeliverableItem?;
-      final kpisResponse = results[1] as StrategyReviewKpiItem?;
+      final periods = results[0] as List<StrategyReviewPeriod>;
+      final deliverablesResponse = results[1] as StrategyReviewDeliverableItem?;
+      final kpisResponse = results[2] as StrategyReviewKpiItem?;
 
       if (!mounted) return;
 
       setState(() {
+        _periods = periods;
+        _selectedPeriod = periods.isNotEmpty ? periods.first : null;
+
         _deliverableItems = deliverablesResponse?.deliverables ?? [];
         _kpiItems = kpisResponse?.kpiDeliverable ?? [];
 
@@ -264,6 +297,7 @@ class StrategyReviewReportDialogState
       rowVersion: widget.existingReview?.rowVersion,
       postingDate: DateTime.now().toUtc().toIso8601String(),
       kraRoadMapId: widget.kraRoadMapId,
+      strategyReviewPeriodId: _selectedPeriod?.id.toString(),
       strategicObjective: _strategicObjective,
       officeNames: _contributingUnitsCtrl.text.trim(),
       strategyReviewDeliverableKpi: List.generate(_kpiItems.length, (i) {
@@ -338,9 +372,8 @@ class StrategyReviewReportDialogState
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 600;
-    final dialogWidth = isMobile
-        ? width * 0.95
-        : (width * 0.85).clamp(0.0, 900.0).toDouble();
+    final dialogWidth =
+        isMobile ? width * 0.95 : (width * 0.85).clamp(0.0, 900.0).toDouble();
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -353,55 +386,58 @@ class StrategyReviewReportDialogState
           children: [
             _buildDialogHeader(),
             Flexible(
-              child: _isLoading
-                  ? const Padding(
-                      padding: EdgeInsets.all(40),
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  : _errorMessage != null
-                  ? Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _errorMessage!,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _isLoading = true;
-                                _errorMessage = null;
-                              });
-                              _fetchData();
-                            },
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      child: Form(
-                        key: _formKey,
+              child:
+                  _isLoading
+                      ? const Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                      : _errorMessage != null
+                      ? Padding(
+                        padding: const EdgeInsets.all(24),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const SizedBox(height: 20),
-                            _buildSection1(isMobile),
+                            Text(
+                              _errorMessage!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
                             const SizedBox(height: 16),
-                            _buildSection2(isMobile),
-                            const SizedBox(height: 16),
-                            _buildSection3(isMobile),
-                            const SizedBox(height: 16),
-                            _buildSection4(isMobile),
-                            const SizedBox(height: 24),
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isLoading = true;
+                                  _errorMessage = null;
+                                });
+                                _fetchData();
+                              },
+                              child: const Text('Retry'),
+                            ),
                           ],
                         ),
+                      )
+                      : SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 20),
+                              _buildPeriodDropdown(),
+                              const SizedBox(height: 16),
+                              _buildSection1(isMobile),
+                              const SizedBox(height: 16),
+                              _buildSection2(isMobile),
+                              const SizedBox(height: 16),
+                              _buildSection3(isMobile),
+                              const SizedBox(height: 16),
+                              _buildSection4(isMobile),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -454,6 +490,52 @@ class StrategyReviewReportDialogState
     );
   }
 
+  Widget _buildPeriodDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionLabel('Quarter'),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<StrategyReviewPeriod>(
+          value: _selectedPeriod,
+          isExpanded: true,
+          style: const TextStyle(fontSize: 13, color: Colors.black87),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 10,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: BorderSide(color: primaryColor, width: 2),
+            ),
+          ),
+          items:
+              _periods.map((p) {
+                return DropdownMenuItem<StrategyReviewPeriod>(
+                  value: p,
+                  child: Text(
+                    p.quarter ?? '—',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                );
+              }).toList(),
+          onChanged: (val) => setState(() => _selectedPeriod = val),
+          validator: (val) => val == null ? 'Please select a quarter' : null,
+        ),
+      ],
+    );
+  }
+
   Widget _sectionHeader(List<String> labels, List<int> flexes) {
     return Container(
       decoration: BoxDecoration(
@@ -483,8 +565,9 @@ class StrategyReviewReportDialogState
 
   String get _strategicObjective =>
       widget.existingReview?.strategicObjective?.isNotEmpty == true
-      ? widget.existingReview!.strategicObjective!
-      : widget.strategicObjectives;
+          ? widget.existingReview!.strategicObjective!
+          : widget.strategicObjectives;
+
   Widget _buildSection1(bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -493,30 +576,30 @@ class StrategyReviewReportDialogState
         const SizedBox(height: 8),
         isMobile
             ? Column(
-                children: [
-                  _readOnlyField('Objective', _strategicObjective),
-                  const SizedBox(height: 10),
-                  _readOnlyField(
+              children: [
+                _readOnlyField('Objective', _strategicObjective),
+                const SizedBox(height: 10),
+                _readOnlyField(
+                  'Contributing Units',
+                  _contributingUnitsCtrl.text,
+                ),
+              ],
+            )
+            : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _readOnlyField('Objective', _strategicObjective),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _readOnlyField(
                     'Contributing Units',
                     _contributingUnitsCtrl.text,
                   ),
-                ],
-              )
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _readOnlyField('Objective', _strategicObjective),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _readOnlyField(
-                      'Contributing Units',
-                      _contributingUnitsCtrl.text,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
+            ),
       ],
     );
   }
@@ -799,51 +882,51 @@ class StrategyReviewReportDialogState
         if (!isMobile) _sectionHeader(['Continue', 'Stop', 'Start'], [1, 1, 1]),
         isMobile
             ? Column(
-                children: [
-                  _labeledField('Continue', _continueCtrl, maxLines: 3),
-                  const SizedBox(height: 10),
-                  _labeledField('Stop', _stopCtrl, maxLines: 3),
-                  const SizedBox(height: 10),
-                  _labeledField('Start', _startCtrl, maxLines: 3),
-                ],
-              )
+              children: [
+                _labeledField('Continue', _continueCtrl, maxLines: 3),
+                const SizedBox(height: 10),
+                _labeledField('Stop', _stopCtrl, maxLines: 3),
+                const SizedBox(height: 10),
+                _labeledField('Start', _startCtrl, maxLines: 3),
+              ],
+            )
             : Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(6),
-                  ),
-                ),
-                padding: const EdgeInsets.all(8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _compactField(
-                        _continueCtrl,
-                        'Enter continue actions...',
-                        maxLines: 4,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _compactField(
-                        _stopCtrl,
-                        'Enter stop actions...',
-                        maxLines: 4,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _compactField(
-                        _startCtrl,
-                        'Enter start actions...',
-                        maxLines: 4,
-                      ),
-                    ),
-                  ],
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(6),
                 ),
               ),
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _compactField(
+                      _continueCtrl,
+                      'Enter continue actions...',
+                      maxLines: 4,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _compactField(
+                      _stopCtrl,
+                      'Enter stop actions...',
+                      maxLines: 4,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _compactField(
+                      _startCtrl,
+                      'Enter start actions...',
+                      maxLines: 4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
       ],
     );
   }
@@ -852,82 +935,117 @@ class StrategyReviewReportDialogState
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
+        TextButton.icon(
+          onPressed: () async {
+            final byteData = await rootBundle.load(
+              'assets/strategy-review-guide.pdf',
+            );
+            final bytes = byteData.buffer.asUint8List();
+            if (kIsWeb) {
+              final blob = html.Blob([bytes], 'application/pdf');
+              final url = html.Url.createObjectUrlFromBlob(blob);
+              html.window.open(url, '_blank');
+              Future.delayed(const Duration(seconds: 15), () {
+                html.Url.revokeObjectUrl(url);
+              });
+            } else {
+              final tempDir = await getTemporaryDirectory();
+              final file = File('${tempDir.path}/strategy-review-guide.pdf');
+              await file.writeAsBytes(bytes);
+              await OpenFile.open(file.path);
+            }
+          },
+          icon: const Icon(
+            Icons.menu_book_outlined,
+            size: 16,
+            color: primaryColor,
+          ),
+          label: Text(
+            'View Guide',
+            style: TextStyle(color: primaryColor, fontWeight: FontWeight.w600),
+          ),
+        ),
+        const Spacer(),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text('Cancel', style: TextStyle(color: primaryTextColor)),
         ),
 
         const SizedBox(width: 12),
-
-        ElevatedButton(
-          onPressed: _isSaving
-              ? null
-              : () async {
-                  if (_formKey.currentState!.validate()) {
-                    bool? confirmAction = await showDialog<bool>(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text(
-                            id == null ? "Confirm Save" : "Confirm Update",
-                          ),
-                          content: Text(
-                            id == null
-                                ? "Are you sure you want to save this record?"
-                                : "Are you sure you want to update this record?",
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(
-                                "No",
-                                style: TextStyle(color: primaryColor),
+        PermissionWidget(
+          permission: AppPermissions.addStrategyReview,
+          child: ElevatedButton(
+            onPressed:
+                _isSaving
+                    ? null
+                    : () async {
+                      if (_formKey.currentState!.validate()) {
+                        bool? confirmAction = await showDialog<bool>(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: Text(
+                                id == null ? "Confirm Save" : "Confirm Update",
                               ),
-                            ),
-
-                            TextButton(
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  Navigator.pop(context, true);
-                                }
-                              },
-                              child: Text(
-                                "Yes",
-                                style: TextStyle(color: primaryColor),
+                              content: Text(
+                                id == null
+                                    ? "Are you sure you want to save this record?"
+                                    : "Are you sure you want to update this record?",
                               ),
-                            ),
-                          ],
+                              actions: [
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.pop(context, false),
+                                  child: Text(
+                                    "No",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    if (_formKey.currentState!.validate()) {
+                                      Navigator.pop(context, true);
+                                    }
+                                  },
+                                  child: Text(
+                                    "Yes",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         );
-                      },
-                    );
 
-                    if (confirmAction == true) {
-                      await _submit();
-                    }
-                  }
-                },
+                        if (confirmAction == true) {
+                          await _submit();
+                        }
+                      }
+                    },
 
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-          ),
 
-          child: _isSaving
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Text(
-                  id == null ? 'Save' : 'Update',
-                  style: const TextStyle(color: Colors.white),
-                ),
+            child:
+                _isSaving
+                    ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                    : Text(
+                      id == null ? 'Save' : 'Update',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+          ),
         ),
       ],
     );
@@ -1091,31 +1209,32 @@ class StrategyReviewReportDialogState
           borderSide: BorderSide(color: primaryColor, width: 2),
         ),
       ),
-      items: PgsStatus.values.map((status) {
-        return DropdownMenuItem<PgsStatus>(
-          value: status,
-          child: Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: statusColor(status),
-                  shape: BoxShape.circle,
-                ),
+      items:
+          PgsStatus.values.map((status) {
+            return DropdownMenuItem<PgsStatus>(
+              value: status,
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: statusColor(status),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      statusLabel(status),
+                      style: const TextStyle(fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  statusLabel(status),
-                  style: const TextStyle(fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
       onChanged: onChanged,
     );
   }

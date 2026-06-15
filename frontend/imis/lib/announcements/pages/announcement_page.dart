@@ -529,7 +529,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                   horizontal: 20,
                 ),
                 decoration: BoxDecoration(
-                  color: primaryLightColor,
+                  color: primaryColor,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
