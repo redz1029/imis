@@ -19,6 +19,7 @@ import 'package:imis/utils/permission_service.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/filter_widget/button_filter.dart';
 import 'package:imis/widgets/no_permission_to_view_widget.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:imis/widgets/strategy_review_report_widget/strategy_review_report_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -592,7 +593,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
 
     if (!hasPermission) return noPermissionScreen();
 
-    // ── Use _filteredReviews so the filter actually applies ──────────────────
     final displayList = _filteredReviews;
 
     return Scaffold(
@@ -648,7 +648,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                             Expanded(
                               flex: 2,
                               child: Text(
-                                "Posting Date",
+                                "Quarter",
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -898,7 +898,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          "KRA: ${matchedKra.kraName}",
+                                          "Process (Core & Support): ${matchedKra.kraName}",
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -906,7 +906,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
 
                                         const SizedBox(height: 4),
                                         Text(
-                                          "Date: $postingDate",
+                                          "Quarter: $postingDate",
                                           style: TextStyle(
                                             color: Colors.grey.shade500,
                                             fontSize: 12,
@@ -917,6 +917,29 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                   );
                                 },
                               ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          // PaginationControls(
+                          //   currentPage: _currentPage,
+                          //   totalItems: _totalCount,
+                          //   itemsPerPage: _pageSize,
+                          //   isLoading: _isLoading,
+                          //   onPageChanged:
+                          //       (page) => fetchStrategyReviews(page: page),
+                          // ),
+                          // const SizedBox(width: 60),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -936,7 +959,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
     );
   }
 
-  // ── Updated to accept count so the header stays accurate ──────────────────
   Widget _buildPageHeader(bool isMobile, int count) {
     return Container(
       width: double.infinity,
