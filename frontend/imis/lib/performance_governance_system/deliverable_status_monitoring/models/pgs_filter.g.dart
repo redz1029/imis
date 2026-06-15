@@ -7,6 +7,7 @@ part of 'pgs_filter.dart';
 // **************************************************************************
 
 PgsFilter _$PgsFilterFromJson(Map<String, dynamic> json) => PgsFilter(
+  json['roleId'] as String?,
   (json['pgsPeriodId'] as num?)?.toInt(),
   (json['officeId'] as num?)?.toInt(),
   (json['kraId'] as num?)?.toInt(),
@@ -18,6 +19,7 @@ PgsFilter _$PgsFilterFromJson(Map<String, dynamic> json) => PgsFilter(
 );
 
 Map<String, dynamic> _$PgsFilterToJson(PgsFilter instance) => <String, dynamic>{
+  'roleId': instance.roleId,
   'pgsPeriodId': instance.pgsPeriodId,
   'officeId': instance.officeId,
   'kraId': instance.kraId,
