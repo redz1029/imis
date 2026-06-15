@@ -1,8 +1,6 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
-using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.StrategyReviewPeriodModule;
-using IMIS.Application.TeamModule;
 using IMIS.Domain;
 
 namespace IMIS.Persistence.StrategyReviewPeriodModule

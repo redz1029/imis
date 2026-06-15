@@ -17,6 +17,7 @@ using IMIS.Application.KraRoadMapRoleAssignmentModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
 using IMIS.Application.OperationReviewProtocolModule;
+using IMIS.Application.PerformanceValidationToolPeriodModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
@@ -50,6 +51,7 @@ using IMIS.Persistence.KraRoadMapRoleModule;
 using IMIS.Persistence.OfficeModule;
 using IMIS.Persistence.OfficeTypeModule;
 using IMIS.Persistence.OperationReviewProtocolModule;
+using IMIS.Persistence.PerformanceValidationToolPeriodModule;
 using IMIS.Persistence.PgsDeliverableAccomplishmentModule;
 using IMIS.Persistence.PgsModule;
 using IMIS.Persistence.PGSModules;
@@ -166,6 +168,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IStrategyReviewPeriodRepository, StrategyReviewPeriodRepository>();
             services.AddScoped<IStrategyReviewPeriodService, StrategyReviewPeriodService>();
+
+            services.AddScoped<IPerformanceValidationToolPeriodRepository, PerformanceValidationToolPeriodRepository>();
+            services.AddScoped<IPerformanceValidationToolPeriodService, PerformanceValidationToolPeriodService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

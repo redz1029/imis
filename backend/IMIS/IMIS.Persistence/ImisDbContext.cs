@@ -5,7 +5,6 @@ using IMIS.Domain;
 using IMIS.Persistence.SeedConfigurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using System.Reflection.Emit;
 
 namespace IMIS.Persistence
 {
@@ -48,6 +47,7 @@ namespace IMIS.Persistence
         public DbSet<StrategyReviewDeliverableKpi> StrategyReviewDeliverableKpi { get; set; }
         public DbSet<StrategyReviewDeliverable> StrategyReviewDeliverable { get; set; }
         public DbSet<StrategyReviewPeriod> StrategyReviewPeriod { get; set; }
+        public DbSet<PerformanceValidationToolPeriod> PerformanceValidationToolPeriod { get; set; }
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
         public DbSet<IsoStandard> IsoStandards { get; set; }
