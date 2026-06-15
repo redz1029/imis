@@ -15,6 +15,7 @@ import 'package:imis/widgets/permission_widget.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../common_services/common_service.dart';
 import '../../../office/models/office.dart';
 import '../../../reports/models/pgs_summary_narrative.dart';
@@ -94,7 +95,10 @@ class _DeliverableStatusMonitoringPageState
 
   Future<void> _initialize() async {
     setState(() => isLoading = true);
-    final offices = await _deliverableStatusMonitoring.fetchOffices();
+    final roleId = await _getRoleId();
+    final offices = await _deliverableStatusMonitoring.fetchOffices(
+      roleId: roleId,
+    );
     final period = await _commonService.fetchPgsPeriod();
     final kra = await _commonService.fetchKra();
     await _loadCurrentUserId();
@@ -108,6 +112,22 @@ class _DeliverableStatusMonitoringPageState
     fetchFilteredPgsList();
   }
 
+  Future<String> _getRoleId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      return currentRole.id;
+    }
+    return '';
+  }
+
   Future<void> _loadCurrentUserId() async {
     UserRegistration? user = await AuthUtil.processTokenValidity(dio, context);
     if (mounted) setState(() => userId = user?.id ?? "UserId");
@@ -117,9 +137,22 @@ class _DeliverableStatusMonitoringPageState
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
-
+    String? roleId;
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      roleId = currentRole.id;
+    }
     try {
       final filter = PgsFilter(
+        roleId,
         selectedPeriod,
         int.tryParse(_selectedOfficeId ?? ''),
         selectedKra,
@@ -236,8 +269,22 @@ class _DeliverableStatusMonitoringPageState
       setDialogState(() => _hasAvailableDeliverables = false);
       return;
     }
+    String? roleId;
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      roleId = currentRole.id;
+    }
     try {
       final filter = PgsFilter(
+        roleId,
         int.tryParse(_selectedPeriod!) ?? 0,
         int.tryParse(_selectedOffice!) ?? 0,
         null,
