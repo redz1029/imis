@@ -18,6 +18,7 @@ class StrategyReviewSaveRequest {
   final String? continueText;
   final String? start;
   final String? stop;
+  final String? strategyReviewPeriodId;
 
   StrategyReviewSaveRequest({
     required this.id,
@@ -32,6 +33,7 @@ class StrategyReviewSaveRequest {
     this.continueText,
     this.start,
     this.stop,
+    this.strategyReviewPeriodId,
   });
 
   factory StrategyReviewSaveRequest.fromJson(Map<String, dynamic> json) =>
@@ -131,6 +133,7 @@ class StrategyReviewReport {
   final String? stop;
   final List<StrategyReviewDeliverableKpiRequest>? strategyReviewDeliverableKpi;
   final List<StrategyReviewDeliverableRequest>? strategyReviewDeliverable;
+  final int? strategyReviewPeriodId;
 
   StrategyReviewReport({
     required this.id,
@@ -145,6 +148,7 @@ class StrategyReviewReport {
     this.stop,
     this.strategyReviewDeliverableKpi,
     this.strategyReviewDeliverable,
+    this.strategyReviewPeriodId,
   });
 
   factory StrategyReviewReport.fromJson(Map<String, dynamic> json) =>

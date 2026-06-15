@@ -35,6 +35,7 @@ StrategyReviewSaveRequest _$StrategyReviewSaveRequestFromJson(
   continueText: json['continue'] as String?,
   start: json['start'] as String?,
   stop: json['stop'] as String?,
+  strategyReviewPeriodId: json['strategyReviewPeriodId'] as String?,
 );
 
 Map<String, dynamic> _$StrategyReviewSaveRequestToJson(
@@ -52,6 +53,7 @@ Map<String, dynamic> _$StrategyReviewSaveRequestToJson(
   'continue': instance.continueText,
   'start': instance.start,
   'stop': instance.stop,
+  'strategyReviewPeriodId': instance.strategyReviewPeriodId,
 };
 
 StrategyReviewDeliverableKpiRequest
@@ -145,6 +147,7 @@ StrategyReviewReport _$StrategyReviewReportFromJson(
             ),
           )
           .toList(),
+  strategyReviewPeriodId: (json['strategyReviewPeriodId'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$StrategyReviewReportToJson(
@@ -162,4 +165,5 @@ Map<String, dynamic> _$StrategyReviewReportToJson(
   'stop': instance.stop,
   'strategyReviewDeliverableKpi': instance.strategyReviewDeliverableKpi,
   'strategyReviewDeliverable': instance.strategyReviewDeliverable,
+  'strategyReviewPeriodId': instance.strategyReviewPeriodId,
 };
