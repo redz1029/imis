@@ -19,12 +19,12 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
-import 'package:imis/widgets/accomplishment_widget.dart/breakthrough_widget.dart';
-import 'package:imis/widgets/button_widget/filter_button_widget.dart';
-import 'package:imis/widgets/filter_widget/button_filter.dart';
-import 'package:imis/widgets/no_permission_to_view_widget.dart';
-import 'package:imis/widgets/operations_review_protocol_widget/monthly_review_dialog_widget.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/dialog/breakthrough_dialog.dart';
+import 'package:imis/widgets/common/filter_button_widget.dart';
+import 'package:imis/widgets/common/button_filter.dart';
+import 'package:imis/widgets/common/no_permission_to_view_widget.dart';
+import 'package:imis/widgets/dialog/monthly_review_dialog_widget.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,8 +34,8 @@ import '../../performance_governance_system/models/pgs_readiness.dart';
 import '../../performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import '../../utils/auth_util.dart';
 import '../../utils/permission_service.dart';
-import '../../widgets/accomplishment_widget.dart/accomplishment_pgs_standardUser_widget.dart';
-import '../../widgets/custom_tooltip.dart';
+import '../../widgets/dialog/accomplishment/accomplishment_pgs_standardUser_dialog.dart';
+import '../../widgets/common/custom_tooltip.dart';
 
 const int _fHandle = 2;
 const int _fNo = 2;
@@ -6590,7 +6590,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                           ],
                         ),
                         const SizedBox(height: 12),
-                        BreakthroughWidget(deliverableId: deliverableId),
+                        BreakthroughDialog(deliverableId: deliverableId),
                       ],
                     ),
                   ),

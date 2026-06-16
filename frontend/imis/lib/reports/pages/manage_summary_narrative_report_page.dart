@@ -14,13 +14,15 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/print_preview_util.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ManageSummaryNarrativeDialog extends StatefulWidget {
   const ManageSummaryNarrativeDialog({super.key});
@@ -64,7 +66,10 @@ class ManageSummaryNarrativeDialogState
     super.initState();
     () async {
       final period = await _commonService.fetchPgsPeriod();
-      final offices = await _deliverableStatusMonitoring.fetchOffices();
+      final roleId = await _getRoleId();
+      final offices = await _deliverableStatusMonitoring.fetchOffices(
+        roleId: roleId,
+      );
       if (!mounted) return;
       setState(() {
         officeList = offices;
@@ -115,6 +120,22 @@ class ManageSummaryNarrativeDialogState
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<String> _getRoleId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      return currentRole.id;
+    }
+    return '';
   }
 
   String getPeriodLabel(int periodId) {

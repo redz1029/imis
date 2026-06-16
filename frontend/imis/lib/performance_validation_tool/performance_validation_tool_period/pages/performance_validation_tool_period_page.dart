@@ -7,8 +7,8 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_validation_tool/performance_validation_tool_period/models/performance_validation_tool_period.dart';
 import 'package:imis/performance_validation_tool/performance_validation_tool_period/services/performance_validation_tool_service.dart';
 import 'package:imis/utils/date_time_converter.dart';
-import 'package:imis/widgets/build_page_header.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/build_page_header.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class PerformanceValidationToolPeriodPage extends StatefulWidget {

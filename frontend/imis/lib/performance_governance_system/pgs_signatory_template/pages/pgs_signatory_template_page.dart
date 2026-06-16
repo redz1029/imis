@@ -9,7 +9,7 @@ import 'package:imis/performance_governance_system/pgs_signatory_template/pgs_si
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../common_services/common_service.dart';
 import '../models/pgs_signatory_template.dart';

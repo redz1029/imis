@@ -12,8 +12,8 @@ import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:universal_html/html.dart' as html;
-import '../../performance_governance_system/enum/pgs_status.dart';
-import '../../scorecard/services/score_card_monitoring_services.dart';
+import '../../../performance_governance_system/enum/pgs_status.dart';
+import '../../../scorecard/services/score_card_monitoring_services.dart';
 
 final Dio dio = Dio();
 final _scorecardAccomplishmentService = ScoreCardMonitoringServices(dio);
@@ -56,13 +56,13 @@ Color getStatusTextColor(String status) {
   return Colors.white;
 }
 
-class ScorecardAccomplishmentRowWidget extends StatefulWidget {
+class ScorecardMonitoringAccomplishmentDialog extends StatefulWidget {
   final String period;
   final int periodIndex;
   final int totalPeriods;
   final int deliverableId;
 
-  const ScorecardAccomplishmentRowWidget({
+  const ScorecardMonitoringAccomplishmentDialog({
     super.key,
     required this.period,
     required this.periodIndex,
@@ -71,12 +71,12 @@ class ScorecardAccomplishmentRowWidget extends StatefulWidget {
   });
 
   @override
-  State<ScorecardAccomplishmentRowWidget> createState() =>
-      _ScorecardAccomplishmentRowWidgetState();
+  State<ScorecardMonitoringAccomplishmentDialog> createState() =>
+      ScorecardMonitoringAccomplishmentDialogState();
 }
 
-class _ScorecardAccomplishmentRowWidgetState
-    extends State<ScorecardAccomplishmentRowWidget> {
+class ScorecardMonitoringAccomplishmentDialogState
+    extends State<ScorecardMonitoringAccomplishmentDialog> {
   File? mobileImage;
   Uint8List? webImage;
   String? fileName;

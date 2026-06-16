@@ -10,7 +10,7 @@ import 'package:imis/office/services/office_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class OfficePage extends StatefulWidget {

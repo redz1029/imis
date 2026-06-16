@@ -16,7 +16,7 @@ import 'package:imis/performance_governance_system/models/pgs_deliverables.dart'
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
-import 'package:imis/widgets/operations_review_protocol_widget/operations_review_protocol_widget.dart';
+import 'package:imis/widgets/dialog/operations_review_protocol_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';

@@ -5,7 +5,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
-import 'package:imis/widgets/dynamic_side_column.dart';
+import 'package:imis/widgets/home/dynamic_side_column.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../performance_governance_system/enum/pgs_status.dart';

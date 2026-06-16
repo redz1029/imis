@@ -14,8 +14,8 @@ import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:universal_html/html.dart' as html;
-import '../../constant/permissions.dart';
-import '../../performance_governance_system/enum/pgs_status.dart';
+import '../../../constant/permissions.dart';
+import '../../../performance_governance_system/enum/pgs_status.dart';
 
 final Dio dio = Dio();
 final _accomplishmentService = DeliverableStatusMonitoringService(dio);
@@ -72,7 +72,7 @@ Color getStatusColor(String status) {
 
 Color getStatusTextColor(String status) => Colors.white;
 
-class TrackingRowWidget extends StatefulWidget {
+class AccomplishmentPgsAuditorDialog extends StatefulWidget {
   final String period;
   final int periodIndex;
   final int totalPeriods;
@@ -80,7 +80,7 @@ class TrackingRowWidget extends StatefulWidget {
   final int periodMonth;
   final int periodYear;
 
-  const TrackingRowWidget({
+  const AccomplishmentPgsAuditorDialog({
     super.key,
     required this.period,
     required this.periodIndex,
@@ -91,10 +91,12 @@ class TrackingRowWidget extends StatefulWidget {
   });
 
   @override
-  State<TrackingRowWidget> createState() => _TrackingRowWidgetState();
+  State<AccomplishmentPgsAuditorDialog> createState() =>
+      AccomplishmentPgsAuditorDialogState();
 }
 
-class _TrackingRowWidgetState extends State<TrackingRowWidget> {
+class AccomplishmentPgsAuditorDialogState
+    extends State<AccomplishmentPgsAuditorDialog> {
   String? fileName;
   bool isLoading = false;
   Uint8List? _serverImageCache;

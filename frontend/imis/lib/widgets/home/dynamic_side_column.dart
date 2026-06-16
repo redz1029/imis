@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/widgets/announcement_widget.dart';
+import 'package:imis/widgets/home/announcement_widget.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class DynamicSideColumn1 extends StatelessWidget {

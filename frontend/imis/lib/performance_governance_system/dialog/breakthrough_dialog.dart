@@ -62,16 +62,16 @@ String _scoreLabel(double score) {
   return 'At Risk';
 }
 
-class BreakthroughWidget extends StatefulWidget {
+class BreakthroughDialog extends StatefulWidget {
   final int deliverableId;
 
-  const BreakthroughWidget({super.key, required this.deliverableId});
+  const BreakthroughDialog({super.key, required this.deliverableId});
 
   @override
-  State<BreakthroughWidget> createState() => _BreakthroughWidgetState();
+  State<BreakthroughDialog> createState() => _BreakthroughDialogState();
 }
 
-class _BreakthroughWidgetState extends State<BreakthroughWidget> {
+class _BreakthroughDialogState extends State<BreakthroughDialog> {
   late TextEditingController _percentageController;
   late TextEditingController _strategicController;
   late TextEditingController _breakthroughController;

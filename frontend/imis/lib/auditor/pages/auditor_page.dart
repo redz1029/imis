@@ -12,9 +12,9 @@ import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
-import '../../widgets/custom_toggle.dart';
+import '../../widgets/common/custom_toggle.dart';
 
 class AuditorPage extends StatefulWidget {
   const AuditorPage({super.key});

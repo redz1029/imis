@@ -11,21 +11,21 @@ import 'package:imis/performance_governance_system/deliverable_status_monitoring
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/widgets/accomplishment_widget.dart/accomplishment_pgs_auditor_widget.dart';
+import 'package:imis/widgets/dialog/accomplishment/accomplishment_pgs_auditor_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:universal_html/html.dart' as html;
-import '../../constant/permissions.dart';
-import '../../utils/permission_service.dart';
+import '../../../constant/permissions.dart';
+import '../../../utils/permission_service.dart';
 
 final _accomplishmentService = DeliverableStatusMonitoringService(dio);
 final permissionService = PermissionService();
 
-class AccomplishmentRowWidget extends StatefulWidget {
+class AccomplishmentPgsStandarduserDialog extends StatefulWidget {
   final DateTime date;
   final TrackingRowData row;
   final void Function(PgsStatus newStatus)? onStatusChanged;
-  const AccomplishmentRowWidget({
+  const AccomplishmentPgsStandarduserDialog({
     super.key,
     required this.date,
     required this.row,
@@ -33,11 +33,12 @@ class AccomplishmentRowWidget extends StatefulWidget {
   });
 
   @override
-  State<AccomplishmentRowWidget> createState() =>
-      _AccomplishmentRowWidgetState();
+  State<AccomplishmentPgsStandarduserDialog> createState() =>
+      AccomplishmentStandarduserDialogState();
 }
 
-class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
+class AccomplishmentStandarduserDialogState
+    extends State<AccomplishmentPgsStandarduserDialog> {
   Uint8List? webImage;
   File? mobileImage;
   String? fileName;
@@ -806,7 +807,7 @@ class _AccomplishmentListViewState extends State<AccomplishmentListView> {
         final row = achievementsList[widget.deliverableId]!.rows[i];
         return Column(
           children: [
-            AccomplishmentRowWidget(
+            AccomplishmentPgsStandarduserDialog(
               date: widget.startAndEndDates[i],
               row: row,
               onStatusChanged: (newStatus) {

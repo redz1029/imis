@@ -6,7 +6,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/widgets/dynamic_side_column.dart';
+import 'package:imis/widgets/home/dynamic_side_column.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:imis/roadmap/models/roadmap.dart';
 import 'package:table_calendar/table_calendar.dart';

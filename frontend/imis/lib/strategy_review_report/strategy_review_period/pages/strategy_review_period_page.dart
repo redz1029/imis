@@ -6,8 +6,8 @@ import 'package:imis/constant/permissions.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/models/strategy_review_period.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/services/strategy_review_period_service.dart';
 import 'package:imis/utils/date_time_converter.dart';
-import 'package:imis/widgets/build_page_header.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/build_page_header.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 

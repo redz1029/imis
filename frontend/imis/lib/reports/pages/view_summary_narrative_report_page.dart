@@ -16,8 +16,8 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart' show PaginationUtil;
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/utils/print_preview_util.dart';
-import 'package:imis/widgets/button_widget/filter_button_widget.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/filter_button_widget.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 

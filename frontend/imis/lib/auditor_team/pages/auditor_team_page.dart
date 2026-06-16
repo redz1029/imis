@@ -8,8 +8,8 @@ import 'package:imis/auditor_team/services/auditor_team_service.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
-import 'package:imis/widgets/custom_toggle.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/custom_toggle.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class AuditorTeamPage extends StatefulWidget {

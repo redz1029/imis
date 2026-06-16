@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'accomplishment_widget.dart/scorecard_monitoring_accomplishment_widget.dart';
+import 'dialog/accomplishment/scorecard_monitoring_accomplishment_widget.dart';
 import 'dart:math';
 
 class TotalScoreIndicator extends StatelessWidget {

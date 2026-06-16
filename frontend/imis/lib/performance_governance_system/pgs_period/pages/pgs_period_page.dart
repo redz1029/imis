@@ -10,7 +10,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -220,7 +220,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
               ),
             ),
             child: Text(
-              id == null ? 'Create  PGS Period' : 'Edit PGS Period',
+              id == null ? 'Create PGS Period' : 'Edit PGS Period',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,

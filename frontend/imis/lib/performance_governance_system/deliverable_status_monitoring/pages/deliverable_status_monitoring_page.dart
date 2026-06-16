@@ -8,9 +8,9 @@ import 'package:imis/performance_governance_system/process_core_support/models/k
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/filter_widget/filter_bottom_sheet.dart';
-import 'package:imis/widgets/no_permission_to_view_widget.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/filter_bottom_sheet.dart';
+import 'package:imis/widgets/common/no_permission_to_view_widget.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:intl/intl.dart';
@@ -26,8 +26,8 @@ import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
 import '../../../utils/date_time_converter.dart';
 import '../../../utils/permission_string.dart';
-import '../../../widgets/accomplishment_widget.dart/accomplishment_pgs_auditor_widget.dart';
-import '../../../widgets/accomplishment_widget.dart/breakthrough_widget.dart';
+import '../dialog/accomplishment_pgs_auditor_dialog.dart';
+import '../../../widgets/dialog/breakthrough_dialog.dart';
 import '../../models/pgs_deliverable_score_history.dart';
 import '../models/pgs_filter.dart';
 import '../services/deliverable_status_monitoring_service.dart';
@@ -2492,7 +2492,7 @@ Future<bool?> showAccomplishmentFormDialog(
                                   (e) => Column(
                                     children: [
                                       const Divider(height: 1),
-                                      TrackingRowWidget(
+                                      AccomplishmentPgsAuditorDialog(
                                         period: e.value['period'],
                                         periodIndex: e.key,
                                         totalPeriods: monthlyPeriods.length,
@@ -2693,7 +2693,7 @@ Future<bool?> showBreakthroughFormDialog(
                         ],
                       ),
                       const SizedBox(height: 12),
-                      BreakthroughWidget(
+                      BreakthroughDialog(
                         deliverableId: deliverable['pgsDeliverableId'],
                       ),
                     ],

@@ -11,7 +11,7 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/services/home_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/widgets/dynamic_side_column.dart';
+import 'package:imis/widgets/home/dynamic_side_column.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class AdminDashboard extends StatefulWidget {
