@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/auditor_offices/models/auditor_offices.dart';
 import 'package:imis/auditor_offices/services/auditor_offices_service.dart';
@@ -17,6 +18,7 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../common_services/common_service.dart';
 import '../../user/models/user.dart';
@@ -104,14 +106,15 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
     }
   }
 
-  Future<void> fetchAuditorOffice({int page = 1, String? searchQuery}) async {
+  Future<void> fetchAuditorOffice({int? page, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
+    final targetPage = page ?? _currentPage;
 
     try {
       final pageList = await _auditorOfficeSevice.getAuditorOffice(
-        page: page,
+        page: targetPage,
         pageSize: _pageSize,
         searchQuery: searchQuery,
       );
@@ -979,40 +982,37 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
 
   void showDeleteDialog(String id) {
     showDialog(
+      barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Auditor Office? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Auditor Office ',
+            itemName: 'auditor office',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
                 await _auditorOfficeSevice.deleteAuditorOffice(id);
                 await fetchAuditorOffice();
-                MotionToast.success(
+                if (mounted) {
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text(
+                      'auditor office deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
+                  ).show(context);
+                }
+              } catch (_) {
+                MotionToast.error(
                   toastAlignment: Alignment.topCenter,
-                  description: Text('Auditor Office deleted successfully'),
-                ).show(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+                  description: Text(
+                    'Failed to delete auditor office',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 }

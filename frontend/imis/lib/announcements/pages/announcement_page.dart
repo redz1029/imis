@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/constant/constant.dart';
@@ -12,6 +13,7 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/custom_toggle.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class AnnouncementPage extends StatefulWidget {
@@ -865,43 +867,35 @@ class AnnouncementPageState extends State<AnnouncementPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Team? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _announcement.deleteAnnouncement(id);
-                  await fetchAnnouncement();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Announcement',
+            itemName: 'announcement',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _announcement.deleteAnnouncement(id);
+                await fetchAnnouncement();
+                if (mounted) {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Announcement deleted successfully'),
+                    description: Text(
+                      'Announcement deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete Team'));
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete announcement',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 }

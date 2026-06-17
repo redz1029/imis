@@ -4,7 +4,15 @@ import 'package:imis/constant/constant.dart';
 
 class DeleteDialog extends StatelessWidget {
   final VoidCallback onDelete;
-  const DeleteDialog({required this.onDelete});
+  final String title;
+  final String itemName;
+
+  const DeleteDialog({
+    super.key,
+    required this.onDelete,
+    required this.title,
+    required this.itemName,
+  });
 
   @override
   Widget build(BuildContext context) => Dialog(
@@ -41,7 +49,7 @@ class DeleteDialog extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Delete Template',
+            'Delete $title',
             style: GoogleFonts.plusJakartaSans(
               fontWeight: FontWeight.w700,
               fontSize: 17,
@@ -50,7 +58,7 @@ class DeleteDialog extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Are you sure you want to delete this signatory template? This action cannot be undone.',
+            'Are you sure you want to delete "$itemName"? This action cannot be undone.',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
               color: kMuted,

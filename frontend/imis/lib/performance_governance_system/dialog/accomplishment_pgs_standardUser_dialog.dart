@@ -90,9 +90,7 @@ class AccomplishmentStandarduserDialogState
   }
 
   Future<void> pickFile() async {
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -101,11 +99,27 @@ class AccomplishmentStandarduserDialogState
         allowMultiple: false,
         withData: true,
       );
+
       if (result != null) {
         final file = result.files.first;
         final pickedFile = result.files.first;
-        final fileSizeInMB = file.size / (1024 * 1024);
 
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
+        final ext = (pickedFile.extension ?? '').toLowerCase();
+        if (!allowedExtensions.contains(ext)) {
+          MotionToast.error(
+            title: const Text("Invalid File Type"),
+            description: Text(
+              '".$ext" is not supported. Please upload a PDF or image (jpg, jpeg, png, gif, webp).',
+            ),
+            toastDuration: const Duration(seconds: 4),
+            toastAlignment: Alignment.topCenter,
+          ).show(context);
+          setState(() => isLoading = false);
+          return;
+        }
+
+        final fileSizeInMB = file.size / (1024 * 1024);
         if (fileSizeInMB > 10) {
           MotionToast.warning(
             description: const Text(
@@ -114,12 +128,10 @@ class AccomplishmentStandarduserDialogState
             toastDuration: const Duration(seconds: 3),
             toastAlignment: Alignment.topCenter,
           ).show(context);
-
-          setState(() {
-            isLoading = false;
-          });
+          setState(() => isLoading = false);
           return;
         }
+
         if (kIsWeb) {
           Uint8List? bytes = pickedFile.bytes;
           if (bytes != null) {
@@ -134,7 +146,6 @@ class AccomplishmentStandarduserDialogState
         } else {
           File file = File(pickedFile.path!);
           Uint8List bytes = await file.readAsBytes();
-
           setState(() {
             mobileImage = file;
             fileName = pickedFile.name;
@@ -145,11 +156,9 @@ class AccomplishmentStandarduserDialogState
         }
       }
     } catch (e) {
-      debugPrint("File picking failed:");
+      debugPrint("File picking failed: $e");
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
   }
 

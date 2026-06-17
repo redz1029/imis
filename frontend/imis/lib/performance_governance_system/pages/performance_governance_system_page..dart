@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -23,6 +24,7 @@ import 'package:imis/performance_governance_system/dialog/breakthrough_dialog.da
 import 'package:imis/widgets/auto_complete_field.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
 import 'package:imis/operation_review_protocol/dialog/monthly_review_dialog_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -2015,7 +2017,7 @@ class _PerformanceGovernanceSystemPageState
                               color: Colors.redAccent,
                             ),
                             onPressed:
-                                () => _showDeleteDialog(pgs.id.toString()),
+                                () => showDeleteDialog(pgs.id.toString()),
                           ),
                         ),
                     ],
@@ -2094,7 +2096,7 @@ class _PerformanceGovernanceSystemPageState
                       if (value == 'delete' &&
                           status != 'Approved' &&
                           status != 'For Approval') {
-                        _showDeleteDialog(pgs.id.toString());
+                        showDeleteDialog(pgs.id.toString());
                       }
                     },
                     itemBuilder:
@@ -2388,46 +2390,38 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
-  void _showDeleteDialog(String id) {
+  void showDeleteDialog(String id) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: const Text("Confirm Delete"),
-            content: const Text(
-              "Are you sure you want to delete this PGS? This action cannot be undone.",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "Cancel",
-                  style: TextStyle(color: primaryTextColor),
-                ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await _pgsService.deletePgs(id);
-                  await fetchPgsFilter();
-                  try {
-                    MotionToast.success(
-                      toastAlignment: Alignment.topCenter,
-                      description: Text('Pgs deleted successfully'),
-                    ).show(context);
-                  } catch (e) {
-                    MotionToast.error(description: Text('Failed to Pgs'));
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+          (ctx) => DeleteDialog(
+            title: 'PGS',
+            itemName: 'PGS',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _pgsService.deletePgs(id);
+                await fetchPgsList();
+                if (mounted) {
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text(
+                      'PGS deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
+                  ).show(context);
+                }
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete PGS',
+                    style: GoogleFonts.plusJakartaSans(),
                   ),
-                ),
-                child: Text('Delete', style: TextStyle(color: Colors.white)),
-              ),
-            ],
+                );
+              }
+            },
           ),
     );
   }
@@ -2517,13 +2511,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       widget.periods.where((p) => !p.isDeleted).toList();
   List<String> _collectDeliverableSuggestions({required int excludeIndex}) {
     return _delivCtrl.entries
-        .where((e) => e.key != excludeIndex && e.value.text.trim().isNotEmpty)
-        .map((e) => e.value.text.trim())
-        .toList();
-  }
-
-  List<String> _collectKraSuggestions({required int excludeIndex}) {
-    return _kraCtrl.entries
         .where((e) => e.key != excludeIndex && e.value.text.trim().isNotEmpty)
         .map((e) => e.value.text.trim())
         .toList();

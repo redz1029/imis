@@ -38,14 +38,14 @@ class RolesPageState extends State<RolesPage> {
 
   final dio = Dio();
 
-  Future<void> fetchRoles({int page = 1, String? searchQuery}) async {
+  Future<void> fetchRoles({int? page, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
-
+    final targetPage = page ?? _currentPage;
     try {
       final pageList = await _rolesService.getRoles(
-        page: page,
+        page: targetPage,
         pageSize: _pageSize,
         searchQuery: searchQuery,
       );

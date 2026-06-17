@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/office/services/office_service.dart';
@@ -11,6 +12,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class OfficePage extends StatefulWidget {
@@ -46,18 +48,18 @@ class OfficePageState extends State<OfficePage> {
 
   final dio = Dio();
 
-  Future<void> fetchOffices({int page = 1, String? searchQuery}) async {
+  Future<void> fetchOffices({int? page, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
+    final targetPage = page ?? _currentPage;
 
     try {
       final pageList = await _officeService.getOffice(
-        page: page,
+        page: targetPage,
         pageSize: _pageSize,
         searchQuery: searchQuery,
       );
-
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
@@ -803,42 +805,35 @@ class OfficePageState extends State<OfficePage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Office? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _officeService.deleteOffice(id);
-                  await fetchOffices();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Office',
+            itemName: 'office',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _officeService.deleteOffice(id);
+                await fetchOffices();
+                if (mounted) {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Office deleted successfully'),
+                    description: Text(
+                      'office deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete Role'));
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete office',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 }

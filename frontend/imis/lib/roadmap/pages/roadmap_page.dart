@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/print_preview_util.dart';
@@ -15,6 +16,7 @@ import 'package:imis/roadmap/models/roadmap_gut_check.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/button_filter.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
@@ -2958,47 +2960,33 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
       barrierDismissible: false,
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: const Text("Confirm Delete"),
-            content: const Text(
-              "Are you sure you want to delete this Roadmap? This action cannot be undone.",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "Cancel",
-                  style: TextStyle(color: primaryTextColor),
-                ),
-              ),
-              TextButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+          (ctx) => DeleteDialog(
+            title: 'Roadmap',
+            itemName: 'roadmap',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _roadmapService.deleteRoadmap(id);
+                await fetchRoadmap();
+                if (mounted) {
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text(
+                      'Roadmap deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
+                  ).show(context);
+                }
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete roadmap',
+                    style: GoogleFonts.plusJakartaSans(),
                   ),
-                ),
-                onPressed: () async {
-                  Navigator.pop(context);
-                  try {
-                    await _roadmapService.deleteRoadmap(id);
-                    await fetchRoadmap();
-                    MotionToast.success(
-                      toastAlignment: Alignment.topCenter,
-                      description: const Text('Deleted successfully'),
-                    ).show(context);
-                  } catch (e) {
-                    MotionToast.error(
-                      description: const Text('Failed to Delete'),
-                    ).show(context);
-                  }
-                },
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+                );
+              }
+            },
           ),
     );
   }

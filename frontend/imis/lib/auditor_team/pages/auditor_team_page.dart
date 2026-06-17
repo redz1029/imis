@@ -2,6 +2,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/auditor_team/models/auditor_team.dart';
 import 'package:imis/auditor_team/services/auditor_team_service.dart';
@@ -10,6 +11,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/widgets/common/custom_toggle.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class AuditorTeamPage extends StatefulWidget {
@@ -600,7 +602,9 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                             color: primaryColor,
                                           ),
                                           onPressed: () {
-                                            showDeleteDialog(audiorTeam.teamId);
+                                            showDeleteDialog(
+                                              audiorTeam.teamId.toString(),
+                                            );
                                           },
                                         ),
                                       ],
@@ -651,48 +655,39 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     );
   }
 
-  void showDeleteDialog(int teamId) {
+  void showDeleteDialog(String id) {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Auditor Team? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _adutiorTeamService.deleteAuditorTeam(teamId);
-                  await fetchAuditorTeam();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Auditor Team ',
+            itemName: 'auditor team',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _adutiorTeamService.deleteAuditorTeam(id);
+                await fetchAuditorTeam();
+                if (mounted) {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Auditor Team deleted successfully'),
+                    description: Text(
+                      'auditor team deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete Auditor Team'),
-                  );
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete auditor team',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 }

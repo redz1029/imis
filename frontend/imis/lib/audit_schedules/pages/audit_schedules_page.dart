@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/audit_schedules/models/audit_schedules_details.dart';
 import 'package:imis/audit_schedules/models/auditable_office.dart';
@@ -14,6 +15,7 @@ import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../utils/http_util.dart';
 import '../services/audit_schedules_service.dart';
@@ -458,7 +460,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                             },
                                             child: Icon(
                                               Icons.delete,
-                                              size: 24,
+                                              size: 12,
                                               color: Colors.grey.shade600,
                                             ),
                                           ),
@@ -1065,6 +1067,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
+                                                      size: 18,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -1100,6 +1103,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                                   icon: const Icon(
                                                     CupertinoIcons
                                                         .delete_simple,
+                                                    size: 18,
                                                     color: Colors.redAccent,
                                                   ),
                                                   onPressed:
@@ -1202,7 +1206,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                                             CupertinoIcons
                                                                 .delete_simple,
                                                             color: Colors.red,
-                                                            size: 18,
+                                                            size: 12,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Delete'),
@@ -1268,43 +1272,35 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Team? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _auditScheduleService.deleteAuditSchedule(id);
-                  await fetchAuditSchedules();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Audit Schedule',
+            itemName: 'audit schedules',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _auditScheduleService.deleteAuditSchedule(id);
+                await fetchAuditSchedules();
+                if (mounted) {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Deleted successfully'),
+                    description: Text(
+                      'Audit schedule deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete'));
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete audit schedule',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 }

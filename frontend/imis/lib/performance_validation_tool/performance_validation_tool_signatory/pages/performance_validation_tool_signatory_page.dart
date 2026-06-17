@@ -951,6 +951,8 @@ class PerformanceValidationToolSignatoryPageState
                 }
               }
             },
+            title: 'Delete template',
+            itemName: 'signatory',
           ),
     );
   }

@@ -925,6 +925,8 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
       context: context,
       builder:
           (ctx) => DeleteDialog(
+            title: 'Delete Template',
+            itemName: 'signatory',
             onDelete: () async {
               Navigator.pop(ctx);
               try {
@@ -942,6 +944,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
               } catch (_) {
                 if (mounted) {
                   MotionToast.error(
+                    toastAlignment: Alignment.topCenter,
                     description: Text(
                       'Failed to delete template',
                       style: GoogleFonts.plusJakartaSans(),

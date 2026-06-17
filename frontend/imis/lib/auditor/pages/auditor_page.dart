@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/auditor/services/auditor_service.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
@@ -13,6 +14,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../widgets/common/custom_toggle.dart';
 
@@ -45,14 +47,15 @@ class AuditorMainPageState extends State<AuditorPage> {
 
   final dio = Dio();
 
-  Future<void> fetchAuditors({int page = 1, String? searchQuery}) async {
+  Future<void> fetchAuditors({int? page, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
+    final targetPage = page ?? _currentPage;
 
     try {
       final pageList = await _auditorService.getAuditor(
-        page: page,
+        page: targetPage,
         pageSize: _pageSize,
         searchQuery: searchQuery,
       );
@@ -128,42 +131,35 @@ class AuditorMainPageState extends State<AuditorPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Auditor? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _auditorService.deleteAuditor(id);
-                  await fetchAuditors();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Delete Roadmap',
+            itemName: 'roadmap',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _auditorService.deleteAuditor(id);
+                await fetchAuditors();
+                if (mounted) {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Auditor deleted successfully'),
+                    description: Text(
+                      'Roadmap deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete Role'));
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete roadmap',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 

@@ -189,8 +189,24 @@ class AccomplishmentPgsAuditorDialogState
 
       if (result != null) {
         final file = result.files.first;
-        final fileSizeInMB = file.size / (1024 * 1024);
 
+        // Validate extension (catches drag-drop bypass or OS-level override)
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
+        final ext = (file.extension ?? '').toLowerCase();
+        if (!allowedExtensions.contains(ext)) {
+          MotionToast.error(
+            title: const Text("Invalid File Type"),
+            description: Text(
+              '".$ext" is not supported. Please upload a PDF or image (jpg, jpeg, png, gif, webp).',
+            ),
+            toastDuration: const Duration(seconds: 4),
+            toastAlignment: Alignment.topCenter,
+          ).show(context);
+          setState(() => isLoading = false);
+          return;
+        }
+
+        final fileSizeInMB = file.size / (1024 * 1024);
         if (fileSizeInMB > 10) {
           MotionToast.warning(
             description: const Text(
