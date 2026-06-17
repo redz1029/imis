@@ -20,6 +20,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/performance_governance_system/dialog/breakthrough_dialog.dart';
+import 'package:imis/widgets/auto_complete_field.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
@@ -2514,6 +2515,19 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
   bool get _isMobile => MediaQuery.sizeOf(context).width < 640;
   List<PgsPeriod> get _activePeriods =>
       widget.periods.where((p) => !p.isDeleted).toList();
+  List<String> _collectDeliverableSuggestions({required int excludeIndex}) {
+    return _delivCtrl.entries
+        .where((e) => e.key != excludeIndex && e.value.text.trim().isNotEmpty)
+        .map((e) => e.value.text.trim())
+        .toList();
+  }
+
+  List<String> _collectKraSuggestions({required int excludeIndex}) {
+    return _kraCtrl.entries
+        .where((e) => e.key != excludeIndex && e.value.text.trim().isNotEmpty)
+        .map((e) => e.value.text.trim())
+        .toList();
+  }
 
   @override
   void initState() {
@@ -4897,32 +4911,26 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             ),
             const SizedBox(height: 10),
           ],
-          CustomTooltip(
-            message:
-                'Specify the tangible results or outcomes tied to this responsibility.',
-            child: TextFormField(
-              readOnly: !hasEditPermission,
-              controller: _delivCtrl[i],
-              maxLines: null,
-              style: const TextStyle(fontSize: 12, color: kText),
-              decoration: const InputDecoration(
-                hintText: 'Enter deliverable…',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
-                isDense: true,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return isDisapproved
-                      ? "Please revise your deliverable"
-                      : "Please enter your deliverable";
-                }
-                return null;
-              },
+          PgsAutocompleteField(
+            readOnly: !hasEditPermission,
+            controller: _delivCtrl[i]!,
+            // maxLines: null,
+            style: const TextStyle(fontSize: 12, color: kText),
+            decoration: const InputDecoration(
+              hintText: 'Enter deliverable…',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              isDense: true,
             ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return isDisapproved
+                    ? "Please revise your deliverable"
+                    : "Please enter your deliverable";
+              }
+              return null;
+            },
+            suggestions: _collectDeliverableSuggestions(excludeIndex: i),
           ),
           const SizedBox(height: 10),
           ValueListenableBuilder<TextEditingValue>(
