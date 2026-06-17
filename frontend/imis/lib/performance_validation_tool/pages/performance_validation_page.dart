@@ -6,7 +6,6 @@ import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
-import 'package:imis/operation_review_protocol/services/operation_review_protocol_services.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
@@ -17,9 +16,8 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
-import 'package:imis/widgets/dialog/monthly_review_dialog_widget.dart';
-import 'package:imis/widgets/common/pagination_controls.dart';
-import 'package:imis/widgets/permission_widget.dart';
+import 'package:imis/operation_review_protocol/dialog/monthly_review_dialog_widget.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,9 +49,6 @@ class OperationReviewProtocolPageState
     Dio(),
   );
   final _commonService = CommonService(Dio());
-  final _operationReviewProtocolService = OperationReviewProtocolServices(
-    Dio(),
-  );
   final _pgsService = PerformanceGovernanceSystemService(Dio());
 
   @override
@@ -102,25 +97,25 @@ class OperationReviewProtocolPageState
   //   }
   // }
 
-  void _applyFilters(List<PerformanceGovernanceSystem> source) {
-    var result = List<PerformanceGovernanceSystem>.from(source);
+  // void _applyFilters(List<PerformanceGovernanceSystem> source) {
+  //   var result = List<PerformanceGovernanceSystem>.from(source);
 
-    if (_selectedOfficeId != null) {
-      result =
-          result
-              .where((pgs) => pgs.office.id.toString() == _selectedOfficeId)
-              .toList();
-    }
+  //   if (_selectedOfficeId != null) {
+  //     result =
+  //         result
+  //             .where((pgs) => pgs.office.id.toString() == _selectedOfficeId)
+  //             .toList();
+  //   }
 
-    if (_selectedServiceId != null) {
-      result =
-          result
-              .where((pgs) => pgs.office.id.toString() == _selectedServiceId)
-              .toList();
-    }
+  //   if (_selectedServiceId != null) {
+  //     result =
+  //         result
+  //             .where((pgs) => pgs.office.id.toString() == _selectedServiceId)
+  //             .toList();
+  //   }
 
-    filteredList = result;
-  }
+  //   filteredList = result;
+  // }
 
   Future<String> _getRoleId() async {
     final prefs = await SharedPreferences.getInstance();

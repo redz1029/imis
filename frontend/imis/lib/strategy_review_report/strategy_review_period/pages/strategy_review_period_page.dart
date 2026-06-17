@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +10,7 @@ import 'package:imis/strategy_review_report/strategy_review_period/services/stra
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
-import 'package:imis/widgets/permission_widget.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class StrategyReviewPeriodPage extends StatefulWidget {
@@ -590,6 +592,7 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                       ),
                                     );
                                   }
+                                  return null;
                                 },
                               ),
                     ),

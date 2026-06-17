@@ -19,13 +19,13 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
-import 'package:imis/widgets/dialog/breakthrough_dialog.dart';
+import 'package:imis/performance_governance_system/dialog/breakthrough_dialog.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
-import 'package:imis/widgets/common/no_permission_to_view_widget.dart';
-import 'package:imis/widgets/dialog/monthly_review_dialog_widget.dart';
+import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
+import 'package:imis/operation_review_protocol/dialog/monthly_review_dialog_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
-import 'package:imis/widgets/permission_widget.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -34,7 +34,7 @@ import '../../performance_governance_system/models/pgs_readiness.dart';
 import '../../performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import '../../utils/auth_util.dart';
 import '../../utils/permission_service.dart';
-import '../../widgets/dialog/accomplishment/accomplishment_pgs_standardUser_dialog.dart';
+import '../dialog/accomplishment_pgs_standardUser_dialog.dart';
 import '../../widgets/common/custom_tooltip.dart';
 
 const int _fHandle = 2;
@@ -2502,15 +2502,15 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
   final _roadMapService = RoadmapService(Dio());
   final _dateConverter = const LongDateOnlyConverter();
   final Map<int, List<dynamic>> _kraDescCache = {};
-  Map<int, String> _initialDelivCtrl = {};
-  Map<int, String> _initialKraCtrl = {};
-  Map<int, int?> _initialSelectedKRA = {};
-  Map<int, String> _initialByWhen = {};
-  Map<int, bool> _initialIsDirect = {};
-  int? _initialPeriodId;
-  double _initialCompetence = 0.0;
-  double _initialResource = 0.0;
-  double _initialConfidence = 0.0;
+  // Map<int, String> _initialDelivCtrl = {};
+  // Map<int, String> _initialKraCtrl = {};
+  // Map<int, int?> _initialSelectedKRA = {};
+  // Map<int, String> _initialByWhen = {};
+  // Map<int, bool> _initialIsDirect = {};
+  // int? _initialPeriodId;
+  // double _initialCompetence = 0.0;
+  // double _initialResource = 0.0;
+  // double _initialConfidence = 0.0;
   bool get _isMobile => MediaQuery.sizeOf(context).width < 640;
   List<PgsPeriod> get _activePeriods =>
       widget.periods.where((p) => !p.isDeleted).toList();
@@ -2522,9 +2522,9 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     _initFromExisting();
     if (_rows.isEmpty) _addRowInternal();
     _loadKraOptions();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _takeSnapshot();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _takeSnapshot();
+    // });
   }
 
   void _initFromExisting() {
@@ -3274,51 +3274,51 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     ),
   );
 
-  void _takeSnapshot() {
-    _initialPeriodId = _selectedPeriodId;
-    _initialCompetence = _competence;
-    _initialResource = _resource;
-    _initialConfidence = _confidence;
+  // void _takeSnapshot() {
+  //   _initialPeriodId = _selectedPeriodId;
+  //   _initialCompetence = _competence;
+  //   _initialResource = _resource;
+  //   _initialConfidence = _confidence;
 
-    _initialDelivCtrl = {
-      for (final e in _delivCtrl.entries) e.key: e.value.text,
-    };
-    _initialKraCtrl = {for (final e in _kraCtrl.entries) e.key: e.value.text};
-    _initialSelectedKRA = Map.from(_selectedKRA);
-    _initialByWhen = {
-      for (int i = 0; i < _rows.length; i++) i: _rows[i].byWhen,
-    };
-    _initialIsDirect = {
-      for (int i = 0; i < _rows.length; i++) i: _rows[i].isDirect,
-    };
-  }
+  //   _initialDelivCtrl = {
+  //     for (final e in _delivCtrl.entries) e.key: e.value.text,
+  //   };
+  //   _initialKraCtrl = {for (final e in _kraCtrl.entries) e.key: e.value.text};
+  //   _initialSelectedKRA = Map.from(_selectedKRA);
+  //   _initialByWhen = {
+  //     for (int i = 0; i < _rows.length; i++) i: _rows[i].byWhen,
+  //   };
+  //   _initialIsDirect = {
+  //     for (int i = 0; i < _rows.length; i++) i: _rows[i].isDirect,
+  //   };
+  // }
 
-  bool _hasUnsavedChanges() {
-    if (_selectedPeriodId != _initialPeriodId) return true;
-    if (_competence != _initialCompetence) return true;
-    if (_resource != _initialResource) return true;
-    if (_confidence != _initialConfidence) return true;
+  // bool _hasUnsavedChanges() {
+  //   if (_selectedPeriodId != _initialPeriodId) return true;
+  //   if (_competence != _initialCompetence) return true;
+  //   if (_resource != _initialResource) return true;
+  //   if (_confidence != _initialConfidence) return true;
 
-    final snapshotRowCount = _initialByWhen.length;
-    for (int i = 0; i < snapshotRowCount; i++) {
-      if ((_delivCtrl[i]?.text ?? '') != (_initialDelivCtrl[i] ?? '')) {
-        return true;
-      }
-      if ((_kraCtrl[i]?.text ?? '') != (_initialKraCtrl[i] ?? '')) return true;
-      if (_selectedKRA[i] != _initialSelectedKRA[i]) return true;
-      if (_rows[i].byWhen != (_initialByWhen[i] ?? '')) return true;
-      if (_rows[i].isDirect != (_initialIsDirect[i] ?? true)) return true;
-    }
+  //   final snapshotRowCount = _initialByWhen.length;
+  //   for (int i = 0; i < snapshotRowCount; i++) {
+  //     if ((_delivCtrl[i]?.text ?? '') != (_initialDelivCtrl[i] ?? '')) {
+  //       return true;
+  //     }
+  //     if ((_kraCtrl[i]?.text ?? '') != (_initialKraCtrl[i] ?? '')) return true;
+  //     if (_selectedKRA[i] != _initialSelectedKRA[i]) return true;
+  //     if (_rows[i].byWhen != (_initialByWhen[i] ?? '')) return true;
+  //     if (_rows[i].isDirect != (_initialIsDirect[i] ?? true)) return true;
+  //   }
 
-    for (int i = snapshotRowCount; i < _rows.length; i++) {
-      final hasDeliverable = _delivCtrl[i]?.text.trim().isNotEmpty == true;
-      final hasKra = _selectedKRA[i] != null;
-      final hasByWhen = _rows[i].byWhen.isNotEmpty;
-      if (hasDeliverable || hasKra || hasByWhen) return true;
-    }
+  //   for (int i = snapshotRowCount; i < _rows.length; i++) {
+  //     final hasDeliverable = _delivCtrl[i]?.text.trim().isNotEmpty == true;
+  //     final hasKra = _selectedKRA[i] != null;
+  //     final hasByWhen = _rows[i].byWhen.isNotEmpty;
+  //     if (hasDeliverable || hasKra || hasByWhen) return true;
+  //   }
 
-    return false;
-  }
+  //   return false;
+  // }
 
   Widget _periodSelector(bool isMobile) {
     String formatPeriodRange(PgsPeriod p) {

@@ -12,8 +12,8 @@ import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:universal_html/html.dart' as html;
-import '../../../performance_governance_system/enum/pgs_status.dart';
-import '../../../scorecard/services/score_card_monitoring_services.dart';
+import '../../performance_governance_system/enum/pgs_status.dart';
+import '../services/score_card_monitoring_services.dart';
 
 final Dio dio = Dio();
 final _scorecardAccomplishmentService = ScoreCardMonitoringServices(dio);

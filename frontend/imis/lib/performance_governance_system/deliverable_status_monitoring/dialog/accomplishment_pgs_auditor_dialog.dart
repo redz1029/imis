@@ -10,12 +10,12 @@ import 'package:imis/performance_governance_system/deliverable_status_monitoring
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_string.dart';
-import 'package:imis/widgets/permission_widget.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:universal_html/html.dart' as html;
 import '../../../constant/permissions.dart';
-import '../../../performance_governance_system/enum/pgs_status.dart';
+import '../../enum/pgs_status.dart';
 
 final Dio dio = Dio();
 final _accomplishmentService = DeliverableStatusMonitoringService(dio);

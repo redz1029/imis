@@ -532,6 +532,7 @@ class PerformanceValidationToolPeriodPageState
                                       ),
                                     );
                                   }
+                                  return null;
                                 },
                               ),
                     ),

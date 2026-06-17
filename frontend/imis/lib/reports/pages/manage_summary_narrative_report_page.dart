@@ -20,7 +20,7 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
-import 'package:imis/widgets/permission_widget.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

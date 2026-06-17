@@ -13,7 +13,7 @@ import 'package:imis/strategy_review_report/models/strategy_review_kpi.dart';
 import 'package:imis/strategy_review_report/models/strategy_review_report.dart';
 import 'package:imis/strategy_review_report/services/strategy_review_report_services.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/models/strategy_review_period.dart';
-import 'package:imis/widgets/permission_widget.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';

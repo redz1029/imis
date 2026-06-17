@@ -13,7 +13,7 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../utils/http_util.dart';
 import '../services/audit_schedules_service.dart';

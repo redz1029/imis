@@ -9,7 +9,10 @@ import 'package:imis/performance_governance_system/pgs_signatory_template/pgs_si
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
+import 'package:imis/widgets/common/icon_button_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/common/section_label_widget.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../common_services/common_service.dart';
 import '../models/pgs_signatory_template.dart';
@@ -44,7 +47,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
   int _totalCount = 0;
   bool _isLoading = false;
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
@@ -75,7 +77,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
     super.dispose();
   }
 
-  // ── Data ───────────────────────────────────────────────────────────────────
   Future<void> _fetchTemplates({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
     setState(() => _isLoading = true);
@@ -134,95 +135,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
     return grouped;
   }
 
-  // ── Styling helpers ────────────────────────────────────────────────────────
-  InputDecoration _field(String label, {Widget? prefix}) => InputDecoration(
-    labelText: label,
-    prefixIcon: prefix,
-    filled: true,
-    fillColor: kBackground,
-    labelStyle: GoogleFonts.plusJakartaSans(
-      color: kMuted,
-      fontSize: 13,
-      fontWeight: FontWeight.w500,
-    ),
-    floatingLabelStyle: GoogleFonts.plusJakartaSans(
-      color: primaryColor,
-      fontSize: 12,
-      fontWeight: FontWeight.w600,
-    ),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: kBorder),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: kBorder),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: primaryColor, width: 1.5),
-    ),
-    errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: kDanger),
-    ),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-  );
-
-  DropDownDecoratorProps _ddProps(String label) =>
-      DropDownDecoratorProps(dropdownSearchDecoration: _field(label));
-
-  PopupProps<T> _popupProps<T>(
-    String hint,
-    Widget Function(BuildContext, T, bool) builder,
-  ) => PopupProps.menu(
-    showSearchBox: true,
-    searchFieldProps: TextFieldProps(
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.plusJakartaSans(color: kMuted, fontSize: 13),
-        fillColor: kSurface,
-        filled: true,
-        prefixIcon: const Icon(Icons.search_rounded, size: 18, color: kMuted),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: kBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: primaryColor, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
-      ),
-    ),
-    itemBuilder: builder,
-    menuProps: MenuProps(
-      borderRadius: BorderRadius.circular(12),
-      elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.12),
-    ),
-  );
-
-  Widget _sectionLabel(String label, IconData icon) => Row(
-    children: [
-      Icon(icon, size: 14, color: primaryColor),
-      const SizedBox(width: 6),
-      Text(
-        label,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: kMuted,
-          letterSpacing: 0.5,
-        ),
-      ),
-    ],
-  );
-
-  // ── Toast helpers ──────────────────────────────────────────────────────────
   void _toastError(BuildContext ctx, String msg) => MotionToast.error(
     title: Text(
       'Error',
@@ -241,7 +153,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
     toastAlignment: Alignment.center,
   ).show(ctx);
 
-  // ── Confirm dialog ─────────────────────────────────────────────────────────
   Future<bool?> _confirm(
     BuildContext ctx, {
     required String title,
@@ -259,7 +170,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
         ),
   );
 
-  // ── Add/update API call ───────────────────────────────────────────────────
   Future<void> _addOrUpdate(List<PgsSignatoryTemplate> items) async {
     try {
       final res = await AuthenticatedRequest.post(
@@ -273,7 +183,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
     }
   }
 
-  // ── Signatory sub-dialog ──────────────────────────────────────────────────
   void _showSignatoryDialog({
     required BuildContext context,
     required Function setOuter,
@@ -367,7 +276,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                           child: Column(
                             children: [
                               DropdownSearch<User?>(
-                                popupProps: _popupProps<User?>(
+                                popupProps: popupProps<User?>(
                                   'Search user…',
                                   (ctx, user, _) => ListTile(
                                     dense: true,
@@ -419,7 +328,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                                         val == null
                                             ? 'Please select a user'
                                             : null,
-                                dropdownDecoratorProps: _ddProps(
+                                dropdownDecoratorProps: ddProps(
                                   'Select Signatory User',
                                 ),
                               ),
@@ -434,7 +343,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 13,
                                 ),
-                                decoration: _field('Signatory Label'),
+                                decoration: field('Signatory Label'),
                               ),
                               const SizedBox(height: 16),
                               Row(
@@ -451,7 +360,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 13,
                                       ),
-                                      decoration: _field('Signatory Status'),
+                                      decoration: field('Signatory Status'),
                                     ),
                                   ),
                                   const SizedBox(width: 16),
@@ -485,7 +394,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            _StepBtn(
+                                            StepBtn(
                                               icon: Icons.remove_rounded,
                                               onTap:
                                                   () => setInner(() {
@@ -507,7 +416,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                                                 ),
                                               ),
                                             ),
-                                            _StepBtn(
+                                            StepBtn(
                                               icon: Icons.add_rounded,
                                               onTap:
                                                   () => setInner(() => level++),
@@ -524,7 +433,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                         ),
                       ),
                       // Footer
-                      _DialogFooter(
+                      DialogFooter(
                         onCancel: () => Navigator.pop(ctx),
                         onConfirm: () {
                           if (_formKey.currentState!.validate()) {
@@ -570,7 +479,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
     });
   }
 
-  // ── Main form dialog ───────────────────────────────────────────────────────
   void showFormDialog({
     String? id,
     bool isDeleted = false,
@@ -623,7 +531,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Header
                       Container(
                         padding: const EdgeInsets.fromLTRB(24, 20, 20, 20),
                         decoration: const BoxDecoration(
@@ -647,7 +554,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                                 size: 20,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            gap12px,
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -687,18 +594,16 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                           ],
                         ),
                       ),
-
-                      // Body
                       Flexible(
                         child: SingleChildScrollView(
                           padding: const EdgeInsets.all(24),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _sectionLabel('Office', Icons.business_rounded),
+                              sectionLabel('Office', Icons.business_rounded),
                               const SizedBox(height: 8),
                               DropdownSearch<Office?>(
-                                popupProps: _popupProps<Office?>(
+                                popupProps: popupProps<Office?>(
                                   'Search offices…',
                                   (ctx, office, _) => ListTile(
                                     dense: true,
@@ -739,7 +644,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                                         val == null
                                             ? 'Please select an office'
                                             : null,
-                                dropdownDecoratorProps: _ddProps(
+                                dropdownDecoratorProps: ddProps(
                                   'Select Office',
                                 ),
                               ),
@@ -750,7 +655,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  _sectionLabel(
+                                  sectionLabel(
                                     'Signatories',
                                     Icons.people_alt_rounded,
                                   ),
@@ -874,7 +779,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
                         ),
                       ),
 
-                      // Footer
                       Container(
                         padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
                         decoration: BoxDecoration(
@@ -1015,13 +919,12 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
     );
   }
 
-  // ── Delete dialog ──────────────────────────────────────────────────────────
   void showDeleteDialog(String id) {
     showDialog(
       barrierDismissible: false,
       context: context,
       builder:
-          (ctx) => _DeleteDialog(
+          (ctx) => DeleteDialog(
             onDelete: () async {
               Navigator.pop(ctx);
               try {
@@ -1051,7 +954,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
     );
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final isNarrow = MediaQuery.of(context).size.width < 600;
@@ -1075,7 +977,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
               Expanded(
                 child:
                     _isLoading
-                        ? _skeleton()
+                        ? skeleton()
                         : grouped.isEmpty
                         ? _empty()
                         : _list(grouped),
@@ -1118,7 +1020,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Signatory Template',
+          'PGS Signatory Template',
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 24,
@@ -1350,60 +1252,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
       ],
     ),
   );
-
-  Widget _skeleton() => ListView.separated(
-    itemCount: 5,
-    separatorBuilder: (_, __) => const SizedBox(height: 8),
-    itemBuilder:
-        (_, __) => Container(
-          height: 68,
-          decoration: BoxDecoration(
-            color: kSurface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: kBorder),
-          ),
-          child: Row(
-            children: [
-              const SizedBox(width: 16),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: kBackground,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 180,
-                    height: 13,
-                    decoration: BoxDecoration(
-                      color: kBackground,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 100,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: kBackground,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-  );
 }
-
-// ─── Sub-widgets ──────────────────────────────────────────────────────────────
 
 class _OfficeCard extends StatelessWidget {
   final String officeName;
@@ -1462,7 +1311,7 @@ class _OfficeCard extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _IconBtn(
+              IconBtn(
                 icon: Icons.edit_rounded,
                 tooltip: 'Edit',
                 color: primaryTextColor,
@@ -1470,7 +1319,7 @@ class _OfficeCard extends StatelessWidget {
                 onTap: onEdit,
               ),
               const SizedBox(width: 6),
-              _IconBtn(
+              IconBtn(
                 icon: CupertinoIcons.delete_simple,
                 tooltip: 'Delete',
                 color: kDanger,
@@ -1639,7 +1488,7 @@ class _SignatoryCard extends StatelessWidget {
             ],
           ),
         ),
-        _IconBtn(
+        IconBtn(
           icon: Icons.edit_rounded,
           tooltip: 'Edit',
           color: primaryTextColor,
@@ -1648,121 +1497,13 @@ class _SignatoryCard extends StatelessWidget {
           size: 15,
         ),
         const SizedBox(width: 6),
-        _IconBtn(
+        IconBtn(
           icon: CupertinoIcons.delete_simple,
           tooltip: 'Remove',
           color: kDanger,
 
           onTap: onDelete,
           size: 15,
-        ),
-      ],
-    ),
-  );
-}
-
-class _IconBtn extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final Color color;
-  final VoidCallback onTap;
-  final double size;
-  const _IconBtn({
-    required this.icon,
-    required this.tooltip,
-    required this.color,
-
-    required this.onTap,
-    this.size = 15,
-  });
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-    message: tooltip,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Icon(icon, size: size, color: color),
-    ),
-  );
-}
-
-class _StepBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  const _StepBtn({required this.icon, required this.onTap});
-  @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(8),
-    child: SizedBox(
-      width: 36,
-      height: 46,
-      child: Icon(icon, size: 18, color: primaryColor),
-    ),
-  );
-}
-
-class _DialogFooter extends StatelessWidget {
-  final VoidCallback onCancel, onConfirm;
-  final String confirmLabel;
-  final IconData confirmIcon;
-  const _DialogFooter({
-    required this.onCancel,
-    required this.onConfirm,
-    required this.confirmLabel,
-    required this.confirmIcon,
-  });
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(24, 14, 24, 20),
-    decoration: const BoxDecoration(
-      color: kBackground,
-      borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-      border: Border(top: BorderSide(color: kBorder)),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        OutlinedButton(
-          onPressed: onCancel,
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: kBorder),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: Text(
-            'Cancel',
-            style: GoogleFonts.plusJakartaSans(
-              color: kMuted,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        ElevatedButton.icon(
-          onPressed: onConfirm,
-          icon: Icon(confirmIcon, size: 16, color: Colors.white),
-          label: Text(
-            confirmLabel,
-            style: GoogleFonts.plusJakartaSans(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
         ),
       ],
     ),
@@ -1873,118 +1614,6 @@ class _ConfirmDialog extends StatelessWidget {
                     style: GoogleFonts.plusJakartaSans(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _DeleteDialog extends StatelessWidget {
-  final VoidCallback onDelete;
-  const _DeleteDialog({required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) => Dialog(
-    backgroundColor: Colors.transparent,
-    child: Container(
-      width: 380,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: kSurface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 32,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: kDangerLight,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.delete_outline_rounded,
-              color: kDanger,
-              size: 28,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Delete Template',
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 17,
-              color: kText,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Are you sure you want to delete this signatory template? This action cannot be undone.',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
-              color: kMuted,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: kBorder),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'Cancel',
-                    style: GoogleFonts.plusJakartaSans(
-                      color: kMuted,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onDelete,
-                  icon: const Icon(
-                    Icons.delete_rounded,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    'Delete',
-                    style: GoogleFonts.plusJakartaSans(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kDanger,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
