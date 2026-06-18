@@ -73,7 +73,7 @@ class _PgsAutocompleteFieldState extends State<PgsAutocompleteField> {
                   s.toLowerCase().contains(lower) &&
                   s.toLowerCase() != lower,
             )
-            .toSet()
+            .toSet() // deduplicate
             .toList();
 
     if (matched.isEmpty) {
@@ -254,11 +254,29 @@ class _PgsAutocompleteFieldState extends State<PgsAutocompleteField> {
   }
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
-    if (_matched.isEmpty) return KeyEventResult.ignored;
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (_overlay == null || _matched.isEmpty) return KeyEventResult.ignored;
 
     switch (event.logicalKey) {
       case LogicalKeyboardKey.tab:
+        final shiftHeld =
+            HardwareKeyboard.instance.logicalKeysPressed.contains(
+              LogicalKeyboardKey.shiftLeft,
+            ) ||
+            HardwareKeyboard.instance.logicalKeysPressed.contains(
+              LogicalKeyboardKey.shiftRight,
+            );
+        setState(() {
+          _highlighted =
+              shiftHeld
+                  ? (_highlighted - 1 + _matched.length) % _matched.length
+                  : (_highlighted + 1) % _matched.length;
+        });
+        _overlay?.markNeedsBuild();
+        return KeyEventResult.handled;
+
       case LogicalKeyboardKey.arrowDown:
         setState(() {
           _highlighted = (_highlighted + 1) % _matched.length;
@@ -274,11 +292,8 @@ class _PgsAutocompleteFieldState extends State<PgsAutocompleteField> {
         return KeyEventResult.handled;
 
       case LogicalKeyboardKey.enter:
-        if (_overlay != null) {
-          _accept(_matched[_highlighted]);
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
+        _accept(_matched[_highlighted]);
+        return KeyEventResult.handled;
 
       case LogicalKeyboardKey.escape:
         _removeOverlay();
@@ -293,9 +308,9 @@ class _PgsAutocompleteFieldState extends State<PgsAutocompleteField> {
   Widget build(BuildContext context) {
     return CompositedTransformTarget(
       link: _layerLink,
-      child: KeyboardListener(
+      child: Focus(
         focusNode: FocusNode(skipTraversal: true),
-        onKeyEvent: (e) => _handleKey(_focus, e),
+        onKeyEvent: _handleKey,
         child: TextFormField(
           controller: widget.controller,
           focusNode: _focus,
