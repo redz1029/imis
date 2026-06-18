@@ -189,8 +189,6 @@ class AccomplishmentPgsAuditorDialogState
 
       if (result != null) {
         final file = result.files.first;
-
-        // Validate extension (catches drag-drop bypass or OS-level override)
         const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
         final ext = (file.extension ?? '').toLowerCase();
         if (!allowedExtensions.contains(ext)) {

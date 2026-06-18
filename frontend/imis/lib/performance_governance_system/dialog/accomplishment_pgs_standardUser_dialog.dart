@@ -981,46 +981,71 @@ Future<void> loadAccomplishments(
       deliverableId,
     );
 
-    achievementsList[deliverableId] = AchievementPeriodData(
-      rows:
-          accomplishments.asMap().entries.map((entry) {
-            final i = entry.key;
-            final acc = entry.value;
-            final percent = acc.percentAccomplished ?? 0;
+    final rows =
+        accomplishments.asMap().entries.map((entry) {
+          final i = entry.key;
+          final acc = entry.value;
+          final percent = acc.percentAccomplished ?? 0;
 
-            final DateTime rowDate =
-                i < startAndEndDates.length
-                    ? DateTime(
-                      startAndEndDates[i].year,
-                      startAndEndDates[i].month,
-                      1,
-                    )
-                    : (DateTime(
-                      acc.postingDate.year,
-                      acc.postingDate.month,
-                      1,
-                    ));
+          final DateTime rowDate =
+              i < startAndEndDates.length
+                  ? DateTime(
+                    startAndEndDates[i].year,
+                    startAndEndDates[i].month,
+                    1,
+                  )
+                  : DateTime(acc.postingDate.year, acc.postingDate.month, 1);
 
-            return TrackingRowData(
-              date: rowDate,
-              remarksController: TextEditingController(text: acc.remarks),
-              percentageController: TextEditingController(
-                text: percent.toString(),
+          return TrackingRowData(
+            date: rowDate,
+            remarksController: TextEditingController(text: acc.remarks),
+            percentageController: TextEditingController(
+              text: percent.toString(),
+            ),
+            status: ValueNotifier<PgsStatus>(
+              acc.status != null
+                  ? PgsStatusExtension.fromInt(acc.status!)
+                  : _deriveStatusFromPercent(percent),
+            ),
+            auditorRemarksController: TextEditingController(
+              text: acc.auditorRemarks,
+            ),
+            attachmentPath: acc.attachmentPath,
+            attachmentBytes: null,
+            accomplishmentId: acc.id,
+          );
+        }).toList();
+
+    final dio = Dio();
+    final loggedUser = await AuthUtil.processTokenValidity(dio, null);
+    final token = loggedUser?.accessToken;
+
+    if (token != null) {
+      await Future.wait(
+        rows.map((row) async {
+          if (row.accomplishmentId == null) return;
+          final name = row.attachmentPath?.split("/").last ?? "";
+          if (name.isEmpty || name.toLowerCase().endsWith('.pdf')) return;
+
+          try {
+            final response = await dio.get<List<int>>(
+              "${ApiEndpoint.baseUrl}/${row.accomplishmentId}/preview",
+              options: Options(
+                responseType: ResponseType.bytes,
+                headers: {"Authorization": "Bearer $token"},
               ),
-              status: ValueNotifier<PgsStatus>(
-                acc.status != null
-                    ? PgsStatusExtension.fromInt(acc.status!)
-                    : _deriveStatusFromPercent(percent),
-              ),
-              auditorRemarksController: TextEditingController(
-                text: acc.auditorRemarks,
-              ),
-              attachmentPath: acc.attachmentPath,
-              attachmentBytes: null,
-              accomplishmentId: acc.id,
             );
-          }).toList(),
-    );
+            row.attachmentBytes = Uint8List.fromList(response.data!);
+          } catch (e) {
+            debugPrint(
+              "Thumbnail fetch failed for ${row.accomplishmentId}: $e",
+            );
+          }
+        }),
+      );
+    }
+
+    achievementsList[deliverableId] = AchievementPeriodData(rows: rows);
   } catch (e) {
     debugPrint(
       "Failed to load accomplishments for deliverable $deliverableId: $e",
