@@ -5,10 +5,10 @@ import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';
 import 'package:imis/utils/pagination_util.dart';
 
-class KeyResultAreaService {
+class ProcessCoreSupportService {
   final Dio dio;
 
-  KeyResultAreaService(this.dio);
+  ProcessCoreSupportService(this.dio);
   Future<PageList<KeyResultArea>> getKRA({
     int page = 1,
     int pageSize = 15,
