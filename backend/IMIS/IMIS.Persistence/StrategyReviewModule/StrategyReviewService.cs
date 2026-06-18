@@ -1,10 +1,15 @@
-﻿using Base.Primitives;
+﻿using Base.Auths;
+using Base.Auths.Roles;
+using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths.Roles;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.StrategyReviewModule
@@ -16,25 +21,78 @@ namespace IMIS.Persistence.StrategyReviewModule
         private readonly IKeyResultAreaRepository _kraRepository;
         private readonly IKraRoadMapKpiRepository _kraRoadMapKpiRepository;
         private readonly IKraRoadMapDeliverableRepository _kraRoadMapDeliverableRepository;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public StrategyReviewService(IStrategyReviewRepository repository, IkraRoadMapRepository kraRoadMapRepository, IKeyResultAreaRepository kraRepository, IKraRoadMapKpiRepository kraRoadMapKpiRepository, IKraRoadMapDeliverableRepository kraRoadMapDeliverableRepository)
+        public StrategyReviewService(IStrategyReviewRepository repository, IkraRoadMapRepository kraRoadMapRepository, IKeyResultAreaRepository kraRepository, IKraRoadMapKpiRepository kraRoadMapKpiRepository, IKraRoadMapDeliverableRepository kraRoadMapDeliverableRepository, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             _repository = repository;
             _kraRoadMapRepository = kraRoadMapRepository;
             _kraRepository = kraRepository;
             _kraRoadMapKpiRepository = kraRoadMapKpiRepository;
             _kraRoadMapDeliverableRepository = kraRoadMapDeliverableRepository;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
-
-        public async Task<List<StrategyReviewDto>?> GetAll(CancellationToken cancellationToken)
+        private async Task<User?> GetCurrentUserAsync()
         {
-            var strategyReviewDto = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
+            return await currentUserService!.GetCurrentUserAsync();
+        }
+     
+        public async Task<DtoPageList<StrategyReviewDto, StrategyReview, long>> GetAllRoleIdAsync(string roleId, int? strategyReviewPeriodId, int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
 
-            if (strategyReviewDto == null)
-                return null;
+            if (currentUser == null)
+            {
+                return DtoPageList<StrategyReviewDto, StrategyReview, long>.Create(new List<StrategyReview>(), page, pageSize, 0);
+            }
 
-            return strategyReviewDto.Select(o => new StrategyReviewDto(o)).ToList();
-        }  
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+            {
+                return DtoPageList<StrategyReviewDto, StrategyReview, long>.Create(new List<StrategyReview>(),page,  pageSize, 0);
+            }
+
+            if (!await _userManager.IsInRoleAsync(currentUser, role.Name!))
+            {
+                return DtoPageList<StrategyReviewDto, StrategyReview, long>.Create(new List<StrategyReview>(), page, pageSize, 0);
+            }
+
+            List<StrategyReview> strategyReviews;
+
+            if (
+                role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                strategyReviews = await _repository.GetAll(cancellationToken) ?? new List<StrategyReview>();
+            }
+            else
+            {
+                strategyReviews = await _repository.GetAllForRoleAsync(role.Id, cancellationToken) ?? new List<StrategyReview>();
+            }
+
+            // FILTER BY PERIOD
+            if (strategyReviewPeriodId.HasValue)
+            {
+                strategyReviews = strategyReviews.Where(x => x.StrategyReviewPeriodId == strategyReviewPeriodId.Value).ToList();
+            }
+
+            var totalCount = strategyReviews.Count; 
+
+            var pagedItems = strategyReviews.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            return DtoPageList<StrategyReviewDto, StrategyReview, long>.Create(pagedItems, page, pageSize, totalCount);
+        }
 
         public async Task<StrategyReviewDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
         {
@@ -190,18 +248,40 @@ namespace IMIS.Persistence.StrategyReviewModule
         }
 
 
-        public async Task<StrategyReviewDto> SaveOrUpdateAsync(StrategyReviewDto dto, CancellationToken cancellationToken)
+        public async Task<StrategyReviewDto> SaveOrUpdateAsync(
+        StrategyReviewDto dto,
+        CancellationToken cancellationToken)
         {
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+                throw new UnauthorizedAccessException("User not found.");
+
+            var userRoleNames = await _userManager.GetRolesAsync(currentUser);
+
+            bool isAdmin = userRoleNames.Any(r =>
+                r.Equals(
+                    new AdministratorRole().Name,
+                    StringComparison.OrdinalIgnoreCase));
+
             bool isNew = dto.Id == 0;
 
             StrategyReview entity;
 
-            // CREATE =====
+            // CREATE
             if (isNew)
             {
                 entity = dto.ToEntity();
 
-                // SAVE  =======
+                if (!isAdmin)
+                {
+                    if (string.IsNullOrEmpty(dto.RoleId))
+                        throw new InvalidOperationException("RoleId is required.");
+
+                    await ValidateUserRoleAsync(dto.RoleId, userRoleNames);
+                    entity.RoleId = dto.RoleId;
+                }
+
                 _repository.GetDbContext().Add(entity);
 
                 await _repository.SaveOrUpdateAsync(entity, cancellationToken);
@@ -225,17 +305,25 @@ namespace IMIS.Persistence.StrategyReviewModule
                 await _repository.SaveOrUpdateAsync(entity, cancellationToken);
             }
 
-            // UPDATE ======
+            // UPDATE
             else
             {
                 entity = await _repository.GetDbContext()
                     .Set<StrategyReview>()
                     .Include(x => x.StrategyReviewDeliverableKpi)
                     .Include(x => x.StrategyReviewDeliverable)
-                    .FirstOrDefaultAsync(x => x.Id == dto.Id, cancellationToken)
-                    ?? throw new InvalidOperationException("StrategyReview not found.");
+                    .FirstOrDefaultAsync(x => x.Id == dto.Id, cancellationToken) ?? throw new InvalidOperationException("StrategyReview not found.");
 
-                // UPDATE ======
+                var originalRoleId = entity.RoleId;
+
+                if (!isAdmin)
+                {
+                    if (string.IsNullOrEmpty(dto.RoleId))
+                        throw new InvalidOperationException("RoleId is required.");
+
+                    await ValidateUserRoleAsync(dto.RoleId, userRoleNames);
+                }
+
                 entity.PostingDate = dto.PostingDate;
                 entity.StrategyReviewPeriodId = dto.StrategyReviewPeriodId;
                 entity.KraRoadMapId = dto.KraRoadMapId;
@@ -243,21 +331,31 @@ namespace IMIS.Persistence.StrategyReviewModule
                 entity.Start = dto.Start;
                 entity.Stop = dto.Stop;
 
+                entity.RoleId = isAdmin ? originalRoleId : dto.RoleId;
+
                 var updatedEntity = dto.ToEntity();
 
-                // UPDATE KPI =====
                 UpdateStrategyReviewDeliverableKpi(entity, updatedEntity);
 
-                // UPDATE DELIVERABLE =======
                 UpdateStrategyReviewDeliverable(entity, updatedEntity);
 
-                await _repository.SaveOrUpdateAsync(entity, cancellationToken);
+                await _repository.SaveOrUpdateAsync(entity,  cancellationToken);
             }
 
             return new StrategyReviewDto(entity)
             {
                 Id = entity.Id
             };
+        }
+        private async Task ValidateUserRoleAsync(string roleId, IList<string> userRoleNames)
+        {
+            var roleEntities = await _roleManager.Roles.Where(r => userRoleNames.Contains(r.Name!)).ToListAsync();
+
+            if (!roleEntities.Any(r => r.Id == roleId))
+            {
+                throw new UnauthorizedAccessException(
+                    "Invalid role assignment.");
+            }
         }
 
         private void UpdateStrategyReviewDeliverableKpi(StrategyReview existing, StrategyReview incoming)

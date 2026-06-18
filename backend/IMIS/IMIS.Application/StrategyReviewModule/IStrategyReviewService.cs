@@ -1,11 +1,13 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
+using IMIS.Domain;
 
 namespace IMIS.Application.StrategyReviewModule
 {
     public interface IStrategyReviewService : IService
     {
         Task<StrategyReviewDto?> GetByIdAsync(long id, CancellationToken cancellationToken);
-        Task<ReportStrategyReviewDto?> ReportGetByIdAsync(long id, CancellationToken cancellationToken);
-        Task<List<StrategyReviewDto>?> GetAll(CancellationToken cancellationToken);
+        Task<ReportStrategyReviewDto?> ReportGetByIdAsync(long id, CancellationToken cancellationToken);    
+        Task<DtoPageList<StrategyReviewDto, StrategyReview, long>> GetAllRoleIdAsync(string roleId, int? strategyReviewPeriodId, int page, int pageSize, CancellationToken cancellationToken);
     }
 }

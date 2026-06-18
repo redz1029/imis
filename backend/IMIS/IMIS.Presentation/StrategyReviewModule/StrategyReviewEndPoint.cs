@@ -30,16 +30,7 @@ namespace IMIS.Presentation.StrategyReviewModule
             })
            .WithTags(_strategyReview)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.Add));
-
-            app.MapGet("/", async (IStrategyReviewService service, CancellationToken cancellationToken) =>
-            {
-                var kraRoadMapDto = await service.GetAll(cancellationToken).ConfigureAwait(false);
-                return Results.Ok(kraRoadMapDto);
-            })
-            .WithTags(_strategyReview)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_strategyReview), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.View));
-
+            
             app.MapGet("/{id:long}", async (long id, IStrategyReviewService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetByIdAsync(id, cancellationToken);
@@ -49,7 +40,7 @@ namespace IMIS.Presentation.StrategyReviewModule
                 return Results.Ok(result);
             })
            .WithTags(_strategyReview)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_strategyReview), true)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReview), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.View));
 
             app.MapGet("/pdf/{id:long}", async (long id, IStrategyReviewService service, HttpResponse response, CancellationToken cancellationToken) =>
@@ -83,7 +74,7 @@ namespace IMIS.Presentation.StrategyReviewModule
                 //return Results.Ok(result);
             })
            .WithTags(_strategyReview)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_strategyReview), true);
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReview), true);
 
             app.MapPut("/update", async ([FromBody] StrategyReviewDto dto, IStrategyReviewService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -101,7 +92,7 @@ namespace IMIS.Presentation.StrategyReviewModule
                 return Results.Ok(result);
             })
             .WithTags(_strategyReview)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_strategyReview), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReview), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.View));
 
             app.MapGet("/kpis/{kraRoadMapId:long}/{year:int}", async (long kraRoadMapId, int year,  IKraRoadMapKpiService service, CancellationToken cancellationToken) =>
@@ -111,8 +102,17 @@ namespace IMIS.Presentation.StrategyReviewModule
                 return Results.Ok(result);
             })  
             .WithTags(_strategyReview)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_strategyReview), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReview), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.View));
+            
+            app.MapGet("/roleid/{roleId}", async (string roleId, int? strategyReviewPeriodId, int page, int pageSize, IStrategyReviewService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetAllRoleIdAsync(roleId, strategyReviewPeriodId, page, pageSize, cancellationToken);
+
+                return Results.Ok(result);
+            })
+            .WithTags(_strategyReview)
+            .CacheOutput(builder => builder.Expire(TimeSpan.Zero).Tag(_strategyReview), true);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Base.Primitives;
+using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Domain
 {
@@ -14,5 +15,7 @@ namespace IMIS.Domain
         public string? Continue { get; set; }
         public string? Start { get; set; }
         public string? Stop { get; set; }
+        public string? RoleId { get; set; }
+        public IdentityRole? Role { get; set; }
     }
 }

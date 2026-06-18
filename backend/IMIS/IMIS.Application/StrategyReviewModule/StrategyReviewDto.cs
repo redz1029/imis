@@ -18,6 +18,7 @@ namespace IMIS.Application.StrategyReviewModule
         public string? Continue { get; set; }
         public string? Start { get; set; }
         public string? Stop { get; set; }
+        public  string? RoleId { get; set; }
 
         public StrategyReviewDto() { }
 
@@ -35,6 +36,7 @@ namespace IMIS.Application.StrategyReviewModule
                 .Select(x => new StrategyReviewDeliverableKpiDto(x)).ToList();
             this.StrategyReviewDeliverable = strategyReview.StrategyReviewDeliverable?
                 .Select(x => new StrategyReviewDeliverableDto(x)).ToList();
+            this.RoleId = strategyReview.RoleId!;
         }
 
         public override StrategyReview ToEntity() => new()
@@ -50,6 +52,7 @@ namespace IMIS.Application.StrategyReviewModule
                 .Select(x => x.ToEntity()).ToList(),
             StrategyReviewDeliverable = this.StrategyReviewDeliverable?
                 .Select(x => x.ToEntity()).ToList(),
+            RoleId = this.RoleId,
         };
     }
 }

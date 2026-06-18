@@ -10,12 +10,29 @@ namespace IMIS.Persistence.StrategyReviewModule
         public StrategyReviewRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
-        public async Task<IEnumerable<StrategyReview>> GetAll(CancellationToken cancellationToken)
+      
+        public async Task<List<StrategyReview>> GetAll(CancellationToken cancellationToken)
         {
-            return await _entities
-            .AsNoTracking()
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            return await ReadOnlyDbContext.Set<StrategyReview>()
+                .Include(x => x.StrategyReviewPeriod)
+                .Include(x => x.KraRoadMap)
+                    .ThenInclude(x => x!.Kra)
+                .Include(x => x.StrategyReviewDeliverable)
+                .Include(x => x.StrategyReviewDeliverableKpi)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<StrategyReview>> GetAllForRoleAsync(string roleId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<StrategyReview>()
+                .Include(x => x.StrategyReviewPeriod)
+                .Include(x => x.KraRoadMap)
+                    .ThenInclude(x => x!.Kra)
+                .Include(x => x.StrategyReviewDeliverable)
+                .Include(x => x.StrategyReviewDeliverableKpi)
+                .Where(x => x.RoleId == roleId)
+                .OrderBy(x => x.PostingDate)
+                .ToListAsync(cancellationToken);
         }
 
         public async Task<StrategyReview?> GetByIdWithChildrenAsync(long id,  CancellationToken cancellationToken)
