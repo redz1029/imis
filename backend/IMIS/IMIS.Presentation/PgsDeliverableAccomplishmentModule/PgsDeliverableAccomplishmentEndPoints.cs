@@ -182,6 +182,8 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                     return Results.NotFound("File not found.");
 
                 var fileName = Path.GetFileName(accomplishment.AttachmentPath);
+          
+                var safeFileName = System.Text.RegularExpressions.Regex.Replace(fileName, @"[^\x20-\x7E]", " ").Trim();
 
                 byte[] fileBytes;
                 try
@@ -195,11 +197,10 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
 
                 var contentType = FTPHelper.GetContentType(fileName);
 
-                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
-
+                response.Headers["Content-Disposition"] = $"inline; filename=\"{safeFileName}\"";
                 return Results.File(fileBytes, contentType);
             })
-           .WithTags(_pgsDeliverableAccomplishmentTag)
+          .WithTags(_pgsDeliverableAccomplishmentTag)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
 
             app.MapGet("/page", async (int page, int pageSize, IPgsDeliverableAcomplishmentService service, CancellationToken cancellationToken) =>
