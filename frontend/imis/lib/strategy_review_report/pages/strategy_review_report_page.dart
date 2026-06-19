@@ -9,6 +9,7 @@ import 'package:imis/constant/permissions.dart';
 import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
 import 'package:imis/strategy_review_report/models/strategy_review_report.dart';
 import 'package:imis/strategy_review_report/services/strategy_review_report_services.dart';
+import 'package:imis/strategy_review_report/strategy_review_period/models/strategy_review_period.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/roadmap/models/kpi_roadmap.dart';
@@ -19,6 +20,7 @@ import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/common/button_filter.dart';
+import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -181,7 +183,9 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
   int _totalCount = 0;
   bool _isLoading = false;
   final dio = Dio();
-  String roleId = "";
+  String _roleId = '';
+  String? _selectedPeriodId;
+  List<StrategyReviewPeriod> strategyPeriodList = [];
   final List<DeliverableGroup> deliverables = [];
   List<KeyResultArea> kraList = [];
   List<KraRoadmapRole> kraListRoadmap = [];
@@ -190,10 +194,10 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
   final permissionService = PermissionService();
   String selectedFilter = "All Process (Core&Support)";
   List<StrategyReviewReport> _strategyReviewList = [];
+  List<StrategyReviewReport> _strategyReviewFilteredList = [];
   final _dateConverter = const LongDateOnlyConverter();
   bool _isLoadingReviews = false;
 
-  // ── Filtered getter ────────────────────────────────────────────────────────
   List<StrategyReviewReport> get _filteredReviews {
     if (selectedFilter == "All Process (Core&Support)") {
       return _strategyReviewList;
@@ -218,7 +222,8 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
   @override
   void initState() {
     super.initState();
-    _loadCurrentRoleId();
+
+    _initialize();
     isSearchfocus.addListener(() => setState(() {}));
     () async {
       final kra = await _commonService.fetchKra();
@@ -234,35 +239,96 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
     }();
   }
 
-  Future<void> _loadCurrentRoleId() async {
-    await AuthUtil.processTokenValidity(dio, context);
-    final roles = await AuthUtil.fetchRoles();
+  Future<void> _initialize() async {
+    setState(() => _isLoading = true);
+
+    final periods = await _commonService.fetchSrategyPeriod();
+
+    if (!mounted) return;
+    setState(() {
+      strategyPeriodList = periods;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> fetchStrategyReviews({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final roleId = await _getRoleId();
+
+      if (roleId.isEmpty) {
+        debugPrint('Role ID is empty, aborting fetch.');
+        return;
+      }
+
+      setState(() => _roleId = roleId);
+
+      final pageList = await _strategyReviewReport.getStrategyReviewReportList(
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+        roleId: roleId,
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          _strategyReviewList = pageList.items;
+          filteredList = List.from(_strategyReviewList);
+        });
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> fetchFilter({int? page, int pageSize = 15}) async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final targetPage = page ?? _currentPage;
+      final roleIdParam = await _getRoleId();
+
+      final result = await _strategyReviewReport.getStrategyReviewReportList(
+        roleId: roleIdParam,
+        page: targetPage,
+        pageSize: pageSize,
+        strategyReviewPeriodId: _selectedPeriodId,
+      );
+      setState(() {
+        _strategyReviewList = result.items;
+        _strategyReviewFilteredList = result.items;
+        _currentPage = result.page;
+        _totalCount = result.totalCount;
+      });
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<String> _getRoleId() async {
     final prefs = await SharedPreferences.getInstance();
     final String? selectedRoleName = prefs.getString('selectedRole');
-    String tempRoleId = "";
+    final roles = await AuthUtil.fetchRoles();
     if (roles != null && roles.isNotEmpty) {
       var currentRole = roles.first;
       if (selectedRoleName != null) {
         try {
           currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
-          // ignore: empty_catches
-        } catch (e) {}
+        } catch (_) {}
       }
-      tempRoleId = currentRole.id;
+      return currentRole.id;
     }
-  }
-
-  Future<void> fetchStrategyReviews() async {
-    if (_isLoadingReviews) return;
-    setState(() => _isLoadingReviews = true);
-    try {
-      final list = await _strategyReviewReport.getStrategyReviews();
-      if (mounted) setState(() => _strategyReviewList = list);
-    } catch (e) {
-      debugPrint(e.toString());
-    } finally {
-      if (mounted) setState(() => _isLoadingReviews = false);
-    }
+    return '';
   }
 
   Future<void> filterSearchResults(String query) async {
@@ -505,7 +571,9 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                           strategicObjectives:
                                               kra.strategicObjectives ?? '',
                                         );
-                                    if (result != null) {}
+                                    if (result != null) {
+                                      fetchStrategyReviews();
+                                    }
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -590,7 +658,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 600;
     final hasPermission = permissionService.hasPermission(
-      AppPermissions.viewKraRoadMap,
+      AppPermissions.viewStrategyReview,
     );
 
     if (!hasPermission) return noPermissionScreen();
@@ -931,15 +999,15 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                             totalItems: _totalCount,
                             itemsPerPage: _pageSize,
                           ),
-                          // PaginationControls(
-                          //   currentPage: _currentPage,
-                          //   totalItems: _totalCount,
-                          //   itemsPerPage: _pageSize,
-                          //   isLoading: _isLoading,
-                          //   onPageChanged:
-                          //       (page) => fetchStrategyReviews(page: page),
-                          // ),
-                          // const SizedBox(width: 60),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) => fetchStrategyReviews(page: page),
+                          ),
+                          const SizedBox(width: 60),
                         ],
                       ),
                     ),
@@ -1008,7 +1076,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
               ),
               if (!isMobile)
                 PermissionWidget(
-                  permission: AppPermissions.addKraRoadMap,
+                  permission: AppPermissions.addStrategyReview,
                   child: ElevatedButton.icon(
                     onPressed: () => showPeriodPanel(),
                     style: ElevatedButton.styleFrom(
@@ -1092,7 +1160,14 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
           ],
         ),
         const SizedBox(height: 10),
-        Wrap(spacing: 10, runSpacing: 10, children: [_buildRoadmapFilter()]),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            buildDropdown(child: _buildRoadmapFilter()),
+            buildDropdown(child: _periodDropdown()),
+          ],
+        ),
       ],
     );
   }
@@ -1144,6 +1219,13 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
             ),
           ),
         ),
+        SizedBox(
+          height: 38,
+          child: PermissionWidget(
+            permission: AppPermissions.viewOffice,
+            child: _periodDropdown(),
+          ),
+        ),
         if (_hasActiveFilters) ...[
           const SizedBox(width: 4),
           IconButton(
@@ -1154,6 +1236,55 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _periodDropdown() {
+    final converter = LongDateOnlyConverter();
+    final items = strategyPeriodList.where((p) => !p.isDeleted).toList();
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: [
+            "All Periods",
+            ...items.map(
+              (p) =>
+                  "${converter.toJson(p.startDate)} - ${converter.toJson(p.endDate)}",
+            ),
+          ],
+          selectedItem:
+              _selectedPeriodId == null
+                  ? "All Periods"
+                  : (() {
+                    final match =
+                        items
+                            .where((p) => p.id.toString() == _selectedPeriodId)
+                            .firstOrNull;
+                    if (match == null) return "All Periods";
+                    return "${converter.toJson(match.startDate)} - ${converter.toJson(match.endDate)}";
+                  })(),
+          hintText: "Period",
+          searchHint: "Search periods...",
+          prefixIcon: Icons.calendar_today_outlined,
+          onChanged: (value) {
+            setState(() {
+              if (value == "All Periods") {
+                _selectedPeriodId = null;
+              } else {
+                final selected = items.firstWhere(
+                  (p) =>
+                      "${converter.toJson(p.startDate)} - ${converter.toJson(p.endDate)}" ==
+                      value,
+                );
+                _selectedPeriodId = selected.id.toString();
+              }
+            });
+            fetchFilter();
+          },
+        ),
+      ),
     );
   }
 
