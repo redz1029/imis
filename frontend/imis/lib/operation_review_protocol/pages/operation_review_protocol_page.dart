@@ -46,7 +46,7 @@ class OperationReviewProtocolPageState
   String _roleId = '';
   List<PerformanceGovernanceSystem> operationReviewprotocolList = [];
   List<PerformanceGovernanceSystem> filteredList = [];
-  String? _selectedPeriodId; // ← new
+  String? _selectedPeriodId;
   List<PgsPeriod> pgsPeriodList = [];
   final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
     Dio(),
@@ -604,7 +604,7 @@ class OperationReviewProtocolPageState
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  Icons.assessment_outlined,
+                  Icons.reviews_outlined,
                   color: primaryColor,
                   size: 22,
                 ),
@@ -765,8 +765,13 @@ class OperationReviewProtocolPageState
             child: _officeDropdown(),
           ),
         ),
-        // gap8px,
-        // SizedBox(height: 38, child: _serviceDropdown()),
+        SizedBox(
+          height: 38,
+          child: PermissionWidget(
+            permission: AppPermissions.viewOffice,
+            child: _periodDropdown(),
+          ),
+        ),
       ],
     );
   }

@@ -81,6 +81,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
   bool _documenterError = false;
   bool _minutesFileError = false;
   bool _isSaving = false;
+  String? _serviceId;
   final Map<int, PgsStatus> _selectedStatuses = {};
   String get _monthLabel {
     const names = [
@@ -137,17 +138,16 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       final token = loggedUser?.accessToken;
       if (token == null) return;
 
-      final response = await _dio.get<String>(
+      final response = await _dio.get(
         '${ApiEndpoint.baseUrl}/office/${widget.data.office.id}/parent',
-        options: Options(
-          responseType: ResponseType.plain,
-          headers: {'Authorization': 'Bearer $token'},
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       if (!mounted) return;
+      final data = response.data;
       setState(() {
-        _serviceName = (response.data ?? '').replaceAll('"', '');
+        _serviceName = data['name'] ?? '—';
+        _serviceId = data['id']?.toString();
       });
     } catch (e) {
       debugPrint('Failed to load parent service: $e');
@@ -491,6 +491,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       _minutesDeleted ? '' : (_existingMinutesPath ?? ''),
       widget.month,
       false,
+      divisionId: int.tryParse(_serviceId ?? ''),
     );
 
     final accomplishmentUpdates =
