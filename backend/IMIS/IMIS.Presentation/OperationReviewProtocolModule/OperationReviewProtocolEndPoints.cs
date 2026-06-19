@@ -328,11 +328,11 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                     "OperationReviewProtocol", cancellationToken).ConfigureAwait(false);
 
                 // FORCE INLINE PDF VIEW IN BROWSER
-                var fileName = $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                response.Headers.ContentDisposition = $"inline; filename={fileName}";
-                return Results.File(file, "application/pdf");
+                //var fileName = $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                //response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                //return Results.File(file, "application/pdf");
 
-                //return Results.File(file, "application/pdf", $"OperationReviewProtocol_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                return Results.File(file, "application/pdf", $"OperationReviewProtocol_{DateTime.Now:yyyyMMddHHmmss}.pdf");
 
                 //var result = await service.ReportGetByIdAsync(id, pgsId, month, year, cancellationToken).ConfigureAwait(false);
                 //return result != null ? Results.Ok(result) : Results.NotFound();
@@ -361,17 +361,15 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
             .WithTags(_operationReviewProtocol)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
-
+          
             app.MapGet("office/{id}/parent", async (int id, IOfficeService service, CancellationToken cancellationToken) =>
             {
-                var parentOfficeName = await service.GetParentOfficeNameAsync(id, cancellationToken).ConfigureAwait(false);
+                var parentOffice = await service.GetParentOfficeAsync(id, cancellationToken).ConfigureAwait(false);
 
-                return parentOfficeName != null
-                    ? Results.Ok(parentOfficeName)
-                    : Results.NotFound();
+                return parentOffice != null ? Results.Ok(parentOffice) : Results.NotFound();
             })
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View))
-           .WithTags(_operationReviewProtocol).CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View)).WithTags(_operationReviewProtocol)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
         }
     }
 }   

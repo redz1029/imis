@@ -25,8 +25,8 @@ namespace IMIS.Persistence.OfficeModule
             _userManager = userManager;
             _roleManager = roleManager;
         }
-
-        public async Task<string?> GetParentOfficeNameAsync(int officeId, CancellationToken cancellationToken)
+        
+        public async Task<OfficeDto?> GetParentOfficeAsync(int officeId, CancellationToken cancellationToken)
         {
             var office = await GetByIdAsync(officeId, cancellationToken).ConfigureAwait(false);
 
@@ -35,7 +35,14 @@ namespace IMIS.Persistence.OfficeModule
 
             var parentOffice = await GetByIdAsync(office.ParentOfficeId.Value, cancellationToken).ConfigureAwait(false);
 
-            return parentOffice?.Name;
+            if (parentOffice == null)
+                return null;
+
+            return new OfficeDto
+            {
+                Id = parentOffice.Id,
+                Name = parentOffice.Name
+            };
         }
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
@@ -101,9 +108,7 @@ namespace IMIS.Persistence.OfficeModule
         private async Task<User?> GetCurrentUserAsync()
         {
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
-            return currentUserService != null
-                ? await currentUserService.GetCurrentUserAsync()
-                : null;
+            return currentUserService != null ? await currentUserService.GetCurrentUserAsync() : null;
         }
        
         public async Task<List<OfficeDto>> GetOfficesForPgsAuditorAsync(string roleId, CancellationToken cancellationToken)
@@ -132,9 +137,7 @@ namespace IMIS.Persistence.OfficeModule
             }
             else
             {
-                offices = await _repository.GetOfficesForAuditorAsync(
-                    currentUser.Id,
-                    cancellationToken);
+                offices = await _repository.GetOfficesForAuditorAsync(currentUser.Id, cancellationToken);
 
                 if (offices == null || !offices.Any())
                     return [];
