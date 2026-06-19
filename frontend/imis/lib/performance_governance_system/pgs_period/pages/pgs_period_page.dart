@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/pgs_period/services/pgs_period_service.dart';
@@ -11,6 +12,7 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -140,44 +142,32 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this PGS Period? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _pgsPeriodService.deletePeriod(id);
-                  await fetchPGSPeriods();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'PGS period',
+            itemName: 'PGS period',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _pgsPeriodService.deletePeriod(id);
+                await fetchPGSPeriods();
+                if (mounted) {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Period deleted successfully'),
+                    description: Text('PGS period deleted successfully'),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete Period'),
-                  );
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete PGS period',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 
