@@ -3,13 +3,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
-import 'package:imis/performance_governance_system/process_core_support/services/key_result_area_service.dart';
+import 'package:imis/performance_governance_system/process_core_support/services/process_core_support_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class ProcessCoreSupportPage extends StatefulWidget {
@@ -21,7 +23,7 @@ class ProcessCoreSupportPage extends StatefulWidget {
 
 class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
   final _formKey = GlobalKey<FormState>();
-  final _kraService = KeyResultAreaService(Dio());
+  final _processCoreSupportService = ProcessCoreSupportService(Dio());
 
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<KeyResultArea> kraSearchUtil;
@@ -61,7 +63,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _kraService.getKRA(
+      final pageList = await _processCoreSupportService.getKRA(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
@@ -99,40 +101,35 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this KRA? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _kraService.deleteKra(id);
-                  await fetchKRA();
-                  MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('KRA deleted successfully'),
-                  ).show(context);
-                } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete KRA'));
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
+      builder: (ctx) {
+        return DeleteDialog(
+          title: 'Process (Core&Support)',
+          itemName: 'process (core&support)',
+
+          onDelete: () async {
+            Navigator.pop(ctx);
+            try {
+              await _processCoreSupportService.deleteKra(id);
+              fetchKRA();
+              if (mounted) {
+                MotionToast.success(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Process deleted sucessfully',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                ).show(context);
+              }
+            } catch (_) {
+              MotionToast.error(
+                toastAlignment: Alignment.topCenter,
+                description: Text(
+                  'Failed to delete process (core&support)',
+                  style: GoogleFonts.plusJakartaSans(),
                 ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+              );
+            }
+          },
         );
       },
     );
@@ -312,7 +309,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                       strategicObjectiveController.text,
                       false,
                     );
-                    await _kraService.createOrUpdateKra(kra);
+                    await _processCoreSupportService.createOrUpdateKra(kra);
                     setState(() {
                       fetchKRA();
                     });

@@ -114,6 +114,11 @@ class CommonService {
     (e) => PgsPeriod.fromJson(e),
     'Failed to fetch kra period',
   );
+  Future<List<StrategyReviewPeriod>> fetchStrategyReviewPeriod() => _fetchList(
+    ApiEndpoint().strategyReviewPeriod,
+    (e) => StrategyReviewPeriod.fromJson(e),
+    'Failed to fetch strategy review period ',
+  );
 
   Future<List<StrategyReviewPeriod>> fetchSrategyPeriod() => _fetchList(
     ApiEndpoint().strategyReviewPeriod,

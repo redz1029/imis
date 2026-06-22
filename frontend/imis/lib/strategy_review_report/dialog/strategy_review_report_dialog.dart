@@ -13,10 +13,12 @@ import 'package:imis/strategy_review_report/models/strategy_review_kpi.dart';
 import 'package:imis/strategy_review_report/models/strategy_review_report.dart';
 import 'package:imis/strategy_review_report/services/strategy_review_report_services.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/models/strategy_review_period.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal_html/html.dart' as html;
 
 class StrategyReviewReportFormData {
@@ -115,15 +117,33 @@ class StrategyReviewReportDialogState
 
   List<StrategyReviewPeriod> _periods = [];
   StrategyReviewPeriod? _selectedPeriod;
-
+  String roleId = "";
   bool _isLoading = true;
   String? _errorMessage;
   bool _isSaving = false;
+  final dio = Dio();
 
   @override
   void initState() {
     super.initState();
     _fetchData();
+    _loadCurrentRoleId();
+  }
+
+  Future<void> _loadCurrentRoleId() async {
+    await AuthUtil.processTokenValidity(dio, context);
+    final roles = await AuthUtil.fetchRoles();
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      if (mounted) setState(() => roleId = currentRole.id);
+    }
   }
 
   Future<void> _fetchData() async {
@@ -335,6 +355,7 @@ class StrategyReviewReportDialogState
       continueText: _continueCtrl.text.trim(),
       stop: _stopCtrl.text.trim(),
       start: _startCtrl.text.trim(),
+      roleId: roleId,
     );
 
     setState(() => _isSaving = true);

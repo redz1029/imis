@@ -34,16 +34,6 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
   void initState() {
     super.initState();
     fetchStrategyPeriod();
-    // pgsPeriodSearchUtil = FilterSearchResultUtil<PgsPeriod>(
-    //   paginationUtils: _paginationUtils,
-    //   endpoint: ApiEndpoint().pgsperiod,
-    //   pageSize: _pageSize,
-    //   fromJson: (json) => PgsPeriod.fromJson(json),
-    // );
-
-    // isSearchfocus.addListener(() {
-    //   setState(() {});
-    // });
   }
 
   Future<void> fetchStrategyPeriod({int page = 1, String? searchQuery}) async {

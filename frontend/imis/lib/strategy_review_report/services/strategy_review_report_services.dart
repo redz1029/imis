@@ -3,7 +3,6 @@ import 'package:imis/roadmap/models/kra_roadmap_role.dart';
 import 'package:imis/strategy_review_report/models/strategy_review_deliverable.dart';
 import 'package:imis/strategy_review_report/models/strategy_review_kpi.dart';
 import 'package:imis/strategy_review_report/models/strategy_review_report.dart';
-import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';
@@ -14,18 +13,26 @@ class StrategyReviewReportServices {
 
   StrategyReviewReportServices(this.dio);
 
-  Future<PageList<Team>> getStrategyReviewReport({
+  Future<PageList<StrategyReviewReport>> getStrategyReviewReportList({
     int page = 1,
     int pageSize = 15,
     String? searchQuery,
+    required String roleId,
+
+    String? strategyReviewPeriodId,
   }) async {
     final paginationUtil = PaginationUtil(dio);
-    return await paginationUtil.fetchPaginatedData<Team>(
-      endpoint: '${ApiEndpoint().team}/page',
+
+    return await paginationUtil.fetchPaginatedData(
+      endpoint: '${ApiEndpoint().strategyReview}/roleid/$roleId',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
-      fromJson: (json) => Team.fromJson(json),
+      additionalParams: {
+        if (strategyReviewPeriodId != null)
+          'strategyReviewPeriodId': strategyReviewPeriodId,
+      },
+      fromJson: (json) => StrategyReviewReport.fromJson(json),
     );
   }
 
@@ -86,8 +93,10 @@ class StrategyReviewReportServices {
     }
   }
 
-  Future<List<StrategyReviewReport>> getStrategyReviews() async {
-    final url = '${ApiEndpoint.baseUrl}/strategyReview';
+  Future<List<StrategyReviewReport>> getStrategyReviews({
+    String? roleId,
+  }) async {
+    final url = '${ApiEndpoint.baseUrl}/strategyReview/roleid/$roleId';
     final response = await AuthenticatedRequest.get(dio, url);
     final List data = response.data as List;
     return data.map((e) => StrategyReviewReport.fromJson(e)).toList();
@@ -97,5 +106,10 @@ class StrategyReviewReportServices {
     final url = '${ApiEndpoint.baseUrl}/strategyReview/$id';
     final response = await AuthenticatedRequest.get(dio, url);
     return StrategyReviewReport.fromJson(response.data);
+  }
+
+  Future<void> deleteStrategyReview(String id) async {
+    final url = '${ApiEndpoint.baseUrl}/$id';
+    await AuthenticatedRequest.delete(dio, url);
   }
 }

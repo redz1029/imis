@@ -133,8 +133,8 @@ class AuditorMainPageState extends State<AuditorPage> {
       context: context,
       builder:
           (ctx) => DeleteDialog(
-            title: 'Delete Roadmap',
-            itemName: 'roadmap',
+            title: 'Auditor',
+            itemName: 'auditor',
             onDelete: () async {
               Navigator.pop(ctx);
               try {
@@ -144,7 +144,7 @@ class AuditorMainPageState extends State<AuditorPage> {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
                     description: Text(
-                      'Roadmap deleted successfully',
+                      'auditor deleted successfully',
                       style: GoogleFonts.plusJakartaSans(),
                     ),
                   ).show(context);
@@ -153,7 +153,7 @@ class AuditorMainPageState extends State<AuditorPage> {
                 MotionToast.error(
                   toastAlignment: Alignment.topCenter,
                   description: Text(
-                    'Failed to delete roadmap',
+                    'Failed to delete auditor',
                     style: GoogleFonts.plusJakartaSans(),
                   ),
                 );

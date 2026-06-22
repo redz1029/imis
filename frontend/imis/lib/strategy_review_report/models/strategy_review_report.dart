@@ -19,6 +19,7 @@ class StrategyReviewSaveRequest {
   final String? start;
   final String? stop;
   final String? strategyReviewPeriodId;
+  final String? roleId;
 
   StrategyReviewSaveRequest({
     required this.id,
@@ -34,6 +35,7 @@ class StrategyReviewSaveRequest {
     this.start,
     this.stop,
     this.strategyReviewPeriodId,
+    this.roleId,
   });
 
   factory StrategyReviewSaveRequest.fromJson(Map<String, dynamic> json) =>
@@ -134,6 +136,7 @@ class StrategyReviewReport {
   final List<StrategyReviewDeliverableKpiRequest>? strategyReviewDeliverableKpi;
   final List<StrategyReviewDeliverableRequest>? strategyReviewDeliverable;
   final int? strategyReviewPeriodId;
+  final String? roleId;
 
   StrategyReviewReport({
     required this.id,
@@ -149,6 +152,7 @@ class StrategyReviewReport {
     this.strategyReviewDeliverableKpi,
     this.strategyReviewDeliverable,
     this.strategyReviewPeriodId,
+    this.roleId,
   });
 
   factory StrategyReviewReport.fromJson(Map<String, dynamic> json) =>

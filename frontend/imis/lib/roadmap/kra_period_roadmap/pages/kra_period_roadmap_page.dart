@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
 import 'package:imis/roadmap/kra_period_roadmap/services/kra_period_roadmap_service.dart';
@@ -11,6 +12,7 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -23,7 +25,7 @@ class KraPeriodRoadmapPage extends StatefulWidget {
 
 class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
   final _paginationUtils = PaginationUtil(Dio());
-  final _pgsPeriodService = KraPeriodRoadmapService(Dio());
+  final _kraPeriodService = KraPeriodRoadmapService(Dio());
   late FilterSearchResultUtil<KraRoadmapPeriod> pgsPeriodSearchUtil;
   final _formKey = GlobalKey<FormState>();
   List<KraRoadmapPeriod> kraPeriodList = [];
@@ -65,7 +67,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _pgsPeriodService.getKraPeriod(
+      final pageList = await _kraPeriodService.getKraPeriod(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
@@ -141,44 +143,30 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this KRA Period? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _pgsPeriodService.deleteKraPeriod(id);
-                  await fetchKRAPeriods();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'KRA Roadmap Period',
+            itemName: 'kRA roadmap period',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _kraPeriodService.deleteKraPeriod(id);
+                await fetchKRAPeriods();
+                if (mounted) {
                   MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('KRA Period deleted successfully'),
+                    description: Text(
+                      'KRA period deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete KRA Period'),
-                  );
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  description: Text('KRA period deleted successfully'),
+                ).show(context);
+              }
+            },
+          ),
     );
   }
 
@@ -403,7 +391,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                       isDeleted: false,
                       rowVersion: '',
                     );
-                    await _pgsPeriodService.createOrUpdateKraPeriod(period);
+                    await _kraPeriodService.createOrUpdateKraPeriod(period);
                     setState(() {
                       fetchKRAPeriods();
                     });
