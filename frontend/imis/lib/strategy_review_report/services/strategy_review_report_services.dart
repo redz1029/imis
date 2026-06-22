@@ -109,7 +109,7 @@ class StrategyReviewReportServices {
   }
 
   Future<void> deleteStrategyReview(String id) async {
-    final url = '${ApiEndpoint.baseUrl}/$id';
+    final url = '${ApiEndpoint().strategyReview}/$id';
     await AuthenticatedRequest.delete(dio, url);
   }
 }
