@@ -10,7 +10,12 @@ namespace IMIS.Persistence.StrategyReviewModule
         public StrategyReviewRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
-      
+
+        public async Task<StrategyReview?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<StrategyReview>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
         public async Task<List<StrategyReview>> GetAll(CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<StrategyReview>()

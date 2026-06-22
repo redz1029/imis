@@ -2,6 +2,7 @@
 using Carter;
 using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
+using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
@@ -113,6 +114,17 @@ namespace IMIS.Presentation.StrategyReviewModule
             })
             .WithTags(_strategyReview)
             .CacheOutput(builder => builder.Expire(TimeSpan.Zero).Tag(_strategyReview), true);
+
+            app.MapDelete("/{id:int}", async (int id, IStrategyReviewService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_strategyReview, cancellationToken);
+
+                return result ? Results.Ok(new { message = " Review deleted successfully." }) : Results.NotFound(new { message = "Review not found." });
+            })
+           .WithTags(_strategyReview)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.Edit));
         }
     }
 }

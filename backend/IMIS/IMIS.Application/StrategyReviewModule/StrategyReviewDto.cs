@@ -9,6 +9,7 @@ namespace IMIS.Application.StrategyReviewModule
     {
      
         public int StrategyReviewPeriodId { get; set; }
+        public string? StrategyReviewPeriod { get; set; }
         public DateTime PostingDate { get; set; }
         public long KraRoadMapId { get; set; }
         public string? StrategicObjective { get; set; }
@@ -27,6 +28,9 @@ namespace IMIS.Application.StrategyReviewModule
         {
             this.Id = strategyReview.Id;
             this.StrategyReviewPeriodId = strategyReview.StrategyReviewPeriodId;
+            StrategyReviewPeriod = strategyReview.StrategyReviewPeriod != null
+            ? $"{strategyReview.StrategyReviewPeriod.StartDate:MMMM dd, yyyy} to {strategyReview.StrategyReviewPeriod.EndDate:MMMM dd, yyyy}"
+            : null;
             this.PostingDate = strategyReview.PostingDate;
             this.KraRoadMapId = strategyReview.KraRoadMapId;
             this.Continue = strategyReview.Continue;

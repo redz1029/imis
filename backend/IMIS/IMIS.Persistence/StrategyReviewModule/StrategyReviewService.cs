@@ -20,7 +20,7 @@ namespace IMIS.Persistence.StrategyReviewModule
         private readonly IkraRoadMapRepository _kraRoadMapRepository;
         private readonly IKeyResultAreaRepository _kraRepository;
         private readonly IKraRoadMapKpiRepository _kraRoadMapKpiRepository;
-        private readonly IKraRoadMapDeliverableRepository _kraRoadMapDeliverableRepository;
+        private readonly IKraRoadMapDeliverableRepository _kraRoadMapDeliverableRepository; 
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
@@ -33,6 +33,19 @@ namespace IMIS.Persistence.StrategyReviewModule
             _kraRoadMapDeliverableRepository = kraRoadMapDeliverableRepository;
             _userManager = userManager;
             _roleManager = roleManager;
+        }
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var SoftDelete = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (SoftDelete == null)
+                return false;
+
+            SoftDelete.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
         }
         private async Task<User?> GetCurrentUserAsync()
         {
@@ -162,8 +175,7 @@ namespace IMIS.Persistence.StrategyReviewModule
 
                     if (deliverable != null)
                     {
-                        item.KraRoadMapDeliverableDetails =
-                            new KraRoadMapDeliverableDto(deliverable);
+                        item.KraRoadMapDeliverableDetails = new KraRoadMapDeliverableDto(deliverable);
                     }
                 }
             }
@@ -239,8 +251,7 @@ namespace IMIS.Persistence.StrategyReviewModule
 
                     if (deliverable != null)
                     {
-                        item.KraRoadMapDeliverableDetails =
-                            new KraRoadMapDeliverableDto(deliverable);
+                        item.KraRoadMapDeliverableDetails = new KraRoadMapDeliverableDto(deliverable);
                     }
                 }
             }
@@ -248,9 +259,7 @@ namespace IMIS.Persistence.StrategyReviewModule
         }
 
 
-        public async Task<StrategyReviewDto> SaveOrUpdateAsync(
-        StrategyReviewDto dto,
-        CancellationToken cancellationToken)
+        public async Task<StrategyReviewDto> SaveOrUpdateAsync(StrategyReviewDto dto, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
 
@@ -259,10 +268,7 @@ namespace IMIS.Persistence.StrategyReviewModule
 
             var userRoleNames = await _userManager.GetRolesAsync(currentUser);
 
-            bool isAdmin = userRoleNames.Any(r =>
-                r.Equals(
-                    new AdministratorRole().Name,
-                    StringComparison.OrdinalIgnoreCase));
+            bool isAdmin = userRoleNames.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase));
 
             bool isNew = dto.Id == 0;
 

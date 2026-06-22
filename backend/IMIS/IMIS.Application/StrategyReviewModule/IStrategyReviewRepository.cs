@@ -9,5 +9,6 @@ namespace IMIS.Application.StrategyReviewModule
         Task<List<string>> GetOfficeNamesByKraRoadMapIdAsync(long kraRoadMapId, CancellationToken cancellationToken);
         Task<List<StrategyReview>> GetAll(CancellationToken cancellationToken);
         Task<List<StrategyReview>> GetAllForRoleAsync(string roleId, CancellationToken cancellationToken);
+        Task<StrategyReview?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }
