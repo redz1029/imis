@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-06-11 17:31:09.293771
+// Last synced: 2026-06-22 08:38:04.743445
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -37,6 +37,9 @@ class AppPermissions {
   static const String addPgsDeliverableAccomplishment = 'Add Pgs Deliverable Accomplishment';
   static const String viewPgsDeliverableAccomplishment = 'View Pgs Deliverable Accomplishment';
   static const String editPgsDeliverableAccomplishment = 'Edit Pgs Deliverable Accomplishment';
+  static const String addPerformanceValidationToolPeriod = 'Add Performance Validation Tool Period';
+  static const String viewPerformanceValidationToolPeriod = 'View Performance Validation Tool Period';
+  static const String editPerformanceValidationToolPeriod = 'Edit Performance Validation Tool Period';
   static const String disapprovePerformanceGovernanceSystem = 'Disapprove Performance Governance System';
   static const String submitPerformanceGovernanceSystem = 'Submit Performance Governance System';
   static const String confirmPerformanceGovernanceSystem = 'Confirm Performance Governance System';
