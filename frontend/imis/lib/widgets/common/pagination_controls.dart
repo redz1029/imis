@@ -39,7 +39,7 @@ class PaginationControls extends StatelessWidget {
               hasPreviousPage && !isLoading
                   ? () => onPageChanged(currentPage - 1)
                   : null,
-          icon: const Icon(Icons.chevron_left),
+          icon: const Icon(Icons.chevron_left, size: 16),
           color: grey,
         ),
 
@@ -50,7 +50,7 @@ class PaginationControls extends StatelessWidget {
               hasNextPage && !isLoading
                   ? () => onPageChanged(currentPage + 1)
                   : null,
-          icon: const Icon(Icons.chevron_right),
+          icon: const Icon(Icons.chevron_right, size: 16),
           color: grey,
         ),
       ],
@@ -95,8 +95,8 @@ class PaginationControls extends StatelessWidget {
       child: InkWell(
         onTap: !isCurrent && !isLoading ? () => onPageChanged(page) : null,
         child: Container(
-          width: 32,
-          height: 32,
+          width: 24,
+          height: 24,
           decoration: BoxDecoration(
             color: isCurrent ? activeColor : inactiveColor,
             borderRadius: BorderRadius.circular(4),
@@ -107,6 +107,7 @@ class PaginationControls extends StatelessWidget {
             '$page',
             style: TextStyle(
               color: isCurrent ? activeTextColor : inactiveTextColor,
+              fontSize: 12,
             ),
           ),
         ),
@@ -135,7 +136,7 @@ class PaginationInfo extends StatelessWidget {
       padding: const EdgeInsets.only(left: 16),
       child: Text(
         'Page $currentPage/${(totalItems / itemsPerPage).ceil()}',
-        style: TextStyle(color: textColor),
+        style: TextStyle(color: textColor, fontSize: 12),
       ),
     );
   }
