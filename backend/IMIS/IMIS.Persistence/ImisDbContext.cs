@@ -1,4 +1,5 @@
-﻿using Base.Abstractions;
+﻿using System.Reflection.Emit;
+using Base.Abstractions;
 using Base.Auths;
 using Base.Utilities;
 using IMIS.Domain;
@@ -48,6 +49,13 @@ namespace IMIS.Persistence
         public DbSet<StrategyReviewDeliverable> StrategyReviewDeliverable { get; set; }
         public DbSet<StrategyReviewPeriod> StrategyReviewPeriod { get; set; }
         public DbSet<PerformanceValidationToolPeriod> PerformanceValidationToolPeriod { get; set; }
+        public DbSet<PerformanceValidationToolValidators> PerformanceValidationToolValidators { get; set; }
+        public DbSet<PerformanceValidationToolObjectives> PerformanceValidationToolObjectives { get; set; }
+        public DbSet<PerformanceValidationToolDeliverableFindings> PerformanceValidationToolDeliverableFindings { get; set; }
+        public DbSet<PerformanceValidationToolConclusion> PerformanceValidationToolConclusion { get; set; }
+        public DbSet<PerformanceValidationToolSignatoryTemplate> PerformanceValidationToolSignatoryTemplate { get; set; }
+        public DbSet<PerformanceValidationToolSignatory> PerformanceValidationToolSignatory { get; set; }
+        public DbSet<PerformanceValidationTool> PerformanceValidationTool { get; set; }
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
         public DbSet<IsoStandard> IsoStandards { get; set; }
@@ -86,7 +94,81 @@ namespace IMIS.Persistence
                       .HasForeignKey(x => x.StrategyReviewPeriodId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+            //builder.Entity<PerformanceValidationToolConclusion>()
+            //.HasOne(x => x.PerformanceValidationTool)
+            //.WithOne(x => x.Conclusion)
+            //.HasForeignKey<PerformanceValidationToolConclusion>(x => x.PerformanceValidationToolId)
+            //.OnDelete(DeleteBehavior.NoAction);
 
+            //builder.Entity<PerformanceValidationToolObjectives>()
+            //.HasOne(x => x.PerformanceValidationTool)
+            //.WithOne(x => x.Objectives)
+            //.HasForeignKey<PerformanceValidationToolObjectives>(x => x.PerformanceValidationToolId)
+            //.OnDelete(DeleteBehavior.NoAction);
+
+            //builder.Entity<PerformanceValidationToolValidators>()
+            //    .HasOne<PerformanceValidationTool>()
+            //    .WithMany()
+            //    .HasForeignKey(x => x.PerformanceValidationToolId)
+            //    .OnDelete(DeleteBehavior.NoAction);
+
+            //builder.Entity<PerformanceValidationToolObjectives>()
+            //    .HasOne<PerformanceValidationTool>()
+            //    .WithMany()
+            //    .HasForeignKey(x => x.PerformanceValidationToolId)
+            //    .OnDelete(DeleteBehavior.NoAction);
+
+            //builder.Entity<PerformanceValidationToolConclusion>()
+            //    .HasOne<PerformanceValidationTool>()
+            //    .WithMany()
+            //    .HasForeignKey(x => x.PerformanceValidationToolId)
+            //    .OnDelete(DeleteBehavior.NoAction);
+
+            //builder.Entity<PerformanceValidationToolDeliverableFindings>()
+            //    .HasOne<PerformanceValidationTool>()
+            //    .WithMany()
+            //    .HasForeignKey(x => x.PerformanceValidationToolId)
+            //    .OnDelete(DeleteBehavior.NoAction);
+
+            //builder.Entity<PerformanceValidationToolSignatory>()
+            //    .HasOne<PerformanceValidationTool>()
+            //    .WithMany()
+            //    .HasForeignKey(x => x.PerformanceValidationToolId)
+            //    .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<PerformanceValidationToolValidators>()
+          .HasOne<PerformanceValidationTool>()
+          .WithMany(x => x.Validators)
+          .HasForeignKey(x => x.PerformanceValidationToolId)
+          .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<PerformanceValidationToolDeliverableFindings>()
+                .HasOne<PerformanceValidationTool>()
+                .WithMany(x => x.DeliverableFindings)
+                .HasForeignKey(x => x.PerformanceValidationToolId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<PerformanceValidationToolSignatory>()
+                .HasOne<PerformanceValidationTool>()
+                .WithMany(x => x.PvtSignatories)
+                .HasForeignKey(x => x.PerformanceValidationToolId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // =========================
+            // ONE-TO-ONE RELATIONSHIPS (IMPORTANT FIX)
+            // =========================
+
+            builder.Entity<PerformanceValidationToolObjectives>()
+                .HasOne<PerformanceValidationTool>()
+                .WithOne(x => x.Objectives)
+                .HasForeignKey<PerformanceValidationToolObjectives>(x => x.PerformanceValidationToolId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<PerformanceValidationToolConclusion>()
+                .HasOne<PerformanceValidationTool>()
+                .WithOne(x => x.Conclusion)
+                .HasForeignKey<PerformanceValidationToolConclusion>(x => x.PerformanceValidationToolId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<AuditorTeams>()
                 .HasKey(at => at.Id);

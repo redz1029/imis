@@ -47,7 +47,8 @@ namespace IMIS.Infrastructure.Auths
                 new PgsDeliverableAccomplishmentPermission(),
                 new SWOTAnalysisPermission(),
                 new KeyResultAreaPermission(),
-                new OperationReviewProtocolPermission());
+                new OperationReviewProtocolPermission(),
+                new StrategyReviewPermission());
 
             // This will seed view only permissions for a role
             await PermissionSeeder.SeedViewOnlyPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
@@ -57,7 +58,8 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
                 new PgsSummaryNarrativePermissions(),
-                new OperationReviewProtocolPermission());
+                new OperationReviewProtocolPermission(),
+                new StrategyReviewPermission());
 
             // This will seed specific permission to disapprove for MCC role
             // This is only a sample implementation, @Wilbur please adjust as needed.
@@ -81,7 +83,8 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapPermission(),
                 new KraRoadMapAccomplishmentPermission(),
                 new KraRoadMapPeriodPermission(),
-                new OperationReviewProtocolPermission());         
+                new OperationReviewProtocolPermission(),
+                new StrategyReviewPermission());         
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -124,7 +127,8 @@ namespace IMIS.Infrastructure.Auths
                 new PgsSummaryNarrativePermissions(),
                 new PgsDeliverableAccomplishmentPermission(),
                 new KraRoadMapKpiAccomplishmentPermission(),
-                new OperationReviewProtocolPermission());
+                new OperationReviewProtocolPermission(),
+                new StrategyReviewPermission());
 
             await PermissionSeeder.SeedPermissionForRole<MCC, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),

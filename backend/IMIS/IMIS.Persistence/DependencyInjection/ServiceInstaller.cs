@@ -17,12 +17,19 @@ using IMIS.Application.KraRoadMapRoleAssignmentModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
 using IMIS.Application.OperationReviewProtocolModule;
+using IMIS.Application.PerformanceValidationToolConclusionModule;
+using IMIS.Application.PerformanceValidationToolDeliverableFindingsModule;
+using IMIS.Application.PerformanceValidationToolModule;
+using IMIS.Application.PerformanceValidationToolObjectivesModule;
 using IMIS.Application.PerformanceValidationToolPeriodModule;
+using IMIS.Application.PerformanceValidationToolSignatoryTemplateModule;
+using IMIS.Application.PerformanceValidationToolValidatorsModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
+using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.StandardVersionModule;
@@ -51,12 +58,19 @@ using IMIS.Persistence.KraRoadMapRoleModule;
 using IMIS.Persistence.OfficeModule;
 using IMIS.Persistence.OfficeTypeModule;
 using IMIS.Persistence.OperationReviewProtocolModule;
+using IMIS.Persistence.PerformanceValidationToolConclusionModule;
+using IMIS.Persistence.PerformanceValidationToolDeliverableFindingsModule;
+using IMIS.Persistence.PerformanceValidationToolModule;
+using IMIS.Persistence.PerformanceValidationToolObjectivesModule;
 using IMIS.Persistence.PerformanceValidationToolPeriodModule;
+using IMIS.Persistence.PerformanceValidationToolSignatoryTemplateModule;
+using IMIS.Persistence.PerformanceValidationToolValidatorsModule;
 using IMIS.Persistence.PgsDeliverableAccomplishmentModule;
 using IMIS.Persistence.PgsModule;
 using IMIS.Persistence.PGSModules;
 using IMIS.Persistence.PgsPeriodModule;
 using IMIS.Persistence.PGSReadinessRatingCancerCareModule;
+using IMIS.Persistence.PgsSignatoryModule;
 using IMIS.Persistence.PgsSignatoryTemplateModule;
 using IMIS.Persistence.PgsSummaryNarrativeModule;
 using IMIS.Persistence.StandardVersionModule;
@@ -171,6 +185,27 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IPerformanceValidationToolPeriodRepository, PerformanceValidationToolPeriodRepository>();
             services.AddScoped<IPerformanceValidationToolPeriodService, PerformanceValidationToolPeriodService>();
+
+            services.AddScoped<IPerformanceValidationToolSignatoryTemplateRepository, PerformanceValidationToolSignatoryTemplateRepository>();
+            services.AddScoped<IPerformanceValidationToolSignatoryTemplateService, PerformanceValidationToolSignatoryTemplateService>();
+
+            services.AddScoped<IPerformanceValidationToolObjectivesRepository, PerformanceValidationToolObjectivesRepository>();
+            services.AddScoped<IPerformanceValidationToolObjectivesService, PerformanceValidationToolObjectivesService>();
+
+            services.AddScoped<IPerformanceValidationToolConclusionRepository, PerformanceValidationToolConclusionRepository>();
+            services.AddScoped<IPerformanceValidationToolConclusionService, PerformanceValidationToolConclusionService>();
+
+            services.AddScoped<IPerformanceValidationToolValidatorsRepository, PerformanceValidationToolValidatorsRepository>();
+            services.AddScoped<IPerformanceValidationToolValidatorsService, PerformanceValidationToolValidatorsService>();
+
+            services.AddScoped<IPerformanceValidationToolDeliverableFindingsRepository, PerformanceValidationToolDeliverableFindingsRepository>();
+            services.AddScoped<IPerformanceValidationToolDeliverableFindingsService, PerformanceValidationToolDeliverableFindingsService>();
+
+            services.AddScoped<IPerformanceValidationToolRepository, PerformanceValidationToolRepository>();
+            services.AddScoped<IPerformanceValidationToolService, PerformanceValidationToolService>();
+
+            services.AddScoped<IPgsSignatoryRepository, PgsSignatoryRepository>();
+            services.AddScoped<IPgsSignatoryService, PgsSignatoryService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

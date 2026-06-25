@@ -33,8 +33,4 @@
     <ProjectReference Include="..\IMIS.Infrastructure\IMIS.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="PgsSignatoryModule\" />
-  </ItemGroup>
-
 </Project>

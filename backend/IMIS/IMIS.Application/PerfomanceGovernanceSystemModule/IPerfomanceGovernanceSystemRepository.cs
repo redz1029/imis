@@ -25,6 +25,6 @@ namespace IMIS.Application.PgsModule
         Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken);  
         Task<List<PerfomanceGovernanceSystem>>GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken);
         Task<List<PerfomanceGovernanceSystem>>GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(string userId, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken);
-
+        Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableByStandardUserAsync(string userId, long? pgsPeriodId,  CancellationToken cancellationToken);
     }
 }
