@@ -1502,7 +1502,6 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
   void _addRow() => setState(() => _rows.add(_RowEntry(_years)));
   void _removeRow(int i) => setState(() => _rows.removeAt(i));
 
-  // ── helpers for building RoadmapGutCheck ──
   double _gutRating(int i) => (_gutRatings[i] ?? 0).toDouble();
 
   double _gutAverage() {
@@ -1686,31 +1685,105 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
     bool? confirm = await showDialog<bool>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: const Text('Confirm Save'),
-            content: const Text('Are you sure you want to save this roadmap?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: primaryColor),
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+          (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: 380,
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: kSurface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 32,
+                    offset: Offset(0, 12),
                   ),
-                ),
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text(
-                  'Confirm',
-                  style: TextStyle(color: Colors.white),
-                ),
+                ],
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: kPrimaryBg,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.save_outlined,
+                      color: primaryColor,
+                      size: 28,
+                    ),
+                  ),
+                  gap16px,
+                  Text(
+                    'Confirm Save',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: kText,
+                    ),
+                  ),
+                  gap8px,
+                  Text(
+                    'Are you sure you want to save this roadmap?',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: kMuted,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  gap24px,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: kBorder),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: kMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          label: Text(
+                            'Save',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            elevation: 0,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
     );
 
@@ -2351,9 +2424,12 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
           gap4px,
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
@@ -2381,28 +2457,40 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Process (Core & Support)",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Period",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -2488,21 +2576,30 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                   if (!isMobile) {
                                     return Container(
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
+                                        vertical: 4,
                                       ),
                                       child: Row(
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: Text(matchedKra.name),
+                                            child: Text(
+                                              matchedKra.name,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
-                                            child: Text(kraPeriod),
+                                            child: Text(
+                                              kraPeriod,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
@@ -2517,7 +2614,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                     child: IconButton(
                                                       icon: const Icon(
                                                         Icons.edit_outlined,
-                                                        size: 18,
+                                                        size: 16,
                                                       ),
                                                       onPressed: () async {
                                                         final roadmapDetails =
@@ -2543,7 +2640,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                     icon: const Icon(
                                                       Icons
                                                           .description_outlined,
-                                                      size: 18,
+                                                      size: 16,
                                                       color: Colors.blueAccent,
                                                     ),
                                                     onPressed: () {
@@ -2564,7 +2661,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                     icon: const Icon(
                                                       CupertinoIcons
                                                           .delete_simple,
-                                                      size: 18,
+                                                      size: 16,
                                                       color: Colors.redAccent,
                                                     ),
                                                     onPressed:
@@ -2603,6 +2700,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                               "$itemNumber",
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                               ),
                                             ),
                                             const Spacer(),
@@ -2662,7 +2760,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                             Icon(
                                                               Icons
                                                                   .edit_outlined,
-                                                              size: 18,
+                                                              size: 16,
                                                             ),
                                                             SizedBox(width: 8),
                                                             Text('Edit'),
@@ -2677,7 +2775,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                           Icon(
                                                             Icons
                                                                 .description_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                             color:
                                                                 Colors
                                                                     .blueAccent,
@@ -2699,7 +2797,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                               CupertinoIcons
                                                                   .delete_simple,
                                                               color: Colors.red,
-                                                              size: 18,
+                                                              size: 16,
                                                             ),
                                                             SizedBox(width: 8),
                                                             Text('Delete'),
@@ -2714,9 +2812,13 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         const SizedBox(height: 8),
                                         Text(
                                           "Process (Core & Support): ${matchedKra.name}",
+                                          style: TextStyle(fontSize: 12),
                                         ),
                                         const SizedBox(height: 4),
-                                        Text("Period: $kraPeriod"),
+                                        Text(
+                                          "Period: $kraPeriod",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                       ],
                                     ),
                                   );
@@ -2724,7 +2826,10 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                               ),
                     ),
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       color: Theme.of(context).cardColor,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2764,40 +2869,52 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   }
 
   Widget _buildPageHeader(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 900;
+    final isXSmall = width < 700;
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: EdgeInsets.fromLTRB(20, isXSmall ? 12 : 16, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(isXSmall ? 6 : 8),
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.map, color: primaryColor, size: 22),
+                child: Icon(
+                  Icons.assessment_outlined,
+                  color: primaryColor,
+                  size: isXSmall ? 18 : 22,
+                ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isXSmall ? 8 : 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Roadmap Information",
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize:
+                            isXSmall
+                                ? 12
+                                : isSmall
+                                ? 14
+                                : 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1D23),
+                        color: const Color(0xFF1A1D23),
                       ),
                     ),
                     Text(
                       "${filteredList.length} roadmap${filteredList.length != 1 ? 's' : ''} found",
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: isXSmall ? 10 : 12,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -2811,18 +2928,25 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                     onPressed: () => showProcess(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 16,
+                      padding: EdgeInsets.symmetric(
+                        vertical: isXSmall ? 8 : 10,
+                        horizontal: isXSmall ? 10 : 16,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text(
-                      'Add New',
-                      style: TextStyle(color: Colors.white),
+                    icon: Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: isXSmall ? 14 : 16,
+                    ),
+                    label: Text(
+                      isXSmall ? 'Add' : 'Add New',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isXSmall ? 11 : 13,
+                      ),
                     ),
                   ),
                 ),
@@ -2847,7 +2971,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
         children: [
           const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
           ),
         ],

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/user/models/user.dart';
@@ -16,6 +17,7 @@ import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/common/dotted_button.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:universal_html/html.dart' as html;
 
@@ -535,37 +537,30 @@ class UserRolePageState extends State<UserRolePage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text("Are you sure you want to delete this User Role?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _userRoleService.deleteUserRole(id);
-                  await fetchUserRoles();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'User Role',
+            itemName: 'user role',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _userRoleService.deleteUserRole(id);
+                await fetchUserRoles();
+                if (mounted) {
                   MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('User role deleted successfully'),
-                  ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete User role'),
+                    description: Text(
+                      'User Role deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
                   );
                 }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  description: Text('Faled to delete user role'),
+                ).show(context);
+              }
+            },
+          ),
     );
   }
 

@@ -151,9 +151,12 @@ class SwotDialogResponsiveState extends State<SwotPage> {
           gap4px,
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
@@ -181,28 +184,40 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Full Name",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -260,10 +275,9 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                   final userName = matchUserName.fullName;
 
                                   if (!isMobile) {
-                                    /// DESKTOP ROW
                                     return Container(
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
+                                        vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(
@@ -276,11 +290,17 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: Text(userName),
+                                            child: Text(
+                                              userName,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
@@ -288,6 +308,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                               DateFormat(
                                                 'yyyy',
                                               ).format(swot.postingDate),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
@@ -302,7 +323,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                                     message: 'Edit',
                                                     child: IconButton(
                                                       icon: const Icon(
-                                                        size: 18,
+                                                        size: 16,
                                                         Icons.edit_outlined,
                                                       ),
                                                       onPressed: () async {
@@ -365,7 +386,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                                     icon: const Icon(
                                                       CupertinoIcons
                                                           .delete_simple,
-                                                      size: 18,
+                                                      size: 16,
                                                       color: Colors.redAccent,
                                                     ),
                                                     onPressed:
@@ -485,7 +506,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                                             Icon(
                                                               Icons
                                                                   .edit_outlined,
-                                                              size: 18,
+                                                              size: 16,
                                                             ),
                                                             SizedBox(width: 8),
                                                             Text('Edit'),
@@ -506,7 +527,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                                               CupertinoIcons
                                                                   .delete_simple,
                                                               color: Colors.red,
-                                                              size: 18,
+                                                              size: 16,
                                                             ),
                                                             SizedBox(width: 8),
                                                             Text('Delete'),
@@ -531,7 +552,10 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                               ),
                     ),
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       color: Theme.of(context).cardColor,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -571,40 +595,52 @@ class SwotDialogResponsiveState extends State<SwotPage> {
   }
 
   Widget _buildPageHeader(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 900;
+    final isXSmall = width < 700;
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: EdgeInsets.fromLTRB(20, isXSmall ? 12 : 16, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(isXSmall ? 6 : 8),
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.rocket_launch, color: primaryColor, size: 22),
+                child: Icon(
+                  Icons.assessment_outlined,
+                  color: primaryColor,
+                  size: isXSmall ? 18 : 22,
+                ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isXSmall ? 8 : 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "SWOT Information",
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize:
+                            isXSmall
+                                ? 12
+                                : isSmall
+                                ? 14
+                                : 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1D23),
+                        color: const Color(0xFF1A1D23),
                       ),
                     ),
                     Text(
                       "${filteredList.length} SWOT${filteredList.length != 1 ? 's' : ''} found",
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: isXSmall ? 10 : 12,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -613,23 +649,30 @@ class SwotDialogResponsiveState extends State<SwotPage> {
               ),
               if (!isMobile)
                 PermissionWidget(
-                  permission: AppPermissions.addKraRoadMap,
+                  permission: AppPermissions.addSWOTAnalysis,
                   child: ElevatedButton.icon(
                     onPressed: () => showSwotDialog(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 16,
+                      padding: EdgeInsets.symmetric(
+                        vertical: isXSmall ? 8 : 10,
+                        horizontal: isXSmall ? 10 : 16,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text(
-                      'Add New',
-                      style: TextStyle(color: Colors.white),
+                    icon: Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: isXSmall ? 14 : 16,
+                    ),
+                    label: Text(
+                      isXSmall ? 'Add' : 'Add New',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isXSmall ? 11 : 13,
+                      ),
                     ),
                   ),
                 ),
@@ -648,7 +691,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
         children: [
           const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             child: isMobile ? _buildRoadmapFilter() : _buildDesktopFilters(),
           ),
         ],

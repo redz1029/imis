@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/team/services/team_service.dart';
@@ -10,6 +11,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/dialog_field.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class TeamPage extends StatefulWidget {
@@ -107,11 +109,110 @@ class TeamPageState extends State<TeamPage> {
     String? name,
     bool isActive = false,
   }) {
+    final isEdit = id != null;
     TextEditingController teamController = TextEditingController(text: name);
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 420,
+            padding: EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: kSurface,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 32,
+                  offset: Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.track_changes_rounded,
+                          color: primaryColor,
+                          size: 22,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isEdit ? 'Edit Team' : 'Create Team',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 17,
+                              color: kText,
+                            ),
+                          ),
+                          Text(
+                            isEdit ? ' Update Team' : 'Add a new Team',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              color: kMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Divider(color: kBorder, height: 1),
+                  SizedBox(height: 20),
+                  dialogField(
+                    label: 'Team',
+                    controller: teamController,
+                    validator:
+                        (v) =>
+                            (v == null || v.trim().isEmpty)
+                                ? 'Please fill out this field'
+                                : null,
+                  ),
+                  SizedBox(height: 24),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: kBorder),
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadiusGeometry.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: kMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+              ),
+            ),
+          ),
+        );
         return AlertDialog(
           backgroundColor: mainBgColor,
           shape: RoundedRectangleBorder(

@@ -3,12 +3,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_validation_tool/performance_validation_tool_period/models/performance_validation_tool_period.dart';
 import 'package:imis/performance_validation_tool/performance_validation_tool_period/services/performance_validation_tool_service.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class PerformanceValidationToolPeriodPage extends StatefulWidget {
@@ -518,12 +520,11 @@ class PerformanceValidationToolPeriodPageState
                                                         .delete_simple,
                                                     color: Colors.redAccent,
                                                   ),
-                                                  onPressed: () {},
-
-                                                  // => showDeleteDialog(
-                                                  //   stratperiod.id
-                                                  //       .toString(),
-                                                  // ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        stratperiod.id
+                                                            .toString(),
+                                                      ),
                                                 ),
                                               ],
                                             ),
@@ -573,43 +574,33 @@ class PerformanceValidationToolPeriodPageState
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Confirm Delete'),
-          content: Text(
-            'Are you sure you want to delete this period? This action cannot be undone',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _performanceValidationToolPeriodService
-                      .deleteValidationPeriod(id);
-                  await fetchValidationPeriod();
-                  MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('Period deleted successfully'),
-                  ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to delete period'),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
+      builder: (ctx) {
+        return DeleteDialog(
+          title: 'Performance Validation Tool Period',
+          itemName: 'performance validation tool period',
+          onDelete: () async {
+            Navigator.pop(ctx);
+
+            try {
+              await _performanceValidationToolPeriodService
+                  .deleteValidationPeriod(id);
+              await fetchValidationPeriod();
+              if (mounted) {
+                MotionToast.success(
+                  description: Text(
+                    'Performance validation tool period deleted successfully',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                ).show(context);
+              }
+            } catch (_) {
+              MotionToast.error(
+                description: Text(
+                  'Failed to delete performance validation tool period',
                 ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+              ).show(context);
+            }
+          },
         );
       },
     );

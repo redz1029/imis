@@ -8,6 +8,7 @@ import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
+import 'package:imis/performance_governance_system/dialog/pgs_action_dialog.dart';
 import 'package:imis/performance_governance_system/enum/pgs_action_type.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
@@ -335,32 +336,13 @@ class _PerformanceGovernanceSystemPageState
         break;
     }
 
-    bool? confirm = await showDialog(
+    bool? confirm = await showDialog<bool>(
       context: context,
       builder:
-          (_) => AlertDialog(
-            title: Text(title),
-            content: Text(content),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text("No", style: TextStyle(color: primaryColor)),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: Text("Yes", style: TextStyle(color: Colors.white)),
-              ),
-            ],
+          (_) => PgsActionDialog(
+            title: title,
+            content: content,
+            actionType: actionType,
           ),
     );
 
@@ -1206,9 +1188,12 @@ class _PerformanceGovernanceSystemPageState
           gap4px,
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
@@ -1248,17 +1233,20 @@ class _PerformanceGovernanceSystemPageState
   }
 
   Widget _buildPageHeader(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 900;
+    final isXSmall = width < 700;
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: EdgeInsets.fromLTRB(20, isXSmall ? 12 : 16, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(isXSmall ? 6 : 8),
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -1266,26 +1254,31 @@ class _PerformanceGovernanceSystemPageState
                 child: Icon(
                   Icons.assessment_outlined,
                   color: primaryColor,
-                  size: 22,
+                  size: isXSmall ? 18 : 22,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isXSmall ? 8 : 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "PGS Deliverables Information",
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize:
+                            isXSmall
+                                ? 12
+                                : isSmall
+                                ? 14
+                                : 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1D23),
+                        color: const Color(0xFF1A1D23),
                       ),
                     ),
                     Text(
                       "$_totalCount PGS deliverable${_totalCount != 1 ? 's' : ''} found",
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: isXSmall ? 10 : 12,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -1299,18 +1292,25 @@ class _PerformanceGovernanceSystemPageState
                     onPressed: () => _onAddTap(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 16,
+                      padding: EdgeInsets.symmetric(
+                        vertical: isXSmall ? 8 : 10,
+                        horizontal: isXSmall ? 10 : 16,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text(
-                      'Add New',
-                      style: TextStyle(color: Colors.white),
+                    icon: Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: isXSmall ? 14 : 16,
+                    ),
+                    label: Text(
+                      isXSmall ? 'Add' : 'Add New',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isXSmall ? 11 : 13,
+                      ),
                     ),
                   ),
                 ),
@@ -1348,7 +1348,7 @@ class _PerformanceGovernanceSystemPageState
         children: [
           const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
           ),
         ],
@@ -1420,18 +1420,76 @@ class _PerformanceGovernanceSystemPageState
       selectedStartPeriod != null ||
       selectedEndDate != null;
 
+  // Widget _buildDesktopFilters() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Row(
+  //         children: [
+  //           Icon(Icons.tune, size: 15, color: Colors.grey.shade600),
+  //           const SizedBox(width: 6),
+  //           Text(
+  //             "Filter by",
+  //             style: TextStyle(
+  //               fontSize: 13,
+  //               fontWeight: FontWeight.w600,
+  //               color: Colors.grey.shade700,
+  //             ),
+  //           ),
+  //           const Spacer(),
+  //           if (_hasActiveFilters)
+  //             TextButton.icon(
+  //               onPressed: _resetFilters,
+  //               icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+  //               label: Text(
+  //                 'Clear filters',
+  //                 style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+  //               ),
+  //               style: TextButton.styleFrom(
+  //                 padding: const EdgeInsets.symmetric(
+  //                   horizontal: 8,
+  //                   vertical: 4,
+  //                 ),
+  //               ),
+  //             ),
+  //         ],
+  //       ),
+  //       const SizedBox(height: 10),
+  //       Wrap(
+  //         spacing: 10,
+  //         runSpacing: 10,
+  //         children: [
+  //           buildDropdown(
+  //             child: PermissionWidget(
+  //               permission: AppPermissions.viewOffice,
+  //               child: _servicesDropdown(),
+  //             ),
+  //           ),
+  //           buildDropdown(
+  //             child: PermissionWidget(
+  //               permission: AppPermissions.viewOffice,
+  //               child: _officeDropdown(),
+  //             ),
+  //           ),
+  //           buildDropdown(child: _startDateDropdown()),
+  //           buildDropdown(child: _endDateDropdown()),
+  //         ],
+  //       ),
+  //     ],
+  //   );
+  // }
   Widget _buildDesktopFilters() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.tune, size: 15, color: Colors.grey.shade600),
+            Icon(Icons.tune, size: 14, color: Colors.grey.shade600),
             const SizedBox(width: 6),
             Text(
               "Filter by",
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey.shade700,
               ),
@@ -1440,10 +1498,10 @@ class _PerformanceGovernanceSystemPageState
             if (_hasActiveFilters)
               TextButton.icon(
                 onPressed: _resetFilters,
-                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+                icon: Icon(Icons.refresh, size: 13, color: Colors.red.shade400),
                 label: Text(
                   'Clear filters',
-                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+                  style: TextStyle(fontSize: 11, color: Colors.red.shade400),
                 ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
@@ -1454,25 +1512,26 @@ class _PerformanceGovernanceSystemPageState
               ),
           ],
         ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
+        const SizedBox(height: 8),
+        Row(
           children: [
-            buildDropdown(
+            Expanded(
               child: PermissionWidget(
                 permission: AppPermissions.viewOffice,
                 child: _servicesDropdown(),
               ),
             ),
-            buildDropdown(
+            const SizedBox(width: 10),
+            Expanded(
               child: PermissionWidget(
                 permission: AppPermissions.viewOffice,
                 child: _officeDropdown(),
               ),
             ),
-            buildDropdown(child: _startDateDropdown()),
-            buildDropdown(child: _endDateDropdown()),
+            const SizedBox(width: 10),
+            Expanded(child: _startDateDropdown()),
+            const SizedBox(width: 10),
+            Expanded(child: _endDateDropdown()),
           ],
         ),
       ],
@@ -1619,7 +1678,7 @@ class _PerformanceGovernanceSystemPageState
       children: [
         _buildStatusTabs(),
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
           ),
@@ -1627,34 +1686,37 @@ class _PerformanceGovernanceSystemPageState
             children: const [
               Expanded(
                 flex: 1,
-                child: Text("#", style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text(
+                  "#",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
               ),
               Expanded(
                 flex: 3,
                 child: Text(
                   "Office",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
               Expanded(
                 flex: 2,
                 child: Text(
                   "Period",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
               Expanded(
                 flex: 2,
                 child: Text(
                   "Status",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
               Expanded(
                 flex: 2,
                 child: Text(
                   "Actions",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
             ],
@@ -1721,7 +1783,7 @@ class _PerformanceGovernanceSystemPageState
                       Text(
                         label,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight:
                               isSelected ? FontWeight.w700 : FontWeight.w500,
                           color:
@@ -1821,16 +1883,30 @@ class _PerformanceGovernanceSystemPageState
         final end = converter.toJson(endDate);
         if (!isMobile) {
           return Container(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.symmetric(vertical: 4),
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
             ),
             child: Row(
               children: [
-                Expanded(flex: 1, child: Text("$itemNumber")),
-                Expanded(flex: 3, child: Text(officeName)),
-                Expanded(flex: 2, child: Text("$start - $end")),
-
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    "$itemNumber",
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(officeName, style: const TextStyle(fontSize: 12)),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    "$start - $end",
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
                 Expanded(
                   flex: 2,
                   child: MouseRegion(
@@ -1854,6 +1930,7 @@ class _PerformanceGovernanceSystemPageState
                             child: Text(
                               status,
                               style: TextStyle(
+                                fontSize: 12,
                                 color: getStatusColor(status),
                                 decorationColor: getStatusColor(status),
                               ),
@@ -1881,7 +1958,7 @@ class _PerformanceGovernanceSystemPageState
                         child: Tooltip(
                           message: 'Edit',
                           child: IconButton(
-                            icon: const Icon(size: 18, Icons.edit_outlined),
+                            icon: const Icon(size: 16, Icons.edit_outlined),
                             onPressed: () => _onEditTap(pgs),
                           ),
                         ),
@@ -1940,7 +2017,7 @@ class _PerformanceGovernanceSystemPageState
                             },
                             icon: const Icon(
                               Icons.reviews_outlined,
-                              size: 18,
+                              size: 16,
                               color: Colors.deepOrangeAccent,
                             ),
                           ),
@@ -1952,7 +2029,7 @@ class _PerformanceGovernanceSystemPageState
                           color: Colors.white,
                           icon: const Icon(
                             Icons.description_outlined,
-                            size: 18,
+                            size: 16,
                             color: Colors.blueAccent,
                           ),
                           onSelected: (value) async {
@@ -2012,7 +2089,7 @@ class _PerformanceGovernanceSystemPageState
                               AppPermissions.deletePerformanceGovernanceSystem,
                           child: IconButton(
                             icon: const Icon(
-                              size: 18,
+                              size: 16,
                               CupertinoIcons.delete_simple,
                               color: Colors.redAccent,
                             ),
@@ -2109,7 +2186,7 @@ class _PerformanceGovernanceSystemPageState
                                       .viewPerformanceGovernanceSystem,
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit_outlined, size: 18),
+                                  Icon(Icons.edit_outlined, size: 16),
                                   SizedBox(width: 8),
                                   Text('Edit'),
                                 ],
@@ -2125,7 +2202,7 @@ class _PerformanceGovernanceSystemPageState
                                 children: [
                                   Icon(
                                     Icons.reviews_outlined,
-                                    size: 18,
+                                    size: 16,
                                     color: Colors.deepOrangeAccent,
                                   ),
                                   SizedBox(width: 8),
@@ -2199,7 +2276,7 @@ class _PerformanceGovernanceSystemPageState
                                   children: const [
                                     Icon(
                                       Icons.description_outlined,
-                                      size: 18,
+                                      size: 16,
                                       color: Colors.blueAccent,
                                     ),
                                     SizedBox(width: 8),
@@ -2228,7 +2305,7 @@ class _PerformanceGovernanceSystemPageState
                                     Icon(
                                       CupertinoIcons.delete_simple,
                                       color: Colors.red,
-                                      size: 18,
+                                      size: 16,
                                     ),
                                     SizedBox(width: 8),
                                     Text('Delete'),
@@ -2253,21 +2330,34 @@ class _PerformanceGovernanceSystemPageState
                     ),
                     child: Center(child: getStatusIcon(status)),
                   ),
-                  Text(status, style: TextStyle(color: getStatusColor(status))),
+                  Text(
+                    status,
+                    style: TextStyle(
+                      color: getStatusColor(status),
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
               gap4px,
               Row(
                 children: [
                   const Text("Office: ", style: TextStyle(color: Colors.grey)),
-                  Expanded(child: Text(officeName)),
+                  Expanded(
+                    child: Text(officeName, style: TextStyle(fontSize: 12)),
+                  ),
                 ],
               ),
               gap4px,
               Row(
                 children: [
                   const Text("Period: ", style: TextStyle(color: Colors.grey)),
-                  Expanded(child: Text("$start - $end")),
+                  Expanded(
+                    child: Text(
+                      "$start - $end",
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -2352,7 +2442,7 @@ class _PerformanceGovernanceSystemPageState
 
   Widget _buildPagination() {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       color: Theme.of(context).cardColor,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2871,33 +2961,13 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               "One or more deliverables are disapproved. Do you want to confirm disapproval?";
           break;
       }
-
-      bool? confirm = await showDialog(
+      bool? confirm = await showDialog<bool>(
         context: context,
         builder:
-            (_) => AlertDialog(
-              title: Text(title),
-              content: Text(content),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text("No", style: TextStyle(color: primaryColor)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text("Yes", style: TextStyle(color: Colors.white)),
-                ),
-              ],
+            (_) => PgsActionDialog(
+              title: title,
+              content: content,
+              actionType: actionType,
             ),
       );
       if (confirm != true) return;
@@ -3499,7 +3569,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                 ),
               ),
             ),
-
           if (showDraftSubmit && id != null)
             Padding(
               padding: const EdgeInsets.only(left: 8),
@@ -3915,44 +3984,137 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                           showDialog(
                             context: context,
                             builder:
-                                (context) => AlertDialog(
-                                  title: const Text('Confirm Delete'),
-                                  content: const Text(
-                                    'Are you sure you want to delete this row?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text(
-                                        'Cancel',
-                                        style: TextStyle(
-                                          color: primaryTextColor,
+                                (context) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  child: Container(
+                                    width: 380,
+                                    padding: const EdgeInsets.all(24),
+                                    decoration: BoxDecoration(
+                                      color: kSurface,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.12,
+                                          ),
+                                          blurRadius: 32,
+                                          offset: const Offset(0, 12),
                                         ),
-                                      ),
+                                      ],
                                     ),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: primaryColor,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 10,
-                                          horizontal: 16,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            4,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 56,
+                                          height: 56,
+                                          decoration: BoxDecoration(
+                                            color: kDangerLight,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.delete_outline_rounded,
+                                            color: kDanger,
+                                            size: 28,
                                           ),
                                         ),
-                                      ),
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                        _removeRow(i);
-                                      },
-                                      child: const Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'Confirm Delete',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 17,
+                                            color: kText,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Are you sure you want to delete this row? This action cannot be undone.',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 13,
+                                            color: kMuted,
+                                            height: 1.5,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 24),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: OutlinedButton(
+                                                onPressed:
+                                                    () =>
+                                                        Navigator.pop(context),
+                                                style: OutlinedButton.styleFrom(
+                                                  side: const BorderSide(
+                                                    color: kBorder,
+                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 12,
+                                                      ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  'Cancel',
+                                                  style:
+                                                      GoogleFonts.plusJakartaSans(
+                                                        color: kMuted,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: ElevatedButton.icon(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                  _removeRow(i);
+                                                },
+                                                icon: const Icon(
+                                                  Icons.delete_rounded,
+                                                  size: 16,
+                                                  color: Colors.white,
+                                                ),
+                                                label: Text(
+                                                  'Delete',
+                                                  style:
+                                                      GoogleFonts.plusJakartaSans(
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                ),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: kDanger,
+                                                  elevation: 0,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 12,
+                                                      ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                           );
                         },
@@ -4176,250 +4338,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     );
   }
 
-  // Widget _buildKraCell(int i) {
-  //   _kraCtrl.putIfAbsent(i, () => TextEditingController());
-  //   _kraRoadmapCtrl.putIfAbsent(i, () => TextEditingController());
-
-  //   final hasEditPermission = _permissionService.hasPermission(
-  //     AppPermissions.editPerformanceGovernanceSystem,
-  //   );
-
-  //   final List<String> options = _kraDropdownOptions[i] ?? [];
-  //   final bool hasOptions = options.isNotEmpty;
-  //   final String savedKra = _kraCtrl[i]?.text ?? '';
-  //   if ((_selectedKRAText[i] == null || _selectedKRAText[i]!.isEmpty) &&
-  //       savedKra.isNotEmpty &&
-  //       !_changingKRA.contains(i)) {
-  //     final bool isRoadmapKra = options.contains(savedKra);
-  //     _selectedKRAText[i] = isRoadmapKra ? savedKra : 'Others';
-  //     _rows[i].isDirect = isRoadmapKra;
-  //     _isRetrievedData.add(i);
-  //   }
-
-  //   final String currentSelection = _selectedKRAText[i] ?? '';
-  //   final bool hasSelection = currentSelection.isNotEmpty;
-  //   final bool isOthers = currentSelection == 'Others';
-  //   final bool isChanging = _changingKRA.contains(i);
-  //   final bool isLocked = _isRetrievedData.contains(i);
-
-  //   Future<void> onChangeKraTapped() async {
-  //     final confirm = await showDialog<bool>(
-  //       context: context,
-  //       builder:
-  //           (ctx) => AlertDialog(
-  //             title: const Text('Change KRA?'),
-  //             content: const Text(
-  //               'Changing the KRA will clear the current selection. Do you want to continue?',
-  //             ),
-  //             actions: [
-  //               TextButton(
-  //                 onPressed: () => Navigator.pop(ctx, false),
-  //                 child: Text(
-  //                   'Cancel',
-  //                   style: TextStyle(color: primaryTextColor),
-  //                 ),
-  //               ),
-  //               ElevatedButton(
-  //                 onPressed: () => Navigator.pop(ctx, true),
-  //                 style: ElevatedButton.styleFrom(
-  //                   backgroundColor: primaryColor,
-  //                   shape: RoundedRectangleBorder(
-  //                     borderRadius: BorderRadius.circular(4),
-  //                   ),
-  //                 ),
-  //                 child: Text(
-  //                   'Yes, Change',
-  //                   style: TextStyle(color: Colors.white),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //     );
-
-  //     if (confirm == true) {
-  //       setState(() {
-  //         _selectedKRAText[i] = '';
-  //         _kraCtrl[i]?.clear();
-  //         _rows[i].isDirect = true;
-  //         _isRetrievedData.remove(i);
-  //         _changingKRA.add(i);
-  //       });
-  //       final kraId = _selectedKRA[i];
-  //       if (kraId != null) {
-  //         await _loadKraDescriptionsForRow(i, kraId);
-  //       }
-  //     }
-  //   }
-
-  //   final changeKraButton = MouseRegion(
-  //     cursor: SystemMouseCursors.click,
-  //     child: GestureDetector(
-  //       onTap: onChangeKraTapped,
-  //       child: const Row(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           Icon(Icons.swap_horiz, color: Colors.blue, size: 15),
-  //           Text(
-  //             'Change KRA',
-  //             style: TextStyle(fontSize: 11, color: Colors.blue),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-
-  //   if (!hasOptions && !hasSelection && !isChanging) {
-  //     return Padding(
-  //       padding: const EdgeInsets.all(6),
-  //       child: AbsorbPointer(
-  //         child: TextFormField(
-  //           readOnly: true,
-  //           style: const TextStyle(fontSize: 11),
-  //           decoration: const InputDecoration(
-  //             hintText: 'Select a process first…',
-  //             border: OutlineInputBorder(),
-  //             isDense: true,
-  //           ),
-  //         ),
-  //       ),
-  //     );
-  //   }
-
-  //   if (!hasSelection || isChanging) {
-  //     return Padding(
-  //       padding: const EdgeInsets.all(6),
-  //       child: DropdownButtonFormField<String>(
-  //         key: ValueKey('kra_dropdown_$i'),
-  //         initialValue: null,
-  //         isExpanded: true,
-  //         hint: const Text('-- Select KRA --', style: TextStyle(fontSize: 11)),
-  //         items:
-  //             options.map((opt) {
-  //               final isOthersOpt = opt == 'Others';
-  //               return DropdownMenuItem(
-  //                 value: opt,
-  //                 child: Row(
-  //                   children: [
-  //                     if (isOthersOpt)
-  //                       const Icon(
-  //                         Icons.edit,
-  //                         size: 14,
-  //                         color: Colors.blueAccent,
-  //                       ),
-  //                     if (isOthersOpt) const SizedBox(width: 6),
-  //                     Expanded(
-  //                       child: Text(
-  //                         opt,
-  //                         overflow: TextOverflow.ellipsis,
-  //                         style: TextStyle(
-  //                           fontSize: 11,
-  //                           color: isOthersOpt ? Colors.blueAccent : kText,
-  //                           fontStyle:
-  //                               isOthersOpt
-  //                                   ? FontStyle.italic
-  //                                   : FontStyle.normal,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               );
-  //             }).toList(),
-  //         onChanged:
-  //             !hasEditPermission
-  //                 ? null
-  //                 : (value) {
-  //                   if (value == null) return;
-  //                   setState(() {
-  //                     _selectedKRAText[i] = value;
-  //                     _changingKRA.remove(i);
-  //                     _isRetrievedData.remove(i);
-  //                     if (value == 'Others') {
-  //                       _rows[i].isDirect = false;
-  //                       _kraCtrl[i]?.clear();
-  //                     } else {
-  //                       _rows[i].isDirect = true;
-  //                       _kraCtrl[i]?.text = value;
-  //                     }
-  //                   });
-  //                 },
-  //         decoration: const InputDecoration(
-  //           border: OutlineInputBorder(),
-  //           isDense: true,
-  //         ),
-  //       ),
-  //     );
-  //   }
-
-  //   if (isOthers) {
-  //     return Padding(
-  //       padding: const EdgeInsets.all(6),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           TextFormField(
-  //             controller: _kraCtrl[i],
-  //             readOnly: !hasEditPermission || isLocked,
-  //             maxLines: null,
-  //             style: const TextStyle(fontSize: 12),
-  //             decoration: InputDecoration(
-  //               hintText: 'Type your KRA here…',
-  //               border: const OutlineInputBorder(),
-  //               enabledBorder: OutlineInputBorder(
-  //                 borderSide: BorderSide(
-  //                   color: primaryColor.withValues(alpha: 0.5),
-  //                 ),
-  //               ),
-  //               focusedBorder: const OutlineInputBorder(
-  //                 borderSide: BorderSide(color: primaryColor, width: 1.5),
-  //               ),
-  //               prefixIcon: Icon(
-  //                 isLocked ? Icons.lock_outline : Icons.edit,
-  //                 size: 14,
-  //                 color: primaryColor,
-  //               ),
-  //             ),
-  //             validator:
-  //                 (value) =>
-  //                     (value == null || value.isEmpty)
-  //                         ? 'Please type your KRA'
-  //                         : null,
-  //           ),
-  //           if (hasEditPermission) ...[
-  //             const SizedBox(height: 6),
-  //             changeKraButton,
-  //           ],
-  //         ],
-  //       ),
-  //     );
-  //   }
-
-  //   return Padding(
-  //     padding: const EdgeInsets.all(6),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         TextFormField(
-  //           controller: _kraCtrl[i],
-  //           readOnly: true,
-  //           maxLines: null,
-  //           style: const TextStyle(fontSize: 12),
-  //           decoration: const InputDecoration(
-  //             hintText: 'KRA description…',
-  //             border: OutlineInputBorder(),
-  //             isDense: true,
-  //             prefixIcon: Icon(
-  //               Icons.lock_outline,
-  //               size: 12,
-  //               color: primaryColor,
-  //             ),
-  //           ),
-  //         ),
-  //         if (hasEditPermission) ...[gap6px, changeKraButton],
-  //       ],
-  //     ),
-  //   );
-  // }
   Widget _buildKraCell(int i) {
     _kraCtrl.putIfAbsent(i, () => TextEditingController());
     _kraRoadmapCtrl.putIfAbsent(i, () => TextEditingController());
@@ -4449,33 +4367,105 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       final confirm = await showDialog<bool>(
         context: context,
         builder:
-            (ctx) => AlertDialog(
-              title: const Text('Change KRA?'),
-              content: const Text(
-                'Changing the KRA will clear the current selection. Do you want to continue?',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(color: primaryTextColor),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+            (ctx) => Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 380,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: kSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 32,
+                      offset: const Offset(0, 12),
                     ),
-                  ),
-                  child: const Text(
-                    'Yes, Change',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  ],
                 ),
-              ],
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: kPrimaryBg,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.swap_horiz_rounded,
+                        color: primaryColor,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Change KRA?',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17,
+                        color: kText,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Changing the KRA will clear the current selection. Do you want to continue?',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        color: kMuted,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: kBorder),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: kMuted,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              'Yes, Change',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
       );
 
@@ -5409,7 +5399,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             _dataCell(
               Center(
                 child: Icon(
-                  row.isDirect
+                  !row.isDirect
                       ? Icons.check_box
                       : Icons.check_box_outline_blank,
                   size: 16,
@@ -5612,27 +5602,128 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                       showDialog(
                         context: context,
                         builder:
-                            (context) => AlertDialog(
-                              title: const Text('Confirm Delete'),
-                              content: const Text(
-                                'Are you sure you want to delete this row?',
+                            (context) => Dialog(
+                              backgroundColor: Colors.transparent,
+                              child: Container(
+                                width: 380,
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: kSurface,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.12,
+                                      ),
+                                      blurRadius: 32,
+                                      offset: const Offset(0, 12),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 56,
+                                      height: 56,
+                                      decoration: BoxDecoration(
+                                        color: kDangerLight,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: kDanger,
+                                        size: 28,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Confirm Delete',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 17,
+                                        color: kText,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Are you sure you want to delete this row? This action cannot be undone.',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13,
+                                        color: kMuted,
+                                        height: 1.5,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: OutlinedButton(
+                                            onPressed:
+                                                () => Navigator.pop(context),
+                                            style: OutlinedButton.styleFrom(
+                                              side: const BorderSide(
+                                                color: kBorder,
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                  ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              'Cancel',
+                                              style:
+                                                  GoogleFonts.plusJakartaSans(
+                                                    color: kMuted,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: ElevatedButton.icon(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              _removeRow(i);
+                                            },
+                                            icon: const Icon(
+                                              Icons.delete_rounded,
+                                              size: 16,
+                                              color: Colors.white,
+                                            ),
+                                            label: Text(
+                                              'Delete',
+                                              style:
+                                                  GoogleFonts.plusJakartaSans(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: kDanger,
+                                              elevation: 0,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                  ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    _removeRow(i);
-                                  },
-                                  child: const Text(
-                                    'Delete',
-                                    style: TextStyle(color: Colors.red),
-                                  ),
-                                ),
-                              ],
                             ),
                       );
                     },
@@ -6449,33 +6540,145 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
+
                           onPressed: () async {
                             final shouldSave = await showDialog<bool>(
                               context: context,
                               builder:
-                                  (ctx) => AlertDialog(
-                                    title: const Text("Confirm Save"),
-                                    content: const Text(
-                                      "Are you sure you want to save this data?",
+                                  (ctx) => Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    child: Container(
+                                      width: 380,
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: kSurface,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.12,
+                                            ),
+                                            blurRadius: 32,
+                                            offset: const Offset(0, 12),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 56,
+                                            height: 56,
+                                            decoration: BoxDecoration(
+                                              color: kPrimaryBg,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: const Icon(
+                                              Icons.save_outlined,
+                                              color: primaryColor,
+                                              size: 28,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'Confirm Save',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 17,
+                                              color: kText,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Are you sure you want to save this accomplishment data?',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 13,
+                                              color: kMuted,
+                                              height: 1.5,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 24),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: OutlinedButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        ctx,
+                                                        false,
+                                                      ),
+                                                  style: OutlinedButton.styleFrom(
+                                                    side: const BorderSide(
+                                                      color: kBorder,
+                                                    ),
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 12,
+                                                        ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    'Cancel',
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          color: kMuted,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: ElevatedButton.icon(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        ctx,
+                                                        true,
+                                                      ),
+                                                  icon: const Icon(
+                                                    Icons.check_rounded,
+                                                    size: 16,
+                                                    color: Colors.white,
+                                                  ),
+                                                  label: Text(
+                                                    'Save',
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                  ),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        primaryColor,
+                                                    elevation: 0,
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 12,
+                                                        ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed:
-                                            () => Navigator.of(ctx).pop(false),
-                                        child: Text(
-                                          "No",
-                                          style: TextStyle(color: primaryColor),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed:
-                                            () => Navigator.of(ctx).pop(true),
-                                        child: Text(
-                                          "Yes",
-                                          style: TextStyle(color: primaryColor),
-                                        ),
-                                      ),
-                                    ],
                                   ),
                             );
                             if (shouldSave != true) return;

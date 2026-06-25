@@ -12,6 +12,7 @@ import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/string_extension.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class UserProfilePage extends StatefulWidget {
@@ -1673,42 +1674,27 @@ class UserProfileState extends State<UserProfilePage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this User? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  // await _pgsPeriodService.deletePeriod(id);
-                  // await fetchPGSPeriods();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'User',
+            itemName: 'user',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _userProfileService.deleteUser(id);
+                await fetchUserProfile();
+                if (mounted) {
                   MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
                     description: Text('User deleted successfully'),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(description: Text('User to Delete Period'));
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  description: Text('Failed to delete user'),
+                ).show(context);
+              }
+            },
+          ),
     );
   }
 }

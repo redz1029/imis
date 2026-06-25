@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
@@ -1201,43 +1202,119 @@ class DialogFooter extends StatelessWidget {
                 final shouldSave = await showDialog<bool>(
                   context: dialogContext,
                   builder:
-                      (ctx) => AlertDialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        title: const Text(
-                          'Confirm Save',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        content: const Text(
-                          'Are you sure you want to save this breakthrough data?',
-                          style: TextStyle(fontSize: 13),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(false),
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(color: primaryColor),
-                            ),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                      (ctx) => Dialog(
+                        backgroundColor: Colors.transparent,
+                        child: Container(
+                          width: 380,
+                          padding: EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: kSurface,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.12),
+                                blurRadius: 32,
+                                offset: const Offset(0, 12),
                               ),
-                            ),
-                            onPressed: () => Navigator.of(ctx).pop(true),
-                            child: const Text(
-                              'Confirm',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                            ],
                           ),
-                        ],
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: kPrimaryBg,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(
+                                  Icons.save_outlined,
+                                  color: primaryColor,
+                                  size: 28,
+                                ),
+                              ),
+                              gap16px,
+                              Text(
+                                'Confirm Save',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: kText,
+                                ),
+                              ),
+                              gap8px,
+                              Text(
+                                'Are you sure you want to save this breakthrough?',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  color: kMuted,
+                                  height: 1.5,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 24),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed:
+                                          () => Navigator.pop(ctx, false),
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(color: kBorder),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Cancel',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          color: kMuted,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      icon: const Icon(
+                                        Icons.check_rounded,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                      label: Text(
+                                        'Confirm',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryColor,
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                 );
                 if (shouldSave != true) return;

@@ -16,6 +16,7 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/common/custom_toggle.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class UserOfficePage extends StatefulWidget {
@@ -976,44 +977,27 @@ class UserOfficePageState extends State<UserOfficePage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this User Office? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _userOfficeService.deleteUserOffice(id);
-                  await fetchUserOffice();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'User Office',
+            itemName: 'user office',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _userOfficeService.deleteUserOffice(id);
+                await fetchUserOffice();
+                if (mounted) {
                   MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('User office deleted successfully'),
+                    description: Text('User Office deleted successfully'),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete User office'),
-                  );
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  description: Text('Failed to delete user office'),
+                ).show(context);
+              }
+            },
+          ),
     );
   }
 }

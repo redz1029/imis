@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -102,6 +100,7 @@ class AccomplishmentPgsAuditorDialogState
   Uint8List? _serverImageCache;
   OverlayEntry? _overlayEntry;
   bool serverImageFetchAttempted = false;
+
   @override
   void initState() {
     super.initState();
@@ -445,11 +444,15 @@ class AccomplishmentPgsAuditorDialogState
             ),
           ),
           PermissionWidget(
-            allowedRoles: [PermissionString.pgsAuditor],
-            child: Text(
+            allowedRoles: [
+              PermissionString.roleAdmin,
+              PermissionString.roleStandardUser,
+            ],
+            fallback: Text(
               'No attachment',
               style: TextStyle(color: grey, fontSize: 12),
             ),
+            child: const SizedBox.shrink(),
           ),
         ],
       );
@@ -501,6 +504,7 @@ class AccomplishmentPgsAuditorDialogState
                 ),
               ),
             ),
+            // ✅ Only Admin/StandardUser can delete attachment
             PermissionWidget(
               allowedRoles: [
                 PermissionString.roleAdmin,
@@ -749,33 +753,34 @@ class AccomplishmentPgsAuditorDialogState
             ),
           ),
 
+          // ─── STATUS COLUMN ───────────────────────────────────────────
           Expanded(
             flex: 2,
             child: ValueListenableBuilder<PgsStatus>(
               valueListenable: selectedStatus,
               builder: (context, status, _) {
+                // Read-only text widget (shared by auditor + all other roles)
+                final readOnlyStatus = Center(
+                  child: Tooltip(
+                    message: statusDescriptions[status] ?? '',
+                    child: Text(
+                      statusDisplayNames[status]!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                );
+
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    PermissionWidget(
-                      allowedRoles: [PermissionString.pgsAuditor],
-                      child: Center(
-                        child: Tooltip(
-                          message: statusDescriptions[status] ?? '',
-                          child: Text(
-                            statusDisplayNames[status]!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ),
-                      ),
-                    ),
-
+                    // ✅ FIX: Admin/StandardUser → dropdown; everyone else → read-only text
                     PermissionWidget(
                       allowedRoles: [
                         PermissionString.roleAdmin,
                         PermissionString.roleStandardUser,
                       ],
+                      fallback: readOnlyStatus,
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 6),
                         child: DropdownButtonFormField<PgsStatus>(
@@ -860,6 +865,8 @@ class AccomplishmentPgsAuditorDialogState
               },
             ),
           ),
+
+          // ─── PERCENTAGE COLUMN ───────────────────────────────────────
           Expanded(
             flex: 2,
             child: ValueListenableBuilder<PgsStatus>(
@@ -897,6 +904,15 @@ class AccomplishmentPgsAuditorDialogState
                       progressColor = Colors.orange;
                     }
 
+                    // ✅ FIX: read-only percentage text (shared by all non-editable roles)
+                    final readOnlyPercentage = Text(
+                      '${value.text}%',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -919,31 +935,14 @@ class AccomplishmentPgsAuditorDialogState
                               width: 40,
                               height: 40,
                               child: Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Auditor → text only
-                                    PermissionWidget(
-                                      allowedRoles: [
-                                        PermissionString.pgsAuditor,
-                                      ],
-                                      child: Text(
-                                        '${value.text}%',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    // Admin / Standard User → editable
-                                    PermissionWidget(
-                                      allowedRoles: [
-                                        PermissionString.roleAdmin,
-                                        PermissionString.roleStandardUser,
-                                      ],
-                                      child: _buildEditablePercentage(status),
-                                    ),
+                                // ✅ FIX: Admin/StandardUser → editable; everyone else → read-only text
+                                child: PermissionWidget(
+                                  allowedRoles: [
+                                    PermissionString.roleAdmin,
+                                    PermissionString.roleStandardUser,
                                   ],
+                                  fallback: readOnlyPercentage,
+                                  child: _buildEditablePercentage(status),
                                 ),
                               ),
                             ),

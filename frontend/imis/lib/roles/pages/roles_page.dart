@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/roles/services/roles_service.dart';
@@ -10,6 +11,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class RolesPage extends StatefulWidget {
@@ -618,43 +620,30 @@ class RolesPageState extends State<RolesPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Role? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _rolesService.deleteRole(id);
-                  await fetchRoles();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Roles',
+            itemName: 'roles',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _rolesService.deleteRole(id);
+                await fetchRoles();
+                if (mounted) {
                   MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('Role deleted successfully'),
+                    description: Text(
+                      'Roles deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete Role'));
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  description: Text('Failed to delete role'),
+                ).show(context);
+              }
+            },
+          ),
     );
   }
 }

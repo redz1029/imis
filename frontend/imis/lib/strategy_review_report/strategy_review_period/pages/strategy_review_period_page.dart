@@ -10,6 +10,7 @@ import 'package:imis/strategy_review_report/strategy_review_period/services/stra
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -69,44 +70,27 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this PGS Period? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _strategyPeriodService.deletePeriod(id);
-                  await fetchStrategyPeriod();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Strategy Review Period',
+            itemName: 'strategy review period',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _strategyPeriodService.deletePeriod(id);
+                await fetchStrategyPeriod();
+                if (mounted) {
                   MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('Period deleted successfully'),
+                    description: Text('Strategy review deleted successfully'),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete Period'),
-                  );
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  description: Text('Failed to delete strategy review period'),
+                ).show(context);
+              }
+            },
+          ),
     );
   }
 

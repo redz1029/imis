@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -371,7 +372,7 @@ class _DeliverableStatusMonitoringPageState
                   gap6px,
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                       child: _buildTableCard(isMobile),
                     ),
                   ),
@@ -384,7 +385,7 @@ class _DeliverableStatusMonitoringPageState
 
   Widget _buildPagination() {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       color: Theme.of(context).cardColor,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -408,6 +409,9 @@ class _DeliverableStatusMonitoringPageState
   }
 
   Widget _buildPageHeader(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 900;
+    final isXSmall = width < 700;
     return Container(
       width: double.infinity,
       color: Colors.white,
@@ -429,15 +433,20 @@ class _DeliverableStatusMonitoringPageState
                   size: 22,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isXSmall ? 8 : 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       "Deliverables Status Monitoring",
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize:
+                            isXSmall
+                                ? 12
+                                : isSmall
+                                ? 14
+                                : 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1D23),
                       ),
@@ -515,7 +524,7 @@ class _DeliverableStatusMonitoringPageState
         children: [
           const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
           ),
         ],
@@ -1121,8 +1130,6 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  // ─── TABLE ───────────────────────────────────────────────────────────────────
-
   Widget _buildTableCard(bool isMobile) {
     return Container(
       decoration: BoxDecoration(
@@ -1158,7 +1165,6 @@ class _DeliverableStatusMonitoringPageState
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.grey.shade500,
                 letterSpacing: 0.5,
               ),
             ),
@@ -1166,11 +1172,10 @@ class _DeliverableStatusMonitoringPageState
           Expanded(
             flex: 5,
             child: Text(
-              'DELIVERABLE DETAILS',
+              'Deliverable Details',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.grey.shade500,
                 letterSpacing: 0.5,
               ),
             ),
@@ -1179,11 +1184,10 @@ class _DeliverableStatusMonitoringPageState
             width: 220,
             child: Center(
               child: Text(
-                'ACTIONS',
+                'Actions',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: Colors.grey.shade500,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -1322,7 +1326,7 @@ class _DeliverableStatusMonitoringPageState
                   child: Text(
                     d['deliverableName'] ?? '',
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF1A1D23),
                     ),
@@ -2540,41 +2544,135 @@ Future<bool?> showAccomplishmentFormDialog(
                             final shouldSave = await showDialog<bool>(
                               context: context,
                               builder:
-                                  (ctx) => AlertDialog(
-                                    title: const Text("Confirm Save"),
-                                    content: const Text(
-                                      "Save accomplishment data?",
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed:
-                                            () => Navigator.of(ctx).pop(false),
-                                        child: const Text(
-                                          "No",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
+                                  (ctx) => Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    child: Container(
+                                      width: 380,
+                                      padding: EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: kSurface,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.12,
+                                            ),
+                                            blurRadius: 32,
+                                            offset: Offset(0, 12),
+                                          ),
+                                        ],
                                       ),
-                                      ElevatedButton(
-                                        onPressed:
-                                            () => Navigator.of(ctx).pop(true),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: primaryColor,
-                                          elevation: 0,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 56,
+                                            height: 56,
+                                            decoration: BoxDecoration(
+                                              color: kPrimaryBg,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Icon(
+                                              Icons.save_outlined,
+                                              color: primaryColor,
+                                              size: 28,
                                             ),
                                           ),
-                                        ),
-                                        child: const Text(
-                                          "Yes",
-                                          style: TextStyle(color: Colors.white),
-                                        ),
+                                          gap16px,
+                                          Text(
+                                            'Confirm Save',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 17,
+                                              color: kText,
+                                            ),
+                                          ),
+                                          gap8px,
+                                          Text(
+                                            'Are you sure you want to save ths accomplishment?',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 13,
+                                              color: kMuted,
+                                              height: 1.5,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          gap24px,
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: OutlinedButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        ctx,
+                                                        false,
+                                                      ),
+                                                  style: OutlinedButton.styleFrom(
+                                                    side: BorderSide(
+                                                      color: kBorder,
+                                                    ),
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          vertical: 12,
+                                                        ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    'Cancel',
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          color: kMuted,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(width: 10),
+                                              Expanded(
+                                                child: ElevatedButton.icon(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        ctx,
+                                                        true,
+                                                      ),
+                                                  label: Text(
+                                                    'Save',
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                  ),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        primaryColor,
+                                                    elevation: 0,
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          vertical: 12,
+                                                        ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                             );
                             if (shouldSave != true) return;

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/models/pgs_deliverable_accomplishment.dart';
@@ -1333,36 +1334,130 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                         final confirmed = await showDialog<bool>(
                           context: context,
                           builder:
-                              (ctx) => AlertDialog(
-                                title: Text(
-                                  widget.existingProtocol != null
-                                      ? 'Confirm Update'
-                                      : 'Confirm Save',
-                                ),
-                                content: Text(
-                                  widget.existingProtocol != null
-                                      ? 'Are you sure you want to update this record?'
-                                      : 'Are you sure you want to save this record?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: Text(
-                                      'No',
-                                      style: TextStyle(color: primaryColor),
-                                    ),
+                              (ctx) => Dialog(
+                                backgroundColor: Colors.transparent,
+                                child: Container(
+                                  width: 380,
+                                  padding: EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: kSurface,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        blurRadius: 32,
+                                        offset: Offset(0, 12),
+                                      ),
+                                    ],
                                   ),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: Text(
-                                      'Yes',
-                                      style: TextStyle(color: primaryColor),
-                                    ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 56,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: kPrimaryBg,
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.save_outlined,
+                                          color: primaryColor,
+                                          size: 28,
+                                        ),
+                                      ),
+                                      gap16px,
+                                      Text(
+                                        widget.existingProtocol != null
+                                            ? 'Confirm Update'
+                                            : 'Confirm Save',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 17,
+                                          color: kText,
+                                        ),
+                                      ),
+                                      gap8px,
+                                      Text(
+                                        widget.existingProtocol != null
+                                            ? 'Are you sure you want to update this record?'
+                                            : 'Are you sure you want to save this record?',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13,
+                                          color: kMuted,
+                                          height: 1.5,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      gap24px,
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: OutlinedButton(
+                                              onPressed:
+                                                  () => Navigator.pop(ctx),
+                                              style: OutlinedButton.styleFrom(
+                                                side: BorderSide(
+                                                  color: kBorder,
+                                                ),
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 12,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                'Cancel',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      color: kMuted,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(width: 10),
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              onPressed:
+                                                  () =>
+                                                      Navigator.pop(ctx, true),
+                                              label: Text(
+                                                'Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: primaryColor,
+                                                elevation: 0,
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 12,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                         );
-
                         if (confirmed == true) await _save();
                       },
 

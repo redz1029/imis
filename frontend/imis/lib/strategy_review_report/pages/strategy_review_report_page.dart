@@ -196,8 +196,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
   List<StrategyReviewReport> _strategyReviewList = [];
   List<StrategyReviewReport> _strategyReviewFilteredList = [];
   final _dateConverter = const LongDateOnlyConverter();
-  bool _isLoadingReviews = false;
-
   List<StrategyReviewReport> get _filteredReviews {
     if (selectedFilter == "All Process (Core&Support)") {
       return _strategyReviewList;
@@ -675,9 +673,12 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
           gap4px,
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
@@ -705,28 +706,40 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Process (Core & Support)",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Quarter",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -735,7 +748,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                     const SizedBox(height: 5),
                     Expanded(
                       child:
-                          _isLoadingReviews
+                          _isLoading
                               ? Center(
                                 child: CircularProgressIndicator(
                                   color: primaryColor,
@@ -798,11 +811,17 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: Text(matchedKra.kraName),
+                                            child: Text(
+                                              matchedKra.kraName,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
@@ -810,6 +829,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                               _dateConverter.toJson(
                                                 DateTime.parse(postingDate),
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
@@ -821,7 +841,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                   child: IconButton(
                                                     icon: const Icon(
                                                       Icons.edit_outlined,
-                                                      size: 18,
+                                                      size: 16,
                                                     ),
                                                     onPressed: () async {
                                                       final existing =
@@ -884,7 +904,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                     icon: const Icon(
                                                       Icons
                                                           .description_outlined,
-                                                      size: 18,
+                                                      size: 16,
                                                       color: Colors.blueAccent,
                                                     ),
                                                   ),
@@ -893,7 +913,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                   icon: const Icon(
                                                     CupertinoIcons
                                                         .delete_simple,
-                                                    size: 18,
+                                                    size: 16,
                                                     color: Colors.redAccent,
                                                   ),
                                                   onPressed:
@@ -931,6 +951,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                               "$itemNumber",
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                               ),
                                             ),
                                             const Spacer(),
@@ -955,7 +976,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                             CupertinoIcons
                                                                 .delete_simple,
                                                             color: Colors.red,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Delete'),
@@ -971,6 +992,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                           "Process (Core & Support): ${matchedKra.kraName}",
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w500,
+                                            fontSize: 12,
                                           ),
                                         ),
 
@@ -989,7 +1011,10 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                               ),
                     ),
                     Container(
-                      padding: EdgeInsets.all(10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       color: Theme.of(context).cardColor,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1030,10 +1055,13 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
   }
 
   Widget _buildPageHeader(bool isMobile, int count) {
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 900;
+    final isXSmall = width < 700;
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: EdgeInsets.fromLTRB(20, isXSmall ? 12 : 16, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1051,15 +1079,20 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                   size: 22,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isXSmall ? 8 : 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Strategy Review Report Information",
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize:
+                            isXSmall
+                                ? 12
+                                : isSmall
+                                ? 14
+                                : 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1D23),
                       ),
@@ -1067,7 +1100,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                     Text(
                       "$count report${count != 1 ? 's' : ''} found",
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: isXSmall ? 10 : 12,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -1081,7 +1114,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                     onPressed: () => showPeriodPanel(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         vertical: 10,
                         horizontal: 16,
                       ),
@@ -1089,10 +1122,17 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text(
+                    icon: Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: isXSmall ? 14 : 16,
+                    ),
+                    label: Text(
                       'Add New',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isXSmall ? 11 : 13,
+                      ),
                     ),
                   ),
                 ),
@@ -1104,10 +1144,14 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
     );
   }
 
-  bool get _hasActiveFilters => selectedFilter != "All Process (Core&Support)";
-
+  bool get _hasActiveFilters =>
+      selectedFilter != "All Process (Core&Support)" ||
+      _selectedPeriodId != null;
   void _resetFilters() {
-    setState(() => selectedFilter = "All Process (Core&Support)");
+    setState(() {
+      selectedFilter = "All Process (Core&Support)";
+      _selectedPeriodId = null;
+    });
   }
 
   Widget _buildFilterBar(bool isMobile) {
@@ -1117,7 +1161,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
         children: [
           const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
           ),
         ],
@@ -1299,7 +1343,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
             onDelete: () async {
               Navigator.pop(ctx);
               try {
-                await _roadmapService.deleteRoadmap(id);
+                await _strategyReviewReport.deleteStrategyReview(id);
                 await fetchStrategyReviews();
                 if (mounted) {
                   MotionToast.success(

@@ -162,7 +162,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                 }
               } catch (_) {
                 MotionToast.error(
-                  description: Text('KRA period deleted successfully'),
+                  description: Text('Failed to delete KRA period'),
                 ).show(context);
               }
             },

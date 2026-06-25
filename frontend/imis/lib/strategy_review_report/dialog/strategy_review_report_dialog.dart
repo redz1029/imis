@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -1003,39 +1004,131 @@ class StrategyReviewReportDialogState
                       if (_formKey.currentState!.validate()) {
                         bool? confirmAction = await showDialog<bool>(
                           context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: Text(
-                                id == null ? "Confirm Save" : "Confirm Update",
-                              ),
-                              content: Text(
-                                id == null
-                                    ? "Are you sure you want to save this record?"
-                                    : "Are you sure you want to update this record?",
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed:
-                                      () => Navigator.pop(context, false),
-                                  child: Text(
-                                    "No",
-                                    style: TextStyle(color: primaryColor),
+                          builder:
+                              (ctx) => Dialog(
+                                backgroundColor: Colors.transparent,
+                                child: Container(
+                                  width: 380,
+                                  padding: EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: kSurface,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        blurRadius: 32,
+                                        offset: Offset(0, 12),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 56,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: kPrimaryBg,
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.save_outlined,
+                                          color: primaryColor,
+                                          size: 28,
+                                        ),
+                                      ),
+                                      gap16px,
+                                      Text(
+                                        id == null
+                                            ? "Confirm Save"
+                                            : "Confirm Update",
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 17,
+                                          color: kText,
+                                        ),
+                                      ),
+                                      gap8px,
+                                      Text(
+                                        id == null
+                                            ? "Are you sure you want to save this record?"
+                                            : "Are you sure you want to update this record?",
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13,
+                                          color: kMuted,
+                                          height: 1.5,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      gap24px,
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: OutlinedButton(
+                                              onPressed:
+                                                  () =>
+                                                      Navigator.pop(ctx, false),
+                                              style: OutlinedButton.styleFrom(
+                                                side: BorderSide(
+                                                  color: kBorder,
+                                                ),
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 12,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                'Cancel',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      color: kMuted,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(width: 10),
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              onPressed:
+                                                  () =>
+                                                      Navigator.pop(ctx, true),
+                                              label: Text(
+                                                'Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: primaryColor,
+                                                elevation: 0,
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 12,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                TextButton(
-                                  onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      Navigator.pop(context, true);
-                                    }
-                                  },
-                                  child: Text(
-                                    "Yes",
-                                    style: TextStyle(color: primaryColor),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                              ),
                         );
 
                         if (confirmAction == true) {

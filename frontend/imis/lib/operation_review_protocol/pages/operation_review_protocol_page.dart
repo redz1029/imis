@@ -322,9 +322,13 @@ class OperationReviewProtocolPageState
           gap4px,
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
@@ -352,28 +356,40 @@ class OperationReviewProtocolPageState
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Office",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Period",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -438,15 +454,24 @@ class OperationReviewProtocolPageState
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: Text(officeName),
+                                            child: Text(
+                                              officeName,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
-                                            child: Text("$start - $end"),
+                                            child: Text(
+                                              "$start - $end",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
@@ -462,7 +487,7 @@ class OperationReviewProtocolPageState
                                                     child: IconButton(
                                                       icon: const Icon(
                                                         Icons.reviews_outlined,
-                                                        size: 18,
+                                                        size: 16,
                                                         color:
                                                             Colors
                                                                 .deepOrangeAccent,
@@ -505,6 +530,7 @@ class OperationReviewProtocolPageState
                                               "$itemNumber",
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                               ),
                                             ),
                                             const Spacer(),
@@ -528,7 +554,7 @@ class OperationReviewProtocolPageState
                                                           Icon(
                                                             Icons
                                                                 .reviews_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                             color:
                                                                 Colors
                                                                     .deepOrangeAccent,
@@ -545,9 +571,15 @@ class OperationReviewProtocolPageState
                                           ],
                                         ),
                                         const SizedBox(height: 8),
-                                        Text("Office: $officeName"),
+                                        Text(
+                                          "Office: $officeName",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                         const SizedBox(height: 4),
-                                        Text("Period: $start - $end"),
+                                        Text(
+                                          "Period: $start - $end",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                       ],
                                     ),
                                   );
@@ -588,17 +620,20 @@ class OperationReviewProtocolPageState
   }
 
   Widget _buildPageHeader(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 900;
+    final isXSmall = width < 700;
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: EdgeInsets.fromLTRB(20, isXSmall ? 12 : 16, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(isXSmall ? 6 : 8),
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -614,10 +649,15 @@ class OperationReviewProtocolPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Operation Review Protocol Information",
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize:
+                            isXSmall
+                                ? 12
+                                : isSmall
+                                ? 14
+                                : 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1D23),
                       ),
@@ -626,7 +666,7 @@ class OperationReviewProtocolPageState
                       "$_totalCount operation review protocol${_totalCount != 1 ? 's' : ''} found",
 
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: isXSmall ? 10 : 12,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -662,7 +702,7 @@ class OperationReviewProtocolPageState
         children: [
           const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
           ),
         ],
