@@ -11,13 +11,11 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
 
-  
-
-    public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken)
+    public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId,  long? officeId, int? month, int? year, CancellationToken cancellationToken)
     {
-        var query = from auditor in ReadOnlyDbContext.Set<Auditor>().AsNoTracking()
+        var query =  from auditor in ReadOnlyDbContext.Set<Auditor>().AsNoTracking()
 
-            join auditorOffice in ReadOnlyDbContext.Set<AuditorOffices>().AsNoTracking() on auditor.Id equals auditorOffice.AuditorId
+            join auditorOffice in ReadOnlyDbContext.Set<AuditorOffices>().AsNoTracking()   on auditor.Id equals auditorOffice.AuditorId
 
             join office in ReadOnlyDbContext.Set<Office>().AsNoTracking() on auditorOffice.OfficeId equals office.Id
 
@@ -44,18 +42,18 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             from accomplishment in accomplishments.DefaultIfEmpty()
 
             where
-            !auditor.IsDeleted
-            && !auditorOffice.IsDeleted
-            && (!auditorId.HasValue || auditor.Id == auditorId.Value)
-            && (!teamId.HasValue || (team != null && team.Id == teamId.Value))
-            && (!officeId.HasValue || office.Id == officeId.Value)
-            && (
-                accomplishment == null ||
-                (
-                    (!month.HasValue || accomplishment.PostingDate.Month == month.Value)
-                    && (!year.HasValue || accomplishment.PostingDate.Year == year.Value)
+                !auditor.IsDeleted
+                && !auditorOffice.IsDeleted
+                && (!auditorId.HasValue || auditor.Id == auditorId.Value)
+                && (!teamId.HasValue || (team != null && team.Id == teamId.Value))
+                && (!officeId.HasValue || office.Id == officeId.Value)
+                && (
+                    accomplishment == null ||
+                    (
+                        (!month.HasValue || accomplishment.PostingDate.Month == month.Value)
+                        && (!year.HasValue || accomplishment.PostingDate.Year == year.Value)
+                    )
                 )
-            )
 
             group accomplishment by new
             {
@@ -91,13 +89,23 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 OfficeId = g.Key.OfficeId,
                 OfficeName = g.Key.OfficeName,
 
+                TotalAuditCount = g.Count(x =>
+                    x != null &&
+                    !x.IsDeleted),
+
+                CompletedAuditCount = g.Count(x =>
+                    x != null &&
+                    !x.IsDeleted &&
+                    !string.IsNullOrEmpty(x.AuditorRemarks)),
+
                 PendingAuditCount = g.Count(x =>
                     x != null &&
                     !x.IsDeleted &&
                     string.IsNullOrEmpty(x.AuditorRemarks))
             };
 
-        var data = await query            .OrderBy(x => x.TeamName)
+        var data = await query
+            .OrderBy(x => x.TeamName)
             .ThenBy(x => x.OfficeName)
             .ThenBy(x => x.LastName)
             .ToListAsync(cancellationToken);
@@ -105,21 +113,31 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         return data.Select(x => new AuditorPendingAuditDto
         {
             AuditorId = x.AuditorId,
+
             AuditorName = string.Join(" ",
-            new[]
-            {
+                new[]
+                {
                 x.Prefix,
                 x.FirstName,
                 x.MiddleName,
                 x.LastName,
                 x.Suffix
-            }
-            .Where(s => !string.IsNullOrWhiteSpace(s))),
+                }
+                .Where(s => !string.IsNullOrWhiteSpace(s))),
+
             TeamId = x.TeamId,
             TeamName = x.TeamName,
+
             OfficeId = x.OfficeId,
             OfficeName = x.OfficeName,
-            PendingAuditCount = x.PendingAuditCount
+
+            TotalAuditCount = x.TotalAuditCount,
+
+            CompletedAuditCount = x.CompletedAuditCount,
+
+            PendingAuditCount = x.PendingAuditCount,
+
+            AuditProgress = $"{x.CompletedAuditCount} out of {x.TotalAuditCount}"
         })
         .ToList();
     }
