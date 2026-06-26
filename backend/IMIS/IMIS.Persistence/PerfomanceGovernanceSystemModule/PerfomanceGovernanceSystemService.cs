@@ -45,9 +45,29 @@ namespace IMIS.Persistence.PgsModule
        
         public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken)
         {
-            return await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year,  cancellationToken);
+            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken);
+
+            foreach (var item in result)
+            {
+                item.ParentOfficeName = await _officeRepository.GetParentOfficeNameAsync((int)item.OfficeId, cancellationToken) ?? string.Empty;
+            }
+
+            return result;
         }
 
+        // ==== Audit Accomplishment Report for Auditor ======
+        public async Task<List<AuditorPendingAuditDto>> ReportGetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken)
+        {
+            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken);
+
+            foreach (var item in result)
+            {
+                item.ParentOfficeName = await _officeRepository.GetParentOfficeNameAsync((int)item.OfficeId, cancellationToken) ?? string.Empty;
+            }
+
+            return result;
+        }
+     
         //======= Operation Review Protocol / Performance Validation Tool ===========
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetAuditorPgsDeliverableAsync(string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
         {

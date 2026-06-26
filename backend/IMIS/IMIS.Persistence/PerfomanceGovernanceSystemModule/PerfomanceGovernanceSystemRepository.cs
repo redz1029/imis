@@ -11,35 +11,49 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
 
-    public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId,  long? officeId, int? month, int? year, CancellationToken cancellationToken)
+    public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken)
     {
-        var query =  from auditor in ReadOnlyDbContext.Set<Auditor>().AsNoTracking()
+        var query =
+            from auditor in ReadOnlyDbContext.Set<Auditor>().AsNoTracking()
 
-            join auditorOffice in ReadOnlyDbContext.Set<AuditorOffices>().AsNoTracking()   on auditor.Id equals auditorOffice.AuditorId
+            join auditorOffice in ReadOnlyDbContext.Set<AuditorOffices>().AsNoTracking()
+                on auditor.Id equals auditorOffice.AuditorId
 
-            join office in ReadOnlyDbContext.Set<Office>().AsNoTracking() on auditorOffice.OfficeId equals office.Id
+            join office in ReadOnlyDbContext.Set<Office>().AsNoTracking()
+                on auditorOffice.OfficeId equals office.Id
 
-            join user in ReadOnlyDbContext.Set<User>().AsNoTracking() on auditor.UserId equals user.Id
+            join user in ReadOnlyDbContext.Set<User>().AsNoTracking()
+                on auditor.UserId equals user.Id
 
-            join auditorTeam in ReadOnlyDbContext.Set<AuditorTeams>().AsNoTracking() on auditor.Id equals auditorTeam.AuditorId into auditorTeams
+            join auditorTeam in ReadOnlyDbContext.Set<AuditorTeams>().AsNoTracking()
+                on auditor.Id equals auditorTeam.AuditorId into auditorTeams
 
             from auditorTeam in auditorTeams.DefaultIfEmpty()
 
-            join team in ReadOnlyDbContext.Set<Team>().AsNoTracking() on auditorTeam.TeamId equals team.Id into teams
+            join team in ReadOnlyDbContext.Set<Team>().AsNoTracking()
+                on auditorTeam.TeamId equals team.Id into teams
 
             from team in teams.DefaultIfEmpty()
 
-            join pgs in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking() on office.Id equals pgs.OfficeId into pgsList
+            join pgs in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking()
+                on office.Id equals pgs.OfficeId into pgsList
 
             from pgs in pgsList.DefaultIfEmpty()
 
-            join deliverable in ReadOnlyDbContext.Set<PgsDeliverable>().AsNoTracking() on pgs.Id equals deliverable.PerfomanceGovernanceSystemId into deliverables
+            join deliverable in ReadOnlyDbContext.Set<PgsDeliverable>().AsNoTracking()
+                on pgs.Id equals deliverable.PerfomanceGovernanceSystemId into deliverables
 
             from deliverable in deliverables.DefaultIfEmpty()
 
-            join accomplishment in ReadOnlyDbContext.Set<PgsDeliverableAccomplishment>().AsNoTracking() on deliverable.Id equals accomplishment.PgsDeliverableId into accomplishments
+            join accomplishment in ReadOnlyDbContext.Set<PgsDeliverableAccomplishment>().AsNoTracking()
+                on deliverable.Id equals accomplishment.PgsDeliverableId into accomplishments
 
             from accomplishment in accomplishments.DefaultIfEmpty()
+
+            join accomplishedUser in ReadOnlyDbContext.Set<User>().AsNoTracking()
+                on accomplishment.UserId equals accomplishedUser.Id into accomplishedUsers
+
+            from accomplishedUser in accomplishedUsers.DefaultIfEmpty()
 
             where
                 !auditor.IsDeleted
@@ -55,7 +69,12 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     )
                 )
 
-            group accomplishment by new
+            group new
+            {
+                accomplishment,
+                accomplishedUser
+            }
+            by new
             {
                 AuditorId = auditor.Id,
 
@@ -90,18 +109,43 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 OfficeName = g.Key.OfficeName,
 
                 TotalAuditCount = g.Count(x =>
-                    x != null &&
-                    !x.IsDeleted),
+                    x.accomplishment != null &&
+                    !x.accomplishment.IsDeleted),
 
                 CompletedAuditCount = g.Count(x =>
-                    x != null &&
-                    !x.IsDeleted &&
-                    !string.IsNullOrEmpty(x.AuditorRemarks)),
+                    x.accomplishment != null &&
+                    !x.accomplishment.IsDeleted &&
+                    !string.IsNullOrEmpty(x.accomplishment.AuditorRemarks)),
 
                 PendingAuditCount = g.Count(x =>
-                    x != null &&
-                    !x.IsDeleted &&
-                    string.IsNullOrEmpty(x.AuditorRemarks))
+                    x.accomplishment != null &&
+                    !x.accomplishment.IsDeleted &&
+                    string.IsNullOrEmpty(x.accomplishment.AuditorRemarks)),
+
+                AccomplisherPrefix = g
+                    .Where(x => x.accomplishment != null && x.accomplishedUser != null)
+                    .Select(x => x.accomplishedUser.Prefix)
+                    .FirstOrDefault(),
+
+                                AccomplisherFirstName = g
+                    .Where(x => x.accomplishment != null && x.accomplishedUser != null)
+                    .Select(x => x.accomplishedUser.FirstName)
+                    .FirstOrDefault(),
+
+                                AccomplisherMiddleName = g
+                    .Where(x => x.accomplishment != null && x.accomplishedUser != null)
+                    .Select(x => x.accomplishedUser.MiddleName)
+                    .FirstOrDefault(),
+
+                                AccomplisherLastName = g
+                    .Where(x => x.accomplishment != null && x.accomplishedUser != null)
+                    .Select(x => x.accomplishedUser.LastName)
+                    .FirstOrDefault(),
+
+                                AccomplisherSuffix = g
+                    .Where(x => x.accomplishment != null && x.accomplishedUser != null)
+                    .Select(x => x.accomplishedUser.Suffix)
+                    .FirstOrDefault(),
             };
 
         var data = await query
@@ -109,6 +153,15 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             .ThenBy(x => x.OfficeName)
             .ThenBy(x => x.LastName)
             .ToListAsync(cancellationToken);
+
+        var reportMonth =
+            month.HasValue && year.HasValue
+                ? new DateTime(year.Value, month.Value, 1).ToString("MMMM yyyy")
+                : month.HasValue
+                    ? new DateTime(DateTime.Now.Year, month.Value, 1).ToString("MMMM")
+                    : year.HasValue
+                        ? year.Value.ToString()
+                        : "All Periods";
 
         return data.Select(x => new AuditorPendingAuditDto
         {
@@ -122,8 +175,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 x.MiddleName,
                 x.LastName,
                 x.Suffix
-                }
-                .Where(s => !string.IsNullOrWhiteSpace(s))),
+                }.Where(s => !string.IsNullOrWhiteSpace(s))),
 
             TeamId = x.TeamId,
             TeamName = x.TeamName,
@@ -132,12 +184,22 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             OfficeName = x.OfficeName,
 
             TotalAuditCount = x.TotalAuditCount,
-
             CompletedAuditCount = x.CompletedAuditCount,
-
             PendingAuditCount = x.PendingAuditCount,
 
-            AuditProgress = $"{x.CompletedAuditCount} out of {x.TotalAuditCount}"
+            AuditProgress = $"{x.CompletedAuditCount} out of {x.TotalAuditCount}",
+
+            ReportMonth = reportMonth,
+            AccomplishedBy = string.Join(" ",
+                new[]
+                {
+                    x.AccomplisherPrefix,
+                    x.AccomplisherFirstName,
+                    x.AccomplisherMiddleName,
+                    x.AccomplisherLastName,
+                    x.AccomplisherSuffix
+                }
+                .Where(s => !string.IsNullOrWhiteSpace(s))),
         })
         .ToList();
     }

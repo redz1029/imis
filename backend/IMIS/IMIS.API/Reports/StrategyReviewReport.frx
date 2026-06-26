@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="06/01/2026 14:04:16" ReportInfo.Modified="06/15/2026 13:53:17" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="06/01/2026 14:04:16" ReportInfo.Modified="06/26/2026 09:46:51" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -189,7 +189,9 @@ namespace FastReport
       <LineObject Name="Line16" Left="684.85" Top="-0.55" Height="134.8" CanGrow="true" GrowToBottom="true"/>
       <TextObject Name="Text321" Left="687.55" Top="1.1" Width="302.2" Height="29.9" Fill.Color="192, 80, 77" Text="Start" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 11pt" TextFill.Color="White"/>
     </ReportSummaryBand>
-    <PageFooterBand Name="PageFooter1" Top="533.95" Width="1047.06" Height="21.4"/>
+    <PageFooterBand Name="PageFooter1" Top="533.95" Width="1047.06" Height="21.4">
+      <TextObject Name="Text29" Left="53.3" Top="3" Width="938.7" Height="14.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
+    </PageFooterBand>
   </ReportPage>
   <ReportPage Name="DeliverableKPI" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt">
     <DataBand Name="Data2" Width="1047.06" Height="25.35" CanGrow="true" DataSource="StrategyReviewDeliverableKpi">

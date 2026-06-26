@@ -23,5 +23,6 @@ namespace IMIS.Application.PgsModule
         Task<bool> SoftDeleteDeliverableAsync(int deliverableId, CancellationToken cancellationToken);
         Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>>GetAuditorPgsDeliverableAsync(string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken);
         Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken);
+        Task<List<AuditorPendingAuditDto>> ReportGetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken);
     }
 }

@@ -3,6 +3,8 @@ using Base.Utilities;
 using Carter;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsModule;
+using IMIS.Domain;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -219,6 +221,38 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                 var result = await service.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken);
 
                 return Results.Ok(result);
+            })
+            .WithTags(_pgsDeliverableAccomplishmentTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
+
+            app.MapGet("/auditor/pending-audits-report", async (long? auditorId, long? teamId, long? officeId, int? month, int? year, IPerfomanceGovernanceSystemService service,   CancellationToken cancellationToken) =>
+            {
+                var result = await service.ReportGetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken).ConfigureAwait(false);
+
+                if (result == null || !result.Any())
+                    return Results.NotFound();
+
+                var reportData = result.Select(x => new ReportAuditorPendingAuditDto
+                {
+                    AuditorId = x.AuditorId,
+                    AuditorName = x.AuditorName,
+                    TeamId = x.TeamId,
+                    TeamName = x.TeamName,
+                    OfficeId = x.OfficeId,
+                    OfficeName = x.OfficeName,
+                    TotalAuditCount = x.TotalAuditCount,
+                    CompletedAuditCount = x.CompletedAuditCount,
+                    PendingAuditCount = x.PendingAuditCount,
+                    AuditProgress = x.AuditProgress,
+                    ReportMonth = x.ReportMonth,
+                    AccomplishedBy = x.AccomplishedBy,
+                    ParentOfficeName  = x.ParentOfficeName,
+                }).ToList();
+                var file = await ReportUtil.GeneratePdfReport
+                <ReportAuditorPendingAuditDto>
+                ("PgsDeliverableAccomplishmentAuditReport",reportData, "ReportAuditorPendingAuditDto", cancellationToken).ConfigureAwait(false);
+
+                return Results.File(file, "application/pdf", $"AuditorPendingAuditReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
