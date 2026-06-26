@@ -1,6 +1,7 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.PerfomanceGovernanceSystemModule; 
+using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
@@ -10,6 +11,118 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
 
+  
+
+    public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken)
+    {
+        var query = from auditor in ReadOnlyDbContext.Set<Auditor>().AsNoTracking()
+
+            join auditorOffice in ReadOnlyDbContext.Set<AuditorOffices>().AsNoTracking() on auditor.Id equals auditorOffice.AuditorId
+
+            join office in ReadOnlyDbContext.Set<Office>().AsNoTracking() on auditorOffice.OfficeId equals office.Id
+
+            join user in ReadOnlyDbContext.Set<User>().AsNoTracking() on auditor.UserId equals user.Id
+
+            join auditorTeam in ReadOnlyDbContext.Set<AuditorTeams>().AsNoTracking() on auditor.Id equals auditorTeam.AuditorId into auditorTeams
+
+            from auditorTeam in auditorTeams.DefaultIfEmpty()
+
+            join team in ReadOnlyDbContext.Set<Team>().AsNoTracking() on auditorTeam.TeamId equals team.Id into teams
+
+            from team in teams.DefaultIfEmpty()
+
+            join pgs in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking() on office.Id equals pgs.OfficeId into pgsList
+
+            from pgs in pgsList.DefaultIfEmpty()
+
+            join deliverable in ReadOnlyDbContext.Set<PgsDeliverable>().AsNoTracking() on pgs.Id equals deliverable.PerfomanceGovernanceSystemId into deliverables
+
+            from deliverable in deliverables.DefaultIfEmpty()
+
+            join accomplishment in ReadOnlyDbContext.Set<PgsDeliverableAccomplishment>().AsNoTracking() on deliverable.Id equals accomplishment.PgsDeliverableId into accomplishments
+
+            from accomplishment in accomplishments.DefaultIfEmpty()
+
+            where
+            !auditor.IsDeleted
+            && !auditorOffice.IsDeleted
+            && (!auditorId.HasValue || auditor.Id == auditorId.Value)
+            && (!teamId.HasValue || (team != null && team.Id == teamId.Value))
+            && (!officeId.HasValue || office.Id == officeId.Value)
+            && (
+                accomplishment == null ||
+                (
+                    (!month.HasValue || accomplishment.PostingDate.Month == month.Value)
+                    && (!year.HasValue || accomplishment.PostingDate.Year == year.Value)
+                )
+            )
+
+            group accomplishment by new
+            {
+                AuditorId = auditor.Id,
+
+                user.FirstName,
+                user.MiddleName,
+                user.LastName,
+                user.Prefix,
+                user.Suffix,
+
+                TeamId = team != null ? team.Id : 0,
+                TeamName = team != null ? team.Name : string.Empty,
+
+                OfficeId = office.Id,
+                OfficeName = office.Name
+            }
+            into g
+
+            select new
+            {
+                AuditorId = g.Key.AuditorId,
+
+                g.Key.FirstName,
+                g.Key.MiddleName,
+                g.Key.LastName,
+                g.Key.Prefix,
+                g.Key.Suffix,
+
+                TeamId = g.Key.TeamId,
+                TeamName = g.Key.TeamName,
+
+                OfficeId = g.Key.OfficeId,
+                OfficeName = g.Key.OfficeName,
+
+                PendingAuditCount = g.Count(x =>
+                    x != null &&
+                    !x.IsDeleted &&
+                    string.IsNullOrEmpty(x.AuditorRemarks))
+            };
+
+        var data = await query            .OrderBy(x => x.TeamName)
+            .ThenBy(x => x.OfficeName)
+            .ThenBy(x => x.LastName)
+            .ToListAsync(cancellationToken);
+
+        return data.Select(x => new AuditorPendingAuditDto
+        {
+            AuditorId = x.AuditorId,
+            AuditorName = string.Join(" ",
+            new[]
+            {
+                x.Prefix,
+                x.FirstName,
+                x.MiddleName,
+                x.LastName,
+                x.Suffix
+            }
+            .Where(s => !string.IsNullOrWhiteSpace(s))),
+            TeamId = x.TeamId,
+            TeamName = x.TeamName,
+            OfficeId = x.OfficeId,
+            OfficeName = x.OfficeName,
+            PendingAuditCount = x.PendingAuditCount
+        })
+        .ToList();
+    }
 
     // GET ALL AUDITOR PGS DELIVERABLES    
     public async Task<List<PerfomanceGovernanceSystem>>

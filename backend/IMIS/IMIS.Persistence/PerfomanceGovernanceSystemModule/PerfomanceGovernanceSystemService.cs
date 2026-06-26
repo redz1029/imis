@@ -4,6 +4,7 @@ using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
@@ -40,8 +41,14 @@ namespace IMIS.Persistence.PgsModule
             _userOfficeRepository = userOfficeRepository;
             _roleManager = roleManager;
 
-        }     
+        }
+       
+        public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken)
+        {
+            return await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year,  cancellationToken);
+        }
 
+        //======= Operation Review Protocol / Performance Validation Tool ===========
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetAuditorPgsDeliverableAsync(string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();

@@ -2,6 +2,7 @@
 using Base.Utilities;
 using Carter;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
+using IMIS.Application.PgsModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -211,6 +212,16 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
            .WithTags(_pgsDeliverableAccomplishmentTag)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
+         
+            app.MapGet("/auditor/pending-audits", async (long? auditorId, long? teamId, long? officeId, int? month, int? year, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            {
+    
+                var result = await service.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken);
+
+                return Results.Ok(result);
+            })
+            .WithTags(_pgsDeliverableAccomplishmentTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
         }
     }
 }
