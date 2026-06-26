@@ -1,4 +1,5 @@
-﻿using Base.Auths.Permissions;
+﻿using Azure;
+using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
@@ -225,7 +226,7 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
 
-            app.MapGet("/auditor/pending-audits-report", async (long? auditorId, long? teamId, long? officeId, int? month, int? year, IPerfomanceGovernanceSystemService service,   CancellationToken cancellationToken) =>
+            app.MapGet("/auditor/pending-audits-report", async (HttpResponse response, long? auditorId, long? teamId, long? officeId, int? month, int? year, IPerfomanceGovernanceSystemService service,   CancellationToken cancellationToken) =>
             {
                 var result = await service.ReportGetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken).ConfigureAwait(false);
 
@@ -252,7 +253,12 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                 <ReportAuditorPendingAuditDto>
                 ("PgsDeliverableAccomplishmentAuditReport",reportData, "ReportAuditorPendingAuditDto", cancellationToken).ConfigureAwait(false);
 
-                return Results.File(file, "application/pdf", $"AuditorPendingAuditReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                // FORCE INLINE PDF VIEW IN BROWSER
+                var fileName = $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"AuditorPendingAuditReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);

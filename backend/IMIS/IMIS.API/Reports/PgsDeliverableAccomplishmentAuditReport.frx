@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="06/26/2026 10:39:13" ReportInfo.Modified="06/26/2026 15:57:47" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="06/26/2026 10:39:13" ReportInfo.Modified="06/26/2026 16:31:50" ReportInfo.CreatorVersion="2025.2.0.0">
   <Dictionary>
     <BusinessObjectDataSource Name="ReportAuditorPendingAuditDto" ReferenceName="ReportAuditorPendingAuditDto" DataType="System.Int32" Enabled="true">
       <Column Name="AuditorId" DataType="System.Int64"/>
@@ -12,7 +12,7 @@
       <Column Name="CompletedAuditCount" DataType="System.Int32"/>
       <Column Name="PendingAuditCount" DataType="System.Int32"/>
       <Column Name="AuditProgress" DataType="System.String"/>
-      <Column Name="ReportMonth" DataType="System.String"/>  
+      <Column Name="ReportMonth" DataType="System.String"/>
       <Column Name="AccomplishedBy" DataType="System.String"/>
       <Column Name="ParentOfficeName" DataType="System.String"/>
     </BusinessObjectDataSource>
@@ -41,7 +41,7 @@
       <TextObject Name="Text329" Left="474.95" Top="188" Width="151.55" Height="20.45" CanGrow="true" GrowToBottom="true" Text="Department/Unit Head" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
       <TextObject Name="Text331" Left="631.15" Top="188" Width="122.55" Height="20.45" CanGrow="true" GrowToBottom="true" Text="Service" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
     </PageHeaderBand>
-    <DataBand Name="Data1" Top="212.35" Width="1047.06" Height="22.9" CanGrow="true" DataSource="ReportAuditorPendingAuditDto">
+    <DataBand Name="Data1" Top="214.35" Width="1047.06" Height="22.9" CanGrow="true" DataSource="ReportAuditorPendingAuditDto">
       <ShapeObject Name="Shape12" Left="9.45" Top="-2" Width="1026.7" Height="24.9" GrowToBottom="true"/>
       <TextObject Name="Text321" Left="12.45" Top="0.45" Width="167.45" Height="19.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportAuditorPendingAuditDto.AuditorName]" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <LineObject Name="Line7" Left="182.8" Top="-1" Height="23.35" CanGrow="true" GrowToBottom="true"/>
@@ -57,8 +57,9 @@
       <TextObject Name="Text330" Left="475.4" Top="1" Width="150.5" Height="18.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportAuditorPendingAuditDto.AccomplishedBy]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text332" Left="631.15" Top="1" Width="122.5" Height="18.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportAuditorPendingAuditDto.ParentOfficeName]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt"/>
     </DataBand>
-    <PageFooterBand Name="PageFooter1" Top="237.25" Width="1047.06" Height="18.9">
-      <TextObject Name="Text320" Left="10.9" Top="3" Width="1024.85" Height="12.9" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Arial, 8pt"/>
+    <PageFooterBand Name="PageFooter1" Top="241.25" Width="1047.06" Height="56.7">
+      <TextObject Name="Text320" Left="9.9" Top="39.8" Width="1024.85" Height="12.9" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Arial, 8pt"/>
+      <TextObject Name="Text333" Left="9.45" Top="1.45" Width="1025.15" Height="18.9" Text="Note:  Please report the number of audited deliverables based on the accomplishment remarks provided by each auditor." Font="Noto Sans, 9pt"/>
     </PageFooterBand>
   </ReportPage>
 </Report>
