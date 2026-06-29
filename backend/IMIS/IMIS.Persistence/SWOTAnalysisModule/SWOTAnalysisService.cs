@@ -33,7 +33,9 @@ namespace IMIS.Persistence.SWOTAnalysisModule
                  r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
                  r.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                  r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
-                 r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase));
+                 r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                 r.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
+                 r.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase));
 
             if (isElevatedUser)
             {
@@ -93,7 +95,9 @@ namespace IMIS.Persistence.SWOTAnalysisModule
                     r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
                     r.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                     r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
-                    r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase)))
+                    r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                    r.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                    r.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase)))
             {
                 swotEntities = await _repository.GetAllAsync(cancellationToken);
             }
