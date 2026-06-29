@@ -123,7 +123,8 @@ namespace IMIS.Persistence.PGSModules
                 role.Name.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase);
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase);
 
             List<int>? officeIds = null;
 
