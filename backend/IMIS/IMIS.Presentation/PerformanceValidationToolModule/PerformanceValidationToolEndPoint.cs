@@ -1,4 +1,5 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.PerformanceValidationToolModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsSignatoryModule;
@@ -14,6 +15,7 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
     public class PerformanceValidationToolEndPoint : CarterModule
     {
         private const string _performanceValidationTool = "Performance Validation Tool";
+        public readonly PerformanceValidationToolPermission _performanceValidationToolPermission = new();
         public PerformanceValidationToolEndPoint() : base("/performanceValidationTool")
         {
         }
@@ -25,7 +27,8 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
                 await cache.EvictByTagAsync(_performanceValidationTool,  cancellationToken);
                 return Results.Ok(dto);
             })
-           .WithTags(_performanceValidationTool);
+           .WithTags(_performanceValidationTool)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.Add));
 
             app.MapGet("/{id:long}", async (long id, IPerformanceValidationToolService service, CancellationToken cancellationToken) =>
             {
@@ -33,14 +36,17 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
                 return result is null ? Results.NotFound() : Results.Ok(result);
             })
             .WithTags(_performanceValidationTool)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.View));
 
             app.MapGet("/", async (IPerformanceValidationToolService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetAllAsync(cancellationToken);
                 return Results.Ok(result);
             })
-            .WithTags(_performanceValidationTool);
+            .WithTags(_performanceValidationTool)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.View));
 
             app.MapPut("/", async ([FromBody] PerformanceValidationToolDto dto, IPerformanceValidationToolService service, IOutputCacheStore cache,  CancellationToken cancellationToken) =>
             {
@@ -49,7 +55,8 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
                 return Results.Ok(dto);
             })
             .WithTags(_performanceValidationTool)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.Edit));
 
             app.MapGet("/pgsAuditor/{roleId}", async (string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
@@ -58,7 +65,8 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
                 return Results.Ok(result);
             })
             .WithTags(_performanceValidationTool)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.View));
 
             app.MapGet("/pgsidlist", async (long? performanceGovernanceSystemId, IPerformanceValidationToolService service, CancellationToken cancellationToken) =>
             {
@@ -67,7 +75,8 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
                 return Results.Ok(result);
             })
             .WithTags(_performanceValidationTool)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool))
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.View));
 
             app.MapGet("/pgsiddiverable/{id}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
@@ -75,8 +84,8 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
                 return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
             })
             .WithTags(_performanceValidationTool)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true);
-           
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.View));
 
             app.MapGet("/PgsSignatory", async (long? pgsSignatoryId, IPgsSignatoryService service, CancellationToken cancellationToken) =>
             {
@@ -85,7 +94,8 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
                 return Results.Ok(result);
             })
             .WithTags(_performanceValidationTool)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool))
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.View));
 
             app.MapPut("/submit", async ([FromBody] PerformanceValidationToolDto dto, string userId, IPerformanceValidationToolService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -95,7 +105,8 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
 
                 return Results.Created($"/performanceValidationTool/{submitted.Id}", submitted);
             })
-           .WithTags(_performanceValidationTool);
+           .WithTags(_performanceValidationTool)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.Edit));
 
             app.MapGet("/submit/userId/{userId}", async (string userId, long performanceValidationToolId, IPerformanceValidationToolService service, CancellationToken cancellationToken) =>
             {
@@ -104,7 +115,8 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
                 return dto != null ? Results.Ok(dto): Results.NotFound();
             })
             .WithTags(_performanceValidationTool)    
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.View));
         }
     }
 }
