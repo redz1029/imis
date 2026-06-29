@@ -58,7 +58,8 @@ namespace IMIS.Persistence.KraRoadMapModule
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
             {
                 data = await _repository.GetAllStrategyReviewRoadmapAsync(pgsRoadMapPeriodId, cancellationToken);
             }
@@ -104,7 +105,8 @@ namespace IMIS.Persistence.KraRoadMapModule
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
             {
                 deliverables = await _repository.GetDeliverablesAsync(kraid, fromYear, toYear, cancellationToken);
             }
@@ -156,7 +158,8 @@ namespace IMIS.Persistence.KraRoadMapModule
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
             {
                 kpis = await _repository.GetKpisAsync(kraid, fromYear, toYear, cancellationToken);
             }
@@ -321,7 +324,8 @@ namespace IMIS.Persistence.KraRoadMapModule
                 role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase)
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase)
             )
             {
                 roadmaps = (await _repository.GetAll(cancellationToken))
