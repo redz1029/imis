@@ -50,10 +50,23 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 
             from accomplishment in accomplishments.DefaultIfEmpty()
 
-            join accomplishedUser in ReadOnlyDbContext.Set<User>().AsNoTracking()
-                on accomplishment.UserId equals accomplishedUser.Id into accomplishedUsers
+                //join accomplishedUser in ReadOnlyDbContext.Set<User>().AsNoTracking()
+                //    on accomplishment.UserId equals accomplishedUser.Id into accomplishedUsers
 
-            from accomplishedUser in accomplishedUsers.DefaultIfEmpty()
+                //from accomplishedUser in accomplishedUsers.DefaultIfEmpty()
+
+
+            join userOffice in ReadOnlyDbContext.Set<UserOffices>().AsNoTracking()
+             on office.Id equals userOffice.OfficeId into userOffices
+
+            from userOffice in userOffices
+                .Where(x => x.IsOfficeHead && x.IsActive && !x.IsDeleted)
+                .DefaultIfEmpty()
+
+            join officeHeadUser in ReadOnlyDbContext.Set<User>().AsNoTracking()
+                on userOffice.UserId equals officeHeadUser.Id into officeHeadUsers
+
+            from officeHeadUser in officeHeadUsers.DefaultIfEmpty()
 
             where
                 !auditor.IsDeleted
@@ -72,7 +85,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             group new
             {
                 accomplishment,
-                accomplishedUser
+                officeHeadUser
             }
             by new
             {
@@ -122,29 +135,24 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     !x.accomplishment.IsDeleted &&
                     string.IsNullOrEmpty(x.accomplishment.AuditorRemarks)),
 
-                AccomplisherPrefix = g
-                    .Where(x => x.accomplishment != null && x.accomplishedUser != null)
-                    .Select(x => x.accomplishedUser.Prefix)
+                OfficeHeadPrefix = g
+                    .Select(x => x.officeHeadUser.Prefix)
                     .FirstOrDefault(),
 
-                                AccomplisherFirstName = g
-                    .Where(x => x.accomplishment != null && x.accomplishedUser != null)
-                    .Select(x => x.accomplishedUser.FirstName)
+                                OfficeHeadFirstName = g
+                    .Select(x => x.officeHeadUser.FirstName)
                     .FirstOrDefault(),
 
-                                AccomplisherMiddleName = g
-                    .Where(x => x.accomplishment != null && x.accomplishedUser != null)
-                    .Select(x => x.accomplishedUser.MiddleName)
+                                OfficeHeadMiddleName = g
+                    .Select(x => x.officeHeadUser.MiddleName)
                     .FirstOrDefault(),
 
-                                AccomplisherLastName = g
-                    .Where(x => x.accomplishment != null && x.accomplishedUser != null)
-                    .Select(x => x.accomplishedUser.LastName)
+                                OfficeHeadLastName = g
+                    .Select(x => x.officeHeadUser.LastName)
                     .FirstOrDefault(),
 
-                                AccomplisherSuffix = g
-                    .Where(x => x.accomplishment != null && x.accomplishedUser != null)
-                    .Select(x => x.accomplishedUser.Suffix)
+                                OfficeHeadSuffix = g
+                    .Select(x => x.officeHeadUser.Suffix)
                     .FirstOrDefault(),
             };
 
@@ -191,15 +199,15 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 
             ReportMonth = reportMonth,
             AccomplishedBy = string.Join(" ",
-                new[]
-                {
-                    x.AccomplisherPrefix,
-                    x.AccomplisherFirstName,
-                    x.AccomplisherMiddleName,
-                    x.AccomplisherLastName,
-                    x.AccomplisherSuffix
-                }
-                .Where(s => !string.IsNullOrWhiteSpace(s))),
+            new[]
+            {
+                x.OfficeHeadPrefix,
+                x.OfficeHeadFirstName,
+                x.OfficeHeadMiddleName,
+                x.OfficeHeadLastName,
+                x.OfficeHeadSuffix
+            }
+            .Where(s => !string.IsNullOrWhiteSpace(s))),
         })
         .ToList();
     }
