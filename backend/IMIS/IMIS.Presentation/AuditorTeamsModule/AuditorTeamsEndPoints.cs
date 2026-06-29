@@ -35,7 +35,7 @@ namespace IMIS.Presentation.AuditorTeamsModule
                 return Results.Ok(AuditorTeamDto);
             })
             .WithTags(_AuditorTeamTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_AuditorTeamTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.View));
 
             app.MapGet("/teamid/{id:long}", async (long id, IAuditorTeamsService service, CancellationToken cancellationToken) =>
@@ -50,7 +50,7 @@ namespace IMIS.Presentation.AuditorTeamsModule
                 return Results.Ok(team);
             })
             .WithTags(_AuditorTeamTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_AuditorTeamTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.View));
 
             app.MapPut("/teamid", async ([FromBody] AuditorTeamsDto auditorTeamsDto, IAuditorTeamsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -70,7 +70,7 @@ namespace IMIS.Presentation.AuditorTeamsModule
                 return Results.Ok(auditorTeamsDto);
             })
             .WithTags(_AuditorTeamTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_AuditorTeamTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IAuditorTeamsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
