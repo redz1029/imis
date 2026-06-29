@@ -38,7 +38,7 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
             })
            .WithTags(_pgsSummaryNarrativeTag)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View))
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true);         
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsSummaryNarrativeTag), true);         
 
             app.MapGet("/byAuditor", async(int ? periodId, int ? office, IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
             {            
@@ -89,7 +89,7 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
 
             })
             .WithTags(_pgsSummaryNarrativeTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true);           
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsSummaryNarrativeTag), true);           
 
             app.MapGet("/page", async (int page, int pageSize, IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
             {
@@ -97,7 +97,7 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
                 return Results.Ok(pgsSummaryNarrativeDto);
             })
             .WithTags(_pgsSummaryNarrativeTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsSummaryNarrativeTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View));
 
             app.MapDelete("/{id:int}", async (int id, IPGSSummaryNarrativeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
