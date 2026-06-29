@@ -36,7 +36,7 @@ namespace IMIS.Presentation.AuditorOfficesModule
                 return Results.Ok(auditorsOffices);
             })
             .WithTags(_auditorOfficesTag).RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorOfficePermission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorOfficesTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_auditorOfficesTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] AuditorOfficesDto auditorOffice, IAuditorOfficesService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -58,7 +58,7 @@ namespace IMIS.Presentation.AuditorOfficesModule
                 return Results.Ok(paginatedAuditorOffice);
             })
             .WithTags(_auditorOfficesTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorOfficesTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_auditorOfficesTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorOfficePermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IAuditorOfficesService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
