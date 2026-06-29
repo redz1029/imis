@@ -34,7 +34,7 @@ namespace IMIS.Presentation.KraRoadMapPeriodModule
                 return Results.Ok(period);
             })
             .WithTags(_kraRoadMapPeriod)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMapPeriod), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMapPeriod), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPeriodPermission.View));
 
             app.MapGet("/{id}", async (int id, IKraRoadMapPeriodService service, CancellationToken cancellationToken) =>
@@ -43,7 +43,7 @@ namespace IMIS.Presentation.KraRoadMapPeriodModule
                 return kraRoadMapPeriodDto != null ? Results.Ok(kraRoadMapPeriodDto) : Results.NotFound();
             })
             .WithTags(_kraRoadMapPeriod)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMapPeriod), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMapPeriod), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPeriodPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] KraRoadMapPeriodDto kraRoadMapPeriodDto, IKraRoadMapPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -68,7 +68,7 @@ namespace IMIS.Presentation.KraRoadMapPeriodModule
                 return Results.Ok(paginatedkraRoadMapPeriodDto);
             })
            .WithTags(_kraRoadMapPeriod)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMapPeriod), true)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMapPeriod), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPeriodPermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IKraRoadMapPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
