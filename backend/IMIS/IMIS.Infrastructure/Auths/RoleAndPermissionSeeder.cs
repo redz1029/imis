@@ -269,6 +269,23 @@ namespace IMIS.Infrastructure.Auths
               new OperationReviewProtocolPermission(),
               new StrategyReviewPermission());
 
+            await PermissionSeeder.SeedPermissionForRole<MSGC, IdentityRole>(_roleManager,
+             new KeyResultAreaPermission(),
+             new PgsDeliverableAuditorPermission(),
+             new PgsPeriodPermission(),
+             new PgsSignatoryTemplatePermission(),
+             new PgsSummaryNarrativePermissions(),
+             new PerformanceGovernanceSystemPermission(),
+             new OfficePermission(),
+             new PgsDeliverableAccomplishmentPermission(),
+             new SWOTAnalysisPermission(),
+             new KraRoadMapPermission(),
+             new KraRoadMapPeriodPermission(),
+             new KraRoadMapAccomplishmentPermission(),
+             new KraRoadMapKpiAccomplishmentPermission(),
+             new OperationReviewProtocolPermission(),
+             new StrategyReviewPermission());
+
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
                  _roleManager, _userManager, "castillano.mrb", "rama.emg");
