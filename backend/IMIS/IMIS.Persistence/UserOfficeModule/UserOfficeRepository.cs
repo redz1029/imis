@@ -56,5 +56,11 @@ namespace IMIS.Persistence.UserOfficeModule
             return await ReadOnlyDbContext.Set<UserOffices>() 
                 .AnyAsync(uo => uo.UserId == userId && uo.OfficeId == officeId && uo.IsOfficeHead && !uo.IsDeleted, cancellationToken);
         }
+
+        public async Task<bool> IsUserOfficeHeadAsync(string userId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<UserOffices>()
+                .AnyAsync(uo => uo.UserId == userId && uo.IsOfficeHead && !uo.IsDeleted, cancellationToken);
+        }
     }
 }
