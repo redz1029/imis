@@ -51,7 +51,7 @@ namespace IMIS.Presentation.UserModule
 
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
-            roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup));
+            roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
             roleGroup.MapGet("page/roles", async (int page, int pageSize, RoleManager<IdentityRole> roleManager) =>
             {
                 page = page <= 0 ? 1 : page;
@@ -74,7 +74,7 @@ namespace IMIS.Presentation.UserModule
                     pageSize,
                 });
             })
-           .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup));
+           .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
             roleGroup.MapPost("/roles", CreateRole);          
                 roleGroup.MapPut("/roles/{roleId}", EditRole);
                 roleGroup.MapDelete("/roles/{roleId}", DeleteRole);
@@ -98,7 +98,7 @@ namespace IMIS.Presentation.UserModule
                     return roles == null ? Results.NoContent() : Results.Ok(rolePermissions);
                 }).WithTags(RoleGroup)
                 .RequireAuthorization()
-                .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup), true);
+                .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup), true);
           
                 roleGroup.MapGet("/users/{userId}/permissions", async (string userId, string roleId,
                 UserManager<User> userManager,
@@ -207,7 +207,7 @@ namespace IMIS.Presentation.UserModule
 
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
-            userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup));
+            userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
             userRoleGroup.MapPost("/userRoles", AssignUserRoles);           
             userRoleGroup.MapPut("/updateUserRole", UpdateUserRoles);
             userRoleGroup.MapDelete("/deleteUserRole", DeleteUserRole);      

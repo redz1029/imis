@@ -32,7 +32,7 @@ namespace IMIS.Presentation.StrategyReviewPeriodModule
                 return Results.Ok(strategyReviewPeriodDto);
             })
           .WithTags(_strategyReviewPeriodTag)
-          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_strategyReviewPeriodTag), true);
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReviewPeriodTag), true);
 
             app.MapGet("/{id}", async (int id, IStrategyReviewPeriodService service, CancellationToken cancellationToken) =>
             {
@@ -40,7 +40,7 @@ namespace IMIS.Presentation.StrategyReviewPeriodModule
                 return strategyReviewPeriodDto != null ? Results.Ok(strategyReviewPeriodDto) : Results.NotFound();
             })
            .WithTags(_strategyReviewPeriodTag)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_strategyReviewPeriodTag), true);
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReviewPeriodTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] StrategyReviewPeriodDto strategyReviewPeriodDto, IStrategyReviewPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -65,7 +65,7 @@ namespace IMIS.Presentation.StrategyReviewPeriodModule
                 return Results.Ok(paginatedReviewPeriod);
             })
           .WithTags(_strategyReviewPeriodTag)
-          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_strategyReviewPeriodTag), true);
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReviewPeriodTag), true);
 
             app.MapDelete("/{id:int}", async (int id, IStrategyReviewPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

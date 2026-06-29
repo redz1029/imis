@@ -105,7 +105,7 @@ namespace IMIS.Presentation.StrategyReviewModule
             .WithTags(_strategyReview)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReview), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.View));
-            
+
             app.MapGet("/roleid/{roleId}", async (string roleId, int? strategyReviewPeriodId, int page, int pageSize, IStrategyReviewService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetAllRoleIdAsync(roleId, strategyReviewPeriodId, page, pageSize, cancellationToken);
@@ -113,7 +113,7 @@ namespace IMIS.Presentation.StrategyReviewModule
                 return Results.Ok(result);
             })
             .WithTags(_strategyReview)
-            .CacheOutput(builder => builder.Expire(TimeSpan.Zero).Tag(_strategyReview), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReview), true);
 
             app.MapDelete("/{id:int}", async (int id, IStrategyReviewService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
