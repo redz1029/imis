@@ -34,7 +34,7 @@ namespace IMIS.Presentation.PgsSummaryNarrativeHeadAuditorModule
                 return office != null ? Results.Ok(office) : Results.NotFound();
             })
             .WithTags(_pgsSummaryNarrativeTag)         
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsSummaryNarrativeTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View)); ;
 
             app.MapGet("/byHeadAuditor", async (int? periodId, int? office, IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
