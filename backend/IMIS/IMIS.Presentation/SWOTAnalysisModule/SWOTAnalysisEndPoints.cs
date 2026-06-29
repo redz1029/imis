@@ -42,7 +42,7 @@ namespace IMIS.Presentation.SWOTAnalysisModule
                 return swotAnalysisDto != null ? Results.Ok(swotAnalysisDto) : Results.NotFound();
             })
             .WithTags(_swotAnalysisTag)         
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_swotAnalysisTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisDto swotAnalysisDto, ISWOTAnalysisService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -78,7 +78,7 @@ namespace IMIS.Presentation.SWOTAnalysisModule
                 return Results.Ok(paginatedswotAnalysisDto);
             })
             .WithTags(_swotAnalysisTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_swotAnalysisTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
 
             app.MapDelete("/{id:int}", async (int id, ISWOTAnalysisService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
