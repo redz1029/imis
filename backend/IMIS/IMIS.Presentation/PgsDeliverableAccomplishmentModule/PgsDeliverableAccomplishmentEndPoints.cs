@@ -236,7 +236,7 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                 var reportData = result.Select(x => new ReportAuditorPendingAuditDto
                 {
                     AuditorId = x.AuditorId,
-                    AuditorName = x.AuditorName,
+                    AuditorName = x.AuditorName,   
                     TeamId = x.TeamId,
                     TeamName = x.TeamName,
                     OfficeId = x.OfficeId,
