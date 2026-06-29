@@ -58,7 +58,7 @@ namespace IMIS.Presentation.PGSModule
             })  
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverablePermission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] PGSDeliverableDto pgsdeliverables, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -86,7 +86,7 @@ namespace IMIS.Presentation.PGSModule
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverablePermission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsTag), true);
 
             app.MapGet("/filter", async ([AsParameters] PgsDeliverableMonitorFilter filter, IPGSDeliverableService service, CancellationToken cancellationToken) =>
             {
