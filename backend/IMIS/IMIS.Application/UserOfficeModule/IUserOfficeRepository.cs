@@ -13,6 +13,5 @@ namespace IMIS.Application.UserOfficeModule
         Task<bool> IsUserOfficeHeadAsync(string userId, int officeId, CancellationToken cancellationToken);
         Task<UserOffices?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<UserOffices>?> FilteByName(string name, int noOfResults, CancellationToken cancellationToken);
-        Task<bool> IsUserOfficeHeadAsync(string userId, CancellationToken cancellationToken);
     }
 }
