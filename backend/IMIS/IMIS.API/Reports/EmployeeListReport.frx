@@ -1,16 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Report ScriptLanguage="CSharp" ReportInfo.Created="03/31/2026 16:00:23" ReportInfo.Modified="04/06/2026 09:25:40" ReportInfo.CreatorVersion="2025.2.0.0">
   <Dictionary>
-    <BusinessObjectDataSource Name="Users" ReferenceName="Users" DataType="System.Int32" Enabled="true">
-      <Column Name="UserId" DataType="System.String"/>
-      <Column Name="UserName" DataType="System.String"/>
-      <Column Name="Email" DataType="System.String"/>
-      <Column Name="FirstName" DataType="System.String"/>
-      <Column Name="MiddleName" DataType="System.String"/>
-      <Column Name="LastName" DataType="System.String"/>
-      <Column Name="Position" DataType="System.String"/>
-      <Column Name="RoleName" DataType="System.String"/>
-      <Column Name="RoleHeader" DataType="System.String"/>
+    <BusinessObjectDataSource Name="AuditData" DataType="System.Int32" Enabled="true">
+      <Column Name="Year" DataType="System.Int32"/>
+      <Column Name="For" DataType="System.String"/>
+      <Column Name="From" DataType="System.String"/>
+      <Column Name="Purpose" DataType="System.String"/>
+      <Column Name="ScopeAndFreqAudit" DataType="System.String"/>
+      <Column Name="InternalAuditSched" DataType="System.String"/>
+      <Column Name="AuditPlanObjective" DataType="System.String"/>
+      <Column Name="ScopeOfAudit" DataType="System.String"/>
+      <BusinessObjectDataSource Name="Objectives" DataType="System.Int32" Enabled="true">
+        <Column Name="Id" DataType="System.Int64"/>
+        <Column Name="Text" DataType="System.String"/>
+      </BusinessObjectDataSource>
     </BusinessObjectDataSource>
   </Dictionary>
   <ReportPage Name="Page1" RawPaperSize="9" Watermark.Font="Arial, 60pt">

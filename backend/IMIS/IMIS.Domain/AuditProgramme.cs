@@ -10,7 +10,6 @@ namespace IMIS.Domain
         public required string From { get; set; }
         public required string Purpose { get; set; }
 
-        // Replaced single string Objective with a sorted collection
         public ICollection<AuditProgrammeObjective> Objectives { get; set; } = new List<AuditProgrammeObjective>();
 
         public required string ScopeAndFreqAudit { get; set; }
@@ -18,6 +17,8 @@ namespace IMIS.Domain
         public required string AuditPlanObjective { get; set; }
         public required string ScopeOfAudit { get; set; }
 
-        public ICollection<AuditPlan>? Plan { get; set; }
+
+        // Fix: Changed 'Plan' to 'AuditPlans' to ensure consistency with the DTO mapping graph
+        public ICollection<AuditPlan> AuditPlans { get; set; } = new List<AuditPlan>();
     }
 }

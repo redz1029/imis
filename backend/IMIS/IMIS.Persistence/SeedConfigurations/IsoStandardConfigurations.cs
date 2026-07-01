@@ -8,6 +8,8 @@ namespace IMIS.Persistence.SeedConfigurations
     {
         public void Configure(EntityTypeBuilder<IsoStandard> builder)
         {
+            builder.Property(x => x.Id)
+                    .HasColumnName("Id");
 
 
             builder.HasData(

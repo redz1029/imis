@@ -9,6 +9,7 @@ namespace IMIS.Application.IsoAuditProcessModule
         public string Name { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public int AuditPlanEntryId { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; }
 
         public IsoAuditProcessDto() { }
 
@@ -31,7 +32,9 @@ namespace IMIS.Application.IsoAuditProcessModule
                 Id = Id,
                 Name = Name,
                 IsActive = IsActive,
-                AuditPlanEntryId = AuditPlanEntryId
+                AuditPlanEntryId = AuditPlanEntryId,
+
+                AuditPlanEntry = null
             };
         }
     }

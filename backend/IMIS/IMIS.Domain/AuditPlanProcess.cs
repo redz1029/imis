@@ -7,7 +7,7 @@ namespace IMIS.Domain
         public required int OfficeId { get; set; }
         public Office? Office { get; set; }
         public required int AuditPlanEntryId { get; set; }
-        public AuditPlanEntry? AuditPlanEntry { get; set; }
-        
+        public AuditPlanEntry? AuditPlanEntry { get; set; } = null!;
+
     }
 }

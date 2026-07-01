@@ -7,6 +7,6 @@ namespace IMIS.Domain
         public required string Name { get; set; }
         public required bool IsActive { get; set; }
         public required int AuditPlanEntryId { get; set; }
-        public AuditPlanEntry? AuditPlanEntry { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; } = null!;
     }
 }

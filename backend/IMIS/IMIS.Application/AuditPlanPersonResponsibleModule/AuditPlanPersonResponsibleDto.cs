@@ -8,6 +8,7 @@ namespace IMIS.Application.AuditPlanPersonResponsibleModule
     {
         public string Name { get; set; } = string.Empty;
         public int AuditPlanEntryId { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; }
 
         public AuditPlanPersonResponsibleDto() { }
 
@@ -28,7 +29,9 @@ namespace IMIS.Application.AuditPlanPersonResponsibleModule
             {
                 Id = Id,
                 Name = Name,
-                AuditPlanEntryId = AuditPlanEntryId
+                AuditPlanEntryId = AuditPlanEntryId,
+
+                AuditPlanEntry = null
             };
         }
     }

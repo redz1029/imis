@@ -10,6 +10,8 @@ namespace IMIS.Application.IsoAuditorModule
         public string? AuditorId { get; set; } = string.Empty;
         public int? AuditPlanEntryId { get; set; }
 
+        public IsoAuditorDto? Team { get; set; }
+
         public IsoAuditorDto() { }
 
         [SetsRequiredMembers]
@@ -31,7 +33,9 @@ namespace IMIS.Application.IsoAuditorModule
                 Id = Id,
                 TeamId = TeamId,
                 AuditorId = AuditorId,
-                AuditPlanEntryId = AuditPlanEntryId
+                AuditPlanEntryId = AuditPlanEntryId,
+
+                AuditPlanEntry = null
             };
         }
     }

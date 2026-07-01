@@ -8,6 +8,7 @@ namespace IMIS.Application.IsoStandardAuditPlanModule // Adjusted namespace to m
     {
         public long IsoStandardId { get; set; }
         public int AuditPlanEntryId { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; }
 
         public IsoStandardAuditPlanDto() { }
 
@@ -29,7 +30,9 @@ namespace IMIS.Application.IsoStandardAuditPlanModule // Adjusted namespace to m
             {
                 Id = Id,
                 IsoStandardId = IsoStandardId,
-                AuditPlanEntryId = AuditPlanEntryId
+                AuditPlanEntryId = AuditPlanEntryId,
+
+                AuditPlanEntry = null
             };
         }
     }

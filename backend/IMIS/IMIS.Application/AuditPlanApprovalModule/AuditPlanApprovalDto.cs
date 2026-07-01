@@ -1,15 +1,27 @@
-using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
 using IMIS.Domain;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace IMIS.Application.AuditPlanApprovalModule
 {
     public class AuditPlanApprovalDto : BaseDto<AuditPlanApproval, int>
     {
-        public required int AuditPlanId { get; set; }
+
+        [JsonPropertyName("auditPlanId")]
+        public int AuditPlanId { get; set; }
+
+        // This force maps the backend parameter contract to bind successfully
+        [JsonPropertyName("aproverId")]
         public required string AproverId { get; set; }
-        public required string Action { get; set; }
-        public required DateTime Timestamp { get; set; } 
+
+        [JsonPropertyName("action")]
+        public string? Action { get; set; }
+
+        [JsonPropertyName("timestamp")]
+        public DateTime Timestamp { get; set; }
+
+        [JsonPropertyName("comments")]
         public string? Comments { get; set; }
 
         public AuditPlanApprovalDto() { }

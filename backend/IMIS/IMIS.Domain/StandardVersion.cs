@@ -12,6 +12,7 @@ namespace IMIS.Domain
         public required string VersionName { get; set; }
 
         public required bool isActive { get; set; }
-       
+
+        public ICollection<IsoStandard> IsoStandards { get; set; } = new List<IsoStandard>();
     }
 }

@@ -1,4 +1,4 @@
-using Base.Primitives;
+﻿using Base.Primitives;
 using IMIS.Application.AuditPlanModule;
 using IMIS.Application.AuditPlanPersonResponsibleModule;
 using IMIS.Application.AuditPlanProcessModule;
@@ -10,25 +10,39 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace IMIS.Application.AuditPlanEntryModule
 {
     public class AuditPlanEntryDto : BaseDto<AuditPlanEntry, int>
     {
+        [JsonPropertyName("auditPlanId")]
         public required int AuditPlanId { get; set; }
-        public AuditPlanDto AuditPlan { get; set; }
+
+        // 🔥 FIX: Added [JsonIgnore] to stop the serializer from crawling back up to the parent
+        [JsonIgnore]
+        [JsonPropertyName("auditPlan")]
+        public AuditPlanDto? AuditPlan { get; set; }
+
+        [JsonPropertyName("dayNumber")]
         public required int DayNumber { get; set; }
 
+        [JsonPropertyName("time")]
         public required DateTime Time { get; set; }
 
+        [JsonPropertyName("isoAuditProcesses")]
         public List<IsoAuditProcessDto>? IsoAuditProcesses { get; set; }
 
+        [JsonPropertyName("responsiblePersons")]
         public List<AuditPlanPersonResponsibleDto>? ResponsiblePersons { get; set; }
 
+        [JsonPropertyName("isoAuditors")]
         public List<IsoAuditorDto>? IsoAuditors { get; set; }
 
+        [JsonPropertyName("isoStandardAuditPlans")]
         public List<IsoStandardAuditPlanDto>? IsoStandardAuditPlans { get; set; }
 
+        [JsonPropertyName("auditPlanProcesses")]
         public List<AuditPlanProcessDto>? AuditPlanProcesses { get; set; }
 
         public AuditPlanEntryDto() { }
@@ -40,6 +54,10 @@ namespace IMIS.Application.AuditPlanEntryModule
             this.AuditPlanId = entity.AuditPlanId;
             this.DayNumber = entity.DayNumber;
             this.Time = entity.Time;
+
+            // 🔥 FIX: Never initialize the full parent AuditPlanDto graph node inside a child constructor.
+            // Leaving this null breaks the infinite recursion execution ring.
+            this.AuditPlan = null;
 
             this.IsoAuditProcesses = entity.IsoAuditProcesses != null
                 ? entity.IsoAuditProcesses.Select(x => new IsoAuditProcessDto(x)).ToList()
@@ -70,23 +88,19 @@ namespace IMIS.Application.AuditPlanEntryModule
             {
                 Id = this.Id,
                 AuditPlanId = this.AuditPlanId,
-                AuditPlan = this.AuditPlan != null ? this.AuditPlan.ToEntity() : null,
+                AuditPlan = null, // Safely broken
+
                 DayNumber = this.DayNumber,
                 Time = this.Time,
 
-                IsoAuditProcesses = this.IsoAuditProcesses?.Select(x => x.ToEntity()).ToList(),
-
-                ResponsiblePersons = this.ResponsiblePersons?.Select(x => x.ToEntity()).ToList(),
-
-                IsoAuditors = this.IsoAuditors?.Select(x => x.ToEntity()).ToList(),
-
-                IsoStandardAuditPlans = this.IsoStandardAuditPlans?.Select(x => x.ToEntity()).ToList(),
-
-                AuditPlanProcesses = this.AuditPlanProcesses?.Select(x => x.ToEntity()).ToList(),
+                IsoAuditProcesses = this.IsoAuditProcesses?.Select(x => x.ToEntity()).ToList() ?? new List<IsoAuditProcess>(),
+                ResponsiblePersons = this.ResponsiblePersons?.Select(x => x.ToEntity()).ToList() ?? new List<AuditPlanPersonResponsible>(),
+                IsoAuditors = this.IsoAuditors?.Select(x => x.ToEntity()).ToList() ?? new List<IsoAuditor>(),
+                IsoStandardAuditPlans = this.IsoStandardAuditPlans?.Select(x => x.ToEntity()).ToList() ?? new List<IsoStandardAuditPlan>(),
+                AuditPlanProcesses = this.AuditPlanProcesses?.Select(x => x.ToEntity()).ToList() ?? new List<AuditPlanProcess>(),
 
                 RowVersion = this.RowVersion
             };
         }
     }
 }
-

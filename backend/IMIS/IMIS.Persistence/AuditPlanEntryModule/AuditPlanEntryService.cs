@@ -92,6 +92,105 @@ namespace IMIS.Persistence.AuditPlanEntryModule
             return true;
         }
 
+        //    public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
+        //where TEntity : Entity<TId>
+        //    {
+        //        if (dto is not AuditPlanEntryDto aDto)
+        //            throw new InvalidOperationException("Invalid DTO type for AuditPlanEntry saving.");
+
+        //        var entity = aDto.ToEntity();
+        //        var isNew = entity.Id == 0;
+        //        var dbContext = _repository.GetDbContext();
+
+        //        // --- 1. Save or update main entity ---
+        //        if (isNew)
+        //        {
+        //            dbContext.Add(entity);
+        //            await dbContext.SaveChangesAsync(cancellationToken);
+        //        }
+        //        else
+        //        {
+        //            await _repository.UpdateAsync(entity, entity.Id, cancellationToken);
+        //        }
+
+        //        // --- 2. Handle child collections individually ---
+
+        //        // IsoAuditProcesses
+        //        if (entity.IsoAuditProcesses?.Any() == true)
+        //        {
+        //            var existingIds = await _repository.GetExistingIsoAuditProcessIdsAsync(entity.Id, cancellationToken);
+        //            var newItems = entity.IsoAuditProcesses
+        //                .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
+        //                .ToList();
+
+        //            if (newItems.Any())
+        //            {
+        //                newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
+        //                await _repository.AddIsoAuditProcessesAsync(newItems, cancellationToken);
+        //            }
+        //        }
+
+        //        // ResponsiblePersons
+        //        if (entity.ResponsiblePersons?.Any() == true)
+        //        {
+        //            var existingIds = await _repository.GetExistingResponsiblePersonIdsAsync(entity.Id, cancellationToken);
+        //            var newItems = entity.ResponsiblePersons
+        //                .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
+        //                .ToList();
+
+        //            if (newItems.Any())
+        //            {
+        //                newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
+        //                await _repository.AddResponsiblePersonsAsync(newItems, cancellationToken);
+        //            }
+        //        }
+
+        //        // IsoAuditors
+        //        if (entity.IsoAuditors?.Any() == true)
+        //        {
+        //            var existingIds = await _repository.GetExistingIsoAuditorIdsAsync(entity.Id, cancellationToken);
+        //            var newItems = entity.IsoAuditors
+        //                .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
+        //                .ToList();
+
+        //            if (newItems.Any())
+        //            {
+        //                newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
+        //                await _repository.AddIsoAuditorsAsync(newItems, cancellationToken);
+        //            }
+        //        }
+
+        //        // IsoStandardAuditPlans
+        //        if (entity.IsoStandardAuditPlans?.Any() == true)
+        //        {
+        //            var existingIds = await _repository.GetExistingIsoStandardAuditPlanIdsAsync(entity.Id, cancellationToken);
+        //            var newItems = entity.IsoStandardAuditPlans
+        //                .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
+        //                .ToList();
+
+        //            if (newItems.Any())
+        //            {
+        //                newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
+        //                await _repository.AddIsoStandardAuditPlansAsync(newItems, cancellationToken);
+        //            }
+        //        }
+
+        //        // AuditPlanProcesses
+        //        if (entity.AuditPlanProcesses?.Any() == true)
+        //        {
+        //            var existingIds = await _repository.GetExistingAuditPlanProcessIdsAsync(entity.Id, cancellationToken);
+        //            var newItems = entity.AuditPlanProcesses
+        //                .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
+        //                .ToList();
+
+        //            if (newItems.Any())
+        //            {
+        //                newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
+        //                await _repository.AddAuditPlanProcessesAsync(newItems, cancellationToken);
+        //            }
+        //        }
+        //    }
+
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
     where TEntity : Entity<TId>
         {
@@ -113,25 +212,28 @@ namespace IMIS.Persistence.AuditPlanEntryModule
                 await _repository.UpdateAsync(entity, entity.Id, cancellationToken);
             }
 
-            // --- 2. Handle child collections individually ---
+            // --- 2. Handle child collections individually with hardbound Parent ID routing ---
 
             // IsoAuditProcesses
-            if (entity.IsoAuditProcesses?.Any() == true)
+            if (entity.IsoAuditProcesses != null)
             {
                 var existingIds = await _repository.GetExistingIsoAuditProcessIdsAsync(entity.Id, cancellationToken);
+
+                // Isolate brand new items or items that aren't bound to this entity yet
                 var newItems = entity.IsoAuditProcesses
                     .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
                     .ToList();
 
                 if (newItems.Any())
                 {
+                    // 🔥 Force every item to explicitly share the exact same generated parent ID
                     newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
                     await _repository.AddIsoAuditProcessesAsync(newItems, cancellationToken);
                 }
             }
 
             // ResponsiblePersons
-            if (entity.ResponsiblePersons?.Any() == true)
+            if (entity.ResponsiblePersons != null)
             {
                 var existingIds = await _repository.GetExistingResponsiblePersonIdsAsync(entity.Id, cancellationToken);
                 var newItems = entity.ResponsiblePersons
@@ -140,13 +242,14 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
                 if (newItems.Any())
                 {
+                    // 🔥 Force every item to explicitly share the exact same generated parent ID
                     newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
                     await _repository.AddResponsiblePersonsAsync(newItems, cancellationToken);
                 }
             }
 
             // IsoAuditors
-            if (entity.IsoAuditors?.Any() == true)
+            if (entity.IsoAuditors != null)
             {
                 var existingIds = await _repository.GetExistingIsoAuditorIdsAsync(entity.Id, cancellationToken);
                 var newItems = entity.IsoAuditors
@@ -155,13 +258,14 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
                 if (newItems.Any())
                 {
+                    // 🔥 Force every item to explicitly share the exact same generated parent ID
                     newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
                     await _repository.AddIsoAuditorsAsync(newItems, cancellationToken);
                 }
             }
 
             // IsoStandardAuditPlans
-            if (entity.IsoStandardAuditPlans?.Any() == true)
+            if (entity.IsoStandardAuditPlans != null)
             {
                 var existingIds = await _repository.GetExistingIsoStandardAuditPlanIdsAsync(entity.Id, cancellationToken);
                 var newItems = entity.IsoStandardAuditPlans
@@ -170,13 +274,14 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
                 if (newItems.Any())
                 {
+                    // 🔥 Force every item to explicitly share the exact same generated parent ID
                     newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
                     await _repository.AddIsoStandardAuditPlansAsync(newItems, cancellationToken);
                 }
             }
 
             // AuditPlanProcesses
-            if (entity.AuditPlanProcesses?.Any() == true)
+            if (entity.AuditPlanProcesses != null)
             {
                 var existingIds = await _repository.GetExistingAuditPlanProcessIdsAsync(entity.Id, cancellationToken);
                 var newItems = entity.AuditPlanProcesses
@@ -185,6 +290,7 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
                 if (newItems.Any())
                 {
+                    // 🔥 Force every item to explicitly share the exact same generated parent ID
                     newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
                     await _repository.AddAuditPlanProcessesAsync(newItems, cancellationToken);
                 }

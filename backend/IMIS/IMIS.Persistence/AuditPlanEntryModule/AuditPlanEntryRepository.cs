@@ -73,7 +73,8 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
         public async Task AddIsoAuditProcessesAsync(List<IsoAuditProcess> processes, CancellationToken cancellationToken)
         {
-            await ReadOnlyDbContext.Set<IsoAuditProcess>().AddRangeAsync(processes, cancellationToken);
+            //  Changed from ReadOnlyDbContext to GetDbContext()
+            await GetDbContext().Set<IsoAuditProcess>().AddRangeAsync(processes, cancellationToken);
             await GetDbContext().SaveChangesAsync(cancellationToken);
         }
 
@@ -87,7 +88,8 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
         public async Task AddResponsiblePersonsAsync(List<AuditPlanPersonResponsible> persons, CancellationToken cancellationToken)
         {
-            await ReadOnlyDbContext.Set<AuditPlanPersonResponsible>().AddRangeAsync(persons, cancellationToken);
+            //  Changed from ReadOnlyDbContext to GetDbContext()
+            await GetDbContext().Set<AuditPlanPersonResponsible>().AddRangeAsync(persons, cancellationToken);
             await GetDbContext().SaveChangesAsync(cancellationToken);
         }
 
@@ -101,7 +103,8 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
         public async Task AddIsoAuditorsAsync(List<IsoAuditor> auditors, CancellationToken cancellationToken)
         {
-            await ReadOnlyDbContext.Set<IsoAuditor>().AddRangeAsync(auditors, cancellationToken);
+            //  Changed from ReadOnlyDbContext to GetDbContext()
+            await GetDbContext().Set<IsoAuditor>().AddRangeAsync(auditors, cancellationToken);
             await GetDbContext().SaveChangesAsync(cancellationToken);
         }
 
@@ -115,7 +118,8 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
         public async Task AddIsoStandardAuditPlansAsync(List<IsoStandardAuditPlan> standards, CancellationToken cancellationToken)
         {
-            await ReadOnlyDbContext.Set<IsoStandardAuditPlan>().AddRangeAsync(standards, cancellationToken);
+            //  Changed from ReadOnlyDbContext to GetDbContext()
+            await GetDbContext().Set<IsoStandardAuditPlan>().AddRangeAsync(standards, cancellationToken);
             await GetDbContext().SaveChangesAsync(cancellationToken);
         }
 
@@ -129,26 +133,11 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
         public async Task AddAuditPlanProcessesAsync(List<AuditPlanProcess> processes, CancellationToken cancellationToken)
         {
-            await ReadOnlyDbContext.Set<AuditPlanProcess>().AddRangeAsync(processes, cancellationToken);
+            //  Changed from ReadOnlyDbContext to GetDbContext()
+            await GetDbContext().Set<AuditPlanProcess>().AddRangeAsync(processes, cancellationToken);
             await GetDbContext().SaveChangesAsync(cancellationToken);
         }
 
-        public async Task AddAuditPlanEntryCollectionsAsync(AuditPlanEntry entity, CancellationToken cancellationToken)
-        {
-            if (entity.IsoAuditProcesses?.Any() == true)
-                await AddIsoAuditProcessesAsync(entity.IsoAuditProcesses.ToList(), cancellationToken);
-
-            if (entity.ResponsiblePersons?.Any() == true)
-                await AddResponsiblePersonsAsync(entity.ResponsiblePersons.ToList(), cancellationToken);
-
-            if (entity.IsoAuditors?.Any() == true)
-                await AddIsoAuditorsAsync(entity.IsoAuditors.ToList(), cancellationToken);
-
-            if (entity.IsoStandardAuditPlans?.Any() == true)
-                await AddIsoStandardAuditPlansAsync(entity.IsoStandardAuditPlans.ToList(), cancellationToken);
-
-            if (entity.AuditPlanProcesses?.Any() == true)
-                await AddAuditPlanProcessesAsync(entity.AuditPlanProcesses.ToList(), cancellationToken);
-        }
+      
     }
 }

@@ -96,6 +96,8 @@ using IMIS.Persistence.SWOTAnalysisModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
 using Microsoft.Extensions.DependencyInjection;
+using IMIS.Application.KraRoadmapAccomplishmentModule;
+using IMIS.Application.KraRoadmapCoreSupportProcessModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {

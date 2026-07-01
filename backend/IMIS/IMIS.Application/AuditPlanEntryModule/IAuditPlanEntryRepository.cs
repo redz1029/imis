@@ -32,7 +32,6 @@ namespace IMIS.Application.AuditPlanEntryModule
         Task<List<int>> GetExistingAuditPlanProcessIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken);
         Task AddAuditPlanProcessesAsync(List<AuditPlanProcess> processes, CancellationToken cancellationToken);
 
-        // Optional: generic collection save
-        Task AddAuditPlanEntryCollectionsAsync(AuditPlanEntry entity, CancellationToken cancellationToken);
+
     }
 }

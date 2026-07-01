@@ -1,3 +1,4 @@
+using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.StandardVersionModule;
 using Microsoft.AspNetCore.Builder;
@@ -5,87 +6,80 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IMIS.Presentation.StandardVersionModule
 {
     public class StandardVersionEndpoint : CarterModule
     {
-        private const string _tag = "StandardVersion";
+        private const string _tag = "StandardVersions";
+        // Assuming a matching permission configuration structure exists
+        // public readonly StandardVersionPermission _permission = new();
 
-        public StandardVersionEndpoint() : base("/api/StandardVersion")
+        public StandardVersionEndpoint() : base("/standardVersions")
         {
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
+            // --- CREATE / UPDATE ---
             app.MapPost("/", async ([FromBody] StandardVersionDto dto, IStandardVersionService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                await service.SaveOrUpdateAsync(dto, cancellationToken);
+                await service.SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_tag, cancellationToken);
                 return Results.Ok(dto);
             })
             .WithTags(_tag);
+            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
+            // --- READ ALL ---
             app.MapGet("/", async (IStandardVersionService service, CancellationToken cancellationToken) =>
             {
-                var versions = await service.GetAllAsync(cancellationToken);
-                return versions != null ? Results.Ok(versions) : Results.NoContent();
+                var list = await service.GetAll(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(list);
             })
-            .WithTags(_tag);
+            .WithTags(_tag)
+            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_tag), true);
 
-            app.MapGet("/{id}", async (int id, IStandardVersionService service, CancellationToken cancellationToken) =>
+            // --- UPDATE BY ID ---
+            app.MapPut("/{id:int}", async (int id, [FromBody] StandardVersionDto dto, IStandardVersionService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                var version = await service.GetByIdAsync(id, cancellationToken);
-                return version != null ? Results.Ok(version) : Results.NotFound();
-            })
-            .WithTags(_tag);
-
-            app.MapGet("/{id}/with-standards", async (int id, IStandardVersionService service, CancellationToken cancellationToken) =>
-            {
-                var version = await service.GetByIdWithIsoStandardsAsync(id, cancellationToken);
-                return version != null ? Results.Ok(version) : Results.NotFound();
-            })
-            .WithTags(_tag);
-
-            app.MapGet("/filter/{name}", async (string name, IStandardVersionService service, CancellationToken cancellationToken) =>
-            {
-                const int noOfResults = 10;
-                var versions = await service.FilterByName(name, noOfResults, cancellationToken);
-                return versions != null ? Results.Ok(versions) : Results.NoContent();
-            })
-            .WithTags(_tag);
-
-            app.MapGet("/paginate/{page}/{pageSize}", async (int page, int pageSize, IStandardVersionService service, CancellationToken cancellationToken) =>
-            {
-                var paginatedVersions = await service.GetPaginatedAsync(page, pageSize, cancellationToken);
-                return Results.Ok(paginatedVersions);
-            })
-            .WithTags(_tag);
-
-            app.MapPut("/{id}", async (int id, [FromBody] StandardVersionDto dto, IStandardVersionService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                var existing = await service.GetByIdAsync(id, cancellationToken);
+                var existing = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existing == null)
-                    return Results.NotFound($"StandardVersion with ID {id} not found.");
-                dto.Id = id;
-                await service.SaveOrUpdateAsync(dto, cancellationToken);
+                {
+                    return Results.NotFound($"Standard Version with ID {id} not found.");
+                }
+
+                dto.Id = id; // Ensure ID consistency
+                await service.SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_tag, cancellationToken);
                 return Results.Ok(dto);
             })
             .WithTags(_tag);
+            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
 
-            app.MapDelete("/{id}", async (int id, IStandardVersionService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            // --- READ PAGINATED ---
+            app.MapGet("/page", async (int page, int pageSize, IStandardVersionService service, CancellationToken cancellationToken) =>
+            {
+                var paginated = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(paginated);
+            })
+            .WithTags(_tag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_tag), true);
+            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            // --- DELETE ---
+            app.MapDelete("/{id:int}", async (int id, IStandardVersionService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var result = await service.SoftDeleteAsync(id, cancellationToken);
-                if (result)
-                {
-                    await cache.EvictByTagAsync(_tag, cancellationToken);
-                    return Results.Ok(new { message = "StandardVersion deleted successfully." });
-                }
-                return Results.NotFound(new { message = "StandardVersion not found." });
-            })
+                await cache.EvictByTagAsync(_tag, cancellationToken);
 
+                return result ? Results.Ok(new { message = "Standard version deleted successfully." })
+                              : Results.NotFound(new { message = "Standard version not found." });
+            })
             .WithTags(_tag);
+            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
         }
     }
 }

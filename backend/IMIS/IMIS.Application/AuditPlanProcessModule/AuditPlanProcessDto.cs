@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
+using IMIS.Application.AuditPlanEntryModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.AuditPlanProcessModule
@@ -8,6 +9,8 @@ namespace IMIS.Application.AuditPlanProcessModule
     {
         public int OfficeId { get; set; }
         public int AuditPlanEntryId { get; set; }
+
+        public AuditPlanEntryDto? AuditPlanEntry { get; set; }
 
         public AuditPlanProcessDto() { }
 
@@ -28,7 +31,9 @@ namespace IMIS.Application.AuditPlanProcessModule
             {
                 Id = Id,
                 OfficeId = OfficeId,
-                AuditPlanEntryId = AuditPlanEntryId
+                AuditPlanEntryId = AuditPlanEntryId,
+
+                AuditPlanEntry = null
             };
         }
     }

@@ -12,6 +12,6 @@ namespace IMIS.Domain
         public Auditor? IsoAuditors { get; set; }
 
         public required int? AuditPlanEntryId { get; set; }
-        public AuditPlanEntry? AuditPlanEntry { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; } = null!;
     }
 }

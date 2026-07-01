@@ -13,7 +13,7 @@ namespace IMIS.Domain
         public IsoStandard? IsoStandard { get; set; }
 
         public required int? AuditPlanEntryId { get; set; }
-        public AuditPlanEntry? AuditPlanEntry { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; } = null!;
 
     }
 }

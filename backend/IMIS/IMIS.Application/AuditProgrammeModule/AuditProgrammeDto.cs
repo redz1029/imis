@@ -1,4 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Collections.Generic;
+using System.Text.Json.Serialization; // CRITICAL for mapping names
 using Base.Primitives;
 using IMIS.Application.AuditPlanModule;
 using IMIS.Domain;
@@ -7,7 +10,6 @@ namespace IMIS.Application.AuditProgrammeModule
 {
     public class AuditProgrammeDto : BaseDto<AuditProgramme, int>
     {
-        // Added Year to match the Domain Entity
         public int Year { get; set; }
         public required string For { get; set; }
         public required string From { get; set; }
@@ -17,16 +19,18 @@ namespace IMIS.Application.AuditProgrammeModule
         public required string AuditPlanObjective { get; set; }
         public required string ScopeOfAudit { get; set; }
 
-        // Collection of nested DTOs
         public List<AuditProgrammeObjectiveDto> Objectives { get; set; } = new();
-        public List<AuditPlanDto> AuditPlan { get; set; } = new();
+
+        [JsonPropertyName("auditPlan")]
+        public List<AuditPlanDto> AuditPlans { get; set; } = new();
+
         public AuditProgrammeDto() { }
 
         [SetsRequiredMembers]
         public AuditProgrammeDto(AuditProgramme entity)
         {
             Id = entity.Id;
-            Year = entity.Year; // Mapping Year from Entity to DTO
+            Year = entity.Year;
             For = entity.For;
             From = entity.From;
             Purpose = entity.Purpose;
@@ -37,12 +41,18 @@ namespace IMIS.Application.AuditProgrammeModule
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
 
-            // Map nested collection
             if (entity.Objectives != null)
             {
                 Objectives = entity.Objectives
                     .OrderBy(o => o.SortOrder)
                     .Select(o => new AuditProgrammeObjectiveDto(o))
+                    .ToList();
+            }
+
+            if (entity.AuditPlans != null)
+            {
+                AuditPlans = entity.AuditPlans
+                    .Select(p => new AuditPlanDto(p))
                     .ToList();
             }
         }
@@ -52,7 +62,7 @@ namespace IMIS.Application.AuditProgrammeModule
             return new AuditProgramme
             {
                 Id = Id,
-                Year = Year, // Mapping Year from DTO to Entity
+                Year = Year,
                 For = For,
                 From = From,
                 Purpose = Purpose,
@@ -63,8 +73,8 @@ namespace IMIS.Application.AuditProgrammeModule
                 IsDeleted = IsDeleted,
                 RowVersion = RowVersion,
 
-                // Map DTO collection back to Entity collection
-                Objectives = Objectives.Select(o => o.ToEntity()).ToList()
+                Objectives = Objectives?.Select(o => o.ToEntity()).ToList() ?? new List<AuditProgrammeObjective>(),
+                AuditPlans = AuditPlans?.Select(p => p.ToEntity()).ToList() ?? new List<AuditPlan>()
             };
         }
     }
