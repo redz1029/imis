@@ -13,6 +13,7 @@ PvtValidators _$PvtValidatorsFromJson(Map<String, dynamic> json) =>
       (json['performanceValidationToolId'] as num).toInt(),
       (json['auditorId'] as num).toInt(),
       DateTime.parse(json['postingDate'] as String),
+      auditorName: json['auditorName'] as String?,
       rowVersion: json['rowVersion'] as bool?,
     );
 
@@ -23,5 +24,6 @@ Map<String, dynamic> _$PvtValidatorsToJson(PvtValidators instance) =>
       'isDeleted': instance.isDeleted,
       'performanceValidationToolId': instance.performanceValidationToolId,
       'auditorId': instance.auditorId,
+      'auditorName': instance.auditorName,
       'postingDate': instance.postingDate.toIso8601String(),
     };
