@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -753,13 +755,11 @@ class AccomplishmentPgsAuditorDialogState
             ),
           ),
 
-          // ─── STATUS COLUMN ───────────────────────────────────────────
           Expanded(
             flex: 2,
             child: ValueListenableBuilder<PgsStatus>(
               valueListenable: selectedStatus,
               builder: (context, status, _) {
-                // Read-only text widget (shared by auditor + all other roles)
                 final readOnlyStatus = Center(
                   child: Tooltip(
                     message: statusDescriptions[status] ?? '',
@@ -774,7 +774,6 @@ class AccomplishmentPgsAuditorDialogState
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ✅ FIX: Admin/StandardUser → dropdown; everyone else → read-only text
                     PermissionWidget(
                       allowedRoles: [
                         PermissionString.roleAdmin,
@@ -820,28 +819,6 @@ class AccomplishmentPgsAuditorDialogState
                               ) {
                                 applyStatus(i, PgsStatus.completed);
                               }
-                            } else if (newValue == PgsStatus.onGoing) {
-                              for (
-                                int i = widget.periodIndex + 1;
-                                i < rows.length;
-                                i++
-                              ) {
-                                if (rows[i].status.value !=
-                                    PgsStatus.completed) {
-                                  applyStatus(i, PgsStatus.onGoing);
-                                }
-                              }
-                            } else if (newValue == PgsStatus.notStarted) {
-                              for (
-                                int i = widget.periodIndex + 1;
-                                i < rows.length;
-                                i++
-                              ) {
-                                if (rows[i].status.value ==
-                                    PgsStatus.notStarted) {
-                                  applyStatus(i, PgsStatus.notStarted);
-                                }
-                              }
                             }
                           },
                           items:
@@ -866,7 +843,6 @@ class AccomplishmentPgsAuditorDialogState
             ),
           ),
 
-          // ─── PERCENTAGE COLUMN ───────────────────────────────────────
           Expanded(
             flex: 2,
             child: ValueListenableBuilder<PgsStatus>(
@@ -904,7 +880,6 @@ class AccomplishmentPgsAuditorDialogState
                       progressColor = Colors.orange;
                     }
 
-                    // ✅ FIX: read-only percentage text (shared by all non-editable roles)
                     final readOnlyPercentage = Text(
                       '${value.text}%',
                       style: const TextStyle(
@@ -935,7 +910,6 @@ class AccomplishmentPgsAuditorDialogState
                               width: 40,
                               height: 40,
                               child: Center(
-                                // ✅ FIX: Admin/StandardUser → editable; everyone else → read-only text
                                 child: PermissionWidget(
                                   allowedRoles: [
                                     PermissionString.roleAdmin,

@@ -827,24 +827,6 @@ class _AccomplishmentListViewState extends State<AccomplishmentListView> {
                     rows[j].status.value = PgsStatus.completed;
                     rows[j].percentageController.text = '100';
                   }
-                } else if (newStatus == PgsStatus.onGoing) {
-                  for (int j = i + 1; j < rows.length; j++) {
-                    if (rows[j].status.value != PgsStatus.completed) {
-                      rows[j].status.value = PgsStatus.onGoing;
-                      if ((int.tryParse(rows[j].percentageController.text) ??
-                              0) >=
-                          100) {
-                        rows[j].percentageController.text = '1';
-                      }
-                    }
-                  }
-                } else if (newStatus == PgsStatus.notStarted) {
-                  // ← add this
-                  for (int j = i + 1; j < rows.length; j++) {
-                    if (rows[j].status.value == PgsStatus.notStarted) {
-                      rows[j].percentageController.text = '0';
-                    }
-                  }
                 }
 
                 if (mounted) setState(() {});

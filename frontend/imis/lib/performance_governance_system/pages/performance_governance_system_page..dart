@@ -23,7 +23,6 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/performance_governance_system/dialog/breakthrough_dialog.dart';
 import 'package:imis/widgets/auto_complete_field.dart';
-import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
@@ -1420,64 +1419,6 @@ class _PerformanceGovernanceSystemPageState
       selectedStartPeriod != null ||
       selectedEndDate != null;
 
-  // Widget _buildDesktopFilters() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Row(
-  //         children: [
-  //           Icon(Icons.tune, size: 15, color: Colors.grey.shade600),
-  //           const SizedBox(width: 6),
-  //           Text(
-  //             "Filter by",
-  //             style: TextStyle(
-  //               fontSize: 13,
-  //               fontWeight: FontWeight.w600,
-  //               color: Colors.grey.shade700,
-  //             ),
-  //           ),
-  //           const Spacer(),
-  //           if (_hasActiveFilters)
-  //             TextButton.icon(
-  //               onPressed: _resetFilters,
-  //               icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
-  //               label: Text(
-  //                 'Clear filters',
-  //                 style: TextStyle(fontSize: 12, color: Colors.red.shade400),
-  //               ),
-  //               style: TextButton.styleFrom(
-  //                 padding: const EdgeInsets.symmetric(
-  //                   horizontal: 8,
-  //                   vertical: 4,
-  //                 ),
-  //               ),
-  //             ),
-  //         ],
-  //       ),
-  //       const SizedBox(height: 10),
-  //       Wrap(
-  //         spacing: 10,
-  //         runSpacing: 10,
-  //         children: [
-  //           buildDropdown(
-  //             child: PermissionWidget(
-  //               permission: AppPermissions.viewOffice,
-  //               child: _servicesDropdown(),
-  //             ),
-  //           ),
-  //           buildDropdown(
-  //             child: PermissionWidget(
-  //               permission: AppPermissions.viewOffice,
-  //               child: _officeDropdown(),
-  //             ),
-  //           ),
-  //           buildDropdown(child: _startDateDropdown()),
-  //           buildDropdown(child: _endDateDropdown()),
-  //         ],
-  //       ),
-  //     ],
-  //   );
-  // }
   Widget _buildDesktopFilters() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

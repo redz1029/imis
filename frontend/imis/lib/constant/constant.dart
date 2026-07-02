@@ -15,7 +15,7 @@ const lightGrey = Color.fromRGBO(217, 217, 217, 1);
 const lightGrey1 = Color.fromRGBO(245, 245, 245, 1);
 const primaryTextColor = Color.fromRGBO(65, 65, 65, 1);
 const scaffoldBackgroundColor = Color(0xffEDEDED);
-const Color kOrange = Color(0xFFF4724A);
+const Color kOrange = Color(0xFFF57F17);
 const Color kGreen = Color(0xFF4DC688);
 const Color kDark = Color(0xFF0F0F0F);
 const Color kText = Color(0xFF111827);
@@ -29,6 +29,8 @@ const kSuccessLight = Color(0xFFECFDF5);
 const kLabel = Color(0xFF374151);
 const kHint = Color(0xFF9CA3AF);
 const kSurface = Color(0xFFFFFFFF);
+const Color surface = Color(0xFFF5F6FA);
+
 const kCardShadow = Color(0x0A000000);
 const kPrimaryLight = Color(0xFFEBF2FF);
 const kDangerLight = Color(0xFFFEF2F2);
