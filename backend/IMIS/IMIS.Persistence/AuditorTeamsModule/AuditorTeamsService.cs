@@ -33,14 +33,39 @@ namespace IMIS.Application.AuditorTeamsModule
 
             return true;
         }
+       
         public async Task<DtoPageList<AuditorTeamsDto, AuditorTeams, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var auditorTeams = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+
             if (auditorTeams.TotalCount == 0)
             {
                 return null;
             }
-            return DtoPageList<AuditorTeamsDto, AuditorTeams, int>.Create(auditorTeams.Items, page, pageSize, auditorTeams.TotalCount);
+
+            foreach (var auditorTeam in auditorTeams.Items.Where(x => x.Auditor != null))
+            {
+                var user = await _userManager.FindByIdAsync(auditorTeam.Auditor!.UserId);
+
+                var fullName = string.Join(" ",
+                    new[]
+                    {
+                        user?.Prefix,
+                        user?.FirstName,
+                        user?.MiddleName,
+                        user?.LastName,
+                        user?.Suffix
+                    }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
+
+                auditorTeam.Auditor.Name = fullName;
+            }
+
+            return DtoPageList<AuditorTeamsDto, AuditorTeams, int>.Create(
+                auditorTeams.Items,
+                page,
+                pageSize,
+                auditorTeams.TotalCount);
         }
         public async Task<List<AuditorTeamsDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
