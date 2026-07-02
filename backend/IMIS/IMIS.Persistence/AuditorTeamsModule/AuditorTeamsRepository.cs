@@ -11,16 +11,7 @@ namespace IMIS.Persistence.AuditorTeamsModule
     
         public AuditorTeamsRepository(ImisDbContext dbContext) : base(dbContext)
         {
-        }      
-        public async Task<EntityPageList<AuditorTeams, int>> GetPaginatedAsync(int page, int pageSize,  CancellationToken cancellationToken)
-        {
-            var query = _entities
-                .AsNoTracking()
-                .Include(x => x.Auditor)
-                .Include(x => x.Team);
-
-            return await EntityPageList<AuditorTeams, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
-        }
+        }            
         public async Task<List<AuditorTeams>> GetByTeamIdAsync(long teamId, CancellationToken cancellationToken)
         {
             return await _entities

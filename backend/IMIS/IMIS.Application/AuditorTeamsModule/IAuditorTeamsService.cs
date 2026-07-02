@@ -1,6 +1,4 @@
 ﻿using Base.Abstractions;
-using Base.Pagination;
-using IMIS.Domain;
 
 namespace IMIS.Application.AuditorTeamsModule
 {
@@ -8,7 +6,7 @@ namespace IMIS.Application.AuditorTeamsModule
     {
         Task<List<AuditorTeamsDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<AuditorTeamsDto?> GetByTeamIdAsync(long teamId, CancellationToken cancellationToken);
-        public Task<DtoPageList<AuditorTeamsDto, AuditorTeams, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        public Task<AuditorTeamsPageDto> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

@@ -8,6 +8,5 @@ namespace IMIS.Application.AuditorTeamsModule
     {
         Task<IEnumerable<AuditorTeams>> GetAllAsync(CancellationToken cancellationToken);
         Task<List<AuditorTeams>> GetByTeamIdAsync(long teamId, CancellationToken cancellationToken);
-        Task<EntityPageList<AuditorTeams, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
     }
 }

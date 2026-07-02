@@ -1,5 +1,4 @@
-﻿using Base.Pagination;
-using Base.Primitives;
+﻿using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Identity;
@@ -28,26 +27,20 @@ namespace IMIS.Application.AuditorTeamsModule
                 member.IsActive = false;
             }
 
-            await _repository.GetDbContext().SaveChangesAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return true;
         }
-       
-        public async Task<DtoPageList<AuditorTeamsDto, AuditorTeams, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+    
+        public async Task<AuditorTeamsPageDto> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var auditorTeams = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            var auditorTeams = await _repository.GetAllAsync(cancellationToken);
 
-            if (auditorTeams.TotalCount == 0)
-            {
-                return null;
-            }
-
-            foreach (var auditorTeam in auditorTeams.Items.Where(x => x.Auditor != null))
+            foreach (var auditorTeam in auditorTeams.Where(x => x.Auditor != null))
             {
                 var user = await _userManager.FindByIdAsync(auditorTeam.Auditor!.UserId);
 
-                var fullName = string.Join(" ",
+                auditorTeam.Auditor.Name = string.Join(" ",
                     new[]
                     {
                         user?.Prefix,
@@ -57,16 +50,45 @@ namespace IMIS.Application.AuditorTeamsModule
                         user?.Suffix
                     }
                     .Where(x => !string.IsNullOrWhiteSpace(x)));
-
-                auditorTeam.Auditor.Name = fullName;
             }
 
-            return DtoPageList<AuditorTeamsDto, AuditorTeams, int>.Create(
-                auditorTeams.Items,
-                page,
-                pageSize,
-                auditorTeams.TotalCount);
+            // Group by Team
+            var grouped = auditorTeams.GroupBy(at => at.TeamId).Select(group => new AuditorTeamsDto
+            {
+                Id = group.Key,
+                TeamId = group.Key,
+                Auditors = group
+                    .Where(at => at.Auditor != null)
+                    .Select(at => new AuditorDto
+                    {
+                        Id = at.Auditor!.Id,
+                        Name = at.Auditor.Name,
+                        UserId = at.Auditor.UserId,
+                        IsActive = at.Auditor.IsActive,
+                        IsTeamLeader = at.IsTeamLeader
+                    })
+                    .ToList(),
+                IsActive = group.First().IsActive
+            })
+            .ToList();
+
+            var totalCount = grouped.Count;
+
+            var pagedItems = grouped
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return new AuditorTeamsPageDto
+            {
+                Items = pagedItems,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount               
+            };
         }
+
+
         public async Task<List<AuditorTeamsDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var auditorTeams = await _repository.GetAllAsync(cancellationToken);
