@@ -302,7 +302,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                 return Results.File(fileBytes, contentType);
             })
             .WithTags(_operationReviewProtocol)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);         
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
 
             app.MapGet("/pagelist", async (int page, int pageSize, IOperationReviewProtocolService service, CancellationToken cancellationToken) =>
             {

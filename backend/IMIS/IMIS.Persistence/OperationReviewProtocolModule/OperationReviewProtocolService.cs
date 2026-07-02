@@ -3,6 +3,7 @@ using Base.Primitives;
 using Base.Utilities;
 using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Persistence.OperationReviewProtocolModule
@@ -46,23 +47,15 @@ namespace IMIS.Persistence.OperationReviewProtocolModule
                 .Select(a => new ORPPgsDeliverableAccomplishmentDto(a))
                 .ToList();
         }
-      
-        public async Task<ReportOperationReviewProtocolDto?> ReportGetByIdAsync(
-        long operationReviewProtocolId,
-        long pgsId,
-        int month,
-        int year, 
-        CancellationToken cancellationToken)
+    
+        public async Task<ReportOperationReviewProtocolDto?> ReportGetByIdAsync(long operationReviewProtocolId, long pgsId, int month, int year, CancellationToken cancellationToken)
         {
-            var orp = await _repository
-                .ReportGetByIdAsync(operationReviewProtocolId, cancellationToken)
-                .ConfigureAwait(false);
+            var orp = await _repository.ReportGetByIdAsync(operationReviewProtocolId, cancellationToken).ConfigureAwait(false);
 
-            if (orp == null) return null;
+            if (orp == null)
+                return null;
 
-            var accomplishments = await _repository
-                .GetDeliverableByIdAsync(pgsId, month, year, cancellationToken)
-                .ConfigureAwait(false);
+            var accomplishments = await _repository.GetDeliverableByIdAsync(pgsId, month, year, cancellationToken).ConfigureAwait(false);
 
             var dto = new ReportOperationReviewProtocolDto(orp, accomplishments);
 
@@ -71,13 +64,35 @@ namespace IMIS.Persistence.OperationReviewProtocolModule
                 try
                 {
                     var fileName = Path.GetFileName(orp.MinutesAttachmentPath);
-                    dto.MinutesImageBytes = await FTPHelper
+                    var extension = Path.GetExtension(fileName).ToLowerInvariant();
+
+                    var fileBytes = await FTPHelper
                         .DownloadAsync(_ftpBasePath, fileName, cancellationToken)
                         .ConfigureAwait(false);
+
+                    if (extension == ".pdf")
+                    {
+                        dto.MinutesImages = PdfHelper.ConvertPdfToImages(fileBytes)
+                        .Select(x => new MinutesImageDto
+                        {
+                            Image = x
+                        })
+                        .ToList();
+                    }
+                    else
+                    {
+                        dto.MinutesImages = new List<MinutesImageDto>
+                        {
+                            new MinutesImageDto
+                            {
+                                Image = fileBytes
+                            }
+                        };
+                    }
                 }
                 catch
                 {
-                    dto.MinutesImageBytes = null;
+                    dto.MinutesImages = new List<MinutesImageDto>();
                 }
             }
 
