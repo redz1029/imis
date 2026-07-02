@@ -49,13 +49,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 on deliverable.Id equals accomplishment.PgsDeliverableId into accomplishments
 
             from accomplishment in accomplishments.DefaultIfEmpty()
-
-                //join accomplishedUser in ReadOnlyDbContext.Set<User>().AsNoTracking()
-                //    on accomplishment.UserId equals accomplishedUser.Id into accomplishedUsers
-
-                //from accomplishedUser in accomplishedUsers.DefaultIfEmpty()
-
-
+              
             join userOffice in ReadOnlyDbContext.Set<UserOffices>().AsNoTracking()
              on office.Id equals userOffice.OfficeId into userOffices
 
