@@ -75,6 +75,9 @@ class ApiEndpoint {
   late String strategyReview;
   late String strategyReviewPeriod;
   late String performanceValidationToolPeriod;
+  late String performanceValidationTool;
+  late String pendingAudits;
+  late String performanceValidationToolSignatoryTemplate;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -149,6 +152,10 @@ class ApiEndpoint {
     strategyReviewPeriod = '$baseUrl/strategyReviewPeriod';
     performanceValidationToolPeriod =
         '$baseUrl/performanceValidationToolPeriod';
+    performanceValidationTool = '$baseUrl/performanceValidationTool';
+    pendingAudits = '$baseUrl/auditor/pending-audits';
+    performanceValidationToolSignatoryTemplate =
+        '$baseUrl/performanceValidationToolSignatoryTemplate';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
