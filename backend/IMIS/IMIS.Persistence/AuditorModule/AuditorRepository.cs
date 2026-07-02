@@ -33,5 +33,30 @@ namespace IMIS.Persistence.AuditorModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
+     
+        public async Task<Team?> GetTeamByUserIdAsync(string userId, CancellationToken cancellationToken)
+        {
+            var auditor = await ReadOnlyDbContext.Set<Auditor>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.IsActive, cancellationToken);
+
+            if (auditor == null)
+            {
+                return null;
+            }
+
+            var auditorTeam = await ReadOnlyDbContext.Set<AuditorTeams>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.AuditorId == auditor.Id && x.IsActive, cancellationToken);
+
+            if (auditorTeam == null)
+            {
+                return null;
+            }
+
+            return await ReadOnlyDbContext.Set<Team>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == auditorTeam.TeamId && x.IsActive, cancellationToken);
+        }
     }
 }

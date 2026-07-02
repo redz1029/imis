@@ -1,6 +1,8 @@
-﻿using Base.Pagination;
+﻿using Base.Abstractions;
+using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditorModule;
+using IMIS.Application.TeamModule;
 using IMIS.Domain;
 
 namespace IMIS.Persistence.AuditorModule
@@ -11,6 +13,13 @@ namespace IMIS.Persistence.AuditorModule
         public AuditorService(IAuditorRepository auditorRepository)
         {
             _auditorRepository = auditorRepository;
+        }
+
+        public async Task<TeamDto?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
+        {
+            var team = await _auditorRepository.GetTeamByUserIdAsync(userId, cancellationToken);
+
+            return team != null ? new TeamDto(team) : null;
         }
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
