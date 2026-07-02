@@ -8,12 +8,7 @@ namespace IMIS.Application.PerformanceValidationToolModule
         Task<IEnumerable<PerformanceValidationTool>> GetAll(CancellationToken cancellationToken);
         Task<IEnumerable<PerformanceValidationTool>?> GetAllPgsIdTool(long? performanceGovernanceSystemId, CancellationToken cancellationToken);
         Task<PerformanceValidationTool?> GetByPvtIdAsync(long id, CancellationToken cancellationToken);
-        Task<PerformanceValidationTool?> GetWithIncludesAsync(
-    long id,
-    CancellationToken cancellationToken);
-
-        Task<PerformanceValidationTool?> GetByUserIdAndPerformanceValidationToolIdAsync(
-    long performanceValidationToolId,
-    CancellationToken cancellationToken);
+        Task<PerformanceValidationTool?> GetWithIncludesAsync(long id, CancellationToken cancellationToken);
+        Task<PerformanceValidationTool?> GetByUserIdAndPerformanceValidationToolIdAsync(long performanceValidationToolId, CancellationToken cancellationToken);
     }
 }

@@ -31,8 +31,8 @@ namespace IMIS.Application.OperationReviewProtocolModule
         public string? FrequencySchedule { get; set; }
         public string? FrequencyUpdate { get; set; }
         public string? Frequency { get; set; }
-        public string? MinutesAttachmentPath { get; set; }
-        public byte[]? MinutesImageBytes { get; set; }
+        public string? MinutesAttachmentPath { get; set; }     
+        public List<MinutesImageDto> MinutesImages { get; set; } = new();
         public DateTime PostingDate { get; set; }
 
         public ReportOperationReviewProtocolDto() { }
