@@ -12,6 +12,7 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
+import 'package:imis/widgets/dialog/dialog_field.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class RolesPage extends StatefulWidget {
@@ -105,171 +106,328 @@ class RolesPageState extends State<RolesPage> {
 
   void showFormDialog({
     String? id,
+    bool isDeleted = false,
     String? name,
-    String? normalizedName,
-    String? concurrencyStamp,
+    bool isActive = false,
   }) {
+    final isEdit = id != null;
     TextEditingController roleController = TextEditingController(text: name);
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 420,
+            padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: primaryLightColor,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Text(
-              id == null ? 'Create Roles' : 'Edit Auditor',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.white,
-              ),
-            ),
-          ),
-
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 350,
-                  height: 65,
-                  child: TextFormField(
-                    controller: roleController,
-                    decoration: InputDecoration(
-                      labelText: 'Role Name',
-                      focusColor: primaryColor,
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please fill out this field';
-                      }
-                      return null;
-                    },
-                  ),
+              color: kSurface,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 32,
+                  offset: Offset(0, 12),
                 ),
               ],
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  bool? confirmAction = await showDialog<bool>(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text(
-                          id == null ? "Confirm Save" : "Confirm Update",
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        content: Text(
-                          id == null
-                              ? "Are you sure you want to save this record?"
-                              : "Are you sure you want to update this record?",
+                        child: Icon(
+                          Icons.shield_outlined,
+                          color: primaryColor,
+                          size: 22,
                         ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(
-                              "No",
-                              style: TextStyle(color: primaryColor),
+                      ),
+                      SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isEdit ? 'Edit Role' : 'Create Role',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 17,
+                              color: kText,
                             ),
                           ),
-                          TextButton(
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                Navigator.pop(context, true);
-                              }
-                            },
-                            child: Text(
-                              "Yes",
-                              style: TextStyle(color: primaryColor),
+                          Text(
+                            isEdit ? ' Update Role' : 'Add a new Role',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              color: kMuted,
                             ),
                           ),
                         ],
-                      );
-                    },
-                  );
-                  if (confirmAction == true) {
-                    final roleName = roleController.text.trim();
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Divider(color: kBorder, height: 1),
+                  SizedBox(height: 20),
+                  dialogField(
+                    label: 'Role',
+                    controller: roleController,
+                    validator:
+                        (v) =>
+                            (v == null || v.trim().isEmpty)
+                                ? 'Please fill out this field'
+                                : null,
+                  ),
+                  SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: kBorder),
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadiusGeometry.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: kMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: Icon(
+                            isEdit ? Icons.save_rounded : Icons.add_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                          label: Text(
+                            isEdit ? 'Update' : 'Save',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () async {
+                            if (!_formKey.currentState!.validate()) return;
 
-                    if (roleName.isNotEmpty) {
-                      if (id == null) {
-                        try {
-                          await _rolesService.createRole(roleName);
-                          setState(() {
-                            fetchRoles();
-                          });
-                          MotionToast.success(
-                            toastAlignment: Alignment.topCenter,
-                            description: Text('Saved successfully'),
-                          ).show(context);
-                          Navigator.pop(context);
-                        } catch (e) {
-                          MotionToast.error(
-                            description: Text('Failed to Add Role'),
-                          );
-                        }
-                      } else {
-                        try {
-                          await _rolesService.updateRole(id, roleName);
-                          fetchRoles();
-                          MotionToast.success(
-                            toastAlignment: Alignment.topCenter,
-                            description: Text('Updated successfully'),
-                          ).show(context);
-                          Navigator.pop(context);
-                        } catch (e) {
-                          MotionToast.error(
-                            description: Text('Failed to Update Role'),
-                          );
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              child: Text(
-                id == null ? 'Save' : 'Update',
-                style: TextStyle(color: Colors.white),
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder:
+                                  (ctx) => Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    child: Container(
+                                      width: 340,
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: kSurface,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.12,
+                                            ),
+                                            blurRadius: 32,
+                                            offset: const Offset(0, 12),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: primaryColor.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                            ),
+                                            child: const Icon(
+                                              Icons.help_outline_rounded,
+                                              color: primaryColor,
+                                              size: 26,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 14),
+                                          Text(
+                                            isEdit
+                                                ? 'Confirm Update'
+                                                : 'Confirm Save',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 16,
+                                              color: kText,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            isEdit
+                                                ? 'Are you sure you want to update this role?'
+                                                : 'Are you sure you want to save this role?',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 13,
+                                              color: kMuted,
+                                              height: 1.5,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 22),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: OutlinedButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        ctx,
+                                                        false,
+                                                      ),
+                                                  style: OutlinedButton.styleFrom(
+                                                    side: const BorderSide(
+                                                      color: kBorder,
+                                                    ),
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 11,
+                                                        ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    'No',
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          color: kMuted,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: ElevatedButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        ctx,
+                                                        true,
+                                                      ),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        primaryColor,
+                                                    elevation: 0,
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 11,
+                                                        ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    'Yes',
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                            );
+
+                            if (confirmed == true) {
+                              final roleName = roleController.text.trim();
+
+                              if (roleName.isNotEmpty) {
+                                if (id == null) {
+                                  try {
+                                    await _rolesService.createRole(roleName);
+                                    setState(() {
+                                      fetchRoles();
+                                    });
+                                    MotionToast.success(
+                                      toastAlignment: Alignment.topCenter,
+                                      description: Text('Saved successfully'),
+                                    ).show(context);
+                                    Navigator.pop(context);
+                                  } catch (e) {
+                                    MotionToast.error(
+                                      description: Text('Failed to Add Role'),
+                                    );
+                                  }
+                                } else {
+                                  try {
+                                    await _rolesService.updateRole(
+                                      id,
+                                      roleName,
+                                    );
+                                    fetchRoles();
+                                    MotionToast.success(
+                                      toastAlignment: Alignment.topCenter,
+                                      description: Text('Updated successfully'),
+                                    ).show(context);
+                                    Navigator.pop(context);
+                                  } catch (e) {
+                                    MotionToast.error(
+                                      description: Text(
+                                        'Failed to Update Role',
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         );
       },
     );

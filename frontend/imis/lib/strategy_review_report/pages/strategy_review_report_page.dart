@@ -183,7 +183,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
   int _totalCount = 0;
   bool _isLoading = false;
   final dio = Dio();
-  String _roleId = '';
   String? _selectedPeriodId;
   List<StrategyReviewPeriod> strategyPeriodList = [];
   final List<DeliverableGroup> deliverables = [];
@@ -194,7 +193,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
   final permissionService = PermissionService();
   String selectedFilter = "All Process (Core&Support)";
   List<StrategyReviewReport> _strategyReviewList = [];
-  List<StrategyReviewReport> _strategyReviewFilteredList = [];
   final _dateConverter = const LongDateOnlyConverter();
   List<StrategyReviewReport> get _filteredReviews {
     if (selectedFilter == "All Process (Core&Support)") {
@@ -262,8 +260,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
         return;
       }
 
-      setState(() => _roleId = roleId);
-
       final pageList = await _strategyReviewReport.getStrategyReviewReportList(
         page: page,
         pageSize: _pageSize,
@@ -304,7 +300,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
       );
       setState(() {
         _strategyReviewList = result.items;
-        _strategyReviewFilteredList = result.items;
         _currentPage = result.page;
         _totalCount = result.totalCount;
       });
