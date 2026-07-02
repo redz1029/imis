@@ -19,13 +19,14 @@ namespace IMIS.Persistence.AuditorTeamsModule
                 .Include(x => x.Auditor)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-        }
+        }      
         public async Task<IEnumerable<AuditorTeams>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _entities
-            .Where(a => a.IsActive && a.Auditor != null)
-            .Include(x => x.Auditor)
-            .ToListAsync(cancellationToken);
-        }  
+                .Where(a => a.IsActive && a.Auditor != null)
+                .Include(x => x.Auditor)
+                .OrderByDescending(x => x.Id)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
