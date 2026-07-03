@@ -8,7 +8,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:dio/dio.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
-import 'package:imis/utils/permission_string.dart';
+import 'package:imis/utils/permission_role_string.dart';
 import 'package:imis/widgets/common/custom_toggle.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -80,8 +80,8 @@ class _AnnouncementListState extends State<AnnouncementList> {
                   children: [
                     PermissionWidget(
                       allowedRoles: [
-                        PermissionString.roleAdmin,
-                        PermissionString.mcc,
+                        PermissionRoleString.roleAdmin,
+                        PermissionRoleString.mcc,
                       ],
                       child: Tooltip(
                         message: 'Add announcement',
@@ -103,8 +103,8 @@ class _AnnouncementListState extends State<AnnouncementList> {
                     const SizedBox(width: 4),
                     PermissionWidget(
                       allowedRoles: [
-                        PermissionString.roleAdmin,
-                        PermissionString.mcc,
+                        PermissionRoleString.roleAdmin,
+                        PermissionRoleString.mcc,
                       ],
                       child: Tooltip(
                         message: 'Manage announcement',
@@ -572,8 +572,8 @@ class _AnnouncementCard extends StatelessWidget {
                         ),
                         PermissionWidget(
                           allowedRoles: [
-                            PermissionString.roleAdmin,
-                            PermissionString.mcc,
+                            PermissionRoleString.roleAdmin,
+                            PermissionRoleString.mcc,
                           ],
                           child: Tooltip(
                             message: 'Edit announcement',

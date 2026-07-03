@@ -9,7 +9,7 @@ import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/permission_string.dart';
+import 'package:imis/utils/permission_role_string.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
@@ -424,8 +424,8 @@ class AccomplishmentPgsAuditorDialogState
         children: [
           PermissionWidget(
             allowedRoles: [
-              PermissionString.roleAdmin,
-              PermissionString.roleStandardUser,
+              PermissionRoleString.roleAdmin,
+              PermissionRoleString.roleStandardUser,
             ],
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -447,8 +447,8 @@ class AccomplishmentPgsAuditorDialogState
           ),
           PermissionWidget(
             allowedRoles: [
-              PermissionString.roleAdmin,
-              PermissionString.roleStandardUser,
+              PermissionRoleString.roleAdmin,
+              PermissionRoleString.roleStandardUser,
             ],
             fallback: Text(
               'No attachment',
@@ -509,8 +509,8 @@ class AccomplishmentPgsAuditorDialogState
             // ✅ Only Admin/StandardUser can delete attachment
             PermissionWidget(
               allowedRoles: [
-                PermissionString.roleAdmin,
-                PermissionString.roleStandardUser,
+                PermissionRoleString.roleAdmin,
+                PermissionRoleString.roleStandardUser,
               ],
               child: SizedBox(
                 width: 28,
@@ -776,8 +776,8 @@ class AccomplishmentPgsAuditorDialogState
                   children: [
                     PermissionWidget(
                       allowedRoles: [
-                        PermissionString.roleAdmin,
-                        PermissionString.roleStandardUser,
+                        PermissionRoleString.roleAdmin,
+                        PermissionRoleString.roleStandardUser,
                       ],
                       fallback: readOnlyStatus,
                       child: Container(
@@ -912,8 +912,8 @@ class AccomplishmentPgsAuditorDialogState
                               child: Center(
                                 child: PermissionWidget(
                                   allowedRoles: [
-                                    PermissionString.roleAdmin,
-                                    PermissionString.roleStandardUser,
+                                    PermissionRoleString.roleAdmin,
+                                    PermissionRoleString.roleStandardUser,
                                   ],
                                   fallback: readOnlyPercentage,
                                   child: _buildEditablePercentage(status),

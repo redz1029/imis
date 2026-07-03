@@ -10,7 +10,7 @@ import 'package:imis/swot/services/swot_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/permission_string.dart';
+import 'package:imis/utils/permission_role_string.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -953,7 +953,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                   //     (userId == strengthController.text) ||
                                   //     (permissionService.currentRole != null &&
                                   //         permissionService.currentRole ==
-                                  //             PermissionString.roleAdmin);
+                                  //             PermissionRoleString.roleAdmin);
 
                                   final bool isEdit = swotToEdit != null;
 
@@ -962,7 +962,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
 
                                   final bool isAdmin =
                                       permissionService.currentRole ==
-                                      PermissionString.roleAdmin;
+                                      PermissionRoleString.roleAdmin;
 
                                   final bool canSaveOrUpdate =
                                       !isEdit || isOwner || isAdmin;

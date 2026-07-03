@@ -26,7 +26,7 @@ import '../../../user/models/user_registration.dart';
 import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
 import '../../../utils/date_time_converter.dart';
-import '../../../utils/permission_string.dart';
+import '../../../utils/permission_role_string.dart';
 import '../dialog/accomplishment_pgs_auditor_dialog.dart';
 import '../../dialog/breakthrough_dialog.dart';
 import '../../models/pgs_deliverable_score_history.dart';
@@ -468,8 +468,8 @@ class _DeliverableStatusMonitoringPageState
       children: [
         PermissionWidget(
           allowedRoles: [
-            PermissionString.pgsAuditor,
-            PermissionString.roleAdmin,
+            PermissionRoleString.pgsAuditor,
+            PermissionRoleString.roleAdmin,
           ],
           child: OutlinedButton.icon(
             onPressed:
@@ -493,8 +493,8 @@ class _DeliverableStatusMonitoringPageState
         const SizedBox(width: 10),
         PermissionWidget(
           allowedRoles: [
-            PermissionString.pgsAuditor,
-            PermissionString.roleAdmin,
+            PermissionRoleString.pgsAuditor,
+            PermissionRoleString.roleAdmin,
           ],
           child: ElevatedButton.icon(
             onPressed: showReportDialog,
@@ -1669,8 +1669,8 @@ class _DeliverableStatusMonitoringPageState
       children: [
         PermissionWidget(
           allowedRoles: [
-            PermissionString.pgsAuditor,
-            PermissionString.roleAdmin,
+            PermissionRoleString.pgsAuditor,
+            PermissionRoleString.roleAdmin,
           ],
           child: FloatingActionButton.extended(
             heroTag: "manage_audit",
@@ -1696,8 +1696,8 @@ class _DeliverableStatusMonitoringPageState
         const SizedBox(height: 10),
         PermissionWidget(
           allowedRoles: [
-            PermissionString.pgsAuditor,
-            PermissionString.roleAdmin,
+            PermissionRoleString.pgsAuditor,
+            PermissionRoleString.roleAdmin,
           ],
           child: FloatingActionButton.extended(
             heroTag: "create_report",
@@ -2518,8 +2518,8 @@ Future<bool?> showAccomplishmentFormDialog(
                   const SizedBox(height: 16),
                   PermissionWidget(
                     allowedRoles: [
-                      PermissionString.pgsAuditor,
-                      PermissionString.roleAdmin,
+                      PermissionRoleString.pgsAuditor,
+                      PermissionRoleString.roleAdmin,
                     ],
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,

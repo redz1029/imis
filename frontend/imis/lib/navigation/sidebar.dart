@@ -10,20 +10,27 @@ import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
+import 'package:imis/dashboard/pending_audit_dashboard.dart';
 import 'package:imis/dashboard/strategic_change_agenda.dart';
 import 'package:imis/dashboard/strategy_roadmap_page.dart';
 import 'package:imis/office/pages/office_page.dart';
+import 'package:imis/operation_review_protocol/pages/operation_review_protocol_page.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/pages/deliverable_status_monitoring_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page..dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/performance_governance_system/process_core_support/pages/process_core_support_page.dart';
+import 'package:imis/performance_validation_tool/pages/performance_validation_page.dart';
+import 'package:imis/performance_validation_tool/performance_validation_tool_period/pages/performance_validation_tool_period_page.dart';
+import 'package:imis/performance_validation_tool/performance_validation_tool_signatory/pages/performance_validation_tool_signatory_page.dart';
 import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/roadmap/pages/roadmap_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/scorecard/pages/score_card_monitoring_page.dart';
 import 'package:imis/scorecard/pages/score_card_report_page.dart';
+import 'package:imis/strategy_review_report/pages/strategy_review_report_page.dart';
+import 'package:imis/strategy_review_report/strategy_review_period/pages/strategy_review_period_page.dart';
 import 'package:imis/swot/pages/swot_page.dart';
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/change_password_page.dart';
@@ -31,8 +38,8 @@ import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
-import 'package:imis/utils/permission_string.dart';
-import 'package:imis/widgets/permission_widget.dart';
+import 'package:imis/utils/permission_role_string.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constant/constant.dart';
 import '../constant/role_info.dart';
@@ -41,7 +48,7 @@ import '../user/models/user_registration.dart';
 import '../user/pages/home_page.dart';
 import '../utils/auth_util.dart';
 import '../utils/permission_service.dart';
-import '../widgets/circle_text_widget.dart';
+import '../widgets/common/circle_text_widget.dart';
 
 class Sidebar extends StatefulWidget {
   // final bool isDarkMode;
@@ -108,13 +115,12 @@ class SidebarState extends State<Sidebar> {
     if (page == 2) {
       // SWOT: only certain roles see index 0
       final allowedSwot = [
-        PermissionString.roleAdmin,
-        PermissionString.roleStandardUser,
-        PermissionString.serviceHead,
-        PermissionString.mcc,
-        PermissionString.coreTeam,
-        PermissionString.osm,
-        PermissionString.twg,
+        PermissionRoleString.roleAdmin,
+        PermissionRoleString.roleStandardUser,
+        PermissionRoleString.serviceHead,
+        PermissionRoleString.coreTeam,
+        PermissionRoleString.osm,
+        PermissionRoleString.twg,
       ];
       return allowedSwot.contains(selectedRole) ? 0 : 0;
     }
@@ -126,92 +132,100 @@ class SidebarState extends State<Sidebar> {
 
       // SubPage 0: Roadmaps
       final canSeeRoadmaps = [
-        PermissionString.roleAdmin,
-        PermissionString.roleStandardUser,
-        PermissionString.mcc,
-        PermissionString.osm,
-        PermissionString.coreTeam,
-        PermissionString.serviceHead,
-        PermissionString.trainingOfficer,
-        PermissionString.hrOfficer,
-        PermissionString.serviceOfficer,
-        PermissionString.financeOfficer,
-        PermissionString.safetyOfficer,
-        PermissionString.facilityOfficer,
-        PermissionString.linkagesOfficer,
-        PermissionString.informationOfficer,
-        PermissionString.researchOfficer,
-        PermissionString.pgsAuditor,
-        PermissionString.headAuditor,
-        PermissionString.twg,
+        PermissionRoleString.roleAdmin,
+        PermissionRoleString.roleStandardUser,
+        PermissionRoleString.mcc,
+        PermissionRoleString.osm,
+        PermissionRoleString.coreTeam,
+        PermissionRoleString.serviceHead,
+        PermissionRoleString.trainingOfficer,
+        PermissionRoleString.hrOfficer,
+        PermissionRoleString.serviceOfficer,
+        PermissionRoleString.financeOfficer,
+        PermissionRoleString.safetyOfficer,
+        PermissionRoleString.facilityOfficer,
+        PermissionRoleString.linkagesOfficer,
+        PermissionRoleString.informationOfficer,
+        PermissionRoleString.researchOfficer,
+        PermissionRoleString.pgsAuditor,
+        PermissionRoleString.headAuditor,
+        PermissionRoleString.twg,
       ].contains(role);
       if (canSeeRoadmaps) return 0;
 
       // SubPage 1: Deliverables
       final canSeeDeliverables = [
-        PermissionString.roleAdmin,
-        PermissionString.roleStandardUser,
-        PermissionString.serviceHead,
-        PermissionString.mcc,
-        PermissionString.coreTeam,
-        PermissionString.osm,
-        PermissionString.twg,
+        PermissionRoleString.roleAdmin,
+        PermissionRoleString.roleStandardUser,
+        PermissionRoleString.serviceHead,
+        PermissionRoleString.mcc,
+        PermissionRoleString.coreTeam,
+        PermissionRoleString.osm,
+        PermissionRoleString.twg,
       ].contains(role);
       if (canSeeDeliverables) return 1;
 
       final canseeSwot = [
-        PermissionString.roleAdmin,
-        PermissionString.roleStandardUser,
-        PermissionString.serviceHead,
-        PermissionString.mcc,
-        PermissionString.coreTeam,
-        PermissionString.osm,
-        PermissionString.twg,
+        PermissionRoleString.roleAdmin,
+        PermissionRoleString.roleStandardUser,
+        PermissionRoleString.serviceHead,
+        PermissionRoleString.mcc,
+        PermissionRoleString.coreTeam,
+        PermissionRoleString.osm,
+        PermissionRoleString.twg,
       ].contains(role);
       if (canseeSwot) return 2;
 
       // SubPage 2: Deliverable Status Monitoring
       final canSeeMonitoring = [
-        PermissionString.roleAdmin,
-        PermissionString.serviceHead,
-        PermissionString.mcc,
-        PermissionString.osm,
-        PermissionString.pgsAuditor,
-        PermissionString.pgsHead,
-        PermissionString.coreTeam,
-        PermissionString.twg,
+        PermissionRoleString.roleAdmin,
+        PermissionRoleString.serviceHead,
+        PermissionRoleString.mcc,
+        PermissionRoleString.osm,
+        PermissionRoleString.pgsAuditor,
+        PermissionRoleString.pgsHead,
+        PermissionRoleString.coreTeam,
+        PermissionRoleString.twg,
       ].contains(role);
       if (canSeeMonitoring) return 3;
 
       // SubPage 3/4: Scorecard
       final canSeeScorecard = [
-        PermissionString.roleAdmin,
-        PermissionString.trainingOfficer,
-        PermissionString.hrOfficer,
-        PermissionString.serviceOfficer,
-        PermissionString.financeOfficer,
-        PermissionString.safetyOfficer,
-        PermissionString.facilityOfficer,
-        PermissionString.linkagesOfficer,
-        PermissionString.informationOfficer,
-        PermissionString.researchOfficer,
-        PermissionString.coreTeam,
-        PermissionString.mcc,
-        PermissionString.osm,
-        PermissionString.pgsAuditor,
-        PermissionString.headAuditor,
-        PermissionString.serviceHead,
-        PermissionString.twg,
+        PermissionRoleString.roleAdmin,
+        PermissionRoleString.trainingOfficer,
+        PermissionRoleString.hrOfficer,
+        PermissionRoleString.serviceOfficer,
+        PermissionRoleString.financeOfficer,
+        PermissionRoleString.safetyOfficer,
+        PermissionRoleString.facilityOfficer,
+        PermissionRoleString.linkagesOfficer,
+        PermissionRoleString.informationOfficer,
+        PermissionRoleString.researchOfficer,
+        PermissionRoleString.coreTeam,
+        PermissionRoleString.mcc,
+        PermissionRoleString.osm,
+        PermissionRoleString.pgsAuditor,
+        PermissionRoleString.headAuditor,
+        PermissionRoleString.serviceHead,
+        PermissionRoleString.twg,
       ].contains(role);
       if (canSeeScorecard) return 4;
 
       // SubPage 5: PGS Auditor Report
       final canSeeAuditorReport = [
-        PermissionString.headAuditor,
-        PermissionString.roleAdmin,
-        PermissionString.twg,
+        PermissionRoleString.headAuditor,
+        PermissionRoleString.roleAdmin,
+        PermissionRoleString.twg,
       ].contains(role);
       if (canSeeAuditorReport) return 5;
+
+      // SubPage 5: Operation Review Protocol
+      final canSeeOperationReviewProtocol = [
+        PermissionRoleString.pgsAuditor,
+        PermissionRoleString.roleAdmin,
+        PermissionRoleString.twg,
+      ].contains(role);
+      if (canSeeOperationReviewProtocol) return 8;
     }
 
     return 0;
@@ -1114,19 +1128,23 @@ class SidebarState extends State<Sidebar> {
   Widget getCurrentPage() {
     if (selectedPage == 0) {
       if (selectedSubPage == 0) return HomePage();
-      if (selectedSubPage == 1) return HomePage();
-      if (selectedSubPage == 2) return const StrategyRoadmapPage();
-      if (selectedSubPage == 3) return const StrategicChangeAgenda();
+      if (selectedSubPage == 1) return PendingAuditDashboardPage();
+
+      if (selectedSubPage == 2) return HomePage();
+      if (selectedSubPage == 3) return const StrategyRoadmapPage();
+      if (selectedSubPage == 4) return const StrategicChangeAgenda();
     }
     if (selectedPage == 1) {
       if (selectedSubPage == 0) return const RoadmapPage();
       if (selectedSubPage == 1) return const PerformanceGovernanceSystemPage();
       if (selectedSubPage == 2) return const SwotPage();
       if (selectedSubPage == 3) return const DeliverableStatusMonitoringPage();
+      if (selectedSubPage == 8) return const OperationReviewProtocolPage();
       if (selectedSubPage == 4) return const ScoreCardMonitoringPage();
       if (selectedSubPage == 5) return const ScoreCardReportPage();
-      // if (selectedSubPage == 7) return const StrategyReviewReportPage();
+      if (selectedSubPage == 7) return const StrategyReviewReportPage();
       if (selectedSubPage == 6) return const ViewSummaryNarrativeReportPage();
+      if (selectedSubPage == 9) return const PerformanceValidationPage();
     }
 
     if (selectedPage == 3) {
@@ -1145,6 +1163,13 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 12) return const UserProfilePage();
       if (selectedSubPage == 13) return const UserOfficePage();
       if (selectedSubPage == 14) return const UserRolePage();
+      if (selectedSubPage == 15) return const StrategyReviewPeriodPage();
+      if (selectedSubPage == 16) {
+        return const PerformanceValidationToolPeriodPage();
+      }
+      if (selectedSubPage == 17) {
+        return const PerformanceValidationToolSignatoryPage();
+      }
     }
     return HomePage();
   }
@@ -1193,7 +1218,7 @@ class SidebarState extends State<Sidebar> {
                   const Spacer(),
                   PermissionWidget(
                     child:
-                        (selectedRole == PermissionString.roleAdmin)
+                        (selectedRole == PermissionRoleString.roleAdmin)
                             ? sidebarIcon(
                               Icons.settings_outlined,
                               3,
@@ -1221,7 +1246,7 @@ class SidebarState extends State<Sidebar> {
               children: [
                 Container(
                   color: Colors.white,
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   child: Row(
                     children: [
                       if (isMobile)
@@ -1463,7 +1488,7 @@ class SidebarState extends State<Sidebar> {
                 sidebarIcon(Icons.fact_check_outlined, 2, label: 'ISO'),
                 PermissionWidget(
                   child:
-                      (selectedRole == PermissionString.roleAdmin)
+                      (selectedRole == PermissionRoleString.roleAdmin)
                           ? sidebarIcon(
                             Icons.settings_outlined,
                             3,
@@ -1483,68 +1508,74 @@ class SidebarState extends State<Sidebar> {
                 children: [
                   if (selectedPage == 0) ...[
                     sidebarSubText("Overview", 0),
-                    sidebarSubText("OSM Calendar of Acticity", 1),
-                    sidebarSubText("Strategy Map", 2),
-                    sidebarSubText("Strategic Change Agenda", 3),
+                    sidebarSubText("Summary Validated Deliverables", 1),
+                    sidebarSubText("OSM Calendar of Acticity", 2),
+                    sidebarSubText("Strategy Map", 3),
+                    sidebarSubText("Strategic Change Agenda", 4),
                   ],
                   //PGS
                   if (selectedPage == 1) ...[
                     PermissionWidget(
                       child:
-                          (selectedRole == PermissionString.roleAdmin ||
+                          (selectedRole == PermissionRoleString.roleAdmin ||
                                   selectedRole ==
-                                      PermissionString.roleStandardUser ||
-                                  selectedRole == PermissionString.mcc ||
-                                  selectedRole == PermissionString.osm ||
-                                  selectedRole == PermissionString.coreTeam ||
+                                      PermissionRoleString.roleStandardUser ||
+                                  selectedRole == PermissionRoleString.mcc ||
+                                  selectedRole == PermissionRoleString.osm ||
                                   selectedRole ==
-                                      PermissionString.serviceHead ||
-                                  selectedRole == PermissionString.pgsAuditor ||
+                                      PermissionRoleString.coreTeam ||
                                   selectedRole ==
-                                      PermissionString.headAuditor ||
-                                  selectedRole == PermissionString.twg)
+                                      PermissionRoleString.serviceHead ||
+                                  selectedRole ==
+                                      PermissionRoleString.pgsAuditor ||
+                                  selectedRole ==
+                                      PermissionRoleString.headAuditor ||
+                                  selectedRole == PermissionRoleString.twg ||
+                                  selectedRole == PermissionRoleString.msgc)
                               ? sidebarSubText(
-                                selectedRole == PermissionString.roleAdmin
+                                selectedRole == PermissionRoleString.roleAdmin
                                     ? 'Create/View Roadmaps'
                                     : 'View Roadmaps',
                                 0,
                               )
                               : (selectedRole ==
-                                      PermissionString.trainingOfficer ||
-                                  selectedRole == PermissionString.hrOfficer ||
+                                      PermissionRoleString.trainingOfficer ||
                                   selectedRole ==
-                                      PermissionString.serviceOfficer ||
+                                      PermissionRoleString.hrOfficer ||
                                   selectedRole ==
-                                      PermissionString.financeOfficer ||
+                                      PermissionRoleString.serviceOfficer ||
                                   selectedRole ==
-                                      PermissionString.safetyOfficer ||
+                                      PermissionRoleString.financeOfficer ||
                                   selectedRole ==
-                                      PermissionString.facilityOfficer ||
+                                      PermissionRoleString.safetyOfficer ||
                                   selectedRole ==
-                                      PermissionString.linkagesOfficer ||
+                                      PermissionRoleString.facilityOfficer ||
                                   selectedRole ==
-                                      PermissionString.informationOfficer ||
+                                      PermissionRoleString.linkagesOfficer ||
                                   selectedRole ==
-                                      PermissionString.researchOfficer)
+                                      PermissionRoleString.informationOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.researchOfficer)
                               ? sidebarSubText('Create Roadmaps', 0)
                               : const SizedBox.shrink(),
                     ),
                     PermissionWidget(
                       child:
-                          (selectedRole == PermissionString.roleAdmin ||
+                          (selectedRole == PermissionRoleString.roleAdmin ||
                                   selectedRole ==
-                                      PermissionString.roleStandardUser ||
+                                      PermissionRoleString.roleStandardUser ||
                                   selectedRole ==
-                                      PermissionString.serviceHead ||
-                                  selectedRole == PermissionString.mcc ||
-                                  selectedRole == PermissionString.coreTeam ||
-                                  selectedRole == PermissionString.osm ||
-                                  selectedRole == PermissionString.twg)
+                                      PermissionRoleString.serviceHead ||
+                                  selectedRole == PermissionRoleString.mcc ||
+                                  selectedRole ==
+                                      PermissionRoleString.coreTeam ||
+                                  selectedRole == PermissionRoleString.osm ||
+                                  selectedRole == PermissionRoleString.twg)
                               ? sidebarSubText(
-                                selectedRole == PermissionString.roleAdmin
+                                selectedRole == PermissionRoleString.roleAdmin
                                     ? 'Create/View Deliverables'
                                     : selectedRole ==
-                                        PermissionString.roleStandardUser
+                                        PermissionRoleString.roleStandardUser
                                     ? 'Create Deliverables'
                                     : 'View Deliverables',
                                 1,
@@ -1553,20 +1584,21 @@ class SidebarState extends State<Sidebar> {
                     ),
                     PermissionWidget(
                       child:
-                          (selectedRole == PermissionString.roleAdmin ||
+                          (selectedRole == PermissionRoleString.roleAdmin ||
                                   selectedRole ==
-                                      PermissionString.roleStandardUser ||
+                                      PermissionRoleString.roleStandardUser ||
                                   selectedRole ==
-                                      PermissionString.serviceHead ||
-                                  selectedRole == PermissionString.mcc ||
-                                  selectedRole == PermissionString.coreTeam ||
-                                  selectedRole == PermissionString.osm ||
-                                  selectedRole == PermissionString.twg)
+                                      PermissionRoleString.serviceHead ||
+                                  selectedRole == PermissionRoleString.mcc ||
+                                  selectedRole ==
+                                      PermissionRoleString.coreTeam ||
+                                  selectedRole == PermissionRoleString.osm ||
+                                  selectedRole == PermissionRoleString.twg)
                               ? sidebarSubText(
-                                selectedRole == PermissionString.roleAdmin
+                                selectedRole == PermissionRoleString.roleAdmin
                                     ? 'Create/View SWOT'
                                     : selectedRole ==
-                                        PermissionString.roleStandardUser
+                                        PermissionRoleString.roleStandardUser
                                     ? 'Create SWOT'
                                     : 'View SWOT',
                                 2,
@@ -1576,14 +1608,14 @@ class SidebarState extends State<Sidebar> {
                     PermissionWidget(
                       child:
                           [
-                                PermissionString.roleAdmin,
-                                PermissionString.serviceHead,
-                                PermissionString.mcc,
-                                PermissionString.osm,
-                                PermissionString.pgsAuditor,
-                                PermissionString.pgsHead,
-                                PermissionString.coreTeam,
-                                PermissionString.twg,
+                                PermissionRoleString.roleAdmin,
+                                PermissionRoleString.serviceHead,
+                                PermissionRoleString.mcc,
+                                PermissionRoleString.osm,
+                                PermissionRoleString.pgsAuditor,
+                                PermissionRoleString.pgsHead,
+                                PermissionRoleString.coreTeam,
+                                PermissionRoleString.twg,
                               ].contains(selectedRole)
                               ? sidebarSubText(
                                 'Deliverable Status Monitoring',
@@ -1595,23 +1627,23 @@ class SidebarState extends State<Sidebar> {
                     PermissionWidget(
                       child:
                           [
-                                PermissionString.roleAdmin,
-                                PermissionString.trainingOfficer,
-                                PermissionString.hrOfficer,
-                                PermissionString.serviceOfficer,
-                                PermissionString.financeOfficer,
-                                PermissionString.safetyOfficer,
-                                PermissionString.facilityOfficer,
-                                PermissionString.linkagesOfficer,
-                                PermissionString.informationOfficer,
-                                PermissionString.researchOfficer,
-                                PermissionString.coreTeam,
-                                PermissionString.serviceHead,
-                                PermissionString.headAuditor,
-                                PermissionString.mcc,
-                                PermissionString.osm,
-                                PermissionString.pgsAuditor,
-                                PermissionString.twg,
+                                PermissionRoleString.roleAdmin,
+                                PermissionRoleString.trainingOfficer,
+                                PermissionRoleString.hrOfficer,
+                                PermissionRoleString.serviceOfficer,
+                                PermissionRoleString.financeOfficer,
+                                PermissionRoleString.safetyOfficer,
+                                PermissionRoleString.facilityOfficer,
+                                PermissionRoleString.linkagesOfficer,
+                                PermissionRoleString.informationOfficer,
+                                PermissionRoleString.researchOfficer,
+                                PermissionRoleString.coreTeam,
+                                PermissionRoleString.serviceHead,
+                                PermissionRoleString.headAuditor,
+                                PermissionRoleString.mcc,
+                                PermissionRoleString.osm,
+                                PermissionRoleString.pgsAuditor,
+                                PermissionRoleString.twg,
                               ].contains(selectedRole)
                               ? ExpandableSidebarItem(
                                 title: "Scorecard",
@@ -1628,15 +1660,93 @@ class SidebarState extends State<Sidebar> {
                               )
                               : SizedBox.shrink(),
                     ),
-                    // PermissionWidget(
-                    //   child: sidebarSubText('Strategy Review Report', 7),
-                    // ),
+                    PermissionWidget(
+                      child:
+                          (selectedRole == PermissionRoleString.roleAdmin ||
+                                  selectedRole ==
+                                      PermissionRoleString.roleStandardUser ||
+                                  selectedRole == PermissionRoleString.mcc ||
+                                  selectedRole == PermissionRoleString.osm ||
+                                  selectedRole ==
+                                      PermissionRoleString.coreTeam ||
+                                  selectedRole ==
+                                      PermissionRoleString.serviceHead ||
+                                  selectedRole ==
+                                      PermissionRoleString.pgsAuditor ||
+                                  selectedRole ==
+                                      PermissionRoleString.headAuditor ||
+                                  selectedRole == PermissionRoleString.twg)
+                              ? sidebarSubText(
+                                selectedRole == PermissionRoleString.roleAdmin
+                                    ? 'Create/View Strategy Review Report'
+                                    : 'View Strategy Review Report',
+                                7,
+                              )
+                              : (selectedRole ==
+                                      PermissionRoleString.trainingOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.hrOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.serviceOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.financeOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.safetyOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.facilityOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.linkagesOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.informationOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.researchOfficer)
+                              ? sidebarSubText(
+                                'Create Strategy Review Report',
+                                7,
+                              )
+                              : const SizedBox.shrink(),
+                    ),
+                    PermissionWidget(
+                      child:
+                          (selectedRole == PermissionRoleString.roleAdmin ||
+                                  selectedRole == PermissionRoleString.mcc ||
+                                  selectedRole == PermissionRoleString.osm ||
+                                  selectedRole ==
+                                      PermissionRoleString.coreTeam ||
+                                  selectedRole ==
+                                      PermissionRoleString.serviceHead ||
+                                  selectedRole ==
+                                      PermissionRoleString.pgsAuditor ||
+                                  selectedRole ==
+                                      PermissionRoleString.headAuditor ||
+                                  selectedRole == PermissionRoleString.twg)
+                              ? sidebarSubText(
+                                selectedRole == PermissionRoleString.roleAdmin
+                                    ? 'Create/View Operation Review Protocol'
+                                    : "View Operation Review Protocol",
+                                8,
+                              )
+                              : SizedBox.shrink(),
+                    ),
                     PermissionWidget(
                       child:
                           [
-                                PermissionString.headAuditor,
-                                PermissionString.roleAdmin,
-                                PermissionString.twg,
+                                PermissionRoleString.pgsAuditor,
+                                PermissionRoleString.roleAdmin,
+                                PermissionRoleString.twg,
+                                PermissionRoleString.osm,
+                                PermissionRoleString.headAuditor,
+                                PermissionRoleString.roleStandardUser,
+                              ].contains(selectedRole)
+                              ? sidebarSubText("Performance Validation Tool", 9)
+                              : SizedBox.shrink(),
+                    ),
+                    PermissionWidget(
+                      child:
+                          [
+                                PermissionRoleString.headAuditor,
+                                PermissionRoleString.roleAdmin,
+                                PermissionRoleString.twg,
                               ].contains(selectedRole)
                               ? sidebarSubText("PGS Auditor Report", 6)
                               : SizedBox.shrink(),
@@ -1659,6 +1769,9 @@ class SidebarState extends State<Sidebar> {
                     sidebarSubText("User", 12),
                     sidebarSubText("User Office", 13),
                     sidebarSubText("User Role", 14),
+                    sidebarSubText("Strategy Review Period", 15),
+                    sidebarSubText("Performance Validation Tool Period", 16),
+                    sidebarSubText("Performance Validation Tool Signatory", 17),
                   ],
                 ],
               ),
@@ -1684,7 +1797,7 @@ class SidebarState extends State<Sidebar> {
         child: Text(
           text,
           style: TextStyle(
-            fontSize: 15,
+            fontSize: 13,
             color:
                 isActive
                     ? primaryColor

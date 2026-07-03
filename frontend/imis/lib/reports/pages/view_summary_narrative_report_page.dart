@@ -14,7 +14,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart' show PaginationUtil;
-import 'package:imis/utils/permission_string.dart';
+import 'package:imis/utils/permission_role_string.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -229,8 +229,8 @@ class ViewSummaryNarrativeReportPageState
                 if (selectedTabIndex == 0)
                   PermissionWidget(
                     allowedRoles: [
-                      PermissionString.headAuditor,
-                      PermissionString.roleAdmin,
+                      PermissionRoleString.headAuditor,
+                      PermissionRoleString.roleAdmin,
                     ],
                     child: Row(
                       children: [

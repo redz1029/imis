@@ -10,6 +10,7 @@ class IconBtn extends StatelessWidget {
   final VoidCallback onTap;
   final double size;
   const IconBtn({
+    super.key,
     required this.icon,
     required this.tooltip,
     required this.color,
@@ -32,7 +33,7 @@ class IconBtn extends StatelessWidget {
 class StepBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  const StepBtn({required this.icon, required this.onTap});
+  const StepBtn({super.key, required this.icon, required this.onTap});
   @override
   Widget build(BuildContext context) => InkWell(
     onTap: onTap,

@@ -2,11 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/utils/permission_string.dart';
+import 'package:imis/utils/permission_role_string.dart';
 
 RoleInfo getRoleInfo(String role) {
   switch (role) {
-    case PermissionString.roleAdmin:
+    case PermissionRoleString.roleAdmin:
       return RoleInfo(
         icon: Icons.admin_panel_settings_outlined,
         iconColor: Colors.green,
@@ -16,7 +16,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Full system access with complete control over all features and settings",
       );
-    case PermissionString.roleStandardUser:
+    case PermissionRoleString.roleStandardUser:
       return RoleInfo(
         icon: Icons.person_outline,
         iconColor: Colors.blue,
@@ -26,7 +26,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Personal workspace where you can create and manage your deliverables",
       );
-    case PermissionString.pgsAuditor:
+    case PermissionRoleString.pgsAuditor:
       return RoleInfo(
         icon: Icons.person_outline,
         iconColor: Colors.deepOrange,
@@ -36,7 +36,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Oversee deliverables and conduct evaluations through scoring and performance assessment.",
       );
-    case PermissionString.serviceHead:
+    case PermissionRoleString.serviceHead:
       return RoleInfo(
         icon: Icons.person_outline,
         iconColor: Colors.deepPurple,
@@ -46,7 +46,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Responsible for reviewing progress and approving submitted deliverables.",
       );
-    case PermissionString.coreTeam:
+    case PermissionRoleString.coreTeam:
       return RoleInfo(
         icon: Icons.diversity_1_outlined,
         iconColor: Colors.teal,
@@ -56,7 +56,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Assist in managing deliverables and reviewing progress of assigned activities.",
       );
-    case PermissionString.mcc:
+    case PermissionRoleString.mcc:
       return RoleInfo(
         icon: Icons.person_outline,
         iconColor: Colors.pink,
@@ -66,7 +66,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Responsible for reviewing progress and approving key deliverables.",
       );
-    case PermissionString.osm:
+    case PermissionRoleString.osm:
       return RoleInfo(
         icon: Icons.person_outline,
         iconColor: Colors.purpleAccent,
@@ -76,7 +76,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Responsible for reviewing progress and approving submitted deliverables.",
       );
-    case PermissionString.headAuditor:
+    case PermissionRoleString.headAuditor:
       return RoleInfo(
         icon: Icons.person_outline,
         iconColor: Colors.indigoAccent,
@@ -86,7 +86,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Responsible for reviewing progress and approving submitted deliverables.",
       );
-    case PermissionString.financeOfficer:
+    case PermissionRoleString.financeOfficer:
       return RoleInfo(
         icon: Icons.wallet_outlined,
         iconColor: Colors.orangeAccent,
@@ -96,7 +96,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Serve as the point person for financial stewardship, tracking budgets, and guiding the financial roadmap.",
       );
-    case PermissionString.serviceOfficer:
+    case PermissionRoleString.serviceOfficer:
       return RoleInfo(
         icon: Icons.volunteer_activism_outlined,
         iconColor: Colors.redAccent,
@@ -105,7 +105,7 @@ RoleInfo getRoleInfo(String role) {
         textColor: Colors.black,
         description: "Serve as the primary point person for service operations",
       );
-    case PermissionString.trainingOfficer:
+    case PermissionRoleString.trainingOfficer:
       return RoleInfo(
         icon: Icons.school_outlined,
         iconColor: Colors.orange,
@@ -115,7 +115,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Coordinate and oversee training programs, serving as the point person for all training activities.",
       );
-    case PermissionString.hrOfficer:
+    case PermissionRoleString.hrOfficer:
       return RoleInfo(
         icon: Icons.work_outline,
         iconColor: Colors.lightGreen,
@@ -125,7 +125,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Main point person for human resource activities and personnel matters.",
       );
-    case PermissionString.safetyOfficer:
+    case PermissionRoleString.safetyOfficer:
       return RoleInfo(
         icon: Icons.shield_outlined,
         iconColor: Colors.orange,
@@ -135,7 +135,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Serve as the primary point of contact for safety, ensuring compliance with protocols and safe operations.",
       );
-    case PermissionString.linkagesOfficer:
+    case PermissionRoleString.linkagesOfficer:
       return RoleInfo(
         icon: Icons.route,
         iconColor: Colors.orange,
@@ -145,7 +145,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Serve as the point person for organizational linkages and external partnerships.",
       );
-    case PermissionString.facilityOfficer:
+    case PermissionRoleString.facilityOfficer:
       return RoleInfo(
         icon: Icons.engineering_outlined,
         iconColor: Colors.orange,
@@ -155,7 +155,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Serve as the point person for infrastructure, equipment, and facility-related matters.",
       );
-    case PermissionString.informationOfficer:
+    case PermissionRoleString.informationOfficer:
       return RoleInfo(
         icon: Icons.computer,
         iconColor: Colors.orange,
@@ -165,7 +165,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Serve as the point person for information technology and IT-related resources.",
       );
-    case PermissionString.researchOfficer:
+    case PermissionRoleString.researchOfficer:
       return RoleInfo(
         icon: Icons.content_paste_search,
         iconColor: Colors.orange,
@@ -175,7 +175,7 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Serve as the point person for research activities and initiatives.",
       );
-    case PermissionString.twg:
+    case PermissionRoleString.twg:
       return RoleInfo(
         icon: Icons.support_agent,
         iconColor: const Color.fromARGB(255, 4, 65, 105),
@@ -184,6 +184,16 @@ RoleInfo getRoleInfo(String role) {
         textColor: Colors.black,
         description:
             "Supports the planning, implementation, monitoring, and evaluation of organizational performance initiatives.",
+      );
+    case PermissionRoleString.msgc:
+      return RoleInfo(
+        icon: Icons.handshake_outlined,
+        iconColor: const Color.fromARGB(255, 143, 2, 80),
+        backgroundColor: mainBgColor,
+        borderColor: Colors.grey.shade300,
+        textColor: Colors.black,
+        description:
+            "Individuals or groups with an interest in organizational activities and outcomes.",
       );
     default:
       return RoleInfo(
