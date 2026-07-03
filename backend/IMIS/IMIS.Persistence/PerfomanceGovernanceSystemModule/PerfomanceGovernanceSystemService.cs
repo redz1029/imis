@@ -44,6 +44,11 @@ namespace IMIS.Persistence.PgsModule
 
         }
 
+        public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(int? pgsPeriodId, CancellationToken cancellationToken)
+        {
+            return await _repository.GetDashboardAuditStatusAsync(pgsPeriodId, cancellationToken);
+        }
+
         public async Task<TotalDashboardAuditedDto> GetTotalAuditedAsync(int? pgsPeriodId, CancellationToken cancellationToken)
         {
             return await _repository.GetTotalAuditedAsync(pgsPeriodId, cancellationToken);

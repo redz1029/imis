@@ -7,10 +7,41 @@ using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
+using PgsStatus = IMIS.Domain.PgsStatus;
 
 public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGovernanceSystem, long, ImisDbContext, User>, IPerfomanceGovernanceSystemRepository
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
+
+    public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(int? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        var query = from accomplishment in ReadOnlyDbContext.Set<PgsDeliverableAccomplishment>().AsNoTracking()
+
+            join deliverable in ReadOnlyDbContext.Set<PgsDeliverable>().AsNoTracking()
+                on accomplishment.PgsDeliverableId equals deliverable.Id
+
+            join pgs in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking()
+                on deliverable.PerfomanceGovernanceSystemId equals pgs.Id
+
+            where
+                !accomplishment.IsDeleted
+                && !deliverable.IsDeleted
+                && !pgs.IsDeleted
+                && (!pgsPeriodId.HasValue || pgs.PgsPeriod.Id == pgsPeriodId.Value)
+
+            group accomplishment by 1 into g
+
+            select new DashboardAuditStatusDto
+            {
+                Completed = g.Count(x => x.Status == PgsStatus.completed),
+
+                Ongoing = g.Count(x => x.Status == PgsStatus.onGoing),
+
+                NotStarted = g.Count(x => x.Status == PgsStatus.notStarted)
+            };
+
+            return await query.FirstOrDefaultAsync(cancellationToken) ?? new DashboardAuditStatusDto();
+    }
 
 
     public async Task<TotalDashboardAuditedDto> GetTotalAuditedAsync(int? pgsPeriodId, CancellationToken cancellationToken)

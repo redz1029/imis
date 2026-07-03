@@ -261,32 +261,40 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
-          
-             app.MapGet("/dashboard/total-deliverables-count", async (int? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
-            {
-                var result = await service.GetTotalDeliverableAsync(pgsPeriodId,  cancellationToken);
 
-                return Results.Ok(result);
-            })
-            .WithTags(_pgsDeliverableAccomplishmentTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
+            app.MapGet("/dashboard/total-deliverables-count", async (int? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+           {
+               var result = await service.GetTotalDeliverableAsync(pgsPeriodId, cancellationToken);
+
+               return Results.Ok(result);
+           })
+           .WithTags(_pgsDeliverableAccomplishmentTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
 
             app.MapGet("/dashboard/total-offices-count", async (int? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken token) =>
             {
                 return Results.Ok(await service.GetTotalOfficeAsync(pgsPeriodId, token));
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
 
             app.MapGet("/dashboard/total-audited-count", async (int? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken token) =>
             {
                 return Results.Ok(await service.GetTotalAuditedAsync(pgsPeriodId, token));
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
+
+
+            app.MapGet("/dashboard/audit-status-count", async (int? pgsPeriodId,
+            IPerfomanceGovernanceSystemService service,
+            CancellationToken token) =>
+            {
+                return Results.Ok(
+                    await service.GetDashboardAuditStatusAsync(pgsPeriodId, token));
+            })
+            .WithTags(_pgsDeliverableAccomplishmentTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
         }
     }
 }
