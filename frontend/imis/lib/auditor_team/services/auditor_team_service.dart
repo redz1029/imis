@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:imis/auditor_team/models/auditor_team.dart';
+import 'package:imis/auditor_team/models/auditor_team_member.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/page_list.dart';
 import 'package:imis/utils/pagination_util.dart';
@@ -10,6 +11,7 @@ class AuditorTeamService {
   final Dio dio;
 
   AuditorTeamService(this.dio);
+
   Future<PageList<AuditorTeam>> getAuditorTeam({
     int page = 1,
     int pageSize = 15,
@@ -17,12 +19,22 @@ class AuditorTeamService {
   }) async {
     final paginationUtil = PaginationUtil(dio);
     return await paginationUtil.fetchPaginatedData<AuditorTeam>(
-      endpoint: ApiEndpoint().auditorteam,
+      endpoint: '${ApiEndpoint().auditorteam}/page',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
       fromJson: (json) => AuditorTeam.fromJson(json),
     );
+  }
+
+  Future<AuditorTeamDetail> getAuditorTeamById(String id) async {
+    final url = '${ApiEndpoint().auditorteam}/teamid/$id';
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+      return AuditorTeamDetail.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> createOrUpdateAuditorTeam(AuditorTeam auditorTeam) async {
@@ -45,7 +57,8 @@ class AuditorTeamService {
   }
 
   Future<void> deleteAuditorTeam(String id) async {
-    final url = '${ApiEndpoint().roles}/$id';
+    final url =
+        '${ApiEndpoint().roles}/$id'; // ⚠️ possible bug — see note above
     await AuthenticatedRequest.delete(dio, url);
   }
 }
