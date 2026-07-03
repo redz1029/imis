@@ -1,5 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.Dashboard;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Domain;
@@ -23,6 +24,9 @@ namespace IMIS.Application.PgsModule
         Task<bool> SoftDeleteDeliverableAsync(int deliverableId, CancellationToken cancellationToken);
         Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>>GetAuditorPgsDeliverableAsync(string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken);
         Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken);
-        Task<List<AuditorPendingAuditDto>> ReportGetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken);
+        Task<List<AuditorPendingAuditDto>> ReportGetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken);     
+        Task<TotalDashboardDeliverableDto> GetTotalDeliverableAsync(int? pgsPeriodId, CancellationToken cancellationToken);
+        Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(int? pgsPeriodId, CancellationToken cancellationToken);
+        Task<TotalDashboardAuditedDto> GetTotalAuditedAsync(int? pgsPeriodId, CancellationToken cancellationToken);
     }
 }

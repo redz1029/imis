@@ -2,6 +2,7 @@
 using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
+using IMIS.Application.Dashboard;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
@@ -42,7 +43,22 @@ namespace IMIS.Persistence.PgsModule
             _roleManager = roleManager;
 
         }
-       
+
+        public async Task<TotalDashboardAuditedDto> GetTotalAuditedAsync(int? pgsPeriodId, CancellationToken cancellationToken)
+        {
+            return await _repository.GetTotalAuditedAsync(pgsPeriodId, cancellationToken);
+        }
+
+        public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(int? pgsPeriodId, CancellationToken cancellationToken)
+        {
+            return await _repository.GetTotalOfficeAsync(pgsPeriodId, cancellationToken);
+        }
+
+        public async Task<TotalDashboardDeliverableDto> GetTotalDeliverableAsync(int? pgsPeriodId, CancellationToken cancellationToken)
+        {
+            return await _repository.GetTotalDeliverableAsync(pgsPeriodId, cancellationToken);
+        }
+      
         public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken)
         {
             var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken);
