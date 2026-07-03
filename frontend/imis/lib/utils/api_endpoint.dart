@@ -78,6 +78,10 @@ class ApiEndpoint {
   late String performanceValidationTool;
   late String pendingAudits;
   late String performanceValidationToolSignatoryTemplate;
+  late String dashboardTotalAudited;
+  late String dashboardTotalOffices;
+  late String dashboardTotalDeliverables;
+  late String dashboardAuditStatus;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -156,6 +160,10 @@ class ApiEndpoint {
     pendingAudits = '$baseUrl/auditor/pending-audits';
     performanceValidationToolSignatoryTemplate =
         '$baseUrl/performanceValidationToolSignatoryTemplate';
+    dashboardTotalDeliverables = '$baseUrl/dashboard/total-deliverables-count';
+    dashboardTotalOffices = '$baseUrl/dashboard/total-offices-count';
+    dashboardTotalAudited = '$baseUrl/dashboard/total-audited-count';
+    dashboardAuditStatus = '$baseUrl/dashboard/audit-status-count';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
