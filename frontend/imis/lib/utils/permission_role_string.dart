@@ -1,4 +1,4 @@
-class PermissionString {
+class PermissionRoleString {
   static const String roleAdmin = 'Administrator';
   static const String roleStandardUser = 'Standard User';
   static const String pgsAuditor = 'Auditor';
@@ -19,4 +19,5 @@ class PermissionString {
   static const String informationOfficer = 'Information Officer';
   static const String researchOfficer = 'Research Officer';
   static const String twg = 'TWG';
+  static const String msgc = 'Multi-Sector Governance Council Officer';
 }
