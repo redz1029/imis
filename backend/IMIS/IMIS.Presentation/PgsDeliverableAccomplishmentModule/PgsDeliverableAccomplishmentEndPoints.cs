@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using VaultSharp.V1.AuthMethods.AppRole.Models;
 
 namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
 {
@@ -262,36 +263,34 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
 
-            app.MapGet("/dashboard/total-deliverables-count", async (int? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            app.MapGet("/dashboard/total-deliverables-count", async (string roleid, int ? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
            {
-               var result = await service.GetTotalDeliverableAsync(pgsPeriodId, cancellationToken);
+               var result = await service.GetTotalDeliverableAsync(roleid, pgsPeriodId, cancellationToken);
 
                return Results.Ok(result);
            })
            .WithTags(_pgsDeliverableAccomplishmentTag)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
 
-            app.MapGet("/dashboard/total-offices-count", async (int? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken token) =>
+            app.MapGet("/dashboard/total-offices-count", async (string roleId, int ? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken token) =>
             {
-                return Results.Ok(await service.GetTotalOfficeAsync(pgsPeriodId, token));
+                return Results.Ok(await service.GetTotalOfficeAsync(roleId, pgsPeriodId, token));
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
 
-            app.MapGet("/dashboard/total-audited-count", async (int? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken token) =>
+            app.MapGet("/dashboard/total-audited-count", async (string roleId, int? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken token) =>
             {
-                return Results.Ok(await service.GetTotalAuditedAsync(pgsPeriodId, token));
+                return Results.Ok(await service.GetTotalAuditedAsync(roleId, pgsPeriodId, token));
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
 
-
-            app.MapGet("/dashboard/audit-status-count", async (int? pgsPeriodId,
+            app.MapGet("/dashboard/audit-status-count", async (string roleid, int? pgsPeriodId,
             IPerfomanceGovernanceSystemService service,
             CancellationToken token) =>
             {
-                return Results.Ok(
-                    await service.GetDashboardAuditStatusAsync(pgsPeriodId, token));
+                return Results.Ok(await service.GetDashboardAuditStatusAsync(roleid, pgsPeriodId, token));
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);

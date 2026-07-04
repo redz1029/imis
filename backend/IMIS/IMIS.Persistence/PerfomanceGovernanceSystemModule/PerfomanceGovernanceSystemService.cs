@@ -44,26 +44,149 @@ namespace IMIS.Persistence.PgsModule
 
         }
 
-        public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(int? pgsPeriodId, CancellationToken cancellationToken)
+        public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
         {
-            return await _repository.GetDashboardAuditStatusAsync(pgsPeriodId, cancellationToken);
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+                return new DashboardAuditStatusDto();
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+                return new DashboardAuditStatusDto();
+
+            List<int> officeIds;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
+            }
+            else if (role.Name.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                officeIds = await _userOfficeRepository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
+            }
+            else
+            {
+                officeIds = await _userOfficeRepository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
+            }
+
+            if (officeIds == null || !officeIds.Any())
+                return new DashboardAuditStatusDto();
+
+            return await _repository.GetDashboardAuditStatusAsync(officeIds, pgsPeriodId, cancellationToken);
+        }       
+        public async Task<TotalDashboardAuditedDto> GetTotalAuditedAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+                return new TotalDashboardAuditedDto();
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+                return new TotalDashboardAuditedDto();
+
+            List<int> officeIds;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
+            }
+            else
+            {
+                officeIds = await _userOfficeRepository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
+            }
+
+            if (!officeIds.Any())
+                return new TotalDashboardAuditedDto();
+
+            return await _repository.GetTotalAuditedAsync(officeIds, pgsPeriodId, cancellationToken);
         }
 
-        public async Task<TotalDashboardAuditedDto> GetTotalAuditedAsync(int? pgsPeriodId, CancellationToken cancellationToken)
+        public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
         {
-            return await _repository.GetTotalAuditedAsync(pgsPeriodId, cancellationToken);
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+                return new TotalDashboardOfficeDto();
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+                return new TotalDashboardOfficeDto();
+
+            List<int> officeIds;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
+            }
+            else
+            {
+                officeIds = await _userOfficeRepository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
+            }
+
+            if (!officeIds.Any())
+                return new TotalDashboardOfficeDto();
+
+            return await _repository.GetTotalOfficeAsync(officeIds, pgsPeriodId, cancellationToken);
         }
 
-        public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(int? pgsPeriodId, CancellationToken cancellationToken)
+        public async Task<TotalDashboardDeliverableDto> GetTotalDeliverableAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
         {
-            return await _repository.GetTotalOfficeAsync(pgsPeriodId, cancellationToken);
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+                return new TotalDashboardDeliverableDto();
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+                return new TotalDashboardDeliverableDto();
+
+            List<int> officeIds;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
+            }
+            else
+            {
+                officeIds = await _userOfficeRepository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
+            }
+
+            if (!officeIds.Any())
+                return new TotalDashboardDeliverableDto();
+
+            return await _repository.GetTotalDeliverableAsync(officeIds, pgsPeriodId, cancellationToken);
         }
 
-        public async Task<TotalDashboardDeliverableDto> GetTotalDeliverableAsync(int? pgsPeriodId, CancellationToken cancellationToken)
-        {
-            return await _repository.GetTotalDeliverableAsync(pgsPeriodId, cancellationToken);
-        }
-      
         public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken)
         {
             var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken);

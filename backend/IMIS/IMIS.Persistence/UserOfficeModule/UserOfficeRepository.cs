@@ -12,6 +12,17 @@ namespace IMIS.Persistence.UserOfficeModule
         {
           
         }
+
+        public async Task<List<int>> GetUserOfficeIdsAsync(string userId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<UserOffices>()
+                .Where(x =>
+                    x.UserId == userId &&
+                    x.IsActive &&
+                    !x.IsDeleted)
+                .Select(x => x.OfficeId)
+                .ToListAsync(cancellationToken);
+        }
         public async Task<IEnumerable<UserOffices>?> FilteByName(string name, int UserOfficeNoOfResults, CancellationToken cancellationToken)
         {
             return await _entities
