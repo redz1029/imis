@@ -7,5 +7,8 @@ namespace IMIS.Application.PerformanceValidationToolModule
         public override string ModuleName => "PerformanceValidationTool";
 
         public override string PermissionGroup => PermissionGrouper.Transaction;
+        public string Delete => $"Delete{ModuleName}";
+        public string Draft => $"Draft{ModuleName}";
+        public string Submit => $"Submit{ModuleName}";
     }
 }
