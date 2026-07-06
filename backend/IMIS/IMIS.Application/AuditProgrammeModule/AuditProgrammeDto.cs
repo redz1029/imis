@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.Json.Serialization; // CRITICAL for mapping names
@@ -21,6 +22,10 @@ namespace IMIS.Application.AuditProgrammeModule
 
         public List<AuditProgrammeObjectiveDto> Objectives { get; set; } = new();
 
+        // FIX FOR FASTREPORT: Exposes a single, flat string holding all row descriptions broken by newlines
+        [JsonPropertyName("combinedObjectivesText")]
+        public string CombinedObjectivesText { get; set; } = string.Empty;
+
         [JsonPropertyName("auditPlan")]
         public List<AuditPlanDto> AuditPlans { get; set; } = new();
 
@@ -41,12 +46,18 @@ namespace IMIS.Application.AuditProgrammeModule
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
 
-            if (entity.Objectives != null)
+            if (entity.Objectives != null && entity.Objectives.Any())
             {
+                // 1. Maintain the native object array projection structure
                 Objectives = entity.Objectives
                     .OrderBy(o => o.SortOrder)
                     .Select(o => new AuditProgrammeObjectiveDto(o))
                     .ToList();
+
+                // 2. CONCATENATION FIX: Automatically combine descriptions with line breaks for FastReport text boxes
+                CombinedObjectivesText = string.Join(Environment.NewLine, entity.Objectives
+                    .OrderBy(o => o.SortOrder)
+                    .Select(o => o.Description));
             }
 
             if (entity.AuditPlans != null)

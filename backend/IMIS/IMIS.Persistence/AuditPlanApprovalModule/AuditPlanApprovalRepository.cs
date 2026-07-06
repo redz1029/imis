@@ -51,7 +51,7 @@ namespace IMIS.Persistence.AuditPlanApprovalModule
                 .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<AuditPlanApproval>> FilterByApproverId(string approverId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<AuditPlanApproval>> FilterByApproverId(int approverId, CancellationToken cancellationToken)
         {
             return await _entities
                 .AsNoTracking()

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="04/23/2026 09:02:36" ReportInfo.Modified="06/17/2026 16:00:09" ReportInfo.CreatorVersion="2025.2.0.0">
-  <ScriptText>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="04/23/2026 09:02:36" ReportInfo.Modified="07/06/2026 16:40:00" ReportInfo.CreatorVersion="2025.2.0.0">
+	<ScriptText>
 		using System;
 		using System.Collections;
 		using System.Collections.Generic;
@@ -19,84 +19,127 @@
 		}
 		}
 	</ScriptText>
-  <Dictionary>
-    <BusinessObjectDataSource Name="AuditData" DataType="System.Int32" Enabled="true">
-      <Column Name="Year" DataType="System.Int32"/>
-      <Column Name="For" DataType="System.String"/>
-      <Column Name="From" DataType="System.String"/>
-      <Column Name="Purpose" DataType="System.String"/>
-      <Column Name="ScopeAndFreqAudit" DataType="System.String"/>
-      <Column Name="InternalAuditSched" DataType="System.String"/>
-      <Column Name="AuditPlanObjective" DataType="System.String"/>
-      <Column Name="ScopeOfAudit" DataType="System.String"/>
-      <BusinessObjectDataSource Name="Objectives" DataType="System.Int32" Enabled="true">
-        <Column Name="Id" DataType="System.Int64"/>
-        <Column Name="Text" DataType="System.String"/>
-      </BusinessObjectDataSource>
-      <BusinessObjectDataSource Name="AuditPlan" DataType="System.Int32" Enabled="true">
-        <Column Name="Id" DataType="System.Int32"/>
-        <Column Name="StartDate" DataType="System.DateTime"/>
-        <Column Name="EndDate" DataType="System.DateTime"/>
-        <Column Name="PlanStatus" DataType="System.String"/>
-        <Column Name="BatchIndexString" DataType="System.String"/>
-        <Column Name="BatchFormattedDates" DataType="System.String"/>
-        <BusinessObjectDataSource Name="Entries" DataType="System.Int32" Enabled="true">
-          <Column Name="Id" DataType="System.Int32"/>
-          <Column Name="DayNumber" DataType="System.Int32"/>
-          <Column Name="Time" DataType="System.DateTime"/>
-          <Column Name="FormattedOfficeNames" DataType="System.String"/>
-          <Column Name="FormattedStandardChapters" DataType="System.String"/>
-          <Column Name="FormattedProposedSchedule" DataType="System.String"/>
-          <Column Name="FormattedAuditorTeamAndMembers" DataType="System.String"/>
-          <Column Name="TotalDaysInBatch" DataType="System.Int32"/>
-        </BusinessObjectDataSource>
-      </BusinessObjectDataSource>
-    </BusinessObjectDataSource>
-  </Dictionary>
-  <ReportPage Name="Page1" Watermark.Font="Arial, 60pt">
-    <ReportTitleBand Name="ReportTitle1" Width="718.2" Height="140">
-      <TextObject Name="TxtRepub" Left="217.35" Top="20" Width="321.3" Height="15" Text="Republic of the Philippines" HorzAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="TxtDoh" Left="217.35" Top="35" Width="321.3" Height="15" Text="Department of Health" HorzAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="TxtHospName" Left="150" Top="50" Width="450" Height="25" Text="COTABATO REGIONAL AND MEDICAL CENTER" HorzAlign="Center" Font="Times New Roman, 12pt, style=Bold"/>
-      <TextObject Name="TxtTitle" Left="217.35" Top="90" Width="321.3" Height="25" Text="AUDIT PROGRAMME" HorzAlign="Center" Font="Times New Roman, 14pt, style=Bold"/>
-    </ReportTitleBand>
-    <PageHeaderBand Name="PageHeader1" Top="144" Width="718.2" Height="472.5" Guides="444.15">
-      <TextObject Name="LblFor" Left="0.55" Width="60" Height="30" Border.Lines="All" Text="FOR:" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
-      <TextObject Name="ValFor" Left="60.55" Width="280" Height="30" Border.Lines="All" Text="[AuditData.For]" VertAlign="Center" Font="Times New Roman, 10pt"/>
-      <TextObject Name="LblFrom" Left="340.55" Width="70" Height="30" Border.Lines="All" Text="FROM:" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
-      <TextObject Name="ValFrom" Left="410.55" Width="288" Height="30" Border.Lines="All" Text="[AuditData.From]" VertAlign="Center" Font="Times New Roman, 10pt"/>
-      <TextObject Name="LblPurpose" Left="0.55" Top="30" Width="698" Height="20" Border.Lines="Left, Right, Top" Text="Purpose:" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
-      <TextObject Name="ValPurpose" Left="0.55" Top="50" Width="698" Height="40" Border.Lines="Left, Right, Bottom" CanGrow="true" Text="[AuditData.Purpose]" HorzAlign="Justify" Font="Times New Roman, 10pt"/>
-      <TextObject Name="LblObjectivesHeader" Left="0.55" Top="100" Width="698" Height="25" Border.Lines="Left, Right, Top" Text="I.  Objectives" VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
-      <TextObject Name="LblObjectivesSub" Left="0.55" Top="115.55" Width="698" Height="20" Border.Lines="Left, Right, Bottom" Text="    The audit aims to achieve the following target vectors:" VertAlign="Center" Font="Times New Roman, 10pt, style=Italic"/>
-      <TextObject Name="ValObjText" Left="50.55" Top="151.2" Width="648" Height="25" Border.Lines="Right" CanGrow="true" Text="[AuditData.Objectives.Text]" VertAlign="Center" Font="Times New Roman, 10pt"/>
-      <TextObject Name="LblScopeHeader" Left="0.55" Top="208.45" Width="698" Height="25" Border.Lines="Left, Right, Top" Text="II. Scope and Frequency of Audit" VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
-      <TextObject Name="ValScopeText" Left="0.55" Top="252.35" Width="698" Height="35" Border.Lines="Left, Right, Bottom" CanGrow="true" Text="[AuditData.ScopeAndFreqAudit]" Font="Times New Roman, 10pt"/>
-      <TextObject Name="LblSchedHeader" Left="0.55" Top="292.35" Width="698" Height="25" Border.Lines="Left, Right, Top" Text="III. Internal Audit Schedule" VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
-      <TextObject Name="ValSchedText" Left="0.55" Top="317.35" Width="698" Height="45" Border.Lines="Left, Right, Bottom" CanGrow="true" Text="[AuditData.InternalAuditSched]" Font="Times New Roman, 10pt"/>
-      <TextObject Name="LblPlanObjective" Left="0.55" Top="367.35" Width="140" Height="50" Border.Lines="All" Text="Audit Plan Objective:" Font="Times New Roman, 10pt, style=Bold"/>
-      <TextObject Name="ValPlanObjective" Left="140.55" Top="367.35" Width="558" Height="50" Border.Lines="All" CanGrow="true" Text="[AuditData.AuditPlanObjective]" Font="Times New Roman, 10pt"/>
-      <TextObject Name="LblScopeOfAudit" Left="0.55" Top="417.5" Width="140" Height="55" Border.Lines="All" Text="Scope of Audit:" Font="Times New Roman, 10pt, style=Bold"/>
-      <TextObject Name="ValScopeOfAudit" Left="140.55" Top="415.8" Width="558" Height="55" Border.Lines="All" CanGrow="true" Text="[AuditData.ScopeOfAudit]" Font="Times New Roman, 10pt"/>
-      <TextObject Name="ValObjIndex" Left="0.55" Top="145.1" Width="50" Height="25" Border.Lines="Left" Text="       [Row#]." VertAlign="Center" Font="Times New Roman, 10pt"/>
-    </PageHeaderBand>
-    <DataBand Name="DataMain" Top="620.5" Width="718.2" Height="94.45" DataSource="AuditData">
-      <TextObject Name="TxtBatchTitle" Left="0.55" Width="698" Height="25" Border.Lines="Left, Right, Top" Fill.Color="White" Text="IQA BATCH [AuditData.AuditPlan.BatchIndexString]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
-      <TextObject Name="TxtBatchDates" Left="0.55" Top="34.45" Width="698" Height="20" Border.Lines="Left, Right, Bottom" Fill.Color="White" Text="[AuditData.AuditPlan.BatchFormattedDates]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
-      <TextObject Name="HStandard" Left="190.55" Top="54.45" Width="180" Height="40" Border.Lines="All" Fill.Color="White" Text="STANDARD CHAPTER" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-      <TextObject Name="HProcess" Left="0.55" Top="54.45" Width="190" Height="40" Border.Lines="All" Fill.Color="White" Text="ORGANIZATIONAL UNIT AND PROCESSES" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-      <TextObject Name="HSchedule" Left="370.55" Top="54.45" Width="130" Height="40" Border.Lines="All" Fill.Color="White" Text="PROPOSED SCHEDULE" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-      <TextObject Name="HAuditors" Left="500.55" Top="54.45" Width="198" Height="40" Border.Lines="All" Fill.Color="White" Text="AUDITORS" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-    </DataBand>
-    <DataBand Name="DataLoopObjectives" Top="718.95" Width="718.2" Height="25" DataSource="Objectives">
-      <TextObject Name="TxtDayStrip" Left="0.55" Width="698" Height="25" Border.Lines="All" Fill.Color="White" Text="DAY [AuditData.AuditPlan.Entries.DayNumber] OF DAY [AuditData.AuditPlan.Entries.TotalDaysInBatch]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
-    </DataBand>
-    <DataBand Name="DataMiddleMetrics" Top="747.95" Width="718.2" Height="56.55" DataSource="AuditData">
-      <TextObject Name="CellAuditors" Left="500.55" Width="198" Height="50" Border.Lines="All" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedAuditorTeamAndMembers]" Font="Times New Roman, 8pt"/>
-      <TextObject Name="CellProcess" Left="0.55" Width="190" Height="50" Border.Lines="All" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedOfficeNames]" Font="Times New Roman, 9pt"/>
-      <TextObject Name="CellStandard" Left="190.55" Width="180" Height="50" Border.Lines="All" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedStandardChapters]" Font="Times New Roman, 9pt"/>
-      <TextObject Name="CellSchedule" Left="370.55" Width="130" Height="50" Border.Lines="All" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedProposedSchedule]" HorzAlign="Center" Font="Times New Roman, 9pt"/>
-    </DataBand>
-    <PageFooterBand Name="PageFooter1" Top="808.5" Width="718.2" Height="20"/>
-  </ReportPage>
+	<Dictionary>
+		<BusinessObjectDataSource Name="AuditData" ReferenceName="AuditData" DataType="System.Object" Enabled="true">
+			<Column Name="Year" DataType="System.Int32"/>
+			<Column Name="For" DataType="System.String"/>
+			<Column Name="From" DataType="System.String"/>
+			<Column Name="Purpose" DataType="System.String"/>
+			<Column Name="ScopeAndFreqAudit" DataType="System.String"/>
+			<Column Name="InternalAuditSched" DataType="System.String"/>
+			<Column Name="AuditPlanObjective" DataType="System.String"/>
+			<Column Name="ScopeOfAudit" DataType="System.String"/>
+			<BusinessObjectDataSource Name="Objectives" DataType="System.Object" Enabled="true">
+				<Column Name="Id" DataType="System.Int64"/>
+				<Column Name="Text" DataType="System.String"/>
+			</BusinessObjectDataSource>
+			<BusinessObjectDataSource Name="AuditPlan" DataType="System.Object" Enabled="true">
+				<Column Name="Id" DataType="System.Int32"/>
+				<Column Name="StartDate" DataType="System.DateTime"/>
+				<Column Name="EndDate" DataType="System.DateTime"/>
+				<Column Name="PlanStatus" DataType="System.String"/>
+				<Column Name="BatchIndexString" DataType="System.String"/>
+				<Column Name="BatchFormattedDates" DataType="System.String"/>
+				<BusinessObjectDataSource Name="Entries" DataType="System.Object" Enabled="true">
+					<Column Name="Id" DataType="System.Int32"/>
+					<Column Name="DayNumber" DataType="System.Int32"/>
+					<Column Name="Time" DataType="System.DateTime"/>
+					<Column Name="FormattedOfficeNames" DataType="System.String"/>
+					<Column Name="FormattedStandardChapters" DataType="System.String"/>
+					<Column Name="FormattedProposedSchedule" DataType="System.String"/>
+					<Column Name="FormattedAuditorTeamAndMembers" DataType="System.String"/>
+					<Column Name="TotalDaysInBatch" DataType="System.Int32"/>
+				</BusinessObjectDataSource>
+			</BusinessObjectDataSource>
+		</BusinessObjectDataSource>
+	</Dictionary>
+
+	<!-- PAGE 1: AUDIT PLAN NARRATIVE FORM -->
+	<ReportPage Name="Page1" PaperWidth="215.9" PaperHeight="279.4" LeftMargin="10" TopMargin="10" RightMargin="10" BottomMargin="10" Watermark.Font="Times New Roman, 60pt">
+
+		<!-- HEADER: Title & Logo Configuration -->
+		<ReportTitleBand Name="ReportTitle1" Width="740.5" Height="130">
+			<PictureObject Name="ImgLogo" Left="35" Top="15" Width="65" Height="65" ImageLocation=""/>
+			<TextObject Name="TxtRepub" Left="0" Top="15" Width="740.5" Height="15" Text="Republic of the Philippines" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt"/>
+			<TextObject Name="TxtDoh" Left="0" Top="30" Width="740.5" Height="15" Text="Department of Health" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt"/>
+			<TextObject Name="TxtHospName" Left="0" Top="45" Width="740.5" Height="25" Text="COTABATO REGIONAL AND MEDICAL CENTER" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 12pt, style=Bold"/>
+			<TextObject Name="TxtTitle" Left="0" Top="95" Width="740.5" Height="25" Text="AUDIT PROGRAMME" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 13pt, style=Bold"/>
+		</ReportTitleBand>
+
+		<!-- BAND 1: FOR and FROM fields -->
+		<DataBand Name="BandForFrom" Width="740.5" Height="35" DataSource="AuditData">
+			<TextObject Name="LblFor" Left="10" Top="0" Width="90" Height="35" Border.Lines="All" Text="FOR:" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
+			<TextObject Name="Text1" Left="100" Top="0" Width="260" Height="35" Border.Lines="Top, Bottom" Padding="5, 1, 5, 1" Text="[AuditData.For]" VertAlign="Center" Font="Times New Roman, 10pt"/>
+			<TextObject Name="LblFrom" Left="360" Top="0" Width="90" Height="35" Border.Lines="All" Text="FROM:" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
+			<TextObject Name="Text2" Left="450" Top="0" Width="280" Height="35" Border.Lines="Top, Right, Bottom" Padding="5, 1, 5, 1" Text="[AuditData.From]" VertAlign="Center" Font="Times New Roman, 10pt"/>
+		</DataBand>
+
+		<!-- BAND 2: Purpose Section -->
+		<DataBand Name="BandPurpose" Top="39" Width="740.5" Height="50" DataSource="AuditData" CanGrow="true">
+			<TextObject Name="Text3" Left="10" Top="0" Width="720" Height="50" Border.Lines="Left, Right, Bottom" Padding="8, 8, 8, 8" CanGrow="true" Text="Purpose: [AuditData.Purpose]" Font="Times New Roman, 10pt"/>
+		</DataBand>
+
+		<!-- BAND 3: Objectives Header Section -->
+		<DataBand Name="BandObjectivesHeader" Top="93" Width="740.5" Height="30" DataSource="AuditData">
+			<TextObject Name="LblObjectivesHeader" Left="10" Top="0" Width="720" Height="30" Border.Lines="Left, Right" Padding="8, 6, 8, 0" Text="I.          Objectives" Font="Times New Roman, 10pt, style=Bold"/>
+		</DataBand>
+
+		<!-- BAND 4: Native Data Loop for Objectives (No subreport/no overlap breakdown possible) -->
+		<DataBand Name="DataObjectives" Top="127" Width="740.5" Height="30" DataSource="Objectives" CanGrow="true">
+			<TextObject Name="ObjBorderLeftRight" Left="10" Top="0" Width="720" Height="30" Border.Lines="Left, Right"/>
+			<TextObject Name="TxtObjNumber" Left="65" Top="0" Width="30" Height="25" Text="[Row#]." HorzAlign="Right" Font="Times New Roman, 10pt"/>
+			<TextObject Name="TxtObjectiveItem" Left="105" Top="0" Width="595" Height="25" CanGrow="true" Text="[AuditData.Objectives.Text]" Font="Times New Roman, 10pt"/>
+		</DataBand>
+
+		<!-- BAND 5: Dynamic Spacer ensuring visual gap under objectives before line closure -->
+		<DataBand Name="BandObjectivesFooter" Top="161" Width="740.5" Height="15" DataSource="AuditData">
+			<TextObject Name="ObjSectionClose" Left="10" Top="0" Width="720" Height="15" Border.Lines="Left, Right, Bottom"/>
+		</DataBand>
+
+		<!-- BAND 6: Scope and Frequency of Audit -->
+		<DataBand Name="BandScope" Top="180" Width="740.5" Height="80" DataSource="AuditData" CanGrow="true">
+			<TextObject Name="LblScopeHeader" Left="10" Top="0" Width="720" Height="25" Border.Lines="Left, Right" Padding="8, 4, 8, 0" Text="II.         Scope and Frequency of Audit" Font="Times New Roman, 10pt, style=Bold"/>
+			<TextObject Name="Text5" Left="10" Top="25" Width="720" Height="55" Border.Lines="Left, Right, Bottom" Padding="55, 4, 25, 8" CanGrow="true" Text="[AuditData.ScopeAndFreqAudit]" Font="Times New Roman, 10pt"/>
+		</DataBand>
+
+		<!-- BAND 7: Internal Audit Schedule Section -->
+		<DataBand Name="BandSchedule" Top="264" Width="740.5" Height="125" DataSource="AuditData" CanGrow="true">
+			<TextObject Name="LblSchedHeader" Left="10" Top="0" Width="720" Height="25" Border.Lines="Left, Right" Padding="8, 4, 8, 0" Text="III.        Internal Audit Schedule" Font="Times New Roman, 10pt, style=Bold"/>
+			<TextObject Name="Text6" Left="10" Top="25" Width="720" Height="100" Border.Lines="Left, Right, Bottom" Padding="55, 6, 25, 8" CanGrow="true" Text="[AuditData.InternalAuditSched]" Font="Times New Roman, 10pt"/>
+		</DataBand>
+
+		<!-- BAND 8: Audit Plan Objective Split Row -->
+		<DataBand Name="BandPlanObjective" Top="393" Width="740.5" Height="75" DataSource="AuditData" CanGrow="true">
+			<TextObject Name="LblPlanObjective" Left="10" Top="0" Width="180" Height="75" Border.Lines="Left, Right, Bottom" Padding="8, 4, 4, 4" Text="Audit Plan Objective:" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
+			<TextObject Name="Text7" Left="190" Top="0" Width="540" Height="75" Border.Lines="Right, Bottom" Padding="8, 4, 8, 4" CanGrow="true" Text="[AuditData.AuditPlanObjective]" VertAlign="Center" Font="Times New Roman, 10pt"/>
+		</DataBand>
+
+		<!-- BAND 9: Scope of Audit Split Row -->
+		<DataBand Name="BandScopeOfAudit" Top="472" Width="740.5" Height="75" DataSource="AuditData" CanGrow="true">
+			<TextObject Name="LblScopeOfAudit" Left="10" Top="0" Width="180" Height="75" Border.Lines="Left, Right, Bottom" Padding="8, 4, 4, 4" Text="Scope of Audit:" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
+			<TextObject Name="Text8" Left="190" Top="0" Width="540" Height="75" Border.Lines="Right, Bottom" Padding="8, 4, 8, 4" CanGrow="true" Text="[AuditData.ScopeOfAudit]" VertAlign="Center" Font="Times New Roman, 10pt"/>
+		</DataBand>
+	</ReportPage>
+
+	<!-- PAGE 2: SCHEDULE SCHEDULE ENGINES -->
+	<ReportPage Name="Page2" PaperWidth="215.9" PaperHeight="279.4" LeftMargin="10" TopMargin="10" RightMargin="10" BottomMargin="10" Watermark.Font="Times New Roman, 60pt">
+		<!-- MASTER BAND: Loops through each distinct Audit Batch -->
+		<DataBand Name="DataBatches" Width="740.5" Height="90" DataSource="AuditPlan">
+			<TextObject Name="Text11" Left="10" Top="10" Width="720" Height="25" Border.Lines="Left, Right, Top" Fill.Color="White" Text="IQA BATCH [AuditData.AuditPlan.BatchIndexString]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
+			<TextObject Name="Text12" Left="10" Top="35" Width="720" Height="20" Border.Lines="Left, Right, Bottom" Fill.Color="White" Text="[AuditData.AuditPlan.BatchFormattedDates]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
+
+			<TextObject Name="Text14" Left="10" Top="60" Width="200" Height="30" Border.Lines="All" Fill.Color="White" Text="ORGANIZATIONAL UNIT AND PROCESSES" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
+			<TextObject Name="Text13" Left="210" Top="60" Width="170" Height="30" Border.Lines="All" Fill.Color="White" Text="STANDARD CHAPTER" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
+			<TextObject Name="Text15" Left="380" Top="60" Width="130" Height="30" Border.Lines="All" Fill.Color="White" Text="PROPOSED SCHEDULE" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
+			<TextObject Name="Text16" Left="510" Top="60" Width="220" Height="30" Border.Lines="All" Fill.Color="White" Text="AUDITORS" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
+
+			<!-- DETAIL CHILD LOOP: Runs directly under the current active Batch to map entries -->
+			<DataBand Name="DataEntries" Top="94" Width="740.5" Height="50" DataSource="Entries" CanGrow="true">
+				<TextObject Name="Text17" Left="10" Width="200" Height="50" Border.Lines="Left, Right, Bottom" Padding="5, 5, 5, 5" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedOfficeNames]" VertAlign="Center" Font="Times New Roman, 9pt"/>
+				<TextObject Name="Text18" Left="210" Width="170" Height="50" Border.Lines="Right, Bottom" Padding="5, 5, 5, 5" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedStandardChapters]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+				<TextObject Name="Text19" Left="380" Width="130" Height="50" Border.Lines="Right, Bottom" Padding="5, 5, 5, 5" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedProposedSchedule]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+				<TextObject Name="Text20" Left="510" Width="220" Height="50" Border.Lines="Right, Bottom" Padding="5, 5, 5, 5" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedAuditorTeamAndMembers]" VertAlign="Center" Font="Times New Roman, 9pt"/>
+			</DataBand>
+		</DataBand>
+	</ReportPage>
 </Report>

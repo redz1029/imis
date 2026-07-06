@@ -41,7 +41,7 @@ namespace IMIS.Application.AuditProgrammeModule
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
 
-            // 1. Map Objectives List Safely using the corrected Description property
+            // 1. Map Objectives List Safely
             if (entity.Objectives != null)
             {
                 Objectives = entity.Objectives
@@ -54,7 +54,7 @@ namespace IMIS.Application.AuditProgrammeModule
                     .ToList();
             }
 
-            // 2. Map and Flatten the Multi-Tiered Batches using corrected AuditPlan collection
+            // 2. Map and Flatten the Multi-Tiered Batches
             if (entity.AuditPlans != null)
             {
                 var plansList = entity.AuditPlans as IEnumerable<AuditPlan> ?? new List<AuditPlan> { entity.AuditPlans as AuditPlan };
@@ -78,11 +78,7 @@ namespace IMIS.Application.AuditProgrammeModule
 
                         foreach (var entry in plan.Entries.OrderBy(e => e.DayNumber).ThenBy(e => e.Time))
                         {
-                            // -----------------------------------------------------------------
-                            // Safe Value Extraction from Structural Normalized Domain Tables
-                            // -----------------------------------------------------------------
-
-                            // 1. Offices / Processes Naming
+                            // A. Offices / Processes Naming
                             string officeNamesCombined = "N/A";
                             if (entry.AuditPlanProcesses != null && entry.AuditPlanProcesses.Any())
                             {
@@ -95,41 +91,70 @@ namespace IMIS.Application.AuditProgrammeModule
                                     .Select(p => p.Name ?? "Unnamed Process"));
                             }
 
-                            // 2. Standards Text Mapping via ClauseRef and Particulars properties
+                            // B. Standards Text Mapping (Extracts pure comma-separated numerical references)
                             string standardChaptersCombined = "N/A";
                             if (entry.IsoStandardAuditPlans != null && entry.IsoStandardAuditPlans.Any())
                             {
                                 standardChaptersCombined = string.Join(", ", entry.IsoStandardAuditPlans
-                                    .Select(s => s.IsoStandard != null
-                                        ? (!string.IsNullOrEmpty(s.IsoStandard.ClauseRef) ? $"{s.IsoStandard.ClauseRef} - {s.IsoStandard.Particulars}" : s.IsoStandard.Particulars)
-                                        : $"ISO Std {s.IsoStandardId}"));
+                                    .Select(s => s.IsoStandard != null ? s.IsoStandard.ClauseRef : string.Empty)
+                                    .Where(clause => !string.IsNullOrEmpty(clause)));
+
+                                if (string.IsNullOrEmpty(standardChaptersCombined))
+                                {
+                                    standardChaptersCombined = "N/A";
+                                }
                             }
 
-                            // 3. User Lookup Naming safely drilling into User Entity Profile references
+                            // C. User/Auditor Grid Formatting (Replicates image_a85e32.jpg dynamic structure)
                             string auditorsLinesCombined = "Unassigned";
                             if (entry.IsoAuditors != null && entry.IsoAuditors.Any())
                             {
-                                auditorsLinesCombined = string.Join(Environment.NewLine, entry.IsoAuditors
-                                    .Select(a => {
-                                        if (a.IsoAuditors?.User != null)
-                                        {
-                                            return $"{a.IsoAuditors.User.FirstName} {a.IsoAuditors.User.LastName}".Trim();
-                                        }
-                                        return !string.IsNullOrEmpty(a.AuditorId) ? $"Auditor: {a.AuditorId}" : "Staff Auditor";
-                                    }));
+                                var auditorLines = new List<string>();
+
+                                // Safely fetch the team name assigned to this block
+                                string teamName = entry.IsoAuditors.FirstOrDefault(a => a.Team != null)?.Team?.Name ?? "Assigned Team";
+                                auditorLines.Add(teamName);
+                                auditorLines.Add(string.Empty); // Inserts blank line spacer under Team Header
+
+                                int regularAuditorIndex = 1;
+                                foreach (var item in entry.IsoAuditors)
+                                {
+                                    string fullName = "Staff Auditor";
+                                    if (item.IsoAuditors != null && item.IsoAuditors.User != null)
+                                    {
+                                        fullName = $"{item.IsoAuditors.User.FirstName} {item.IsoAuditors.User.LastName}".Trim();
+                                    }
+
+                                    // Distinguish between numbered Lead/Regular Auditors and special Auditing Observers (*)
+                                    // If your domain data layer tracks a boolean flag or an ID role type, map it below:
+                                    bool isSpecialObserver = item.TeamId == null || item.AuditorId == null; // Example discriminator logic
+
+                                    if (isSpecialObserver)
+                                    {
+                                        auditorLines.Add($"* {fullName}");
+                                    }
+                                    else
+                                    {
+                                        auditorLines.Add($"{regularAuditorIndex}. {fullName}");
+                                        regularAuditorIndex++;
+                                    }
+                                }
+
+                                auditorsLinesCombined = string.Join(Environment.NewLine, auditorLines);
                             }
 
-                            // Add fully mapped entry to output DTO batch
+                            // Calculate the Entry calendar Date using DayNumber relative to Batch StartDate
+                            DateTime calculatedEntryDate = plan.StartDate.AddDays(entry.DayNumber - 1);
+
                             reportBatch.Entries.Add(new ReportScheduleEntryDto
                             {
                                 Id = entry.Id,
                                 DayNumber = entry.DayNumber,
                                 Time = entry.Time,
                                 TotalDaysInBatch = maxDay,
-
-                                FormakedOfficeNames = officeNamesCombined.Trim(),
+                                FormattedOfficeNames = officeNamesCombined.Trim(),
                                 FormattedStandardChapters = standardChaptersCombined.Trim(),
-                                FormattedProposedSchedule = entry.Time.ToString("hh:mm tt"),
+                                FormattedProposedSchedule = calculatedEntryDate.ToString("MMMM dd, yyyy"), // Perfectly outputs "April 22, 2025"
                                 FormattedAuditorTeamAndMembers = auditorsLinesCombined
                             });
                         }
@@ -193,7 +218,7 @@ namespace IMIS.Application.AuditProgrammeModule
         public int DayNumber { get; set; }
         public DateTime Time { get; set; }
         public int TotalDaysInBatch { get; set; }
-        public string FormakedOfficeNames { get; set; } = string.Empty;
+        public string FormattedOfficeNames { get; set; } = string.Empty;
         public string FormattedStandardChapters { get; set; } = string.Empty;
         public string FormattedProposedSchedule { get; set; } = string.Empty;
         public string FormattedAuditorTeamAndMembers { get; set; } = string.Empty;

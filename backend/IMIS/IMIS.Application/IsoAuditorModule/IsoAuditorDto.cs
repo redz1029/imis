@@ -7,7 +7,7 @@ namespace IMIS.Application.IsoAuditorModule
     public class IsoAuditorDto : BaseDto<IsoAuditor, int>
     {
         public int? TeamId { get; set; }
-        public string? AuditorId { get; set; } = string.Empty;
+        public int? AuditorId { get; set; } 
         public int? AuditPlanEntryId { get; set; }
 
         public IsoAuditorDto? Team { get; set; }

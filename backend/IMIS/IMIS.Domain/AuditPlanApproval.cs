@@ -7,7 +7,7 @@ namespace IMIS.Domain
         public required int AuditPlanId { get; set; }
         public AuditPlan? AuditPlan { get; set; }
 
-        public required string ApproverId { get; set; }
+        public required int ApproverId { get; set; }
         public User? Approver { get; set; }
 
         public required string Action { get; set; }

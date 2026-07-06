@@ -20,6 +20,7 @@ namespace IMIS.Application.AuditProgrammeModule
         /// Retrieves a specific audit programme by ID, including its related Objectives.
         /// </summary>
         Task<AuditProgrammeDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<ReportAuditProgrammeDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
 
         // --- Save / Update ---
         /// <summary>

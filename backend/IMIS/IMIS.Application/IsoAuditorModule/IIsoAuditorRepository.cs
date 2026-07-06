@@ -27,7 +27,7 @@ namespace IMIS.Application.IsoAuditorModule
         /// Retrieves all teams/assignments associated with a specific User.
         /// Note: Uses 'string' to match the Domain.UserId type.
         /// </summary>
-        Task<IEnumerable<IsoAuditor>> FilterByUserId(string userId, CancellationToken cancellationToken);
+        Task<IEnumerable<IsoAuditor>> FilterByUserId(int userId, CancellationToken cancellationToken);
 
         /// <summary>
         /// Retrieves all auditors assigned to a specific Audit Plan Entry.

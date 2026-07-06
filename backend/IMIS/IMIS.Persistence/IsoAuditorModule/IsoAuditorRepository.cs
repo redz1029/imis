@@ -53,7 +53,7 @@ namespace IMIS.Persistence.IsoAuditorModule
                 .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<IsoAuditor>> FilterByUserId(string userId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<IsoAuditor>> FilterByUserId(int userId, CancellationToken cancellationToken)
         {
             return await _entities
                 .AsNoTracking()

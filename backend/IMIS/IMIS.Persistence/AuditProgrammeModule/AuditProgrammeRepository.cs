@@ -14,59 +14,44 @@ namespace IMIS.Persistence.AuditProgrammeModule
     {
         public AuditProgrammeRepository(ImisDbContext dbContext) : base(dbContext) { }
 
-        // 💡 FIXED: Added AsSplitQuery() to bypass Cartesian product explosion on deep loads
+        /// <summary>
+        /// Retrieves a shallow or moderately loaded aggregate root for business logic operations.
+        /// </summary>
         public override async Task<AuditProgramme?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             return await GetDbContext().Set<AuditProgramme>()
-                .AsSplitQuery()
-                .Include(x => x.Objectives)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Preparer)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Approvals)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoAuditProcesses)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.ResponsiblePersons)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoAuditors)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoStandardAuditPlans)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.AuditPlanProcesses)
+                .Include(x => x.Objectives.Where(o => !o.IsDeleted))
                 .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        // 💡 FIXED: Added AsSplitQuery() here to handle intensive details fetches safely
+        /// <summary>
+        /// Safely fetches the complete execution graph using a Split Query to prevent Cartesian explosion.
+        /// Use this specifically when editing the entire tree or viewing deep details.
+        /// </summary>
         public async Task<AuditProgramme?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
             return await GetDbContext().Set<AuditProgramme>()
                 .AsSplitQuery()
-                .Include(x => x.Objectives)
-                .Include(x => x.AuditPlans)
+                .Include(x => x.Objectives.Where(o => !o.IsDeleted))
+                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
                     .ThenInclude(p => p.Preparer)
-                .Include(x => x.AuditPlans)
+                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
                     .ThenInclude(p => p.Approvals)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
+                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
+                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
                         .ThenInclude(e => e.IsoAuditProcesses)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
+                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
+                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
                         .ThenInclude(e => e.ResponsiblePersons)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
+                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
+                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
                         .ThenInclude(e => e.IsoAuditors)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
+                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
+                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
                         .ThenInclude(e => e.IsoStandardAuditPlans)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
+                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
+                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
                         .ThenInclude(e => e.AuditPlanProcesses)
                 .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken)
                 .ConfigureAwait(false);
@@ -79,62 +64,28 @@ namespace IMIS.Persistence.AuditProgrammeModule
                 .ConfigureAwait(false);
         }
 
-        // 💡 FIXED: Added AsSplitQuery() to prevent row duplication crashes during full list queries
+        /// <summary>
+        /// Optimized: Lists do not require a deep 4-level child collection load. 
+        /// Pulls only the immediate root data and objectives for fast lookup rendering.
+        /// </summary>
         public async Task<IEnumerable<AuditProgramme>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _entities
                 .AsNoTracking()
-                .AsSplitQuery()
-                .Include(x => x.Objectives)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Preparer)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Approvals)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoAuditProcesses)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.ResponsiblePersons)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoAuditors)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoStandardAuditPlans)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.AuditPlanProcesses)
+                .Include(x => x.Objectives.Where(o => !o.IsDeleted))
                 .Where(x => !x.IsDeleted)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        // 💡 FIXED: Added AsSplitQuery() to protect paginated list requests
+        /// <summary>
+        /// Optimized: Paginated views are lightweight. Heavy sub-collections are stripped out 
+        /// to ensure fast database execution and predictable memory footprint.
+        /// </summary>
         public async Task<EntityPageList<AuditProgramme, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _entities.AsNoTracking()
-                .AsSplitQuery()
-                .Include(x => x.Objectives)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Preparer)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Approvals)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoAuditProcesses)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.ResponsiblePersons)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoAuditors)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoStandardAuditPlans)
-                .Include(x => x.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.AuditPlanProcesses)
+                .Include(x => x.Objectives.Where(o => !o.IsDeleted))
                 .Where(x => !x.IsDeleted);
 
             return await EntityPageList<AuditProgramme, int>

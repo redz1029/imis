@@ -36,7 +36,7 @@ namespace IMIS.Application.AuditPlanApprovalModule
         /// <summary>
         /// Filters approvals performed by a specific user.
         /// </summary>
-        Task<IEnumerable<AuditPlanApproval>> FilterByApproverId(string approverId, CancellationToken cancellationToken);
+        Task<IEnumerable<AuditPlanApproval>> FilterByApproverId(int approverId, CancellationToken cancellationToken);
 
         /// <summary>
         /// Filters approvals by the action taken (e.g., "Approved", "Rejected").

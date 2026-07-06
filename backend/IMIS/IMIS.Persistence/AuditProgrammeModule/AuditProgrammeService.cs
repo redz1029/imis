@@ -228,6 +228,11 @@ namespace IMIS.Application.AuditProgrammeModule
             var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken);
             return entity != null ? new AuditProgrammeDto(entity) : null;
         }
+        public async Task<ReportAuditProgrammeDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken);
+            return entity != null ? new ReportAuditProgrammeDto(entity) : null;
+        }
 
         public async Task<List<AuditProgrammeDto>?> GetAllAsync(CancellationToken cancellationToken)
         {

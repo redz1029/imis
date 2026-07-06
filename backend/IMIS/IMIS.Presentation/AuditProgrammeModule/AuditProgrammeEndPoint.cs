@@ -1,6 +1,10 @@
-﻿using Base.Auths.Permissions;
+﻿using Azure;
+using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AuditProgrammeModule;
+using IMIS.Application.OperationReviewProtocolModule;
+using IMIS.Infrastructure.Reports;
+using IMIS.Persistence.Migrations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -71,6 +75,40 @@ namespace IMIS.Presentation.AuditProgrammeModule
             })
             .WithTags(_AuditProgramme)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditProgramme), true);
+
+            app.MapGet("/PdF/{id:int}", async (HttpResponse response, int id,
+               IAuditProgrammeService service,
+               CancellationToken cancellationToken) =>
+            {
+                //var result = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                //return result != null
+                //    ? Results.Ok(result)
+                //    : Results.NotFound(new { message = $"Audit Programme with ID {id} was not found." });
+
+                var AuditData = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                if (AuditData == null)
+                    return Results.NotFound();
+
+                var file = await ReportUtil.GeneratePdfReport<ReportAuditProgrammeDto>("AuditProgramme",
+                    new List<ReportAuditProgrammeDto>
+                    {
+                        AuditData
+                    },
+                    "AuditData", cancellationToken).ConfigureAwait(false);
+
+                // FORCE INLINE PDF VIEW IN BROWSER
+                //var fileName = $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                //response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                //return Results.File(file, "application/pdf");
+
+                return Results.File(file, "application/pdf", $"AuditProgramme_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                //var result = await service.ReportGetByIdAsync(id, pgsId, month, year, cancellationToken).ConfigureAwait(false);
+                //return result != null ? Results.Ok(result) : Results.NotFound();
+            })
+           .WithTags(_AuditProgramme)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditProgramme), true);
 
             // UPDATE
             app.MapPut("/{id:int}", async (

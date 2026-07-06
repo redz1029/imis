@@ -19,7 +19,8 @@ namespace IMIS.Application.AuditPlanEntryModule
         [JsonPropertyName("auditPlanId")]
         public required int AuditPlanId { get; set; }
 
-        // 🔥 FIX: Added [JsonIgnore] to stop the serializer from crawling back up to the parent
+        // FIX: The crucial attribute to prevent the serializer from entering an infinite loop.
+        // This completely hides the parent back-reference path from the JSON serializer engine and Swagger.
         [JsonIgnore]
         [JsonPropertyName("auditPlan")]
         public AuditPlanDto? AuditPlan { get; set; }
@@ -30,20 +31,22 @@ namespace IMIS.Application.AuditPlanEntryModule
         [JsonPropertyName("time")]
         public required DateTime Time { get; set; }
 
+        // STABILIZATION: Ensured non-nullable lists initialized to empty instances to secure 
+        // frontend payload rendering from missing reference null crashes.
         [JsonPropertyName("isoAuditProcesses")]
-        public List<IsoAuditProcessDto>? IsoAuditProcesses { get; set; }
+        public List<IsoAuditProcessDto> IsoAuditProcesses { get; set; } = new();
 
         [JsonPropertyName("responsiblePersons")]
-        public List<AuditPlanPersonResponsibleDto>? ResponsiblePersons { get; set; }
+        public List<AuditPlanPersonResponsibleDto> ResponsiblePersons { get; set; } = new();
 
         [JsonPropertyName("isoAuditors")]
-        public List<IsoAuditorDto>? IsoAuditors { get; set; }
+        public List<IsoAuditorDto> IsoAuditors { get; set; } = new();
 
         [JsonPropertyName("isoStandardAuditPlans")]
-        public List<IsoStandardAuditPlanDto>? IsoStandardAuditPlans { get; set; }
+        public List<IsoStandardAuditPlanDto> IsoStandardAuditPlans { get; set; } = new();
 
         [JsonPropertyName("auditPlanProcesses")]
-        public List<AuditPlanProcessDto>? AuditPlanProcesses { get; set; }
+        public List<AuditPlanProcessDto> AuditPlanProcesses { get; set; } = new();
 
         public AuditPlanEntryDto() { }
 
@@ -55,7 +58,7 @@ namespace IMIS.Application.AuditPlanEntryModule
             this.DayNumber = entity.DayNumber;
             this.Time = entity.Time;
 
-            // 🔥 FIX: Never initialize the full parent AuditPlanDto graph node inside a child constructor.
+            // FIX: Never initialize the full parent AuditPlanDto graph node inside a child constructor.
             // Leaving this null breaks the infinite recursion execution ring.
             this.AuditPlan = null;
 
@@ -88,7 +91,7 @@ namespace IMIS.Application.AuditPlanEntryModule
             {
                 Id = this.Id,
                 AuditPlanId = this.AuditPlanId,
-                AuditPlan = null, // Safely broken
+                AuditPlan = null, // Safely broken reference path
 
                 DayNumber = this.DayNumber,
                 Time = this.Time,

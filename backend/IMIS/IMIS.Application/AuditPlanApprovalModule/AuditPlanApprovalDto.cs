@@ -13,7 +13,7 @@ namespace IMIS.Application.AuditPlanApprovalModule
 
         // This force maps the backend parameter contract to bind successfully
         [JsonPropertyName("aproverId")]
-        public required string AproverId { get; set; }
+        public required int AproverId { get; set; }
 
         [JsonPropertyName("action")]
         public string? Action { get; set; }
