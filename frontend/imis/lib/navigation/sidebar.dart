@@ -1836,14 +1836,14 @@ class _ExpandableSidebarItemState extends State<ExpandableSidebarItem> {
   @override
   Widget build(BuildContext context) {
     final TextStyle normalStyle = TextStyle(
-      fontSize: 15,
+      fontSize: 12,
       color: Theme.of(
         context,
       ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
       fontWeight: FontWeight.w400,
     );
     final TextStyle activeStyle = TextStyle(
-      fontSize: 15,
+      fontSize: 12,
       color: primaryColor,
       fontWeight: FontWeight.bold,
     );
@@ -1851,7 +1851,6 @@ class _ExpandableSidebarItemState extends State<ExpandableSidebarItem> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /// Main item
         InkWell(
           onTap: () {
             setState(() {
@@ -1883,8 +1882,6 @@ class _ExpandableSidebarItemState extends State<ExpandableSidebarItem> {
               children:
                   widget.items.map((item) {
                     bool isActive = widget.selectedSubPage == item["index"];
-                    // last item
-
                     return InkWell(
                       onTap: () => widget.onTap(item["index"]),
                       child: Row(
