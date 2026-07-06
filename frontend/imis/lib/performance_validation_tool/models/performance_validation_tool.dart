@@ -1,3 +1,4 @@
+import 'package:imis/performance_validation_tool/models/pvt_conclusion.dart';
 import 'package:imis/performance_validation_tool/models/pvt_deliverable_findings.dart';
 import 'package:imis/performance_validation_tool/models/pvt_objectives.dart';
 import 'package:imis/performance_validation_tool/models/pvt_signatories.dart';
@@ -29,6 +30,7 @@ class PerformanceValidationTool {
   List<PvtValidators>? validators;
   PvtObjectives? objectives;
   List<PvtDeliverableFindings>? deliverableFindings;
+  PvtConclusion? conclusion;
   List<PvtSignatories>? pvtSignatories;
   bool? isDraft;
   int performanceGovernanceSystemId;
@@ -46,6 +48,7 @@ class PerformanceValidationTool {
     required this.validators,
     this.objectives,
     this.deliverableFindings,
+    this.conclusion,
     this.pvtSignatories,
     this.isDraft,
     required this.performanceGovernanceSystemId,

@@ -39,6 +39,10 @@ PerformanceValidationTool _$PerformanceValidationToolFromJson(
             (e) => PvtDeliverableFindings.fromJson(e as Map<String, dynamic>),
           )
           .toList(),
+  conclusion:
+      json['conclusion'] == null
+          ? null
+          : PvtConclusion.fromJson(json['conclusion'] as Map<String, dynamic>),
   pvtSignatories:
       (json['pvtSignatories'] as List<dynamic>?)
           ?.map((e) => PvtSignatories.fromJson(e as Map<String, dynamic>))
@@ -70,6 +74,7 @@ Map<String, dynamic> _$PerformanceValidationToolToJson(
   'validators': instance.validators,
   'objectives': instance.objectives,
   'deliverableFindings': instance.deliverableFindings,
+  'conclusion': instance.conclusion,
   'pvtSignatories': instance.pvtSignatories,
   'isDraft': instance.isDraft,
   'performanceGovernanceSystemId': instance.performanceGovernanceSystemId,
