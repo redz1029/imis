@@ -8,8 +8,10 @@ import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
+import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
-import 'package:imis/performance_validation_tool/pages/performance_validation_dialog.dart';
+import 'package:imis/performance_validation_tool/dialog/performance_validation_list_dialog.dart';
+import 'package:imis/performance_validation_tool/services/performance_validation_services.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
@@ -17,6 +19,7 @@ import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/operation_review_protocol/dialog/monthly_review_dialog_widget.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -44,11 +47,13 @@ class OperationReviewProtocolPageState
   String _roleId = '';
   List<PerformanceGovernanceSystem> operationReviewprotocolList = [];
   List<PerformanceGovernanceSystem> filteredList = [];
-
+  String? _selectedPeriodId;
+  List<PgsPeriod> pgsPeriodList = [];
   final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
     Dio(),
   );
   final _commonService = CommonService(Dio());
+  final _performanceValidation = PerformanceValidationServices(Dio());
   final _pgsService = PerformanceGovernanceSystemService(Dio());
 
   @override
@@ -57,65 +62,77 @@ class OperationReviewProtocolPageState
     _initialize();
   }
 
-  // Future<void> fetchOperationReview({int page = 1, String? searchQuery}) async {
-  //   if (_isLoading) return;
+  Future<void> fetchPerformanceValidation({
+    int page = 1,
+    String? searchQuery,
+  }) async {
+    if (_isLoading) return;
 
-  //   setState(() => _isLoading = true);
+    setState(() => _isLoading = true);
 
-  //   try {
-  //     final roleId = await _getRoleId();
+    try {
+      final roleId = await _getRoleId();
 
-  //     if (roleId.isEmpty) {
-  //       debugPrint('Role ID is empty, aborting fetch.');
-  //       return;
-  //     }
+      if (roleId.isEmpty) {
+        debugPrint('Role ID is empty, aborting fetch.');
+        return;
+      }
 
-  //     setState(() => _roleId = roleId);
+      setState(() => _roleId = roleId);
 
-  //     final pageList = await _operationReviewProtocolService
-  //         .getOperationReviewProtocolList(
-  //           page: page,
-  //           pageSize: _pageSize,
-  //           searchQuery: searchQuery,
-  //           roleId: roleId,
-  //         );
+      final pageList = await _performanceValidation
+          .getPerformanceValidationPageList(
+            page: page,
+            pageSize: _pageSize,
+            searchQuery: searchQuery,
+            roleId: roleId,
+          );
 
-  //     if (mounted) {
-  //       setState(() {
-  //         _currentPage = pageList.page;
-  //         _totalCount = pageList.totalCount;
-  //         operationReviewprotocolList = pageList.items;
-  //         _applyFilters(pageList.items);
-  //       });
-  //     }
-  //   } catch (e) {
-  //     debugPrint(e.toString());
-  //   } finally {
-  //     if (mounted) {
-  //       setState(() => _isLoading = false);
-  //     }
-  //   }
-  // }
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          operationReviewprotocolList = pageList.items;
+          filteredList = List.from(operationReviewprotocolList);
+        });
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
-  // void _applyFilters(List<PerformanceGovernanceSystem> source) {
-  //   var result = List<PerformanceGovernanceSystem>.from(source);
+  Future<void> fetchFilter({int? page, int pageSize = 15}) async {
+    if (_isLoading) return;
 
-  //   if (_selectedOfficeId != null) {
-  //     result =
-  //         result
-  //             .where((pgs) => pgs.office.id.toString() == _selectedOfficeId)
-  //             .toList();
-  //   }
+    setState(() => _isLoading = true);
 
-  //   if (_selectedServiceId != null) {
-  //     result =
-  //         result
-  //             .where((pgs) => pgs.office.id.toString() == _selectedServiceId)
-  //             .toList();
-  //   }
+    try {
+      final targetPage = page ?? _currentPage;
+      final roleIdParam = await _getRoleId();
 
-  //   filteredList = result;
-  // }
+      final result = await _performanceValidation
+          .getPerformanceValidationPageList(
+            roleId: roleIdParam,
+            page: targetPage,
+            pageSize: pageSize,
+            officeId: _selectedOfficeId,
+            periodId: _selectedPeriodId,
+          );
+
+      setState(() {
+        operationReviewprotocolList = result.items;
+        filteredList = result.items;
+        _currentPage = result.page;
+        _totalCount = result.totalCount;
+      });
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   Future<String> _getRoleId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -140,15 +157,17 @@ class OperationReviewProtocolPageState
       roleId: roleId,
     );
     final services = await _commonService.fetchService();
+    final periods = await _commonService.fetchPgsPeriod();
     await _commonService.fetchPgsPeriod();
 
     if (!mounted) return;
     setState(() {
       officeList = offices;
       serviceList = services;
+      pgsPeriodList = periods;
       _isLoading = false;
     });
-    // await fetchOperationReview();
+    await fetchPerformanceValidation();
   }
 
   void _openMonthlyReviewDialog(PerformanceGovernanceSystem pgs) {
@@ -185,6 +204,26 @@ class OperationReviewProtocolPageState
     );
   }
 
+  void _openValidationList(PerformanceGovernanceSystem pgs) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder:
+          (_) => PerformanceValidationListDialog(
+            pgs: pgs,
+            onFetchAll:
+                (pgsId) => _performanceValidation
+                    .fetchAllPerformanceValidationList(pgsId: pgsId),
+            onFetchById:
+                (id) => _performanceValidation
+                    .fetchPerformanceValidationToolById(id: id),
+            onDelete:
+                (id) =>
+                    _performanceValidation.deletePerformanceValidationTool(id),
+          ),
+    );
+  }
+
   Future<void> _openPrintPreview(PerformanceGovernanceSystem pgs) async {
     if (_roleId.isEmpty) {
       debugPrint('Role ID is empty, aborting print preview.');
@@ -214,7 +253,6 @@ class OperationReviewProtocolPageState
 
     try {
       final url = '${ApiEndpoint().operationReviewProtocol}/$_roleId';
-
       if (kIsWeb) {
         final response = await AuthenticatedRequest.get(
           dio,
@@ -305,9 +343,13 @@ class OperationReviewProtocolPageState
           gap4px,
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
@@ -335,28 +377,40 @@ class OperationReviewProtocolPageState
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Office",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Period",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -383,7 +437,7 @@ class OperationReviewProtocolPageState
                                     ),
                                     const SizedBox(height: 10),
                                     const Text(
-                                      "No performance validation tool available",
+                                      "No operation review protocol available",
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: Colors.grey,
@@ -421,15 +475,24 @@ class OperationReviewProtocolPageState
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: Text(officeName),
+                                            child: Text(
+                                              officeName,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
-                                            child: Text("$start - $end"),
+                                            child: Text(
+                                              "$start - $end",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
@@ -441,18 +504,18 @@ class OperationReviewProtocolPageState
                                                           .viewOperationReviewProtocol,
                                                   child: Tooltip(
                                                     message:
-                                                        'Operations Review Protocol',
+                                                        'Create/Edit Performance Validation Tool',
                                                     child: IconButton(
                                                       icon: const Icon(
                                                         Icons.reviews_outlined,
-                                                        size: 18,
+                                                        size: 16,
                                                         color:
                                                             Colors
                                                                 .deepOrangeAccent,
                                                       ),
                                                       onPressed:
                                                           () =>
-                                                              _openMonthlyReviewDialog(
+                                                              _openValidationList(
                                                                 pgs,
                                                               ),
                                                     ),
@@ -488,6 +551,7 @@ class OperationReviewProtocolPageState
                                               "$itemNumber",
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                               ),
                                             ),
                                             const Spacer(),
@@ -511,7 +575,7 @@ class OperationReviewProtocolPageState
                                                           Icon(
                                                             Icons
                                                                 .reviews_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                             color:
                                                                 Colors
                                                                     .deepOrangeAccent,
@@ -528,38 +592,45 @@ class OperationReviewProtocolPageState
                                           ],
                                         ),
                                         const SizedBox(height: 8),
-                                        Text("Office: $officeName"),
+                                        Text(
+                                          "Office: $officeName",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                         const SizedBox(height: 4),
-                                        Text("Period: $start - $end"),
+                                        Text(
+                                          "Period: $start - $end",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                       ],
                                     ),
                                   );
                                 },
                               ),
                     ),
-                    // Container(
-                    //   padding: const EdgeInsets.all(10),
-                    //   color: Theme.of(context).cardColor,
-                    //   child: Row(
-                    //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //     children: [
-                    //       PaginationInfo(
-                    //         currentPage: _currentPage,
-                    //         totalItems: _totalCount,
-                    //         itemsPerPage: _pageSize,
-                    //       ),
-                    //       PaginationControls(
-                    //         currentPage: _currentPage,
-                    //         totalItems: _totalCount,
-                    //         itemsPerPage: _pageSize,
-                    //         isLoading: _isLoading,
-                    //         onPageChanged:
-                    //             (page) => fetchOperationReview(page: page),
-                    //       ),
-                    //       const SizedBox(width: 60),
-                    //     ],
-                    //   ),
-                    // ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) =>
+                                    fetchPerformanceValidation(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -571,23 +642,26 @@ class OperationReviewProtocolPageState
   }
 
   Widget _buildPageHeader(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 900;
+    final isXSmall = width < 700;
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: EdgeInsets.fromLTRB(20, isXSmall ? 12 : 16, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(isXSmall ? 6 : 8),
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  Icons.assessment_outlined,
+                  Icons.fact_check_outlined,
                   color: primaryColor,
                   size: 22,
                 ),
@@ -597,51 +671,30 @@ class OperationReviewProtocolPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Performance Validation Tool Information",
+                    Text(
+                      "Performance Validation Tool",
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize:
+                            isXSmall
+                                ? 12
+                                : isSmall
+                                ? 14
+                                : 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1D23),
                       ),
                     ),
                     Text(
-                      "${filteredList.length} operation review protocol${filteredList.length != 1 ? 's' : ''} found",
+                      "$_totalCount performance validation${_totalCount != 1 ? 's' : ''} found",
+
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: isXSmall ? 10 : 12,
                         color: Colors.grey.shade600,
                       ),
                     ),
                   ],
                 ),
               ),
-              if (!isMobile)
-                PermissionWidget(
-                  permission: AppPermissions.addKraRoadMap,
-                  child: ElevatedButton.icon(
-                    onPressed:
-                        () => showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (_) => const PerformanceValidationDialog(),
-                        ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text(
-                      'Add New',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -651,14 +704,17 @@ class OperationReviewProtocolPageState
   }
 
   bool get _hasActiveFilters =>
-      _selectedOfficeId != null || _selectedServiceId != null;
-
+      _selectedOfficeId != null ||
+      _selectedServiceId != null ||
+      _selectedPeriodId != null;
   void _resetFilters() {
     setState(() {
       _selectedOfficeId = null;
       _selectedServiceId = null;
+      _selectedPeriodId = null;
       filteredList = List.from(operationReviewprotocolList);
     });
+    fetchPerformanceValidation();
   }
 
   Widget _buildFilterBar(bool isMobile) {
@@ -668,7 +724,7 @@ class OperationReviewProtocolPageState
         children: [
           const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
           ),
         ],
@@ -715,13 +771,14 @@ class OperationReviewProtocolPageState
           spacing: 10,
           runSpacing: 10,
           children: [
-            buildDropdown(child: _serviceDropdown()),
+            // buildDropdown(child: _serviceDropdown()),
             buildDropdown(
               child: PermissionWidget(
                 permission: AppPermissions.viewOffice,
                 child: _officeDropdown(),
               ),
             ),
+            buildDropdown(child: _periodDropdown()),
           ],
         ),
       ],
@@ -770,8 +827,13 @@ class OperationReviewProtocolPageState
             child: _officeDropdown(),
           ),
         ),
-        gap8px,
-        SizedBox(height: 38, child: _serviceDropdown()),
+        SizedBox(
+          height: 38,
+          child: PermissionWidget(
+            permission: AppPermissions.viewOffice,
+            child: _periodDropdown(),
+          ),
+        ),
       ],
     );
   }
@@ -804,42 +866,56 @@ class OperationReviewProtocolPageState
                           .id
                           .toString();
             });
-            // fetchOperationReview(page: 1);
+            fetchFilter();
           },
         ),
       ),
     );
   }
 
-  Widget _serviceDropdown() {
+  Widget _periodDropdown() {
+    final converter = LongDateOnlyConverter();
+    final items = pgsPeriodList.where((p) => !p.isDeleted).toList();
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
       child: SizedBox(
         height: 38,
         child: SearchableDropdown(
-          items: ["All Services", ...serviceList.map((s) => s.name)],
+          items: [
+            "All Periods",
+            ...items.map(
+              (p) =>
+                  "${converter.toJson(p.startDate)} - ${converter.toJson(p.endDate)}",
+            ),
+          ],
           selectedItem:
-              _selectedServiceId == null
-                  ? "All Services"
-                  : (serviceList
-                          .where((s) => s.id.toString() == _selectedServiceId)
-                          .firstOrNull
-                          ?.name ??
-                      "All Services"),
-          hintText: "Service",
-          searchHint: "Search services...",
-          prefixIcon: Icons.miscellaneous_services_outlined,
+              _selectedPeriodId == null
+                  ? "All Periods"
+                  : (() {
+                    final match =
+                        items
+                            .where((p) => p.id.toString() == _selectedPeriodId)
+                            .firstOrNull;
+                    if (match == null) return "All Periods";
+                    return "${converter.toJson(match.startDate)} - ${converter.toJson(match.endDate)}";
+                  })(),
+          hintText: "Period",
+          searchHint: "Search periods...",
+          prefixIcon: Icons.calendar_today_outlined,
           onChanged: (value) {
             setState(() {
-              _selectedServiceId =
-                  value == "All Services"
-                      ? null
-                      : serviceList
-                          .firstWhere((s) => s.name == value)
-                          .id
-                          .toString();
+              if (value == "All Periods") {
+                _selectedPeriodId = null;
+              } else {
+                final selected = items.firstWhere(
+                  (p) =>
+                      "${converter.toJson(p.startDate)} - ${converter.toJson(p.endDate)}" ==
+                      value,
+                );
+                _selectedPeriodId = selected.id.toString();
+              }
             });
-            // fetchOperationReview(page: 1);
+            fetchFilter();
           },
         ),
       ),

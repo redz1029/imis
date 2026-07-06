@@ -1499,7 +1499,7 @@ class _FindingsTableHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final permissionService = PermissionService();
 
-    final hasEditPermission = permissionService.hasPermission(
+    permissionService.hasPermission(
       AppPermissions.editPerformanceValidationTool,
     );
     final headerStyle = GoogleFonts.plusJakartaSans(
