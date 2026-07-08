@@ -9,13 +9,7 @@ namespace IMIS.Application.PgsModule
     {       
         Task<EntityPageList<PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken); 
         Task<List<PgsDeliverable>?> GetAll(CancellationToken cancellationToken);
-        //Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken);
-
-        Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(
-           PgsDeliverableMonitorFilter filter,
-           List<int>? officeIds,
-           CancellationToken cancellationToken);
-
+        Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter,  List<int>? officeIds, CancellationToken cancellationToken);
         Task<List<int>> GetUserOfficeIdsAsync(string userId, CancellationToken cancellationToken);
         Task<long?> GetCurrentYearPeriodIdAsync(int year, CancellationToken cancellationToken);
     }

@@ -215,10 +215,10 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
          
-            app.MapGet("/auditor/pending-audits", async (long? auditorId, long? teamId, long? officeId, int? month, int? year, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            app.MapGet("/auditor/pending-audits", async (long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
     
-                var result = await service.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken);
+                var result = await service.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken);
 
                 return Results.Ok(result);
             })
@@ -226,9 +226,36 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
 
-            app.MapGet("/auditor/pending-audits-report", async (HttpResponse response, long? auditorId, long? teamId, long? officeId, int? month, int? year, IPerfomanceGovernanceSystemService service,   CancellationToken cancellationToken) =>
+            app.MapGet("/auditor/pending-audits-sortbyservice-report", async (HttpResponse response, long? auditorId, long? teamId,  long? officeId, long? parentOfficeId, int? month, int? year,  IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>            
             {
-                var result = await service.ReportGetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken).ConfigureAwait(false);
+                var result = await service.ReportGetPendingAuditsByAuditorSortByServiceAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken).ConfigureAwait(false);
+
+                if (result == null || !result.Any())
+                    return Results.NotFound();
+
+
+                var file = await ReportUtil.GeneratePdfReport<ServiceGroupedAuditDto>(
+                    "PgsDeliverableAccomplishmentAuditSortByService",
+                    result,
+                    "ServiceGroupedAuditDto",
+                    cancellationToken).ConfigureAwait(false);
+
+                return Results.File(
+                    file,
+                    "application/pdf",
+                    $"AuditorPendingAuditReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                //var result = await service.ReportGetPendingAuditsByAuditorSortByServiceAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken);
+
+                //return Results.Ok(result);
+            })
+            .WithTags(_pgsDeliverableAccomplishmentTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
+
+
+            app.MapGet("/auditor/pending-audits-report", async (HttpResponse response, long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, IPerfomanceGovernanceSystemService service,   CancellationToken cancellationToken) =>
+            {
+                var result = await service.ReportGetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken).ConfigureAwait(false);
 
                 if (result == null || !result.Any())
                     return Results.NotFound();
@@ -254,11 +281,11 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                 ("PgsDeliverableAccomplishmentAuditReport",reportData, "ReportAuditorPendingAuditDto", cancellationToken).ConfigureAwait(false);
 
                 // FORCE INLINE PDF VIEW IN BROWSER
-                var fileName = $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                response.Headers.ContentDisposition = $"inline; filename={fileName}";
-                return Results.File(file, "application/pdf");
+                //var fileName = $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                //response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                //return Results.File(file, "application/pdf");
 
-                //return Results.File(file, "application/pdf", $"AuditorPendingAuditReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                return Results.File(file, "application/pdf", $"AuditorPendingAuditReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);

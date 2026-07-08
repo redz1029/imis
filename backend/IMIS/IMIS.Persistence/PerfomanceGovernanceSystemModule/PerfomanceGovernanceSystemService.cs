@@ -187,9 +187,9 @@ namespace IMIS.Persistence.PgsModule
             return await _repository.GetTotalDeliverableAsync(officeIds, pgsPeriodId, cancellationToken);
         }
 
-        public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken)
+        public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken)
         {
-            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken);
+            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken);
 
             foreach (var item in result)
             {
@@ -198,11 +198,27 @@ namespace IMIS.Persistence.PgsModule
 
             return result;
         }
+       
+        // ===== Report Filter By Service  Auditor ==========
+        public async Task<List<ServiceGroupedAuditDto>> ReportGetPendingAuditsByAuditorSortByServiceAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken)
+        {
+            var result = await _repository.GetPendingAuditsByAuditorSortByServiceAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken);
+            
+            foreach (var serviceGroup in result)
+            {
+                foreach (var office in serviceGroup.Offices)
+                {
+                    office.ParentOfficeName = await _officeRepository.GetParentOfficeNameAsync((int)office.OfficeId, cancellationToken) ?? office.ParentOfficeName;
+                }
+            }
+
+            return result;
+        }
 
         // ==== Audit Accomplishment Report for Auditor ======
-        public async Task<List<AuditorPendingAuditDto>> ReportGetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, int? month, int? year, CancellationToken cancellationToken)
+        public async Task<List<AuditorPendingAuditDto>> ReportGetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken)
         {
-            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, month, year, cancellationToken);
+            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken);
 
             foreach (var item in result)
             {
