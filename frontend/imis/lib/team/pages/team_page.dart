@@ -289,8 +289,8 @@ class TeamPageState extends State<TeamPage> {
                                           const SizedBox(height: 8),
                                           Text(
                                             isEdit
-                                                ? 'Are you sure you want to update this announcement?'
-                                                : 'Are you sure you want to save this announcement?',
+                                                ? 'Are you sure you want to update this team?'
+                                                : 'Are you sure you want to save this team?',
                                             style: GoogleFonts.plusJakartaSans(
                                               fontSize: 13,
                                               color: kMuted,

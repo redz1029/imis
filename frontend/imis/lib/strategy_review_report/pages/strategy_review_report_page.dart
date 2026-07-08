@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: unused_element_parameter, use_build_context_synchronously
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';

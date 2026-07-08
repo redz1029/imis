@@ -396,6 +396,9 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                               style: OutlinedButton.styleFrom(
                                 side: BorderSide(color: kBorder),
                                 padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                               child: Text(
                                 'Cancel',

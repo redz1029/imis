@@ -186,6 +186,7 @@ class SidebarState extends State<Sidebar> {
         PermissionRoleString.pgsHead,
         PermissionRoleString.coreTeam,
         PermissionRoleString.twg,
+        PermissionRoleString.headAuditor,
       ].contains(role);
       if (canSeeMonitoring) return 3;
 
@@ -1616,6 +1617,7 @@ class SidebarState extends State<Sidebar> {
                                 PermissionRoleString.pgsHead,
                                 PermissionRoleString.coreTeam,
                                 PermissionRoleString.twg,
+                                PermissionRoleString.headAuditor,
                               ].contains(selectedRole)
                               ? sidebarSubText(
                                 'Deliverable Status Monitoring',
@@ -1737,6 +1739,7 @@ class SidebarState extends State<Sidebar> {
                                 PermissionRoleString.osm,
                                 PermissionRoleString.headAuditor,
                                 PermissionRoleString.roleStandardUser,
+                                PermissionRoleString.headAuditor,
                               ].contains(selectedRole)
                               ? sidebarSubText("Performance Validation Tool", 9)
                               : SizedBox.shrink(),

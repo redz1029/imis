@@ -18,6 +18,7 @@ import 'package:imis/performance_validation_tool/services/performance_validation
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class PerformanceValidationDialog extends StatefulWidget {
@@ -1220,52 +1221,60 @@ class _PerformanceValidationDialogState
               ),
             ),
 
-          OutlinedButton(
-            onPressed:
-                _submitting ? null : () => _saveValidation(isSubmit: false),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: primaryColor,
-              side: const BorderSide(color: primaryColor),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          PermissionWidget(
+            permission: AppPermissions.draftPerformanceValidationTool,
+            child: OutlinedButton(
+              onPressed:
+                  _submitting ? null : () => _saveValidation(isSubmit: false),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: primaryColor,
+                side: const BorderSide(color: primaryColor),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 14 : 22,
+                  vertical: isMobile ? 8 : 12,
+                ),
               ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 14 : 22,
-                vertical: isMobile ? 8 : 12,
-              ),
-            ),
-            child: Text(
-              'Save as Draft',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: isMobile ? 11 : 13,
-                fontWeight: FontWeight.w700,
+              child: Text(
+                'Save as Draft',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: isMobile ? 11 : 13,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
           const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed:
-                _submitting ? null : () => _saveValidation(isSubmit: true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          if (widget.existing != null) ...[
+            PermissionWidget(
+              permission: AppPermissions.submitPerformanceGovernanceSystem,
+              child: ElevatedButton(
+                onPressed:
+                    _submitting ? null : () => _saveValidation(isSubmit: true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 18 : 28,
+                    vertical: isMobile ? 8 : 12,
+                  ),
+                  elevation: 2,
+                ),
+                child: Text(
+                  'Submit',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: isMobile ? 11 : 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 18 : 28,
-                vertical: isMobile ? 8 : 12,
-              ),
-              elevation: 2,
             ),
-            child: Text(
-              'Submit',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: isMobile ? 11 : 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );

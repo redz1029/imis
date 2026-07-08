@@ -238,13 +238,27 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png'],
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'], // ← added pdf
         allowMultiple: false,
         withData: true,
       );
 
       if (result != null) {
         final file = result.files.first;
+        final ext = (file.extension ?? '').toLowerCase();
+        const allowedExts = ['jpg', 'jpeg', 'png', 'pdf'];
+        if (!allowedExts.contains(ext)) {
+          MotionToast.warning(
+            description: const Text(
+              'Unsupported file type! Only JPG, PNG, or PDF files are allowed.',
+            ),
+            toastDuration: const Duration(seconds: 3),
+            toastAlignment: Alignment.topCenter,
+          ).show(context);
+          setState(() => _minutesLoading = false);
+          return;
+        }
+
         final fileSizeInMB = file.size / (1024 * 1024);
 
         if (fileSizeInMB > 10) {
@@ -983,16 +997,14 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
           ),
           onPressed: _pickMinutesFile,
         ),
-
         Text(
-          'Upload 1 supported file: Image only. Max 10 MB',
+          'Upload 1 supported file: Image of PDF only. Max 10 MB',
           style: TextStyle(
             color: _minutesFileError ? Colors.red : Colors.grey.shade500,
             fontSize: 10,
           ),
           textAlign: TextAlign.center,
         ),
-
         if (_minutesFileError)
           const Padding(
             padding: EdgeInsets.only(top: 4),

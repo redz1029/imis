@@ -177,6 +177,14 @@ class CommonService {
     }
   }
 
+  Future<Office> getOfficeById(String id) async {
+    final response = await AuthenticatedRequest.get(
+      dio,
+      '${ApiEndpoint().office}/$id',
+    );
+    return Office.fromJson(response.data);
+  }
+
   Future<AuditorTeamDetail> fetchAuditorTeamByTeamId(int teamId) =>
       _fetchSingle(
         '${ApiEndpoint().auditorteam}/teamid/$teamId',

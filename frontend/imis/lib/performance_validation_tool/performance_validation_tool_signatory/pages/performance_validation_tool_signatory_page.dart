@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
-import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory_template.dart';
-import 'package:imis/performance_governance_system/pgs_signatory_template/pgs_signatory_template_service.dart';
+import 'package:imis/performance_validation_tool/performance_validation_tool_signatory/models/pvt_signatory_template.dart';
+import 'package:imis/performance_validation_tool/performance_validation_tool_signatory/services/pvt_signatory_template_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
@@ -28,7 +28,7 @@ class PerformanceValidationToolSignatoryPageState
     extends State<PerformanceValidationToolSignatoryPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _signatoryService = PgsSignatoryTemplateService(Dio());
+  final _signatoryService = PvtSignatoryTemplateService(Dio());
   final _commonService = CommonService(Dio());
   final _searchController = TextEditingController();
   final _searchFocus = FocusNode();
@@ -36,8 +36,8 @@ class PerformanceValidationToolSignatoryPageState
 
   late AnimationController _fadeCtrl;
 
-  List<PgsSignatoryTemplate> _templateList = [];
-  List<PgsSignatoryTemplate> _filteredTemplateList = [];
+  List<PvtSignatoryTemplate> _templateList = [];
+  List<PvtSignatoryTemplate> _filteredTemplateList = [];
   List<Map<String, dynamic>> _selectedSignatories = [];
   List<Office> _officeList = [];
   List<User> _userList = [];
@@ -109,7 +109,7 @@ class PerformanceValidationToolSignatoryPageState
   }
 
   Map<String, List<Map<String, dynamic>>> _groupByOffice(
-    List<PgsSignatoryTemplate> list,
+    List<PvtSignatoryTemplate> list,
     List<Office> offices,
     List<User> users,
   ) {
@@ -171,11 +171,11 @@ class PerformanceValidationToolSignatoryPageState
         ),
   );
 
-  Future<void> _addOrUpdate(List<PgsSignatoryTemplate> items) async {
+  Future<void> _addOrUpdate(List<PvtSignatoryTemplate> items) async {
     try {
       final res = await AuthenticatedRequest.post(
         _dio,
-        ApiEndpoint().signatoryTemplate,
+        ApiEndpoint().performanceValidationToolSignatoryTemplate,
         data: items.map((s) => s.toJson()).toList(),
       );
       if (res.statusCode == 200) await _fetchTemplates();
@@ -860,7 +860,7 @@ class PerformanceValidationToolSignatoryPageState
                                   final items =
                                       _selectedSignatories
                                           .map(
-                                            (s) => PgsSignatoryTemplate(
+                                            (s) => PvtSignatoryTemplate(
                                               s['id'] ?? 0,
                                               isDeleted,
                                               s['level'],

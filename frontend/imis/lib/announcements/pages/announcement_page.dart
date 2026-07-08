@@ -798,7 +798,6 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Actions
                       Row(
                         children: [
                           Expanded(

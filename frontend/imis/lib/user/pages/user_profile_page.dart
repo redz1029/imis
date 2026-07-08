@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/user/services/users_profile_service.dart';
@@ -12,6 +13,7 @@ import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/string_extension.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/common/search_dropdown.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -183,7 +185,7 @@ class UserProfileState extends State<UserProfilePage> {
     positionController.text = position ?? '';
     selectedPosition =
         JobPositions.positions.contains(position) ? position : null;
-
+    final isEdit = id != null;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -211,57 +213,54 @@ class UserProfileState extends State<UserProfilePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ── Header ──────────────────────────────────────────
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 18,
-                        horizontal: 24,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [primaryColor, primaryLightColor],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                        ),
-                      ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(24, 24, 24, 0),
                       child: Row(
                         children: [
-                          Icon(
-                            id == null ? Icons.person_add_alt_1 : Icons.edit,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            'Change Password',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              letterSpacing: 0.3,
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              isEdit
+                                  ? Icons.security_outlined
+                                  : Icons.person_add_alt_1_outlined,
+                              color: primaryColor,
+                              size: 22,
                             ),
                           ),
-                          Spacer(),
-                          IconButton(
-                            icon: Icon(
-                              Icons.close,
-                              color: Colors.white70,
-                              size: 20,
-                            ),
-                            onPressed: () => Navigator.pop(dialogContext),
-                            padding: EdgeInsets.zero,
-                            constraints: BoxConstraints(),
-                            splashRadius: 18,
+                          SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Change Password',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: kText,
+                                ),
+                              ),
+                              Text(
+                                isEdit
+                                    ? 'Update user account details'
+                                    : 'Add a new user account',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
 
+                    SizedBox(height: 16),
+                    Divider(color: kBorder, height: 1),
                     Flexible(
                       child: SingleChildScrollView(
                         padding: EdgeInsets.fromLTRB(24, 20, 24, 8),
@@ -470,6 +469,696 @@ class UserProfileState extends State<UserProfilePage> {
     );
   }
 
+  // void showFormDialog({
+  //   String? id,
+  //   String? userName,
+  //   String? email,
+  //   String? password,
+  //   String? firstName,
+  //   String? middleName,
+  //   String? lastName,
+  //   String? prefix,
+  //   String? suffix,
+  //   String? position,
+  //   bool isEditingpassword = false,
+  // }) {
+  //   userNameController.text = userName ?? '';
+  //   emailController.text = email ?? '';
+  //   passwordController.text = password ?? '';
+  //   firstNameController.text = firstName ?? '';
+  //   middleNameController.text = middleName ?? '';
+  //   lastNameController.text = lastName ?? '';
+  //   prefixController.text = prefix ?? '';
+  //   suffixController.text = suffix ?? '';
+  //   positionController.text = position ?? '';
+  //   selectedPosition =
+  //       JobPositions.positions.contains(position) ? position : null;
+
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (dialogContext) {
+  //       return StatefulBuilder(
+  //         builder: (dialogContext, setDialogState) {
+  //           return Dialog(
+  //             backgroundColor: Colors.transparent,
+  //             child: Container(
+  //               constraints: BoxConstraints(
+  //                 maxWidth: 520,
+  //                 maxHeight: MediaQuery.of(dialogContext).size.height * 0.92,
+  //               ),
+  //               decoration: BoxDecoration(
+  //                 color: mainBgColor,
+  //                 borderRadius: BorderRadius.circular(16),
+  //                 boxShadow: [
+  //                   BoxShadow(
+  //                     color: Colors.black.withValues(alpha: 0.18),
+  //                     blurRadius: 32,
+  //                     offset: Offset(0, 8),
+  //                   ),
+  //                 ],
+  //               ),
+  //               child: Column(
+  //                 mainAxisSize: MainAxisSize.min,
+  //                 children: [
+  //                   Container(
+  //                     width: double.infinity,
+  //                     padding: EdgeInsets.symmetric(
+  //                       vertical: 18,
+  //                       horizontal: 24,
+  //                     ),
+  //                     decoration: BoxDecoration(
+  //                       gradient: LinearGradient(
+  //                         colors: [primaryColor, primaryLightColor],
+  //                         begin: Alignment.centerLeft,
+  //                         end: Alignment.centerRight,
+  //                       ),
+  //                       borderRadius: BorderRadius.only(
+  //                         topLeft: Radius.circular(16),
+  //                         topRight: Radius.circular(16),
+  //                       ),
+  //                     ),
+  //                     child: Row(
+  //                       children: [
+  //                         Icon(
+  //                           id == null ? Icons.person_add_alt_1 : Icons.edit,
+  //                           color: Colors.white,
+  //                           size: 22,
+  //                         ),
+  //                         SizedBox(width: 10),
+  //                         Text(
+  //                           id == null ? 'Create User' : 'Edit User',
+  //                           style: TextStyle(
+  //                             fontSize: 17,
+  //                             fontWeight: FontWeight.w600,
+  //                             color: Colors.white,
+  //                             letterSpacing: 0.3,
+  //                           ),
+  //                         ),
+  //                         Spacer(),
+  //                         IconButton(
+  //                           icon: Icon(
+  //                             Icons.close,
+  //                             color: Colors.white70,
+  //                             size: 20,
+  //                           ),
+  //                           onPressed: () => Navigator.pop(dialogContext),
+  //                           padding: EdgeInsets.zero,
+  //                           constraints: BoxConstraints(),
+  //                           splashRadius: 18,
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ),
+
+  //                   // ── Body ────────────────────────────────────────────
+  //                   Flexible(
+  //                     child: SingleChildScrollView(
+  //                       padding: EdgeInsets.fromLTRB(24, 20, 24, 8),
+  //                       child: Form(
+  //                         key: _formKey,
+  //                         child: Column(
+  //                           crossAxisAlignment: CrossAxisAlignment.start,
+  //                           children: [
+  //                             _sectionLabel('Personal Information'),
+  //                             SizedBox(height: 12),
+
+  //                             Row(
+  //                               children: [
+  //                                 Expanded(
+  //                                   flex: 3,
+  //                                   child: _styledDropdown(
+  //                                     label: 'Prefix',
+  //                                     value:
+  //                                         prefixController.text.isNotEmpty
+  //                                             ? prefixController.text
+  //                                             : null,
+  //                                     items: [
+  //                                       '',
+  //                                       'Mr.',
+  //                                       'Ms.',
+  //                                       'Mrs.',
+  //                                       'Dr.',
+  //                                       'Prof.',
+  //                                       'Engr.',
+  //                                       'Atty.',
+  //                                       'Gen.',
+  //                                     ],
+  //                                     onChanged:
+  //                                         (v) =>
+  //                                             prefixController.text = v ?? '',
+  //                                   ),
+  //                                 ),
+  //                                 SizedBox(width: 10),
+  //                                 Expanded(
+  //                                   flex: 2,
+  //                                   child: _styledField(
+  //                                     controller: suffixController,
+  //                                     label: 'Suffix',
+  //                                   ),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                             SizedBox(height: 12),
+
+  //                             Row(
+  //                               children: [
+  //                                 Expanded(
+  //                                   child: _styledField(
+  //                                     controller: firstNameController,
+  //                                     label: 'First Name',
+  //                                     required: true,
+  //                                   ),
+  //                                 ),
+  //                                 SizedBox(width: 10),
+  //                                 Expanded(
+  //                                   child: _styledField(
+  //                                     controller: middleNameController,
+  //                                     label: 'Middle Initial',
+  //                                   ),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                             SizedBox(height: 12),
+
+  //                             _styledField(
+  //                               controller: lastNameController,
+  //                               label: 'Last Name',
+  //                               required: true,
+  //                             ),
+  //                             SizedBox(height: 20),
+
+  //                             _sectionLabel('Account Information'),
+  //                             SizedBox(height: 12),
+
+  //                             _styledField(
+  //                               controller: userNameController,
+  //                               label: 'Username',
+  //                               prefixIcon: Icons.person_outline,
+  //                               required: true,
+  //                             ),
+  //                             SizedBox(height: 12),
+
+  //                             _styledField(
+  //                               controller: emailController,
+  //                               label: 'Email',
+  //                               prefixIcon: Icons.email_outlined,
+  //                               keyboardType: TextInputType.emailAddress,
+  //                             ),
+  //                             SizedBox(height: 12),
+
+  //                             _sectionLabel('Position'),
+  //                             SizedBox(height: 8),
+  //                             _positionComboBox(setDialogState),
+  //                             SizedBox(height: 20),
+
+  //                             if (id == null) ...[
+  //                               _sectionLabel('Security'),
+  //                               SizedBox(height: 12),
+  //                               _passwordField(setDialogState),
+  //                               SizedBox(height: 8),
+  //                               _passwordHints(),
+  //                             ],
+
+  //                             SizedBox(height: 16),
+  //                           ],
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+
+  //                   // ── Footer ──────────────────────────────────────────
+  //                   Divider(height: 1, color: Colors.grey.shade200),
+  //                   Padding(
+  //                     padding: EdgeInsets.symmetric(
+  //                       horizontal: 24,
+  //                       vertical: 14,
+  //                     ),
+  //                     child: Row(
+  //                       mainAxisAlignment: MainAxisAlignment.end,
+  //                       children: [
+  //                         OutlinedButton(
+  //                           onPressed: () => Navigator.pop(dialogContext),
+  //                           style: OutlinedButton.styleFrom(
+  //                             foregroundColor: primaryColor,
+  //                             side: BorderSide(color: primaryColor),
+  //                             padding: EdgeInsets.symmetric(
+  //                               horizontal: 20,
+  //                               vertical: 12,
+  //                             ),
+  //                             shape: RoundedRectangleBorder(
+  //                               borderRadius: BorderRadius.circular(8),
+  //                             ),
+  //                           ),
+  //                           child: Text('Cancel'),
+  //                         ),
+  //                         SizedBox(width: 10),
+  //                         ElevatedButton.icon(
+  //                           icon: Icon(
+  //                             id == null ? Icons.save_outlined : Icons.update,
+  //                             size: 18,
+  //                             color: Colors.white,
+  //                           ),
+  //                           label: Text(
+  //                             id == null ? 'Save' : 'Update',
+  //                             style: TextStyle(
+  //                               color: Colors.white,
+  //                               fontWeight: FontWeight.w600,
+  //                             ),
+  //                           ),
+  //                           style: ElevatedButton.styleFrom(
+  //                             backgroundColor: primaryColor,
+  //                             padding: EdgeInsets.symmetric(
+  //                               horizontal: 22,
+  //                               vertical: 12,
+  //                             ),
+  //                             shape: RoundedRectangleBorder(
+  //                               borderRadius: BorderRadius.circular(8),
+  //                             ),
+  //                             elevation: 0,
+  //                           ),
+  //                           onPressed: () async {
+  //                             if (_formKey.currentState!.validate()) {
+  //                               bool? confirmAction = await showDialog<bool>(
+  //                                 context: dialogContext,
+  //                                 builder:
+  //                                     (confirmContext) => AlertDialog(
+  //                                       shape: RoundedRectangleBorder(
+  //                                         borderRadius: BorderRadius.circular(
+  //                                           12,
+  //                                         ),
+  //                                       ),
+  //                                       title: Row(
+  //                                         children: [
+  //                                           Icon(
+  //                                             Icons.help_outline,
+  //                                             color: primaryColor,
+  //                                           ),
+  //                                           SizedBox(width: 8),
+  //                                           Text(
+  //                                             id == null
+  //                                                 ? "Confirm Save"
+  //                                                 : "Confirm Update",
+  //                                           ),
+  //                                         ],
+  //                                       ),
+  //                                       content: Text(
+  //                                         id == null
+  //                                             ? "Are you sure you want to save this record?"
+  //                                             : "Are you sure you want to update this record?",
+  //                                       ),
+  //                                       actions: [
+  //                                         TextButton(
+  //                                           onPressed:
+  //                                               () => Navigator.pop(
+  //                                                 confirmContext,
+  //                                                 false,
+  //                                               ),
+  //                                           child: Text(
+  //                                             "No",
+  //                                             style: TextStyle(
+  //                                               color: Colors.grey,
+  //                                             ),
+  //                                           ),
+  //                                         ),
+  //                                         ElevatedButton(
+  //                                           onPressed:
+  //                                               () => Navigator.pop(
+  //                                                 confirmContext,
+  //                                                 true,
+  //                                               ),
+  //                                           style: ElevatedButton.styleFrom(
+  //                                             backgroundColor: primaryColor,
+  //                                             shape: RoundedRectangleBorder(
+  //                                               borderRadius:
+  //                                                   BorderRadius.circular(6),
+  //                                             ),
+  //                                           ),
+  //                                           child: Text(
+  //                                             "Yes",
+  //                                             style: TextStyle(
+  //                                               color: Colors.white,
+  //                                             ),
+  //                                           ),
+  //                                         ),
+  //                                       ],
+  //                                     ),
+  //                               );
+
+  //                               if (confirmAction != true) return;
+
+  //                               final username = userNameController.text;
+  //                               final exists = await isUsernameExists(
+  //                                 username,
+  //                                 id,
+  //                               );
+  //                               if (exists) {
+  //                                 MotionToast.warning(
+  //                                   description: const Text(
+  //                                     'Username already exists',
+  //                                   ),
+  //                                   toastAlignment: Alignment.topCenter,
+  //                                 ).show(dialogContext);
+  //                                 return;
+  //                               }
+
+  //                               final userProfile = UserRegistration(
+  //                                 id,
+  //                                 userNameController.text,
+  //                                 emailController.text,
+  //                                 passwordController.text,
+  //                                 firstNameController.text,
+  //                                 middleNameController.text,
+  //                                 lastNameController.text,
+  //                                 prefixController.text,
+  //                                 suffixController.text,
+  //                                 positionController.text.isNotEmpty
+  //                                     ? positionController.text
+  //                                     : selectedPosition ?? '',
+  //                                 '',
+  //                                 '',
+  //                               );
+
+  //                               if (id == null) {
+  //                                 await _userProfileService.createUser(
+  //                                   userProfile,
+  //                                 );
+  //                                 MotionToast.success(
+  //                                   toastAlignment: Alignment.topCenter,
+  //                                   description: Text('Saved successfully'),
+  //                                 ).show(dialogContext);
+  //                               } else {
+  //                                 await _userProfileService.updateUser(
+  //                                   userProfile,
+  //                                 );
+  //                                 MotionToast.success(
+  //                                   toastAlignment: Alignment.topCenter,
+  //                                   description: Text('Updated successfully'),
+  //                                 ).show(dialogContext);
+  //                                 setState(() {
+  //                                   fetchUserProfile();
+  //                                 });
+  //                               }
+  //                               Navigator.pop(dialogContext);
+  //                             }
+  //                           },
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
+
+  // Widget _sectionLabel(String text) {
+  //   return Text(
+  //     text,
+  //     style: TextStyle(
+  //       fontSize: 11,
+  //       fontWeight: FontWeight.w700,
+  //       color: primaryColor,
+  //       letterSpacing: 0.8,
+  //     ),
+  //   );
+  // }
+
+  // Widget _styledField({
+  //   required TextEditingController controller,
+  //   required String label,
+  //   bool required = false,
+  //   IconData? prefixIcon,
+  //   String? Function(String?)? validator,
+  //   TextInputType? keyboardType,
+  // }) {
+  //   return TextFormField(
+  //     controller: controller,
+  //     keyboardType: keyboardType,
+  //     decoration: InputDecoration(
+  //       labelText: label,
+  //       prefixIcon:
+  //           prefixIcon != null
+  //               ? Icon(prefixIcon, size: 18, color: Colors.grey)
+  //               : null,
+  //       floatingLabelStyle: TextStyle(color: primaryColor, fontSize: 13),
+  //       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+  //       focusedBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: BorderSide(color: primaryColor, width: 1.5),
+  //       ),
+  //       enabledBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: BorderSide(color: Colors.grey.shade300),
+  //       ),
+  //       contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+  //       isDense: true,
+  //     ),
+  //     validator:
+  //         validator ??
+  //         (required
+  //             ? (v) =>
+  //                 (v == null || v.isEmpty) ? 'This field is required' : null
+  //             : null),
+  //   );
+  // }
+
+  // Widget _styledDropdown({
+  //   required String label,
+  //   required String? value,
+  //   required List<String> items,
+  //   required void Function(String?) onChanged,
+  // }) {
+  //   return DropdownButtonFormField<String>(
+  //     initialValue: value,
+  //     onChanged: onChanged,
+  //     decoration: InputDecoration(
+  //       labelText: label,
+  //       floatingLabelStyle: TextStyle(color: primaryColor, fontSize: 13),
+  //       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+  //       focusedBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: BorderSide(color: primaryColor, width: 1.5),
+  //       ),
+  //       enabledBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: BorderSide(color: Colors.grey.shade300),
+  //       ),
+  //       contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+  //       isDense: true,
+  //     ),
+  //     items:
+  //         items
+  //             .map(
+  //               (e) => DropdownMenuItem(
+  //                 value: e,
+  //                 child: Text(e.isEmpty ? '—' : e),
+  //               ),
+  //             )
+  //             .toList(),
+  //   );
+  // }
+
+  // Widget _positionComboBox(StateSetter setDialogState) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       // Autocomplete acts as a combo box
+  //       Autocomplete<String>(
+  //         initialValue: TextEditingValue(text: positionController.text),
+  //         optionsBuilder: (TextEditingValue textEditingValue) {
+  //           if (textEditingValue.text.isEmpty) {
+  //             return JobPositions.positions;
+  //           }
+  //           return JobPositions.positions.where(
+  //             (pos) => pos.toLowerCase().contains(
+  //               textEditingValue.text.toLowerCase(),
+  //             ),
+  //           );
+  //         },
+  //         onSelected: (String selection) {
+  //           setDialogState(() {
+  //             positionController.text = selection;
+  //             selectedPosition = selection;
+  //           });
+  //         },
+  //         fieldViewBuilder: (
+  //           context,
+  //           textController,
+  //           focusNode,
+  //           onFieldSubmitted,
+  //         ) {
+  //           textController.text = positionController.text;
+  //           textController.addListener(() {
+  //             positionController.text = textController.text;
+  //           });
+  //           return TextFormField(
+  //             controller: textController,
+  //             focusNode: focusNode,
+  //             decoration: InputDecoration(
+  //               hintText: 'Select or type a position...',
+  //               prefixIcon: Icon(
+  //                 Icons.work_outline,
+  //                 size: 18,
+  //                 color: Colors.grey,
+  //               ),
+  //               suffixIcon: Icon(Icons.arrow_drop_down, color: Colors.grey),
+  //               floatingLabelStyle: TextStyle(
+  //                 color: primaryColor,
+  //                 fontSize: 13,
+  //               ),
+  //               border: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(8),
+  //               ),
+  //               focusedBorder: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(8),
+  //                 borderSide: BorderSide(color: primaryColor, width: 1.5),
+  //               ),
+  //               enabledBorder: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(8),
+  //                 borderSide: BorderSide(color: Colors.grey.shade300),
+  //               ),
+  //               contentPadding: EdgeInsets.symmetric(
+  //                 horizontal: 14,
+  //                 vertical: 13,
+  //               ),
+  //               isDense: true,
+  //             ),
+  //           );
+  //         },
+  //         optionsViewBuilder: (context, onSelected, options) {
+  //           return Align(
+  //             alignment: Alignment.topLeft,
+  //             child: Material(
+  //               elevation: 6,
+  //               borderRadius: BorderRadius.circular(8),
+  //               child: ConstrainedBox(
+  //                 constraints: BoxConstraints(maxHeight: 200, maxWidth: 472),
+  //                 child: ListView.builder(
+  //                   padding: EdgeInsets.symmetric(vertical: 6),
+  //                   shrinkWrap: true,
+  //                   itemCount: options.length,
+  //                   itemBuilder: (context, index) {
+  //                     final option = options.elementAt(index);
+  //                     return InkWell(
+  //                       onTap: () => onSelected(option),
+  //                       child: Padding(
+  //                         padding: EdgeInsets.symmetric(
+  //                           horizontal: 16,
+  //                           vertical: 10,
+  //                         ),
+  //                         child: Row(
+  //                           children: [
+  //                             Icon(
+  //                               Icons.work_outline,
+  //                               size: 15,
+  //                               color: Colors.grey,
+  //                             ),
+  //                             SizedBox(width: 8),
+  //                             Text(option, style: TextStyle(fontSize: 13)),
+  //                           ],
+  //                         ),
+  //                       ),
+  //                     );
+  //                   },
+  //                 ),
+  //               ),
+  //             ),
+  //           );
+  //         },
+  //       ),
+  //       SizedBox(height: 4),
+  //       Text(
+  //         'Choose from the list or type a custom position',
+  //         style: TextStyle(fontSize: 11, color: Colors.grey),
+  //       ),
+  //     ],
+  //   );
+  // }
+
+  // Widget _passwordField(StateSetter setDialogState) {
+  //   return TextFormField(
+  //     focusNode: focusNewPassword,
+  //     controller: passwordController,
+  //     obscureText: !_isNewPassVisible,
+  //     decoration: InputDecoration(
+  //       labelText: 'Password',
+  //       prefixIcon: Icon(Icons.lock_outline, size: 18, color: Colors.grey),
+  //       floatingLabelStyle: TextStyle(color: primaryColor, fontSize: 13),
+  //       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+  //       focusedBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: BorderSide(color: primaryColor, width: 1.5),
+  //       ),
+  //       enabledBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: BorderSide(color: Colors.grey.shade300),
+  //       ),
+  //       contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+  //       isDense: true,
+  //       suffixIcon: IconButton(
+  //         icon: Icon(
+  //           _isNewPassVisible ? Icons.visibility_off : Icons.visibility,
+  //           size: 18,
+  //           color: focusNewPassword.hasFocus ? primaryColor : Colors.grey,
+  //         ),
+  //         onPressed:
+  //             () =>
+  //                 setDialogState(() => _isNewPassVisible = !_isNewPassVisible),
+  //         splashRadius: 18,
+  //       ),
+  //     ),
+  //     validator: (value) => validatePassword(value),
+  //   );
+  // }
+
+  // Widget _passwordHints() {
+  //   return Container(
+  //     padding: EdgeInsets.all(10),
+  //     decoration: BoxDecoration(
+  //       color: Colors.blue.shade50,
+  //       borderRadius: BorderRadius.circular(8),
+  //       border: Border.all(color: Colors.blue.shade100),
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Text(
+  //           'Password must contain:',
+  //           style: TextStyle(
+  //             fontSize: 11,
+  //             fontWeight: FontWeight.w600,
+  //             color: Colors.blue.shade700,
+  //           ),
+  //         ),
+  //         SizedBox(height: 4),
+  //         ...[
+  //           'At least 6 characters',
+  //           'One uppercase letter',
+  //           'One special character (!@#\$%^&*)',
+  //         ].map(
+  //           (hint) => Padding(
+  //             padding: EdgeInsets.only(top: 2),
+  //             child: Row(
+  //               children: [
+  //                 Icon(Icons.circle, size: 5, color: Colors.blue.shade400),
+  //                 SizedBox(width: 6),
+  //                 Text(
+  //                   hint,
+  //                   style: TextStyle(fontSize: 11, color: Colors.blue.shade700),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
   void showFormDialog({
     String? id,
     String? userName,
@@ -495,6 +1184,8 @@ class UserProfileState extends State<UserProfilePage> {
     selectedPosition =
         JobPositions.positions.contains(position) ? position : null;
 
+    final isEdit = id != null;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -509,60 +1200,64 @@ class UserProfileState extends State<UserProfilePage> {
                   maxHeight: MediaQuery.of(dialogContext).size.height * 0.92,
                 ),
                 decoration: BoxDecoration(
-                  color: mainBgColor,
-                  borderRadius: BorderRadius.circular(16),
+                  color: kSurface,
+                  borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 32,
-                      offset: Offset(0, 8),
+                      offset: Offset(0, 12),
                     ),
                   ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 18,
-                        horizontal: 24,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [primaryColor, primaryLightColor],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                        ),
-                      ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(24, 24, 24, 0),
                       child: Row(
                         children: [
-                          Icon(
-                            id == null ? Icons.person_add_alt_1 : Icons.edit,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            id == null ? 'Create User' : 'Edit User',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              letterSpacing: 0.3,
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            child: Icon(
+                              isEdit
+                                  ? Icons.edit_outlined
+                                  : Icons.person_add_alt_1_outlined,
+                              color: primaryColor,
+                              size: 22,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEdit ? 'Edit User' : 'Create User',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: kText,
+                                ),
+                              ),
+                              Text(
+                                isEdit
+                                    ? 'Update user account details'
+                                    : 'Add a new user account',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ],
                           ),
                           Spacer(),
                           IconButton(
-                            icon: Icon(
-                              Icons.close,
-                              color: Colors.white70,
-                              size: 20,
-                            ),
+                            icon: Icon(Icons.close, color: kMuted, size: 20),
                             onPressed: () => Navigator.pop(dialogContext),
                             padding: EdgeInsets.zero,
                             constraints: BoxConstraints(),
@@ -571,8 +1266,9 @@ class UserProfileState extends State<UserProfilePage> {
                         ],
                       ),
                     ),
+                    SizedBox(height: 16),
+                    Divider(color: kBorder, height: 1),
 
-                    // ── Body ────────────────────────────────────────────
                     Flexible(
                       child: SingleChildScrollView(
                         padding: EdgeInsets.fromLTRB(24, 20, 24, 8),
@@ -588,14 +1284,10 @@ class UserProfileState extends State<UserProfilePage> {
                                 children: [
                                   Expanded(
                                     flex: 3,
-                                    child: _styledDropdown(
+                                    child: SearchDropdown<String>(
                                       label: 'Prefix',
-                                      value:
-                                          prefixController.text.isNotEmpty
-                                              ? prefixController.text
-                                              : null,
-                                      items: [
-                                        '',
+                                      hintText: 'Select prefix',
+                                      items: const [
                                         'Mr.',
                                         'Ms.',
                                         'Mrs.',
@@ -605,9 +1297,16 @@ class UserProfileState extends State<UserProfilePage> {
                                         'Atty.',
                                         'Gen.',
                                       ],
-                                      onChanged:
-                                          (v) =>
-                                              prefixController.text = v ?? '',
+                                      itemAsString: (e) => e,
+                                      selectedItem:
+                                          prefixController.text.isNotEmpty
+                                              ? prefixController.text
+                                              : null,
+                                      onChanged: (v) {
+                                        setDialogState(
+                                          () => prefixController.text = v ?? '',
+                                        );
+                                      },
                                     ),
                                   ),
                                   SizedBox(width: 10),
@@ -688,125 +1387,197 @@ class UserProfileState extends State<UserProfilePage> {
                       ),
                     ),
 
-                    // ── Footer ──────────────────────────────────────────
-                    Divider(height: 1, color: Colors.grey.shade200),
+                    // ── Footer ────────────────────────────────────────
+                    Divider(height: 1, color: kBorder),
                     Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
+                      padding: EdgeInsets.all(24),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          OutlinedButton(
-                            onPressed: () => Navigator.pop(dialogContext),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: primaryColor,
-                              side: BorderSide(color: primaryColor),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(dialogContext),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: kBorder),
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                            child: Text('Cancel'),
                           ),
                           SizedBox(width: 10),
-                          ElevatedButton.icon(
-                            icon: Icon(
-                              id == null ? Icons.save_outlined : Icons.update,
-                              size: 18,
-                              color: Colors.white,
-                            ),
-                            label: Text(
-                              id == null ? 'Save' : 'Update',
-                              style: TextStyle(
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              icon: Icon(
+                                isEdit ? Icons.update : Icons.save_outlined,
+                                size: 18,
                                 color: Colors.white,
-                                fontWeight: FontWeight.w600,
                               ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 22,
-                                vertical: 12,
+                              label: Text(
+                                isEdit ? 'Update' : 'Save',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                elevation: 0,
                               ),
-                              elevation: 0,
-                            ),
-                            onPressed: () async {
-                              if (_formKey.currentState!.validate()) {
-                                bool? confirmAction = await showDialog<bool>(
+                              onPressed: () async {
+                                if (!_formKey.currentState!.validate()) return;
+
+                                final confirmed = await showDialog<bool>(
                                   context: dialogContext,
                                   builder:
-                                      (confirmContext) => AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        title: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.help_outline,
-                                              color: primaryColor,
+                                      (confirmContext) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          width: 340,
+                                          padding: EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
                                             ),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              id == null
-                                                  ? "Confirm Save"
-                                                  : "Confirm Update",
-                                            ),
-                                          ],
-                                        ),
-                                        content: Text(
-                                          id == null
-                                              ? "Are you sure you want to save this record?"
-                                              : "Are you sure you want to update this record?",
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed:
-                                                () => Navigator.pop(
-                                                  confirmContext,
-                                                  false,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
                                                 ),
-                                            child: Text(
-                                              "No",
-                                              style: TextStyle(
-                                                color: Colors.grey,
+                                                blurRadius: 32,
+                                                offset: Offset(0, 12),
                                               ),
-                                            ),
+                                            ],
                                           ),
-                                          ElevatedButton(
-                                            onPressed:
-                                                () => Navigator.pop(
-                                                  confirmContext,
-                                                  true,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
                                                 ),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: primaryColor,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
+                                                child: Icon(
+                                                  Icons.help_outline_rounded,
+                                                  color: primaryColor,
+                                                  size: 26,
+                                                ),
                                               ),
-                                            ),
-                                            child: Text(
-                                              "Yes",
-                                              style: TextStyle(
-                                                color: Colors.white,
+                                              SizedBox(height: 14),
+                                              Text(
+                                                isEdit
+                                                    ? 'Confirm Update'
+                                                    : 'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                      color: kText,
+                                                    ),
                                               ),
-                                            ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                isEdit
+                                                    ? 'Are you sure you want to update this record?'
+                                                    : 'Are you sure you want to save this record?',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              SizedBox(height: 16),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            confirmContext,
+                                                            false,
+                                                          ),
+                                                      style:
+                                                          OutlinedButton.styleFrom(
+                                                            side: BorderSide(
+                                                              color: kBorder,
+                                                            ),
+                                                          ),
+                                                      child: Text(
+                                                        'No',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            confirmContext,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Yes',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                        ),
                                       ),
                                 );
 
-                                if (confirmAction != true) return;
+                                if (confirmed != true) return;
 
                                 final username = userNameController.text;
                                 final exists = await isUsernameExists(
@@ -861,8 +1632,8 @@ class UserProfileState extends State<UserProfilePage> {
                                   });
                                 }
                                 Navigator.pop(dialogContext);
-                              }
-                            },
+                              },
+                            ),
                           ),
                         ],
                       ),
@@ -879,12 +1650,12 @@ class UserProfileState extends State<UserProfilePage> {
 
   Widget _sectionLabel(String text) {
     return Text(
-      text,
-      style: TextStyle(
+      text.toUpperCase(),
+      style: GoogleFonts.plusJakartaSans(
         fontSize: 11,
         fontWeight: FontWeight.w700,
         color: primaryColor,
-        letterSpacing: 0.8,
+        letterSpacing: 0.6,
       ),
     );
   }
@@ -900,24 +1671,38 @@ class UserProfileState extends State<UserProfilePage> {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: GoogleFonts.plusJakartaSans(fontSize: 12, color: kMuted),
+        floatingLabelStyle: GoogleFonts.plusJakartaSans(
+          color: primaryColor,
+          fontSize: 13,
+        ),
         prefixIcon:
             prefixIcon != null
-                ? Icon(prefixIcon, size: 18, color: Colors.grey)
+                ? Icon(prefixIcon, size: 18, color: kMuted)
                 : null,
-        floatingLabelStyle: TextStyle(color: primaryColor, fontSize: 13),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: kBackground,
+        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        isDense: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: kBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: kBorder),
+        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: primaryColor, width: 1.5),
         ),
-        enabledBorder: OutlineInputBorder(
+        errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: kDanger),
         ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        isDense: true,
       ),
       validator:
           validator ??
@@ -928,47 +1713,10 @@ class UserProfileState extends State<UserProfilePage> {
     );
   }
 
-  Widget _styledDropdown({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required void Function(String?) onChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      onChanged: onChanged,
-      decoration: InputDecoration(
-        labelText: label,
-        floatingLabelStyle: TextStyle(color: primaryColor, fontSize: 13),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: primaryColor, width: 1.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        isDense: true,
-      ),
-      items:
-          items
-              .map(
-                (e) => DropdownMenuItem(
-                  value: e,
-                  child: Text(e.isEmpty ? '—' : e),
-                ),
-              )
-              .toList(),
-    );
-  }
-
   Widget _positionComboBox(StateSetter setDialogState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Autocomplete acts as a combo box
         Autocomplete<String>(
           initialValue: TextEditingValue(text: positionController.text),
           optionsBuilder: (TextEditingValue textEditingValue) {
@@ -1000,34 +1748,34 @@ class UserProfileState extends State<UserProfilePage> {
             return TextFormField(
               controller: textController,
               focusNode: focusNode,
+              style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
               decoration: InputDecoration(
                 hintText: 'Select or type a position...',
-                prefixIcon: Icon(
-                  Icons.work_outline,
-                  size: 18,
-                  color: Colors.grey,
-                ),
-                suffixIcon: Icon(Icons.arrow_drop_down, color: Colors.grey),
-                floatingLabelStyle: TextStyle(
-                  color: primaryColor,
+                hintStyle: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
+                  color: kMuted,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: primaryColor, width: 1.5),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
+                prefixIcon: Icon(Icons.work_outline, size: 18, color: kMuted),
+                suffixIcon: Icon(Icons.arrow_drop_down, color: kMuted),
+                filled: true,
+                fillColor: kBackground,
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 14,
                   vertical: 13,
                 ),
                 isDense: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: kBorder),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: kBorder),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: primaryColor, width: 1.5),
+                ),
               ),
             );
           },
@@ -1035,6 +1783,7 @@ class UserProfileState extends State<UserProfilePage> {
             return Align(
               alignment: Alignment.topLeft,
               child: Material(
+                color: kSurface,
                 elevation: 6,
                 borderRadius: BorderRadius.circular(8),
                 child: ConstrainedBox(
@@ -1054,13 +1803,15 @@ class UserProfileState extends State<UserProfilePage> {
                           ),
                           child: Row(
                             children: [
-                              Icon(
-                                Icons.work_outline,
-                                size: 15,
-                                color: Colors.grey,
-                              ),
+                              Icon(Icons.work_outline, size: 15, color: kMuted),
                               SizedBox(width: 8),
-                              Text(option, style: TextStyle(fontSize: 13)),
+                              Text(
+                                option,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  color: kText,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -1075,7 +1826,7 @@ class UserProfileState extends State<UserProfilePage> {
         SizedBox(height: 4),
         Text(
           'Choose from the list or type a custom position',
-          style: TextStyle(fontSize: 11, color: Colors.grey),
+          style: GoogleFonts.plusJakartaSans(fontSize: 11, color: kMuted),
         ),
       ],
     );
@@ -1086,26 +1837,40 @@ class UserProfileState extends State<UserProfilePage> {
       focusNode: focusNewPassword,
       controller: passwordController,
       obscureText: !_isNewPassVisible,
+      style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
       decoration: InputDecoration(
         labelText: 'Password',
-        prefixIcon: Icon(Icons.lock_outline, size: 18, color: Colors.grey),
-        floatingLabelStyle: TextStyle(color: primaryColor, fontSize: 13),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        labelStyle: GoogleFonts.plusJakartaSans(fontSize: 12, color: kMuted),
+        floatingLabelStyle: GoogleFonts.plusJakartaSans(
+          color: primaryColor,
+          fontSize: 13,
+        ),
+        prefixIcon: Icon(Icons.lock_outline, size: 18, color: kMuted),
+        filled: true,
+        fillColor: kBackground,
+        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        isDense: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: kBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: kBorder),
+        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: primaryColor, width: 1.5),
         ),
-        enabledBorder: OutlineInputBorder(
+        errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: kDanger),
         ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        isDense: true,
         suffixIcon: IconButton(
           icon: Icon(
             _isNewPassVisible ? Icons.visibility_off : Icons.visibility,
             size: 18,
-            color: focusNewPassword.hasFocus ? primaryColor : Colors.grey,
+            color: focusNewPassword.hasFocus ? primaryColor : kMuted,
           ),
           onPressed:
               () =>
@@ -1119,21 +1884,21 @@ class UserProfileState extends State<UserProfilePage> {
 
   Widget _passwordHints() {
     return Container(
-      padding: EdgeInsets.all(10),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: primaryColor.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue.shade100),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Password must contain:',
-            style: TextStyle(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Colors.blue.shade700,
+              color: primaryColor,
             ),
           ),
           SizedBox(height: 4),
@@ -1146,11 +1911,14 @@ class UserProfileState extends State<UserProfilePage> {
               padding: EdgeInsets.only(top: 2),
               child: Row(
                 children: [
-                  Icon(Icons.circle, size: 5, color: Colors.blue.shade400),
+                  Icon(Icons.circle, size: 5, color: primaryColor),
                   SizedBox(width: 6),
                   Text(
                     hint,
-                    style: TextStyle(fontSize: 11, color: Colors.blue.shade700),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: kMuted,
+                    ),
                   ),
                 ],
               ),

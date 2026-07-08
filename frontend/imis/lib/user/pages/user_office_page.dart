@@ -2,9 +2,9 @@
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
-import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/constant/constant.dart';
@@ -14,8 +14,8 @@ import 'package:imis/user/services/user_office_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/http_util.dart';
-import 'package:imis/widgets/common/custom_toggle.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/common/search_dropdown.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -192,69 +192,84 @@ class UserOfficePageState extends State<UserOfficePage> {
 
     _selectedUserId = selectedUserId;
     _selectedOfficeId = selectedOfficeId;
+    final isEdit = id != null;
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: mainBgColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          builder: (context, setStateDialog) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 480,
+                padding: EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: primaryLightColor,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
+                  color: kSurface,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 32,
+                      offset: Offset(0, 12),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  id == null ? 'Create User Office' : 'Edit User Office',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              content: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 480,
-                      child: DropdownSearch<User?>(
-                        popupProps: PopupProps.menu(
-                          showSearchBox: true,
-                          searchFieldProps: TextFieldProps(
-                            decoration: InputDecoration(
-                              hintText: 'Search User Name...',
-                              filled: true,
-                              fillColor: mainBgColor,
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.business,
+                              color: primaryColor,
+                              size: 22,
                             ),
                           ),
-                          itemBuilder:
-                              (context, user, isSelected) => ListTile(
-                                tileColor: mainBgColor,
-                                title: Text(user?.fullName ?? ''),
+                          SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEdit
+                                    ? 'Manage User Office'
+                                    : 'Create User Office',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: kText,
+                                ),
                               ),
-                        ),
+                              Text(
+                                isEdit
+                                    ? 'Update office assigned to this user'
+                                    : 'Assign office to a user',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Divider(color: kBorder, height: 1),
+                      SizedBox(height: 20),
+                      SearchDropdown<User?>(
+                        label: 'User',
+                        hintText: 'Search user...',
                         items: userList,
                         itemAsString: (u) => u?.fullName ?? '',
                         selectedItem: userList.cast<User?>().firstWhere(
@@ -262,252 +277,353 @@ class UserOfficePageState extends State<UserOfficePage> {
                           orElse: () => null,
                         ),
                         onChanged:
+                            (value) => setStateDialog(
+                              () => _selectedUserId = value?.id,
+                            ),
+                        validator:
                             (value) =>
-                                setState(() => _selectedUserId = value?.id),
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select a user';
-                          }
-                          return null;
-                        },
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                            labelText: 'Select User',
-                            filled: true,
-                            fillColor: mainBgColor,
-                            floatingLabelBehavior: FloatingLabelBehavior.never,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: primaryColor),
-                            ),
-                          ),
-                        ),
+                                value == null ? 'Please select a user' : null,
                       ),
-                    ),
-                    gap14px,
 
-                    SizedBox(
-                      width: 480,
-                      child: DropdownSearch<Office>(
-                        popupProps: PopupProps.menu(
-                          showSearchBox: true,
-                          searchFieldProps: TextFieldProps(
-                            decoration: InputDecoration(
-                              hintText: 'Search Office Name...',
-                              filled: true,
-                              fillColor: mainBgColor,
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                            ),
-                          ),
-                          itemBuilder:
-                              (context, office, isSelected) => ListTile(
-                                tileColor: mainBgColor,
-                                title: Text(office.name),
-                              ),
-                        ),
+                      gap14px,
+                      SearchDropdown<Office?>(
+                        label: 'Office',
+                        hintText: 'Search office...',
                         items: officenameList,
-                        itemAsString: (office) => office.name,
+                        itemAsString: (u) => u?.name ?? '',
                         selectedItem:
                             _selectedOfficeId == null
                                 ? null
-                                : officenameList.firstWhere(
-                                  (office) =>
-                                      office.id.toString() == _selectedOfficeId,
-                                  orElse:
-                                      () => Office(
-                                        id: 0,
-                                        name: '',
-                                        officeTypeId: 0,
-                                        parentOfficeId: 0,
-                                        isActive: true,
-                                        isDeleted: false,
-                                      ),
+                                : officenameList.firstWhereOrNull(
+                                  (item) =>
+                                      item.id.toString() == _selectedOfficeId,
                                 ),
-
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedOfficeId = value?.id.toString();
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select an office';
-                          }
-                          return null;
-                        },
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                            labelText: 'Select Office',
-                            filled: true,
-                            fillColor: mainBgColor,
-                            floatingLabelBehavior: FloatingLabelBehavior.never,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        onChanged:
+                            (value) => setStateDialog(
+                              () => _selectedOfficeId = value?.id.toString(),
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: primaryColor),
+                        validator:
+                            (value) =>
+                                value == null ? 'Please select office' : null,
+                      ),
+                      SizedBox(height: 20),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: kBackground,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Active Head',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: kText,
+                                  ),
+                                ),
+                                Text(
+                                  'Currently assigned as Head',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
+                            Switch(
+                              value: isOfficeHead,
+                              onChanged:
+                                  (val) =>
+                                      setStateDialog(() => isOfficeHead = val),
+                              activeColor: primaryColor,
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    gap14px,
-                    CustomToggle(
-                      label: "Office Head",
-                      value: isOfficeHead,
-                      activeColor: primaryColor,
-                      inactiveColor: Colors.grey,
-                      onChanged: (val) {
-                        setState(() {
-                          isOfficeHead = val;
-                        });
-                      },
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: kBorder),
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.circular(
+                                    8,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              label: Text(
+                                isEdit ? 'Update' : 'Save',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                if (!_formKey.currentState!.validate()) return;
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder:
+                                      (ctx) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          width: 340,
+                                          padding: EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
+                                                ),
+                                                blurRadius: 32,
+                                                offset: const Offset(0, 12),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
+                                                ),
+                                                child: Icon(
+                                                  Icons.help_outline_rounded,
+                                                ),
+                                              ),
+                                              SizedBox(height: 14),
+                                              Text(
+                                                isEdit
+                                                    ? 'Confirm Update'
+                                                    : 'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                isEdit
+                                                    ? 'Are your sure you want to save update this user office'
+                                                    : 'Are you you want to save this user office',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      style:
+                                                          OutlinedButton.styleFrom(
+                                                            side: BorderSide(
+                                                              color: kBorder,
+                                                            ),
+                                                          ),
+                                                      child: Text(
+                                                        'No',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Yes',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                ); //
+                                if (confirmed == true) {
+                                  final selectedOfficeId =
+                                      int.tryParse(_selectedOfficeId ?? '0') ??
+                                      0;
+                                  final selectedUserId = _selectedUserId ?? '';
+
+                                  final isDuplicateUserOffice = userOfficeList
+                                      .any(
+                                        (u) =>
+                                            u.userId == selectedUserId &&
+                                            u.officeId == selectedOfficeId &&
+                                            u.id != int.tryParse(id ?? '0'),
+                                      );
+
+                                  if (isDuplicateUserOffice) {
+                                    MotionToast.warning(
+                                      toastAlignment: Alignment.topCenter,
+                                      description: const Text(
+                                        'User is already assigned to this office.',
+                                      ),
+                                    ).show(context);
+                                    return;
+                                  }
+
+                                  final hasOfficeHead = userOfficeList.any(
+                                    (u) =>
+                                        u.officeId == selectedOfficeId &&
+                                        u.isOfficeHead == true &&
+                                        u.id != int.tryParse(id ?? '0'),
+                                  );
+
+                                  if (isOfficeHead && hasOfficeHead) {
+                                    MotionToast.warning(
+                                      toastAlignment: Alignment.topCenter,
+                                      description: const Text(
+                                        'This office already has an Office Head.',
+                                      ),
+                                    ).show(context);
+                                    return;
+                                  }
+
+                                  final user = UserOffice(
+                                    int.tryParse(id ?? '0') ?? 0,
+                                    isDeleted,
+                                    '',
+                                    selectedUserId,
+                                    selectedOfficeId,
+                                    isActive,
+                                    firstNameController.text,
+                                    middleNameController.text,
+                                    lastNameController.text,
+                                    prefixController.text,
+                                    suffixController.text,
+                                    positionController.text,
+                                    isOfficeHead,
+                                  );
+
+                                  try {
+                                    await _userOfficeService
+                                        .addOrUpdateUserOffice(user);
+                                    setState(() {
+                                      fetchUserOffice(page: _currentPage);
+                                    });
+
+                                    MotionToast.success(
+                                      toastAlignment: Alignment.topCenter,
+                                      description: Text(
+                                        id == null
+                                            ? 'Saved successfully!'
+                                            : 'Updated successfully!',
+                                      ),
+                                    ).show(context);
+
+                                    Navigator.pop(context);
+                                  } catch (e) {
+                                    MotionToast.error(
+                                      toastAlignment: Alignment.topCenter,
+                                      description: const Text(
+                                        'You cannot assign another Office Head to this office.',
+                                      ),
+                                    ).show(context);
+                                  }
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      bool? confirmAction = await showDialog<bool>(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text(
-                              id == null ? "Confirm Save" : "Confirm Update",
-                            ),
-                            content: Text(
-                              id == null
-                                  ? "Are you sure you want to save this record?"
-                                  : "Are you sure you want to update this record?",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(
-                                  "No",
-                                  style: TextStyle(color: primaryColor),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(
-                                  "Yes",
-                                  style: TextStyle(color: primaryColor),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-
-                      if (confirmAction == true) {
-                        final selectedOfficeId =
-                            int.tryParse(_selectedOfficeId ?? '0') ?? 0;
-                        final selectedUserId = _selectedUserId ?? '';
-
-                        final isDuplicateUserOffice = userOfficeList.any(
-                          (u) =>
-                              u.userId == selectedUserId &&
-                              u.officeId == selectedOfficeId &&
-                              u.id != int.tryParse(id ?? '0'),
-                        );
-
-                        if (isDuplicateUserOffice) {
-                          MotionToast.warning(
-                            toastAlignment: Alignment.topCenter,
-                            description: const Text(
-                              'User is already assigned to this office.',
-                            ),
-                          ).show(context);
-                          return;
-                        }
-
-                        final hasOfficeHead = userOfficeList.any(
-                          (u) =>
-                              u.officeId == selectedOfficeId &&
-                              u.isOfficeHead == true &&
-                              u.id != int.tryParse(id ?? '0'),
-                        );
-
-                        if (isOfficeHead && hasOfficeHead) {
-                          MotionToast.warning(
-                            toastAlignment: Alignment.topCenter,
-                            description: const Text(
-                              'This office already has an Office Head.',
-                            ),
-                          ).show(context);
-                          return;
-                        }
-
-                        final user = UserOffice(
-                          int.tryParse(id ?? '0') ?? 0,
-                          isDeleted,
-                          '',
-                          selectedUserId,
-                          selectedOfficeId,
-                          isActive,
-                          firstNameController.text,
-                          middleNameController.text,
-                          lastNameController.text,
-                          prefixController.text,
-                          suffixController.text,
-                          positionController.text,
-                          isOfficeHead,
-                        );
-
-                        try {
-                          await _userOfficeService.addOrUpdateUserOffice(user);
-                          setState(() {
-                            fetchUserOffice(page: _currentPage);
-                          });
-
-                          MotionToast.success(
-                            toastAlignment: Alignment.topCenter,
-                            description: Text(
-                              id == null
-                                  ? 'Saved successfully!'
-                                  : 'Updated successfully!',
-                            ),
-                          ).show(context);
-
-                          Navigator.pop(context);
-                        } catch (e) {
-                          MotionToast.error(
-                            toastAlignment: Alignment.topCenter,
-                            description: const Text(
-                              'You cannot assign another Office Head to this office.',
-                            ),
-                          ).show(context);
-                        }
-                      }
-                    }
-                  },
-                  child: Text(
-                    id == null ? 'Save' : 'Update',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
             );
           },
         );

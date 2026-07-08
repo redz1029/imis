@@ -791,7 +791,6 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
                         ),
                       ),
 
-                      // Footer
                       Container(
                         padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
                         decoration: BoxDecoration(
@@ -848,11 +847,10 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
                                   id != null ? int.tryParse(id) ?? 0 : 0,
                                   selectTeam ?? 0,
                                   selectedAuditors,
-                                  true,
+                                  isActive,
                                   rowVersion: '',
                                   isDeleted: isActive,
                                 );
-
                                 try {
                                   await _adutiorTeamService
                                       .createOrUpdateAuditorTeam(auditorTeam);
@@ -860,7 +858,6 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
 
                                   if (!mounted) return;
                                   Navigator.of(ctx).pop();
-
                                   MotionToast.success(
                                     toastAlignment: Alignment.topCenter,
                                     description: Text(

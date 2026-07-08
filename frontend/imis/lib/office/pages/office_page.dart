@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/office/services/office_service.dart';
@@ -11,6 +12,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/common/search_dropdown.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/dialog/dialog_field.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -38,6 +40,7 @@ class OfficePageState extends State<OfficePage> {
 
   List<Map<String, dynamic>> filteredListParentOffice = [];
   List<Map<String, dynamic>> parentOfficeList = [];
+  final _commonService = CommonService(Dio());
 
   int _currentPage = 1;
   final int _pageSize = 15;
@@ -149,14 +152,26 @@ class OfficePageState extends State<OfficePage> {
     bool isActive = false,
     bool isDeleted = false,
     bool isRowversion = false,
-    int? selectedOfficeType,
-    int? selectedParentOffice,
+    int? officeType,
+    int? parentOffice,
   }) async {
     await _officeService.getParentOffice();
 
     TextEditingController officeController = TextEditingController(text: name);
-    int? selectedOfficeType0 = selectedOfficeType;
+    int? selectedOfficeType = officeType;
+    int? selectedParentOffice = parentOffice;
     final isEdit = id != null;
+
+    final List<Map<String, dynamic>> officeTypeOptions = [
+      {'id': null, 'name': 'None'},
+      ...officeTypeList,
+    ];
+
+    final List<Map<String, dynamic>> parentOfficeOptions = [
+      {'id': null, 'name': 'None'},
+      ...parentOfficeList,
+    ];
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -233,66 +248,243 @@ class OfficePageState extends State<OfficePage> {
                         controller: officeController,
                       ),
                       SizedBox(height: 8),
-                      DropdownButtonFormField<int>(
-                        initialValue: selectedOfficeType0,
-                        isExpanded: true,
-                        icon: const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: kMuted,
+                      SearchDropdown<Map<String, dynamic>>(
+                        label: 'Office Type',
+                        hintText: 'Select Office Type',
+                        items: officeTypeOptions,
+                        itemAsString: (item) => item['name'],
+                        selectedItem: officeTypeOptions.firstWhere(
+                          (item) => item['id'] == selectedOfficeType,
+                          orElse: () => officeTypeOptions.first,
                         ),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          color: kText,
+                        onChanged: (value) {
+                          setDialog(() => selectedOfficeType = value?['id']);
+                        },
+                      ),
+                      SizedBox(height: 8),
+
+                      SearchDropdown<Map<String, dynamic>>(
+                        label: 'Parent Office',
+                        hintText: 'Select Parent Office',
+                        items: parentOfficeOptions,
+                        itemAsString: (item) => item['name'],
+                        selectedItem: parentOfficeOptions.firstWhere(
+                          (item) => item['id'] == selectedParentOffice,
+                          orElse: () => parentOfficeOptions.first,
                         ),
-                        validator:
-                            (v) => v == null ? 'Please choose a team' : null,
-                        decoration: InputDecoration(
-                          hintText: 'Select Office Type',
-                          hintStyle: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            color: kMuted,
-                          ),
-                          filled: true,
-                          fillColor: kBackground,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 13,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: kBorder),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: kBorder),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                              color: primaryColor,
-                              width: 1.5,
-                            ),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: kDanger),
-                          ),
-                        ),
-                        items:
-                            officeTypeList
-                                .map(
-                                  (officeType) => DropdownMenuItem<int>(
-                                    value: officeType['id'],
-                                    child: Text(officeType['name']),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged:
-                            (value) =>
-                                setDialog(() => selectedOfficeType0 = value),
+                        onChanged: (value) {
+                          setDialog(() => selectedParentOffice = value?['id']);
+                        },
                       ),
 
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: kBorder),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              label: Text(
+                                isEdit ? 'Update' : 'Save',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                elevation: 0,
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.circular(
+                                    8,
+                                  ),
+                                ),
+                              ),
+                              onPressed: () async {
+                                if (!_formKey.currentState!.validate()) return;
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder:
+                                      (ctx) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          width: 340,
+                                          padding: EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
+                                                ),
+                                                blurRadius: 32,
+                                                offset: Offset(0, 12),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
+                                                ),
+                                                child: Icon(
+                                                  Icons.help_outline_rounded,
+                                                  color: primaryColor,
+                                                  size: 26,
+                                                ),
+                                              ),
+                                              SizedBox(height: 14),
+                                              Text(
+                                                isEdit
+                                                    ? 'Confirm Update'
+                                                    : 'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                isEdit
+                                                    ? 'Are you sure you want to update this announcement?'
+                                                    : 'Are you sure you want to save this announcement?',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      style:
+                                                          OutlinedButton.styleFrom(
+                                                            side: BorderSide(
+                                                              color: kBorder,
+                                                            ),
+                                                          ),
+                                                      child: Text(
+                                                        'No',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Yes',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                );
+                                if (confirmed != true) return;
+                                final office = Office(
+                                  id: int.tryParse(id ?? '0') ?? 0,
+                                  name: officeController.text,
+                                  officeTypeId: selectedOfficeType,
+                                  parentOfficeId: selectedParentOffice,
+                                  isDeleted: false,
+                                  isActive: true,
+                                );
+                                await _officeService.createOrUpdateOffice(
+                                  office,
+                                );
+                                setState(() {
+                                  fetchOffices();
+                                });
+                                MotionToast.success(
+                                  toastAlignment: Alignment.topCenter,
+                                  description: Text('Saved successfully'),
+                                ).show(context);
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -300,244 +492,6 @@ class OfficePageState extends State<OfficePage> {
             );
           },
         );
-        // return AlertDialog(
-        //   backgroundColor: mainBgColor,
-        //   shape: RoundedRectangleBorder(
-        //     borderRadius: BorderRadius.circular(12.0),
-        //   ),
-        //   titlePadding: EdgeInsets.zero,
-        //   title: Container(
-        //     width: double.infinity,
-        //     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        //     decoration: BoxDecoration(
-        //       color: primaryLightColor,
-        //       borderRadius: const BorderRadius.only(
-        //         topLeft: Radius.circular(12),
-        //         topRight: Radius.circular(12),
-        //       ),
-        //     ),
-        //     child: Text(
-        //       id == null ? 'Create Office' : 'Edit Office',
-        //       textAlign: TextAlign.center,
-        //       style: const TextStyle(
-        //         fontWeight: FontWeight.bold,
-        //         fontSize: 18,
-        //         color: Colors.white,
-        //       ),
-        //     ),
-        //   ),
-        //   content: Form(
-        //     key: _formKey,
-        //     child: Column(
-        //       mainAxisSize: MainAxisSize.min,
-        //       children: [
-        //         SizedBox(
-        //           width: 480,
-        //           height: 65,
-        //           child: TextFormField(
-        //             controller: officeController,
-        //             decoration: InputDecoration(
-        //               labelText: 'Office Name',
-        //               focusColor: primaryColor,
-        //               floatingLabelStyle: TextStyle(color: primaryColor),
-        //               border: OutlineInputBorder(),
-        //               focusedBorder: const OutlineInputBorder(
-        //                 borderSide: BorderSide(color: primaryColor),
-        //               ),
-        //             ),
-        //             validator: (value) {
-        //               if (value == null || value.trim().isEmpty) {
-        //                 return 'Please fill out this field';
-        //               }
-        //               return null;
-        //             },
-        //           ),
-        //         ),
-
-        //         SizedBox(
-        //           width: 480,
-        //           child: DropdownButtonFormField<String>(
-        //             initialValue: _selectedOfficeType,
-        //             decoration: InputDecoration(
-        //               labelText: 'Office Type',
-        //               border: OutlineInputBorder(
-        //                 borderRadius: BorderRadius.circular(8),
-        //               ),
-        //               floatingLabelStyle: TextStyle(color: primaryColor),
-        //               focusedBorder: OutlineInputBorder(
-        //                 borderSide: BorderSide(color: primaryColor),
-        //               ),
-        //             ),
-
-        //             items:
-        //                 filteredListOfficeType.map((officeTypeData) {
-        //                   return DropdownMenuItem<String>(
-        //                     value: officeTypeData['id'].toString(),
-        //                     child: Text(officeTypeData['name']),
-        //                   );
-        //                 }).toList(),
-        //             onChanged: (value) {
-        //               setState(() {
-        //                 _selectedOfficeType = value;
-        //               });
-        //             },
-        //             validator: (value) {
-        //               if (value == null || value.isEmpty) {
-        //                 return 'Please select an office';
-        //               }
-        //               return null;
-        //             },
-        //           ),
-        //         ),
-        //         gap16px,
-        //         SizedBox(
-        //           width: 480,
-        //           child: DropdownSearch<Map<String, dynamic>>(
-        //             popupProps: PopupProps.menu(
-        //               showSearchBox: true,
-        //               searchFieldProps: TextFieldProps(
-        //                 decoration: InputDecoration(
-        //                   hintText: 'Search Office Name...',
-        //                   filled: true,
-        //                   fillColor: mainBgColor,
-        //                   prefixIcon: Icon(Icons.search),
-        //                   border: OutlineInputBorder(
-        //                     borderRadius: BorderRadius.circular(8),
-        //                   ),
-        //                   focusedBorder: OutlineInputBorder(
-        //                     borderSide: BorderSide(color: primaryColor),
-        //                   ),
-        //                 ),
-        //               ),
-        //               itemBuilder:
-        //                   (context, office, isSelected) => ListTile(
-        //                     tileColor: mainBgColor,
-        //                     title: Text(office['name']),
-        //                   ),
-        //             ),
-        //             items: filteredListParentOffice,
-        //             itemAsString: (office) => office['name'],
-        //             selectedItem:
-        //                 _selectedParentOffice == null
-        //                     ? null
-        //                     : filteredListParentOffice.firstWhere(
-        //                       (office) =>
-        //                           office['id'].toString() ==
-        //                           _selectedParentOffice,
-        //                       orElse: () => <String, dynamic>{},
-        //                     ),
-
-        //             onChanged: (value) {
-        //               setState(() {
-        //                 _selectedParentOffice = value?['id'].toString();
-        //               });
-        //             },
-
-        //             dropdownDecoratorProps: DropDownDecoratorProps(
-        //               dropdownSearchDecoration: InputDecoration(
-        //                 labelText: 'Select Parent Office',
-        //                 filled: true,
-        //                 fillColor: mainBgColor,
-        //                 floatingLabelStyle: TextStyle(color: primaryColor),
-        //                 border: OutlineInputBorder(
-        //                   borderRadius: BorderRadius.circular(8),
-        //                 ),
-        //                 focusedBorder: OutlineInputBorder(
-        //                   borderSide: BorderSide(color: primaryColor),
-        //                 ),
-        //               ),
-        //             ),
-        //           ),
-        //         ),
-        //       ],
-        //     ),
-        //   ),
-        //   actions: [
-        //     TextButton(
-        //       onPressed: () => Navigator.pop(context),
-        //       style: ElevatedButton.styleFrom(
-        //         shape: RoundedRectangleBorder(
-        //           borderRadius: BorderRadius.circular(4),
-        //         ),
-        //       ),
-        //       child: Text('Cancel', style: TextStyle(color: primaryColor)),
-        //     ),
-        //     ElevatedButton(
-        //       style: ElevatedButton.styleFrom(
-        //         backgroundColor: primaryColor,
-        //         shape: RoundedRectangleBorder(
-        //           borderRadius: BorderRadius.circular(4),
-        //         ),
-        //       ),
-        //       onPressed: () async {
-        //         if (_formKey.currentState!.validate()) {
-        //           bool? confirmAction = await showDialog<bool>(
-        //             context: context,
-        //             builder: (context) {
-        //               return AlertDialog(
-        //                 title: Text(
-        //                   id == null ? "Confirm Save" : "Confirm Update",
-        //                 ),
-        //                 content: Text(
-        //                   id == null
-        //                       ? "Are you sure you want to save this record?"
-        //                       : "Are you sure you want to update this record?",
-        //                 ),
-        //                 actions: [
-        //                   TextButton(
-        //                     onPressed: () => Navigator.pop(context, false),
-        //                     child: Text(
-        //                       "No",
-        //                       style: TextStyle(color: primaryColor),
-        //                     ),
-        //                   ),
-        //                   TextButton(
-        //                     onPressed: () {
-        //                       if (_formKey.currentState!.validate()) {
-        //                         Navigator.pop(context, true);
-        //                       }
-        //                     },
-        //                     child: Text(
-        //                       "Yes",
-        //                       style: TextStyle(color: primaryColor),
-        //                     ),
-        //                   ),
-        //                 ],
-        //               );
-        //             },
-        //           );
-        //           if (confirmAction == true) {
-        //             final office = Office(
-        //               id: int.tryParse(id ?? '0') ?? 0,
-        //               name: officeController.text,
-        //               officeTypeId:
-        //                   int.tryParse(_selectedOfficeType ?? '0') ?? 0,
-        //               parentOfficeId:
-        //                   _selectedParentOffice == '0'
-        //                       ? null
-        //                       : int.tryParse(_selectedParentOffice ?? '0'),
-        //               isDeleted: false,
-        //               isActive: true,
-        //             );
-        //             await _officeService.createOrUpdateOffice(office);
-        //             setState(() {
-        //               fetchOffices();
-        //             });
-        //             MotionToast.success(
-        //               toastAlignment: Alignment.topCenter,
-        //               description: Text('Saved successfully'),
-        //             ).show(context);
-        //             Navigator.pop(context);
-        //           }
-        //         }
-        //       },
-        //       child: Text(
-        //         id == null ? 'Save' : 'Update',
-        //         style: TextStyle(color: Colors.white),
-        //       ),
-        //     ),
-        //   ],
-        // );
       },
     );
   }
@@ -752,16 +706,42 @@ class OfficePageState extends State<OfficePage> {
                                                     size: 18,
                                                     Icons.edit_outlined,
                                                   ),
-                                                  onPressed: () {
-                                                    showFormDialog(
-                                                      id: office.id.toString(),
-                                                      name: office.name,
-                                                      selectedOfficeType:
-                                                          office.officeTypeId,
-
-                                                      selectedParentOffice:
-                                                          office.parentOfficeId,
-                                                    );
+                                                  onPressed: () async {
+                                                    try {
+                                                      final fetchedOffice =
+                                                          await _commonService
+                                                              .getOfficeById(
+                                                                office.id
+                                                                    .toString(),
+                                                              );
+                                                      showFormDialog(
+                                                        id:
+                                                            fetchedOffice.id
+                                                                .toString(),
+                                                        name:
+                                                            fetchedOffice.name,
+                                                        officeType:
+                                                            fetchedOffice
+                                                                .officeTypeId,
+                                                        parentOffice:
+                                                            fetchedOffice
+                                                                .parentOfficeId,
+                                                      );
+                                                    } catch (e) {
+                                                      debugPrint(
+                                                        'Failed to fetch office: $e',
+                                                      );
+                                                      if (mounted) {
+                                                        MotionToast.error(
+                                                          toastAlignment:
+                                                              Alignment
+                                                                  .topCenter,
+                                                          description: Text(
+                                                            'Failed to load office details',
+                                                          ),
+                                                        ).show(context);
+                                                      }
+                                                    }
                                                   },
                                                 ),
                                                 IconButton(
@@ -811,17 +791,41 @@ class OfficePageState extends State<OfficePage> {
                                             const Spacer(),
                                             PopupMenuButton<String>(
                                               icon: const Icon(Icons.more_vert),
-                                              onSelected: (value) {
+                                              onSelected: (value) async {
                                                 if (value == 'edit') {
-                                                  showFormDialog(
-                                                    id: office.id.toString(),
-                                                    name: office.name,
-                                                    selectedOfficeType:
-                                                        office.officeTypeId,
-
-                                                    selectedParentOffice:
-                                                        office.parentOfficeId,
-                                                  );
+                                                  try {
+                                                    final fetchedOffice =
+                                                        await _commonService
+                                                            .getOfficeById(
+                                                              office.id
+                                                                  .toString(),
+                                                            );
+                                                    showFormDialog(
+                                                      id:
+                                                          fetchedOffice.id
+                                                              .toString(),
+                                                      name: fetchedOffice.name,
+                                                      officeType:
+                                                          fetchedOffice
+                                                              .officeTypeId,
+                                                      parentOffice:
+                                                          fetchedOffice
+                                                              .parentOfficeId,
+                                                    );
+                                                  } catch (e) {
+                                                    debugPrint(
+                                                      'Failed to fetch office: $e',
+                                                    );
+                                                    if (mounted) {
+                                                      MotionToast.error(
+                                                        toastAlignment:
+                                                            Alignment.topCenter,
+                                                        description: Text(
+                                                          'Failed to load office details',
+                                                        ),
+                                                      ).show(context);
+                                                    }
+                                                  }
                                                 }
 
                                                 if (value == 'delete') {
