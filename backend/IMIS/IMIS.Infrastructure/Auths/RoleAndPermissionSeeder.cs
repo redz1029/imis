@@ -2,6 +2,9 @@
 using Base.Auths.Permissions;
 using Base.Auths.Roles;
 using IMIS.Application.AnnouncementModule;
+using IMIS.Application.AuditorModule;
+using IMIS.Application.AuditorOfficesModule;
+using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.BreakThroughScoringModule;
 using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadmapKpiAccomplishmentModule;
@@ -20,6 +23,7 @@ using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Application.SWOTAnalysisModule;
+using IMIS.Application.TeamModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
@@ -92,7 +96,12 @@ namespace IMIS.Infrastructure.Auths
                 new OperationReviewProtocolPermission(),
                 new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
-                new PerformanceValidationToolPeriodPermission());         
+                new PerformanceValidationToolPeriodPermission(),
+                new AuditorTeamPermission(),
+                new AuditorPermission(),
+                new AuditorOfficesPermission(),
+                new TeamPermission(),
+                new PerformanceGovernanceSystemPermission());         
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -114,21 +123,26 @@ namespace IMIS.Infrastructure.Auths
                 new PerformanceValidationToolPeriodPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsServiceHead, IdentityRole>(_roleManager,
-                new PerformanceGovernanceSystemPermission(),
                 new PgsDeliverableAuditorPermission(),
                 new KeyResultAreaPermission(),
                 new PgsPeriodPermission(),
                 new OfficePermission(),
                 new PgsSummaryNarrativePermissions(),
                 new PgsDeliverableAccomplishmentPermission(),
-                new SWOTAnalysisPermission(),
-                new KraRoadMapPermission(),
-                new KraRoadMapPeriodPermission(),
+                new BreakThroughScoringPermission(),
                 new KraRoadMapKpiAccomplishmentPermission(),
+                new KraRoadMapPermission(),
+                new KraRoadMapAccomplishmentPermission(),
+                new KraRoadMapPeriodPermission(),
                 new OperationReviewProtocolPermission(),
                 new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
-                new PerformanceValidationToolPeriodPermission());
+                new PerformanceValidationToolPeriodPermission(),
+                new AuditorTeamPermission(),
+                new AuditorPermission(),
+                new AuditorOfficesPermission(),
+                new TeamPermission(),
+                new PerformanceGovernanceSystemPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsHead, IdentityRole>(_roleManager, 
                 new PgsDeliverableAuditorPermission(),
