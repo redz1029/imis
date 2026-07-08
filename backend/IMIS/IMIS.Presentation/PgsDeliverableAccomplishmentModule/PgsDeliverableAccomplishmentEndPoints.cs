@@ -240,10 +240,12 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                     "ServiceGroupedAuditDto",
                     cancellationToken).ConfigureAwait(false);
 
-                return Results.File(
-                    file,
-                    "application/pdf",
-                    $"AuditorPendingAuditReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                // FORCE INLINE PDF VIEW IN BROWSER
+                var fileName = $"PerformanceValidationToolReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"AuditorPendingAuditReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
 
                 //var result = await service.ReportGetPendingAuditsByAuditorSortByServiceAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken);
 

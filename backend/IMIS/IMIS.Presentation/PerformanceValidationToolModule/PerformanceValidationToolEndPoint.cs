@@ -57,11 +57,11 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
                     "PerformanceValidationTool", cancellationToken).ConfigureAwait(false);
 
                 // FORCE INLINE PDF VIEW IN BROWSER
-                //var fileName = $"PerformanceValidationToolReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                //response.Headers.ContentDisposition = $"inline; filename={fileName}";
-                //return Results.File(file, "application/pdf");
+                var fileName = $"PerformanceValidationToolReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
 
-                return Results.File(file, "application/pdf", $"PerformanceValidationToolReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                //return Results.File(file, "application/pdf", $"PerformanceValidationToolReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
 
                 //var result = await service.ReportGetByIdAsync(id, pgsId, month, year, cancellationToken).ConfigureAwait(false);
                 //return result != null ? Results.Ok(result) : Results.NotFound();
