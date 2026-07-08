@@ -13,7 +13,40 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
 
-    
+    public async Task<List<ReportPgsServiceOfficePeriodDto>> GetPgsByServiceOfficePeriodAsync(long? periodId, long? officeId, long? parentOfficeId, CancellationToken cancellationToken)
+    {
+        var query = from pgs in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking()
+
+            join parentOffice in ReadOnlyDbContext.Set<Office>().AsNoTracking() on pgs.Office.ParentOfficeId equals parentOffice.Id into parentOffices
+
+            from parentOffice in parentOffices.DefaultIfEmpty()
+
+            where
+                !pgs.IsDeleted
+                && !pgs.Office.IsDeleted
+                && (!periodId.HasValue || pgs.PgsPeriod.Id == periodId.Value)
+                && (!officeId.HasValue || pgs.Office.Id == officeId.Value)
+                && (!parentOfficeId.HasValue || pgs.Office.ParentOfficeId == parentOfficeId.Value)
+
+            select new ReportPgsServiceOfficePeriodDto
+            {
+                ServiceName = parentOffice != null ? parentOffice.Name : "Unassigned",
+                OfficeName = pgs.Office.Name,
+                PeriodId = pgs.PgsPeriod.Id,
+                PeriodName = pgs.PgsPeriod.StartDate.ToString("MMM yyyy") + " - " + pgs.PgsPeriod.EndDate.ToString("MMM yyyy"),
+                StartDate = pgs.PgsPeriod.StartDate,
+                EndDate = pgs.PgsPeriod.EndDate
+            };
+
+        var data = await query
+            .OrderBy(x => x.ServiceName)
+            .ThenBy(x => x.OfficeName)
+            .ToListAsync(cancellationToken);
+
+        return data;
+    }
+
+
     public async Task<List<int>> GetAllOfficeIdsAsync(CancellationToken cancellationToken)
     {
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()

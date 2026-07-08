@@ -44,6 +44,11 @@ namespace IMIS.Persistence.PgsModule
 
         }
 
+        public async Task<List<ReportPgsServiceOfficePeriodDto>> ReportGetPgsByServiceOfficePeriodAsync(long? periodId, long? officeId, long? parentOfficeId, CancellationToken cancellationToken)
+        {
+            return await _repository.GetPgsByServiceOfficePeriodAsync(periodId, officeId, parentOfficeId, cancellationToken);
+        }
+
         public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
@@ -574,7 +579,8 @@ namespace IMIS.Persistence.PgsModule
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase))
             {
                 var allRecords = (await _repository.GetAll(cancellationToken)).ToList();
                 dtos = await BuildDtos(allRecords, userId, cancellationToken);
@@ -1083,6 +1089,7 @@ namespace IMIS.Persistence.PgsModule
             var isTWG = activeRoleName.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase);
             var isOSM = activeRoleName.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase);
             var isMSGC = activeRoleName.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase);
+            var isPgsAuditorHead = activeRoleName.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase);
 
             // =====================  GET PARENT  CHILD OFFICE IDS =====================
             var officeIds = new List<int>();
@@ -1098,7 +1105,7 @@ namespace IMIS.Persistence.PgsModule
             List<PerfomanceGovernanceSystem> filteredEntities;
 
             // ===================== ADMIN / PGS MANAGER / isTWG =====================
-            if (isPgsManager || isAdmin || isTWG || isOSM || isMSGC)
+            if (isPgsManager || isAdmin || isTWG || isOSM || isMSGC || isPgsAuditorHead)
             {
                 var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false)
                               ?? new List<PerfomanceGovernanceSystemDto>();

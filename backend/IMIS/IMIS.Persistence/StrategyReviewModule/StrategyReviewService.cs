@@ -85,7 +85,8 @@ namespace IMIS.Persistence.StrategyReviewModule
                 role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase)
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase)
             )
             {
                 strategyReviews = await _repository.GetAll(cancellationToken) ?? new List<StrategyReview>();

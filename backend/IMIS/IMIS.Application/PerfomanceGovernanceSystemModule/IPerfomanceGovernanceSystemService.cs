@@ -30,5 +30,6 @@ namespace IMIS.Application.PgsModule
         Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(string roleId,int? pgsPeriodId, CancellationToken cancellationToken);
         Task<TotalDashboardAuditedDto> GetTotalAuditedAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken);
         Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(string roloid, int? pgsPeriodId, CancellationToken cancellationToken);
+        Task<List<ReportPgsServiceOfficePeriodDto>> ReportGetPgsByServiceOfficePeriodAsync(long? periodId, long? officeId, long? parentOfficeId, CancellationToken cancellationToken);
     }
 }

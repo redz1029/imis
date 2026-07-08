@@ -2,6 +2,7 @@
 using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Reports;
@@ -245,6 +246,38 @@ namespace IMIS.Presentation.PgsModuleAPIs
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.Edit));
+        
+            app.MapGet("/service-office-period-report", async (HttpResponse response, long? periodId, long? officeId, long? parentOfficeId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.ReportGetPgsByServiceOfficePeriodAsync(periodId, officeId, parentOfficeId, cancellationToken).ConfigureAwait(false);
+
+                if (result == null || !result.Any())
+                    return Results.NotFound();
+
+
+                var file = await ReportUtil.GeneratePdfReport<ReportPgsServiceOfficePeriodDto>(
+                    "ListPgsDeliverable",
+                    result,
+                    "ReportPgsServiceOfficePeriodDto",
+                    cancellationToken).ConfigureAwait(false);
+
+                // FORCE INLINE PDF VIEW IN BROWSER
+                var fileName = $"ListPgsDeliverableReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"ListPgsDeliverableReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                //var result = await service.ReportGetPgsByServiceOfficePeriodAsync(
+                //     periodId, officeId, parentOfficeId, cancellationToken).ConfigureAwait(false);
+
+                //if (result == null || !result.Any())
+                //    return Results.NotFound();
+
+                //return Results.Ok(result);
+            })
+            .WithTags(_pgsTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsTag), true);
         }
     }
 }
