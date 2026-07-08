@@ -10,5 +10,6 @@ namespace IMIS.Application.PerformanceValidationToolModule
         Task<PerformanceValidationTool?> GetByPvtIdAsync(long id, CancellationToken cancellationToken);
         Task<PerformanceValidationTool?> GetWithIncludesAsync(long id, CancellationToken cancellationToken);
         Task<PerformanceValidationTool?> GetByUserIdAndPerformanceValidationToolIdAsync(long performanceValidationToolId, CancellationToken cancellationToken);
+        Task<PerformanceValidationTool?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

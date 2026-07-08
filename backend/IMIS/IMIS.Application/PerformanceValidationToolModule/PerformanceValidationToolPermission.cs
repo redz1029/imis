@@ -10,5 +10,6 @@ namespace IMIS.Application.PerformanceValidationToolModule
         public string Delete => $"Delete{ModuleName}";
         public string Draft => $"Draft{ModuleName}";
         public string Submit => $"Submit{ModuleName}";
+        public string Confirm => $"Confirm{ModuleName}";
     }
 }

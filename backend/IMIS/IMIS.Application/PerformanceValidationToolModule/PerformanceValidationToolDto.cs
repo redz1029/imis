@@ -18,6 +18,7 @@ namespace IMIS.Application.PerformanceValidationToolModule
         public int? OfficeId { get; set; }
         public OfficeDto? Office { get; set; }
         public string? OfficeHeadUserId { get; set; }
+        public string? OfficeHeadName { get; set; }
         public DateTime? ValidateDate { get; set; }
         public string? Comment { get; set; }
         public DateTime? PostingDate { get; set; }

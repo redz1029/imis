@@ -28,6 +28,20 @@ namespace IMIS.Persistence.PerformanceValidationToolModule
             _userManager = userManager;
         }
 
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var entities = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (entities == null)
+                return false;
+
+            entities.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+
         private async Task<PerformanceValidationToolDto> ProcessSignatoriesAsync(PerformanceValidationTool tool, string userId, CancellationToken cancellationToken)
         {
             var dto = new PerformanceValidationToolDto(tool)
@@ -167,7 +181,83 @@ namespace IMIS.Persistence.PerformanceValidationToolModule
             }
 
             var dto = new PerformanceValidationToolDto(entity);
-          
+
+            if (!string.IsNullOrWhiteSpace(entity.OfficeHeadUserId))
+            {
+                var officeHead = await _userManager.FindByIdAsync(entity.OfficeHeadUserId);
+
+                if (officeHead != null)
+                {
+                    dto.OfficeHeadName = string.Join(" ", new[]
+                    {
+                        officeHead.FirstName,
+                        officeHead.MiddleName,
+                        officeHead.LastName,
+                        officeHead.Suffix
+                    }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                }
+            }
+
+            // Validators
+            dto.Validators = entity.Validators?.Select(x => new PerformanceValidationToolValidatorsDto
+            {
+                Id = x.Id,
+                PerformanceValidationToolId = x.PerformanceValidationToolId,
+                AuditorId = x.AuditorId,
+                AuditorName = string.Join(" ", new[]
+                {
+                    x.Auditor?.User?.FirstName,
+                    x.Auditor?.User?.MiddleName,
+                    x.Auditor?.User?.LastName,
+                    x.Auditor?.User?.Suffix
+                }.Where(s => !string.IsNullOrWhiteSpace(s))),
+                PostingDate = x.PostingDate
+            })
+            .ToList();
+
+            // Deliverable Findings
+            dto.DeliverableFindings = entity.DeliverableFindings?.Select(x => new PerformanceValidationToolDeliverableFindingsDto
+            {
+                Id = x.Id,
+                PerformanceValidationToolId = x.PerformanceValidationToolId,  
+                PgsDeliverableId = x.PgsDeliverableId,
+                DeliverableName = x.PgsDeliverable?.DeliverableName,
+                Findings = x.Findings,
+                IsNC = x.IsNC,
+                IsOFI = x.IsOFI,
+                PostingDate = x.PostingDate
+            })
+            .ToList();
+
+            return dto;
+        }
+        public async Task<ReportPerformanceValidationToolDto?> ReportGetByIdAsync(long id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByPvtIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+            if (entity == null)
+            {
+                return null;
+            }
+
+            var dto = new ReportPerformanceValidationToolDto(entity);
+
+            if (!string.IsNullOrWhiteSpace(entity.OfficeHeadUserId))
+            {
+                var officeHead = await _userManager.FindByIdAsync(entity.OfficeHeadUserId);
+
+                if (officeHead != null)
+                {
+                    dto.OfficeHeadName = string.Join(" ", new[]
+                    {
+                        officeHead.FirstName,
+                        officeHead.MiddleName,
+                        officeHead.LastName,
+                        officeHead.Suffix
+                    }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                }
+            }
+
             // Validators
             dto.Validators = entity.Validators?.Select(x => new PerformanceValidationToolValidatorsDto
             {

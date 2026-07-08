@@ -10,10 +10,13 @@ namespace IMIS.Persistence.PerformanceValidationToolModule
         public PerformanceValidationToolRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+        public async Task<PerformanceValidationTool?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<PerformanceValidationTool>().FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
 
-        public async Task<PerformanceValidationTool?> GetByUserIdAndPerformanceValidationToolIdAsync(
-        long performanceValidationToolId,
-        CancellationToken cancellationToken)
+
+        public async Task<PerformanceValidationTool?> GetByUserIdAndPerformanceValidationToolIdAsync(long performanceValidationToolId, CancellationToken cancellationToken)
         {
             return await _entities
                 .Where(x => x.Id == performanceValidationToolId)
@@ -39,9 +42,7 @@ namespace IMIS.Persistence.PerformanceValidationToolModule
 
                 .FirstOrDefaultAsync(cancellationToken);
         }
-        public async Task<PerformanceValidationTool?> GetWithIncludesAsync(
-        long id,
-        CancellationToken cancellationToken)
+        public async Task<PerformanceValidationTool?> GetWithIncludesAsync(long id, CancellationToken cancellationToken)
         {
             return await _entities
                 .Include(x => x.Office)
@@ -52,9 +53,7 @@ namespace IMIS.Persistence.PerformanceValidationToolModule
                 .Include(x => x.DeliverableFindings)
                 .Include(x => x.Conclusion)
                 .Include(x => x.Validators)
-                .FirstOrDefaultAsync(
-                    x => x.Id == id,
-                    cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
         public async Task<IEnumerable<PerformanceValidationTool>?> GetAllPgsIdTool(long? performanceGovernanceSystemId, CancellationToken cancellationToken)
         {
@@ -91,13 +90,9 @@ namespace IMIS.Persistence.PerformanceValidationToolModule
                 .Include(x => x.PvtSignatories)
                     .ThenInclude(x => x.Signatory)
                 .Include(x => x.PvtSignatories)
-
-                .    ThenInclude(x => x.PerformanceValidationToolSignatoryTemplate)
-                .FirstOrDefaultAsync(
-                    x => x.Id == id,
-                    cancellationToken);
+                    .ThenInclude(x => x.PerformanceValidationToolSignatoryTemplate)
+                    .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
-        
-
+       
     }
 }
