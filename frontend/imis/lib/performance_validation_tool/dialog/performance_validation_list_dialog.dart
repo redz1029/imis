@@ -1,22 +1,32 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/performance_validation_tool/dialog/performance_validation_dialog.dart';
 import 'package:imis/performance_validation_tool/models/performance_validation_tool.dart';
+import 'package:imis/performance_validation_tool/services/performance_validation_services.dart';
+import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
+import 'package:motion_toast/motion_toast.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:universal_html/html.dart' as html;
+import '../../utils/http_util.dart';
 
 class PerformanceValidationListDialog extends StatefulWidget {
   final PerformanceGovernanceSystem pgs;
 
-  /// Fetch all saved validations for this PGS
   final Future<List<PerformanceValidationTool>> Function(String pgsId)
   onFetchAll;
 
-  /// Fetch single validation by id (for edit)
   final Future<PerformanceValidationTool?> Function(int id) onFetchById;
 
   /// Delete
@@ -39,7 +49,7 @@ class _PerformanceValidationListDialogState
     extends State<PerformanceValidationListDialog> {
   List<PerformanceValidationTool> _validations = [];
   bool _isLoading = true;
-
+  final _performanceValidationService = PerformanceValidationServices(Dio());
   static const _months = [
     '',
     'January',
@@ -120,57 +130,116 @@ class _PerformanceValidationListDialogState
       barrierDismissible: false,
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: const Text('Confirm Delete'),
-            content: Text(
-              'Are you sure you want to delete this validation for '
-              '"${widget.pgs.office.name}"? This action cannot be undone.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(color: primaryTextColor),
-                ),
-              ),
-              TextButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+          (ctx) => DeleteDialog(
+            title: 'Performance Validation',
+            itemName: 'performance validation',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _performanceValidationService.deletePerformanceValidation(
+                  v.id.toString(),
+                );
+                await _loadValidations();
+                if (mounted) {
+                  MotionToast.success(
+                    description: Text(
+                      'Performance validation deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
+                  ).show(context);
+                }
+              } catch (_) {
+                MotionToast.error(
+                  description: Text(
+                    'Failed to deleted performance validation tool',
                   ),
-                ),
-                onPressed: () async {
-                  Navigator.pop(ctx);
-                  final success = await widget.onDelete(v.id);
-                  if (mounted) {
-                    if (success) {
-                      await _loadValidations();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Deleted successfully.')),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Failed to delete.')),
-                      );
-                    }
-                  }
-                },
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+                ).show(context);
+              }
+            },
           ),
     );
   }
 
-  // ── build ──────────────────────────────────────────────────────────────
+  Future<void> _openPrintPreview(PerformanceValidationTool v) async {
+    final dio = Dio();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => const AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: primaryColor),
+                SizedBox(width: 16),
+                Text(
+                  'Generating PDF...',
+                  style: TextStyle(color: primaryColor),
+                ),
+              ],
+            ),
+          ),
+    );
+
+    try {
+      final url = '${ApiEndpoint().performanceValidationPdfReport}/${v.id}';
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        url,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final bytes = Uint8List.fromList(response.data);
+
+        if (kIsWeb) {
+          final blob = html.Blob([bytes], 'application/pdf');
+          final blobUrl = html.Url.createObjectUrlFromBlob(blob);
+          html.window.open(blobUrl, '_blank');
+          Future.delayed(const Duration(seconds: 15), () {
+            html.Url.revokeObjectUrl(blobUrl);
+          });
+        } else if (Platform.isAndroid || Platform.isIOS) {
+          final tempDir = await getTemporaryDirectory();
+          final filePath = '${tempDir.path}/performance_validation_${v.id}.pdf';
+          await File(filePath).writeAsBytes(bytes);
+          final result = await OpenFile.open(filePath);
+          if (result.type != ResultType.done) {
+            debugPrint('OpenFile error: ${result.message}');
+          }
+        } else {
+          final dir =
+              Platform.isWindows
+                  ? await getDownloadsDirectory()
+                  : await getApplicationDocumentsDirectory();
+          final filePath = '${dir!.path}/performance_validation_${v.id}.pdf';
+          await File(filePath).writeAsBytes(bytes);
+          final result = await OpenFile.open(filePath);
+          if (result.type != ResultType.done) {
+            debugPrint('OpenFile error: ${result.message}');
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error opening Performance Validation PDF: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to open PDF. Please try again.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -269,7 +338,6 @@ class _PerformanceValidationListDialogState
                 ),
               ),
 
-              // ── List body ──────────────────────────────────────────────
               ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: size.height * 0.55),
                 child:
@@ -321,13 +389,13 @@ class _PerformanceValidationListDialogState
                             return _ValidationRow(
                               label: _validationLabel(v),
                               onTap: () => _openSavedValidation(v),
+                              onPrintPreview: () => _openPrintPreview(v),
                               onDelete: () => _showDeleteDialog(v),
                             );
                           },
                         ),
               ),
 
-              // ── Footer ─────────────────────────────────────────────────
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -355,14 +423,16 @@ class _PerformanceValidationListDialogState
   }
 }
 
-// ── Row widget ───────────────────────────────────────────────────────────
 class _ValidationRow extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
+  final VoidCallback? onPrintPreview;
+
   final VoidCallback? onDelete;
 
   const _ValidationRow({
     required this.label,
+    this.onPrintPreview,
     required this.onTap,
     this.onDelete,
   });
@@ -388,14 +458,25 @@ class _ValidationRow extends StatelessWidget {
                 child: IconButton(
                   onPressed: onTap,
                   icon: const Icon(
-                    Icons.reviews_outlined,
+                    Icons.fact_check_outlined,
                     size: 20,
-                    color: Colors.deepOrangeAccent,
+                    color: primaryColor,
+                  ),
+                ),
+              ),
+              Tooltip(
+                message: 'Print Preview',
+                child: IconButton(
+                  onPressed: onPrintPreview,
+                  icon: const Icon(
+                    Icons.description_outlined,
+                    size: 20,
+                    color: Colors.blueAccent,
                   ),
                 ),
               ),
               PermissionWidget(
-                permission: AppPermissions.deleteOperationReviewProtocol,
+                permission: AppPermissions.deletePerformanceValidationTool,
                 child: Tooltip(
                   message: 'Delete',
                   child: IconButton(

@@ -10,7 +10,8 @@ import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
-import 'package:imis/dashboard/pending_audit_dashboard.dart';
+import 'package:imis/dashboard/summary_offices_deliverables.dart';
+import 'package:imis/dashboard/summary_validated_deliverables_page.dart';
 import 'package:imis/dashboard/strategic_change_agenda.dart';
 import 'package:imis/dashboard/strategy_roadmap_page.dart';
 import 'package:imis/office/pages/office_page.dart';
@@ -1129,11 +1130,11 @@ class SidebarState extends State<Sidebar> {
   Widget getCurrentPage() {
     if (selectedPage == 0) {
       if (selectedSubPage == 0) return HomePage();
-      if (selectedSubPage == 1) return PendingAuditDashboardPage();
-
-      if (selectedSubPage == 2) return HomePage();
-      if (selectedSubPage == 3) return const StrategyRoadmapPage();
-      if (selectedSubPage == 4) return const StrategicChangeAgenda();
+      if (selectedSubPage == 1) return SummaryValidatedDeliverablesPage();
+      if (selectedSubPage == 2) return PgsServiceOfficePeriodReportPage();
+      if (selectedSubPage == 3) return HomePage();
+      if (selectedSubPage == 4) return const StrategyRoadmapPage();
+      if (selectedSubPage == 5) return const StrategicChangeAgenda();
     }
     if (selectedPage == 1) {
       if (selectedSubPage == 0) return const RoadmapPage();
@@ -1510,9 +1511,10 @@ class SidebarState extends State<Sidebar> {
                   if (selectedPage == 0) ...[
                     sidebarSubText("Overview", 0),
                     sidebarSubText("Summary Validated Deliverables", 1),
-                    sidebarSubText("OSM Calendar of Acticity", 2),
-                    sidebarSubText("Strategy Map", 3),
-                    sidebarSubText("Strategic Change Agenda", 4),
+                    sidebarSubText("Summary of Offices with Deliverables", 2),
+                    sidebarSubText("Strategy Map", 4),
+                    sidebarSubText("Strategic Change Agenda", 5),
+                    sidebarSubText("OSM Calendar of Acticity", 3),
                   ],
                   //PGS
                   if (selectedPage == 1) ...[
@@ -1571,7 +1573,8 @@ class SidebarState extends State<Sidebar> {
                                   selectedRole ==
                                       PermissionRoleString.coreTeam ||
                                   selectedRole == PermissionRoleString.osm ||
-                                  selectedRole == PermissionRoleString.twg)
+                                  selectedRole == PermissionRoleString.twg ||
+                                  selectedRole == PermissionRoleString.msgc)
                               ? sidebarSubText(
                                 selectedRole == PermissionRoleString.roleAdmin
                                     ? 'Create/View Deliverables'
@@ -1618,6 +1621,7 @@ class SidebarState extends State<Sidebar> {
                                 PermissionRoleString.coreTeam,
                                 PermissionRoleString.twg,
                                 PermissionRoleString.headAuditor,
+                                PermissionRoleString.msgc,
                               ].contains(selectedRole)
                               ? sidebarSubText(
                                 'Deliverable Status Monitoring',
@@ -1740,6 +1744,8 @@ class SidebarState extends State<Sidebar> {
                                 PermissionRoleString.headAuditor,
                                 PermissionRoleString.roleStandardUser,
                                 PermissionRoleString.headAuditor,
+                                PermissionRoleString.serviceHead,
+                                PermissionRoleString.coreTeam,
                               ].contains(selectedRole)
                               ? sidebarSubText("Performance Validation Tool", 9)
                               : SizedBox.shrink(),

@@ -342,21 +342,13 @@ class _PerformanceValidationDialogState
   }
 
   Future<void> _pickValidationDate() async {
-    if (_selectedPeriod == null) return;
-
-    final firstDate = _selectedPeriod!.startDate;
-    final lastDate = _selectedPeriod!.endDate;
+    final now = DateTime.now();
 
     final picked = await showDatePicker(
       context: context,
-      initialDate:
-          _validationDate != null &&
-                  !_validationDate!.isBefore(firstDate) &&
-                  !_validationDate!.isAfter(lastDate)
-              ? _validationDate!
-              : firstDate,
-      firstDate: firstDate,
-      lastDate: lastDate,
+      initialDate: _validationDate ?? now,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 5),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -396,6 +388,117 @@ class _PerformanceValidationDialogState
         'November',
         'December',
       ][m];
+
+  /// Shared confirmation dialog, same visual pattern used in
+  /// OperationsReviewDialog (Confirm Save / Confirm Update).
+  Future<bool> _showConfirmDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    IconData icon = Icons.help_outline,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: 380,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: kSurface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 32,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: kPrimaryLight,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(icon, color: primaryColor, size: 28),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: kText,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: kMuted,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: kBorder),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: kMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            confirmLabel,
+                            style: GoogleFonts.plusJakartaSans(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+    return confirmed == true;
+  }
 
   Future<void> _saveValidation({required bool isSubmit}) async {
     if (!_formKey.currentState!.validate()) return;
@@ -819,31 +922,6 @@ class _PerformanceValidationDialogState
     );
   }
 
-  // Widget _buildDatePickerField() {
-  //   final permissionService = PermissionService();
-
-  //   final hasEditPermission = permissionService.hasPermission(
-  //     AppPermissions.editPerformanceValidationTool,
-  //   );
-  //   final disabled = _selectedPeriod == null;
-  //   return TextFormField(
-  //     controller: _validationDateCtrl,
-  //     readOnly: true,
-  //     onTap: disabled ? null : _pickValidationDate,
-  //     style: GoogleFonts.plusJakartaSans(fontSize: 12),
-  //     decoration: _inputDeco(
-  //       hint: disabled ? 'Select period first…' : 'Pick a date',
-  //     ).copyWith(
-  //       fillColor: disabled ? const Color(0xFFF5F6FA) : Colors.white,
-  //       suffixIcon: Icon(
-  //         Icons.calendar_today_outlined,
-  //         size: 16,
-  //         color: disabled ? Colors.grey.shade400 : primaryColor,
-  //       ),
-  //     ),
-  //     validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-  //   );
-  // }
   Widget _buildDatePickerField() {
     final permissionService = PermissionService();
 
@@ -851,16 +929,14 @@ class _PerformanceValidationDialogState
       AppPermissions.editPerformanceValidationTool,
     );
 
-    final disabled = _selectedPeriod == null || !hasEditPermission;
+    final disabled = !hasEditPermission;
 
     return TextFormField(
       controller: _validationDateCtrl,
       readOnly: true,
       onTap: disabled ? null : _pickValidationDate,
       style: GoogleFonts.plusJakartaSans(fontSize: 12),
-      decoration: _inputDeco(
-        hint: _selectedPeriod == null ? 'Select period first…' : 'Pick a date',
-      ).copyWith(
+      decoration: _inputDeco(hint: 'Pick a date').copyWith(
         fillColor: disabled ? const Color(0xFFF5F6FA) : Colors.white,
         suffixIcon: Icon(
           Icons.calendar_today_outlined,
@@ -1108,92 +1184,6 @@ class _PerformanceValidationDialogState
     );
   }
 
-  Widget _buildSignatories(bool isMobile) {
-    Widget sigField(
-      String label,
-      TextEditingController nameCtrl,
-      TextEditingController dateCtrl,
-    ) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _fieldLabel(label),
-          _inputField(nameCtrl, hint: 'Full name'),
-          const SizedBox(height: 4),
-          _inputField(dateCtrl, hint: 'Date'),
-        ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(height: 24, color: kBorder),
-        if (isMobile)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              sigField(
-                'Prepared by (Head of Validated Office)',
-                _preparedByCtrl,
-                _preparedDateCtrl,
-              ),
-              const SizedBox(height: 12),
-              sigField(
-                'Acknowledged by (Validation Team Leader)',
-                _acknowledgedByCtrl,
-                _acknowledgedDateCtrl,
-              ),
-              const SizedBox(height: 12),
-              sigField(
-                'Approved by (Team Leader, OSM – Performance Management and Analytics)',
-                _approvedByCtrl,
-                _approvedDateCtrl,
-              ),
-            ],
-          )
-        else
-          Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: sigField(
-                      'Prepared by (Head of Validated Office)',
-                      _preparedByCtrl,
-                      _preparedDateCtrl,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: sigField(
-                      'Acknowledged by (Validation Team Leader)',
-                      _acknowledgedByCtrl,
-                      _acknowledgedDateCtrl,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: sigField(
-                      'Approved by (Team Leader, OSM – Performance Management and Analytics)',
-                      _approvedByCtrl,
-                      _approvedDateCtrl,
-                    ),
-                  ),
-                  const Expanded(child: SizedBox()),
-                ],
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-
   Widget _buildFooter(bool isMobile) {
     return Container(
       padding: EdgeInsets.symmetric(
@@ -1225,7 +1215,18 @@ class _PerformanceValidationDialogState
             permission: AppPermissions.draftPerformanceValidationTool,
             child: OutlinedButton(
               onPressed:
-                  _submitting ? null : () => _saveValidation(isSubmit: false),
+                  _submitting
+                      ? null
+                      : () async {
+                        final confirmed = await _showConfirmDialog(
+                          title: 'Confirm Save',
+                          message:
+                              'Are you sure you want to save this as draft?',
+                          confirmLabel: 'Save',
+                          icon: Icons.save_outlined,
+                        );
+                        if (confirmed) _saveValidation(isSubmit: false);
+                      },
               style: OutlinedButton.styleFrom(
                 foregroundColor: primaryColor,
                 side: const BorderSide(color: primaryColor),
@@ -1249,10 +1250,21 @@ class _PerformanceValidationDialogState
           const SizedBox(width: 10),
           if (widget.existing != null) ...[
             PermissionWidget(
-              permission: AppPermissions.submitPerformanceGovernanceSystem,
+              permission: AppPermissions.submitPerformanceValidationTool,
               child: ElevatedButton(
                 onPressed:
-                    _submitting ? null : () => _saveValidation(isSubmit: true),
+                    _submitting
+                        ? null
+                        : () async {
+                          final confirmed = await _showConfirmDialog(
+                            title: 'Confirm Submit',
+                            message:
+                                'Are you sure you want to submit this validation?',
+                            confirmLabel: 'Submit',
+                            icon: Icons.send_outlined,
+                          );
+                          if (confirmed) _saveValidation(isSubmit: true);
+                        },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
                   foregroundColor: Colors.white,
@@ -1267,6 +1279,46 @@ class _PerformanceValidationDialogState
                 ),
                 child: Text(
                   'Submit',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: isMobile ? 11 : 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(width: 10),
+          if (widget.existing != null) ...[
+            PermissionWidget(
+              permission: AppPermissions.confirmPerformanceValidationTool,
+              child: ElevatedButton(
+                onPressed:
+                    _submitting
+                        ? null
+                        : () async {
+                          final confirmed = await _showConfirmDialog(
+                            title: 'Confirm Approval',
+                            message:
+                                'Are you sure you want to confirm/approve this validation?',
+                            confirmLabel: 'Confirm',
+                            icon: Icons.check_circle_outline,
+                          );
+                          if (confirmed) _saveValidation(isSubmit: true);
+                        },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 18 : 28,
+                    vertical: isMobile ? 8 : 12,
+                  ),
+                  elevation: 2,
+                ),
+                child: Text(
+                  'Confirm',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: isMobile ? 11 : 13,
                     fontWeight: FontWeight.w700,
@@ -1387,7 +1439,6 @@ class _PerformanceValidationDialogState
                       _buildValidationFindings(isMobile),
                       _buildCommendations(),
                       _buildConclusion(),
-                      _buildSignatories(isMobile),
                       const SizedBox(height: 8),
                     ],
                   ),

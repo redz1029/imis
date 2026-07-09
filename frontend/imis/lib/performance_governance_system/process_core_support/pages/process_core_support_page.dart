@@ -231,14 +231,18 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                 : null,
                   ),
                   const SizedBox(height: 12),
-                  dialogField(label: 'Remarks', controller: remarksController),
+                  dialogField(
+                    label: 'Remarks',
+                    controller: remarksController,
+                    maxLines: 4,
+                  ),
                   const SizedBox(height: 12),
                   dialogField(
                     label: 'Strategic Contribution',
                     controller: strategicObjectiveController,
+                    maxLines: 3,
                   ),
                   const SizedBox(height: 24),
-
                   Row(
                     children: [
                       Expanded(
@@ -437,8 +441,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                               );
                               await _processCoreSupportService
                                   .createOrUpdateKra(kra);
-                              setState(() => fetchKRA());
-                              if (!context.mounted) return;
+                              fetchKRA();
                               MotionToast.success(
                                 toastAlignment: Alignment.topCenter,
                                 description: const Text('Saved successfully'),

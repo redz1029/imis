@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/models/pgs_deliverable_accomplishment.dart';
@@ -17,6 +18,7 @@ import 'package:imis/performance_governance_system/services/performance_governan
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/operation_review_protocol/dialog/operations_review_protocol_widget.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
@@ -554,58 +556,26 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
       barrierDismissible: false,
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: const Text("Confirm Delete"),
-            content: Text(
-              "Are you sure you want to delete the protocol for "
-              "${p.postingDate != null ? _monthLabel(p.postingDate!) : 'this record'}? "
-              "This action cannot be undone.",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(
-                  "Cancel",
-                  style: TextStyle(color: primaryTextColor),
-                ),
-              ),
-              TextButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+          (ctx) => DeleteDialog(
+            title: 'Performance Validation',
+            itemName: 'performance validation',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              await _pgsService.deleteOperationReviewProtocol(p.id.toString());
+              await _loadProtocols();
+              try {
+                MotionToast.success(
+                  description: Text(
+                    'Performance validation deleted successfully',
+                    style: GoogleFonts.plusJakartaSans(),
                   ),
-                ),
-                onPressed: () async {
-                  Navigator.pop(ctx);
-                  try {
-                    await _pgsService.deleteOperationReviewProtocol(
-                      p.id.toString(),
-                    );
-                    await _loadProtocols();
-                    if (mounted) {
-                      MotionToast.success(
-                        toastAlignment: Alignment.topCenter,
-                        description: const Text('Deleted successfully'),
-                      ).show(context);
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      MotionToast.error(
-                        description: const Text('Failed to delete'),
-                      ).show(context);
-                    }
-                  }
-                },
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+                ).show(context);
+              } catch (_) {
+                MotionToast.error(
+                  description: Text('Failed to delete performance validation'),
+                ).show(context);
+              }
+            },
           ),
     );
   }
@@ -835,13 +805,13 @@ class _SavedMonthRow extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final VoidCallback? onPrintPreview;
-  final VoidCallback? onDelete; // ← new
+  final VoidCallback? onDelete;
 
   const _SavedMonthRow({
     required this.label,
     required this.onTap,
     this.onPrintPreview,
-    this.onDelete, // ← new
+    this.onDelete,
   });
 
   @override

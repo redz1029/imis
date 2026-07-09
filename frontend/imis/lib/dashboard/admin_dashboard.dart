@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:math' as math;
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/auditor/models/auditor.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
-import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
+import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
@@ -11,7 +15,9 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/services/home_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/home/dynamic_side_column.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -28,20 +34,26 @@ class AdminDashboardState extends State<AdminDashboard> {
   List<PgsDeliverables> deliverablesList = [];
   List<PgsDeliverables> filteredDeliverables = [];
 
-  List<KeyResultArea> kraList = [];
-  List<KeyResultArea> filteredKra = [];
-  List<String> roles = [];
+  List<PgsPeriod> statsPeriodList = [];
+  PgsPeriod? selectedStatsPeriod;
+  bool isLoadingStatistics = false;
+  int statTotalDeliverables = 0;
+  int statTotalOffices = 0;
+  int statTotalAudited = 0;
+  int statCompleted = 0;
+  int statOngoing = 0;
+  int statNotStarted = 0;
 
   List<User> userList = [];
   List<User> filteredListUser = [];
   int totalUsers = 0;
   List<String> office = [];
   String firstName = "firstName";
-
+  final dio = Dio();
   List<Office> officeList = [];
   List<Office> filteredListOffice = [];
   int totalOffices = 0;
-
+  final _commonService = CommonService(Dio());
   List<Team> teamList = [];
   List<Team> filteredListTeam = [];
   int totalTeam = 0;
@@ -51,27 +63,17 @@ class AdminDashboardState extends State<AdminDashboard> {
   int totalAuditor = 0;
 
   final int maxDeliverables = 100;
-  int _currentImageIndex = 0;
-  late Timer imageTimer;
-  final List<String> rotatingImages = ['assets/pic1.jpg', 'assets/pic2.jpg'];
 
   @override
   void initState() {
     super.initState();
     loadUserNames();
     _fetchAllData();
-    imageTimer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
-      if (mounted) {
-        setState(() {
-          _currentImageIndex = (_currentImageIndex + 1) % rotatingImages.length;
-        });
-      }
-    });
+    _loadStatisticsPeriods();
   }
 
   @override
   void dispose() {
-    imageTimer.cancel();
     super.dispose();
   }
 
@@ -107,13 +109,80 @@ class AdminDashboardState extends State<AdminDashboard> {
 
           deliverablesList = data.deliverables;
           filteredDeliverables = List.from(data.deliverables);
-
-          kraList = data.kras;
-          filteredKra = List.from(data.kras);
         });
       }
     } catch (e) {
       if (mounted) {}
+    }
+  }
+
+  Future<void> _loadStatisticsPeriods() async {
+    try {
+      final periods = await _commonService.fetchPgsPeriod();
+      if (!mounted) return;
+      setState(() {
+        statsPeriodList = periods;
+        selectedStatsPeriod = periods.isNotEmpty ? periods.first : null;
+      });
+      if (selectedStatsPeriod != null) {
+        await _fetchStatistics(selectedStatsPeriod!.id);
+      }
+    } catch (e) {
+      // handle error
+    }
+  }
+
+  Future<String> _getRoleId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      return currentRole.id;
+    }
+    return '';
+  }
+
+  Future<void> _fetchStatistics(int pgsPeriodId) async {
+    setState(() => isLoadingStatistics = true);
+    try {
+      final roleIdParam = await _getRoleId();
+      final results = await Future.wait([
+        AuthenticatedRequest.get(
+          dio,
+          '${ApiEndpoint().dashboardTotalDeliverables}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
+        ),
+        AuthenticatedRequest.get(
+          dio,
+          '${ApiEndpoint().dashboardTotalOffices}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
+        ),
+        AuthenticatedRequest.get(
+          dio,
+          '${ApiEndpoint().dashboardTotalAudited}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
+        ),
+        AuthenticatedRequest.get(
+          dio,
+          '${ApiEndpoint().dashboardAuditStatus}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
+        ),
+      ]);
+
+      if (!mounted) return;
+      setState(() {
+        statTotalDeliverables = results[0].data['totalNoDeliverable'] ?? 0;
+        statTotalOffices = results[1].data['totalNoOffice'] ?? 0;
+        statTotalAudited = results[2].data['totalNoAudited'] ?? 0;
+        statCompleted = results[3].data['completed'] ?? 0;
+        statOngoing = results[3].data['ongoing'] ?? 0;
+        statNotStarted = results[3].data['notStarted'] ?? 0;
+        isLoadingStatistics = false;
+      });
+    } catch (e) {
+      if (mounted) setState(() => isLoadingStatistics = false);
     }
   }
 
@@ -157,8 +226,9 @@ class AdminDashboardState extends State<AdminDashboard> {
           _buildStatsRow(),
           const SizedBox(height: 16),
 
+          _buildStatisticsSection(),
+          const SizedBox(height: 16),
           _buildInfoCards(),
-
           const SizedBox(height: 16),
           DynamicSideColumn1(
             focusedDay: _focusedDay,
@@ -179,7 +249,6 @@ class AdminDashboardState extends State<AdminDashboard> {
         ],
       );
     }
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -189,16 +258,16 @@ class AdminDashboardState extends State<AdminDashboard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildWelcome(),
-              const SizedBox(height: 24),
+              gap8px,
               _buildStatsRow(),
-              const SizedBox(height: 24),
+              gap6px,
+              _buildStatisticsSection(),
+              gap6px,
               _buildInfoCards(),
             ],
           ),
         ),
-
         const SizedBox(width: 24),
-
         SizedBox(
           width: 250,
           child: DynamicSideColumn1(
@@ -230,7 +299,6 @@ class AdminDashboardState extends State<AdminDashboard> {
         if (isMobile) {
           return Column(children: [_welcomeCard(), const SizedBox(height: 16)]);
         }
-
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -258,7 +326,6 @@ class AdminDashboardState extends State<AdminDashboard> {
             ],
           );
         }
-
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -422,7 +489,6 @@ class AdminDashboardState extends State<AdminDashboard> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // ── Header banner ───────────────────────────────────
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
@@ -847,8 +913,6 @@ class AdminDashboardState extends State<AdminDashboard> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-
-        // PHONE (stacked)
         if (width < 600) {
           return Column(
             children:
@@ -862,8 +926,6 @@ class AdminDashboardState extends State<AdminDashboard> {
                     .toList(),
           );
         }
-
-        // TABLET (2 columns grid)
         if (width < 1000) {
           return GridView.builder(
             shrinkWrap: true,
@@ -965,6 +1027,506 @@ class AdminDashboardState extends State<AdminDashboard> {
       ),
     );
   }
+
+  String _formatPeriodLabel(PgsPeriod period) {
+    final start = _formatShortDate(period.startDate);
+    final end = _formatShortDate(period.endDate);
+    final baseLabel = "$start - $end";
+
+    if (period.remarks != null && period.remarks!.trim().isNotEmpty) {
+      return "${period.remarks} ($baseLabel)";
+    }
+    return baseLabel;
+  }
+
+  String _formatShortDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return "${months[date.month - 1]} ${date.year}";
+  }
+
+  Widget _buildStatisticsSection() {
+    final double auditRate =
+        statTotalDeliverables > 0
+            ? (statTotalAudited / statTotalDeliverables).clamp(0.0, 1.0)
+            : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Audit Statistics",
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    "Overview of Audit Statistics for the Selected Period",
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+              _buildPeriodDropdownPill(),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          if (isLoadingStatistics)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: CircularProgressIndicator(color: primaryColor),
+              ),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 700;
+
+                final donut = _buildAuditDonut(auditRate);
+                final bars = _buildComparisonBars();
+
+                if (isMobile) {
+                  return Column(
+                    children: [donut, const SizedBox(height: 24), bars],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 4, child: donut),
+                    const SizedBox(width: 24),
+                    Expanded(flex: 6, child: bars),
+                  ],
+                );
+              },
+            ),
+
+          if (!isLoadingStatistics) ...[
+            const SizedBox(height: 28),
+            Divider(color: Colors.grey.shade200, height: 1),
+            const SizedBox(height: 24),
+            Text(
+              "Deliverable Progress",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Tracking deliverable status trends month-over-month",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildAuditStatusDonut(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodDropdownPill() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: primaryColor.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<PgsPeriod>(
+          value: selectedStatsPeriod,
+          icon: Icon(Icons.expand_more, size: 18, color: primaryColor),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: primaryColor,
+          ),
+          hint: Text(
+            "Select Period",
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: primaryColor,
+            ),
+          ),
+          items:
+              statsPeriodList.map((period) {
+                return DropdownMenuItem<PgsPeriod>(
+                  value: period,
+                  child: Text(_formatPeriodLabel(period)),
+                );
+              }).toList(),
+          onChanged: (period) {
+            if (period == null) return;
+            setState(() => selectedStatsPeriod = period);
+            _fetchStatistics(period.id);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAuditDonut(double rate) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: kBackground,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          Text(
+            "Audit Completion",
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: rate),
+            duration: const Duration(milliseconds: 900),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return SizedBox(
+                width: 160,
+                height: 160,
+                child: CustomPaint(
+                  painter: _DonutPainter(
+                    progress: value,
+                    progressColor: primaryColor,
+                    backgroundColor: Colors.grey.shade200,
+                    strokeWidth: 14,
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "${(value * 100).toStringAsFixed(0)}%",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          "Audited",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _legendDot(primaryColor, "$statTotalAudited Audited"),
+              const SizedBox(width: 16),
+              _legendDot(
+                Colors.grey.shade300,
+                "${(statTotalDeliverables - statTotalAudited).clamp(0, statTotalDeliverables == 0 ? 0 : statTotalDeliverables)} Pending",
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _legendDot(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 11,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildComparisonBars() {
+    final maxValue = [
+      statTotalDeliverables,
+      statTotalOffices,
+      statTotalAudited,
+    ].fold<int>(0, (prev, e) => e > prev ? e : prev).clamp(1, 999999);
+
+    final entries = [
+      _BarEntry(
+        "Total Deliverables",
+        statTotalDeliverables,
+        Icons.assignment_turned_in_outlined,
+        primaryColor,
+      ),
+      _BarEntry(
+        "Total Offices that Produced Deliverables",
+        statTotalOffices,
+        Icons.apartment_outlined,
+        Colors.blue.shade300,
+      ),
+      _BarEntry(
+        "Total Audited Deliverables",
+        statTotalAudited,
+        Icons.fact_check_outlined,
+        kSuccess,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children:
+          entries.map((e) {
+            final ratio = e.value / maxValue;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(e.icon, size: 16, color: e.color),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          e.label,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        e.value.toString(),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: e.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      height: 10,
+                      color: Colors.grey.shade100,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
+                          duration: const Duration(milliseconds: 900),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, child) {
+                            return FractionallySizedBox(
+                              widthFactor: value,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: e.color,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _buildAuditStatusDonut() {
+    final total = statCompleted + statOngoing + statNotStarted;
+
+    final segments = [
+      _DonutSegment("Completed", statCompleted, Colors.green),
+      _DonutSegment("Ongoing", statOngoing, Colors.orange),
+      _DonutSegment("Not Started", statNotStarted, Colors.redAccent),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 700;
+
+        final chart = Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: kBackground,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            children: [
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.easeOutCubic,
+                builder: (context, animValue, child) {
+                  return SizedBox(
+                    width: 160,
+                    height: 160,
+                    child: CustomPaint(
+                      painter: _MultiDonutPainter(
+                        segments: segments,
+                        total: total,
+                        strokeWidth: 14,
+                        animationProgress: animValue,
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              total.toString(),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              "Total",
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+
+        final legend = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children:
+              segments.map((s) {
+                final pct = total > 0 ? (s.value / total * 100) : 0.0;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: s.color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          s.label,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        "${s.value} (${pct.toStringAsFixed(0)}%)",
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: s.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+        );
+
+        if (isMobile) {
+          return Column(children: [chart, const SizedBox(height: 20), legend]);
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(flex: 4, child: chart),
+            const SizedBox(width: 24),
+            Expanded(flex: 6, child: legend),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _StatItem {
@@ -979,4 +1541,131 @@ class _StatItem {
     required this.icon,
     required this.color,
   });
+}
+
+class _BarEntry {
+  final String label;
+  final int value;
+  final IconData icon;
+  final Color color;
+
+  _BarEntry(this.label, this.value, this.icon, this.color);
+}
+
+class _DonutPainter extends CustomPainter {
+  final double progress;
+  final Color progressColor;
+  final Color backgroundColor;
+  final double strokeWidth;
+
+  _DonutPainter({
+    required this.progress,
+    required this.progressColor,
+    required this.backgroundColor,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+
+    final bgPaint =
+        Paint()
+          ..color = backgroundColor
+          ..strokeWidth = strokeWidth
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+
+    final fgPaint =
+        Paint()
+          ..color = progressColor
+          ..strokeWidth = strokeWidth
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, radius, bgPaint);
+
+    final sweepAngle = 2 * math.pi * progress;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      sweepAngle,
+      false,
+      fgPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _DonutPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+class _DonutSegment {
+  final String label;
+  final int value;
+  final Color color;
+
+  _DonutSegment(this.label, this.value, this.color);
+}
+
+class _MultiDonutPainter extends CustomPainter {
+  final List<_DonutSegment> segments;
+  final int total;
+  final double strokeWidth;
+  final double animationProgress;
+
+  _MultiDonutPainter({
+    required this.segments,
+    required this.total,
+    required this.strokeWidth,
+    required this.animationProgress,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+    if (total <= 0) {
+      final emptyPaint =
+          Paint()
+            ..color = Colors.grey.shade200
+            ..strokeWidth = strokeWidth
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round;
+      canvas.drawCircle(center, radius, emptyPaint);
+      return;
+    }
+
+    double startAngle = -math.pi / 2;
+
+    for (final segment in segments) {
+      if (segment.value <= 0) continue;
+
+      final sweepAngle =
+          (segment.value / total) * 2 * math.pi * animationProgress;
+
+      final paint =
+          Paint()
+            ..color = segment.color
+            ..strokeWidth = strokeWidth
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round;
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle,
+        false,
+        paint,
+      );
+
+      startAngle += (segment.value / total) * 2 * math.pi;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MultiDonutPainter oldDelegate) =>
+      oldDelegate.animationProgress != animationProgress ||
+      oldDelegate.segments != segments;
 }
