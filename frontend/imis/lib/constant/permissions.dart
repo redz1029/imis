@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-06-29 13:42:38.315346
+// Last synced: 2026-07-08 13:18:30.985093
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -43,6 +43,10 @@ class AppPermissions {
   static const String addPerformanceValidationToolPeriod = 'Add Performance Validation Tool Period';
   static const String viewPerformanceValidationToolPeriod = 'View Performance Validation Tool Period';
   static const String editPerformanceValidationToolPeriod = 'Edit Performance Validation Tool Period';
+  static const String deletePerformanceValidationTool = 'Delete Performance Validation Tool';
+  static const String draftPerformanceValidationTool = 'Draft Performance Validation Tool';
+  static const String submitPerformanceValidationTool = 'Submit Performance Validation Tool';
+  static const String confirmPerformanceValidationTool = 'Confirm Performance Validation Tool';
   static const String addPerformanceValidationTool = 'Add Performance Validation Tool';
   static const String viewPerformanceValidationTool = 'View Performance Validation Tool';
   static const String editPerformanceValidationTool = 'Edit Performance Validation Tool';
