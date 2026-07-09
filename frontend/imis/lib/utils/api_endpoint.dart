@@ -82,6 +82,8 @@ class ApiEndpoint {
   late String dashboardTotalOffices;
   late String dashboardTotalDeliverables;
   late String dashboardAuditStatus;
+  late String performanceValidationPdfReport;
+  late String serviceOfficePeriodReport;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -164,6 +166,9 @@ class ApiEndpoint {
     dashboardTotalOffices = '$baseUrl/dashboard/total-offices-count';
     dashboardTotalAudited = '$baseUrl/dashboard/total-audited-count';
     dashboardAuditStatus = '$baseUrl/dashboard/audit-status-count';
+    performanceValidationPdfReport =
+        '$baseUrl/performanceValidationTool/pdf-report';
+    serviceOfficePeriodReport = '$baseUrl/pgs/service-office-period-report';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
