@@ -41,47 +41,42 @@ namespace IMIS.Persistence.PerformanceValidationToolModule
 
             return true;
         }
-
+        
         private async Task<PerformanceValidationToolDto> ProcessSignatoriesAsync(PerformanceValidationTool tool, string userId, CancellationToken cancellationToken)
         {
             var dto = new PerformanceValidationToolDto(tool)
             {
                 PvtSignatories = new List<PerformanceValidationToolSignatoryDto>()
             };
-
-            bool hasSavedSignatories = tool.PvtSignatories != null &&  tool.PvtSignatories.Any(s => s.Id > 0);
-
+            bool hasSavedSignatories = tool.PvtSignatories != null && tool.PvtSignatories.Any(s => s.Id > 0);
             dto.IsDraft = !hasSavedSignatories;
-
             var templates = await GetInheritedSignatoryTemplatesAsync(tool.Office!, cancellationToken);
-
             var userIds = new List<string>();
-
             if (tool.Office?.UserOffices != null)
             {
                 userIds.AddRange(tool.Office.UserOffices.Where(x => x.IsOfficeHead).Select(x => x.UserId));
             }
-
             userIds.AddRange(templates.Where(t => !string.IsNullOrWhiteSpace(t.DefaultSignatoryId)).Select(t => t.DefaultSignatoryId!));
-
             if (tool.PvtSignatories != null)
             {
                 userIds.AddRange(tool.PvtSignatories.Where(s => s.SignatoryId != null).Select(s => s.SignatoryId!));
             }
-
+            if (!string.IsNullOrWhiteSpace(tool.OfficeHeadUserId))
+            {
+                userIds.Add(tool.OfficeHeadUserId);
+            }
             userIds = userIds.Distinct().ToList();
-
             var usersDict = await _userManager.Users.Where(u => userIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, cancellationToken);
-
             string GetFullName(string id)
             {
                 return usersDict.TryGetValue(id, out var u) ? string.Join(" ", new[]
-                { u.FirstName, 
-                  u.LastName 
-                } 
+                {
+                    u.FirstName,
+                    u.LastName
+                }
                 .Where(x => !string.IsNullOrWhiteSpace(x))) : "";
             }
-       
+
             foreach (var s in tool.PvtSignatories ?? [])
             {
                 dto.PvtSignatories.Add(new PerformanceValidationToolSignatoryDto
@@ -96,14 +91,32 @@ namespace IMIS.Persistence.PerformanceValidationToolModule
                     Status = s.DateSigned != default ? PgsStatus.Prepared : PgsStatus.Pending
                 });
             }
-       
+
+            if (!string.IsNullOrWhiteSpace(tool.OfficeHeadUserId))
+            {
+                bool officeHeadAlreadyExists = dto.PvtSignatories.Any(x => x.SignatoryId == tool.OfficeHeadUserId);
+                if (!officeHeadAlreadyExists)
+                {
+                    dto.PvtSignatories.Add(new PerformanceValidationToolSignatoryDto
+                    {
+                        Id = 0,
+                        PerformanceValidationToolId = tool.Id,
+                        PerformanceValidationToolSignatoryTemplateId = null,
+                        SignatoryId = tool.OfficeHeadUserId,
+                        SignatoryName = GetFullName(tool.OfficeHeadUserId),
+                        Label = "Office Head",
+                        OrderLevel = 0,
+                        Status = PgsStatus.Pending,
+                        IsNextStatus = false
+                    });
+                }
+            }
+
             foreach (var t in templates.OrderBy(x => x.OrderLevel))
             {
                 bool exists = dto.PvtSignatories.Any(x => x.PerformanceValidationToolSignatoryTemplateId == t.Id);
-
                 if (exists)
                     continue;
-
                 dto.PvtSignatories.Add(new PerformanceValidationToolSignatoryDto
                 {
                     Id = 0,
@@ -117,22 +130,19 @@ namespace IMIS.Persistence.PerformanceValidationToolModule
                     IsNextStatus = false
                 });
             }
-         
-            var firstSignatory = dto.PvtSignatories.Where(x => x.Id > 0 && x.DateSigned != default).OrderBy(x => x.DateSigned).FirstOrDefault();
 
+            var firstSignatory = dto.PvtSignatories.Where(x => x.Id > 0 && x.DateSigned != default).OrderBy(x => x.DateSigned).FirstOrDefault();
             if (firstSignatory != null)
             {
                 firstSignatory.PerformanceValidationToolSignatoryTemplateId = null;
             }
-        
+
             dto.PvtSignatories = dto.PvtSignatories.OrderBy(x => x.OrderLevel).ToList();
-
             var next = dto.PvtSignatories.Where(x => x.Status == PgsStatus.Pending).OrderBy(x => x.OrderLevel).FirstOrDefault();
-
             if (next != null) next.IsNextStatus = true;
-
             return dto;
         }
+
         public async Task<PerformanceValidationToolDto?>GetByUserIdAndPerformanceValidationToolIdAsync(string userId, long performanceValidationToolId,  CancellationToken cancellationToken)
         {
             var tool = await _repository.GetByUserIdAndPerformanceValidationToolIdAsync(performanceValidationToolId, cancellationToken);
