@@ -136,7 +136,7 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
                 return Results.Created($"/performanceValidationTool/{submitted.Id}", submitted);
             })
            .WithTags(_performanceValidationTool)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.Submit));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.Submit, _performanceValidationToolPermission.Confirm));
 
             app.MapGet("/submit/userId/{userId}", async (string userId, long performanceValidationToolId, IPerformanceValidationToolService service, CancellationToken cancellationToken) =>
             {
