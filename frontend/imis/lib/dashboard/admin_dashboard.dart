@@ -267,9 +267,9 @@ class AdminDashboardState extends State<AdminDashboard> {
             ],
           ),
         ),
-        const SizedBox(width: 24),
+        const SizedBox(width: 6),
         SizedBox(
-          width: 250,
+          width: 290,
           child: DynamicSideColumn1(
             focusedDay: _focusedDay,
             selectedDay: _selectedDay,

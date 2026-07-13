@@ -16,6 +16,7 @@ import 'package:imis/dashboard/strategic_change_agenda.dart';
 import 'package:imis/dashboard/strategy_roadmap_page.dart';
 import 'package:imis/office/pages/office_page.dart';
 import 'package:imis/operation_review_protocol/pages/operation_review_protocol_page.dart';
+import 'package:imis/osm_calendar_activity/pages/osm_calendar_actvity_page.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/pages/deliverable_status_monitoring_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page..dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
@@ -1130,11 +1131,9 @@ class SidebarState extends State<Sidebar> {
   Widget getCurrentPage() {
     if (selectedPage == 0) {
       if (selectedSubPage == 0) return HomePage();
-      if (selectedSubPage == 1) return SummaryValidatedDeliverablesPage();
-      if (selectedSubPage == 2) return PgsServiceOfficePeriodReportPage();
-      if (selectedSubPage == 3) return HomePage();
-      if (selectedSubPage == 4) return const StrategyRoadmapPage();
-      if (selectedSubPage == 5) return const StrategicChangeAgenda();
+      if (selectedSubPage == 1) return StrategyRoadmapPage();
+      if (selectedSubPage == 2) return const StrategicChangeAgenda();
+      if (selectedSubPage == 3) return OsmCalendarActvityPage();
     }
     if (selectedPage == 1) {
       if (selectedSubPage == 0) return const RoadmapPage();
@@ -1147,6 +1146,8 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 7) return const StrategyReviewReportPage();
       if (selectedSubPage == 6) return const ViewSummaryNarrativeReportPage();
       if (selectedSubPage == 9) return const PerformanceValidationPage();
+      if (selectedSubPage == 10) return SummaryValidatedDeliverablesPage();
+      if (selectedSubPage == 11) return PgsServiceOfficePeriodReportPage();
     }
 
     if (selectedPage == 3) {
@@ -1510,11 +1511,9 @@ class SidebarState extends State<Sidebar> {
                 children: [
                   if (selectedPage == 0) ...[
                     sidebarSubText("Overview", 0),
-                    sidebarSubText("Summary Validated Deliverables", 1),
-                    sidebarSubText("Summary of Offices with Deliverables", 2),
-                    sidebarSubText("Strategy Map", 4),
-                    sidebarSubText("Strategic Change Agenda", 5),
-                    sidebarSubText("OSM Calendar of Acticity", 3),
+                    sidebarSubText("Strategy Map", 1),
+                    sidebarSubText("Strategic Change Agenda", 2),
+                    sidebarSubText("Calendar of Activities", 3),
                   ],
                   //PGS
                   if (selectedPage == 1) ...[
@@ -1760,6 +1759,26 @@ class SidebarState extends State<Sidebar> {
                               ? sidebarSubText("PGS Auditor Report", 6)
                               : SizedBox.shrink(),
                     ),
+
+                    ExpandableSidebarItem(
+                      title: "PGS Reports",
+                      items: [
+                        {
+                          "title": "Summary Validated Deliverables",
+                          "index": 10,
+                        },
+                        {
+                          "title": "Summary of Offices with Deliverables",
+                          "index": 11,
+                        },
+                      ],
+                      selectedSubPage: selectedSubPage,
+                      onTap: (index) {
+                        setState(() {
+                          selectedSubPage = index;
+                        });
+                      },
+                    ),
                   ],
 
                   if (selectedPage == 3) ...[
@@ -1845,14 +1864,14 @@ class _ExpandableSidebarItemState extends State<ExpandableSidebarItem> {
   @override
   Widget build(BuildContext context) {
     final TextStyle normalStyle = TextStyle(
-      fontSize: 12,
+      fontSize: 13,
       color: Theme.of(
         context,
       ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
       fontWeight: FontWeight.w400,
     );
     final TextStyle activeStyle = TextStyle(
-      fontSize: 12,
+      fontSize: 13,
       color: primaryColor,
       fontWeight: FontWeight.bold,
     );
