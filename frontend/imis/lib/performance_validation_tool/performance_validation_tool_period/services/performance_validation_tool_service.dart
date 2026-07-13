@@ -21,7 +21,7 @@ class PerformanceValidationToolService {
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
-      fromJson: (json) => PerformanceValidationToolPeriod.fromjson(json),
+      fromJson: (json) => PerformanceValidationToolPeriod.fromJson(json),
     );
   }
 
@@ -48,7 +48,7 @@ class PerformanceValidationToolService {
     );
 
     if (response.statusCode == 200) {
-      return PerformanceValidationToolPeriod.fromjson(response.data);
+      return PerformanceValidationToolPeriod.fromJson(response.data);
     }
 
     return null;

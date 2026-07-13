@@ -88,7 +88,8 @@ class _PerformanceValidationDialogState
   final _acknowledgedDateCtrl = TextEditingController();
   final _approvedByCtrl = TextEditingController();
   final _approvedDateCtrl = TextEditingController();
-
+  bool _canConfirm = false;
+  bool _checkingConfirmEligibility = false;
   bool _submitting = false;
 
   final CommonService _commonService = CommonService(Dio());
@@ -98,19 +99,58 @@ class _PerformanceValidationDialogState
   void initState() {
     super.initState();
     _objectiveChecked = List.filled(_objectives.length, false);
-    if (widget.existing == null) {
-      _loadCurrentUserTeam();
-    } else {
-      _teamLoading = false;
-    }
-    _loadPeriods();
-    _loadSignatory(widget.pgs.id);
 
     if (widget.existing != null) {
+      _teamLoading = false;
+      _periodsLoading = false;
+      _headLoading = false;
+      _checkConfirmEligibility();
       _populateFromExisting(widget.existing!);
       _loadDeliverablesFromExisting(widget.existing!);
     } else {
+      _loadCurrentUserTeam();
+      _loadPeriods();
+      _loadSignatory(widget.pgs.id);
       _loadDeliverables(widget.pgs.id);
+    }
+  }
+
+  Future<void> _checkConfirmEligibility() async {
+    if (widget.existing == null) return;
+
+    setState(() => _checkingConfirmEligibility = true);
+
+    try {
+      final user = await AuthUtil.fetchLoggedUser();
+      if (user == null || user.id == null || user.id!.isEmpty) {
+        if (mounted) setState(() => _canConfirm = false);
+        return;
+      }
+      final signatories = widget.existing!.pvtSignatories ?? [];
+      final matchingSignatory = signatories.firstWhereOrNull(
+        (s) => s.signatoryId == user.id,
+      );
+
+      if (matchingSignatory != null) {
+        if (mounted) {
+          setState(() => _canConfirm = matchingSignatory.isNextStatus == true);
+        }
+        return;
+      }
+
+      final statusCode = await _pvtSaveService.getPerformanceValidationByUserId(
+        userId: user.id!,
+        performanceValidationToolId: widget.existing!.id,
+      );
+
+      if (mounted) {
+        setState(() => _canConfirm = (statusCode == 200));
+      }
+    } catch (e) {
+      debugPrint('Error checking confirm eligibility:');
+      if (mounted) setState(() => _canConfirm = false);
+    } finally {
+      if (mounted) setState(() => _checkingConfirmEligibility = false);
     }
   }
 
@@ -120,6 +160,16 @@ class _PerformanceValidationDialogState
       ..addAll(v.validators ?? []);
 
     _validationDate = v.validateDate;
+
+    if (v.officeHeadName != null) {
+      _headName = v.officeHeadName ?? '';
+    }
+
+    _headUserId = v.officeHeadUserId;
+    if (v.period != null) {
+      _selectedPeriod = v.period;
+      _periods = [v.period!];
+    }
     if (v.validateDate != null) {
       _validationDateCtrl.text =
           '${_monthName(v.validateDate!.month)} ${v.validateDate!.day}, ${v.validateDate!.year}';
@@ -1185,6 +1235,16 @@ class _PerformanceValidationDialogState
   }
 
   Widget _buildFooter(bool isMobile) {
+    final hasSignatories =
+        widget.existing?.pvtSignatories != null &&
+        widget.existing!.pvtSignatories!.isNotEmpty;
+
+    final showActionButton =
+        widget.existing != null && (!hasSignatories || _canConfirm);
+    final actionLabel = hasSignatories ? 'Confirm' : 'Submit';
+    final actionIcon =
+        hasSignatories ? Icons.check_circle_outline : Icons.send_outlined;
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 24,
@@ -1211,74 +1271,36 @@ class _PerformanceValidationDialogState
               ),
             ),
 
-          PermissionWidget(
-            permission: AppPermissions.draftPerformanceValidationTool,
-            child: OutlinedButton(
-              onPressed:
-                  _submitting
-                      ? null
-                      : () async {
-                        final confirmed = await _showConfirmDialog(
-                          title: 'Confirm Save',
-                          message:
-                              'Are you sure you want to save this as draft?',
-                          confirmLabel: 'Save',
-                          icon: Icons.save_outlined,
-                        );
-                        if (confirmed) _saveValidation(isSubmit: false);
-                      },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: primaryColor,
-                side: const BorderSide(color: primaryColor),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 14 : 22,
-                  vertical: isMobile ? 8 : 12,
-                ),
-              ),
-              child: Text(
-                'Save as Draft',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: isMobile ? 11 : 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          if (widget.existing != null) ...[
+          if (!hasSignatories) ...[
             PermissionWidget(
-              permission: AppPermissions.submitPerformanceValidationTool,
-              child: ElevatedButton(
+              permission: AppPermissions.draftPerformanceValidationTool,
+              child: OutlinedButton(
                 onPressed:
                     _submitting
                         ? null
                         : () async {
                           final confirmed = await _showConfirmDialog(
-                            title: 'Confirm Submit',
+                            title: 'Confirm Save',
                             message:
-                                'Are you sure you want to submit this validation?',
-                            confirmLabel: 'Submit',
-                            icon: Icons.send_outlined,
+                                'Are you sure you want to save this as draft?',
+                            confirmLabel: 'Save',
+                            icon: Icons.save_outlined,
                           );
-                          if (confirmed) _saveValidation(isSubmit: true);
+                          if (confirmed) _saveValidation(isSubmit: false);
                         },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  foregroundColor: Colors.white,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primaryColor,
+                  side: const BorderSide(color: primaryColor),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                   padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 18 : 28,
+                    horizontal: isMobile ? 14 : 22,
                     vertical: isMobile ? 8 : 12,
                   ),
-                  elevation: 2,
                 ),
                 child: Text(
-                  'Submit',
+                  'Save as Draft',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: isMobile ? 11 : 13,
                     fontWeight: FontWeight.w700,
@@ -1286,22 +1308,31 @@ class _PerformanceValidationDialogState
                 ),
               ),
             ),
+            const SizedBox(width: 10),
           ],
-          const SizedBox(width: 10),
-          if (widget.existing != null) ...[
+
+          if (showActionButton) ...[
             PermissionWidget(
-              permission: AppPermissions.confirmPerformanceValidationTool,
+              permission:
+                  hasSignatories
+                      ? AppPermissions.confirmPerformanceValidationTool
+                      : AppPermissions.submitPerformanceValidationTool,
               child: ElevatedButton(
                 onPressed:
                     _submitting
                         ? null
                         : () async {
                           final confirmed = await _showConfirmDialog(
-                            title: 'Confirm Approval',
+                            title:
+                                hasSignatories
+                                    ? 'Confirm Approval'
+                                    : 'Confirm Submit',
                             message:
-                                'Are you sure you want to confirm/approve this validation?',
-                            confirmLabel: 'Confirm',
-                            icon: Icons.check_circle_outline,
+                                hasSignatories
+                                    ? 'Are you sure you want to confirm/approve this validation?'
+                                    : 'Are you sure you want to submit this validation?',
+                            confirmLabel: actionLabel,
+                            icon: actionIcon,
                           );
                           if (confirmed) _saveValidation(isSubmit: true);
                         },
@@ -1318,7 +1349,7 @@ class _PerformanceValidationDialogState
                   elevation: 2,
                 ),
                 child: Text(
-                  'Confirm',
+                  actionLabel,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: isMobile ? 11 : 13,
                     fontWeight: FontWeight.w700,

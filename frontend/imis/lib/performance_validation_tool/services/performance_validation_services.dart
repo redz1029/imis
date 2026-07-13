@@ -62,7 +62,7 @@ class PerformanceValidationServices {
       if (response.statusCode == 200 && response.data != null) {
         final List<dynamic> jsonList = response.data as List<dynamic>;
         return jsonList
-            .map((e) => PerformanceValidationTool.fromjson(e))
+            .map((e) => PerformanceValidationTool.fromJson(e))
             .toList();
       }
     } on DioException {
@@ -86,12 +86,10 @@ class PerformanceValidationServices {
       );
 
       if (response.statusCode == 200 && response.data != null) {
-        return PerformanceValidationTool.fromjson(response.data);
+        return PerformanceValidationTool.fromJson(response.data);
       }
     } on DioException catch (e) {
-      debugPrint(
-        "Dio error fetchProtocolById: ${e.response?.statusCode} ${e.response?.data ?? e.message}",
-      );
+      debugPrint("Dio error fetchProtocolById:");
     } catch (e, st) {
       debugPrint("Unexpected error fetchProtocolById: $e");
       debugPrint("$st");
@@ -113,11 +111,32 @@ class PerformanceValidationServices {
     return response.statusCode;
   }
 
+  Future<int?> getPerformanceValidationByUserId({
+    required String userId,
+    required int performanceValidationToolId,
+  }) async {
+    try {
+      final url =
+          '${ApiEndpoint().performanceValidationTool}/submit/userId/$userId'
+          '?performanceValidationToolId=$performanceValidationToolId';
+
+      final response = await AuthenticatedRequest.get(dio, url);
+      return response.statusCode;
+    } on DioException catch (e) {
+      debugPrint("Dio error submitPerformanceValidation: ${e.message}");
+      return e.response?.statusCode;
+    } catch (e, st) {
+      debugPrint("Unexpected error submitPerformanceValidation: $e");
+      debugPrint("$st");
+      return null;
+    }
+  }
+
   Future<bool> deletePerformanceValidationTool(int id) async {
     try {
       final url = '${ApiEndpoint().performanceValidationTool}/$id';
       await AuthenticatedRequest.delete(dio, url);
-      return true; // walang exception = successful delete
+      return true;
     } on DioException {
       debugPrint("Dio error deletePerformanceValidationTool");
       return false;
@@ -125,5 +144,10 @@ class PerformanceValidationServices {
       debugPrint("Unexpected error deletePerformanceValidationTool: $e");
       return false;
     }
+  }
+
+  Future<void> deletePerformanceValidation(String id) async {
+    final url = '${ApiEndpoint().performanceValidationTool}/$id';
+    await AuthenticatedRequest.delete(dio, url);
   }
 }

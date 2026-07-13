@@ -14,8 +14,15 @@ PerformanceValidationTool _$PerformanceValidationToolFromJson(
   rowVersion: json['rowVersion'] as String?,
   performanceValidationToolPeriodId:
       (json['performanceValidationToolPeriodId'] as num).toInt(),
+  period:
+      json['period'] == null
+          ? null
+          : PerformanceValidationToolPeriod.fromJson(
+            json['period'] as Map<String, dynamic>,
+          ),
   officeId: (json['officeId'] as num).toInt(),
   officeHeadUserId: json['officeHeadUserId'] as String?,
+  officeHeadName: json['officeHeadName'] as String?,
   validateDate: _$JsonConverterFromJson<String, DateTime>(
     json['validateDate'],
     const DateTimeConverter().fromJson,
@@ -60,8 +67,10 @@ Map<String, dynamic> _$PerformanceValidationToolToJson(
   'rowVersion': instance.rowVersion,
   'performanceValidationToolPeriodId':
       instance.performanceValidationToolPeriodId,
+  'period': instance.period,
   'officeId': instance.officeId,
   'officeHeadUserId': instance.officeHeadUserId,
+  'officeHeadName': instance.officeHeadName,
   'validateDate': _$JsonConverterToJson<String, DateTime>(
     instance.validateDate,
     const DateTimeConverter().toJson,

@@ -3,6 +3,7 @@ import 'package:imis/performance_validation_tool/models/pvt_deliverable_findings
 import 'package:imis/performance_validation_tool/models/pvt_objectives.dart';
 import 'package:imis/performance_validation_tool/models/pvt_signatories.dart';
 import 'package:imis/performance_validation_tool/models/pvt_validators.dart';
+import 'package:imis/performance_validation_tool/performance_validation_tool_period/models/performance_validation_tool_period.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -14,10 +15,12 @@ class PerformanceValidationTool {
   bool? isDeleted;
   String? rowVersion;
   int performanceValidationToolPeriodId;
+  PerformanceValidationToolPeriod? period;
 
   int officeId;
 
   String? officeHeadUserId;
+  String? officeHeadName;
 
   @DateTimeConverter()
   DateTime? validateDate;
@@ -40,8 +43,10 @@ class PerformanceValidationTool {
     required this.isDeleted,
     this.rowVersion,
     required this.performanceValidationToolPeriodId,
+    this.period,
     required this.officeId,
     required this.officeHeadUserId,
+    this.officeHeadName,
     required this.validateDate,
     this.comment,
     this.postingDate,
@@ -53,7 +58,7 @@ class PerformanceValidationTool {
     this.isDraft,
     required this.performanceGovernanceSystemId,
   });
-  factory PerformanceValidationTool.fromjson(Map<String, dynamic> json) =>
+  factory PerformanceValidationTool.fromJson(Map<String, dynamic> json) =>
       _$PerformanceValidationToolFromJson(json);
 
   Map<String, dynamic> toJson() => _$PerformanceValidationToolToJson(this);

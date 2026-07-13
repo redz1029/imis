@@ -27,7 +27,7 @@ class PerformanceValidationToolPeriod {
     this.rowVersion,
   });
 
-  factory PerformanceValidationToolPeriod.fromjson(Map<String, dynamic> json) =>
+  factory PerformanceValidationToolPeriod.fromJson(Map<String, dynamic> json) =>
       _$PerformanceValidationToolPeriodFromJson(json);
 
   Map<String, dynamic> toJson() =>

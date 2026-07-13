@@ -13,6 +13,7 @@ import 'package:imis/performance_validation_tool/dialog/performance_validation_d
 import 'package:imis/performance_validation_tool/models/performance_validation_tool.dart';
 import 'package:imis/performance_validation_tool/services/performance_validation_services.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -111,9 +112,26 @@ class _PerformanceValidationListDialogState
           ),
     );
 
-    final data = await widget.onFetchById(v.id);
+    final user = await AuthUtil.fetchLoggedUser();
+
+    final results = await Future.wait([
+      widget.onFetchById(v.id),
+      if (user != null && user.id != null && user.id!.isNotEmpty)
+        _performanceValidationService.getPerformanceValidationByUserId(
+          userId: user.id!,
+          performanceValidationToolId: v.id,
+        )
+      else
+        Future.value(null),
+    ]);
+
+    final data = results[0] as PerformanceValidationTool?;
+    final userCheckStatusCode = results[1] as int?;
+
     if (!mounted) return;
     Navigator.pop(context);
+
+    debugPrint('getPerformanceValidationByUserId status: $userCheckStatusCode');
 
     showDialog(
       context: context,
