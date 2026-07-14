@@ -98,4 +98,19 @@ class OfficeService {
     );
     return parentOffice['name'];
   }
+
+  Future<List<Office>> filterOffices(String name) async {
+    final url = '${ApiEndpoint().office}/filter/$name';
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+      if (response.statusCode == 200 && response.data is List) {
+        return (response.data as List)
+            .map((json) => Office.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
