@@ -10,6 +10,8 @@ namespace IMIS.Application.CalendarActivityModule
         public string? Description { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public TimeSpan? StartTime { get; set; }
+        public TimeSpan? EndTime { get; set; }
         public bool IsAllDay { get; set; }
         public string? Color { get; set; }
         public string? Category { get; set; }

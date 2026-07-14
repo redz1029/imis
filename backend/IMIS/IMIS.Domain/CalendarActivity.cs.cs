@@ -8,7 +8,9 @@ namespace IMIS.Domain
         public string Title { get; set; } = string.Empty;       
         public string? Description { get; set; }     
         public DateTime StartDate { get; set; }    
-        public DateTime EndDate { get; set; }     
+        public DateTime EndDate { get; set; }
+        public TimeSpan? StartTime { get; set; }
+        public TimeSpan? EndTime { get; set; }
         public bool IsAllDay { get; set; }     
         public string? Color { get; set; }   
         public string? Category { get; set; }      
@@ -17,7 +19,7 @@ namespace IMIS.Domain
         public string? UserId { get; set; }       
         public int? OfficeId { get; set; }           
         public int? ReminderMinutes { get; set; }       
-        public string? MeetingLink { get; set; }       
+        public string? MeetingLink { get; set; }          
         public string? AttachmentPath { get; set; }                     
         [ForeignKey(nameof(UserId))]
         public virtual User? User { get; set; }

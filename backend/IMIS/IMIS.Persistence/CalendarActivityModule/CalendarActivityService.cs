@@ -1,5 +1,6 @@
 ﻿using Base.Primitives;
 using IMIS.Application.CalendarActivityModule;
+using IMIS.Application.OfficeModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Identity;
 
@@ -9,11 +10,13 @@ namespace IMIS.Persistence.CalendarActivityModule
     {
         private readonly ICalendarActivityRepository _repository;
         private readonly UserManager<User> _userManager;
+        private readonly IOfficeRepository _officeRepository;
 
-        public CalendarActivityService(ICalendarActivityRepository repository, UserManager<User> userManager)
+        public CalendarActivityService(ICalendarActivityRepository repository, UserManager<User> userManager, IOfficeRepository officeRepository)
         {
             _repository = repository;
             _userManager = userManager;
+            _officeRepository = officeRepository;
         }
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
@@ -41,11 +44,38 @@ namespace IMIS.Persistence.CalendarActivityModule
 
             await _repository.SaveOrUpdateAsync(activity, cancellationToken).ConfigureAwait(false);
         }
-
+       
         public async Task<CalendarActivityDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
         {
             var activity = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return activity != null ? new CalendarActivityDto(activity) : null;
+
+            if (activity == null)
+                return null;
+
+            var dto = new CalendarActivityDto(activity);
+
+            var user = await _userManager.FindByIdAsync(activity.UserId!.ToString());
+
+            dto.UserFullName = string.Join(" ",
+                new[]
+                {
+                    user?.Prefix,
+                    user?.FirstName,
+                    user?.MiddleName,
+                    user?.LastName,
+                    user?.Suffix
+                }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+
+            if (activity.OfficeId.HasValue)
+            {
+                var office = await _officeRepository.GetByIdAsync(activity.OfficeId.Value, cancellationToken);
+
+                dto.OfficeName = office?.Name;
+            }
+
+
+            return dto;
         }
 
         public async Task<List<CalendarActivityDto>> GetAllAsync(CancellationToken cancellationToken)

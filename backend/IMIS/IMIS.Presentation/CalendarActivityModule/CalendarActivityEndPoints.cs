@@ -54,6 +54,8 @@ namespace IMIS.Presentation.CalendarActivityModule
                     Description = form.Description,
                     StartDate = form.StartDate,
                     EndDate = form.EndDate,
+                    StartTime = form.StartTime,
+                    EndTime = form.EndTime,
                     IsAllDay = form.IsAllDay,
                     Color = form.Color,
                     Category = form.Category,
@@ -144,6 +146,8 @@ namespace IMIS.Presentation.CalendarActivityModule
                     Description = form.Description,
                     StartDate = form.StartDate,
                     EndDate = form.EndDate,
+                    StartTime = form.StartTime,
+                    EndTime = form.EndTime,
                     IsAllDay = form.IsAllDay,
                     Color = form.Color,
                     Category = form.Category,
@@ -209,12 +213,15 @@ namespace IMIS.Presentation.CalendarActivityModule
             })
             .WithTags(_calendarTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
-           
-            app.MapPost("/filter", async ([FromBody] CalendarActivityFilter filter, ICalendarActivityService service, CancellationToken cancellationToken) =>
+          
+            app.MapGet("/filter", async ([AsParameters] CalendarActivityFilter filter, ICalendarActivityService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetFilteredAsync(filter, cancellationToken);
-                return Results.Ok(result);
 
+                if (result == null)
+                    return Results.Ok(new { items = Array.Empty<CalendarActivityDto>(), totalCount = 0 });
+
+                return Results.Ok(result);
             })
             .WithTags(_calendarTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);

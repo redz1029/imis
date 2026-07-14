@@ -20,18 +20,15 @@ namespace IMIS.Persistence.CalendarActivityModule
                 .Include(x => x.Office)              
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
-
-        public async Task<List<CalendarActivity>> GetAllAsync(
-            CancellationToken cancellationToken)
+        public async Task<List<CalendarActivity>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<CalendarActivity>()
-                .AsNoTracking()
+                .AsNoTracking() 
                 .Include(x => x.User)
                 .Include(x => x.Office)             
                 .OrderBy(x => x.StartDate)
                 .ToListAsync(cancellationToken);
         }
-
         public async Task<List<CalendarActivity>> GetFilteredAsync(CalendarActivityFilter filter, CancellationToken cancellationToken)
         {
             IQueryable<CalendarActivity> query =
@@ -113,8 +110,6 @@ namespace IMIS.Persistence.CalendarActivityModule
                 .OrderBy(x => x.StartDate)
                 .ToListAsync(cancellationToken);
         }
-
-
         public async Task<List<CalendarActivity>> GetByDateAsync(DateTime date, CancellationToken cancellationToken)
         {
             date = date.Date;
@@ -128,7 +123,6 @@ namespace IMIS.Persistence.CalendarActivityModule
                 .OrderBy(x => x.StartDate)
                 .ToListAsync(cancellationToken);
         }
-
         public async Task<List<CalendarActivity>> SearchAsync(string keyword, CancellationToken cancellationToken)
         {
             keyword = keyword.Trim();
@@ -143,7 +137,6 @@ namespace IMIS.Persistence.CalendarActivityModule
                 .OrderBy(x => x.StartDate)
                 .ToListAsync(cancellationToken);
         }
-
         public async Task<bool> ExistsConflictAsync(CalendarActivity activity, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<CalendarActivity>()
