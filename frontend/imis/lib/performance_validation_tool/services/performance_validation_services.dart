@@ -5,7 +5,6 @@ import 'package:imis/performance_validation_tool/models/performance_validation_t
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/page_list.dart';
 import 'package:imis/utils/pagination_util.dart';
-
 import '../../utils/auth_util.dart';
 import '../../utils/http_util.dart';
 
@@ -123,10 +122,10 @@ class PerformanceValidationServices {
       final response = await AuthenticatedRequest.get(dio, url);
       return response.statusCode;
     } on DioException catch (e) {
-      debugPrint("Dio error submitPerformanceValidation: ${e.message}");
+      debugPrint("Dio error submitPerformanceValidation");
       return e.response?.statusCode;
     } catch (e, st) {
-      debugPrint("Unexpected error submitPerformanceValidation: $e");
+      debugPrint("Unexpected error submitPerformanceValidation");
       debugPrint("$st");
       return null;
     }
@@ -141,7 +140,7 @@ class PerformanceValidationServices {
       debugPrint("Dio error deletePerformanceValidationTool");
       return false;
     } catch (e) {
-      debugPrint("Unexpected error deletePerformanceValidationTool: $e");
+      debugPrint("Unexpected error deletePerformanceValidationTool");
       return false;
     }
   }

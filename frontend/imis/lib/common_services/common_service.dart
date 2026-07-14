@@ -153,7 +153,7 @@ class CommonService {
   Future<List<PerformanceValidationToolPeriod>> fetchValidationPeriod() =>
       _fetchList(
         ApiEndpoint().performanceValidationToolPeriod,
-        (e) => PerformanceValidationToolPeriod.fromjson(e),
+        (e) => PerformanceValidationToolPeriod.fromJson(e),
         'Failed to fetch validation period',
       );
 
