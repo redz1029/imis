@@ -510,84 +510,75 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
             builder: (ctx, setDialog) {
               return Dialog(
                 backgroundColor: Colors.transparent,
-                insetPadding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 32,
-                ),
+
                 child: Container(
-                  width: 480,
-                  constraints: const BoxConstraints(maxHeight: 700),
+                  constraints: BoxConstraints(
+                    maxWidth: 520,
+                    maxHeight: MediaQuery.of(ctx).size.height * 0.92,
+                  ),
                   decoration: BoxDecoration(
                     color: kSurface,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 40,
-                        offset: const Offset(0, 16),
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 32,
+                        offset: Offset(0, 12),
                       ),
                     ],
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 20, 20),
-                        decoration: const BoxDecoration(
-                          color: primaryColor,
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(20),
-                          ),
-                        ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+
                         child: Row(
                           children: [
                             Container(
-                              width: 38,
-                              height: 38,
+                              width: 44,
+                              height: 44,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(10),
+                                color: primaryColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
                                 Icons.assignment_ind_rounded,
-                                color: Colors.white,
-                                size: 20,
+                                color: primaryColor,
+                                size: 22,
                               ),
                             ),
-                            gap12px,
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    id == null
-                                        ? 'Create Signatory Template'
-                                        : 'Edit Signatory Template',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                    ),
+                            SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  id == null
+                                      ? 'Create Signatory Template'
+                                      : 'Edit Signatory Template',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                    color: kText,
                                   ),
-                                  Text(
-                                    id == null
-                                        ? 'Add a new template for an office'
-                                        : 'Update the existing configuration',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 11,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.75,
-                                      ),
-                                    ),
+                                ),
+                                Text(
+                                  id == null
+                                      ? 'Add a new template for an office'
+                                      : 'Update the existing configuration',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
+                            Spacer(),
                             IconButton(
                               onPressed: () => Navigator.pop(ctx),
                               icon: const Icon(
                                 Icons.close_rounded,
-                                color: Colors.white,
+                                color: kMuted,
                               ),
                               tooltip: 'Close',
                             ),

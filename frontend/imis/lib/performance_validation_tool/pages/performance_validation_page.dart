@@ -9,7 +9,6 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
-import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
 import 'package:imis/performance_validation_tool/dialog/performance_validation_list_dialog.dart';
 import 'package:imis/performance_validation_tool/services/performance_validation_services.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -18,7 +17,6 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
-import 'package:imis/operation_review_protocol/dialog/monthly_review_dialog_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:open_file/open_file.dart';
@@ -54,7 +52,6 @@ class OperationReviewProtocolPageState
   );
   final _commonService = CommonService(Dio());
   final _performanceValidation = PerformanceValidationServices(Dio());
-  final _pgsService = PerformanceGovernanceSystemService(Dio());
 
   @override
   void initState() {
@@ -158,7 +155,6 @@ class OperationReviewProtocolPageState
     );
     final services = await _commonService.fetchService();
     final periods = await _commonService.fetchPgsPeriod();
-    await _commonService.fetchPgsPeriod();
 
     if (!mounted) return;
     setState(() {
@@ -168,40 +164,6 @@ class OperationReviewProtocolPageState
       _isLoading = false;
     });
     await fetchPerformanceValidation();
-  }
-
-  void _openMonthlyReviewDialog(PerformanceGovernanceSystem pgs) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder:
-          (_) => MonthlyReviewListDialog(
-            pgsId: pgs.id.toString(),
-            startDate: pgs.pgsPeriod.startDate,
-            endDate: pgs.pgsPeriod.endDate,
-            data: pgs,
-            onFetch:
-                (id, month, year) => _pgsService.fetchIdDeliverable(
-                  pgsId: id,
-                  month: month,
-                  year: year,
-                ),
-            onFetchDeliverables:
-                (pgsId) => _pgsService.fetchDeliverablesOnly(pgsId: pgsId),
-            onFetchAll:
-                (pgsId) =>
-                    _pgsService.fetchAllOperationReviewProtocols(pgsId: pgsId),
-            onFetchById:
-                (id) => _pgsService.fetchOperationReviewProtocolById(id: id),
-            onSave:
-                (request, {Uint8List? minutesBytes, String? minutesFileName}) =>
-                    _pgsService.saveOperationReviewProtocol(
-                      request: request,
-                      minutesBytes: minutesBytes,
-                      minutesFileName: minutesFileName,
-                    ),
-          ),
-    );
   }
 
   void _openValidationList(PerformanceGovernanceSystem pgs) {
@@ -507,11 +469,10 @@ class OperationReviewProtocolPageState
                                                         'Create/Edit Performance Validation Tool',
                                                     child: IconButton(
                                                       icon: const Icon(
-                                                        Icons.reviews_outlined,
+                                                        Icons
+                                                            .fact_check_outlined,
                                                         size: 16,
-                                                        color:
-                                                            Colors
-                                                                .deepOrangeAccent,
+                                                        color: primaryColor,
                                                       ),
                                                       onPressed:
                                                           () =>
@@ -561,7 +522,7 @@ class OperationReviewProtocolPageState
                                               icon: const Icon(Icons.more_vert),
                                               onSelected: (value) async {
                                                 if (value == 'review') {
-                                                  _openMonthlyReviewDialog(pgs);
+                                                  _openValidationList(pgs);
                                                 } else if (value == 'preview') {
                                                   await _openPrintPreview(pgs);
                                                 }
@@ -574,11 +535,9 @@ class OperationReviewProtocolPageState
                                                         children: [
                                                           Icon(
                                                             Icons
-                                                                .reviews_outlined,
+                                                                .fact_check_outlined,
                                                             size: 16,
-                                                            color:
-                                                                Colors
-                                                                    .deepOrangeAccent,
+                                                            color: primaryColor,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text(
