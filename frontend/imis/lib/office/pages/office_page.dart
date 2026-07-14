@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -46,7 +48,7 @@ class OfficePageState extends State<OfficePage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-
+  Timer? _debounce;
   final dio = Dio();
 
   Future<void> fetchOffices({int? page, String? searchQuery}) async {
@@ -129,19 +131,27 @@ class OfficePageState extends State<OfficePage> {
   }
 
   Future<void> filterSearchResults(String query) async {
-    final results = await officeSearchUtil.filter(
-      query,
-      (office, search) =>
-          (office.name).toLowerCase().contains(search.toLowerCase()),
-    );
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () async {
+      if (query.trim().isEmpty) {
+        setState(() => filteredList = List.from(officeList));
+        return;
+      }
 
-    setState(() {
-      filteredList = results;
+      try {
+        final results = await _officeService.filterOffices(query.trim());
+        if (mounted) {
+          setState(() => filteredList = results);
+        }
+      } catch (e) {
+        debugPrint('Office filter failed: $e');
+      }
     });
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     isSearchfocus.dispose();
     super.dispose();
   }
