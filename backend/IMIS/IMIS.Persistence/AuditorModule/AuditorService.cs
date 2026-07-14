@@ -1,18 +1,20 @@
-﻿using Base.Abstractions;
-using Base.Pagination;
+﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.TeamModule;
 using IMIS.Domain;
+using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Persistence.AuditorModule
 {
     public class AuditorService : IAuditorService
     {
         private readonly IAuditorRepository _auditorRepository;
-        public AuditorService(IAuditorRepository auditorRepository)
+        private readonly UserManager<User> _userManager;
+        public AuditorService(IAuditorRepository auditorRepository, UserManager<User> userManager)
         {
             _auditorRepository = auditorRepository;
+            _userManager = userManager;
         }
 
         public async Task<TeamDto?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
@@ -47,12 +49,38 @@ namespace IMIS.Persistence.AuditorModule
         {
             var auditors = await _auditorRepository.FilteByName(name, auditorNoOfResults, cancellationToken).ConfigureAwait(false);
             return auditors != null && auditors.Count() > 0 ? auditors.Select(a => new AuditorDto(a)).ToList() : null;
-        }
+        }       
         public async Task<List<AuditorDto>?> GetAll(CancellationToken cancellationToken)
         {
             var auditors = await _auditorRepository.GetAll(cancellationToken).ConfigureAwait(false);
-            return auditors?.Select(a => new AuditorDto(a)).ToList();
-        }   
+
+            if (auditors == null || !auditors.Any())
+                return null;
+
+            var result = new List<AuditorDto>();
+
+            foreach (var auditor in auditors)
+            {
+                var dto = new AuditorDto(auditor);
+
+                var user = await _userManager.FindByIdAsync(auditor.UserId);
+
+                dto.Name = string.Join(" ",
+                    new[]
+                    {
+                        user?.Prefix,
+                        user?.FirstName,
+                        user?.MiddleName,
+                        user?.LastName,
+                        user?.Suffix
+                    }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
+
+                result.Add(dto);
+            }
+
+            return result;
+        }
         public async Task<AuditorDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var auditor = await _auditorRepository
