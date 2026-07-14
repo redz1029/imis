@@ -639,6 +639,13 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                             Expanded(
                               flex: 2,
                               child: Text(
+                                "Quarter",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
                                 "Actions",
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
@@ -689,12 +696,19 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                               ),
                                             ),
                                           ),
+
                                           Expanded(
                                             flex: 2,
                                             child: Text(
                                               DateTimeConverter().toJson(
                                                 stratperiod.endDate,
                                               ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              stratperiod.quarter ?? '',
                                             ),
                                           ),
                                           Expanded(
@@ -759,7 +773,100 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                       ),
                                     );
                                   }
-                                  return null;
+                                  return Container(
+                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    margin: EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text('$itemNumber'),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  showFormDialog(
+                                                    id:
+                                                        stratperiod.id
+                                                            .toString(),
+                                                    startDate:
+                                                        DateTimeConverter()
+                                                            .toJson(
+                                                              stratperiod
+                                                                  .startDate,
+                                                            ),
+                                                    endDate: DateTimeConverter()
+                                                        .toJson(
+                                                          stratperiod.endDate,
+                                                        ),
+                                                    remarkrs:
+                                                        stratperiod.quarter
+                                                            .toString(),
+                                                  );
+                                                }
+
+                                                if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    stratperiod.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
+
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          "${DateTimeConverter().toJson(stratperiod.startDate)} - ${DateTimeConverter().toJson(stratperiod.endDate)}",
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(stratperiod.quarter ?? ''),
+                                      ],
+                                    ),
+                                  );
                                 },
                               ),
                     ),
