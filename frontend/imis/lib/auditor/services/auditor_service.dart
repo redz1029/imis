@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
@@ -46,5 +47,22 @@ class AuditorService {
   Future<void> deleteAuditor(String auditorId) async {
     final url = '${ApiEndpoint().auditor}/$auditorId';
     await AuthenticatedRequest.delete(dio, url);
+  }
+
+  Future<List<Auditor>> filterAuditors(String name) async {
+    final url = '${ApiEndpoint().auditor}/filter/$name';
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        return (response.data as List)
+            .map((json) => Auditor.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('filterAuditors error: $e');
+      rethrow;
+    }
   }
 }

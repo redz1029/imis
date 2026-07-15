@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
@@ -44,7 +46,7 @@ class AuditorMainPageState extends State<AuditorPage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-
+  // Timer? _debounce;
   final dio = Dio();
 
   Future<void> fetchAuditors({int? page, String? searchQuery}) async {
@@ -105,6 +107,7 @@ class AuditorMainPageState extends State<AuditorPage> {
 
   @override
   void dispose() {
+    // _debounce?.cancel();
     isSearchfocus.dispose();
     super.dispose();
   }
