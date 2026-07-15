@@ -45,11 +45,18 @@ namespace IMIS.Persistence.AuditorModule
             }
             return DtoPageList<AuditorDto, Auditor, int>.Create(auditor.Items, page, pageSize, auditor.TotalCount);
         }
-        public async Task<List<AuditorDto>?> FilteByName(string name, int auditorNoOfResults, CancellationToken cancellationToken)
+      
+        public async Task<DtoPageList<AuditorDto, Auditor, int>?> FilterByNameAsync(string name, int page, int pageSize, CancellationToken cancellationToken)
         {
-            var auditors = await _auditorRepository.FilteByName(name, auditorNoOfResults, cancellationToken).ConfigureAwait(false);
-            return auditors != null && auditors.Count() > 0 ? auditors.Select(a => new AuditorDto(a)).ToList() : null;
-        }       
+            var auditors = await _auditorRepository.FilterByNameAsync(name, page, pageSize, cancellationToken).ConfigureAwait(false);
+
+            if (auditors.TotalCount == 0)
+            {
+                return null;
+            }
+
+            return DtoPageList<AuditorDto, Auditor, int>.Create(auditors.Items, page, pageSize, auditors.TotalCount);
+        }
         public async Task<List<AuditorDto>?> GetAll(CancellationToken cancellationToken)
         {
             var auditors = await _auditorRepository.GetAll(cancellationToken).ConfigureAwait(false);
@@ -83,9 +90,7 @@ namespace IMIS.Persistence.AuditorModule
         }
         public async Task<AuditorDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var auditor = await _auditorRepository
-                .GetByIdAsync(id, cancellationToken)
-                .ConfigureAwait(false);
+            var auditor = await _auditorRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return auditor != null ? new AuditorDto(auditor) : null;
         }
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>

@@ -10,7 +10,7 @@ namespace IMIS.Application.AuditorModule
         public Task<DtoPageList<AuditorDto, Auditor, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<List<AuditorDto>?> GetAll(CancellationToken cancellationToken);
         Task<AuditorDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
-        Task<List<AuditorDto>?> FilteByName(string name, int noOfResults, CancellationToken cancellationToken);
+        Task<DtoPageList<AuditorDto, Auditor, int>?> FilterByNameAsync(string name, int page, int pageSize, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<TeamDto?> GetByUserIdAsync(string userId, CancellationToken cancellationToken);
     }

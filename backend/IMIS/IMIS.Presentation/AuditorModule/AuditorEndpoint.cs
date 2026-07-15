@@ -37,11 +37,11 @@ namespace IMIS.Presentation.AuditorModule
             .WithTags(_auditorTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_auditorTag), true)            
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.View));
-
-            app.MapGet("/filter/{name}", async (string name, IAuditorService service, CancellationToken cancellationToken) =>
+           
+            app.MapGet("/filter/{name}", async (string name, int page, int pageSize, IAuditorService service, CancellationToken cancellationToken) =>
             {
-                int noOfResults = 10;
-                var auditors = await service.FilteByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
+                var auditors = await service.FilterByNameAsync(name, page, pageSize, cancellationToken).ConfigureAwait(false);
+
                 return auditors != null ? Results.Ok(auditors) : Results.NoContent();
             })
             .WithTags(_auditorTag)
