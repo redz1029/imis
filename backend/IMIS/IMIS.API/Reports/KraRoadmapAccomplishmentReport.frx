@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="02/24/2026 11:10:55" ReportInfo.Modified="03/12/2026 16:24:42" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="02/24/2026 11:10:55" ReportInfo.Modified="07/09/2026 15:13:08" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -192,34 +192,34 @@ namespace FastReport
   <Dictionary>
     <BusinessObjectDataSource Name="ReportKraDto" ReferenceName="ReportKraDto" DataType="System.Int32" Enabled="true">
       <Column Name="Id" DataType="System.Int32"/>
-      <Column Name="Service_KraName1" DataType="System.String"/>    
-      <Column Name="Service_StrategicObjective1" DataType="System.String"/>        
+      <Column Name="Service_KraName1" DataType="System.String"/>
+      <Column Name="Service_StrategicObjective1" DataType="System.String"/>
       <Column Name="Service_Year1" DataType="System.Int32"/>
       <Column Name="Service_Year2" DataType="System.Int32"/>
       <Column Name="Service_Year3" DataType="System.Int32"/>
       <Column Name="Service_Year4" DataType="System.Int32"/>
-      <Column Name="Service_Year5" DataType="System.Int32"/>		
-      <Column Name="Training_KraName1" DataType="System.String"/> 
-      <Column Name="Training_StrategicObjective1" DataType="System.String"/>  		
+      <Column Name="Service_Year5" DataType="System.Int32"/>
+      <Column Name="Training_KraName1" DataType="System.String"/>
+      <Column Name="Training_StrategicObjective1" DataType="System.String"/>
       <Column Name="Research_KraName1" DataType="System.String"/>
-      <Column Name="Research_StrategicObjective1" DataType="System.String"/>     
+      <Column Name="Research_StrategicObjective1" DataType="System.String"/>
       <Column Name="Linkages_KraName1" DataType="System.String"/>
-      <Column Name="Linkages_StrategicObjective1" DataType="System.String"/>      
+      <Column Name="Linkages_StrategicObjective1" DataType="System.String"/>
       <Column Name="Safety_KraName1" DataType="System.String"/>
-      <Column Name="Safety_StrategicObjective1" DataType="System.String"/>     
+      <Column Name="Safety_StrategicObjective1" DataType="System.String"/>
       <Column Name="HumanResourceKra_KraName1" DataType="System.String"/>
-      <Column Name="HumanResourceKra_StrategicObjective1" DataType="System.String"/>     
+      <Column Name="HumanResourceKra_StrategicObjective1" DataType="System.String"/>
       <Column Name="HumanResourceKra_Year1" DataType="System.Int32"/>
       <Column Name="HumanResourceKra_Year2" DataType="System.Int32"/>
       <Column Name="HumanResourceKra_Year3" DataType="System.Int32"/>
       <Column Name="HumanResourceKra_Year4" DataType="System.Int32"/>
-      <Column Name="HumanResourceKra_Year5" DataType="System.Int32"/>		
+      <Column Name="HumanResourceKra_Year5" DataType="System.Int32"/>
       <Column Name="Infrastructure_KraName1" DataType="System.String"/>
-      <Column Name="Infrastructure_StrategicObjective1" DataType="System.String"/>     
+      <Column Name="Infrastructure_StrategicObjective1" DataType="System.String"/>
       <Column Name="InformationCapital_KraName1" DataType="System.String"/>
-      <Column Name="InformationCapital_StrategicObjective1" DataType="System.String"/>      
+      <Column Name="InformationCapital_StrategicObjective1" DataType="System.String"/>
       <Column Name="FinacialStewardship_KraName1" DataType="System.String"/>
-      <Column Name="FinacialStewardship_StrategicObjective1" DataType="System.String"/>      
+      <Column Name="FinacialStewardship_StrategicObjective1" DataType="System.String"/>
       <BusinessObjectDataSource Name="ServiceList" DataType="System.Int32" Enabled="true">
         <Column Name="KraName" DataType="System.String"/>
         <Column Name="StrategicObjective" DataType="System.String"/>

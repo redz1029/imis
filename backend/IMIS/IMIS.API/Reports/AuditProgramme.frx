@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="04/23/2026 09:02:36" ReportInfo.Modified="07/06/2026 16:40:00" ReportInfo.CreatorVersion="2025.2.0.0">
-	<ScriptText>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="04/23/2026 09:02:36" ReportInfo.Modified="07/13/2026 10:27:52" ReportInfo.CreatorVersion="2025.2.0.0">
+  <ScriptText>
 		using System;
 		using System.Collections;
 		using System.Collections.Generic;
@@ -19,127 +19,129 @@
 		}
 		}
 	</ScriptText>
-	<Dictionary>
-		<BusinessObjectDataSource Name="AuditData" ReferenceName="AuditData" DataType="System.Object" Enabled="true">
-			<Column Name="Year" DataType="System.Int32"/>
-			<Column Name="For" DataType="System.String"/>
-			<Column Name="From" DataType="System.String"/>
-			<Column Name="Purpose" DataType="System.String"/>
-			<Column Name="ScopeAndFreqAudit" DataType="System.String"/>
-			<Column Name="InternalAuditSched" DataType="System.String"/>
-			<Column Name="AuditPlanObjective" DataType="System.String"/>
-			<Column Name="ScopeOfAudit" DataType="System.String"/>
-			<BusinessObjectDataSource Name="Objectives" DataType="System.Object" Enabled="true">
-				<Column Name="Id" DataType="System.Int64"/>
-				<Column Name="Text" DataType="System.String"/>
-			</BusinessObjectDataSource>
-			<BusinessObjectDataSource Name="AuditPlan" DataType="System.Object" Enabled="true">
-				<Column Name="Id" DataType="System.Int32"/>
-				<Column Name="StartDate" DataType="System.DateTime"/>
-				<Column Name="EndDate" DataType="System.DateTime"/>
-				<Column Name="PlanStatus" DataType="System.String"/>
-				<Column Name="BatchIndexString" DataType="System.String"/>
-				<Column Name="BatchFormattedDates" DataType="System.String"/>
-				<BusinessObjectDataSource Name="Entries" DataType="System.Object" Enabled="true">
-					<Column Name="Id" DataType="System.Int32"/>
-					<Column Name="DayNumber" DataType="System.Int32"/>
-					<Column Name="Time" DataType="System.DateTime"/>
-					<Column Name="FormattedOfficeNames" DataType="System.String"/>
-					<Column Name="FormattedStandardChapters" DataType="System.String"/>
-					<Column Name="FormattedProposedSchedule" DataType="System.String"/>
-					<Column Name="FormattedAuditorTeamAndMembers" DataType="System.String"/>
-					<Column Name="TotalDaysInBatch" DataType="System.Int32"/>
-				</BusinessObjectDataSource>
-			</BusinessObjectDataSource>
-		</BusinessObjectDataSource>
-	</Dictionary>
-
-	<!-- PAGE 1: AUDIT PLAN NARRATIVE FORM -->
-	<ReportPage Name="Page1" PaperWidth="215.9" PaperHeight="279.4" LeftMargin="10" TopMargin="10" RightMargin="10" BottomMargin="10" Watermark.Font="Times New Roman, 60pt">
-
-		<!-- HEADER: Title & Logo Configuration -->
-		<ReportTitleBand Name="ReportTitle1" Width="740.5" Height="130">
-			<PictureObject Name="ImgLogo" Left="35" Top="15" Width="65" Height="65" ImageLocation=""/>
-			<TextObject Name="TxtRepub" Left="0" Top="15" Width="740.5" Height="15" Text="Republic of the Philippines" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt"/>
-			<TextObject Name="TxtDoh" Left="0" Top="30" Width="740.5" Height="15" Text="Department of Health" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt"/>
-			<TextObject Name="TxtHospName" Left="0" Top="45" Width="740.5" Height="25" Text="COTABATO REGIONAL AND MEDICAL CENTER" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 12pt, style=Bold"/>
-			<TextObject Name="TxtTitle" Left="0" Top="95" Width="740.5" Height="25" Text="AUDIT PROGRAMME" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 13pt, style=Bold"/>
-		</ReportTitleBand>
-
-		<!-- BAND 1: FOR and FROM fields -->
-		<DataBand Name="BandForFrom" Width="740.5" Height="35" DataSource="AuditData">
-			<TextObject Name="LblFor" Left="10" Top="0" Width="90" Height="35" Border.Lines="All" Text="FOR:" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
-			<TextObject Name="Text1" Left="100" Top="0" Width="260" Height="35" Border.Lines="Top, Bottom" Padding="5, 1, 5, 1" Text="[AuditData.For]" VertAlign="Center" Font="Times New Roman, 10pt"/>
-			<TextObject Name="LblFrom" Left="360" Top="0" Width="90" Height="35" Border.Lines="All" Text="FROM:" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
-			<TextObject Name="Text2" Left="450" Top="0" Width="280" Height="35" Border.Lines="Top, Right, Bottom" Padding="5, 1, 5, 1" Text="[AuditData.From]" VertAlign="Center" Font="Times New Roman, 10pt"/>
-		</DataBand>
-
-		<!-- BAND 2: Purpose Section -->
-		<DataBand Name="BandPurpose" Top="39" Width="740.5" Height="50" DataSource="AuditData" CanGrow="true">
-			<TextObject Name="Text3" Left="10" Top="0" Width="720" Height="50" Border.Lines="Left, Right, Bottom" Padding="8, 8, 8, 8" CanGrow="true" Text="Purpose: [AuditData.Purpose]" Font="Times New Roman, 10pt"/>
-		</DataBand>
-
-		<!-- BAND 3: Objectives Header Section -->
-		<DataBand Name="BandObjectivesHeader" Top="93" Width="740.5" Height="30" DataSource="AuditData">
-			<TextObject Name="LblObjectivesHeader" Left="10" Top="0" Width="720" Height="30" Border.Lines="Left, Right" Padding="8, 6, 8, 0" Text="I.          Objectives" Font="Times New Roman, 10pt, style=Bold"/>
-		</DataBand>
-
-		<!-- BAND 4: Native Data Loop for Objectives (No subreport/no overlap breakdown possible) -->
-		<DataBand Name="DataObjectives" Top="127" Width="740.5" Height="30" DataSource="Objectives" CanGrow="true">
-			<TextObject Name="ObjBorderLeftRight" Left="10" Top="0" Width="720" Height="30" Border.Lines="Left, Right"/>
-			<TextObject Name="TxtObjNumber" Left="65" Top="0" Width="30" Height="25" Text="[Row#]." HorzAlign="Right" Font="Times New Roman, 10pt"/>
-			<TextObject Name="TxtObjectiveItem" Left="105" Top="0" Width="595" Height="25" CanGrow="true" Text="[AuditData.Objectives.Text]" Font="Times New Roman, 10pt"/>
-		</DataBand>
-
-		<!-- BAND 5: Dynamic Spacer ensuring visual gap under objectives before line closure -->
-		<DataBand Name="BandObjectivesFooter" Top="161" Width="740.5" Height="15" DataSource="AuditData">
-			<TextObject Name="ObjSectionClose" Left="10" Top="0" Width="720" Height="15" Border.Lines="Left, Right, Bottom"/>
-		</DataBand>
-
-		<!-- BAND 6: Scope and Frequency of Audit -->
-		<DataBand Name="BandScope" Top="180" Width="740.5" Height="80" DataSource="AuditData" CanGrow="true">
-			<TextObject Name="LblScopeHeader" Left="10" Top="0" Width="720" Height="25" Border.Lines="Left, Right" Padding="8, 4, 8, 0" Text="II.         Scope and Frequency of Audit" Font="Times New Roman, 10pt, style=Bold"/>
-			<TextObject Name="Text5" Left="10" Top="25" Width="720" Height="55" Border.Lines="Left, Right, Bottom" Padding="55, 4, 25, 8" CanGrow="true" Text="[AuditData.ScopeAndFreqAudit]" Font="Times New Roman, 10pt"/>
-		</DataBand>
-
-		<!-- BAND 7: Internal Audit Schedule Section -->
-		<DataBand Name="BandSchedule" Top="264" Width="740.5" Height="125" DataSource="AuditData" CanGrow="true">
-			<TextObject Name="LblSchedHeader" Left="10" Top="0" Width="720" Height="25" Border.Lines="Left, Right" Padding="8, 4, 8, 0" Text="III.        Internal Audit Schedule" Font="Times New Roman, 10pt, style=Bold"/>
-			<TextObject Name="Text6" Left="10" Top="25" Width="720" Height="100" Border.Lines="Left, Right, Bottom" Padding="55, 6, 25, 8" CanGrow="true" Text="[AuditData.InternalAuditSched]" Font="Times New Roman, 10pt"/>
-		</DataBand>
-
-		<!-- BAND 8: Audit Plan Objective Split Row -->
-		<DataBand Name="BandPlanObjective" Top="393" Width="740.5" Height="75" DataSource="AuditData" CanGrow="true">
-			<TextObject Name="LblPlanObjective" Left="10" Top="0" Width="180" Height="75" Border.Lines="Left, Right, Bottom" Padding="8, 4, 4, 4" Text="Audit Plan Objective:" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
-			<TextObject Name="Text7" Left="190" Top="0" Width="540" Height="75" Border.Lines="Right, Bottom" Padding="8, 4, 8, 4" CanGrow="true" Text="[AuditData.AuditPlanObjective]" VertAlign="Center" Font="Times New Roman, 10pt"/>
-		</DataBand>
-
-		<!-- BAND 9: Scope of Audit Split Row -->
-		<DataBand Name="BandScopeOfAudit" Top="472" Width="740.5" Height="75" DataSource="AuditData" CanGrow="true">
-			<TextObject Name="LblScopeOfAudit" Left="10" Top="0" Width="180" Height="75" Border.Lines="Left, Right, Bottom" Padding="8, 4, 4, 4" Text="Scope of Audit:" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
-			<TextObject Name="Text8" Left="190" Top="0" Width="540" Height="75" Border.Lines="Right, Bottom" Padding="8, 4, 8, 4" CanGrow="true" Text="[AuditData.ScopeOfAudit]" VertAlign="Center" Font="Times New Roman, 10pt"/>
-		</DataBand>
-	</ReportPage>
-
-	<!-- PAGE 2: SCHEDULE SCHEDULE ENGINES -->
-	<ReportPage Name="Page2" PaperWidth="215.9" PaperHeight="279.4" LeftMargin="10" TopMargin="10" RightMargin="10" BottomMargin="10" Watermark.Font="Times New Roman, 60pt">
-		<!-- MASTER BAND: Loops through each distinct Audit Batch -->
-		<DataBand Name="DataBatches" Width="740.5" Height="90" DataSource="AuditPlan">
-			<TextObject Name="Text11" Left="10" Top="10" Width="720" Height="25" Border.Lines="Left, Right, Top" Fill.Color="White" Text="IQA BATCH [AuditData.AuditPlan.BatchIndexString]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
-			<TextObject Name="Text12" Left="10" Top="35" Width="720" Height="20" Border.Lines="Left, Right, Bottom" Fill.Color="White" Text="[AuditData.AuditPlan.BatchFormattedDates]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
-
-			<TextObject Name="Text14" Left="10" Top="60" Width="200" Height="30" Border.Lines="All" Fill.Color="White" Text="ORGANIZATIONAL UNIT AND PROCESSES" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-			<TextObject Name="Text13" Left="210" Top="60" Width="170" Height="30" Border.Lines="All" Fill.Color="White" Text="STANDARD CHAPTER" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-			<TextObject Name="Text15" Left="380" Top="60" Width="130" Height="30" Border.Lines="All" Fill.Color="White" Text="PROPOSED SCHEDULE" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-			<TextObject Name="Text16" Left="510" Top="60" Width="220" Height="30" Border.Lines="All" Fill.Color="White" Text="AUDITORS" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-
-			<!-- DETAIL CHILD LOOP: Runs directly under the current active Batch to map entries -->
-			<DataBand Name="DataEntries" Top="94" Width="740.5" Height="50" DataSource="Entries" CanGrow="true">
-				<TextObject Name="Text17" Left="10" Width="200" Height="50" Border.Lines="Left, Right, Bottom" Padding="5, 5, 5, 5" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedOfficeNames]" VertAlign="Center" Font="Times New Roman, 9pt"/>
-				<TextObject Name="Text18" Left="210" Width="170" Height="50" Border.Lines="Right, Bottom" Padding="5, 5, 5, 5" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedStandardChapters]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
-				<TextObject Name="Text19" Left="380" Width="130" Height="50" Border.Lines="Right, Bottom" Padding="5, 5, 5, 5" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedProposedSchedule]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
-				<TextObject Name="Text20" Left="510" Width="220" Height="50" Border.Lines="Right, Bottom" Padding="5, 5, 5, 5" CanGrow="true" Text="[AuditData.AuditPlan.Entries.FormattedAuditorTeamAndMembers]" VertAlign="Center" Font="Times New Roman, 9pt"/>
-			</DataBand>
-		</DataBand>
-	</ReportPage>
+  <Dictionary>
+    <BusinessObjectDataSource Name="AuditData" ReferenceName="AuditData" DataType="System.Object" Enabled="true">
+      <Column Name="Year" DataType="System.Int32"/>
+      <Column Name="For" DataType="System.String"/>
+      <Column Name="From" DataType="System.String"/>
+      <Column Name="Purpose" DataType="System.String"/>
+      <Column Name="ScopeAndFreqAudit" DataType="System.String"/>
+      <Column Name="InternalAuditSched" DataType="System.String"/>
+      <Column Name="AuditPlanObjective" DataType="System.String"/>
+      <Column Name="ScopeOfAudit" DataType="System.String"/>
+      <BusinessObjectDataSource Name="Objectives" DataType="System.Object" Enabled="true">
+        <Column Name="Id" DataType="System.Int64"/>
+        <Column Name="Text" DataType="System.String"/>
+      </BusinessObjectDataSource>
+      <BusinessObjectDataSource Name="AuditPlan" DataType="System.Object" Enabled="true">
+        <Column Name="Id" DataType="System.Int32"/>
+        <Column Name="StartDate" DataType="System.DateTime"/>
+        <Column Name="EndDate" DataType="System.DateTime"/>
+        <Column Name="PlanStatus" DataType="System.String"/>
+        <Column Name="BatchIndexString" DataType="System.String"/>
+        <Column Name="BatchFormattedDates" DataType="System.String"/>
+      </BusinessObjectDataSource>
+      <BusinessObjectDataSource Name="FlatEntries" DataType="System.Object" Enabled="true">
+        <Column Name="Id" DataType="System.Int32"/>
+        <Column Name="DayNumber" DataType="System.Int32"/>
+        <Column Name="Time" DataType="System.DateTime"/>
+        <Column Name="FormattedOfficeNames" DataType="System.String"/>
+        <Column Name="FormattedStandardChapters" DataType="System.String"/>
+        <Column Name="FormattedProposedSchedule" DataType="System.String"/>
+        <Column Name="FormattedAuditorTeamAndMembers" DataType="System.String"/>
+        <Column Name="TotalDaysInBatch" DataType="System.Int32"/>
+      </BusinessObjectDataSource>
+    </BusinessObjectDataSource>
+  </Dictionary>
+  <ReportPage Name="Page1" RawPaperSize="9" Watermark.Font="Times New Roman, 60pt" LastPageSource="261" FirstPageSource="261">
+    <ReportTitleBand Name="ReportTitle1" Width="718.2" Height="146.2" Guides="18.9">
+      <TextObject Name="Text53" Left="-20.45" Top="7" Width="740.5" Height="20" Text="Republic of the Philippines" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 12pt"/>
+      <TextObject Name="Text54" Left="-20.45" Top="27" Width="740.5" Height="20" Text="Department of Health" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 12pt"/>
+      <TextObject Name="Text55" Left="-20.45" Top="47" Width="740.5" Height="25" Text="COTABATO REGIONAL AND MEDICAL CENTER" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 12pt, style=Bold"/>
+      <TextObject Name="Text56" Left="-20.45" Top="99.85" Width="740.5" Height="25" Text="AUDIT PROGRAMME" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 12pt, style=Bold"/>
+      <PictureObject Name="Picture1" Left="56.7" Top="18.9" Width="94.5" Height="85.05" ImageFormat="Png" Image="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"/>
+    </ReportTitleBand>
+    <PageHeaderBand Name="PageHeader2" Top="149.4" Width="718.2" Height="113.4" CanBreak="true">
+      <LineObject Name="Line1" Left="8.9" Top="0.45" Width="699.3"/>
+      <LineObject Name="Line4" Left="8.9" Top="50.7" Width="699.3"/>
+      <LineObject Name="Line5" Left="103.4" Top="2.45" Height="47.25"/>
+      <LineObject Name="Line6" Left="320.75" Top="1.45" Height="47.25"/>
+      <LineObject Name="Line7" Left="424.7" Top="1.45" Height="47.25"/>
+      <TextObject Name="Text57" Left="103.4" Top="3.45" Width="217.35" Height="18.9" Text="[AuditData.For]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 12pt, style=Bold"/>
+      <TextObject Name="Text58" Left="424.7" Top="3.45" Width="283.5" Height="47.25" Text="[AuditData.From]" HorzAlign="Center" Font="Times New Roman, 12pt, style=Bold"/>
+      <TextObject Name="Text59" Left="8.9" Top="3.45" Width="94.5" Height="18.9" Text="FOR:" Font="Times New Roman, 12pt, style=Bold"/>
+      <TextObject Name="Text60" Left="330.2" Top="3.45" Width="94.5" Height="18.9" Text="FROM:" Font="Times New Roman, 12pt, style=Bold"/>
+      <TextObject Name="Text61" Left="8.9" Top="60.15" Width="85.05" Height="18.9" Text="Purpose:" Font="Times New Roman, 12pt, style=Bold"/>
+      <TextObject Name="Text62" Left="93.95" Top="60.15" Width="576.45" Height="37.8" Text="[AuditData.Purpose]" VertAlign="Center" Font="Times New Roman, 12pt"/>
+      <LineObject Name="Line36" Left="8.9" Height="113.4"/>
+      <LineObject Name="Line37" Left="708.2" Height="113.4"/>
+      <ChildBand Name="Child1" Top="266" Width="718.2" Height="198.45">
+        <SubreportObject Name="Subreport1" Left="65.6" Top="56.7" Width="623.7" Height="122.85" GrowToBottom="true" ReportPage="Page3" PrintOnParent="true"/>
+        <TextObject Name="Text63" Left="75.05" Top="9.45" Width="94.5" Height="18.9" Text="Objectives" Font="Times New Roman, 12pt, style=Bold"/>
+        <TextObject Name="Text64" Left="18.35" Top="9.45" Width="28.35" Height="18.9" Text="I." Font="Times New Roman, 12pt, style=Bold"/>
+        <LineObject Name="Line8" Left="8.9" Width="699.3"/>
+        <LineObject Name="Line38" Left="8.9" Height="198.45"/>
+        <LineObject Name="Line39" Left="708.2" Height="198.45"/>
+        <ChildBand Name="Child2" Top="467.65" Width="718.2" Height="132.3" Guides="264.6">
+          <LineObject Name="Line2" Left="8.9" Top="-0.45" Height="132.3"/>
+          <TextObject Name="Text67" Left="18.35" Top="13" Width="28.35" Height="18.9" Text="II." Font="Times New Roman, 12pt, style=Bold"/>
+          <TextObject Name="Text68" Left="75.05" Top="13" Width="255.15" Height="28.35" Text="Scope and Frequency of Audit" Font="Times New Roman, 12pt, style=Bold"/>
+          <TextObject Name="Text69" Left="84.5" Top="50.8" Width="576.45" Height="66.15" Text="[AuditData.ScopeAndFreqAudit]" HorzAlign="Justify" Font="Arial, 12pt"/>
+          <LineObject Name="Line3" Left="708.2" Height="132.3"/>
+          <LineObject Name="Line9" Left="8.9" Top="-0.45" Width="699.3"/>
+          <ChildBand Name="Child3" Top="603.15" Width="718.2" Height="302.4">
+            <TextObject Name="Text75" Left="27.8" Top="236.25" Width="170.1" Height="28.35" Text="Scope of Audit:" Font="Times New Roman, 12pt, style=Bold"/>
+            <TextObject Name="Text76" Left="197.9" Top="236.25" Width="491.4" Height="66.15" Text="[AuditData.ScopeOfAudit]" HorzAlign="Justify" Font="Times New Roman, 12pt"/>
+            <LineObject Name="Line14" Left="18.35" Top="226.8" Width="680.4"/>
+            <TextObject Name="Text73" Left="27.8" Top="170.1" Width="170.1" Height="28.35" Text="Audit Plan Objective:" Font="Times New Roman, 12pt, style=Bold"/>
+            <TextObject Name="Text74" Left="197.9" Top="170.1" Width="491.4" Height="47.25" Text="[AuditData.AuditPlanObjective]" HorzAlign="Justify" Font="Times New Roman, 12pt"/>
+            <LineObject Name="Line11" Left="18.35" Top="160.65" Width="680.4"/>
+            <LineObject Name="Line12" Left="18.35" Top="160.65" Height="141.75"/>
+            <LineObject Name="Line13" Left="698.75" Top="160.65" Height="141.75"/>
+            <TextObject Name="Text71" Left="75.05" Top="47.25" Width="585.9" Height="103.95" Text="[AuditData.InternalAuditSched]" HorzAlign="Justify" Font="Arial, 12pt"/>
+            <TextObject Name="Text70" Left="18.35" Top="9.45" Width="37.8" Height="18.9" Text="III." Font="Times New Roman, 12pt, style=Bold"/>
+            <TextObject Name="Text72" Left="75.05" Top="9.45" Width="255.15" Height="28.35" Text="Internal Audit Schedule" Font="Times New Roman, 12pt, style=Bold"/>
+            <LineObject Name="Line10" Left="8.9" Top="0.45" Width="699.3"/>
+            <LineObject Name="Line34" Left="708.2" Height="302.4"/>
+            <LineObject Name="Line35" Left="8.9" Height="302.4"/>
+            <ChildBand Name="Child4" Top="908.75" Width="718.2" Height="56.7">
+              <LineObject Name="Line40" Left="9.45" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+              <LineObject Name="Line41" Left="18.9" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+              <LineObject Name="Line42" Left="708.75" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+              <LineObject Name="Line43" Left="699.3" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+              <TextObject Name="Text81" Left="27.8" Top="9.45" Width="198.45" Height="37.8" Text="ORGANIZATIONAL UNIT AND PROCESSES&#13;&#10;" HorzAlign="Center" Font="Times New Roman, 12pt, style=Bold, Italic"/>
+              <TextObject Name="Text82" Left="226.25" Top="9.45" Width="198.45" Height="37.8" Text="STANDARD CHAPTER&#13;&#10;" HorzAlign="Center" Font="Times New Roman, 12pt, style=Bold, Italic"/>
+              <TextObject Name="Text83" Left="424.7" Top="9.45" Width="132.3" Height="37.8" Text="PROPOSED SCHEDULE&#13;&#10;" HorzAlign="Center" Font="Times New Roman, 12pt, style=Bold, Italic"/>
+              <TextObject Name="Text84" Left="557" Top="9.45" Width="132.3" Height="37.8" Text="AUDITORS&#13;&#10;" HorzAlign="Center" Font="Times New Roman, 12pt, style=Bold, Italic"/>
+              <LineObject Name="Line44" Left="18.9" Width="680.4" CanGrow="true"/>
+              <LineObject Name="Line46" Left="226.8" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+              <LineObject Name="Line47" Left="425.25" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+              <LineObject Name="Line48" Left="557.55" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+            </ChildBand>
+          </ChildBand>
+        </ChildBand>
+      </ChildBand>
+    </PageHeaderBand>
+    <DataBand Name="BandScopeOfAudit" Top="968.65" Width="718.2" Height="56.7" CanGrow="true" DataSource="AuditData">
+      <LineObject Name="Line19" Left="8.9" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line25" Left="8.9" Top="56.7" Width="699.3" CanGrow="true" GrowToBottom="true"/>
+      <TextObject Name="Text77" Left="27.8" Top="9.45" Width="198.45" Height="37.8" CanGrow="true" CanShrink="true" GrowToBottom="true" Text="[AuditData.FlatEntries.FormattedOfficeNames]" Font="Times New Roman, 12pt"/>
+      <TextObject Name="Text78" Left="226.25" Top="9.45" Width="198.45" Height="37.8" CanGrow="true" CanShrink="true" GrowToBottom="true" Text="[AuditData.FlatEntries.FormattedStandardChapters]" Font="Times New Roman, 12pt"/>
+      <TextObject Name="Text79" Left="424.7" Top="9.45" Width="132.3" Height="37.8" CanGrow="true" CanShrink="true" GrowToBottom="true" Text="[AuditData.FlatEntries.FormattedProposedSchedule]" HorzAlign="Center" Font="Times New Roman, 12pt"/>
+      <TextObject Name="Text80" Left="557" Top="9.45" Width="141.75" Height="37.8" CanGrow="true" CanShrink="true" GrowToBottom="true" Text="[AuditData.FlatEntries.FormattedAuditorTeamAndMembers]" HorzAlign="Center" Font="Times New Roman, 12pt"/>
+      <LineObject Name="Line16" Left="18.35" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line17" Left="698.75" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line18" Left="708.2" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line26" Left="226.25" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line27" Left="424.7" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line28" Left="557" Height="56.7" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line32" Left="18.35" Width="680.4" GrowToBottom="true"/>
+      <LineObject Name="Line45" Left="18.9" Width="680.4" CanGrow="true"/>
+    </DataBand>
+  </ReportPage>
+  <ReportPage Name="Page3" Watermark.Font="Arial, 60pt">
+    <DataBand Name="Data2" Width="718.2" Height="38.8" CanGrow="true" DataSource="Objectives">
+      <TextObject Name="Text66" Left="29.35" Top="1" Width="614.25" Height="18.9" CanGrow="true" Text="[AuditData.Objectives.Text]" HorzAlign="Justify" Font="Arial, 12pt"/>
+    </DataBand>
+  </ReportPage>
 </Report>

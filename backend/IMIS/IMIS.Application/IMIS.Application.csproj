@@ -23,8 +23,4 @@
     <ProjectReference Include="..\IMIS.Domain\IMIS.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="AuditPlanModule\" />
-  </ItemGroup>
-
 </Project>

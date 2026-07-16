@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
-using IMIS.Application.AuditPlanModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.AuditProgrammeModule
 {
     public class ReportAuditProgrammeDto : BaseDto<AuditProgramme, int>
     {
-        // Master Narrative Properties
         public int Year { get; set; }
         public string For { get; set; } = string.Empty;
         public string From { get; set; } = string.Empty;
@@ -20,9 +18,12 @@ namespace IMIS.Application.AuditProgrammeModule
         public string AuditPlanObjective { get; set; } = string.Empty;
         public string ScopeOfAudit { get; set; } = string.Empty;
 
-        // Structured Layout DataBand Collections
         public List<ReportObjectiveItemDto> Objectives { get; set; } = new();
         public List<ReportAuditPlanBatchDto> AuditPlan { get; set; } = new();
+
+        // FLAT list — all entries from all plans in order.
+        // FastReport DataBand binds to AuditData.FlatEntries so every row appears.
+        public List<ReportScheduleEntryDto> FlatEntries { get; set; } = new();
 
         public ReportAuditProgrammeDto() { }
 
@@ -41,26 +42,19 @@ namespace IMIS.Application.AuditProgrammeModule
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
 
-            // 1. Map Objectives List Safely
-            if (entity.Objectives != null)
-            {
-                Objectives = entity.Objectives
-                    .OrderBy(o => o.SortOrder)
-                    .Select(o => new ReportObjectiveItemDto
-                    {
-                        Id = o.Id,
-                        Text = o.Description ?? string.Empty
-                    })
-                    .ToList();
-            }
+            Objectives = entity.Objectives?
+                .OrderBy(o => o.SortOrder)
+                .Select(o => new ReportObjectiveItemDto
+                {
+                    Id = o.Id,
+                    Text = o.Description ?? string.Empty
+                })
+                .ToList() ?? new List<ReportObjectiveItemDto>();
 
-            // 2. Map and Flatten the Multi-Tiered Batches
             if (entity.AuditPlans != null)
             {
-                var plansList = entity.AuditPlans as IEnumerable<AuditPlan> ?? new List<AuditPlan> { entity.AuditPlans as AuditPlan };
-
                 int batchCounter = 1;
-                foreach (var plan in plansList.Where(p => p != null).OrderBy(p => p.StartDate))
+                foreach (var plan in entity.AuditPlans.OrderBy(p => p.StartDate))
                 {
                     var reportBatch = new ReportAuditPlanBatchDto
                     {
@@ -69,7 +63,8 @@ namespace IMIS.Application.AuditProgrammeModule
                         EndDate = plan.EndDate,
                         PlanStatus = plan.PlanStatus ?? "Draft",
                         BatchIndexString = batchCounter.ToString(),
-                        BatchFormattedDates = FormatBatchDateRange(plan.StartDate, plan.EndDate)
+                        BatchFormattedDates = FormatBatchDateRange(plan.StartDate, plan.EndDate),
+                        Entries = new List<ReportScheduleEntryDto>()
                     };
 
                     if (plan.Entries != null)
@@ -78,75 +73,60 @@ namespace IMIS.Application.AuditProgrammeModule
 
                         foreach (var entry in plan.Entries.OrderBy(e => e.DayNumber).ThenBy(e => e.Time))
                         {
-                            // A. Offices / Processes Naming
                             string officeNamesCombined = "N/A";
-                            if (entry.AuditPlanProcesses != null && entry.AuditPlanProcesses.Any())
+                            if (entry.IsoAuditProcesses != null && entry.IsoAuditProcesses.Any())
                             {
-                                officeNamesCombined = string.Join(", ", entry.AuditPlanProcesses
-                                    .Select(p => p.Office != null ? (p.Office.Name ?? $"Office {p.OfficeId}") : $"Office {p.OfficeId}"));
-                            }
-                            else if (entry.IsoAuditProcesses != null && entry.IsoAuditProcesses.Any())
-                            {
-                                officeNamesCombined = string.Join(", ", entry.IsoAuditProcesses
+                                officeNamesCombined = string.Join(Environment.NewLine, entry.IsoAuditProcesses
                                     .Select(p => p.Name ?? "Unnamed Process"));
                             }
+                            else if (entry.AuditPlanProcesses != null && entry.AuditPlanProcesses.Any())
+                            {
+                                officeNamesCombined = string.Join(Environment.NewLine, entry.AuditPlanProcesses
+                                    .Select(p => p.Office != null ? (p.Office.Name ?? $"Office {p.OfficeId}") : $"Office {p.OfficeId}"));
+                            }
 
-                            // B. Standards Text Mapping (Extracts pure comma-separated numerical references)
                             string standardChaptersCombined = "N/A";
                             if (entry.IsoStandardAuditPlans != null && entry.IsoStandardAuditPlans.Any())
                             {
-                                standardChaptersCombined = string.Join(", ", entry.IsoStandardAuditPlans
-                                    .Select(s => s.IsoStandard != null ? s.IsoStandard.ClauseRef : string.Empty)
-                                    .Where(clause => !string.IsNullOrEmpty(clause)));
+                                var clauses = entry.IsoStandardAuditPlans
+                                    .Select(s => s.IsoStandard != null ? s.IsoStandard.ClauseRef : s.IsoStandardId.ToString())
+                                    .Where(clause => !string.IsNullOrEmpty(clause))
+                                    .OrderBy(clause => clause)
+                                    .ToList();
 
-                                if (string.IsNullOrEmpty(standardChaptersCombined))
-                                {
-                                    standardChaptersCombined = "N/A";
-                                }
+                                if (clauses.Any())
+                                    standardChaptersCombined = string.Join(", ", clauses);
                             }
 
-                            // C. User/Auditor Grid Formatting (Replicates image_a85e32.jpg dynamic structure)
                             string auditorsLinesCombined = "Unassigned";
                             if (entry.IsoAuditors != null && entry.IsoAuditors.Any())
                             {
                                 var auditorLines = new List<string>();
 
-                                // Safely fetch the team name assigned to this block
-                                string teamName = entry.IsoAuditors.FirstOrDefault(a => a.Team != null)?.Team?.Name ?? "Assigned Team";
+                                string teamName = entry.IsoAuditors.FirstOrDefault(a => a.Team != null)?.Team?.Name
+                                               ?? $"Team {entry.IsoAuditors.FirstOrDefault(a => a.TeamId != null)?.TeamId ?? 1}";
+
                                 auditorLines.Add(teamName);
-                                auditorLines.Add(string.Empty); // Inserts blank line spacer under Team Header
+                                auditorLines.Add(string.Empty);
 
                                 int regularAuditorIndex = 1;
                                 foreach (var item in entry.IsoAuditors)
                                 {
                                     string fullName = "Staff Auditor";
-                                    if (item.IsoAuditors != null && item.IsoAuditors.User != null)
-                                    {
-                                        fullName = $"{item.IsoAuditors.User.FirstName} {item.IsoAuditors.User.LastName}".Trim();
-                                    }
+                                    var userObj = item.GetType().GetProperty("Auditor")?.GetValue(item);
+                                    if (userObj != null)
+                                        fullName = userObj.GetType().GetProperty("Name")?.GetValue(userObj)?.ToString() ?? fullName;
 
-                                    // Distinguish between numbered Lead/Regular Auditors and special Auditing Observers (*)
-                                    // If your domain data layer tracks a boolean flag or an ID role type, map it below:
-                                    bool isSpecialObserver = item.TeamId == null || item.AuditorId == null; // Example discriminator logic
-
-                                    if (isSpecialObserver)
-                                    {
-                                        auditorLines.Add($"* {fullName}");
-                                    }
-                                    else
-                                    {
-                                        auditorLines.Add($"{regularAuditorIndex}. {fullName}");
-                                        regularAuditorIndex++;
-                                    }
+                                    bool isSpecialObserver = item.TeamId == null || item.AuditorId == 0;
+                                    auditorLines.Add(isSpecialObserver ? $"* {fullName}" : $"{regularAuditorIndex++}. {fullName}");
                                 }
 
                                 auditorsLinesCombined = string.Join(Environment.NewLine, auditorLines);
                             }
 
-                            // Calculate the Entry calendar Date using DayNumber relative to Batch StartDate
                             DateTime calculatedEntryDate = plan.StartDate.AddDays(entry.DayNumber - 1);
 
-                            reportBatch.Entries.Add(new ReportScheduleEntryDto
+                            var scheduleEntry = new ReportScheduleEntryDto
                             {
                                 Id = entry.Id,
                                 DayNumber = entry.DayNumber,
@@ -154,9 +134,14 @@ namespace IMIS.Application.AuditProgrammeModule
                                 TotalDaysInBatch = maxDay,
                                 FormattedOfficeNames = officeNamesCombined.Trim(),
                                 FormattedStandardChapters = standardChaptersCombined.Trim(),
-                                FormattedProposedSchedule = calculatedEntryDate.ToString("MMMM dd, yyyy"), // Perfectly outputs "April 22, 2025"
+                                FormattedProposedSchedule = calculatedEntryDate.ToString("MMMM dd, yyyy"),
                                 FormattedAuditorTeamAndMembers = auditorsLinesCombined
-                            });
+                            };
+
+                            reportBatch.Entries.Add(scheduleEntry);
+
+                            // Also add to the flat list for FastReport DataBand iteration
+                            FlatEntries.Add(scheduleEntry);
                         }
                     }
 
@@ -188,8 +173,8 @@ namespace IMIS.Application.AuditProgrammeModule
         {
             if (start.Month == end.Month && start.Year == end.Year)
             {
-                var days = Enumerable.Range(start.Day, end.Day - start.Day + 1);
-                return $"{start:MMMM} {string.Join(", ", days)}, {start:yyyy}";
+                if (start.Day == end.Day) return $"{start:MMMM dd, yyyy}";
+                return $"{start:MMMM d} – {end:d, yyyy}";
             }
             return $"{start:MMMM dd, yyyy} - {end:MMMM dd, yyyy}";
         }

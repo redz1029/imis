@@ -172,13 +172,42 @@ namespace IMIS.Application.AuditProgrammeModule
             }
 
             // 3. IsoAuditors
-            var auditorsToRemove = existingEntry.IsoAuditors.Where(ea => !incomingEntry.IsoAuditors.Any(ia => ia.Id == ea.Id && ea.Id != 0)).ToList();
-            foreach (var a in auditorsToRemove) { existingEntry.IsoAuditors.Remove(a); dbContext.Set<IsoAuditor>().Remove(a); }
+            // 3. IsoAuditors (EXCLUDING INDIVIDUAL AUDITORS, SAVING TEAM ONLY)
+            var auditorsToRemove = existingEntry.IsoAuditors
+                .Where(ea => !incomingEntry.IsoAuditors.Any(ia => ia.Id == ea.Id && ea.Id != 0)).ToList();
+
+            foreach (var a in auditorsToRemove)
+            {
+                existingEntry.IsoAuditors.Remove(a);
+                dbContext.Set<IsoAuditor>().Remove(a);
+            }
+
             foreach (var incomingA in incomingEntry.IsoAuditors)
             {
+                // Crucial Guard Check: Scrub away individual user identifiers to fulfill saving Team only
+                incomingA.AuditorId = null; // or null/empty depending on type definition string/guid/int
+
+                // If your architecture loads a nested user navigational property object, sever it here:
+                var auditorProp = incomingA.GetType().GetProperty("Auditor");
+                if (auditorProp != null && auditorProp.CanWrite)
+                {
+                    auditorProp.SetValue(incomingA, null);
+                }
+
                 var existingA = existingEntry.IsoAuditors.FirstOrDefault(ea => ea.Id == incomingA.Id && ea.Id != 0);
-                if (existingA == null) { incomingA.AuditPlanEntryId = existingEntry.Id; existingEntry.IsoAuditors.Add(incomingA); }
-                else dbContext.Entry(existingA).CurrentValues.SetValues(incomingA);
+                if (existingA == null)
+                {
+                    incomingA.AuditPlanEntryId = existingEntry.Id;
+                    existingEntry.IsoAuditors.Add(incomingA);
+                }
+                else
+                {
+                    // Enforce Team values exclusively onto the database tracking model entry
+                    dbContext.Entry(existingA).CurrentValues.SetValues(incomingA);
+
+                    // Ensure EF Core tracking state does not re-bind an isolated individual row identity
+                    dbContext.Entry(existingA).Property("AuditorId").IsModified = true;
+                }
             }
 
             // 4. IsoStandardAuditPlans (Handles long identity keys safely)
@@ -228,10 +257,194 @@ namespace IMIS.Application.AuditProgrammeModule
             var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken);
             return entity != null ? new AuditProgrammeDto(entity) : null;
         }
+
         public async Task<ReportAuditProgrammeDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken);
-            return entity != null ? new ReportAuditProgrammeDto(entity) : null;
+            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
+
+            if (entity == null)
+            {
+                return null;
+            }
+
+            // Initialize root primitive structures
+            var dto = new ReportAuditProgrammeDto
+            {
+                Id = entity.Id,
+                Year = entity.Year,
+                For = entity.For ?? string.Empty,
+                From = entity.From ?? string.Empty,
+                Purpose = entity.Purpose ?? string.Empty,
+                ScopeAndFreqAudit = entity.ScopeAndFreqAudit ?? string.Empty,
+                InternalAuditSched = entity.InternalAuditSched ?? string.Empty,
+                AuditPlanObjective = entity.AuditPlanObjective ?? string.Empty,
+                ScopeOfAudit = entity.ScopeOfAudit ?? string.Empty,
+                IsDeleted = entity.IsDeleted,
+                RowVersion = entity.RowVersion
+            };
+
+            // 1. Objectives Linear Projection Block
+            dto.Objectives = entity.Objectives?
+                .OrderBy(o => o.SortOrder)
+                .Select(o => new ReportObjectiveItemDto
+                {
+                    Id = o.Id,
+                    Text = o.Description ?? string.Empty
+                })
+                .ToList() ?? new List<ReportObjectiveItemDto>();
+
+            // 2. Audit Plans Flattened Inner Join Layout Mapping
+            if (entity.AuditPlans != null)
+            {
+                int batchCounter = 1;
+                var formattedBatches = new List<ReportAuditPlanBatchDto>();
+
+                foreach (var plan in entity.AuditPlans.OrderBy(p => p.StartDate))
+                {
+                    var reportBatch = new ReportAuditPlanBatchDto
+                    {
+                        Id = plan.Id,
+                        StartDate = plan.StartDate,
+                        EndDate = plan.EndDate,
+                        PlanStatus = plan.PlanStatus ?? "Draft",
+                        BatchIndexString = batchCounter.ToString(),
+                        BatchFormattedDates = FormatBatchDateRange(plan.StartDate, plan.EndDate),
+                        Entries = new List<ReportScheduleEntryDto>()
+                    };
+
+                    if (plan.Entries != null)
+                    {
+                        int maxDay = plan.Entries.Any() ? plan.Entries.Max(e => e.DayNumber) : 1;
+
+                        foreach (var entry in plan.Entries.OrderBy(e => e.DayNumber).ThenBy(e => e.Time))
+                        {
+                            // A. Auditable Units Configuration Resolution (Office Names & Departments)
+                            string officeNamesCombined = "N/A";
+                            if (entry.AuditPlanProcesses != null && entry.AuditPlanProcesses.Any())
+                            {
+                                var officeNames = entry.AuditPlanProcesses
+                                    .Where(app => app.Office != null)
+                                    .Select(app =>
+                                    {
+                                        var currentOffice = app.Office;
+
+                                        // Traverse up the tree to find a parent of type 'Department' (OfficeTypeId = 2)
+                                        var parent = currentOffice.ParentOffice;
+                                        string? departmentName = null;
+
+                                        while (parent != null)
+                                        {
+                                            if (parent.OfficeTypeId == 2) // 2 represents 'Department'
+                                            {
+                                                departmentName = parent.Name;
+                                                break;
+                                            }
+                                            parent = parent.ParentOffice;
+                                        }
+
+                                        // Format: "Department Name - Office Name" or just "Office Name" if no department parent is found
+                                        if (!string.IsNullOrEmpty(departmentName))
+                                        {
+                                            return $"{departmentName} - {currentOffice.Name}";
+                                        }
+                                        return currentOffice.Name;
+                                    })
+                                    .Where(name => !string.IsNullOrEmpty(name))
+                                    .ToList();
+
+                                if (officeNames.Any())
+                                {
+                                    officeNamesCombined = string.Join(Environment.NewLine, officeNames);
+                                }
+                            }
+                            else if (entry.IsoAuditProcesses != null && entry.IsoAuditProcesses.Any())
+                            {
+                                var processNames = entry.IsoAuditProcesses
+                                    .Select(p => p.Name)
+                                    .Where(name => !string.IsNullOrEmpty(name))
+                                    .ToList();
+
+                                if (processNames.Any())
+                                {
+                                    officeNamesCombined = string.Join(Environment.NewLine, processNames);
+                                }
+                            }
+
+                            // B. Standards Compliance Clause Array Mapping
+                            string standardChaptersCombined = "N/A";
+                            if (entry.IsoStandardAuditPlans != null && entry.IsoStandardAuditPlans.Any())
+                            {
+                                var clauses = entry.IsoStandardAuditPlans
+                                    .Where(isap => isap.IsoStandard != null && !string.IsNullOrEmpty(isap.IsoStandard.ClauseRef))
+                                    .Select(isap => isap.IsoStandard.ClauseRef)
+                                    .OrderBy(clause => clause)
+                                    .ToList();
+
+                                if (clauses.Any())
+                                {
+                                    standardChaptersCombined = string.Join(", ", clauses);
+                                }
+                            }
+
+                            // C. Team Only Resolution Block (No Individual Auditors)
+                            string auditorsLinesCombined = string.Empty;
+                            if (entry.IsoAuditors != null && entry.IsoAuditors.Any())
+                            {
+                                var firstAuditorNode = entry.IsoAuditors.FirstOrDefault();
+                                if (firstAuditorNode != null)
+                                {
+                                    auditorsLinesCombined = firstAuditorNode.Team != null
+                                        ? firstAuditorNode.Team.Name
+                                        : $"Team {firstAuditorNode.TeamId ?? 1}";
+                                }
+                            }
+
+                            // Calculate correct day based on batch start date offset
+                            DateTime calculatedEntryDate = plan.StartDate.AddDays(entry.DayNumber - 1);
+
+                            var scheduleEntry = new ReportScheduleEntryDto
+                            {
+                                Id = entry.Id,
+                                DayNumber = entry.DayNumber,
+                                Time = entry.Time,
+                                TotalDaysInBatch = maxDay,
+                                FormattedOfficeNames = officeNamesCombined.Trim(),
+                                FormattedStandardChapters = standardChaptersCombined.Trim(),
+                                FormattedProposedSchedule = calculatedEntryDate.ToString("MMMM dd, yyyy"),
+                                FormattedAuditorTeamAndMembers = auditorsLinesCombined
+                            };
+
+                            reportBatch.Entries.Add(scheduleEntry);
+                            dto.FlatEntries.Add(scheduleEntry);
+                        }
+                    }
+
+                    formattedBatches.Add(reportBatch);
+                    batchCounter++;
+                }
+
+                dto.AuditPlan = formattedBatches;
+            }
+
+            return dto;
+        }
+
+        // Helper string range compilation utility to prevent missing method compiler runtime issues
+        private string FormatBatchDateRange(DateTime start, DateTime end)
+        {
+            if (start.Date == end.Date)
+            {
+                return start.ToString("MMMM dd, yyyy");
+            }
+            if (start.Month == end.Month && start.Year == end.Year)
+            {
+                return $"{start:MMMM dd} - {end:dd, yyyy}";
+            }
+            if (start.Year == end.Year)
+            {
+                return $"{start:MMMM dd} - {end:MMMM dd, yyyy}";
+            }
+            return $"{start:MMMM dd, yyyy} - {end:MMMM dd, yyyy}";
         }
 
         public async Task<List<AuditProgrammeDto>?> GetAllAsync(CancellationToken cancellationToken)

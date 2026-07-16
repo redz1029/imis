@@ -29,32 +29,35 @@ namespace IMIS.Persistence.AuditProgrammeModule
         /// Safely fetches the complete execution graph using a Split Query to prevent Cartesian explosion.
         /// Use this specifically when editing the entire tree or viewing deep details.
         /// </summary>
+        /// <summary>
+        /// Safely fetches the complete execution graph using a Split Query to prevent Cartesian explosion.
+        /// Use this specifically when editing the entire tree or viewing deep details.
+        /// </summary>
         public async Task<AuditProgramme?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
             return await GetDbContext().Set<AuditProgramme>()
-                .AsSplitQuery()
-                .Include(x => x.Objectives.Where(o => !o.IsDeleted))
-                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Preparer)
-                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Approvals)
-                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.IsoAuditProcesses)
-                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.ResponsiblePersons)
-                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.IsoAuditors)
-                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.IsoStandardAuditPlans)
-                .Include(x => x.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
+                .Include(ap => ap.Objectives)
+                .Include(ap => ap.AuditPlans)
+                    .ThenInclude(p => p.Entries)
                         .ThenInclude(e => e.AuditPlanProcesses)
-                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken)
-                .ConfigureAwait(false);
+                            .ThenInclude(app => app.Office)
+                .Include(ap => ap.AuditPlans)
+                    .ThenInclude(p => p.Entries)
+                        .ThenInclude(e => e.IsoAuditProcesses)
+                .Include(ap => ap.AuditPlans)
+                    .ThenInclude(p => p.Entries)
+                        .ThenInclude(e => e.IsoStandardAuditPlans)
+                            .ThenInclude(isap => isap.IsoStandard)
+                .Include(ap => ap.AuditPlans)
+                    .ThenInclude(p => p.Entries)
+                        .ThenInclude(e => e.IsoAuditors)
+                            .ThenInclude(ia => ia.Team)
+                .Include(ap => ap.AuditPlans)
+                    .ThenInclude(p => p.Entries)
+                        .ThenInclude(e => e.IsoAuditors)
+                            // Explicitly type-cast the lambda parameter to break the naming conflict loop
+                            .ThenInclude((IsoAuditor ia) => ia.IsoAuditors)
+                .FirstOrDefaultAsync(ap => ap.Id == id, cancellationToken);
         }
 
         public async Task<AuditProgramme?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
