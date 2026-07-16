@@ -1026,6 +1026,27 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                   color: primaryColor,
                                 ),
                               )
+                              : filteredList.isEmpty
+                              ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.assignment_outlined,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    const Text(
+                                      "No audit schedule available",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
                               : ListView.builder(
                                 itemCount: filteredList.length,
                                 itemBuilder: (context, index) {

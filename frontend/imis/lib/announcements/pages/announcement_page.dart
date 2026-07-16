@@ -188,7 +188,6 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// DESKTOP HEADER
                     if (!isMobile)
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -238,6 +237,27 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                               ? Center(
                                 child: CircularProgressIndicator(
                                   color: primaryColor,
+                                ),
+                              )
+                              : filteredList.isEmpty
+                              ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.campaign_outlined,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    const Text(
+                                      "No announcement available",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               )
                               : ListView.builder(

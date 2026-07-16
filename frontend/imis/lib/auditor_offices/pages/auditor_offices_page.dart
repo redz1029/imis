@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
@@ -18,6 +19,7 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/common/search_dropdown.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../common_services/common_service.dart';
@@ -200,342 +202,713 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
     _selectedAuditor = selectedAuditor;
     _selectedOffice = selectedOffice;
     _selectedPeriod = selectedPeriod;
+    final isEdit = id != null;
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            decoration: BoxDecoration(
-              color: primaryLightColor,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Text(
-              id == null ? 'Create Auditor Office' : 'Edit Auditor Office',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 480,
-
-                  child: DropdownSearch<Auditor?>(
-                    popupProps: PopupProps.menu(
-                      showSearchBox: true,
-                      searchFieldProps: TextFieldProps(
-                        decoration: InputDecoration(
-                          hintText: 'Search Auditors ...',
-                          filled: true,
-                          fillColor: mainBgColor,
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                        ),
-                      ),
-                      itemBuilder: (context, auditor, isSelected) {
-                        final user = userList.firstWhere(
-                          (u) => u.id == auditor?.userId,
-                          orElse:
-                              () => User(id: '', fullName: '', position: ''),
-                        );
-
-                        return ListTile(
-                          tileColor: mainBgColor,
-                          title: Text(user.fullName),
-                        );
-                      },
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 480,
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: kSurface,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 32,
+                      offset: Offset(0, 12),
                     ),
-                    items: auditorList,
-                    itemAsString: (auditor) {
-                      final user = userList.firstWhere(
-                        (u) => u.id == auditor?.userId,
-                        orElse: () => User(id: '', fullName: '', position: ''),
-                      );
-                      return user.fullName;
-                    },
-                    onChanged:
-                        (value) => setState(
-                          () => _selectedAuditor = value?.id.toString(),
-                        ),
-                    selectedItem:
-                        _selectedAuditor == null
-                            ? null
-                            : auditorList.firstWhere(
-                              (auditor) =>
-                                  auditor.id.toString() == _selectedAuditor,
-                              orElse:
-                                  () => Auditor(id: 0, name: '', userId: ''),
-                            ),
-                    validator: (value) {
-                      if (value == null) {
-                        return 'This field is required';
-                      }
-                      return null;
-                    },
-                    dropdownDecoratorProps: DropDownDecoratorProps(
-                      dropdownSearchDecoration: InputDecoration(
-                        labelText: 'Select Auditor',
-                        filled: true,
-                        fillColor: mainBgColor,
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
-                        ),
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
-                gap14px,
-                SizedBox(
-                  width: 480,
-                  child: DropdownSearch<Office>(
-                    popupProps: PopupProps.menu(
-                      showSearchBox: true,
-                      searchFieldProps: TextFieldProps(
-                        decoration: InputDecoration(
-                          hintText: 'Search Office Name...',
-                          filled: true,
-                          fillColor: mainBgColor,
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.business,
+                              color: primaryColor,
+                              size: 22,
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
+                          SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEdit
+                                    ? 'Manage Auditor Office'
+                                    : 'Create Auditor Office',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: kText,
+                                ),
+                              ),
+                              Text(
+                                isEdit
+                                    ? 'Update auditor to this office'
+                                    : 'Assign auditor to an office',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
+                        ],
                       ),
-                      itemBuilder:
-                          (context, office, isSelected) => ListTile(
-                            tileColor: mainBgColor,
-                            title: Text(office.name),
+                      SizedBox(height: 20),
+                      Divider(color: kBorder, height: 1),
+                      SizedBox(height: 20),
+                      SearchDropdown<Auditor?>(
+                        label: 'Auditor',
+                        hintText: 'Search auditor...',
+                        items: auditorList,
+                        itemAsString: (auditor) {
+                          final user = userList.firstWhere(
+                            (u) => u.id == auditor?.userId,
+                            orElse:
+                                () => User(id: '', fullName: '', position: ''),
+                          );
+                          return user.fullName;
+                        },
+                        selectedItem:
+                            _selectedAuditor == null
+                                ? null
+                                : auditorList.firstWhere(
+                                  (auditor) =>
+                                      auditor.id.toString() == _selectedAuditor,
+                                  orElse:
+                                      () =>
+                                          Auditor(id: 0, name: '', userId: ''),
+                                ),
+                        onChanged:
+                            (value) => setState(
+                              () => _selectedAuditor = value?.id.toString(),
+                            ),
+                        validator: (value) {
+                          if (value == null) {
+                            return 'This field is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      gap14px,
+                      SearchDropdown<Office?>(
+                        label: 'Office',
+                        hintText: 'Search office...',
+                        items: officenameList,
+                        itemAsString: (u) => u?.name ?? '',
+                        selectedItem:
+                            _selectedOffice == null
+                                ? null
+                                : officenameList.firstWhereOrNull(
+                                  (item) =>
+                                      item.id.toString() == _selectedOffice,
+                                ),
+                        onChanged:
+                            (value) => setStateDialog(
+                              () => _selectedOffice = value?.id.toString(),
+                            ),
+                        validator:
+                            (value) =>
+                                value == null ? 'Please select office' : null,
+                      ),
+                      gap14px,
+                      SearchDropdown<PgsPeriod>(
+                        label: 'Office',
+                        hintText: 'Search period...',
+                        items: periodList,
+                        itemAsString:
+                            (period) =>
+                                "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
+                        selectedItem:
+                            _selectedPeriod == null
+                                ? null
+                                : periodList.firstWhere(
+                                  (office) =>
+                                      office.id.toString() == _selectedPeriod,
+                                  orElse:
+                                      () => PgsPeriod(
+                                        0,
+                                        false,
+                                        DateTime.now(),
+                                        DateTime.now(),
+                                        'remarks',
+                                      ),
+                                ),
+                        onChanged:
+                            (value) => setStateDialog(
+                              () => _selectedPeriod = value?.id.toString(),
+                            ),
+                        validator:
+                            (value) =>
+                                value == null ? 'Please select office' : null,
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: kBorder),
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.circular(
+                                    8,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           ),
-                    ),
-                    items: officenameList,
-                    itemAsString: (office) => office.name,
-                    selectedItem:
-                        _selectedOffice == null
-                            ? null
-                            : officenameList.firstWhere(
-                              (office) =>
-                                  office.id.toString() == _selectedOffice,
-                              orElse:
-                                  () => Office(
-                                    id: 0,
-                                    name: 'Unknown',
-                                    officeTypeId: 0,
-                                    parentOfficeId: 0,
-                                    isActive: true,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              label: Text(
+                                isEdit ? 'Update' : 'Save',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                if (!_formKey.currentState!.validate()) return;
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder:
+                                      (ctx) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          width: 340,
+                                          padding: EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
+                                                ),
+                                                blurRadius: 32,
+                                                offset: const Offset(0, 12),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
+                                                ),
+                                                child: Icon(
+                                                  Icons.help_outline_rounded,
+                                                  color: primaryColor,
+                                                  size: 26,
+                                                ),
+                                              ),
+                                              SizedBox(height: 14),
+                                              Text(
+                                                isEdit
+                                                    ? 'Confirm Update'
+                                                    : 'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                isEdit
+                                                    ? 'Are you sure you want to update this auditor office?'
+                                                    : 'Are you sure you want to save this auditor office',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      child: Text(
+                                                        'No',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Yes',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                );
+                                if (confirmed == true) {
+                                  final auditorOffice = AuditorOffices(
+                                    id: int.tryParse(id ?? '0') ?? 0,
+                                    auditorId:
+                                        int.tryParse(_selectedAuditor ?? '0') ??
+                                        0,
+                                    officeId:
+                                        int.tryParse(_selectedOffice ?? '0') ??
+                                        0,
+                                    pgsPeriodId:
+                                        int.tryParse(_selectedPeriod ?? '0') ??
+                                        0,
+                                    isOfficeHead: false,
                                     isDeleted: false,
-                                  ),
-                            ),
-
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedOffice = value?.id.toString();
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null) {
-                        return 'This field is required';
-                      }
-                      return null;
-                    },
-                    dropdownDecoratorProps: DropDownDecoratorProps(
-                      dropdownSearchDecoration: InputDecoration(
-                        labelText: 'Select Office',
-                        filled: true,
-                        fillColor: mainBgColor,
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                gap14px,
-                SizedBox(
-                  width: 480,
-                  child: DropdownSearch<PgsPeriod>(
-                    popupProps: PopupProps.menu(
-                      showSearchBox: true,
-                      searchFieldProps: TextFieldProps(
-                        decoration: InputDecoration(
-                          hintText: 'Search Period...',
-                          filled: true,
-                          fillColor: mainBgColor,
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                        ),
-                      ),
-                      itemBuilder:
-                          (context, period, isSelected) => ListTile(
-                            tileColor: mainBgColor,
-                            title: Text(
-                              "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
-                            ),
-                          ),
-                    ),
-
-                    items: periodList,
-                    itemAsString:
-                        (period) =>
-                            "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
-                    selectedItem:
-                        _selectedPeriod == null
-                            ? null
-                            : periodList.firstWhere(
-                              (office) =>
-                                  office.id.toString() == _selectedPeriod,
-                              orElse:
-                                  () => PgsPeriod(
-                                    0,
-                                    false,
-                                    DateTime.now(),
-                                    DateTime.now(),
-                                    'remarks',
-                                  ),
-                            ),
-
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedPeriod = value?.id.toString();
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null) {
-                        return 'This field is required';
-                      }
-                      return null;
-                    },
-                    dropdownDecoratorProps: DropDownDecoratorProps(
-                      dropdownSearchDecoration: InputDecoration(
-                        labelText: 'Select Period',
-                        filled: true,
-                        fillColor: mainBgColor,
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  bool? confirmAction = await showDialog<bool>(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text(
-                          id == null ? "Confirm Save" : "Confirm Update",
-                        ),
-                        content: Text(
-                          id == null
-                              ? "Are you sure you want to save this record?"
-                              : "Are you sure you want to update this record?",
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(
-                              "No",
-                              style: TextStyle(color: primaryColor),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text(
-                              "Yes",
-                              style: TextStyle(color: primaryColor),
+                                  );
+                                  await _auditorOfficeSevice.addAuditorOffice(
+                                    auditorOffice,
+                                  );
+                                  setState(() {
+                                    fetchAuditorOffice();
+                                  });
+                                  MotionToast.success(
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text('Saved successfully'),
+                                  ).show(context);
+                                  Navigator.pop(context);
+                                }
+                              },
                             ),
                           ),
                         ],
-                      );
-                    },
-                  );
-                  if (confirmAction == true) {
-                    final auditorOffice = AuditorOffices(
-                      id: int.tryParse(id ?? '0') ?? 0,
-                      auditorId: int.tryParse(_selectedAuditor ?? '0') ?? 0,
-                      officeId: int.tryParse(_selectedOffice ?? '0') ?? 0,
-                      pgsPeriodId: int.tryParse(_selectedPeriod ?? '0') ?? 0,
-                      isOfficeHead: false,
-                      isDeleted: false,
-                    );
-                    await _auditorOfficeSevice.addAuditorOffice(auditorOffice);
-                    setState(() {
-                      fetchAuditorOffice();
-                    });
-                    MotionToast.success(
-                      toastAlignment: Alignment.topCenter,
-                      description: Text('Saved successfully'),
-                    ).show(context);
-                    Navigator.pop(context);
-                  }
-                }
-              },
-              child: Text(
-                id == null ? 'Save' : 'Update',
-                style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+            );
+          },
         );
+        // return AlertDialog(
+        //   backgroundColor: mainBgColor,
+        //   shape: RoundedRectangleBorder(
+        //     borderRadius: BorderRadius.circular(12.0),
+        //   ),
+        //   titlePadding: EdgeInsets.zero,
+        //   title: Container(
+        //     width: double.infinity,
+        //     padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        //     decoration: BoxDecoration(
+        //       color: primaryLightColor,
+        //       borderRadius: BorderRadius.only(
+        //         topLeft: Radius.circular(12),
+        //         topRight: Radius.circular(12),
+        //       ),
+        //     ),
+        //     child: Text(
+        //       id == null ? 'Create Auditor Office' : 'Edit Auditor Office',
+        //       textAlign: TextAlign.center,
+        //       style: TextStyle(
+        //         fontWeight: FontWeight.bold,
+        //         fontSize: 18,
+        //         color: Colors.white,
+        //       ),
+        //     ),
+        //   ),
+        // content: Form(
+        //   key: _formKey,
+        //   child: Column(
+        //     mainAxisSize: MainAxisSize.min,
+        //     children: [
+        //       SizedBox(
+        //         width: 480,
+
+        //         child: DropdownSearch<Auditor?>(
+        //           popupProps: PopupProps.menu(
+        //             showSearchBox: true,
+        //             searchFieldProps: TextFieldProps(
+        //               decoration: InputDecoration(
+        //                 hintText: 'Search Auditors ...',
+        //                 filled: true,
+        //                 fillColor: mainBgColor,
+        //                 prefixIcon: Icon(Icons.search),
+        //                 border: OutlineInputBorder(
+        //                   borderRadius: BorderRadius.circular(8),
+        //                 ),
+        //                 focusedBorder: OutlineInputBorder(
+        //                   borderSide: BorderSide(color: primaryColor),
+        //                 ),
+        //               ),
+        //             ),
+        //             itemBuilder: (context, auditor, isSelected) {
+        //               final user = userList.firstWhere(
+        //                 (u) => u.id == auditor?.userId,
+        //                 orElse:
+        //                     () => User(id: '', fullName: '', position: ''),
+        //               );
+
+        //               return ListTile(
+        //                 tileColor: mainBgColor,
+        //                 title: Text(user.fullName),
+        //               );
+        //             },
+        //           ),
+        //           items: auditorList,
+        //           itemAsString: (auditor) {
+        //             final user = userList.firstWhere(
+        //               (u) => u.id == auditor?.userId,
+        //               orElse: () => User(id: '', fullName: '', position: ''),
+        //             );
+        //             return user.fullName;
+        //           },
+        //           onChanged:
+        //               (value) => setState(
+        //                 () => _selectedAuditor = value?.id.toString(),
+        //               ),
+        //           selectedItem:
+        //               _selectedAuditor == null
+        //                   ? null
+        //                   : auditorList.firstWhere(
+        //                     (auditor) =>
+        //                         auditor.id.toString() == _selectedAuditor,
+        //                     orElse:
+        //                         () => Auditor(id: 0, name: '', userId: ''),
+        //                   ),
+        //           validator: (value) {
+        //             if (value == null) {
+        //               return 'This field is required';
+        //             }
+        //             return null;
+        //           },
+        //           dropdownDecoratorProps: DropDownDecoratorProps(
+        //             dropdownSearchDecoration: InputDecoration(
+        //               labelText: 'Select Auditor',
+        //               filled: true,
+        //               fillColor: mainBgColor,
+        //               floatingLabelBehavior: FloatingLabelBehavior.never,
+        //               border: OutlineInputBorder(
+        //                 borderRadius: BorderRadius.circular(8),
+        //               ),
+        //               focusedBorder: OutlineInputBorder(
+        //                 borderSide: BorderSide(color: primaryColor),
+        //               ),
+        //             ),
+        //           ),
+        //         ),
+        //       ),
+        //       gap14px,
+        //       SizedBox(
+        //         width: 480,
+        //         child: DropdownSearch<Office>(
+        //           popupProps: PopupProps.menu(
+        //             showSearchBox: true,
+        //             searchFieldProps: TextFieldProps(
+        //               decoration: InputDecoration(
+        //                 hintText: 'Search Office Name...',
+        //                 filled: true,
+        //                 fillColor: mainBgColor,
+        //                 prefixIcon: Icon(Icons.search),
+        //                 border: OutlineInputBorder(
+        //                   borderRadius: BorderRadius.circular(8),
+        //                 ),
+        //                 focusedBorder: OutlineInputBorder(
+        //                   borderSide: BorderSide(color: primaryColor),
+        //                 ),
+        //               ),
+        //             ),
+        //             itemBuilder:
+        //                 (context, office, isSelected) => ListTile(
+        //                   tileColor: mainBgColor,
+        //                   title: Text(office.name),
+        //                 ),
+        //           ),
+        //           items: officenameList,
+        //           itemAsString: (office) => office.name,
+        //           selectedItem:
+        //               _selectedOffice == null
+        //                   ? null
+        //                   : officenameList.firstWhere(
+        //                     (office) =>
+        //                         office.id.toString() == _selectedOffice,
+        //                     orElse:
+        //                         () => Office(
+        //                           id: 0,
+        //                           name: 'Unknown',
+        //                           officeTypeId: 0,
+        //                           parentOfficeId: 0,
+        //                           isActive: true,
+        //                           isDeleted: false,
+        //                         ),
+        //                   ),
+
+        //           onChanged: (value) {
+        //             setState(() {
+        //               _selectedOffice = value?.id.toString();
+        //             });
+        //           },
+        //           validator: (value) {
+        //             if (value == null) {
+        //               return 'This field is required';
+        //             }
+        //             return null;
+        //           },
+        //           dropdownDecoratorProps: DropDownDecoratorProps(
+        //             dropdownSearchDecoration: InputDecoration(
+        //               labelText: 'Select Office',
+        //               filled: true,
+        //               fillColor: mainBgColor,
+        //               floatingLabelBehavior: FloatingLabelBehavior.never,
+        //               border: OutlineInputBorder(
+        //                 borderRadius: BorderRadius.circular(8),
+        //               ),
+        //               focusedBorder: OutlineInputBorder(
+        //                 borderSide: BorderSide(color: primaryColor),
+        //               ),
+        //             ),
+        //           ),
+        //         ),
+        //       ),
+        //       gap14px,
+        //       SizedBox(
+        //         width: 480,
+        //         child: DropdownSearch<PgsPeriod>(
+        //           popupProps: PopupProps.menu(
+        //             showSearchBox: true,
+        //             searchFieldProps: TextFieldProps(
+        //               decoration: InputDecoration(
+        //                 hintText: 'Search Period...',
+        //                 filled: true,
+        //                 fillColor: mainBgColor,
+        //                 prefixIcon: Icon(Icons.search),
+        //                 border: OutlineInputBorder(
+        //                   borderRadius: BorderRadius.circular(8),
+        //                 ),
+        //                 focusedBorder: OutlineInputBorder(
+        //                   borderSide: BorderSide(color: primaryColor),
+        //                 ),
+        //               ),
+        //             ),
+        //             itemBuilder:
+        //                 (context, period, isSelected) => ListTile(
+        //                   tileColor: mainBgColor,
+        //                   title: Text(
+        //                     "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
+        //                   ),
+        //                 ),
+        //           ),
+
+        //           items: periodList,
+        //           itemAsString:
+        //               (period) =>
+        //                   "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
+        //           selectedItem:
+        //               _selectedPeriod == null
+        //                   ? null
+        //                   : periodList.firstWhere(
+        //                     (office) =>
+        //                         office.id.toString() == _selectedPeriod,
+        //                     orElse:
+        //                         () => PgsPeriod(
+        //                           0,
+        //                           false,
+        //                           DateTime.now(),
+        //                           DateTime.now(),
+        //                           'remarks',
+        //                         ),
+        //                   ),
+
+        //           onChanged: (value) {
+        //             setState(() {
+        //               _selectedPeriod = value?.id.toString();
+        //             });
+        //           },
+        //           validator: (value) {
+        //             if (value == null) {
+        //               return 'This field is required';
+        //             }
+        //             return null;
+        //           },
+        //           dropdownDecoratorProps: DropDownDecoratorProps(
+        //             dropdownSearchDecoration: InputDecoration(
+        //               labelText: 'Select Period',
+        //               filled: true,
+        //               fillColor: mainBgColor,
+        //               floatingLabelBehavior: FloatingLabelBehavior.never,
+        //               border: OutlineInputBorder(
+        //                 borderRadius: BorderRadius.circular(8),
+        //               ),
+        //               focusedBorder: OutlineInputBorder(
+        //                 borderSide: BorderSide(color: primaryColor),
+        //               ),
+        //             ),
+        //           ),
+        //         ),
+        //       ),
+        //     ],
+        //   ),
+        // ),
+        // actions: [
+        //   TextButton(
+        //     onPressed: () => Navigator.pop(context),
+        //     child: Text('Cancel', style: TextStyle(color: primaryColor)),
+        //   ),
+        //   ElevatedButton(
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: primaryColor,
+        //       shape: RoundedRectangleBorder(
+        //         borderRadius: BorderRadius.circular(4),
+        //       ),
+        //     ),
+        //     onPressed: () async {
+        //       if (_formKey.currentState!.validate()) {
+        //         bool? confirmAction = await showDialog<bool>(
+        //           context: context,
+        //           builder: (context) {
+        //             return AlertDialog(
+        //               title: Text(
+        //                 id == null ? "Confirm Save" : "Confirm Update",
+        //               ),
+        //       content: Text(
+        //         id == null
+        //             ? "Are you sure you want to save this record?"
+        //             : "Are you sure you want to update this record?",
+        //       ),
+        //       actions: [
+        //         TextButton(
+        //           onPressed: () => Navigator.pop(context, false),
+        //           child: Text(
+        //             "No",
+        //             style: TextStyle(color: primaryColor),
+        //           ),
+        //         ),
+        //         TextButton(
+        //           onPressed: () => Navigator.pop(context, true),
+        //           child: Text(
+        //             "Yes",
+        //             style: TextStyle(color: primaryColor),
+        //           ),
+        //         ),
+        //       ],
+        //     );
+        //   },
+        // );
+        //             if (confirmAction == true) {
+        //               final auditorOffice = AuditorOffices(
+        //                 id: int.tryParse(id ?? '0') ?? 0,
+        //                 auditorId: int.tryParse(_selectedAuditor ?? '0') ?? 0,
+        //                 officeId: int.tryParse(_selectedOffice ?? '0') ?? 0,
+        //                 pgsPeriodId: int.tryParse(_selectedPeriod ?? '0') ?? 0,
+        //                 isOfficeHead: false,
+        //                 isDeleted: false,
+        //               );
+        //               await _auditorOfficeSevice.addAuditorOffice(auditorOffice);
+        //               setState(() {
+        //                 fetchAuditorOffice();
+        //               });
+        //               MotionToast.success(
+        //                 toastAlignment: Alignment.topCenter,
+        //                 description: Text('Saved successfully'),
+        //               ).show(context);
+        //               Navigator.pop(context);
+        //             }
+        //           }
+        //         },
+        //         child: Text(
+        //           id == null ? 'Save' : 'Update',
+        //           style: TextStyle(color: Colors.white),
+        //         ),
+        //       ),
+        //     ],
+        //   );
       },
     );
   }

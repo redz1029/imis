@@ -254,7 +254,7 @@ class OfficePageState extends State<OfficePage> {
                       Divider(color: kBorder, height: 1),
                       const SizedBox(height: 20),
                       dialogField(
-                        label: 'Remarks',
+                        label: 'Office Name',
                         controller: officeController,
                       ),
                       SizedBox(height: 8),
@@ -390,8 +390,8 @@ class OfficePageState extends State<OfficePage> {
                                               const SizedBox(height: 8),
                                               Text(
                                                 isEdit
-                                                    ? 'Are you sure you want to update this announcement?'
-                                                    : 'Are you sure you want to save this announcement?',
+                                                    ? 'Are you sure you want to update this office?'
+                                                    : 'Are you sure you want to save this office?',
                                                 style:
                                                     GoogleFonts.plusJakartaSans(
                                                       fontSize: 13,
