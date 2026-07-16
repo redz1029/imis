@@ -225,6 +225,34 @@ namespace IMIS.Presentation.CalendarActivityModule
             })
             .WithTags(_calendarTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
+
+            app.MapGet("/calendar/{id:long}/preview", async (long id, ICalendarActivityService service, HttpResponse response, CancellationToken token) =>
+            {
+                var calendar = await service.GetByIdAsync(id, token);
+                if (calendar == null || string.IsNullOrWhiteSpace(calendar.AttachmentPath))
+                    return Results.NotFound("File not found.");
+
+                var fileName = Path.GetFileName(calendar.AttachmentPath);
+
+                byte[] fileBytes;
+                try
+                {
+                    fileBytes = await FTPHelper.DownloadAsync(_ftpBasePath, fileName, token);
+                }
+                catch (Exception ex)
+                {
+                    return Results.NotFound(ex.Message);
+                }
+
+                var contentType = FTPHelper.GetContentType(fileName);
+
+                //Force inline preview
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+
+                return Results.File(fileBytes, contentType);
+            })
+            .WithTags(_calendarTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
         }
     }
 }
