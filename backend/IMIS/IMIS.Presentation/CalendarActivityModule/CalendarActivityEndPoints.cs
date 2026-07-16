@@ -1,6 +1,8 @@
-﻿using Base.Utilities;
+﻿using Base.Auths.Permissions;
+using Base.Utilities;
 using Carter;
 using IMIS.Application.CalendarActivityModule;
+using IMIS.Application.OfficeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -253,6 +255,17 @@ namespace IMIS.Presentation.CalendarActivityModule
             })
             .WithTags(_calendarTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
+
+            app.MapDelete("/{id:int}", async (int id, ICalendarActivityService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_calendarTag, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Office deleted successfully." })
+                              : Results.NotFound(new { message = "Office not found." });
+            })
+           .WithTags(_calendarTag);       
         }
     }
 }

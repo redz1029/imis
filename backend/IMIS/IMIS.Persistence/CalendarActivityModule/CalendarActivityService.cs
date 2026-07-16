@@ -107,5 +107,19 @@ namespace IMIS.Persistence.CalendarActivityModule
             var activities = await _repository .SearchAsync(keyword, cancellationToken).ConfigureAwait(false);
             return activities.Select(a => new CalendarActivityDto(a)).ToList();
         }
+
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var activities = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (activities == null)
+                return false;
+
+            activities.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
     }
 }

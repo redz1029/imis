@@ -12,6 +12,6 @@ namespace IMIS.Application.CalendarActivityModule
         Task<List<CalendarActivity>> GetByDateAsync(DateTime date, CancellationToken cancellationToken);
         Task<List<CalendarActivity>> SearchAsync(string keyword, CancellationToken cancellationToken);
         Task<bool> ExistsConflictAsync(CalendarActivity activity, CancellationToken cancellationToken);
-
+        Task<CalendarActivity?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

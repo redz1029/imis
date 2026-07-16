@@ -7,9 +7,13 @@ namespace IMIS.Persistence.CalendarActivityModule
 {
     public class CalendarActivityRepository : BaseRepository<CalendarActivity, long, ImisDbContext, User>, ICalendarActivityRepository
     {
-        public CalendarActivityRepository(ImisDbContext dbContext)
-            : base(dbContext)
+        public CalendarActivityRepository(ImisDbContext dbContext) : base(dbContext)
         {
+        }
+
+        public async Task<CalendarActivity?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<CalendarActivity>().FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
 
         public async Task<CalendarActivity?> GetByIdAsync(long id, CancellationToken cancellationToken)
@@ -31,8 +35,7 @@ namespace IMIS.Persistence.CalendarActivityModule
         }
         public async Task<List<CalendarActivity>> GetFilteredAsync(CalendarActivityFilter filter, CancellationToken cancellationToken)
         {
-            IQueryable<CalendarActivity> query =
-                ReadOnlyDbContext.Set<CalendarActivity>()
+            IQueryable<CalendarActivity> query = ReadOnlyDbContext.Set<CalendarActivity>()
                 .AsNoTracking()
                 .Include(x => x.User)
                 .Include(x => x.Office);
