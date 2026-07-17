@@ -2,7 +2,6 @@
 using Base.Utilities;
 using Carter;
 using IMIS.Application.CalendarActivityModule;
-using IMIS.Application.OfficeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +15,7 @@ namespace IMIS.Presentation.CalendarActivityModule
     {
         private const string _calendarTag = "Calendar Activity";
         private readonly string _ftpBasePath = $"{FTPCredentials.FTPRootFolderPath}/sample";
+        public readonly CalendarActivityPermission _calendarActivityPermission = new();
 
         public CalendarActivityEndPoints() : base("/calendarActivity")
         {
@@ -76,7 +76,8 @@ namespace IMIS.Presentation.CalendarActivityModule
 
             })
              .DisableAntiforgery()
-             .WithTags(_calendarTag);
+             .WithTags(_calendarTag)
+             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.Add));
 
 
             app.MapPut("/{id:long}", async (long id, [FromForm] CalendarActivityForm form, ICalendarActivityService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -168,7 +169,8 @@ namespace IMIS.Presentation.CalendarActivityModule
                 return Results.Ok(dto);
             })
             .DisableAntiforgery()
-            .WithTags(_calendarTag);
+            .WithTags(_calendarTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.Edit));
 
             app.MapGet("/", async (ICalendarActivityService service, CancellationToken cancellationToken) =>
             {
@@ -177,8 +179,9 @@ namespace IMIS.Presentation.CalendarActivityModule
 
             })
             .WithTags(_calendarTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
-          
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.View));
+
             app.MapGet("/{id:long}", async (long id, ICalendarActivityService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetByIdAsync(id, cancellationToken);
@@ -187,8 +190,9 @@ namespace IMIS.Presentation.CalendarActivityModule
 
             })
             .WithTags(_calendarTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
-           
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.View));
+
             app.MapGet("/month", async (int month, int year, ICalendarActivityService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetByMonthAsync(month, year, cancellationToken);
@@ -196,7 +200,8 @@ namespace IMIS.Presentation.CalendarActivityModule
 
             })
             .WithTags(_calendarTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.View));
 
             app.MapGet("/date", async (DateTime date, ICalendarActivityService service, CancellationToken cancellationToken) =>
             {
@@ -205,8 +210,9 @@ namespace IMIS.Presentation.CalendarActivityModule
 
             })
             .WithTags(_calendarTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
-           
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.View));
+
             app.MapGet("/search", async (string keyword, ICalendarActivityService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.SearchAsync(keyword, cancellationToken);
@@ -214,8 +220,9 @@ namespace IMIS.Presentation.CalendarActivityModule
 
             })
             .WithTags(_calendarTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
-          
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.View));
+
             app.MapGet("/filter", async ([AsParameters] CalendarActivityFilter filter, ICalendarActivityService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetFilteredAsync(filter, cancellationToken);
@@ -226,7 +233,8 @@ namespace IMIS.Presentation.CalendarActivityModule
                 return Results.Ok(result);
             })
             .WithTags(_calendarTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.View));
 
             app.MapGet("/calendar/{id:long}/preview", async (long id, ICalendarActivityService service, HttpResponse response, CancellationToken token) =>
             {
@@ -254,7 +262,8 @@ namespace IMIS.Presentation.CalendarActivityModule
                 return Results.File(fileBytes, contentType);
             })
             .WithTags(_calendarTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_calendarTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.View));
 
             app.MapDelete("/{id:int}", async (int id, ICalendarActivityService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -265,7 +274,8 @@ namespace IMIS.Presentation.CalendarActivityModule
                 return result ? Results.Ok(new { message = "Office deleted successfully." })
                               : Results.NotFound(new { message = "Office not found." });
             })
-           .WithTags(_calendarTag);       
+           .WithTags(_calendarTag)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.View));
         }
     }
 }
