@@ -45,6 +45,8 @@ namespace IMIS.Application.OperationReviewProtocolModule
         public string? Frequency { get; set; }
 
         public string? MinutesAttachmentPath { get; set; }
+        public bool? IsDraft { get; set; }
+
         public DateTime PostingDate { get; set; }
 
         public OperationReviewProtocolDto()
@@ -77,7 +79,8 @@ namespace IMIS.Application.OperationReviewProtocolModule
             FrequencyUpdate = operationReviewProtocol.FrequencyUpdate;
             Frequency = operationReviewProtocol.Frequency;
             MinutesAttachmentPath = operationReviewProtocol.MinutesAttachmentPath;
-            PostingDate = operationReviewProtocol.PostingDate;  
+            PostingDate = operationReviewProtocol.PostingDate;
+            IsDraft = operationReviewProtocol.IsDraft;
         }
 
         public override OperationReviewProtocol ToEntity()
@@ -103,6 +106,7 @@ namespace IMIS.Application.OperationReviewProtocolModule
                 Frequency = Frequency,
                 MinutesAttachmentPath = MinutesAttachmentPath,
                 PostingDate = PostingDate,
+                IsDraft = IsDraft
                 
             };
         }

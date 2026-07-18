@@ -86,7 +86,8 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                         FrequencyUpdate = form.FrequencyUpdate,
                         Frequency = form.Frequency,
                         MinutesAttachmentPath = uploadedFilePath,
-                        PostingDate = form.PostingDate
+                        PostingDate = form.PostingDate,
+                        IsDraft = form.IsDraft,
                     };
 
                     await service.SaveOrUpdateAsync(dto, cancellationToken);
@@ -257,7 +258,8 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                     FrequencyUpdate = form.FrequencyUpdate,
                     Frequency = form.Frequency,
                     MinutesAttachmentPath = uploadedFilePath,
-                    PostingDate = form.PostingDate
+                    PostingDate = form.PostingDate,
+                    IsDraft = form.IsDraft,
                 };
 
                 await service.SaveOrUpdateAsync(dto, cancellationToken);

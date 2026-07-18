@@ -23,6 +23,7 @@ namespace IMIS.Application.OperationReviewProtocolModule
         public IFormFile? MinutesAttachmentPath { get; set; }
         public DateTime PostingDate { get; set; }
         public bool RemoveAttachment { get; set; }
+        public bool IsDraft { get; set; }
 
     }
 }
