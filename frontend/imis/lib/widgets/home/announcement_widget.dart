@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/constant/constant.dart';
@@ -9,7 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/permission_role_string.dart';
-import 'package:imis/widgets/common/custom_toggle.dart';
+import 'package:imis/widgets/dialog/dialog_field.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -316,169 +317,373 @@ class _AnnouncementListState extends State<AnnouncementList> {
     TextEditingController descriptionController = TextEditingController(
       text: description,
     );
+    bool activeState = isActive;
 
     bool localIsActive = isActive;
-
+    final isEdit = id != null;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: mainBgColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 20,
-                ),
+          builder: (context, setStateDialog) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 460,
+                padding: EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: primaryLightColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  id == null ? 'Create Announcement' : 'Edit Announcement',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              content: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Title
-                    SizedBox(
-                      width: 450,
-                      child: TextFormField(
-                        controller: titleController,
-                        decoration: InputDecoration(
-                          labelText: 'Title',
-                          border: const OutlineInputBorder(),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelStyle: const TextStyle(
-                            color: primaryColor,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter a title';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Description
-                    SizedBox(
-                      width: 450,
-                      child: TextFormField(
-                        controller: descriptionController,
-                        maxLines: 5,
-                        decoration: InputDecoration(
-                          labelText: 'Description',
-                          alignLabelWithHint: true,
-                          border: const OutlineInputBorder(),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelStyle: const TextStyle(
-                            color: primaryColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Toggle
-                    CustomToggle(
-                      label: "Show on Dashboard",
-                      value: localIsActive,
-                      activeColor: primaryColor,
-                      inactiveColor: Colors.grey,
-                      onChanged: (val) {
-                        setState(() => localIsActive = val);
-                      },
+                  color: kSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: .12),
+                      blurRadius: 32,
+                      offset: Offset(0, 12),
                     ),
                   ],
                 ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      final announcement = Announcement(
-                        id: int.tryParse(id ?? '0') ?? 0,
-                        title: titleController.text,
-                        fromDate: DateTime.now(),
-                        toDate: DateTime.now(),
-                        description: descriptionController.text,
-                        isActive: localIsActive,
-                        isDeleted: false,
-                      );
-
-                      try {
-                        if (announcement.id == 0) {
-                          await _announcement.createAnnouncement(announcement);
-                        } else {
-                          await _announcement.updateAnnouncement(announcement);
-                        }
-
-                        Navigator.pop(context);
-                        if (onSaved != null) {
-                          onSaved(); // << Call the onSaved callback
-                        }
-
-                        MotionToast.success(
-                          title: const Text("Success"),
-                          toastAlignment: Alignment.topCenter,
-                          description: Text(
-                            announcement.id == 0
-                                ? "Announcement created successfully!"
-                                : "Announcement updated successfully!",
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.campaign_outlined,
+                              color: primaryColor,
+                              size: 22,
+                            ),
                           ),
-                        ).show(context);
-                        _refreshAnnouncements();
-                      } catch (e) {
-                        MotionToast.error(
-                          title: const Text("Error"),
-                          toastAlignment: Alignment.topCenter,
-                          description: Text("Failed to save: $e"),
-                        ).show(context);
-                      }
-                    }
-                  },
-                  child: Text(
-                    id == null ? 'Save' : 'Update',
-                    style: const TextStyle(color: Colors.white),
+                          SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEdit
+                                    ? 'Edit Announcement'
+                                    : 'Create Announcement',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: kText,
+                                ),
+                              ),
+                              Text(
+                                isEdit
+                                    ? 'Update announcement details'
+                                    : 'Add a new announcement',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Divider(color: kBorder, height: 1),
+                      SizedBox(height: 20),
+                      dialogField(
+                        label: 'Title',
+                        controller: titleController,
+                        validator:
+                            (v) =>
+                                (v == null || v.trim().isEmpty)
+                                    ? 'Please fill out this field'
+                                    : null,
+                      ),
+                      SizedBox(height: 12),
+                      dialogField(
+                        label: 'Description',
+                        controller: descriptionController,
+                        maxLines: 4,
+                        validator:
+                            (v) =>
+                                (v == null || v.trim().isEmpty)
+                                    ? 'Please fill out ths field'
+                                    : null,
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Show on Dashboard',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: kText,
+                                  ),
+                                ),
+                                Text(
+                                  'Visible to all users on the dashboard',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: activeState,
+                              onChanged:
+                                  (val) =>
+                                      setStateDialog(() => activeState = val),
+                              activeColor: primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: kBorder),
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              label: Text(
+                                isEdit ? 'Update' : 'Save',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                elevation: 0,
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                if (!_formKey.currentState!.validate()) return;
+                                final confirmed = await showDialog(
+                                  context: context,
+                                  builder:
+                                      (ctx) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          width: 340,
+                                          padding: EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
+                                                ),
+                                                blurRadius: 32,
+                                                offset: const Offset(0, 12),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
+                                                ),
+                                                child: Icon(
+                                                  Icons.help_outline_rounded,
+                                                  color: primaryColor,
+                                                  size: 26,
+                                                ),
+                                              ),
+                                              SizedBox(height: 14),
+                                              Text(
+                                                isEdit
+                                                    ? 'Confirm Update'
+                                                    : 'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                isEdit
+                                                    ? 'Are you sure you want to update this announcement?'
+                                                    : 'Are you want to save this announcement',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              SizedBox(height: 22),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            context,
+                                                          ),
+                                                      child: Text(
+                                                        'No',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Yes',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                );
+                                if (confirmed != true) return;
+                                final announcement = Announcement(
+                                  id: int.tryParse(id ?? '0') ?? 0,
+                                  title: titleController.text,
+                                  fromDate: DateTime.now(),
+                                  toDate: DateTime.now(),
+                                  description: descriptionController.text,
+                                  isActive: localIsActive,
+                                  isDeleted: false,
+                                );
+
+                                try {
+                                  if (announcement.id == 0) {
+                                    await _announcement.createAnnouncement(
+                                      announcement,
+                                    );
+                                  } else {
+                                    await _announcement.updateAnnouncement(
+                                      announcement,
+                                    );
+                                  }
+
+                                  Navigator.pop(context);
+                                  if (onSaved != null) {
+                                    onSaved(); // << Call the onSaved callback
+                                  }
+
+                                  MotionToast.success(
+                                    title: const Text("Success"),
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text(
+                                      announcement.id == 0
+                                          ? "Announcement created successfully!"
+                                          : "Announcement updated successfully!",
+                                    ),
+                                  ).show(context);
+                                  _refreshAnnouncements();
+                                } catch (e) {
+                                  MotionToast.error(
+                                    title: const Text("Error"),
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text("Failed to save: $e"),
+                                  ).show(context);
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             );
           },
         );
