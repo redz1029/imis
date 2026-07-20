@@ -275,7 +275,7 @@ namespace IMIS.Presentation.CalendarActivityModule
                               : Results.NotFound(new { message = "Calendar not found." });
             })
            .WithTags(_calendarTag)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.View));
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.Delete));
         }
     }
 }

@@ -7,5 +7,6 @@ namespace IMIS.Application.CalendarActivityModule
         public override string ModuleName => "CalendarActivity";
 
         public override string PermissionGroup => PermissionGrouper.Transaction;
+        public string Delete => $"Delete{ModuleName}";
     }
 }
