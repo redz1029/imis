@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-07-08 13:18:30.985093
+// Last synced: 2026-07-20 14:36:07.983334
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -83,6 +83,10 @@ class AppPermissions {
   static const String addIsoStandard = 'Add Iso Standard';
   static const String viewIsoStandard = 'View Iso Standard';
   static const String editIsoStandard = 'Edit Iso Standard';
+  static const String deleteCalendarActivity = 'Delete Calendar Activity';
+  static const String addCalendarActivity = 'Add Calendar Activity';
+  static const String viewCalendarActivity = 'View Calendar Activity';
+  static const String editCalendarActivity = 'Edit Calendar Activity';
   static const String addBreakThroughScoring = 'Add Break Through Scoring';
   static const String viewBreakThroughScoring = 'View Break Through Scoring';
   static const String editBreakThroughScoring = 'Edit Break Through Scoring';
