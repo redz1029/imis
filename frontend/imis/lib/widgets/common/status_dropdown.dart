@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
@@ -20,6 +21,11 @@ Widget statusDropdown({
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 12,
+        ),
+        floatingLabelStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 12,
+          color: primaryColor,
+          fontWeight: FontWeight.w600,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
@@ -49,7 +55,13 @@ Widget statusDropdown({
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(statusLabel(status)),
+                  Text(
+                    statusLabel(status),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: kText,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -108,7 +120,7 @@ Widget serviceDropdown({
                     color: primaryColor,
                   ),
                   const SizedBox(width: 8),
-                  // ← Flexible removed, Text lang with overflow
+
                   Expanded(
                     child: Text(
                       service.name,
