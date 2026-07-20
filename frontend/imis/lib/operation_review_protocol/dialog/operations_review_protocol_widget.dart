@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -84,6 +82,28 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
   bool _isSaving = false;
   String? _serviceId;
   final Map<int, PgsStatus> _selectedStatuses = {};
+
+  // Scroll-to-error support
+  final _scrollController = ScrollController();
+  final _documenterKey = GlobalKey();
+  final _deputyKey = GlobalKey();
+  final _venueKey = GlobalKey();
+  final _frequencyScheduleKey = GlobalKey();
+  final _minutesKey = GlobalKey();
+  final _scoreboardLocationKey = GlobalKey();
+  final _scoreboardOICKey = GlobalKey();
+  final _actionPointsKey = GlobalKey();
+  final _frequencyUpdateKey = GlobalKey();
+  final _celebrateWinsKey = GlobalKey();
+  final _recognizeRewardKey = GlobalKey();
+  final _frequencyKey = GlobalKey();
+
+  /// True kapag existing record na naka-Submit na (isDraft == false).
+  /// Locked na dapat ang lahat ng fields/dropdown pag ganito.
+  bool get _isLocked =>
+      widget.existingProtocol != null &&
+      widget.existingProtocol!.isDraft == false;
+
   String get _monthLabel {
     const names = [
       'January',
@@ -104,6 +124,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _deputyController.dispose();
     _documenterController.dispose();
     _venueController.dispose();
@@ -233,6 +254,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
   }
 
   Future<void> _pickMinutesFile() async {
+    if (_isLocked) return;
     setState(() => _minutesLoading = true);
 
     try {
@@ -448,7 +470,9 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     return false;
   }
 
-  Future<void> _save() async {
+  /// Runs required-field validation and updates the *Error flags.
+  /// Returns true if everything is valid.
+  bool _validateForSubmit() {
     setState(() {
       _deputyError = _deputyController.text.trim().isEmpty;
       _documenterError = _documenterController.text.trim().isEmpty;
@@ -466,7 +490,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       _minutesFileError = !_hasMinutesAttachment;
     });
 
-    if (_deputyError ||
+    return !(_deputyError ||
         _documenterError ||
         _frequencyError ||
         _frequencyScheduleError ||
@@ -477,14 +501,74 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
         _frequencyUpdateError ||
         _celebrateWinsError ||
         _recognizeRewardError ||
-        _minutesFileError) {
-      return;
+        _minutesFileError);
+  }
+
+  void _clearValidationErrors() {
+    setState(() {
+      _deputyError = false;
+      _documenterError = false;
+      _frequencyError = false;
+      _frequencyScheduleError = false;
+      _venueError = false;
+      _scoreboardLocationError = false;
+      _scoreboardOICError = false;
+      _actionPlanError = false;
+      _frequencyUpdateError = false;
+      _celebrateWinsError = false;
+      _recognizeRewardError = false;
+      _minutesFileError = false;
+    });
+  }
+
+  /// Scrolls the form so the first field with a validation error is
+  /// visible — sinusundan yung visual top-to-bottom order ng form.
+  void _scrollToFirstError() {
+    final fields = <({bool hasError, GlobalKey key})>[
+      (hasError: _documenterError, key: _documenterKey),
+      (hasError: _deputyError, key: _deputyKey),
+      (hasError: _venueError, key: _venueKey),
+      (hasError: _frequencyScheduleError, key: _frequencyScheduleKey),
+      (hasError: _minutesFileError, key: _minutesKey),
+      (hasError: _scoreboardLocationError, key: _scoreboardLocationKey),
+      (hasError: _scoreboardOICError, key: _scoreboardOICKey),
+      (hasError: _actionPlanError, key: _actionPointsKey),
+      (hasError: _frequencyUpdateError, key: _frequencyUpdateKey),
+      (hasError: _celebrateWinsError, key: _celebrateWinsKey),
+      (hasError: _recognizeRewardError, key: _recognizeRewardKey),
+      (hasError: _frequencyError, key: _frequencyKey),
+    ];
+
+    for (final f in fields) {
+      if (f.hasError) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = f.key.currentContext;
+          if (ctx != null) {
+            Scrollable.ensureVisible(
+              ctx,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+              alignment: 0.2,
+            );
+          }
+        });
+        break;
+      }
+    }
+  }
+
+  Future<void> _save({required bool isDraft}) async {
+    if (isDraft) {
+      _clearValidationErrors();
     }
 
     setState(() => _isSaving = true);
 
     final user = await AuthUtil.fetchLoggedUser();
-    if (user == null) return;
+    if (user == null) {
+      if (mounted) setState(() => _isSaving = false);
+      return;
+    }
 
     final request = OperationsReviewProtocol(
       widget.existingProtocol?.id ?? 0,
@@ -505,8 +589,9 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       _frequencyController.text.trim(),
       _minutesDeleted ? '' : (_existingMinutesPath ?? ''),
       widget.month,
-      false,
+      _minutesDeleted, // removeAttachment (19th positional param)
       divisionId: int.tryParse(_serviceId ?? ''),
+      isDraft: isDraft, // isDraft is a NAMED param sa model, hindi positional
     );
 
     final accomplishmentUpdates =
@@ -530,7 +615,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       Navigator.pop(context);
       MotionToast.success(
         toastAlignment: Alignment.topCenter,
-        description: Text('Saved successfully'),
+        description: Text(isDraft ? 'Saved as draft' : 'Saved successfully'),
       ).show(context);
     } else {
       MotionToast.error(
@@ -538,6 +623,128 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
         description: Text('Failed to save'),
       ).show(context);
     }
+  }
+
+  Future<void> _showConfirmDialog({required bool isDraft}) async {
+    if (_isLocked) return;
+
+    if (!isDraft && !_validateForSubmit()) {
+      _scrollToFirstError();
+      return;
+    }
+
+    final actionLabel = isDraft ? 'Save as Draft' : 'Submit';
+    final titleLabel = isDraft ? 'Confirm Save as Draft' : 'Confirm Submit';
+    final questionLabel =
+        isDraft
+            ? 'Save this as a draft? You can continue editing it later.'
+            : "Are you sure you want to submit this record? You won't be able to make any changes.";
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: 380,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: kSurface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 32,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: kPrimaryBg,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      isDraft ? Icons.drafts_outlined : Icons.save_outlined,
+                      color: primaryColor,
+                      size: 28,
+                    ),
+                  ),
+                  gap16px,
+                  Text(
+                    titleLabel,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: kText,
+                    ),
+                  ),
+                  gap8px,
+                  Text(
+                    questionLabel,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: kMuted,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  gap24px,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: kBorder),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: kMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          label: Text(
+                            actionLabel,
+                            style: GoogleFonts.plusJakartaSans(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+
+    if (confirmed == true) await _save(isDraft: isDraft);
   }
 
   int _pgsStatusToInt(PgsStatus status) {
@@ -596,6 +803,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
               _buildHeader(),
               Expanded(
                 child: SingleChildScrollView(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
@@ -691,11 +899,13 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
               label: 'Documenter',
               controller: _documenterController,
               hasError: _documenterError,
+              fieldKey: _documenterKey,
             ),
             _requiredInputField(
               label: 'Deputy',
               controller: _deputyController,
               hasError: _deputyError,
+              fieldKey: _deputyKey,
             ),
           ],
         ),
@@ -725,11 +935,13 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                   label: 'Documenter',
                   controller: _documenterController,
                   hasError: _documenterError,
+                  fieldKey: _documenterKey,
                 ),
                 _requiredInputField(
                   label: 'Deputy',
                   controller: _deputyController,
                   hasError: _deputyError,
+                  fieldKey: _deputyKey,
                 ),
               ],
             ),
@@ -835,8 +1047,9 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                                           _selectedStatuses[acc.id] ??
                                           PgsStatus.notStarted,
                                       onChanged: (value) {
-                                        if (value == null) return;
-
+                                        if (_isLocked || value == null) {
+                                          return;
+                                        }
                                         setState(() {
                                           _selectedStatuses[acc.id] = value;
                                         });
@@ -863,15 +1076,15 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       flex: 2,
-
                                       child: statusDropdown(
                                         label: 'Status',
                                         value:
                                             _selectedStatuses[acc.id] ??
                                             PgsStatus.notStarted,
                                         onChanged: (value) {
-                                          if (value == null) return;
-
+                                          if (_isLocked || value == null) {
+                                            return;
+                                          }
                                           setState(() {
                                             _selectedStatuses[acc.id] = value;
                                           });
@@ -902,11 +1115,13 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     label: 'Venue',
                     controller: _venueController,
                     hasError: _venueError,
+                    fieldKey: _venueKey,
                   ),
                   _requiredInputField(
                     label: 'Frequency & Schedule',
                     controller: _frequencyScheduleController,
                     hasError: _frequencyScheduleError,
+                    fieldKey: _frequencyScheduleKey,
                   ),
                   _buildMinutesAttachmentField(),
                 ],
@@ -925,6 +1140,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                               label: 'Venue',
                               controller: _venueController,
                               hasError: _venueError,
+                              fieldKey: _venueKey,
                             ),
                             _buildMinutesAttachmentField(),
                           ],
@@ -936,6 +1152,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                           label: 'Frequency & Schedule',
                           controller: _frequencyScheduleController,
                           hasError: _frequencyScheduleError,
+                          fieldKey: _frequencyScheduleKey,
                         ),
                       ),
                     ],
@@ -947,6 +1164,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
 
   Widget _buildMinutesAttachmentField() {
     return Padding(
+      key: _minutesKey,
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -995,7 +1213,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
             Icons.upload_file_outlined,
             color: _minutesFileError ? Colors.red : Colors.blue,
           ),
-          onPressed: _pickMinutesFile,
+          onPressed: _isLocked ? null : _pickMinutesFile,
         ),
         Text(
           'Upload 1 supported file: Image of PDF only. Max 10 MB',
@@ -1065,23 +1283,28 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                 ),
               ),
             ),
-            SizedBox(
-              width: 28,
-              height: 28,
-              child: IconButton(
-                icon: Icon(Icons.delete, size: 16, color: Colors.grey.shade500),
-                padding: EdgeInsets.zero,
-                tooltip: 'Delete',
-                onPressed: () {
-                  setState(() {
-                    _minutesFileName = null;
-                    _minutesBytes = null;
-                    _minutesServerImageCache = null;
-                    _minutesDeleted = true;
-                  });
-                },
+            if (!_isLocked)
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.delete,
+                    size: 16,
+                    color: Colors.grey.shade500,
+                  ),
+                  padding: EdgeInsets.zero,
+                  tooltip: 'Delete',
+                  onPressed: () {
+                    setState(() {
+                      _minutesFileName = null;
+                      _minutesBytes = null;
+                      _minutesServerImageCache = null;
+                      _minutesDeleted = true;
+                    });
+                  },
+                ),
               ),
-            ),
           ],
         ),
       ],
@@ -1145,22 +1368,26 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     label: 'Scoreboard Location',
                     controller: _scoreboardLocationController,
                     hasError: _scoreboardLocationError,
+                    fieldKey: _scoreboardLocationKey,
                   ),
                   _requiredInputField(
                     label: 'Scoreboard OIC',
                     controller: _scoreboardOICController,
                     hasError: _scoreboardOICError,
+                    fieldKey: _scoreboardOICKey,
                   ),
                   _requiredInputField(
                     label: 'Action Plan/Point',
                     controller: _actionPointsController,
                     maxLines: 4,
                     hasError: _actionPlanError,
+                    fieldKey: _actionPointsKey,
                   ),
                   _requiredInputField(
                     label: 'Frequency of update',
                     controller: _frequencyUpdateController,
                     hasError: _frequencyUpdateError,
+                    fieldKey: _frequencyUpdateKey,
                   ),
                 ],
               )
@@ -1178,17 +1405,20 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                               label: 'Scoreboard Location',
                               controller: _scoreboardLocationController,
                               hasError: _scoreboardLocationError,
+                              fieldKey: _scoreboardLocationKey,
                             ),
                             _requiredInputField(
                               label: 'Scoreboard OIC',
                               controller: _scoreboardOICController,
                               hasError: _scoreboardOICError,
+                              fieldKey: _scoreboardOICKey,
                             ),
                             _requiredInputField(
                               label: 'Action Plan/Point',
                               controller: _actionPointsController,
                               maxLines: 4,
                               hasError: _actionPlanError,
+                              fieldKey: _actionPointsKey,
                             ),
                           ],
                         ),
@@ -1200,6 +1430,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                           label: 'Frequency of update',
                           controller: _frequencyUpdateController,
                           hasError: _frequencyUpdateError,
+                          fieldKey: _frequencyUpdateKey,
                         ),
                       ),
                     ],
@@ -1223,6 +1454,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     controller: _celebrateWinsController,
                     hasError: _celebrateWinsError,
                     maxLines: 3,
+                    fieldKey: _celebrateWinsKey,
                   ),
                   _requiredInputField(
                     label:
@@ -1230,11 +1462,13 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                     controller: _recognizeRewardController,
                     hasError: _recognizeRewardError,
                     maxLines: 3,
+                    fieldKey: _recognizeRewardKey,
                   ),
                   _requiredInputField(
                     label: 'Frequency',
                     controller: _frequencyController,
                     hasError: _frequencyError,
+                    fieldKey: _frequencyKey,
                   ),
                 ],
               )
@@ -1253,6 +1487,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                               controller: _celebrateWinsController,
                               maxLines: 3,
                               hasError: _celebrateWinsError,
+                              fieldKey: _celebrateWinsKey,
                             ),
                             _requiredInputField(
                               label:
@@ -1260,6 +1495,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                               controller: _recognizeRewardController,
                               maxLines: 3,
                               hasError: _recognizeRewardError,
+                              fieldKey: _recognizeRewardKey,
                             ),
                           ],
                         ),
@@ -1270,6 +1506,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                           label: 'Frequency',
                           controller: _frequencyController,
                           hasError: _frequencyError,
+                          fieldKey: _frequencyKey,
                         ),
                       ),
                     ],
@@ -1281,15 +1518,22 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
 
   Widget _buildBottomButtons(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: kBg,
         border: Border(top: BorderSide(color: Colors.grey.shade300)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: kBorder),
+              padding: EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadiusGeometry.circular(8),
+              ),
+            ),
             onPressed: _isSaving ? null : () => Navigator.pop(context),
             child: const Text(
               'Cancel',
@@ -1297,197 +1541,103 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
             ),
           ),
           const SizedBox(width: 12),
-          PermissionWidget(
-            permission: AppPermissions.addOperationReviewProtocol,
-            child: ElevatedButton(
-              onPressed:
-                  _isSaving
-                      ? null
-                      : () async {
-                        setState(() {
-                          _deputyError = _deputyController.text.trim().isEmpty;
-                          _documenterError =
-                              _documenterController.text.trim().isEmpty;
-                          _frequencyError =
-                              _frequencyController.text.trim().isEmpty;
-                          _frequencyScheduleError =
-                              _frequencyScheduleController.text.trim().isEmpty;
-                          _venueError = _venueController.text.trim().isEmpty;
-                          _scoreboardLocationError =
-                              _scoreboardLocationController.text.trim().isEmpty;
-                          _scoreboardOICError =
-                              _scoreboardOICController.text.trim().isEmpty;
-                          _actionPlanError =
-                              _actionPointsController.text.trim().isEmpty;
-                          _frequencyUpdateError =
-                              _frequencyUpdateController.text.trim().isEmpty;
-                          _celebrateWinsError =
-                              _celebrateWinsController.text.trim().isEmpty;
-                          _recognizeRewardError =
-                              _recognizeRewardController.text.trim().isEmpty;
-                          _minutesFileError = !_hasMinutesAttachment;
-                        });
 
-                        if (_deputyError ||
-                            _documenterError ||
-                            _frequencyError ||
-                            _frequencyScheduleError ||
-                            _venueError ||
-                            _scoreboardLocationError ||
-                            _scoreboardOICError ||
-                            _actionPlanError ||
-                            _frequencyUpdateError ||
-                            _celebrateWinsError ||
-                            _recognizeRewardError ||
-                            _minutesFileError) {
-                          return;
-                        }
-
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder:
-                              (ctx) => Dialog(
-                                backgroundColor: Colors.transparent,
-                                child: Container(
-                                  width: 380,
-                                  padding: EdgeInsets.all(24),
-                                  decoration: BoxDecoration(
-                                    color: kSurface,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        blurRadius: 32,
-                                        offset: Offset(0, 12),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 56,
-                                        height: 56,
-                                        decoration: BoxDecoration(
-                                          color: kPrimaryBg,
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.save_outlined,
-                                          color: primaryColor,
-                                          size: 28,
-                                        ),
-                                      ),
-                                      gap16px,
-                                      Text(
-                                        widget.existingProtocol != null
-                                            ? 'Confirm Update'
-                                            : 'Confirm Save',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 17,
-                                          color: kText,
-                                        ),
-                                      ),
-                                      gap8px,
-                                      Text(
-                                        widget.existingProtocol != null
-                                            ? 'Are you sure you want to update this record?'
-                                            : 'Are you sure you want to save this record?',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 13,
-                                          color: kMuted,
-                                          height: 1.5,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      gap24px,
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: OutlinedButton(
-                                              onPressed:
-                                                  () => Navigator.pop(ctx),
-                                              style: OutlinedButton.styleFrom(
-                                                side: BorderSide(
-                                                  color: kBorder,
-                                                ),
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: 12,
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                'Cancel',
-                                                style:
-                                                    GoogleFonts.plusJakartaSans(
-                                                      color: kMuted,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(width: 10),
-                                          Expanded(
-                                            child: ElevatedButton.icon(
-                                              onPressed:
-                                                  () =>
-                                                      Navigator.pop(ctx, true),
-                                              label: Text(
-                                                'Save',
-                                                style:
-                                                    GoogleFonts.plusJakartaSans(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                              ),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: primaryColor,
-                                                elevation: 0,
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: 12,
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                        );
-                        if (confirmed == true) await _save();
-                      },
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text(_isSaving ? 'Saving...' : 'Save'),
+          if (!_isLocked)
+            PermissionWidget(
+              permission: AppPermissions.addOperationReviewProtocol,
+              child: _buildActionsDropdown(),
             ),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionsDropdown() {
+    return PopupMenuButton<String>(
+      enabled: !_isSaving,
+      offset: const Offset(0, 44),
+      color: Colors.white,
+      elevation: 8,
+      shadowColor: Colors.black.withValues(alpha: 0.15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      itemBuilder:
+          (context) => [
+            PopupMenuItem<String>(
+              value: 'draft',
+              height: 44,
+              child: Row(
+                children: [
+                  Icon(Icons.drafts_outlined, size: 18, color: primaryColor),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Save as Draft',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'submit',
+              height: 44,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 18,
+                    color: primaryColor,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Submit',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+      onSelected: (value) {
+        if (value == 'draft') {
+          _showConfirmDialog(isDraft: true);
+        } else if (value == 'submit') {
+          _showConfirmDialog(isDraft: false);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
+        decoration: BoxDecoration(
+          color: primaryColor,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _isSaving ? 'Saving...' : 'Actions',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.keyboard_arrow_down,
+              color: Colors.white,
+              size: 18,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1498,6 +1648,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       child: TextField(
         controller: TextEditingController(text: value),
         readOnly: true,
+        style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
         decoration: InputDecoration(
           labelText: label,
           floatingLabelBehavior: FloatingLabelBehavior.auto,
@@ -1506,6 +1657,11 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 16,
+          ),
+          floatingLabelStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            color: primaryColor,
+            fontWeight: FontWeight.w600,
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
@@ -1529,20 +1685,30 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     required TextEditingController controller,
     bool hasError = false,
     int? maxLines,
+    Key? fieldKey,
   }) {
     return Padding(
+      key: fieldKey,
       padding: const EdgeInsets.only(bottom: 14),
-      child: TextField(
+      child: TextFormField(
         controller: controller,
         maxLines: maxLines,
+        enabled: !_isLocked,
         onChanged: (_) {
           if (hasError) setState(() {});
         },
+        style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
         decoration: InputDecoration(
           labelText: '$label *',
+          labelStyle: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
+          floatingLabelStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            color: primaryColor,
+            fontWeight: FontWeight.w600,
+          ),
           alignLabelWithHint: (maxLines ?? 1) > 1,
           filled: true,
-          fillColor: Colors.grey.shade50,
+          fillColor: _isLocked ? Colors.grey.shade100 : Colors.grey.shade50,
           errorText:
               hasError && controller.text.trim().isEmpty
                   ? '$label is required'
@@ -1567,6 +1733,10 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
             borderSide: BorderSide(color: primaryColor, width: 2),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: Colors.grey.shade200),
           ),
         ),
       ),

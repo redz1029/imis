@@ -25,6 +25,7 @@ class OperationsReviewProtocol {
   String? departmentName;
   String? divisionName;
   String? fullName;
+  bool? isDraft;
 
   @JsonKey()
   @DateTimeConverter()
@@ -60,6 +61,7 @@ class OperationsReviewProtocol {
     this.departmentName,
     this.divisionName,
     this.fullName,
+    this.isDraft,
   });
 
   factory OperationsReviewProtocol.fromJson(Map<String, dynamic> json) =>

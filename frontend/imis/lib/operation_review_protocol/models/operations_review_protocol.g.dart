@@ -37,6 +37,7 @@ OperationsReviewProtocol _$OperationsReviewProtocolFromJson(
   departmentName: json['departmentName'] as String?,
   divisionName: json['divisionName'] as String?,
   fullName: json['fullName'] as String?,
+  isDraft: json['isDraft'] as bool?,
 );
 
 Map<String, dynamic> _$OperationsReviewProtocolToJson(
@@ -63,6 +64,7 @@ Map<String, dynamic> _$OperationsReviewProtocolToJson(
   'departmentName': instance.departmentName,
   'divisionName': instance.divisionName,
   'fullName': instance.fullName,
+  'isDraft': instance.isDraft,
   'postingDate': _$JsonConverterToJson<String, DateTime>(
     instance.postingDate,
     const DateTimeConverter().toJson,
