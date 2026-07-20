@@ -12,14 +12,17 @@ class OsmCalendarActivity {
   @JsonKey()
   @DateTimeConverter()
   DateTime startDate;
-
+  String? startTime;
+  String? endTime;
   bool? isAllDay;
   String? color;
   String? category;
   String? location;
   int? status;
   String? userId;
+  String? userFullName;
   int? officeId;
+  String? officeName;
   int? reminderMinutes;
   String? meetingLink;
 
@@ -31,12 +34,16 @@ class OsmCalendarActivity {
     this.startDate, {
     this.description,
     this.isAllDay,
+    this.startTime,
+    this.endTime,
     this.color,
     this.category,
     this.location,
     this.status,
     this.userId,
+    this.userFullName,
     this.officeId,
+    this.officeName,
     this.reminderMinutes,
     this.meetingLink,
     this.attachmentPath,
