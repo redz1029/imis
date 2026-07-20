@@ -1,11 +1,10 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
@@ -50,7 +49,9 @@ class _PerformanceValidationListDialogState
     extends State<PerformanceValidationListDialog> {
   List<PerformanceValidationTool> _validations = [];
   bool _isLoading = true;
+  bool _checkingSignatory = false;
   final _performanceValidationService = PerformanceValidationServices(Dio());
+  final _commonService = CommonService(Dio());
   static const _months = [
     '',
     'January',
@@ -92,7 +93,115 @@ class _PerformanceValidationListDialogState
     return office;
   }
 
-  void _openNewValidation() {
+  Future<void> _showNoSignatoryDialog() async {
+    await showDialog(
+      context: context,
+      builder:
+          (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: 380,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 32,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.pending_actions_outlined,
+                      color: Colors.orange.shade700,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Deliverables Not Yet Submitted',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The head of ${widget.pgs.office.name} has not submitted their '
+                    'deliverables yet. Performance validation cannot be created '
+                    'until the head department has submitted.',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'OK',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+
+  Future<void> _openNewValidation() async {
+    setState(() => _checkingSignatory = true);
+
+    String? headUserId;
+    try {
+      final signatories = await _commonService.fetchPgsSignatories(
+        widget.pgs.id,
+      );
+      if (signatories.isNotEmpty) {
+        headUserId = signatories.first.signatoryId;
+      }
+    } catch (_) {
+      headUserId = null;
+    }
+
+    if (mounted) setState(() => _checkingSignatory = false);
+
+    if (headUserId == null || headUserId.isEmpty) {
+      if (mounted) await _showNoSignatoryDialog();
+      return;
+    }
+
+    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -327,12 +436,23 @@ class _PerformanceValidationListDialogState
                     PermissionWidget(
                       permission: AppPermissions.addPerformanceValidationTool,
                       child: TextButton.icon(
-                        onPressed: _openNewValidation,
-                        icon: const Icon(
-                          Icons.add,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                        onPressed:
+                            _checkingSignatory ? null : _openNewValidation,
+                        icon:
+                            _checkingSignatory
+                                ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                                : const Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                         label: const Text(
                           'Add New',
                           style: TextStyle(

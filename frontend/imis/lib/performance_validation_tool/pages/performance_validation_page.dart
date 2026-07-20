@@ -29,11 +29,10 @@ class PerformanceValidationPage extends StatefulWidget {
 
   @override
   State<PerformanceValidationPage> createState() =>
-      OperationReviewProtocolPageState();
+      PerformanceValidationPageState();
 }
 
-class OperationReviewProtocolPageState
-    extends State<PerformanceValidationPage> {
+class PerformanceValidationPageState extends State<PerformanceValidationPage> {
   List<Office> officeList = [];
   List<Office> serviceList = [];
   String? _selectedOfficeId;
@@ -184,111 +183,6 @@ class OperationReviewProtocolPageState
                     _performanceValidation.deletePerformanceValidationTool(id),
           ),
     );
-  }
-
-  Future<void> _openPrintPreview(PerformanceGovernanceSystem pgs) async {
-    if (_roleId.isEmpty) {
-      debugPrint('Role ID is empty, aborting print preview.');
-      return;
-    }
-
-    final dio = Dio();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (_) => const AlertDialog(
-            content: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(color: primaryColor),
-                SizedBox(width: 16),
-                Text(
-                  'Generating PDF...',
-                  style: TextStyle(color: primaryColor),
-                ),
-              ],
-            ),
-          ),
-    );
-
-    try {
-      final url = '${ApiEndpoint().operationReviewProtocol}/$_roleId';
-      if (kIsWeb) {
-        final response = await AuthenticatedRequest.get(
-          dio,
-          url,
-          options: Options(
-            responseType: ResponseType.bytes,
-            headers: {'Accept': 'application/pdf'},
-          ),
-        );
-        if (response.statusCode == 200 && response.data != null) {
-          final bytes = Uint8List.fromList(response.data);
-          final blob = html.Blob([bytes], 'application/pdf');
-          final blobUrl = html.Url.createObjectUrlFromBlob(blob);
-          html.window.open(blobUrl, '_blank');
-          Future.delayed(const Duration(seconds: 15), () {
-            html.Url.revokeObjectUrl(blobUrl);
-          });
-        }
-      } else if (Platform.isAndroid || Platform.isIOS) {
-        final response = await AuthenticatedRequest.get(
-          dio,
-          url,
-          options: Options(
-            responseType: ResponseType.bytes,
-            headers: {'Accept': 'application/pdf'},
-          ),
-        );
-        if (response.statusCode == 200 && response.data != null) {
-          final bytes = Uint8List.fromList(response.data);
-          final tempDir = await getTemporaryDirectory();
-          final filePath = '${tempDir.path}/operation_review_${pgs.id}.pdf';
-          await File(filePath).writeAsBytes(bytes);
-          final result = await OpenFile.open(filePath);
-          if (result.type != ResultType.done) {
-            debugPrint('OpenFile error: ${result.message}');
-          }
-        }
-      } else {
-        final response = await AuthenticatedRequest.get(
-          dio,
-          url,
-          options: Options(
-            responseType: ResponseType.bytes,
-            headers: {'Accept': 'application/pdf'},
-          ),
-        );
-        if (response.statusCode == 200 && response.data != null) {
-          final bytes = Uint8List.fromList(response.data);
-          final dir =
-              Platform.isWindows
-                  ? await getDownloadsDirectory()
-                  : await getApplicationDocumentsDirectory();
-          final filePath = '${dir!.path}/operation_review_${pgs.id}.pdf';
-          await File(filePath).writeAsBytes(bytes);
-          final result = await OpenFile.open(filePath);
-          if (result.type != ResultType.done) {
-            debugPrint('OpenFile error: ${result.message}');
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Error opening Operations Review PDF: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to open PDF. Please try again.'),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-    }
   }
 
   @override
@@ -523,8 +417,6 @@ class OperationReviewProtocolPageState
                                               onSelected: (value) async {
                                                 if (value == 'review') {
                                                   _openValidationList(pgs);
-                                                } else if (value == 'preview') {
-                                                  await _openPrintPreview(pgs);
                                                 }
                                               },
                                               itemBuilder:
@@ -541,7 +433,7 @@ class OperationReviewProtocolPageState
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text(
-                                                            'Operations Review',
+                                                            'Performance Validation',
                                                           ),
                                                         ],
                                                       ),
