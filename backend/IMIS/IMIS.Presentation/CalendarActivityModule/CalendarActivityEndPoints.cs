@@ -271,8 +271,8 @@ namespace IMIS.Presentation.CalendarActivityModule
 
                 await cache.EvictByTagAsync(_calendarTag, cancellationToken);
 
-                return result ? Results.Ok(new { message = "Office deleted successfully." })
-                              : Results.NotFound(new { message = "Office not found." });
+                return result ? Results.Ok(new { message = " Calendar deleted successfully." })
+                              : Results.NotFound(new { message = "Calendar not found." });
             })
            .WithTags(_calendarTag)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _calendarActivityPermission.View));
