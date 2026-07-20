@@ -25,7 +25,6 @@ class UserProfilePage extends StatefulWidget {
 }
 
 class UserProfileState extends State<UserProfilePage> {
-  final _formKey = GlobalKey<FormState>();
   final _userProfileService = UsersProfileService(Dio());
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController middleNameController = TextEditingController();
@@ -186,6 +185,8 @@ class UserProfileState extends State<UserProfilePage> {
     selectedPosition =
         JobPositions.positions.contains(position) ? position : null;
     final isEdit = id != null;
+    final formKey = GlobalKey<FormState>();
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -265,7 +266,7 @@ class UserProfileState extends State<UserProfilePage> {
                       child: SingleChildScrollView(
                         padding: EdgeInsets.fromLTRB(24, 20, 24, 8),
                         child: Form(
-                          key: _formKey,
+                          key: formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -331,7 +332,7 @@ class UserProfileState extends State<UserProfilePage> {
                               elevation: 0,
                             ),
                             onPressed: () async {
-                              if (_formKey.currentState!.validate()) {
+                              if (formKey.currentState!.validate()) {
                                 bool? confirmAction = await showDialog<bool>(
                                   context: dialogContext,
                                   builder:
@@ -495,6 +496,7 @@ class UserProfileState extends State<UserProfilePage> {
         JobPositions.positions.contains(position) ? position : null;
 
     final isEdit = id != null;
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
@@ -583,7 +585,7 @@ class UserProfileState extends State<UserProfilePage> {
                       child: SingleChildScrollView(
                         padding: EdgeInsets.fromLTRB(24, 20, 24, 8),
                         child: Form(
-                          key: _formKey,
+                          key: formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -744,7 +746,7 @@ class UserProfileState extends State<UserProfilePage> {
                                 elevation: 0,
                               ),
                               onPressed: () async {
-                                if (!_formKey.currentState!.validate()) return;
+                                if (!formKey.currentState!.validate()) return;
 
                                 final confirmed = await showDialog<bool>(
                                   context: dialogContext,

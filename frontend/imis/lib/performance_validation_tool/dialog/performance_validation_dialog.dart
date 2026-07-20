@@ -89,7 +89,7 @@ class _PerformanceValidationDialogState
   final _approvedByCtrl = TextEditingController();
   final _approvedDateCtrl = TextEditingController();
   bool _canConfirm = false;
-  bool _checkingConfirmEligibility = false;
+  bool checkingConfirmEligibility = false;
   bool _submitting = false;
 
   final CommonService _commonService = CommonService(Dio());
@@ -118,7 +118,7 @@ class _PerformanceValidationDialogState
   Future<void> _checkConfirmEligibility() async {
     if (widget.existing == null) return;
 
-    setState(() => _checkingConfirmEligibility = true);
+    setState(() => checkingConfirmEligibility = true);
 
     try {
       final user = await AuthUtil.fetchLoggedUser();
@@ -150,7 +150,7 @@ class _PerformanceValidationDialogState
       debugPrint('Error checking confirm eligibility:');
       if (mounted) setState(() => _canConfirm = false);
     } finally {
-      if (mounted) setState(() => _checkingConfirmEligibility = false);
+      if (mounted) setState(() => checkingConfirmEligibility = false);
     }
   }
 

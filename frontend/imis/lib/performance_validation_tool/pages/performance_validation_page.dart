@@ -399,7 +399,7 @@ class OperationReviewProtocolPageState
                                     ),
                                     const SizedBox(height: 10),
                                     const Text(
-                                      "No operation review protocol available",
+                                      "No performance validation available",
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: Colors.grey,

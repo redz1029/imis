@@ -30,7 +30,6 @@ class UserOfficePageState extends State<UserOfficePage> {
   final _commonService = CommonService(Dio());
   final _userOfficeService = UserOfficeService(Dio());
   late FilterSearchResultUtil<UserOffice> userOfficeSearchUtil;
-  final _formKey = GlobalKey<FormState>();
   List<UserOffice> userOfficeList = [];
   List<UserOffice> filteredList = [];
   List<User> userList = [];
@@ -193,6 +192,7 @@ class UserOfficePageState extends State<UserOfficePage> {
     _selectedUserId = selectedUserId;
     _selectedOfficeId = selectedOfficeId;
     final isEdit = id != null;
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
@@ -217,7 +217,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                   ],
                 ),
                 child: Form(
-                  key: _formKey,
+                  key: formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,7 +396,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                                 ),
                               ),
                               onPressed: () async {
-                                if (!_formKey.currentState!.validate()) return;
+                                if (!formKey.currentState!.validate()) return;
                                 final confirmed = await showDialog<bool>(
                                   context: context,
                                   builder:

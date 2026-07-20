@@ -25,19 +25,15 @@ class AuditorTeamPage extends StatefulWidget {
 
 class AuditorTeamPageState extends State<AuditorTeamPage>
     with SingleTickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
   final _adutiorTeamService = AuditorTeamService(Dio());
   final _commonService = CommonService(Dio());
   final _searchController = TextEditingController();
   final _searchFocus = FocusNode();
-
   late AnimationController _fadeCtrl;
-
   List<dynamic> auditorTeamList = [];
   List<dynamic> filteredList = [];
   List<Team> teamList = [];
   List<Auditor> auditorList = [];
-
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
@@ -438,6 +434,7 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
     int? selectTeam = teamId;
     List<Auditor> selectedAuditors = auditors ?? [];
     final isEdit = id != null;
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
@@ -466,7 +463,7 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
                   ],
                 ),
                 child: Form(
-                  key: _formKey,
+                  key: formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -827,7 +824,7 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
                             const SizedBox(width: 10),
                             ElevatedButton.icon(
                               onPressed: () async {
-                                if (!_formKey.currentState!.validate()) return;
+                                if (!formKey.currentState!.validate()) return;
 
                                 final confirmed = await _confirm(
                                   ctx,

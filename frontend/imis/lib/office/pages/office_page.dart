@@ -181,6 +181,7 @@ class OfficePageState extends State<OfficePage> {
       {'id': null, 'name': 'None'},
       ...parentOfficeList,
     ];
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
@@ -205,7 +206,7 @@ class OfficePageState extends State<OfficePage> {
                   ],
                 ),
                 child: Form(
-                  key: _formKey,
+                  key: formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +333,7 @@ class OfficePageState extends State<OfficePage> {
                                 ),
                               ),
                               onPressed: () async {
-                                if (!_formKey.currentState!.validate()) return;
+                                if (!formKey.currentState!.validate()) return;
                                 final confirmed = await showDialog<bool>(
                                   context: context,
                                   builder:

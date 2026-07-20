@@ -525,10 +525,10 @@ class AnnouncementPageState extends State<AnnouncementPage> {
   }) {
     final titleController = TextEditingController(text: title);
     final descriptionController = TextEditingController(text: description);
-    DateTime? selectedFromDate =
-        fromDate != null ? DateTime.tryParse(fromDate) : null;
-    DateTime? selectedEndDate =
-        endDate != null ? DateTime.tryParse(endDate) : null;
+    // DateTime? selectedFromDate =
+    //     fromDate != null ? DateTime.tryParse(fromDate) : null;
+    // DateTime? selectedEndDate =
+    //     endDate != null ? DateTime.tryParse(endDate) : null;
     bool activeState = isActive;
     final isEdit = id != null;
 
@@ -538,115 +538,115 @@ class AnnouncementPageState extends State<AnnouncementPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            Future<void> pickDate({required bool isFrom}) async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2101),
-                builder:
-                    (context, child) => Theme(
-                      data: Theme.of(context).copyWith(
-                        colorScheme: ColorScheme.light(
-                          primary: primaryColor,
-                          onPrimary: Colors.white,
-                        ),
-                        textButtonTheme: TextButtonThemeData(
-                          style: TextButton.styleFrom(
-                            foregroundColor: primaryColor,
-                          ),
-                        ),
-                      ),
-                      child: child!,
-                    ),
-              );
-              if (picked == null) return;
-              setStateDialog(() {
-                if (isFrom) {
-                  selectedFromDate = picked;
-                  if (selectedEndDate != null &&
-                      selectedEndDate!.isBefore(picked)) {
-                    selectedEndDate = null;
-                  }
-                } else {
-                  selectedEndDate = picked;
-                }
-              });
-            }
+            // Future<void> pickDate({required bool isFrom}) async {
+            //   final picked = await showDatePicker(
+            //     context: context,
+            //     initialDate: DateTime.now(),
+            //     firstDate: DateTime(2000),
+            //     lastDate: DateTime(2101),
+            //     builder:
+            //         (context, child) => Theme(
+            //           data: Theme.of(context).copyWith(
+            //             colorScheme: ColorScheme.light(
+            //               primary: primaryColor,
+            //               onPrimary: Colors.white,
+            //             ),
+            //             textButtonTheme: TextButtonThemeData(
+            //               style: TextButton.styleFrom(
+            //                 foregroundColor: primaryColor,
+            //               ),
+            //             ),
+            //           ),
+            //           child: child!,
+            //         ),
+            //   );
+            //   if (picked == null) return;
+            //   setStateDialog(() {
+            //     if (isFrom) {
+            //       selectedFromDate = picked;
+            //       if (selectedEndDate != null &&
+            //           selectedEndDate!.isBefore(picked)) {
+            //         selectedEndDate = null;
+            //       }
+            //     } else {
+            //       selectedEndDate = picked;
+            //     }
+            //   });
+            // }
 
-            Widget dateField({
-              required String label,
-              required DateTime? value,
-              required bool isFrom,
-              required String? Function(String?)? validator,
-            }) {
-              return TextFormField(
-                readOnly: true,
-                controller: TextEditingController(
-                  text: value != null ? "${value.toLocal()}".split(' ')[0] : '',
-                ),
-                onTap: () async {
-                  if (!isFrom && selectedFromDate == null) {
-                    MotionToast.warning(
-                      toastAlignment: Alignment.topCenter,
-                      description: const Text(
-                        'Please select a start date first',
-                      ),
-                    ).show(context);
-                    return;
-                  }
-                  await pickDate(isFrom: isFrom);
-                },
-                validator: validator,
-                style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
-                decoration: InputDecoration(
-                  labelText: label,
-                  labelStyle: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    color: kMuted,
-                  ),
-                  floatingLabelStyle: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: primaryColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  suffixIcon: const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 18,
-                    color: kMuted,
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 13,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: kBorder),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: kBorder),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(
-                      color: primaryColor,
-                      width: 1.5,
-                    ),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: kDanger),
-                  ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: kDanger, width: 1.5),
-                  ),
-                ),
-              );
-            }
+            // Widget dateField({
+            //   required String label,
+            //   required DateTime? value,
+            //   required bool isFrom,
+            //   required String? Function(String?)? validator,
+            // }) {
+            //   return TextFormField(
+            //     readOnly: true,
+            //     controller: TextEditingController(
+            //       text: value != null ? "${value.toLocal()}".split(' ')[0] : '',
+            //     ),
+            //     onTap: () async {
+            //       if (!isFrom && selectedFromDate == null) {
+            //         MotionToast.warning(
+            //           toastAlignment: Alignment.topCenter,
+            //           description: const Text(
+            //             'Please select a start date first',
+            //           ),
+            //         ).show(context);
+            //         return;
+            //       }
+            //       await pickDate(isFrom: isFrom);
+            //     },
+            //     validator: validator,
+            //     style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
+            //     decoration: InputDecoration(
+            //       labelText: label,
+            //       labelStyle: GoogleFonts.plusJakartaSans(
+            //         fontSize: 13,
+            //         color: kMuted,
+            //       ),
+            //       floatingLabelStyle: GoogleFonts.plusJakartaSans(
+            //         fontSize: 12,
+            //         color: primaryColor,
+            //         fontWeight: FontWeight.w600,
+            //       ),
+            //       suffixIcon: const Icon(
+            //         Icons.calendar_today_outlined,
+            //         size: 18,
+            //         color: kMuted,
+            //       ),
+            //       filled: true,
+            //       fillColor: Colors.grey.shade50,
+            //       contentPadding: const EdgeInsets.symmetric(
+            //         horizontal: 14,
+            //         vertical: 13,
+            //       ),
+            //       border: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //         borderSide: const BorderSide(color: kBorder),
+            //       ),
+            //       enabledBorder: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //         borderSide: const BorderSide(color: kBorder),
+            //       ),
+            //       focusedBorder: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //         borderSide: const BorderSide(
+            //           color: primaryColor,
+            //           width: 1.5,
+            //         ),
+            //       ),
+            //       errorBorder: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //         borderSide: const BorderSide(color: kDanger),
+            //       ),
+            //       focusedErrorBorder: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //         borderSide: const BorderSide(color: kDanger, width: 1.5),
+            //       ),
+            //     ),
+            //   );
+            // }
 
             return Dialog(
               backgroundColor: Colors.transparent,
@@ -670,7 +670,6 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header
                       Row(
                         children: [
                           Container(
@@ -717,7 +716,6 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                       Divider(color: kBorder, height: 1),
                       const SizedBox(height: 20),
 
-                      // Title
                       dialogField(
                         label: 'Title',
                         controller: titleController,
@@ -727,38 +725,38 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                     ? 'Please fill out this field'
                                     : null,
                       ),
-                      const SizedBox(height: 12),
+                      // const SizedBox(height: 12),
 
-                      // Date row
-                      Row(
-                        children: [
-                          Expanded(
-                            child: dateField(
-                              label: 'From Date',
-                              value: selectedFromDate,
-                              isFrom: true,
-                              validator:
-                                  (_) =>
-                                      selectedFromDate == null
-                                          ? 'Required'
-                                          : null,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: dateField(
-                              label: 'To Date',
-                              value: selectedEndDate,
-                              isFrom: false,
-                              validator:
-                                  (_) =>
-                                      selectedEndDate == null
-                                          ? 'Required'
-                                          : null,
-                            ),
-                          ),
-                        ],
-                      ),
+                      // // Date row
+                      // Row(
+                      //   children: [
+                      //     Expanded(
+                      //       child: dateField(
+                      //         label: 'From Date',
+                      //         value: selectedFromDate,
+                      //         isFrom: true,
+                      //         validator:
+                      //             (_) =>
+                      //                 selectedFromDate == null
+                      //                     ? 'Required'
+                      //                     : null,
+                      //       ),
+                      //     ),
+                      //     const SizedBox(width: 12),
+                      //     Expanded(
+                      //       child: dateField(
+                      //         label: 'To Date',
+                      //         value: selectedEndDate,
+                      //         isFrom: false,
+                      //         validator:
+                      //             (_) =>
+                      //                 selectedEndDate == null
+                      //                     ? 'Required'
+                      //                     : null,
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
                       const SizedBox(height: 12),
 
                       dialogField(
@@ -772,7 +770,6 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                     : null,
                       ),
                       const SizedBox(height: 12),
-
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -1022,8 +1019,8 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                 final announcement = Announcement(
                                   id: int.tryParse(id ?? '0') ?? 0,
                                   title: titleController.text.trim(),
-                                  fromDate: selectedFromDate!,
-                                  toDate: selectedEndDate!,
+                                  fromDate: DateTime.now(),
+                                  toDate: DateTime.now(),
                                   description:
                                       descriptionController.text.trim(),
                                   isActive: activeState,
@@ -1041,12 +1038,10 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                     );
                                   }
 
-                                  // Refresh data
                                   await fetchAnnouncement();
 
                                   if (!mounted) return;
 
-                                  // Close the form dialog
                                   Navigator.of(context).pop();
 
                                   MotionToast.success(

@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
-import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -203,7 +202,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
     _selectedOffice = selectedOffice;
     _selectedPeriod = selectedPeriod;
     final isEdit = id != null;
-
+    final formKey = GlobalKey<FormState>();
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -227,7 +226,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                   ],
                 ),
                 child: Form(
-                  key: _formKey,
+                  key: formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,7 +332,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                       ),
                       gap14px,
                       SearchDropdown<PgsPeriod>(
-                        label: 'Office',
+                        label: 'Period',
                         hintText: 'Search period...',
                         items: periodList,
                         itemAsString:
@@ -578,337 +577,6 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
             );
           },
         );
-        // return AlertDialog(
-        //   backgroundColor: mainBgColor,
-        //   shape: RoundedRectangleBorder(
-        //     borderRadius: BorderRadius.circular(12.0),
-        //   ),
-        //   titlePadding: EdgeInsets.zero,
-        //   title: Container(
-        //     width: double.infinity,
-        //     padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        //     decoration: BoxDecoration(
-        //       color: primaryLightColor,
-        //       borderRadius: BorderRadius.only(
-        //         topLeft: Radius.circular(12),
-        //         topRight: Radius.circular(12),
-        //       ),
-        //     ),
-        //     child: Text(
-        //       id == null ? 'Create Auditor Office' : 'Edit Auditor Office',
-        //       textAlign: TextAlign.center,
-        //       style: TextStyle(
-        //         fontWeight: FontWeight.bold,
-        //         fontSize: 18,
-        //         color: Colors.white,
-        //       ),
-        //     ),
-        //   ),
-        // content: Form(
-        //   key: _formKey,
-        //   child: Column(
-        //     mainAxisSize: MainAxisSize.min,
-        //     children: [
-        //       SizedBox(
-        //         width: 480,
-
-        //         child: DropdownSearch<Auditor?>(
-        //           popupProps: PopupProps.menu(
-        //             showSearchBox: true,
-        //             searchFieldProps: TextFieldProps(
-        //               decoration: InputDecoration(
-        //                 hintText: 'Search Auditors ...',
-        //                 filled: true,
-        //                 fillColor: mainBgColor,
-        //                 prefixIcon: Icon(Icons.search),
-        //                 border: OutlineInputBorder(
-        //                   borderRadius: BorderRadius.circular(8),
-        //                 ),
-        //                 focusedBorder: OutlineInputBorder(
-        //                   borderSide: BorderSide(color: primaryColor),
-        //                 ),
-        //               ),
-        //             ),
-        //             itemBuilder: (context, auditor, isSelected) {
-        //               final user = userList.firstWhere(
-        //                 (u) => u.id == auditor?.userId,
-        //                 orElse:
-        //                     () => User(id: '', fullName: '', position: ''),
-        //               );
-
-        //               return ListTile(
-        //                 tileColor: mainBgColor,
-        //                 title: Text(user.fullName),
-        //               );
-        //             },
-        //           ),
-        //           items: auditorList,
-        //           itemAsString: (auditor) {
-        //             final user = userList.firstWhere(
-        //               (u) => u.id == auditor?.userId,
-        //               orElse: () => User(id: '', fullName: '', position: ''),
-        //             );
-        //             return user.fullName;
-        //           },
-        //           onChanged:
-        //               (value) => setState(
-        //                 () => _selectedAuditor = value?.id.toString(),
-        //               ),
-        //           selectedItem:
-        //               _selectedAuditor == null
-        //                   ? null
-        //                   : auditorList.firstWhere(
-        //                     (auditor) =>
-        //                         auditor.id.toString() == _selectedAuditor,
-        //                     orElse:
-        //                         () => Auditor(id: 0, name: '', userId: ''),
-        //                   ),
-        //           validator: (value) {
-        //             if (value == null) {
-        //               return 'This field is required';
-        //             }
-        //             return null;
-        //           },
-        //           dropdownDecoratorProps: DropDownDecoratorProps(
-        //             dropdownSearchDecoration: InputDecoration(
-        //               labelText: 'Select Auditor',
-        //               filled: true,
-        //               fillColor: mainBgColor,
-        //               floatingLabelBehavior: FloatingLabelBehavior.never,
-        //               border: OutlineInputBorder(
-        //                 borderRadius: BorderRadius.circular(8),
-        //               ),
-        //               focusedBorder: OutlineInputBorder(
-        //                 borderSide: BorderSide(color: primaryColor),
-        //               ),
-        //             ),
-        //           ),
-        //         ),
-        //       ),
-        //       gap14px,
-        //       SizedBox(
-        //         width: 480,
-        //         child: DropdownSearch<Office>(
-        //           popupProps: PopupProps.menu(
-        //             showSearchBox: true,
-        //             searchFieldProps: TextFieldProps(
-        //               decoration: InputDecoration(
-        //                 hintText: 'Search Office Name...',
-        //                 filled: true,
-        //                 fillColor: mainBgColor,
-        //                 prefixIcon: Icon(Icons.search),
-        //                 border: OutlineInputBorder(
-        //                   borderRadius: BorderRadius.circular(8),
-        //                 ),
-        //                 focusedBorder: OutlineInputBorder(
-        //                   borderSide: BorderSide(color: primaryColor),
-        //                 ),
-        //               ),
-        //             ),
-        //             itemBuilder:
-        //                 (context, office, isSelected) => ListTile(
-        //                   tileColor: mainBgColor,
-        //                   title: Text(office.name),
-        //                 ),
-        //           ),
-        //           items: officenameList,
-        //           itemAsString: (office) => office.name,
-        //           selectedItem:
-        //               _selectedOffice == null
-        //                   ? null
-        //                   : officenameList.firstWhere(
-        //                     (office) =>
-        //                         office.id.toString() == _selectedOffice,
-        //                     orElse:
-        //                         () => Office(
-        //                           id: 0,
-        //                           name: 'Unknown',
-        //                           officeTypeId: 0,
-        //                           parentOfficeId: 0,
-        //                           isActive: true,
-        //                           isDeleted: false,
-        //                         ),
-        //                   ),
-
-        //           onChanged: (value) {
-        //             setState(() {
-        //               _selectedOffice = value?.id.toString();
-        //             });
-        //           },
-        //           validator: (value) {
-        //             if (value == null) {
-        //               return 'This field is required';
-        //             }
-        //             return null;
-        //           },
-        //           dropdownDecoratorProps: DropDownDecoratorProps(
-        //             dropdownSearchDecoration: InputDecoration(
-        //               labelText: 'Select Office',
-        //               filled: true,
-        //               fillColor: mainBgColor,
-        //               floatingLabelBehavior: FloatingLabelBehavior.never,
-        //               border: OutlineInputBorder(
-        //                 borderRadius: BorderRadius.circular(8),
-        //               ),
-        //               focusedBorder: OutlineInputBorder(
-        //                 borderSide: BorderSide(color: primaryColor),
-        //               ),
-        //             ),
-        //           ),
-        //         ),
-        //       ),
-        //       gap14px,
-        //       SizedBox(
-        //         width: 480,
-        //         child: DropdownSearch<PgsPeriod>(
-        //           popupProps: PopupProps.menu(
-        //             showSearchBox: true,
-        //             searchFieldProps: TextFieldProps(
-        //               decoration: InputDecoration(
-        //                 hintText: 'Search Period...',
-        //                 filled: true,
-        //                 fillColor: mainBgColor,
-        //                 prefixIcon: Icon(Icons.search),
-        //                 border: OutlineInputBorder(
-        //                   borderRadius: BorderRadius.circular(8),
-        //                 ),
-        //                 focusedBorder: OutlineInputBorder(
-        //                   borderSide: BorderSide(color: primaryColor),
-        //                 ),
-        //               ),
-        //             ),
-        //             itemBuilder:
-        //                 (context, period, isSelected) => ListTile(
-        //                   tileColor: mainBgColor,
-        //                   title: Text(
-        //                     "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
-        //                   ),
-        //                 ),
-        //           ),
-
-        //           items: periodList,
-        //           itemAsString:
-        //               (period) =>
-        //                   "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
-        //           selectedItem:
-        //               _selectedPeriod == null
-        //                   ? null
-        //                   : periodList.firstWhere(
-        //                     (office) =>
-        //                         office.id.toString() == _selectedPeriod,
-        //                     orElse:
-        //                         () => PgsPeriod(
-        //                           0,
-        //                           false,
-        //                           DateTime.now(),
-        //                           DateTime.now(),
-        //                           'remarks',
-        //                         ),
-        //                   ),
-
-        //           onChanged: (value) {
-        //             setState(() {
-        //               _selectedPeriod = value?.id.toString();
-        //             });
-        //           },
-        //           validator: (value) {
-        //             if (value == null) {
-        //               return 'This field is required';
-        //             }
-        //             return null;
-        //           },
-        //           dropdownDecoratorProps: DropDownDecoratorProps(
-        //             dropdownSearchDecoration: InputDecoration(
-        //               labelText: 'Select Period',
-        //               filled: true,
-        //               fillColor: mainBgColor,
-        //               floatingLabelBehavior: FloatingLabelBehavior.never,
-        //               border: OutlineInputBorder(
-        //                 borderRadius: BorderRadius.circular(8),
-        //               ),
-        //               focusedBorder: OutlineInputBorder(
-        //                 borderSide: BorderSide(color: primaryColor),
-        //               ),
-        //             ),
-        //           ),
-        //         ),
-        //       ),
-        //     ],
-        //   ),
-        // ),
-        // actions: [
-        //   TextButton(
-        //     onPressed: () => Navigator.pop(context),
-        //     child: Text('Cancel', style: TextStyle(color: primaryColor)),
-        //   ),
-        //   ElevatedButton(
-        //     style: ElevatedButton.styleFrom(
-        //       backgroundColor: primaryColor,
-        //       shape: RoundedRectangleBorder(
-        //         borderRadius: BorderRadius.circular(4),
-        //       ),
-        //     ),
-        //     onPressed: () async {
-        //       if (_formKey.currentState!.validate()) {
-        //         bool? confirmAction = await showDialog<bool>(
-        //           context: context,
-        //           builder: (context) {
-        //             return AlertDialog(
-        //               title: Text(
-        //                 id == null ? "Confirm Save" : "Confirm Update",
-        //               ),
-        //       content: Text(
-        //         id == null
-        //             ? "Are you sure you want to save this record?"
-        //             : "Are you sure you want to update this record?",
-        //       ),
-        //       actions: [
-        //         TextButton(
-        //           onPressed: () => Navigator.pop(context, false),
-        //           child: Text(
-        //             "No",
-        //             style: TextStyle(color: primaryColor),
-        //           ),
-        //         ),
-        //         TextButton(
-        //           onPressed: () => Navigator.pop(context, true),
-        //           child: Text(
-        //             "Yes",
-        //             style: TextStyle(color: primaryColor),
-        //           ),
-        //         ),
-        //       ],
-        //     );
-        //   },
-        // );
-        //             if (confirmAction == true) {
-        //               final auditorOffice = AuditorOffices(
-        //                 id: int.tryParse(id ?? '0') ?? 0,
-        //                 auditorId: int.tryParse(_selectedAuditor ?? '0') ?? 0,
-        //                 officeId: int.tryParse(_selectedOffice ?? '0') ?? 0,
-        //                 pgsPeriodId: int.tryParse(_selectedPeriod ?? '0') ?? 0,
-        //                 isOfficeHead: false,
-        //                 isDeleted: false,
-        //               );
-        //               await _auditorOfficeSevice.addAuditorOffice(auditorOffice);
-        //               setState(() {
-        //                 fetchAuditorOffice();
-        //               });
-        //               MotionToast.success(
-        //                 toastAlignment: Alignment.topCenter,
-        //                 description: Text('Saved successfully'),
-        //               ).show(context);
-        //               Navigator.pop(context);
-        //             }
-        //           }
-        //         },
-        //         child: Text(
-        //           id == null ? 'Save' : 'Update',
-        //           style: TextStyle(color: Colors.white),
-        //         ),
-        //       ),
-        //     ],
-        //   );
       },
     );
   }
@@ -1305,7 +973,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                         Text("Office $officeName"),
                                         const SizedBox(height: 4),
 
-                                        Text("Period: $period}"),
+                                        Text("Period: $period"),
                                       ],
                                     ),
                                   );

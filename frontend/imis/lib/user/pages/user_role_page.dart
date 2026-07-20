@@ -29,7 +29,7 @@ class UserRolePage extends StatefulWidget {
 }
 
 class UserRolePageState extends State<UserRolePage> {
-  final _formKey = GlobalKey<FormState>();
+  // final _formKey = GlobalKey<FormState>();
   final _commonService = CommonService(Dio());
   final _userRoleService = UserRoleService(Dio());
   final FocusNode isSearchfocus = FocusNode();
@@ -215,6 +215,7 @@ class UserRolePageState extends State<UserRolePage> {
             .toList();
 
     final isEdit = id != null;
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
@@ -239,7 +240,7 @@ class UserRolePageState extends State<UserRolePage> {
                   ],
                 ),
                 child: Form(
-                  key: _formKey,
+                  key: formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -593,7 +594,7 @@ class UserRolePageState extends State<UserRolePage> {
                                 ),
                               ),
                               onPressed: () async {
-                                if (!_formKey.currentState!.validate()) return;
+                                if (!formKey.currentState!.validate()) return;
 
                                 final confirmed = await showDialog<bool>(
                                   context: context,
