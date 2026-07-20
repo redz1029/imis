@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
@@ -11,18 +9,13 @@ import 'package:imis/performance_governance_system/models/performance_governance
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_validation_tool/dialog/performance_validation_list_dialog.dart';
 import 'package:imis/performance_validation_tool/services/performance_validation_services.dart';
-import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
-import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
-import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:universal_html/html.dart' as html;
 
 class PerformanceValidationPage extends StatefulWidget {
   const PerformanceValidationPage({super.key});
@@ -41,7 +34,6 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-  String _roleId = '';
   List<PerformanceGovernanceSystem> operationReviewprotocolList = [];
   List<PerformanceGovernanceSystem> filteredList = [];
   String? _selectedPeriodId;
@@ -73,8 +65,6 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
         debugPrint('Role ID is empty, aborting fetch.');
         return;
       }
-
-      setState(() => _roleId = roleId);
 
       final pageList = await _performanceValidation
           .getPerformanceValidationPageList(

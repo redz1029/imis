@@ -678,7 +678,7 @@ class SummaryValidatedDeliverablesPageState
               _selectedServiceId == null
                   ? "All Services"
                   : (serviceList
-                          .where((o) => o.id.toString() == _selectedServiceId)
+                          .where((o) => o.id == _selectedServiceId)
                           .firstOrNull
                           ?.name ??
                       "All Services"),

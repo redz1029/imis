@@ -87,7 +87,7 @@ class PerformanceValidationServices {
       if (response.statusCode == 200 && response.data != null) {
         return PerformanceValidationTool.fromJson(response.data);
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error fetchProtocolById:");
     } catch (e, st) {
       debugPrint("Unexpected error fetchProtocolById: $e");

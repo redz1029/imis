@@ -839,12 +839,27 @@ class UserRolePageState extends State<UserRolePage> {
     String roleId,
     List<dynamic> permissions,
   ) {
+    String searchQuery = '';
+
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             bool allChecked = permissions.every((p) => p['isAssigned'] == true);
+
+            final filteredPermissions =
+                searchQuery.isEmpty
+                    ? permissions
+                    : permissions
+                        .where(
+                          (p) => p['permission']
+                              .toString()
+                              .toLowerCase()
+                              .contains(searchQuery.toLowerCase()),
+                        )
+                        .toList();
+
             return AlertDialog(
               backgroundColor: mainBgColor,
               shape: RoundedRectangleBorder(
@@ -856,6 +871,29 @@ class UserRolePageState extends State<UserRolePage> {
                 height: 350,
                 child: Column(
                   children: [
+                    TextField(
+                      onChanged: (value) {
+                        setDialogState(() => searchQuery = value);
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search permissions',
+                        hintStyle: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: kMuted,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          size: 20,
+                          color: kMuted,
+                        ),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                      ),
+                    ),
+                    gap12px,
                     CheckboxListTile(
                       title: Text(
                         allChecked ? "Uncheck All" : "Check All",
@@ -887,11 +925,11 @@ class UserRolePageState extends State<UserRolePage> {
                     gap8px,
                     Expanded(
                       child:
-                          permissions.isNotEmpty
+                          filteredPermissions.isNotEmpty
                               ? ListView.builder(
-                                itemCount: permissions.length,
+                                itemCount: filteredPermissions.length,
                                 itemBuilder: (context, index) {
-                                  final item = permissions[index];
+                                  final item = filteredPermissions[index];
                                   return CheckboxListTile(
                                     title: Text(item['permission']),
                                     value: item['isAssigned'],
