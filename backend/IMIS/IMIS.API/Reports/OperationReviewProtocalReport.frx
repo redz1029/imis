@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="05/06/2026 15:50:50" ReportInfo.Modified="07/02/2026 14:07:44" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/06/2026 15:50:50" ReportInfo.Modified="07/21/2026 13:51:17" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -87,7 +87,7 @@ namespace FastReport
     </BusinessObjectDataSource>
   </Dictionary>
   <ReportPage Name="Page1" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt">
-    <PageHeaderBand Name="PageHeader1" Width="1047.06" Height="260.05">
+    <PageHeaderBand Name="PageHeader1" Width="1047.06" Height="260.05" PrintOn="FirstPage">
       <ShapeObject Name="Shape12" Left="54.7" Top="164" Width="948.1" Height="72.8" CanGrow="true" GrowToBottom="true"/>
       <ShapeObject Name="Shape11" Left="54.8" Top="128.75" Width="948.1" Height="36.8" Fill.Color="IndianRed" CanGrow="true"/>
       <TextObject Name="Text292" Left="161.9" Top="9.45" Width="694.1" Height="48.7" Text="Department of Health&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
@@ -117,7 +117,7 @@ namespace FastReport
       <TextObject Name="Text338" Left="650.05" Top="190" Width="346.75" Height="20.9" CanGrow="true" Text="[OperationReviewProtocol.Deputy]" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text339" Left="677.4" Top="214.35" Width="319.3" Height="18.9" Text="[OperationReviewProtocol.Documenter]" VertAlign="Center" Font="Noto Sans, 8pt"/>
     </PageHeaderBand>
-    <DataBand Name="Data1" Top="265.38" Width="1047.06" Height="27.25" CanGrow="true" DataSource="PgsDeliverables">
+    <DataBand Name="Data1" Top="264.05" Width="1047.06" Height="27.25" CanGrow="true" DataSource="PgsDeliverables">
       <ShapeObject Name="Shape14" Left="54.7" Top="-1.55" Width="948.1" Height="28.8" CanGrow="true" GrowToBottom="true"/>
       <TextObject Name="txtStatus" Left="824.05" Width="177.5" Height="25.9" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtStatus_BeforePrint" Text="[OperationReviewProtocol.PgsDeliverables.Status]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <LineObject Name="Line8" Left="645.05" Top="-1" Height="27.35" CanGrow="true" GrowToBottom="true"/>
@@ -127,7 +127,7 @@ namespace FastReport
       <TextObject Name="Text362" Left="56.7" Top="16.45" Width="583.15" Height="7.9" CanGrow="true" GrowToBottom="true" Text="." VertAlign="Center" Font="Noto Sans, 8pt" TextFill.Color="White"/>
       <TextObject Name="Text363" Left="648.05" Top="14.45" Width="171.5" Height="9.9" CanGrow="true" GrowToBottom="true" Text="." Format="Date" Format.Format="MMMM yyyy" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt" TextFill.Color="White"/>
     </DataBand>
-    <ReportSummaryBand Name="ReportSummary1" Top="297.97" Width="1047.06" Height="58.45" CanGrow="true">
+    <ReportSummaryBand Name="ReportSummary1" Top="295.3" Width="1047.06" Height="58.45" CanGrow="true">
       <TextObject Name="Text313" Left="55.6" Top="-1.1" Width="171.1" Height="58.9" Fill.Color="IndianRed" CanGrow="true" GrowToBottom="true" Text="CONVERSATION" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 7pt, style=Bold" TextFill.Color="White"/>
       <ShapeObject Name="Shape15" Left="54.7" Top="-1.55" Width="948.1" Height="60" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line12" Left="645.05" Top="-1" Height="58.1" CanGrow="true" GrowToBottom="true"/>
@@ -136,7 +136,7 @@ namespace FastReport
       <TextObject Name="Text329" Left="652.05" Top="-1.1" Width="138.1" Height="54.9" CanGrow="true" GrowToBottom="true" Text="Frequency and Schedule:" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text340" Left="283.5" Top="2.45" Width="355.5" Height="51.9" Text="[OperationReviewProtocol.Venue]" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text347" Left="791.8" Top="0.9" Width="202.45" Height="53.9" CanGrow="true" GrowToBottom="true" Text="[OperationReviewProtocol.FrequencySchedule]" VertAlign="Center" Font="Noto Sans, 8pt"/>
-      <ChildBand Name="Child1" Top="361.75" Width="1047.06" Height="76.55" CanGrow="true">
+      <ChildBand Name="Child1" Top="357.75" Width="1047.06" Height="76.55" CanGrow="true">
         <TextObject Name="Text350" Left="55.7" Width="171.1" Height="75.9" Fill.Color="IndianRed" CanGrow="true" GrowToBottom="true" Text="FEEDBACK" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 7pt, style=Bold" TextFill.Color="White"/>
         <ShapeObject Name="Shape16" Left="54.7" Top="-1" Width="948.1" Height="77.55" CanGrow="true" GrowToBottom="true"/>
         <TextObject Name="Text342" Left="330.65" Top="26.35" Width="311.85" Height="18.9" CanGrow="true" Text="[OperationReviewProtocol.ScoreboardOIC]" VertAlign="Center" Font="Noto Sans, 8pt"/>
@@ -149,7 +149,7 @@ namespace FastReport
         <LineObject Name="Line15" Left="645.05" Top="-1" Height="77" CanGrow="true" GrowToBottom="true"/>
         <TextObject Name="Text354" Left="650.05" Top="2.35" Width="124.1" Height="68.9" CanGrow="true" GrowToBottom="true" Text="Frequency of update: " VertAlign="Center" Font="Noto Sans, 8pt"/>
         <TextObject Name="Text349" Left="775.35" Top="2.35" Width="217.9" Height="68.9" CanGrow="true" GrowToBottom="true" Text="[OperationReviewProtocol.Frequency]" VertAlign="Center" Font="Noto Sans, 8pt"/>
-        <ChildBand Name="Child2" Top="443.63" Width="1047.06" Height="105.9" CanGrow="true">
+        <ChildBand Name="Child2" Top="438.3" Width="1047.06" Height="105.9" CanGrow="true">
           <TextObject Name="Text355" Left="55.7" Width="171.1" Height="104.9" Fill.Color="IndianRed" CanGrow="true" GrowToBottom="true" Text="RECOGNITION" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 7pt, style=Bold" TextFill.Color="White"/>
           <ShapeObject Name="Shape17" Left="54.7" Top="-1" Width="948.1" Height="106.9" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line16" Left="226.8" Top="-1" Height="106.1" CanGrow="true" GrowToBottom="true"/>
@@ -164,7 +164,7 @@ namespace FastReport
         </ChildBand>
       </ChildBand>
     </ReportSummaryBand>
-    <PageFooterBand Name="PageFooter1" Top="554.87" Width="1047.06" Height="61.15">
+    <PageFooterBand Name="PageFooter1" Top="548.2" Width="1047.06" Height="61.15">
       <TextObject Name="Text357" Left="68.5" Top="2.45" Width="57.6" Height="16.9" Text="Legend:" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text358" Left="155.35" Top="3" Width="89.9" Height="13.9" Text="Completed" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text359" Left="274.7" Top="2.9" Width="91.9" Height="14.9" Text="On Going" Font="Noto Sans, 8pt"/>
