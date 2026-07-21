@@ -30,7 +30,6 @@ class OfficePageState extends State<OfficePage> {
   final _officeService = OfficeService(Dio());
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Office> officeSearchUtil;
-  final _formKey = GlobalKey<FormState>();
 
   List<Office> officeList = [];
   List<Office> filteredList = [];

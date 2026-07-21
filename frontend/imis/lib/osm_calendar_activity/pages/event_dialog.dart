@@ -200,7 +200,7 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
               _infoCard(
                 Icons.calendar_today_outlined,
                 'DATE',
-                _formatDate(event.dateOnly),
+                formatDate(event.dateOnly),
               ),
               const SizedBox(height: 10),
               _infoCard(Icons.access_time, 'TIME', event.timeLabel),
@@ -532,7 +532,7 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
     );
   }
 
-  String _formatDate(DateTime d) {
+  String formatDate(DateTime d) {
     const weekdays = [
       'Monday',
       'Tuesday',

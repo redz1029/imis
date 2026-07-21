@@ -555,18 +555,15 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                 return InkWell(
                                   onTap: () async {
                                     Navigator.pop(ctx);
-                                    final result =
-                                        await showStrategyReviewReportDialog(
-                                          context,
-                                          kraRoadMapId: kra.id,
-                                          year: selectedPeriod.startYear.year,
-                                          kraName: kra.kraName,
-                                          strategicObjectives:
-                                              kra.strategicObjectives ?? '',
-                                        );
-                                    if (result != null) {
-                                      fetchStrategyReviews();
-                                    }
+                                    await showStrategyReviewReportDialog(
+                                      context,
+                                      kraRoadMapId: kra.id,
+                                      year: selectedPeriod.startYear.year,
+                                      kraName: kra.kraName,
+                                      strategicObjectives:
+                                          kra.strategicObjectives ?? '',
+                                    );
+                                    fetchStrategyReviews();
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(

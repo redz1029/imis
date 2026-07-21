@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:io';
+import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -31,7 +32,6 @@ class PerformanceValidationListDialog extends StatefulWidget {
 
   final Future<PerformanceValidationTool?> Function(int id) onFetchById;
 
-  /// Delete
   final Future<bool> Function(int id) onDelete;
 
   const PerformanceValidationListDialog({
@@ -50,8 +50,10 @@ class PerformanceValidationListDialog extends StatefulWidget {
 class _PerformanceValidationListDialogState
     extends State<PerformanceValidationListDialog> {
   List<PerformanceValidationTool> _validations = [];
+  List<PerformanceValidationTool> _filteredValidations = [];
   bool _isLoading = true;
   bool _checkingSignatory = false;
+  final _searchController = TextEditingController();
   final _performanceValidationService = PerformanceValidationServices(Dio());
   final _commonService = CommonService(Dio());
   static const _months = [
@@ -76,23 +78,51 @@ class _PerformanceValidationListDialogState
     _loadValidations();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadValidations() async {
     setState(() => _isLoading = true);
     final list = await widget.onFetchAll(widget.pgs.id.toString());
     if (mounted) {
       setState(() {
         _validations = list;
+        _filteredValidations = List.from(list);
         _isLoading = false;
       });
+      if (_searchController.text.isNotEmpty) {
+        _filterResults(_searchController.text);
+      }
     }
   }
 
-  String _validationLabel(PerformanceValidationTool v) {
-    final office = widget.pgs.office.name;
-    if (v.validateDate != null) {
-      return '$office — ${_months[v.validateDate!.month]} ${v.validateDate!.year}';
+  void _filterResults(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) {
+      setState(() => _filteredValidations = List.from(_validations));
+      return;
     }
-    return office;
+    setState(() {
+      _filteredValidations =
+          _validations
+              .where((v) => _periodLabel(v).toLowerCase().contains(q))
+              .toList();
+    });
+  }
+
+  String _officeName() {
+    final name = widget.pgs.office.name;
+    return name.isEmpty ? '—' : name;
+  }
+
+  String _periodLabel(PerformanceValidationTool v) {
+    if (v.validateDate != null) {
+      return '${_months[v.validateDate!.month]} ${v.validateDate!.year}';
+    }
+    return '—';
   }
 
   Future<void> _showNoSignatoryDialog() async {
@@ -371,265 +401,464 @@ class _PerformanceValidationListDialogState
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 700;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+
+    final dialogWidth =
+        isMobile
+            ? screenWidth
+            : isTablet
+            ? screenWidth * 0.92
+            : screenWidth * 0.62;
+
+    final dialogHeight = isMobile ? screenHeight : screenHeight * 0.85;
+
+    final horizontalPadding =
+        isMobile
+            ? 0.0
+            : isTablet
+            ? 16.0
+            : 24.0;
+    final verticalPadding = isMobile ? 0.0 : 20.0;
 
     return Dialog(
-      insetPadding: const EdgeInsets.all(16),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
       backgroundColor: Colors.transparent,
-      child: Container(
-        width: isMobile ? double.infinity : 520,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight: dialogHeight,
+          minWidth: isMobile ? screenWidth : 320,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: mainBgColor,
+            borderRadius:
+                isMobile ? BorderRadius.zero : BorderRadius.circular(16),
+            boxShadow:
+                isMobile
+                    ? null
+                    : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Header ─────────────────────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 16,
-                ),
-                color: Colors.white,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: primaryColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.fact_check_outlined,
-                              color: primaryColor,
-                              size: isMobile ? 18 : 20,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          const Expanded(
-                            child: Text(
-                              'Performance Validation',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    PermissionWidget(
-                      permission: AppPermissions.addPerformanceValidationTool,
-                      child: TextButton.icon(
-                        onPressed:
-                            _checkingSignatory ? null : _openNewValidation,
-                        icon:
-                            _checkingSignatory
-                                ? const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                                : const Icon(
-                                  Icons.add,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                        label: const Text(
-                          'Add New',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: TextButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: size.height * 0.55),
+              _buildHeader(isMobile, isTablet),
+              if (isMobile) _buildMobileSearch(),
+              Expanded(
                 child:
                     _isLoading
-                        ? const Padding(
-                          padding: EdgeInsets.all(40),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: primaryColor,
-                            ),
-                          ),
-                        )
-                        : _validations.isEmpty
-                        ? Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 40,
-                            horizontal: 24,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.inbox_outlined,
-                                size: 48,
-                                color: Colors.grey.shade400,
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'No performance validations yet.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                        : ListView.separated(
-                          shrinkWrap: true,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 16,
-                          ),
-                          itemCount: _validations.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
-                          itemBuilder: (_, i) {
-                            final v = _validations[i];
-                            return _ValidationRow(
-                              label: _validationLabel(v),
-                              onTap: () => _openSavedValidation(v),
-                              onPrintPreview: () => _openPrintPreview(v),
-                              onDelete: () => _showDeleteDialog(v),
-                            );
-                          },
-                        ),
+                        ? const Center(child: CircularProgressIndicator())
+                        : _filteredValidations.isEmpty
+                        ? _buildEmptyState()
+                        : isMobile
+                        ? _buildMobileList()
+                        : _buildDesktopTable(),
               ),
-
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  border: Border(top: BorderSide(color: Colors.grey.shade300)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'Close',
-                        style: TextStyle(color: primaryTextColor),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildFooter(isMobile),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-class _ValidationRow extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  final VoidCallback? onPrintPreview;
-
-  final VoidCallback? onDelete;
-
-  const _ValidationRow({
-    required this.label,
-    this.onPrintPreview,
-    required this.onTap,
-    this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+  Widget _buildHeader(bool isMobile, bool isTablet) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: isMobile ? 12 : 16,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius:
+            isMobile
+                ? BorderRadius.zero
+                : const BorderRadius.vertical(top: Radius.circular(16)),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
       child: Row(
         children: [
-          const Icon(Icons.check_circle, size: 16, color: Colors.green),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.fact_check_outlined,
+              color: primaryColor,
+              size: isMobile ? 18 : 20,
             ),
           ),
-          Row(
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Performance Validation',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: isMobile ? 14 : 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    letterSpacing: 0.5,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  _officeName(),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: isMobile ? 10 : 12,
+                    color: kMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!isMobile) ...[
+            const SizedBox(width: 12),
+            SizedBox(
+              width: isTablet ? 200 : 240,
+              height: 36,
+              child: _searchField(),
+            ),
+            const SizedBox(width: 12),
+            PermissionWidget(
+              permission: AppPermissions.addPerformanceValidationTool,
+              child: TextButton.icon(
+                onPressed: _checkingSignatory ? null : _openNewValidation,
+                icon:
+                    _checkingSignatory
+                        ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : const Icon(Icons.add, color: Colors.white, size: 18),
+                label: const Text(
+                  'Add New',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close, size: 20),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.grey.shade100,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileSearch() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Row(
+        children: [
+          Expanded(child: _searchField()),
+          const SizedBox(width: 8),
+          PermissionWidget(
+            permission: AppPermissions.addPerformanceValidationTool,
+            child:
+                _checkingSignatory
+                    ? const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: primaryColor,
+                        ),
+                      ),
+                    )
+                    : IconButton(
+                      onPressed: _openNewValidation,
+                      icon: const Icon(
+                        Icons.add_circle,
+                        color: primaryColor,
+                        size: 30,
+                      ),
+                    ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _searchField() {
+    return TextField(
+      controller: _searchController,
+      onChanged: _filterResults,
+      decoration: InputDecoration(
+        hintText: 'Search period...',
+        hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+        prefixIcon: const Icon(Icons.search, size: 18),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: primaryColor),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(
+            'No performance validations yet.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopTable() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: DataTable2(
+        columnSpacing: 12,
+        headingRowColor: WidgetStatePropertyAll(Colors.grey.shade50),
+        dataRowColor: WidgetStatePropertyAll(Colors.white),
+        headingTextStyle: TextStyle(
+          color: Colors.grey.shade600,
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
+        horizontalMargin: 12,
+        minWidth: 480,
+        fixedTopRows: 1,
+        border: TableBorder(
+          horizontalInside: BorderSide(color: Colors.grey.shade100),
+        ),
+        columns: const [
+          DataColumn2(label: Text('#'), fixedWidth: 40),
+          DataColumn2(label: Text('Period'), size: ColumnSize.L),
+          DataColumn(label: Text('Actions')),
+        ],
+        rows:
+            _filteredValidations.asMap().entries.map((entry) {
+              final index = entry.key;
+              final v = entry.value;
+
+              return DataRow(
+                cells: [
+                  DataCell(Text('${index + 1}')),
+                  DataCell(
+                    Text(
+                      _periodLabel(v),
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  DataCell(_actionButtons(v)),
+                ],
+              );
+            }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildMobileList() {
+    return ListView.separated(
+      padding: const EdgeInsets.all(12),
+      itemCount: _filteredValidations.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final v = _filteredValidations[index];
+
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Tooltip(
-                message: 'View / Edit Validation',
-                child: IconButton(
-                  onPressed: onTap,
-                  icon: const Icon(
-                    Icons.fact_check_outlined,
-                    size: 20,
+              Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '${index + 1}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                     color: primaryColor,
                   ),
                 ),
               ),
-              Tooltip(
-                message: 'Print Preview',
-                child: IconButton(
-                  onPressed: onPrintPreview,
-                  icon: const Icon(
-                    Icons.description_outlined,
-                    size: 20,
-                    color: Colors.blueAccent,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _periodLabel(v),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Colors.black87,
                   ),
                 ),
               ),
-              PermissionWidget(
-                permission: AppPermissions.deletePerformanceValidationTool,
-                child: Tooltip(
-                  message: 'Delete',
-                  child: IconButton(
-                    onPressed: onDelete,
-                    icon: const Icon(
-                      CupertinoIcons.delete_simple,
-                      size: 20,
-                      color: Colors.red,
-                    ),
-                  ),
-                ),
-              ),
+              _actionButtons(v, compact: true),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _actionButtons(PerformanceValidationTool v, {bool compact = false}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Tooltip(
+          message: 'View / Edit Validation',
+          child: IconButton(
+            icon: Icon(
+              Icons.fact_check_outlined,
+              size: compact ? 16 : 18,
+              color: primaryColor,
+            ),
+            visualDensity: compact ? VisualDensity.compact : null,
+            onPressed: () => _openSavedValidation(v),
+          ),
+        ),
+        Tooltip(
+          message: 'Print Preview',
+          child: IconButton(
+            icon: Icon(
+              Icons.description_outlined,
+              size: compact ? 16 : 18,
+              color: Colors.blueAccent,
+            ),
+            visualDensity: compact ? VisualDensity.compact : null,
+            onPressed: () => _openPrintPreview(v),
+          ),
+        ),
+        PermissionWidget(
+          permission: AppPermissions.deletePerformanceValidationTool,
+          child: Tooltip(
+            message: 'Delete',
+            child: IconButton(
+              icon: Icon(
+                CupertinoIcons.delete_simple,
+                size: compact ? 16 : 18,
+                color: Colors.red,
+              ),
+              visualDensity: compact ? VisualDensity.compact : null,
+              onPressed: () => _showDeleteDialog(v),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooter(bool isMobile) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: 10,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius:
+            isMobile
+                ? BorderRadius.zero
+                : const BorderRadius.vertical(bottom: Radius.circular(16)),
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (isMobile)
+            PermissionWidget(
+              permission: AppPermissions.addPerformanceValidationTool,
+              child: TextButton.icon(
+                onPressed: _checkingSignatory ? null : _openNewValidation,
+                icon: const Icon(Icons.add, color: Colors.white, size: 16),
+                label: const Text(
+                  'Add New',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            )
+          else
+            const SizedBox.shrink(),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Close',
+              style: TextStyle(color: primaryTextColor),
+            ),
           ),
         ],
       ),

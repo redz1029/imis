@@ -31,7 +31,6 @@ class AuditorMainPageState extends State<AuditorPage> {
   final _auditorService = AuditorService(Dio());
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Auditor> auditorSearchUtil;
-  final _formKey = GlobalKey<FormState>();
   final _commonService = CommonService(Dio());
 
   List<Auditor> auditorList = [];
