@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="06/01/2026 14:04:16" ReportInfo.Modified="06/26/2026 09:46:51" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="06/01/2026 14:04:16" ReportInfo.Modified="07/21/2026 13:49:49" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -122,7 +122,7 @@ namespace FastReport
     </BusinessObjectDataSource>
   </Dictionary>
   <ReportPage Name="StrategyReviewReport" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt">
-    <PageHeaderBand Name="PageHeader1" Width="1047.06" Height="268.05" CanGrow="true">
+    <PageHeaderBand Name="PageHeader1" Width="1047.06" Height="268.05" CanGrow="true" PrintOn="FirstPage">
       <LineObject Name="Line1" Left="991.7" Top="153.2" Height="113.4" CanGrow="true" GrowToBottom="true"/>
       <ShapeObject Name="Shape11" Left="284.5" Top="128.3" Width="708.95" Height="34.8" Fill.Color="192, 80, 77" CanGrow="true"/>
       <ShapeObject Name="Shape12" Left="50.15" Top="128.3" Width="236.35" Height="139.75" Fill.Color="250, 255, 228, 225" CanGrow="true" GrowToBottom="true"/>
@@ -137,8 +137,9 @@ namespace FastReport
       <TextObject Name="Text318" Left="98.5" Top="156.3" Width="141.75" Height="63.4" CanGrow="true" Text="STRATEGY REVIEW REPORT" HorzAlign="Center" VertAlign="Center" Font="Arial, 13pt"/>
       <TextObject Name="Text322" Left="98.05" Top="220.8" Width="142.1" Height="13.9" CanGrow="true" Text="[StrategyReview.Quarter]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text323" Left="288.4" Top="164.1" Width="344.3" Height="101.05" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.StrategicObjective]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
-      <TextObject Name="Text324" Left="640.6" Top="165.1" Width="347.2" Height="100.05" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.OfficeNames]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
-      <ChildBand Name="Child3" Top="272.05" Width="1047.06" Height="52.7" CanGrow="true">
+      <TextObject Name="Text324" Left="641.6" Top="169.1" Width="347.2" Height="82.15" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.OfficeNames]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
+      <TextObject Name="Text340" Left="641.6" Top="250.7" Width="347.2" Height="13.45" CanGrow="true" GrowToBottom="true" CanBreak="false" Text=".&#13;&#10;&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt" TextFill.Color="Transparent"/>
+      <ChildBand Name="Child3" Top="272.05" Width="1047.06" Height="52.7" CanGrow="true" PrintOn="FirstPage">
         <ShapeObject Name="Shape13" Left="50.2" Top="-0.65" Width="942.6" Height="34.8" Fill.Color="192, 80, 77" CanGrow="true"/>
         <LineObject Name="Line4" Left="562.45" Top="-0.65" Height="33.8"/>
         <LineObject Name="Line3" Left="285.85" Top="-0.1" Height="33.8"/>
@@ -180,14 +181,17 @@ namespace FastReport
     <ReportSummaryBand Name="ReportSummary1" Top="394.8" Width="1047.06" Height="135.15" CanGrow="true" FirstRowStartsNewPage="true">
       <ShapeObject Name="Shape17" Left="50.15" Top="-1.1" Width="943.3" Height="34.8" Fill.Color="192, 80, 77" CanGrow="true"/>
       <ShapeObject Name="Shape18" Left="50.25" Top="32.25" Width="943.3" Height="102.9" CanGrow="true" GrowToBottom="true"/>
-      <TextObject Name="Text325" Left="53.7" Top="35.25" Width="295.5" Height="94.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.Continue]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
-      <TextObject Name="Text326" Left="356.1" Top="35.25" Width="324.3" Height="95.5" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.Stop]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
-      <TextObject Name="Text327" Left="689.85" Top="35.25" Width="296.95" Height="94.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.Start]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
+      <TextObject Name="Text325" Left="53.7" Top="40.25" Width="295.5" Height="75" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.Continue]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
+      <TextObject Name="Text326" Left="356.1" Top="40.25" Width="324.3" Height="74.6" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.Stop]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
+      <TextObject Name="Text327" Left="689.85" Top="40.25" Width="296.95" Height="75" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.Start]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
       <LineObject Name="Line9" Left="352.35" Top="-0.1" Height="133.8" CanGrow="true" GrowToBottom="true"/>
       <TextObject Name="Text319" Left="54.5" Top="0.9" Width="294.2" Height="29.9" Fill.Color="192, 80, 77" Text="Continue" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 11pt" TextFill.Color="White"/>
       <TextObject Name="Text320" Left="354.7" Top="0.9" Width="328.2" Height="29.9" Fill.Color="192, 80, 77" Text="Stop" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 11pt" TextFill.Color="White"/>
       <LineObject Name="Line16" Left="684.85" Top="-0.55" Height="134.8" CanGrow="true" GrowToBottom="true"/>
       <TextObject Name="Text321" Left="687.55" Top="1.1" Width="302.2" Height="29.9" Fill.Color="192, 80, 77" Text="Start" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 11pt" TextFill.Color="White"/>
+      <TextObject Name="Text341" Left="53.7" Top="116.4" Width="294.2" Height="13.45" CanGrow="true" GrowToBottom="true" CanBreak="false" Text=".&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt" TextFill.Color="Transparent"/>
+      <TextObject Name="Text342" Left="357.1" Top="116.4" Width="323.2" Height="13.45" CanGrow="true" GrowToBottom="true" CanBreak="false" Text=".&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt" TextFill.Color="Transparent"/>
+      <TextObject Name="Text343" Left="689.85" Top="116.4" Width="297.2" Height="13.45" CanGrow="true" GrowToBottom="true" CanBreak="false" Text=".&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt" TextFill.Color="Transparent"/>
     </ReportSummaryBand>
     <PageFooterBand Name="PageFooter1" Top="533.95" Width="1047.06" Height="21.4">
       <TextObject Name="Text29" Left="53.3" Top="3" Width="938.7" Height="14.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
