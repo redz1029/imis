@@ -1194,7 +1194,6 @@ class SidebarState extends State<Sidebar> {
               child: Column(
                 children: [
                   const SizedBox(height: 30),
-
                   // IconButton(
                   //   icon: Icon(
                   //     widget.isDarkMode ? Icons.dark_mode : Icons.light_mode,

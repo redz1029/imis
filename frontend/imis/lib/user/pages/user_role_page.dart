@@ -785,6 +785,7 @@ class UserRolePageState extends State<UserRolePage> {
                                 isEdit ? 'Update' : 'Save',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: Colors.white,
+
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
