@@ -1107,19 +1107,24 @@ namespace IMIS.Persistence.PgsModule
             // ===================== ADMIN / PGS MANAGER / isTWG =====================
             if (isPgsManager || isAdmin || isTWG || isOSM || isMSGC || isPgsAuditorHead)
             {
-                var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false)
-                              ?? new List<PerfomanceGovernanceSystemDto>();
-
-                var filteredDtos = allDtos
-                    .Where(dto =>
+                var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false) ?? new List<PerfomanceGovernanceSystemDto>();
+              
+                var filteredDtos = allDtos.Where(dto =>
                     {
                         bool matches = true;
+
                         if (filter.OfficeId.HasValue)
                             matches &= officeIds.Contains(dto.Office.Id);
+
+                        if (filter.PeriodId.HasValue)
+                            matches &= dto.PgsPeriod?.Id == filter.PeriodId.Value;
+
                         if (filter.FromDate.HasValue)
                             matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
+
                         if (filter.ToDate.HasValue)
                             matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
+
                         return matches;
                     })
                     .ToList();
@@ -1127,10 +1132,7 @@ namespace IMIS.Persistence.PgsModule
                 var processedDtos = new List<PerfomanceGovernanceSystemDto>();
                 foreach (var dto in filteredDtos)
                 {
-                    var processedDto = await ProcessPGSSignatories(
-                        dto.ToEntity(),
-                        dto.Office.Id.ToString(),
-                        cancellationToken);
+                    var processedDto = await ProcessPGSSignatories(dto.ToEntity(), dto.Office.Id.ToString(), cancellationToken);
 
                     processedDtos.Add(processedDto);
                 }
@@ -1140,24 +1142,24 @@ namespace IMIS.Persistence.PgsModule
             else
             {
                 // ===================== NORMAL USER =====================
-                var userDtos = await GetByUserIdAsync(
-                    currentUser.Id,
-                    roleId,
-                    filter.Page,
-                    filter.PageSize,
-                    cancellationToken).ConfigureAwait(false)
-                    ?? new List<PerfomanceGovernanceSystemDto>();
+                var userDtos = await GetByUserIdAsync(currentUser.Id, roleId, filter.Page, filter.PageSize,  cancellationToken).ConfigureAwait(false) ?? new List<PerfomanceGovernanceSystemDto>();
 
-                var filteredDtos = userDtos
-                    .Where(dto =>
+                var filteredDtos = userDtos.Where(dto =>
                     {
                         bool matches = true;
+
                         if (filter.OfficeId.HasValue)
                             matches &= officeIds.Contains(dto.Office.Id);
+
+                        if (filter.PeriodId.HasValue)
+                            matches &= dto.PgsPeriod?.Id == filter.PeriodId.Value;
+
                         if (filter.FromDate.HasValue)
                             matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
+
                         if (filter.ToDate.HasValue)
                             matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
+
                         return matches;
                     })
                     .ToList();
@@ -1204,8 +1206,7 @@ namespace IMIS.Persistence.PgsModule
 
                     if (user != null)
                     {
-                        signatory.SignatoryName =
-                            $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}";
+                        signatory.SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}";
                     }
 
                     // ===================== STATUS LOGIC =====================
@@ -1214,8 +1215,7 @@ namespace IMIS.Persistence.PgsModule
                     signatory.IsNextStatus = false;
                 }
 
-                var nextSignatory = item.PgsSignatories
-                    .Where(s => s.DateSigned == null || s.DateSigned == DateTime.MinValue)
+                var nextSignatory = item.PgsSignatories.Where(s => s.DateSigned == null || s.DateSigned == DateTime.MinValue)
                     .OrderBy(s => s.OrderLevel)
                     .FirstOrDefault();
 
@@ -1249,8 +1249,7 @@ namespace IMIS.Persistence.PgsModule
                                 Status = nextTemplate.Status,
                                 Label = nextTemplate.SignatoryLabel,
                                 OrderLevel = nextTemplate.OrderLevel,
-                                SignatoryName =
-                                    $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}",
+                                SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}",
                                 IsNextStatus = true
                             };
 
