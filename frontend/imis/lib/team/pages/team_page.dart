@@ -512,21 +512,30 @@ class TeamPageState extends State<TeamPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Team",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -567,12 +576,18 @@ class TeamPageState extends State<TeamPage> {
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
 
                                           Expanded(
                                             flex: 3,
-                                            child: Text(team.name),
+                                            child: Text(
+                                              team.name,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
 
                                           Expanded(
@@ -583,7 +598,7 @@ class TeamPageState extends State<TeamPage> {
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
-                                                      size: 18,
+                                                      size: 16,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -599,7 +614,7 @@ class TeamPageState extends State<TeamPage> {
                                                   icon: const Icon(
                                                     CupertinoIcons
                                                         .delete_simple,
-                                                    size: 18,
+                                                    size: 16,
                                                     color: Colors.redAccent,
                                                   ),
                                                   onPressed:
@@ -637,6 +652,7 @@ class TeamPageState extends State<TeamPage> {
                                               "$itemNumber",
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                               ),
                                             ),
                                             const Spacer(),
@@ -666,7 +682,7 @@ class TeamPageState extends State<TeamPage> {
                                                         children: [
                                                           Icon(
                                                             Icons.edit_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Edit'),
@@ -682,7 +698,7 @@ class TeamPageState extends State<TeamPage> {
                                                             CupertinoIcons
                                                                 .delete_simple,
                                                             color: Colors.red,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Delete'),
@@ -694,7 +710,10 @@ class TeamPageState extends State<TeamPage> {
                                           ],
                                         ),
                                         const SizedBox(height: 8),
-                                        Text("Name: ${team.name}"),
+                                        Text(
+                                          "Name: ${team.name}",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                         const SizedBox(height: 4),
                                       ],
                                     ),

@@ -103,7 +103,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
       appBar: AppBar(
         backgroundColor: mainBgColor,
         title: const Text(
-          'Scorecard Report',
+          'Core & Support Processes Scorecard Report',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),

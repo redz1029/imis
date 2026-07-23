@@ -202,28 +202,40 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Title",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Status",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -284,11 +296,17 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
-                                            child: Text(announcement.title),
+                                            child: Text(
+                                              announcement.title,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
@@ -296,6 +314,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                               announcement.isActive
                                                   ? 'Active'
                                                   : 'Inactive',
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
 
@@ -307,7 +326,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
-                                                      size: 18,
+                                                      size: 16,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -342,7 +361,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
 
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,
@@ -429,7 +448,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                                         children: [
                                                           Icon(
                                                             Icons.edit_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Edit'),
@@ -446,7 +465,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                                             CupertinoIcons
                                                                 .delete_simple,
                                                             color: Colors.red,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Delete'),
@@ -460,6 +479,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                         const SizedBox(height: 8),
                                         Text(
                                           "Team Name: ${announcement.title}",
+                                          style: TextStyle(fontSize: 12),
                                         ),
                                         SizedBox(height: 8),
 
@@ -467,6 +487,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                           announcement.isActive
                                               ? 'Active'
                                               : 'Inactive',
+                                          style: TextStyle(fontSize: 12),
                                         ),
                                       ],
                                     ),

@@ -611,28 +611,40 @@ class OfficePageState extends State<OfficePage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Office",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Office Type",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Parent Office",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
 
@@ -640,7 +652,10 @@ class OfficePageState extends State<OfficePage> {
                               flex: 3,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -681,11 +696,17 @@ class OfficePageState extends State<OfficePage> {
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: Text(office.name),
+                                            child: Text(
+                                              office.name,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
@@ -694,6 +715,7 @@ class OfficePageState extends State<OfficePage> {
                                                 office.officeTypeId ?? 0,
                                                 officeTypeList,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
@@ -704,6 +726,7 @@ class OfficePageState extends State<OfficePage> {
                                                     office.parentOfficeId,
                                                     parentOfficeList,
                                                   ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
 
@@ -713,7 +736,7 @@ class OfficePageState extends State<OfficePage> {
                                               children: [
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     Icons.edit_outlined,
                                                   ),
                                                   onPressed: () async {
@@ -756,7 +779,7 @@ class OfficePageState extends State<OfficePage> {
                                                 ),
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,

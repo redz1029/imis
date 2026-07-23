@@ -1344,28 +1344,40 @@ class UserProfileState extends State<UserProfilePage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 4,
                               child: Text(
                                 "Name",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Position",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -1424,7 +1436,10 @@ class UserProfileState extends State<UserProfilePage> {
                                           // # Number
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
 
                                           // Name: Avatar + Full Name
@@ -1433,8 +1448,8 @@ class UserProfileState extends State<UserProfilePage> {
                                             child: Row(
                                               children: [
                                                 Container(
-                                                  width: 38,
-                                                  height: 38,
+                                                  width: 36,
+                                                  height: 36,
                                                   decoration: BoxDecoration(
                                                     color: primaryColor
                                                         .withValues(alpha: 0.1),
@@ -1444,7 +1459,7 @@ class UserProfileState extends State<UserProfilePage> {
                                                     child: Text(
                                                       initials,
                                                       style: TextStyle(
-                                                        fontSize: 13,
+                                                        fontSize: 11,
                                                         fontWeight:
                                                             FontWeight.w600,
                                                         color: primaryColor,
@@ -1457,7 +1472,7 @@ class UserProfileState extends State<UserProfilePage> {
                                                   child: Text(
                                                     fullName,
                                                     style: const TextStyle(
-                                                      fontSize: 14,
+                                                      fontSize: 12,
                                                     ),
                                                     overflow:
                                                         TextOverflow.ellipsis,
@@ -1473,7 +1488,7 @@ class UserProfileState extends State<UserProfilePage> {
                                             child: Text(
                                               user.position ?? '—',
                                               style: const TextStyle(
-                                                fontSize: 13,
+                                                fontSize: 12,
                                               ),
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -1487,7 +1502,7 @@ class UserProfileState extends State<UserProfilePage> {
                                                 IconButton(
                                                   icon: const Icon(
                                                     Icons.security_outlined,
-                                                    size: 18,
+                                                    size: 16,
                                                     color: Colors.blueAccent,
                                                   ),
                                                   onPressed:
@@ -1516,7 +1531,7 @@ class UserProfileState extends State<UserProfilePage> {
                                                 IconButton(
                                                   icon: const Icon(
                                                     Icons.edit_outlined,
-                                                    size: 18,
+                                                    size: 16,
                                                   ),
                                                   onPressed:
                                                       () => showFormDialog(
@@ -1538,7 +1553,7 @@ class UserProfileState extends State<UserProfilePage> {
                                                   icon: const Icon(
                                                     CupertinoIcons
                                                         .delete_simple,
-                                                    size: 18,
+                                                    size: 16,
                                                     color: Colors.red,
                                                   ),
                                                   onPressed:

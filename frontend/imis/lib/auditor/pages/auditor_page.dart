@@ -834,21 +834,30 @@ class AuditorMainPageState extends State<AuditorPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Auditor",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -900,12 +909,18 @@ class AuditorMainPageState extends State<AuditorPage> {
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
 
                                           Expanded(
                                             flex: 3,
-                                            child: Text(userName),
+                                            child: Text(
+                                              userName,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
 
                                           Expanded(
@@ -916,7 +931,7 @@ class AuditorMainPageState extends State<AuditorPage> {
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
-                                                      size: 18,
+                                                      size: 16,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -938,7 +953,7 @@ class AuditorMainPageState extends State<AuditorPage> {
 
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,
@@ -1010,7 +1025,7 @@ class AuditorMainPageState extends State<AuditorPage> {
                                                         children: [
                                                           Icon(
                                                             Icons.edit_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Edit'),
@@ -1026,7 +1041,7 @@ class AuditorMainPageState extends State<AuditorPage> {
                                                             CupertinoIcons
                                                                 .delete_simple,
                                                             color: Colors.red,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Delete'),
@@ -1038,7 +1053,10 @@ class AuditorMainPageState extends State<AuditorPage> {
                                           ],
                                         ),
                                         const SizedBox(height: 8),
-                                        Text("Name: $userName"),
+                                        Text(
+                                          "Name: $userName",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                         const SizedBox(height: 4),
                                       ],
                                     ),

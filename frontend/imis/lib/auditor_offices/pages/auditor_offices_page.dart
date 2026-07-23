@@ -686,28 +686,40 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Auditor",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Office",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Period",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
 
@@ -715,7 +727,10 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                               flex: 3,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -810,19 +825,31 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: Text(userName),
+                                            child: Text(
+                                              userName,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
-                                            child: Text(officeName),
+                                            child: Text(
+                                              officeName,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
-                                            child: Text(period),
+                                            child: Text(
+                                              period,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
 
                                           Expanded(
@@ -831,7 +858,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                               children: [
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     Icons.edit_outlined,
                                                   ),
                                                   onPressed: () {
@@ -856,7 +883,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                                 ),
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,
@@ -897,6 +924,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                               "$itemNumber",
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                               ),
                                             ),
                                             const Spacer(),
@@ -938,7 +966,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                                         children: [
                                                           Icon(
                                                             Icons.edit_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Edit'),
@@ -953,7 +981,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                                             CupertinoIcons
                                                                 .delete_simple,
                                                             color: Colors.red,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Delete'),
@@ -966,13 +994,22 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                         ),
                                         const SizedBox(height: 8),
 
-                                        Text("Auditor: $userName"),
+                                        Text(
+                                          "Auditor: $userName",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                         const SizedBox(height: 4),
 
-                                        Text("Office $officeName"),
+                                        Text(
+                                          "Office $officeName",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                         const SizedBox(height: 4),
 
-                                        Text("Period: $period"),
+                                        Text(
+                                          "Period: $period",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                       ],
                                     ),
                                   );

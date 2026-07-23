@@ -2511,7 +2511,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      Icons.map,
+                                      Icons.timeline_outlined,
                                       size: 50,
                                       color: Colors.grey.shade400,
                                     ),
@@ -2888,7 +2888,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  Icons.assessment_outlined,
+                  Icons.timeline_outlined,
                   color: primaryColor,
                   size: isXSmall ? 18 : 22,
                 ),

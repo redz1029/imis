@@ -4,9 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/osm_calendar_activity/models/osm_calendar_activity.dart';
-import 'package:imis/osm_calendar_activity/pages/calendar_event.dart';
-import 'package:imis/osm_calendar_activity/pages/event_dialog.dart'
+import 'package:imis/osm_calendar_activity/dialog/event_dialog.dart'
     show EventDetailDialog, AddEditEventDialog;
+import 'package:imis/osm_calendar_activity/services/calendar_event.dart';
 
 import 'package:imis/osm_calendar_activity/services/osm_calendar_activity_services.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';

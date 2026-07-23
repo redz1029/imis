@@ -866,10 +866,27 @@ class UserRolePageState extends State<UserRolePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
               ),
-              title: Text('Permissions'),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Permissions',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
               content: SizedBox(
                 width: 700,
-                height: 350,
+                height: 550,
                 child: Column(
                   children: [
                     TextField(
@@ -898,7 +915,10 @@ class UserRolePageState extends State<UserRolePage> {
                     CheckboxListTile(
                       title: Text(
                         allChecked ? "Uncheck All" : "Check All",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
                       ),
                       value: allChecked,
                       onChanged: (value) async {
@@ -922,8 +942,8 @@ class UserRolePageState extends State<UserRolePage> {
                         return Colors.transparent;
                       }),
                     ),
+                    gap16px,
                     Divider(),
-                    gap8px,
                     Expanded(
                       child:
                           filteredPermissions.isNotEmpty
@@ -932,7 +952,12 @@ class UserRolePageState extends State<UserRolePage> {
                                 itemBuilder: (context, index) {
                                   final item = filteredPermissions[index];
                                   return CheckboxListTile(
-                                    title: Text(item['permission']),
+                                    title: Text(
+                                      item['permission'],
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                     value: item['isAssigned'],
                                     onChanged: (value) async {
                                       setDialogState(() {
@@ -966,12 +991,6 @@ class UserRolePageState extends State<UserRolePage> {
                   ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Close', style: TextStyle(color: primaryColor)),
-                ),
-              ],
             );
           },
         );
@@ -1175,28 +1194,40 @@ class UserRolePageState extends State<UserRolePage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Name",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 4,
                               child: Text(
                                 "Roles",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -1336,6 +1367,7 @@ class UserRolePageState extends State<UserRolePage> {
                                             user.fullName,
 
                                             overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(fontSize: 12),
                                           ),
                                         ),
                                       ],
@@ -1351,7 +1383,7 @@ class UserRolePageState extends State<UserRolePage> {
                                         IconButton(
                                           icon: const Icon(
                                             Icons.edit_outlined,
-                                            size: 18,
+                                            size: 16,
                                           ),
                                           onPressed:
                                               () => showFormDialog(
@@ -1363,7 +1395,7 @@ class UserRolePageState extends State<UserRolePage> {
                                           icon: const Icon(
                                             CupertinoIcons.delete_simple,
                                             color: Colors.redAccent,
-                                            size: 18,
+                                            size: 16,
                                           ),
                                           onPressed:
                                               () => showDeleteDialog(user.id),

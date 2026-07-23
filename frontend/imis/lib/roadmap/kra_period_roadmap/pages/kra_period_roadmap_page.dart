@@ -820,21 +820,30 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Start Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "End Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
 
@@ -842,7 +851,10 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -882,7 +894,10 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
@@ -890,6 +905,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                               DateTimeConverter().toJson(
                                                 kraperiod.startYear,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
@@ -898,6 +914,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                               DateTimeConverter().toJson(
                                                 kraperiod.endYear,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
@@ -908,7 +925,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
-                                                      size: 18,
+                                                      size: 16,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -935,7 +952,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
 
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,
@@ -975,6 +992,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                               "$itemNumber",
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                               ),
                                             ),
                                             const Spacer(),
@@ -1011,7 +1029,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                                         children: [
                                                           Icon(
                                                             Icons.edit_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Edit'),
@@ -1027,7 +1045,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                                             CupertinoIcons
                                                                 .delete_simple,
                                                             color: Colors.red,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Delete'),
@@ -1043,12 +1061,14 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                           DateTimeConverter().toJson(
                                             kraperiod.startYear,
                                           ),
+                                          style: TextStyle(fontSize: 12),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           DateTimeConverter().toJson(
                                             kraperiod.endYear,
                                           ),
+                                          style: TextStyle(fontSize: 12),
                                         ),
                                         const SizedBox(height: 4),
                                       ],

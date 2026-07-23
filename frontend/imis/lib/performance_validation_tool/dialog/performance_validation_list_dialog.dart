@@ -458,7 +458,9 @@ class _PerformanceValidationListDialogState
               Expanded(
                 child:
                     _isLoading
-                        ? const Center(child: CircularProgressIndicator())
+                        ? const Center(
+                          child: CircularProgressIndicator(color: primaryColor),
+                        )
                         : _filteredValidations.isEmpty
                         ? _buildEmptyState()
                         : isMobile

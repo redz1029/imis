@@ -736,28 +736,40 @@ class UserOfficePageState extends State<UserOfficePage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 4,
                               child: Text(
                                 "Name",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 "Office",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -836,7 +848,10 @@ class UserOfficePageState extends State<UserOfficePage> {
                                           // # Number
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
 
                                           Expanded(
@@ -867,7 +882,9 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                 Expanded(
                                                   child: Text(
                                                     userName,
-                                                    style: const TextStyle(),
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                    ),
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                   ),
@@ -880,7 +897,9 @@ class UserOfficePageState extends State<UserOfficePage> {
                                             flex: 3,
                                             child: Text(
                                               officeName,
-                                              style: const TextStyle(),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
@@ -893,7 +912,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                 IconButton(
                                                   icon: const Icon(
                                                     Icons.edit_outlined,
-                                                    size: 18,
+                                                    size: 16,
                                                   ),
                                                   onPressed:
                                                       () => showFormDialog(
@@ -914,7 +933,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                   icon: const Icon(
                                                     CupertinoIcons
                                                         .delete_simple,
-                                                    size: 18,
+                                                    size: 16,
                                                     color: Colors.redAccent,
                                                   ),
                                                   onPressed:
@@ -972,6 +991,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                 userName,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
                                                 ),
                                               ),
                                               const SizedBox(height: 4),
@@ -979,6 +999,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                 officeName,
                                                 style: TextStyle(
                                                   color: Colors.grey.shade600,
+                                                  fontSize: 12,
                                                 ),
                                               ),
                                             ],
@@ -1018,7 +1039,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                     children: const [
                                                       Icon(
                                                         Icons.edit_outlined,
-                                                        size: 18,
+                                                        size: 16,
                                                       ),
                                                       SizedBox(width: 8),
                                                       Text('Edit'),
@@ -1033,7 +1054,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                         CupertinoIcons
                                                             .delete_simple,
                                                         color: Colors.redAccent,
-                                                        size: 18,
+                                                        size: 16,
                                                       ),
                                                       const SizedBox(width: 8),
                                                       const Text('Delete'),

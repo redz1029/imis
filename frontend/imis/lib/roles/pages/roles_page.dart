@@ -564,8 +564,8 @@ class RolesPageState extends State<RolesPage> {
                                         children: [
                                           // Avatar
                                           Container(
-                                            width: 38,
-                                            height: 38,
+                                            width: 36,
+                                            height: 36,
                                             decoration: BoxDecoration(
                                               color: primaryColor.withValues(
                                                 alpha: 0.1,
@@ -576,7 +576,7 @@ class RolesPageState extends State<RolesPage> {
                                               child: Text(
                                                 initials,
                                                 style: TextStyle(
-                                                  fontSize: 13,
+                                                  fontSize: 11,
                                                   fontWeight: FontWeight.w600,
                                                   color: primaryColor,
                                                 ),
@@ -590,7 +590,7 @@ class RolesPageState extends State<RolesPage> {
                                               roles.name,
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.w600,
-                                                fontSize: 14,
+                                                fontSize: 12,
                                               ),
                                             ),
                                           ),
@@ -602,7 +602,7 @@ class RolesPageState extends State<RolesPage> {
                                               IconButton(
                                                 icon: Icon(
                                                   Icons.edit_outlined,
-                                                  size: 18,
+                                                  size: 16,
                                                 ),
                                                 onPressed:
                                                     () => showFormDialog(
@@ -613,7 +613,7 @@ class RolesPageState extends State<RolesPage> {
                                               IconButton(
                                                 icon: Icon(
                                                   CupertinoIcons.delete_simple,
-                                                  size: 18,
+                                                  size: 16,
                                                   color: Colors.redAccent,
                                                 ),
                                                 onPressed:
