@@ -11,7 +11,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/osm_calendar_activity/models/osm_calendar_activity.dart';
-import 'package:imis/osm_calendar_activity/pages/calendar_event.dart';
+import 'package:imis/osm_calendar_activity/services/calendar_event.dart';
 import 'package:imis/osm_calendar_activity/services/osm_calendar_activity_services.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
