@@ -17,8 +17,39 @@ namespace IMIS.Domain
         public required string AuditPlanObjective { get; set; }
         public required string ScopeOfAudit { get; set; }
 
+        // --- Added Sections IV to IX from Document ---
 
-        // Fix: Changed 'Plan' to 'AuditPlans' to ensure consistency with the DTO mapping graph
+        /// <summary>
+        /// IV. Audit Criteria
+        /// </summary>
+        public required string AuditCriteria { get; set; }
+
+        /// <summary>
+        /// V. Audit Methodology
+        /// </summary>
+        public required string AuditMethodology { get; set; }
+
+        /// <summary>
+        /// VI. Selection and Evaluation of Auditors
+        /// </summary>
+        public required string SelectionAndEvaluationOfAuditors { get; set; }
+
+        /// <summary>
+        /// VII. Reporting
+        /// </summary>
+        public required string Reporting { get; set; }
+
+        /// <summary>
+        /// VIII. Verification of Previous Nonconformities / Follow-Up Actions
+        /// </summary>
+        public required string VerificationOfPreviousNonconformities { get; set; }
+
+        /// <summary>
+        /// IX. Audit Limitations
+        /// </summary>
+        public required string AuditLimitations { get; set; }
+
+        // --- Navigation Properties ---
         public ICollection<AuditPlan> AuditPlans { get; set; } = new List<AuditPlan>();
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Base.Primitives;
 using IMIS.Domain;
 
@@ -17,6 +17,14 @@ namespace IMIS.Application.AuditProgrammeModule
         public string InternalAuditSched { get; set; } = string.Empty;
         public string AuditPlanObjective { get; set; } = string.Empty;
         public string ScopeOfAudit { get; set; } = string.Empty;
+
+        // --- Added Sections IV to IX ---
+        public string AuditCriteria { get; set; } = string.Empty;
+        public string AuditMethodology { get; set; } = string.Empty;
+        public string SelectionAndEvaluationOfAuditors { get; set; } = string.Empty;
+        public string Reporting { get; set; } = string.Empty;
+        public string VerificationOfPreviousNonconformities { get; set; } = string.Empty;
+        public string AuditLimitations { get; set; } = string.Empty;
 
         public List<ReportObjectiveItemDto> Objectives { get; set; } = new();
         public List<ReportAuditPlanBatchDto> AuditPlan { get; set; } = new();
@@ -39,6 +47,15 @@ namespace IMIS.Application.AuditProgrammeModule
             InternalAuditSched = entity.InternalAuditSched ?? string.Empty;
             AuditPlanObjective = entity.AuditPlanObjective ?? string.Empty;
             ScopeOfAudit = entity.ScopeOfAudit ?? string.Empty;
+
+            // Map Sections IV to IX securely with fallback string values
+            AuditCriteria = entity.AuditCriteria ?? string.Empty;
+            AuditMethodology = entity.AuditMethodology ?? string.Empty;
+            SelectionAndEvaluationOfAuditors = entity.SelectionAndEvaluationOfAuditors ?? string.Empty;
+            Reporting = entity.Reporting ?? string.Empty;
+            VerificationOfPreviousNonconformities = entity.VerificationOfPreviousNonconformities ?? string.Empty;
+            AuditLimitations = entity.AuditLimitations ?? string.Empty;
+
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
 
@@ -164,6 +181,15 @@ namespace IMIS.Application.AuditProgrammeModule
                 InternalAuditSched = InternalAuditSched,
                 AuditPlanObjective = AuditPlanObjective,
                 ScopeOfAudit = ScopeOfAudit,
+
+                // Map Sections IV to IX back to domain entity
+                AuditCriteria = AuditCriteria,
+                AuditMethodology = AuditMethodology,
+                SelectionAndEvaluationOfAuditors = SelectionAndEvaluationOfAuditors,
+                Reporting = Reporting,
+                VerificationOfPreviousNonconformities = VerificationOfPreviousNonconformities,
+                AuditLimitations = AuditLimitations,
+
                 IsDeleted = IsDeleted,
                 RowVersion = RowVersion
             };

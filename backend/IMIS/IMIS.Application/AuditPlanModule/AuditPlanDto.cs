@@ -14,6 +14,7 @@ namespace IMIS.Application.AuditPlanModule
 {
     public class AuditPlanDto : BaseDto<AuditPlan, int>
     {
+
         public required DateTime StartDate { get; set; }
         public required DateTime EndDate { get; set; }
 

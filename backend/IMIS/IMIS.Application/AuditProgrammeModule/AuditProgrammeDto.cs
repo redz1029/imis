@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Collections.Generic;
-using System.Text.Json.Serialization; // CRITICAL for mapping names
+using System.Text.Json.Serialization;
 using Base.Primitives;
 using IMIS.Application.AuditPlanModule;
 using IMIS.Domain;
@@ -19,6 +19,14 @@ namespace IMIS.Application.AuditProgrammeModule
         public required string InternalAuditSched { get; set; }
         public required string AuditPlanObjective { get; set; }
         public required string ScopeOfAudit { get; set; }
+
+        // --- Added Sections IV to IX ---
+        public required string AuditCriteria { get; set; }
+        public required string AuditMethodology { get; set; }
+        public required string SelectionAndEvaluationOfAuditors { get; set; }
+        public required string Reporting { get; set; }
+        public required string VerificationOfPreviousNonconformities { get; set; }
+        public required string AuditLimitations { get; set; }
 
         public List<AuditProgrammeObjectiveDto> Objectives { get; set; } = new();
 
@@ -43,6 +51,15 @@ namespace IMIS.Application.AuditProgrammeModule
             InternalAuditSched = entity.InternalAuditSched;
             AuditPlanObjective = entity.AuditPlanObjective;
             ScopeOfAudit = entity.ScopeOfAudit;
+
+            // Map Sections IV to IX
+            AuditCriteria = entity.AuditCriteria;
+            AuditMethodology = entity.AuditMethodology;
+            SelectionAndEvaluationOfAuditors = entity.SelectionAndEvaluationOfAuditors;
+            Reporting = entity.Reporting;
+            VerificationOfPreviousNonconformities = entity.VerificationOfPreviousNonconformities;
+            AuditLimitations = entity.AuditLimitations;
+
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
 
@@ -81,6 +98,15 @@ namespace IMIS.Application.AuditProgrammeModule
                 InternalAuditSched = InternalAuditSched,
                 AuditPlanObjective = AuditPlanObjective,
                 ScopeOfAudit = ScopeOfAudit,
+
+                // Map Sections IV to IX back to entity
+                AuditCriteria = AuditCriteria,
+                AuditMethodology = AuditMethodology,
+                SelectionAndEvaluationOfAuditors = SelectionAndEvaluationOfAuditors,
+                Reporting = Reporting,
+                VerificationOfPreviousNonconformities = VerificationOfPreviousNonconformities,
+                AuditLimitations = AuditLimitations,
+
                 IsDeleted = IsDeleted,
                 RowVersion = RowVersion,
 

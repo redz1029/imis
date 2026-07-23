@@ -43,7 +43,6 @@ namespace IMIS.Application.AuditProgrammeModule
             if (entity.Id == 0)
             {
                 // BRAND NEW AUDIT PROGRAMME
-                // Let EF handle the natural auto-assignment of identities recursively down to grandchildren
                 dbContext.Add(entity);
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
@@ -53,7 +52,7 @@ namespace IMIS.Application.AuditProgrammeModule
                 var existing = await _repository.GetByIdWithDetailsAsync(entity.Id, cancellationToken);
                 if (existing == null) throw new KeyNotFoundException("Audit Programme not found.");
 
-                // Update root primitive fields
+                // Update root primitive fields (including Sections IV to IX)
                 dbContext.Entry(existing).CurrentValues.SetValues(entity);
 
                 // --- Sync Objectives Collection ---
@@ -64,40 +63,41 @@ namespace IMIS.Application.AuditProgrammeModule
                 existing.Objectives = entity.Objectives;
 
                 // --- Sync Audit Plans & Deep Sub-Collections Safely ---
-                existing.AuditPlans ??= new List<AuditPlan>();
-                entity.AuditPlans ??= new List<AuditPlan>();
+                UpdateAuditPlans(dbContext, existing, entity);
 
-                var plansToRemove = existing.AuditPlans
-                    .Where(ep => !entity.AuditPlans.Any(ip => ip.Id == ep.Id && ep.Id != 0)).ToList();
-
-                foreach (var plan in plansToRemove)
-                {
-                    existing.AuditPlans.Remove(plan);
-                    dbContext.Set<AuditPlan>().Remove(plan);
-                }
-
-                foreach (var incomingPlan in entity.AuditPlans)
-                {
-                    var existingPlan = existing.AuditPlans.FirstOrDefault(ep => ep.Id == incomingPlan.Id && ep.Id != 0);
-
-                    if (existingPlan == null)
-                    {
-                        // Explicitly bind relationship link so child entries know their root scope
-                        incomingPlan.AuditProgrammeId = existing.Id;
-                        existing.AuditPlans.Add(incomingPlan);
-                    }
-                    else
-                    {
-                        // Update existing plan row data cells
-                        dbContext.Entry(existingPlan).CurrentValues.SetValues(incomingPlan);
-
-                        // Synchronize child entries and grandchildren
-                        SyncAuditPlanEntries(dbContext, existingPlan, incomingPlan);
-                    }
-                }
-
-                // Unified save pipeline commit execution
+                // Save changes via pipeline commit
                 await dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        private void UpdateAuditPlans(DbContext dbContext, AuditProgramme existing, AuditProgramme incoming)
+        {
+            existing.AuditPlans ??= new List<AuditPlan>();
+            incoming.AuditPlans ??= new List<AuditPlan>();
+
+            var plansToRemove = existing.AuditPlans
+                .Where(ep => !incoming.AuditPlans.Any(ip => ip.Id == ep.Id && ep.Id != 0)).ToList();
+
+            foreach (var plan in plansToRemove)
+            {
+                existing.AuditPlans.Remove(plan);
+                dbContext.Set<AuditPlan>().Remove(plan);
+            }
+
+            foreach (var incomingPlan in incoming.AuditPlans)
+            {
+                var existingPlan = existing.AuditPlans.FirstOrDefault(ep => ep.Id == incomingPlan.Id && ep.Id != 0);
+
+                if (existingPlan == null)
+                {
+                    incomingPlan.AuditProgrammeId = existing.Id;
+                    existing.AuditPlans.Add(incomingPlan);
+                }
+                else
+                {
+                    dbContext.Entry(existingPlan).CurrentValues.SetValues(incomingPlan);
+                    SyncAuditPlanEntries(dbContext, existingPlan, incomingPlan);
+                }
             }
         }
 
@@ -127,8 +127,6 @@ namespace IMIS.Application.AuditProgrammeModule
                 else
                 {
                     dbContext.Entry(existingEntry).CurrentValues.SetValues(incomingEntry);
-
-                    // Synchronize deep arrays (Grandchildren Leaf collections)
                     SyncEntryGrandchildCollections(dbContext, existingEntry, incomingEntry);
                 }
             }
@@ -172,7 +170,6 @@ namespace IMIS.Application.AuditProgrammeModule
             }
 
             // 3. IsoAuditors
-            // 3. IsoAuditors (EXCLUDING INDIVIDUAL AUDITORS, SAVING TEAM ONLY)
             var auditorsToRemove = existingEntry.IsoAuditors
                 .Where(ea => !incomingEntry.IsoAuditors.Any(ia => ia.Id == ea.Id && ea.Id != 0)).ToList();
 
@@ -184,10 +181,8 @@ namespace IMIS.Application.AuditProgrammeModule
 
             foreach (var incomingA in incomingEntry.IsoAuditors)
             {
-                // Crucial Guard Check: Scrub away individual user identifiers to fulfill saving Team only
-                incomingA.AuditorId = null; // or null/empty depending on type definition string/guid/int
+                incomingA.AuditorId = null;
 
-                // If your architecture loads a nested user navigational property object, sever it here:
                 var auditorProp = incomingA.GetType().GetProperty("Auditor");
                 if (auditorProp != null && auditorProp.CanWrite)
                 {
@@ -202,15 +197,12 @@ namespace IMIS.Application.AuditProgrammeModule
                 }
                 else
                 {
-                    // Enforce Team values exclusively onto the database tracking model entry
                     dbContext.Entry(existingA).CurrentValues.SetValues(incomingA);
-
-                    // Ensure EF Core tracking state does not re-bind an isolated individual row identity
                     dbContext.Entry(existingA).Property("AuditorId").IsModified = true;
                 }
             }
 
-            // 4. IsoStandardAuditPlans (Handles long identity keys safely)
+            // 4. IsoStandardAuditPlans
             var standardsToRemove = existingEntry.IsoStandardAuditPlans.Where(es => !incomingEntry.IsoStandardAuditPlans.Any(isPlan => isPlan.Id == es.Id && es.Id != 0)).ToList();
             foreach (var s in standardsToRemove) { existingEntry.IsoStandardAuditPlans.Remove(s); dbContext.Set<IsoStandardAuditPlan>().Remove(s); }
             foreach (var incomingS in incomingEntry.IsoStandardAuditPlans)
@@ -221,7 +213,7 @@ namespace IMIS.Application.AuditProgrammeModule
             }
 
             // 5. AuditPlanProcesses
-            var appToRemove = existingEntry.AuditPlanProcesses.Where(eap => !incomingEntry.AuditPlanProcesses.Any(iap => iap.Id == eap.Id && iap.Id != 0)).ToList();
+            var appToRemove = existingEntry.AuditPlanProcesses.Where(eap => !incomingEntry.AuditPlanProcesses.Any(iap => iap.Id == eap.Id && eap.Id != 0)).ToList();
             foreach (var ap in appToRemove) { existingEntry.AuditPlanProcesses.Remove(ap); dbContext.Set<AuditPlanProcess>().Remove(ap); }
             foreach (var incomingAp in incomingEntry.AuditPlanProcesses)
             {
@@ -267,7 +259,7 @@ namespace IMIS.Application.AuditProgrammeModule
                 return null;
             }
 
-            // Initialize root primitive structures
+            // Initialize root primitive structures (including Sections IV to IX mapping)
             var dto = new ReportAuditProgrammeDto
             {
                 Id = entity.Id,
@@ -279,6 +271,15 @@ namespace IMIS.Application.AuditProgrammeModule
                 InternalAuditSched = entity.InternalAuditSched ?? string.Empty,
                 AuditPlanObjective = entity.AuditPlanObjective ?? string.Empty,
                 ScopeOfAudit = entity.ScopeOfAudit ?? string.Empty,
+
+                // Sections IV to IX mapping
+                AuditCriteria = entity.AuditCriteria ?? string.Empty,
+                AuditMethodology = entity.AuditMethodology ?? string.Empty,
+                SelectionAndEvaluationOfAuditors = entity.SelectionAndEvaluationOfAuditors ?? string.Empty,
+                Reporting = entity.Reporting ?? string.Empty,
+                VerificationOfPreviousNonconformities = entity.VerificationOfPreviousNonconformities ?? string.Empty,
+                AuditLimitations = entity.AuditLimitations ?? string.Empty,
+
                 IsDeleted = entity.IsDeleted,
                 RowVersion = entity.RowVersion
             };
@@ -327,26 +328,36 @@ namespace IMIS.Application.AuditProgrammeModule
                                     .Select(app =>
                                     {
                                         var currentOffice = app.Office;
-
-                                        // Traverse up the tree to find a parent of type 'Department' (OfficeTypeId = 2)
                                         var parent = currentOffice.ParentOffice;
                                         string? departmentName = null;
+                                        string? serviceName = null;
 
                                         while (parent != null)
                                         {
-                                            if (parent.OfficeTypeId == 2) // 2 represents 'Department'
+                                            if (parent.OfficeTypeId == 2)
                                             {
                                                 departmentName = parent.Name;
                                                 break;
                                             }
+
+                                            if (parent.OfficeTypeId == 1)
+                                            {
+                                                serviceName = parent.Name;
+                                            }
+
                                             parent = parent.ParentOffice;
                                         }
 
-                                        // Format: "Department Name - Office Name" or just "Office Name" if no department parent is found
                                         if (!string.IsNullOrEmpty(departmentName))
                                         {
                                             return $"{departmentName} - {currentOffice.Name}";
                                         }
+
+                                        if (!string.IsNullOrEmpty(serviceName) && currentOffice.Name != serviceName)
+                                        {
+                                            return $"{serviceName} - {currentOffice.Name}";
+                                        }
+
                                         return currentOffice.Name;
                                     })
                                     .Where(name => !string.IsNullOrEmpty(name))
@@ -399,7 +410,6 @@ namespace IMIS.Application.AuditProgrammeModule
                                 }
                             }
 
-                            // Calculate correct day based on batch start date offset
                             DateTime calculatedEntryDate = plan.StartDate.AddDays(entry.DayNumber - 1);
 
                             var scheduleEntry = new ReportScheduleEntryDto
@@ -429,7 +439,6 @@ namespace IMIS.Application.AuditProgrammeModule
             return dto;
         }
 
-        // Helper string range compilation utility to prevent missing method compiler runtime issues
         private string FormatBatchDateRange(DateTime start, DateTime end)
         {
             if (start.Date == end.Date)

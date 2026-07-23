@@ -36,11 +36,19 @@ namespace IMIS.Persistence.AuditProgrammeModule
         public async Task<AuditProgramme?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
             return await GetDbContext().Set<AuditProgramme>()
+                .AsSplitQuery() // Prevent Cartesian explosion on multi-level includes
                 .Include(ap => ap.Objectives)
                 .Include(ap => ap.AuditPlans)
                     .ThenInclude(p => p.Entries)
                         .ThenInclude(e => e.AuditPlanProcesses)
                             .ThenInclude(app => app.Office)
+                                .ThenInclude(o => o.OfficeType) // Load the office type (Service, Department, etc.)
+                .Include(ap => ap.AuditPlans)
+                    .ThenInclude(p => p.Entries)
+                        .ThenInclude(e => e.AuditPlanProcesses)
+                            .ThenInclude(app => app.Office)
+                                .ThenInclude(o => o.ParentOffice) // Load parent office
+                                    .ThenInclude(po => po.OfficeType) // Load parent office type
                 .Include(ap => ap.AuditPlans)
                     .ThenInclude(p => p.Entries)
                         .ThenInclude(e => e.IsoAuditProcesses)
