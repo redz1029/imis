@@ -1572,7 +1572,7 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
               height: 44,
               child: Row(
                 children: [
-                  Icon(Icons.drafts_outlined, size: 18, color: primaryColor),
+                  Icon(Icons.save_outlined, size: 18, color: primaryColor),
                   const SizedBox(width: 12),
                   Text(
                     'Save as Draft',
