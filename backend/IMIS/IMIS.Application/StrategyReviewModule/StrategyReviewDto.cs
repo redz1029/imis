@@ -12,6 +12,7 @@ namespace IMIS.Application.StrategyReviewModule
         public string? StrategyReviewPeriod { get; set; }
         public DateTime PostingDate { get; set; }
         public long KraRoadMapId { get; set; }
+        public string? KraRoadMapName { get; set; }
         public string? StrategicObjective { get; set; }
         public string? OfficeNames { get; set; }
         public List<StrategyReviewDeliverableKpiDto>? StrategyReviewDeliverableKpi { get; set; }
@@ -33,6 +34,7 @@ namespace IMIS.Application.StrategyReviewModule
             : null;
             this.PostingDate = strategyReview.PostingDate;
             this.KraRoadMapId = strategyReview.KraRoadMapId;
+            KraRoadMapName = strategyReview.KraRoadMap?.Kra?.Name;
             this.Continue = strategyReview.Continue;
             this.Start = strategyReview.Start;
             this.Stop = strategyReview.Stop;
