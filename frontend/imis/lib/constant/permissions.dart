@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-07-20 14:36:07.983334
+// Last synced: 2026-07-23 10:04:45.031845
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -11,6 +11,7 @@ class AppPermissions {
   static const String addSWOTAnalysis = 'Add S W O T Analysis';
   static const String viewSWOTAnalysis = 'View S W O T Analysis';
   static const String editSWOTAnalysis = 'Edit S W O T Analysis';
+  static const String deleteStrategyReview = 'Delete Strategy Review';
   static const String addStrategyReview = 'Add Strategy Review';
   static const String viewStrategyReview = 'View Strategy Review';
   static const String editStrategyReview = 'Edit Strategy Review';
@@ -20,6 +21,39 @@ class AppPermissions {
   static const String addPgsSignatoryTemplate = 'Add Pgs Signatory Template';
   static const String viewPgsSignatoryTemplate = 'View Pgs Signatory Template';
   static const String editPgsSignatoryTemplate = 'Edit Pgs Signatory Template';
+  static const String addCreateViewRoadmapSetting = 'Add Create View Roadmap Setting';
+  static const String viewCreateViewRoadmapSetting = 'View Create View Roadmap Setting';
+  static const String editCreateViewRoadmapSetting = 'Edit Create View Roadmap Setting';
+  static const String addPGSSetting = 'Add P G S Setting';
+  static const String viewPGSSetting = 'View P G S Setting';
+  static const String editPGSSetting = 'Edit P G S Setting';
+  static const String addCreateViewDeliverablesSetting = 'Add Create View Deliverables Setting';
+  static const String viewCreateViewDeliverablesSetting = 'View Create View Deliverables Setting';
+  static const String editCreateViewDeliverablesSetting = 'Edit Create View Deliverables Setting';
+  static const String addCreateViewOperationReviewProtocolSetting = 'Add Create View Operation Review Protocol Setting';
+  static const String viewCreateViewOperationReviewProtocolSetting = 'View Create View Operation Review Protocol Setting';
+  static const String editCreateViewOperationReviewProtocolSetting = 'Edit Create View Operation Review Protocol Setting';
+  static const String addCreateViewStrategyReviewReportSetting = 'Add Create View Strategy Review Report Setting';
+  static const String viewCreateViewStrategyReviewReportSetting = 'View Create View Strategy Review Report Setting';
+  static const String editCreateViewStrategyReviewReportSetting = 'Edit Create View Strategy Review Report Setting';
+  static const String addCreateViewSwotSetting = 'Add Create View Swot Setting';
+  static const String viewCreateViewSwotSetting = 'View Create View Swot Setting';
+  static const String editCreateViewSwotSetting = 'Edit Create View Swot Setting';
+  static const String addDeliverableStatusMonitoringSetting = 'Add Deliverable Status Monitoring Setting';
+  static const String viewDeliverableStatusMonitoringSetting = 'View Deliverable Status Monitoring Setting';
+  static const String editDeliverableStatusMonitoringSetting = 'Edit Deliverable Status Monitoring Setting';
+  static const String addPgsAuditorReportSetting = 'Add Pgs Auditor Report Setting';
+  static const String viewPgsAuditorReportSetting = 'View Pgs Auditor Report Setting';
+  static const String editPgsAuditorReportSetting = 'Edit Pgs Auditor Report Setting';
+  static const String addPGSReportSetting = 'Add P G S Report Setting';
+  static const String viewPGSReportSetting = 'View P G S Report Setting';
+  static const String editPGSReportSetting = 'Edit P G S Report Setting';
+  static const String addPgsSetting = 'Add Pgs Setting';
+  static const String viewPgsSetting = 'View Pgs Setting';
+  static const String editPgsSetting = 'Edit Pgs Setting';
+  static const String addScoreCardSetting = 'Add Score Card Setting';
+  static const String viewScoreCardSetting = 'View Score Card Setting';
+  static const String editScoreCardSetting = 'Edit Score Card Setting';
   static const String addPeriod = 'Add Period';
   static const String viewPeriod = 'View Period';
   static const String editPeriod = 'Edit Period';
@@ -71,6 +105,7 @@ class AppPermissions {
   static const String addKraRoadMapPeriod = 'Add Kra Road Map Period';
   static const String viewKraRoadMapPeriod = 'View Kra Road Map Period';
   static const String editKraRoadMapPeriod = 'Edit Kra Road Map Period';
+  static const String deleteKraRoadMap = 'Delete Kra Road Map';
   static const String addKraRoadMap = 'Add Kra Road Map';
   static const String viewKraRoadMap = 'View Kra Road Map';
   static const String editKraRoadMap = 'Edit Kra Road Map';
