@@ -245,7 +245,7 @@ namespace IMIS.Presentation.PgsModuleAPIs
                               : Results.NotFound(new { message = "PGS not found." });
             })
             .WithTags(_pgsTag)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.Edit));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.Delete));
         
             app.MapGet("/service-office-period-report", async (HttpResponse response, long? periodId, long? officeId, long? parentOfficeId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {

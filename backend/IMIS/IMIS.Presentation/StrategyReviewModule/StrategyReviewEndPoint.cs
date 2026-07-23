@@ -123,7 +123,7 @@ namespace IMIS.Presentation.StrategyReviewModule
                 return result ? Results.Ok(new { message = " Review deleted successfully." }) : Results.NotFound(new { message = "Review not found." });
             })
            .WithTags(_strategyReview)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.Edit));
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.Delete));
         }
     }
 }
