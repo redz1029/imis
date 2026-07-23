@@ -178,6 +178,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
     String? startDate,
     String? endDate,
     String? remarkrs,
+    bool isActive = false,
     String? rowVersion,
   }) {
     DateTime? selectedFromDate =
@@ -392,6 +393,49 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                         label: 'Remarks',
                         controller: remarksController,
                       ),
+                      SizedBox(height: 20),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: kBackground,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Active Period',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: kText,
+                                  ),
+                                ),
+                                Text(
+                                  'Currently active as period',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: isActive,
+                              onChanged:
+                                  (val) => setStateDialog(() => isActive = val),
+                              activeColor: primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
                       SizedBox(height: 24),
                       Row(
                         children: [
@@ -598,6 +642,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                     selectedFromDate!,
                                     selectedEndDate!,
                                     remarksController.text,
+                                    isActive: isActive,
                                   );
                                   await _pgsPeriodService
                                       .createOrUpdatePgsPeriod(period);
@@ -834,21 +879,30 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Start Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "End Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
 
@@ -856,7 +910,10 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -904,6 +961,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                               DateTimeConverter().toJson(
                                                 pgsperiod.startDate,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
@@ -912,6 +970,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                               DateTimeConverter().toJson(
                                                 pgsperiod.endDate,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
@@ -922,7 +981,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
-                                                      size: 18,
+                                                      size: 16,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -945,6 +1004,10 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                                         remarkrs:
                                                             pgsperiod.remarks
                                                                 .toString(),
+                                                        isActive:
+                                                            pgsperiod
+                                                                .isActive ??
+                                                            false,
                                                       );
                                                     },
                                                   ),
@@ -952,7 +1015,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
 
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,
@@ -992,6 +1055,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                               "$itemNumber",
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                               ),
                                             ),
                                             const Spacer(),
@@ -1031,7 +1095,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                                         children: [
                                                           Icon(
                                                             Icons.edit_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Edit'),
@@ -1047,7 +1111,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                                             CupertinoIcons
                                                                 .delete_simple,
                                                             color: Colors.red,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Delete'),
@@ -1063,12 +1127,14 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                           DateTimeConverter().toJson(
                                             pgsperiod.startDate,
                                           ),
+                                          style: TextStyle(fontSize: 12),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           DateTimeConverter().toJson(
                                             pgsperiod.endDate,
                                           ),
+                                          style: TextStyle(fontSize: 12),
                                         ),
                                         const SizedBox(height: 4),
                                       ],

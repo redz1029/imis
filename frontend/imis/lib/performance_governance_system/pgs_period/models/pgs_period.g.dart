@@ -13,6 +13,7 @@ PgsPeriod _$PgsPeriodFromJson(Map<String, dynamic> json) => PgsPeriod(
   const DateTimeConverter().fromJson(json['endDate'] as String),
   json['remarks'] as String?,
   rowVersion: json['rowVersion'] as String?,
+  isActive: json['isActive'] as bool?,
 );
 
 Map<String, dynamic> _$PgsPeriodToJson(PgsPeriod instance) => <String, dynamic>{
@@ -22,4 +23,5 @@ Map<String, dynamic> _$PgsPeriodToJson(PgsPeriod instance) => <String, dynamic>{
   'endDate': const DateTimeConverter().toJson(instance.endDate),
   'rowVersion': instance.rowVersion,
   'remarks': instance.remarks,
+  'isActive': instance.isActive,
 };

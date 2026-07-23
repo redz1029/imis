@@ -19,6 +19,7 @@ class PgsPeriod {
 
   String? rowVersion;
   String? remarks;
+  bool? isActive;
 
   PgsPeriod(
     this.id,
@@ -28,6 +29,7 @@ class PgsPeriod {
     this.endDate,
     this.remarks, {
     this.rowVersion,
+    this.isActive,
   });
 
   factory PgsPeriod.fromJson(Map<String, dynamic> json) =>
