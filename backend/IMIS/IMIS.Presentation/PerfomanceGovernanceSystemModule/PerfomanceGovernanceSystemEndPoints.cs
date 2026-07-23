@@ -4,6 +4,7 @@ using Carter;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsModule;
+using IMIS.Application.PgsSignatoryModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
@@ -278,6 +279,16 @@ namespace IMIS.Presentation.PgsModuleAPIs
             })
             .WithTags(_pgsTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsTag), true);
+
+            app.MapDelete("pgssignatory/{pgsid:int}", async (int pgsid, IPgsSignatoryService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteSignatoryAsync(pgsid, cancellationToken);
+
+                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+
+                return result ? Results.Ok(new { message = "PGS signatories deleted successfully." }) : Results.NotFound(new { message = "No signatories found." });
+            })
+            .WithTags(_pgsTag);
         }
     }
 }

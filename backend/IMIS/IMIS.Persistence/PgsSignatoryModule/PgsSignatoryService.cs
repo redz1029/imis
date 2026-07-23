@@ -14,7 +14,22 @@ namespace IMIS.Persistence.PgsSignatoryModule
             _repository = repository;
             _userManager = userManager;
         }
-      
+        public async Task<bool> SoftDeleteSignatoryAsync(int pgsId,  CancellationToken cancellationToken)
+        {
+            var signatories = await _repository.GetByPgsIdForSoftDeleteAsync(pgsId, cancellationToken);
+
+            if (!signatories.Any())
+                return false;
+
+            foreach (var signatory in signatories)
+            {
+                signatory.IsDeleted = true;
+            }
+
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         public async Task<List<PgsSignatoryDto>?> GetAllPgsSignatoryId(long? pgsSignatoryId, CancellationToken cancellationToken)
         {
             var data = await _repository.GetAllPgsSignatoryId(pgsSignatoryId, cancellationToken).ConfigureAwait(false);

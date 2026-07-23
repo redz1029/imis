@@ -10,6 +10,12 @@ namespace IMIS.Persistence.PgsSignatoryModule
         public PgsSignatoryRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+        public async Task<List<PgsSignatory>> GetByPgsIdForSoftDeleteAsync(int pgsId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<PgsSignatory>()
+                .Where(x => x.PgsId == pgsId && !x.IsDeleted)
+                .ToListAsync(cancellationToken);
+        }
 
         public async Task<IEnumerable<PgsSignatory>?> GetAllPgsSignatoryId(long? pgsSignatoryId, CancellationToken cancellationToken)
         {
