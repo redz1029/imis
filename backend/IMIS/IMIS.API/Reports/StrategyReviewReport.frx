@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="06/01/2026 14:04:16" ReportInfo.Modified="07/21/2026 13:49:49" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="06/01/2026 14:04:16" ReportInfo.Modified="07/23/2026 13:54:12" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -94,6 +94,8 @@ namespace FastReport
         <Column Name="Id" DataType="System.Int64"/>
         <Column Name="StrategyReviewId" DataType="System.Int64"/>
         <Column Name="KpiId" DataType="System.Int64"/>
+        <Column Name="Measure" DataType="System.String"/>
+        <Column Name="Target" DataType="System.String"/>
         <Column Name="ActualDate" DataType="System.String"/>
         <Column Name="Status" DataType="System.String"/>
         <Column Name="KpiDetails" DataType="System.Object">
@@ -108,6 +110,8 @@ namespace FastReport
         <Column Name="Id" DataType="System.Int64"/>
         <Column Name="StrategyReviewId" DataType="System.Int64"/>
         <Column Name="KraRoadmapid" DataType="System.Int64"/>
+        <Column Name="KeyResultArea" DataType="System.String"/>
+        <Column Name="Deliverable" DataType="System.String"/>
         <Column Name="ActualDate" DataType="System.String"/>
         <Column Name="Status" DataType="System.String"/>
         <Column Name="KraRoadMapDeliverableDetails" DataType="System.Object">
@@ -134,12 +138,14 @@ namespace FastReport
       <LineObject Name="Line2" Left="637.4" Top="129.3" Height="137.8" CanGrow="true" GrowToBottom="true"/>
       <TextObject Name="Text307" Left="288.85" Top="130.3" Width="345.2" Height="29.9" Fill.Color="192, 80, 77" Text="Objective" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 11pt" TextFill.Color="White"/>
       <TextObject Name="Text308" Left="640.05" Top="130.3" Width="350.2" Height="29.9" Fill.Color="192, 80, 77" Text="Directly Contributing Units" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 11pt" TextFill.Color="White"/>
-      <TextObject Name="Text318" Left="98.5" Top="156.3" Width="141.75" Height="63.4" CanGrow="true" Text="STRATEGY REVIEW REPORT" HorzAlign="Center" VertAlign="Center" Font="Arial, 13pt"/>
-      <TextObject Name="Text322" Left="98.05" Top="220.8" Width="142.1" Height="13.9" CanGrow="true" Text="[StrategyReview.Quarter]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt"/>
+      <TextObject Name="Text318" Left="98.5" Top="137.3" Width="141.75" Height="63.4" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="STRATEGY REVIEW REPORT" HorzAlign="Center" VertAlign="Center" Font="Arial, 13pt"/>
+      <TextObject Name="Text322" Left="98.05" Top="203.35" Width="142.1" Height="13.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.Quarter]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text323" Left="288.4" Top="164.1" Width="344.3" Height="101.05" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.StrategicObjective]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
       <TextObject Name="Text324" Left="641.6" Top="169.1" Width="347.2" Height="82.15" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.OfficeNames]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
       <TextObject Name="Text340" Left="641.6" Top="250.7" Width="347.2" Height="13.45" CanGrow="true" GrowToBottom="true" CanBreak="false" Text=".&#13;&#10;&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt" TextFill.Color="Transparent"/>
-      <ChildBand Name="Child3" Top="272.05" Width="1047.06" Height="52.7" CanGrow="true" PrintOn="FirstPage">
+      <ChildBand Name="Child3" Top="270.72" Width="1047.06" Height="52.7" CanGrow="true" PrintOn="FirstPage">
+        <SubreportObject Name="Subreport1" Left="54.15" Top="34.25" Width="934.1" Height="16.05" GrowToBottom="true" ReportPage="DeliverableKPI" PrintOnParent="true"/>
+        <ShapeObject Name="Shape14" Left="50.25" Top="32.8" Width="942.55" Height="19.9" CanGrow="true" GrowToBottom="true"/>
         <ShapeObject Name="Shape13" Left="50.2" Top="-0.65" Width="942.6" Height="34.8" Fill.Color="192, 80, 77" CanGrow="true"/>
         <LineObject Name="Line4" Left="562.45" Top="-0.65" Height="33.8"/>
         <LineObject Name="Line3" Left="285.85" Top="-0.1" Height="33.8"/>
@@ -147,13 +153,11 @@ namespace FastReport
         <TextObject Name="Text312" Left="566.65" Top="1.8" Width="263.95" Height="28.9" Fill.Color="192, 80, 77" Text="Actual to Date" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 11pt" TextFill.Color="White"/>
         <TextObject Name="Text311" Left="287.85" Top="1.8" Width="270.95" Height="28.9" Fill.Color="192, 80, 77" Text="Target" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 11pt" TextFill.Color="White"/>
         <TextObject Name="Text309" Left="53.05" Top="1.8" Width="230.95" Height="28.9" Fill.Color="192, 80, 77" Text="Measure" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 11pt" TextFill.Color="White"/>
-        <SubreportObject Name="Subreport1" Left="54.15" Top="35.25" Width="934.1" Height="14.05" GrowToBottom="true" ReportPage="DeliverableKPI" PrintOnParent="true"/>
-        <ShapeObject Name="Shape14" Left="50.25" Top="32.8" Width="942.55" Height="19.9" CanGrow="true" GrowToBottom="true"/>
-        <LineObject Name="Line10" Left="285.95" Top="30.8" Height="19.8" CanGrow="true" GrowToBottom="true"/>
+        <LineObject Name="Line10" Left="285.85" Top="30.8" Height="19.8" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line11" Left="562.45" Top="30.8" Height="19.8" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line12" Left="832.95" Top="30.8" Height="19.8" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line5" Left="832.95" Top="-0.65" Height="33.8"/>
-        <ChildBand Name="Child4" Top="328.75" Width="1047.06" Height="33.15">
+        <ChildBand Name="Child4" Top="326.08" Width="1047.06" Height="33.15">
           <ShapeObject Name="Shape15" Left="50.15" Top="-1.65" Width="942.6" Height="34.8" Fill.Color="192, 80, 77" CanGrow="true"/>
           <LineObject Name="Line6" Left="285.8" Top="-1.1" Height="33.8"/>
           <LineObject Name="Line7" Left="562.85" Top="-1.65" Height="33.8"/>
@@ -165,20 +169,20 @@ namespace FastReport
         </ChildBand>
       </ChildBand>
     </PageHeaderBand>
-    <DataBand Name="Data1" Top="365.9" Width="1047.06" Height="24.9" CanGrow="true" DataSource="StrategyReviewDeliverable">
+    <DataBand Name="Data1" Top="361.9" Width="1047.06" Height="24.9" CanGrow="true" DataSource="StrategyReviewDeliverable">
       <TextObject Name="txtDeliverableStatus" Left="833.45" Top="-1" Width="158.5" Height="23.9" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtDeliverableStatus_BeforePrint" Text="[StrategyReview.StrategyReviewDeliverable.Status]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
-      <ShapeObject Name="Shape16" Left="50.25" Top="-2" Width="942.55" Height="26.9" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line13" Left="832.95" Top="-0.45" Height="24.8" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line14" Left="563.55" Top="-1.45" Height="25.8" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line15" Left="285.4" Top="-1.45" Height="25.8" CanGrow="true" GrowToBottom="true"/>
-      <TextObject Name="Text333" Left="56.15" Width="225.5" Height="11.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverable.KraRoadMapDeliverableDetails.KraDescription]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
-      <TextObject Name="Text334" Left="289.65" Width="271.5" Height="11.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverable.KraRoadMapDeliverableDetails.DeliverableDescription]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
+      <TextObject Name="Text333" Left="56.15" Width="225.5" Height="11.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverable.KeyResultArea]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
+      <TextObject Name="Text334" Left="289.65" Width="271.5" Height="11.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverable.Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
       <TextObject Name="Text335" Left="568.35" Width="262.5" Height="11.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverable.ActualDate]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
       <TextObject Name="Text336" Left="56.3" Top="12.45" Width="225.5" Height="9.9" CanGrow="true" GrowToBottom="true" Text=".&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt" TextFill.Color="White"/>
       <TextObject Name="Text337" Left="289.95" Top="12.45" Width="270.5" Height="9.9" CanGrow="true" GrowToBottom="true" Text=".&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt" TextFill.Color="White"/>
       <TextObject Name="Text338" Left="568.45" Top="12.45" Width="262.5" Height="9.9" CanGrow="true" GrowToBottom="true" Text=".&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt" TextFill.Color="White"/>
+      <ShapeObject Name="Shape16" Left="50.25" Top="-2" Width="942.55" Height="26.9" CanGrow="true" GrowToBottom="true"/>
     </DataBand>
-    <ReportSummaryBand Name="ReportSummary1" Top="394.8" Width="1047.06" Height="135.15" CanGrow="true" FirstRowStartsNewPage="true">
+    <ReportSummaryBand Name="ReportSummary1" Top="389.47" Width="1047.06" Height="135.15" CanGrow="true" FirstRowStartsNewPage="true">
       <ShapeObject Name="Shape17" Left="50.15" Top="-1.1" Width="943.3" Height="34.8" Fill.Color="192, 80, 77" CanGrow="true"/>
       <ShapeObject Name="Shape18" Left="50.25" Top="32.25" Width="943.3" Height="102.9" CanGrow="true" GrowToBottom="true"/>
       <TextObject Name="Text325" Left="53.7" Top="40.25" Width="295.5" Height="75" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[StrategyReview.Continue]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
@@ -193,17 +197,17 @@ namespace FastReport
       <TextObject Name="Text342" Left="357.1" Top="116.4" Width="323.2" Height="13.45" CanGrow="true" GrowToBottom="true" CanBreak="false" Text=".&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt" TextFill.Color="Transparent"/>
       <TextObject Name="Text343" Left="689.85" Top="116.4" Width="297.2" Height="13.45" CanGrow="true" GrowToBottom="true" CanBreak="false" Text=".&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt" TextFill.Color="Transparent"/>
     </ReportSummaryBand>
-    <PageFooterBand Name="PageFooter1" Top="533.95" Width="1047.06" Height="21.4">
+    <PageFooterBand Name="PageFooter1" Top="527.28" Width="1047.06" Height="21.4">
       <TextObject Name="Text29" Left="53.3" Top="3" Width="938.7" Height="14.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
     </PageFooterBand>
   </ReportPage>
   <ReportPage Name="DeliverableKPI" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt">
-    <DataBand Name="Data2" Width="1047.06" Height="25.35" CanGrow="true" DataSource="StrategyReviewDeliverableKpi">
-      <TextObject Name="Text332" Left="778.8" Top="-0.55" Width="158.9" Height="23.9" CanGrow="true" CanShrink="true" GrowToBottom="true" BeforePrintEvent="Text332_BeforePrint" Text="[StrategyReview.StrategyReviewDeliverableKpi.Status]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
-      <TextObject Name="Text329" Left="502.4" Top="5" Width="273.45" Height="18.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverableKpi.ActualDate]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
-      <TextObject Name="Text330" Left="4.9" Top="4.45" Width="218.65" Height="18.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverableKpi.KpiDetails.KpiDescription]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
-      <TextObject Name="Text331" Left="232.15" Top="5" Width="267.7" Height="18.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverableKpi.KpiDetails.Target]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
-      <LineObject Name="Line17" Left="-3.1" Top="25.35" Width="940.95"/>
+    <DataBand Name="Data2" Width="1047.06" Height="23.35" CanGrow="true" DataSource="StrategyReviewDeliverableKpi">
+      <TextObject Name="Text332" Left="778.8" Top="-0.55" Width="158.9" Height="20.9" CanGrow="true" CanShrink="true" GrowToBottom="true" BeforePrintEvent="Text332_BeforePrint" Text="[StrategyReview.StrategyReviewDeliverableKpi.Status]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
+      <TextObject Name="Text329" Left="502.4" Top="4" Width="273.45" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverableKpi.ActualDate]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
+      <TextObject Name="Text330" Left="4.9" Top="3.45" Width="218.65" Height="14.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverableKpi.Measure]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
+      <TextObject Name="Text331" Left="232.15" Top="4" Width="267.7" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[StrategyReview.StrategyReviewDeliverableKpi.Target]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 9pt"/>
+      <LineObject Name="Line17" Left="-3.1" Top="23.35" Width="940.95"/>
     </DataBand>
   </ReportPage>
 </Report>

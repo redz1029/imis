@@ -7,6 +7,8 @@ public class StrategyReviewDeliverableKpiDto : BaseDto<StrategyReviewDeliverable
 {
     public long StrategyReviewId { get; set; }
     public long KpiId { get; set; }
+    public string? Measure { get; set; }
+    public string? Target { get; set; }
     public string? ActualDate { get; set; }
     public required PgsStatus Status { get; set; }
     public KraRoadMapKpiDto? KpiDetails { get; set; }
@@ -16,7 +18,9 @@ public class StrategyReviewDeliverableKpiDto : BaseDto<StrategyReviewDeliverable
     {
         Id = entity.Id;
         StrategyReviewId = entity.StrategyReviewId;
-        KpiId = entity.KraRoadmapid; 
+        KpiId = entity.KraRoadmapid;
+        Measure = entity.Measure;
+        Target = entity.Target;
         ActualDate = entity.ActualDate;
         Status = entity.Status;
         KpiDetails = null;
@@ -30,6 +34,8 @@ public class StrategyReviewDeliverableKpiDto : BaseDto<StrategyReviewDeliverable
             Id = Id,
             StrategyReviewId = StrategyReviewId,
             KraRoadmapid = KpiId, 
+            Measure = Measure,
+            Target = Target,
             ActualDate = ActualDate,
             Status = Status,
         };

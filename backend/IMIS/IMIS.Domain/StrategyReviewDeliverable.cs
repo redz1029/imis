@@ -6,6 +6,8 @@ namespace IMIS.Domain
     {
         public long StrategyReviewId { get; set; }
         public long KraRoadmapid { get; set; }
+        public string? KeyResultArea { get; set; }
+        public string? Deliverable { get; set; }
         public string? ActualDate { get; set; }
         public required PgsStatus Status { get; set; }
     }

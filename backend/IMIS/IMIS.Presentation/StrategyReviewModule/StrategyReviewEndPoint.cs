@@ -2,7 +2,6 @@
 using Carter;
 using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
-using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
