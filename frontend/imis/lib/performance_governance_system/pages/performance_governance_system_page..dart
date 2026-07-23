@@ -101,7 +101,8 @@ class _PerformanceGovernanceSystemPageState
   List<Map<String, dynamic>> filteredListPeriod = [];
   List<Office> officeList = [];
   List<Office> serviceList = [];
-
+  int? _selectedPeriodId;
+  String? selectedPeriodText = "All Periods";
   List<PerformanceGovernanceSystem> deliverableLists = [];
   List<PerformanceGovernanceSystem> filteredList = [];
   Map<String, int> _statusCounts = {
@@ -139,10 +140,44 @@ class _PerformanceGovernanceSystemPageState
     return null;
   }
 
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _fetchData();
+  //   fetchPgsFilter();
+  // }
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _initPgsPageData();
+  }
+
+  Future<void> _initPgsPageData() async {
+    await _fetchData();
+    _applyDefaultActivePeriod();
+  }
+
+  void _applyDefaultActivePeriod() {
+    final activePeriod = filteredListPeriod.firstWhere(
+      (p) => p['isActive'] == true,
+      orElse: () => {},
+    );
+
+    if (activePeriod.isNotEmpty) {
+      final start = _dateConverter.toJson(
+        DateTime.parse(activePeriod['startDate']),
+      );
+      final end = _dateConverter.toJson(
+        DateTime.parse(activePeriod['endDate']),
+      );
+      setState(() {
+        _selectedPeriodId = activePeriod['id'];
+        selectedPeriodText = "$start - $end";
+        selectedStartPeriod = activePeriod['startDate'];
+        selectedEndDate = activePeriod['endDate'];
+      });
+    }
+
     fetchPgsFilter();
   }
 
@@ -806,7 +841,6 @@ class _PerformanceGovernanceSystemPageState
                                   width: 28,
                                   child: Column(
                                     children: [
-                                      // Dot
                                       Container(
                                         width: 14,
                                         height: 14,
@@ -1324,11 +1358,11 @@ class _PerformanceGovernanceSystemPageState
   void _resetFilters() {
     setState(() {
       _selectedServiceId = null;
-      selectedEndDate = null;
-      selectedStartPeriod = null;
       _selectedOfficeId = null;
-      selectedStartDateText = "All Start Date";
-      selectedEndDateText = "All End Date";
+      _selectedPeriodId = null;
+      selectedPeriodText = "All Periods";
+      selectedStartPeriod = null;
+      selectedEndDate = null;
       _statusCounts = {
         'All': 0,
         'Draft': 0,
@@ -1404,11 +1438,13 @@ class _PerformanceGovernanceSystemPageState
             child: _officeDropdown(),
           ),
         ),
-        gap8px,
-        SizedBox(height: 38, child: _startDateDropdown()),
-        gap8px,
+        // gap8px,
+        // SizedBox(height: 38, child: _startDateDropdown()),
+        // gap8px,
 
-        SizedBox(height: 38, child: _endDateDropdown()),
+        // SizedBox(height: 38, child: _endDateDropdown()),
+        gap8px,
+        SizedBox(height: 38, child: _periodDropdown()),
       ],
     );
   }
@@ -1416,8 +1452,7 @@ class _PerformanceGovernanceSystemPageState
   bool get _hasActiveFilters =>
       _selectedServiceId != null ||
       _selectedOfficeId != null ||
-      selectedStartPeriod != null ||
-      selectedEndDate != null;
+      _selectedPeriodId != null;
 
   Widget _buildDesktopFilters() {
     return Column(
@@ -1470,9 +1505,11 @@ class _PerformanceGovernanceSystemPageState
               ),
             ),
             const SizedBox(width: 10),
-            Expanded(child: _startDateDropdown()),
-            const SizedBox(width: 10),
-            Expanded(child: _endDateDropdown()),
+            Expanded(child: _periodDropdown()),
+            // const SizedBox(width: 10),
+            // Expanded(child: _startDateDropdown()),
+            // const SizedBox(width: 10),
+            // Expanded(child: _endDateDropdown()),
           ],
         ),
       ],
@@ -1515,6 +1552,41 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
+  Widget _periodDropdown() {
+    String labelFor(Map<String, dynamic> p) {
+      final start = _dateConverter.toJson(DateTime.parse(p['startDate']));
+      final end = _dateConverter.toJson(DateTime.parse(p['endDate']));
+      return "$start - $end";
+    }
+
+    return SearchableDropdown(
+      items: ["All Periods", ...filteredListPeriod.map(labelFor)],
+      selectedItem: selectedPeriodText,
+      prefixIcon: Icons.calendar_today_outlined,
+      hintText: "All Periods",
+      searchHint: "Search period...",
+      onChanged: (value) {
+        setState(() {
+          if (value == "All Periods") {
+            _selectedPeriodId = null;
+            selectedPeriodText = "All Periods";
+            selectedStartPeriod = null;
+            selectedEndDate = null;
+          } else {
+            final selected = filteredListPeriod.firstWhere(
+              (p) => labelFor(p) == value,
+            );
+            _selectedPeriodId = selected['id'];
+            selectedPeriodText = value;
+            selectedStartPeriod = selected['startDate'];
+            selectedEndDate = selected['endDate'];
+          }
+          fetchPgsFilter();
+        });
+      },
+    );
+  }
+
   Widget _servicesDropdown() {
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
@@ -1551,68 +1623,68 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _startDateDropdown() {
-    return SearchableDropdown(
-      items: [
-        "All Start Date",
-        ...filteredListPeriod.map(
-          (p) => _dateConverter.toJson(DateTime.parse(p['startDate'])),
-        ),
-      ],
-      selectedItem: selectedStartDateText,
-      prefixIcon: Icons.calendar_today_outlined,
-      hintText: "All Start Date",
-      searchHint: "Search start date...",
-      onChanged: (value) {
-        setState(() {
-          if (value == "All Start Date") {
-            selectedStartPeriod = null;
-            selectedStartDateText = "All Start Date";
-          } else {
-            final selected = filteredListPeriod.firstWhere(
-              (p) =>
-                  _dateConverter.toJson(DateTime.parse(p['startDate'])) ==
-                  value,
-            );
-            selectedStartPeriod = selected['startDate'];
-            selectedStartDateText = value;
-          }
-          fetchPgsFilter();
-        });
-      },
-    );
-  }
+  // Widget _startDateDropdown() {
+  //   return SearchableDropdown(
+  //     items: [
+  //       "All Start Date",
+  //       ...filteredListPeriod.map(
+  //         (p) => _dateConverter.toJson(DateTime.parse(p['startDate'])),
+  //       ),
+  //     ],
+  //     selectedItem: selectedStartDateText,
+  //     prefixIcon: Icons.calendar_today_outlined,
+  //     hintText: "All Start Date",
+  //     searchHint: "Search start date...",
+  //     onChanged: (value) {
+  //       setState(() {
+  //         if (value == "All Start Date") {
+  //           selectedStartPeriod = null;
+  //           selectedStartDateText = "All Start Date";
+  //         } else {
+  //           final selected = filteredListPeriod.firstWhere(
+  //             (p) =>
+  //                 _dateConverter.toJson(DateTime.parse(p['startDate'])) ==
+  //                 value,
+  //           );
+  //           selectedStartPeriod = selected['startDate'];
+  //           selectedStartDateText = value;
+  //         }
+  //         fetchPgsFilter();
+  //       });
+  //     },
+  //   );
+  // }
 
-  Widget _endDateDropdown() {
-    return SearchableDropdown(
-      items: [
-        "All End Date",
-        ...filteredListPeriod.map(
-          (p) => _dateConverter.toJson(DateTime.parse(p['endDate'])),
-        ),
-      ],
-      selectedItem: selectedEndDateText,
-      hintText: "All End Date",
-      searchHint: "Search end date...",
-      prefixIcon: Icons.calendar_today_outlined,
-      onChanged: (value) {
-        setState(() {
-          if (value == "All End Date") {
-            selectedEndDate = null;
-            selectedEndDateText = "All End Date";
-          } else {
-            final selected = filteredListPeriod.firstWhere(
-              (p) =>
-                  _dateConverter.toJson(DateTime.parse(p['endDate'])) == value,
-            );
-            selectedEndDate = selected['endDate'];
-            selectedEndDateText = value;
-          }
-          fetchPgsFilter();
-        });
-      },
-    );
-  }
+  // Widget _endDateDropdown() {
+  //   return SearchableDropdown(
+  //     items: [
+  //       "All End Date",
+  //       ...filteredListPeriod.map(
+  //         (p) => _dateConverter.toJson(DateTime.parse(p['endDate'])),
+  //       ),
+  //     ],
+  //     selectedItem: selectedEndDateText,
+  //     hintText: "All End Date",
+  //     searchHint: "Search end date...",
+  //     prefixIcon: Icons.calendar_today_outlined,
+  //     onChanged: (value) {
+  //       setState(() {
+  //         if (value == "All End Date") {
+  //           selectedEndDate = null;
+  //           selectedEndDateText = "All End Date";
+  //         } else {
+  //           final selected = filteredListPeriod.firstWhere(
+  //             (p) =>
+  //                 _dateConverter.toJson(DateTime.parse(p['endDate'])) == value,
+  //           );
+  //           selectedEndDate = selected['endDate'];
+  //           selectedEndDateText = value;
+  //         }
+  //         fetchPgsFilter();
+  //       });
+  //     },
+  //   );
+  // }
 
   Widget _buildDesktopHeader() {
     return Column(
@@ -1769,9 +1841,18 @@ class _PerformanceGovernanceSystemPageState
     if (_isLoading) {
       return Center(child: CircularProgressIndicator(color: primaryColor));
     }
-
     final displayList = filteredList;
     if (displayList.isEmpty) {
+      String emptyText = 'No deliverables found';
+      if (selectedStartPeriod != null && selectedEndDate != null) {
+        final start = DateFormat(
+          'MMMM',
+        ).format(DateTime.parse(selectedStartPeriod!));
+        final end = DateFormat(
+          'MMMM yyyy',
+        ).format(DateTime.parse(selectedEndDate!));
+        emptyText = 'No deliverables found on $start to $end period';
+      }
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1782,9 +1863,10 @@ class _PerformanceGovernanceSystemPageState
               color: Colors.grey.shade400,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'No deliverables found',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            Text(
+              emptyText,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
         ),
