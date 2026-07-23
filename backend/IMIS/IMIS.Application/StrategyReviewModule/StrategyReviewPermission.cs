@@ -6,5 +6,6 @@ namespace IMIS.Application.StrategyReviewModule
     {
         public override string ModuleName => "StrategyReview";
         public override string PermissionGroup => PermissionGrouper.Transaction;
+        public string Delete => $"Delete{ModuleName}";
     }
 }
