@@ -19,6 +19,7 @@ class StrategyReviewKpiItem {
 class StrategyReviewKpi {
   final String? kpiDescription;
   final String? target;
+  final String? measure;
   final String? baseLine;
   final int? kraRoadMapId;
   final int id;
@@ -29,6 +30,7 @@ class StrategyReviewKpi {
     this.id, {
     this.kpiDescription,
     this.target,
+    this.measure,
     this.baseLine,
     this.kraRoadMapId,
     this.isDeleted,

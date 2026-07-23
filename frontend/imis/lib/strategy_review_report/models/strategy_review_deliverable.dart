@@ -24,6 +24,8 @@ class StrategyReviewDeliverable {
   final String? kraDescription;
   final String? deliverableDescription;
   final int? year;
+  final String? keyResultArea;
+  final String? deliverable;
   final bool? isEnabler;
   final int? kraRoadMapId;
   final int id;
@@ -35,6 +37,8 @@ class StrategyReviewDeliverable {
     this.kraDescription,
     this.deliverableDescription,
     this.year,
+    this.keyResultArea,
+    this.deliverable,
     this.isEnabler,
     this.kraRoadMapId,
     this.isDeleted,

@@ -52,6 +52,9 @@ class StrategyReviewDeliverableKpiRequest {
   final int strategyReviewId;
   final int kpiId;
   final String? actualDate;
+  final String? measure;
+  final String? target;
+
   final int status;
   final StrategyReviewKpi? kpiDetails;
 
@@ -59,6 +62,9 @@ class StrategyReviewDeliverableKpiRequest {
     required this.id,
     this.isDeleted,
     this.rowVersion,
+    this.measure,
+    this.target,
+
     required this.strategyReviewId,
     required this.kpiId,
     this.actualDate,
@@ -90,6 +96,8 @@ class StrategyReviewDeliverableRequest {
   final int strategyReviewId;
   final int kraRoadmapid;
   final String? actualDate;
+  final String? deliverable;
+  final String? keyResultArea;
   final int status;
   final StrategyReviewDeliverable? kraRoadMapDeliverableDetails;
 
@@ -97,6 +105,8 @@ class StrategyReviewDeliverableRequest {
     required this.id,
     this.isDeleted,
     this.rowVersion,
+    this.deliverable,
+    this.keyResultArea,
     required this.strategyReviewId,
     required this.kraRoadmapid,
     this.actualDate,
@@ -137,7 +147,8 @@ class StrategyReviewReport {
   final List<StrategyReviewDeliverableRequest>? strategyReviewDeliverable;
   final int? strategyReviewPeriodId;
   final String? roleId;
-
+  final String? strategyReviewPeriod;
+  final String? kraRoadMapName;
   StrategyReviewReport({
     required this.id,
     required this.isDeleted,
@@ -153,6 +164,8 @@ class StrategyReviewReport {
     this.strategyReviewDeliverable,
     this.strategyReviewPeriodId,
     this.roleId,
+    this.strategyReviewPeriod,
+    this.kraRoadMapName,
   });
 
   factory StrategyReviewReport.fromJson(Map<String, dynamic> json) =>

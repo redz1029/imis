@@ -29,6 +29,7 @@ StrategyReviewKpi _$StrategyReviewKpiFromJson(Map<String, dynamic> json) =>
       (json['id'] as num).toInt(),
       kpiDescription: json['kpiDescription'] as String?,
       target: json['target'] as String?,
+      measure: json['measure'] as String?,
       baseLine: json['baseLine'] as String?,
       kraRoadMapId: (json['kraRoadMapId'] as num?)?.toInt(),
       isDeleted: json['isDeleted'] as bool?,
@@ -39,6 +40,7 @@ Map<String, dynamic> _$StrategyReviewKpiToJson(StrategyReviewKpi instance) =>
     <String, dynamic>{
       'kpiDescription': instance.kpiDescription,
       'target': instance.target,
+      'measure': instance.measure,
       'baseLine': instance.baseLine,
       'kraRoadMapId': instance.kraRoadMapId,
       'id': instance.id,

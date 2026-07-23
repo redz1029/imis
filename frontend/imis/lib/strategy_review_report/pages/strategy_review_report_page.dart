@@ -272,7 +272,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
           _strategyReviewList = pageList.items;
-          filteredList = List.from(_strategyReviewList);
         });
       }
     } catch (e) {
@@ -779,14 +778,14 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                   final itemNumber = index + 1;
 
                                   final matchedKra = kraListRoadmap.firstWhere(
-                                    (k) => k.kraId == review.kraRoadMapId,
+                                    (k) => k.kraName == review.kraRoadMapName,
                                     orElse:
                                         () => KraRoadmapRole(
                                           id: 0,
                                           kraId: 0,
                                           roleId: '',
                                           kraName:
-                                              'KRA #${review.kraRoadMapId}',
+                                              'KRA #${review.kraRoadMapName}',
                                           strategicObjectives: '',
                                         ),
                                   );
@@ -818,9 +817,10 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                           Expanded(
                                             flex: 2,
                                             child: Text(
-                                              _dateConverter.toJson(
-                                                DateTime.parse(postingDate),
-                                              ),
+                                              // _dateConverter.toJson(
+                                              //   DateTime.parse(postingDate),
+                                              // ),
+                                              review.strategyReviewPeriod ?? '',
                                               style: TextStyle(fontSize: 12),
                                             ),
                                           ),
@@ -828,58 +828,65 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                             flex: 2,
                                             child: Row(
                                               children: [
-                                                Tooltip(
-                                                  message: 'Edit',
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      Icons.edit_outlined,
-                                                      size: 16,
-                                                    ),
-                                                    onPressed: () async {
-                                                      final existing =
-                                                          await _strategyReviewReport
-                                                              .getStrategyReviewById(
-                                                                review.id,
-                                                              );
+                                                PermissionWidget(
+                                                  permission:
+                                                      AppPermissions
+                                                          .viewStrategyReview,
+                                                  child: Tooltip(
+                                                    message: 'Edit',
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons.edit_outlined,
+                                                        size: 16,
+                                                      ),
+                                                      onPressed: () async {
+                                                        final existing =
+                                                            await _strategyReviewReport
+                                                                .getStrategyReviewById(
+                                                                  review.id,
+                                                                );
 
-                                                      final matchedKra =
-                                                          kraListRoadmap.firstWhere(
-                                                            (k) =>
-                                                                k.kraId ==
-                                                                review
-                                                                    .kraRoadMapId,
-                                                            orElse:
-                                                                () => KraRoadmapRole(
-                                                                  id: 0,
-                                                                  kraId: 0,
-                                                                  roleId: '',
-                                                                  kraName: '',
-                                                                  strategicObjectives:
-                                                                      '',
-                                                                ),
-                                                          );
+                                                        final matchedKra =
+                                                            kraListRoadmap.firstWhere(
+                                                              (k) =>
+                                                                  k.kraId ==
+                                                                  review
+                                                                      .kraRoadMapId,
+                                                              orElse:
+                                                                  () => KraRoadmapRole(
+                                                                    id: 0,
+                                                                    kraId: 0,
+                                                                    roleId: '',
+                                                                    kraName: '',
+                                                                    strategicObjectives:
+                                                                        '',
+                                                                  ),
+                                                            );
 
-                                                      await showStrategyReviewReportDialog(
-                                                        context,
-                                                        kraRoadMapId:
-                                                            review.kraRoadMapId,
-                                                        year:
-                                                            DateTime.parse(
+                                                        await showStrategyReviewReportDialog(
+                                                          context,
+                                                          kraRoadMapId:
                                                               review
-                                                                  .postingDate,
-                                                            ).year,
-                                                        kraName:
-                                                            matchedKra.kraName,
-                                                        strategicObjectives:
-                                                            review
-                                                                .strategicObjective ??
-                                                            '',
-                                                        existingReview:
-                                                            existing,
-                                                      );
+                                                                  .kraRoadMapId,
+                                                          year:
+                                                              DateTime.parse(
+                                                                review
+                                                                    .postingDate,
+                                                              ).year,
+                                                          kraName:
+                                                              matchedKra
+                                                                  .kraName,
+                                                          strategicObjectives:
+                                                              review
+                                                                  .strategicObjective ??
+                                                              '',
+                                                          existingReview:
+                                                              existing,
+                                                        );
 
-                                                      fetchStrategyReviews();
-                                                    },
+                                                        fetchStrategyReviews();
+                                                      },
+                                                    ),
                                                   ),
                                                 ),
                                                 Tooltip(
@@ -901,17 +908,22 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                     ),
                                                   ),
                                                 ),
-                                                IconButton(
-                                                  icon: const Icon(
-                                                    CupertinoIcons
-                                                        .delete_simple,
-                                                    size: 16,
-                                                    color: Colors.redAccent,
+                                                PermissionWidget(
+                                                  permission:
+                                                      AppPermissions
+                                                          .deleteStrategyReview,
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      CupertinoIcons
+                                                          .delete_simple,
+                                                      size: 16,
+                                                      color: Colors.redAccent,
+                                                    ),
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          review.id.toString(),
+                                                        ),
                                                   ),
-                                                  onPressed:
-                                                      () => showDeleteDialog(
-                                                        review.id.toString(),
-                                                      ),
                                                 ),
                                               ],
                                             ),
@@ -947,35 +959,143 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                               ),
                                             ),
                                             const Spacer(),
-                                            PopupMenuButton<String>(
-                                              color:
-                                                  Theme.of(context).cardColor,
-                                              icon: const Icon(Icons.more_vert),
-                                              onSelected: (value) {
-                                                if (value == 'delete') {
-                                                  showDeleteDialog(
-                                                    review.id.toString(),
-                                                  );
-                                                }
-                                              },
-                                              itemBuilder:
-                                                  (_) => [
-                                                    const PopupMenuItem(
-                                                      value: 'delete',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            CupertinoIcons
-                                                                .delete_simple,
-                                                            color: Colors.red,
-                                                            size: 16,
+                                            PermissionWidget(
+                                              child: PopupMenuButton<String>(
+                                                color:
+                                                    Theme.of(context).cardColor,
+                                                icon: const Icon(
+                                                  Icons.more_vert,
+                                                ),
+                                                onSelected: (value) async {
+                                                  if (value == 'edit' &&
+                                                      permissionService
+                                                          .hasPermission(
+                                                            AppPermissions
+                                                                .editStrategyReview,
+                                                          )) {
+                                                    final existing =
+                                                        await _strategyReviewReport
+                                                            .getStrategyReviewById(
+                                                              review.id,
+                                                            );
+
+                                                    final matchedKra =
+                                                        kraListRoadmap.firstWhere(
+                                                          (k) =>
+                                                              k.kraId ==
+                                                              review
+                                                                  .kraRoadMapId,
+                                                          orElse:
+                                                              () => KraRoadmapRole(
+                                                                id: 0,
+                                                                kraId: 0,
+                                                                roleId: '',
+                                                                kraName: '',
+                                                                strategicObjectives:
+                                                                    '',
+                                                              ),
+                                                        );
+
+                                                    await showStrategyReviewReportDialog(
+                                                      context,
+                                                      kraRoadMapId:
+                                                          review.kraRoadMapId,
+                                                      year:
+                                                          DateTime.parse(
+                                                            review.postingDate,
+                                                          ).year,
+                                                      kraName:
+                                                          matchedKra.kraName,
+                                                      strategicObjectives:
+                                                          review
+                                                              .strategicObjective ??
+                                                          '',
+                                                      existingReview: existing,
+                                                    );
+
+                                                    fetchStrategyReviews();
+                                                  }
+                                                  if (value == 'preview') {
+                                                    openStrategyReviewReportPreview(
+                                                      review.id.toString(),
+                                                      review.kraRoadMapId
+                                                          .toString(),
+                                                      context: context,
+                                                    );
+                                                  }
+                                                  if (value == 'delete') {
+                                                    showDeleteDialog(
+                                                      review.id.toString(),
+                                                    );
+                                                  }
+                                                },
+                                                itemBuilder:
+                                                    (_) => [
+                                                      PopupMenuItem(
+                                                        value: 'edit',
+                                                        child: PermissionWidget(
+                                                          permission:
+                                                              AppPermissions
+                                                                  .viewStrategyReview,
+                                                          child: const Row(
+                                                            children: [
+                                                              Icon(
+                                                                Icons
+                                                                    .edit_outlined,
+                                                                size: 16,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 8,
+                                                              ),
+                                                              Text('Edit'),
+                                                            ],
                                                           ),
-                                                          SizedBox(width: 8),
-                                                          Text('Delete'),
-                                                        ],
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ],
+                                                      const PopupMenuItem(
+                                                        value: 'preview',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .description_outlined,
+                                                              size: 16,
+                                                              color:
+                                                                  Colors
+                                                                      .blueAccent,
+                                                            ),
+                                                            SizedBox(width: 8),
+                                                            Text(
+                                                              'Print preview',
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      PopupMenuItem(
+                                                        value: 'delete',
+                                                        child: PermissionWidget(
+                                                          permission:
+                                                              AppPermissions
+                                                                  .deleteStrategyReview,
+                                                          child: Row(
+                                                            children: [
+                                                              Icon(
+                                                                CupertinoIcons
+                                                                    .delete_simple,
+                                                                color:
+                                                                    Colors.red,
+                                                                size: 16,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 8,
+                                                              ),
+                                                              Text('Delete'),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -1209,15 +1329,13 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
   }
 
   Widget _buildRoadmapFilter() {
+    final options = kraListRoadmap.map((k) => k.kraName).toSet().toList();
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
       child: SizedBox(
         height: 38,
         child: SearchableDropdown(
-          items: [
-            "All Process (Core&Support)",
-            ...kraList.map((kra) => kra.name),
-          ],
+          items: ["All Process (Core&Support)", ...options],
           prefixIcon: Icons.account_tree_outlined,
           selectedItem: selectedFilter,
           hintText: "Filter KRA",
@@ -1239,20 +1357,33 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
             color: Colors.grey,
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SizedBox(
-            height: 38,
-            child: SearchableDropdown(
-              items: [
-                "All Process (Core&Support)",
-                ...kraList.map((kra) => kra.name),
-              ],
-              selectedItem: selectedFilter,
-              hintText: "Filter KRA",
-              searchHint: "Search Process...",
-              onChanged: (value) => setState(() => selectedFilter = value),
+        const Spacer(),
+        if (_hasActiveFilters)
+          TextButton.icon(
+            onPressed: _resetFilters,
+            icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+            label: Text(
+              'Clear',
+              style: TextStyle(fontSize: 12, color: Colors.red.shade400),
             ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        gap8px,
+        SizedBox(
+          height: 38,
+          child: SearchableDropdown(
+            items: [
+              "All Process (Core&Support)",
+              ...kraList.map((kra) => kra.name),
+            ],
+            selectedItem: selectedFilter,
+            hintText: "Filter KRA",
+            searchHint: "Search Process...",
+            onChanged: (value) => setState(() => selectedFilter = value),
           ),
         ),
         SizedBox(
@@ -1262,15 +1393,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
             child: _periodDropdown(),
           ),
         ),
-        if (_hasActiveFilters) ...[
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: _resetFilters,
-            icon: Icon(Icons.refresh, size: 18, color: Colors.red.shade400),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-          ),
-        ],
       ],
     );
   }

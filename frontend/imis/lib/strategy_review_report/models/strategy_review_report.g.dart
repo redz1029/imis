@@ -64,6 +64,8 @@ _$StrategyReviewDeliverableKpiRequestFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       isDeleted: json['isDeleted'] as bool?,
       rowVersion: json['rowVersion'] as String?,
+      measure: json['measure'] as String?,
+      target: json['target'] as String?,
       strategyReviewId: (json['strategyReviewId'] as num).toInt(),
       kpiId: (json['kpiId'] as num).toInt(),
       actualDate: json['actualDate'] as String?,
@@ -85,6 +87,8 @@ Map<String, dynamic> _$StrategyReviewDeliverableKpiRequestToJson(
   'strategyReviewId': instance.strategyReviewId,
   'kpiId': instance.kpiId,
   'actualDate': instance.actualDate,
+  'measure': instance.measure,
+  'target': instance.target,
   'status': instance.status,
   'kpiDetails': instance.kpiDetails,
 };
@@ -95,6 +99,8 @@ StrategyReviewDeliverableRequest _$StrategyReviewDeliverableRequestFromJson(
   id: (json['id'] as num).toInt(),
   isDeleted: json['isDeleted'] as bool?,
   rowVersion: json['rowVersion'] as String?,
+  deliverable: json['deliverable'] as String?,
+  keyResultArea: json['keyResultArea'] as String?,
   strategyReviewId: (json['strategyReviewId'] as num).toInt(),
   kraRoadmapid: (json['kraRoadmapid'] as num).toInt(),
   actualDate: json['actualDate'] as String?,
@@ -116,6 +122,8 @@ Map<String, dynamic> _$StrategyReviewDeliverableRequestToJson(
   'strategyReviewId': instance.strategyReviewId,
   'kraRoadmapid': instance.kraRoadmapid,
   'actualDate': instance.actualDate,
+  'deliverable': instance.deliverable,
+  'keyResultArea': instance.keyResultArea,
   'status': instance.status,
   'kraRoadMapDeliverableDetails': instance.kraRoadMapDeliverableDetails,
 };
@@ -151,6 +159,8 @@ StrategyReviewReport _$StrategyReviewReportFromJson(
           .toList(),
   strategyReviewPeriodId: (json['strategyReviewPeriodId'] as num?)?.toInt(),
   roleId: json['roleId'] as String?,
+  strategyReviewPeriod: json['strategyReviewPeriod'] as String?,
+  kraRoadMapName: json['kraRoadMapName'] as String?,
 );
 
 Map<String, dynamic> _$StrategyReviewReportToJson(
@@ -170,4 +180,6 @@ Map<String, dynamic> _$StrategyReviewReportToJson(
   'strategyReviewDeliverable': instance.strategyReviewDeliverable,
   'strategyReviewPeriodId': instance.strategyReviewPeriodId,
   'roleId': instance.roleId,
+  'strategyReviewPeriod': instance.strategyReviewPeriod,
+  'kraRoadMapName': instance.kraRoadMapName,
 };
