@@ -6,7 +6,8 @@ namespace IMIS.Domain
     {
         public required DateOnly StartDate { get; set;}
         public required DateOnly EndDate { get; set;}
-        public string? Remarks { get; set;}      
+        public string? Remarks { get; set;}
+        public bool? IsActive { get; set; }
     }
 }
 
