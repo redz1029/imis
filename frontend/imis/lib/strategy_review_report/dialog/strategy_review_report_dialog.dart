@@ -150,7 +150,6 @@ class StrategyReviewReportDialogState
   Future<void> _fetchData() async {
     try {
       final existing = widget.existingReview;
-
       if (existing != null) {
         final periods = await _commonService.fetchSrategyPeriod();
 
@@ -172,29 +171,27 @@ class StrategyReviewReportDialogState
           _stopCtrl.text = existing.stop ?? '';
           _startCtrl.text = existing.start ?? '';
 
+          // Build measure/target directly from the saved flat fields
           _kpiItems =
               existing.strategyReviewDeliverableKpi
                   ?.map(
                     (k) => StrategyReviewKpi(
                       k.kpiId,
-                      kpiDescription: k.kpiDetails?.kpiDescription,
-                      target: k.kpiDetails?.target,
+                      kpiDescription: k.measure,
+                      target: k.target,
                     ),
                   )
                   .toList() ??
               [];
 
+          // Build keyResultArea/deliverable directly from the saved flat fields
           _deliverableItems =
               existing.strategyReviewDeliverable
                   ?.map(
                     (d) => StrategyReviewDeliverable(
                       d.kraRoadmapid,
-                      kraDescription:
-                          d.kraRoadMapDeliverableDetails?.kraDescription,
-                      deliverableDescription:
-                          d
-                              .kraRoadMapDeliverableDetails
-                              ?.deliverableDescription,
+                      kraDescription: d.keyResultArea,
+                      deliverableDescription: d.deliverable,
                     ),
                   )
                   .toList() ??
@@ -309,6 +306,86 @@ class StrategyReviewReportDialogState
     super.dispose();
   }
 
+  // Future<void> _submit() async {
+  //   if (!_formKey.currentState!.validate()) return;
+
+  //   final request = StrategyReviewSaveRequest(
+  //     id: widget.existingReview?.id ?? 0,
+  //     isDeleted: false,
+  //     rowVersion: widget.existingReview?.rowVersion,
+  //     postingDate: DateTime.now().toUtc().toIso8601String(),
+  //     kraRoadMapId: widget.kraRoadMapId,
+  //     strategyReviewPeriodId: _selectedPeriod?.id.toString(),
+  //     strategicObjective: _strategicObjective,
+  //     officeNames: _contributingUnitsCtrl.text.trim(),
+  //     strategyReviewDeliverableKpi: List.generate(_kpiItems.length, (i) {
+  //       final existing = widget.existingReview?.strategyReviewDeliverableKpi
+  //           ?.firstWhere(
+  //             (k) => k.kpiId == _kpiItems[i].id,
+  //             orElse: () => StrategyReviewDeliverableKpiRequest.empty(),
+  //           );
+  //       return StrategyReviewDeliverableKpiRequest(
+  //         id: existing?.kpiId != 0 ? existing?.id ?? 0 : 0,
+  //         strategyReviewId: widget.existingReview?.id ?? 0,
+  //         isDeleted: false,
+  //         rowVersion: existing?.rowVersion,
+  //         kpiId: _kpiItems[i].id,
+  //         actualDate: _measureActualCtrls[i].text.trim(),
+  //         status: _measureStatuses[i].index,
+  //       );
+  //     }),
+  //     strategyReviewDeliverable: List.generate(_deliverableItems.length, (i) {
+  //       final existing = widget.existingReview?.strategyReviewDeliverable
+  //           ?.firstWhere(
+  //             (d) => d.kraRoadmapid == _deliverableItems[i].id,
+  //             orElse: () => StrategyReviewDeliverableRequest.empty(),
+  //           );
+  //       return StrategyReviewDeliverableRequest(
+  //         id: existing?.kraRoadmapid != 0 ? existing?.id ?? 0 : 0,
+  //         isDeleted: false,
+  //         rowVersion: existing?.rowVersion,
+  //         strategyReviewId: widget.existingReview?.id ?? 0,
+  //         kraRoadmapid: _deliverableItems[i].id,
+  //         actualDate: _kraActualCtrls[i].text.trim(),
+  //         status: _kraStatuses[i].index,
+  //       );
+  //     }),
+  //     continueText: _continueCtrl.text.trim(),
+  //     stop: _stopCtrl.text.trim(),
+  //     start: _startCtrl.text.trim(),
+  //     roleId: roleId,
+  //   );
+
+  //   setState(() => _isSaving = true);
+  //   try {
+  //     if (widget.existingReview != null) {
+  //       await _service.updateStrategyReview(request);
+  //     } else {
+  //       await _service.saveStrategyReview(request);
+  //     }
+
+  //     if (!mounted) return;
+  //     MotionToast.success(
+  //       toastAlignment: Alignment.topCenter,
+  //       description: Text(
+  //         widget.existingReview != null
+  //             ? 'Strategy review updated successfully'
+  //             : 'Strategy review saved successfully',
+  //       ),
+  //     ).show(context);
+  //     await Future.delayed(const Duration(milliseconds: 800));
+  //     if (!mounted) return;
+  //     Navigator.of(context).pop();
+  //   } catch (e) {
+  //     debugPrint('Submit error: $e');
+  //     if (!mounted) return;
+  //     setState(() => _isSaving = false);
+  //     MotionToast.error(
+  //       toastAlignment: Alignment.topCenter,
+  //       description: const Text('Failed to save. Please try again.'),
+  //     ).show(context);
+  //   }
+  // }
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -335,6 +412,8 @@ class StrategyReviewReportDialogState
           kpiId: _kpiItems[i].id,
           actualDate: _measureActualCtrls[i].text.trim(),
           status: _measureStatuses[i].index,
+          measure: _kpiItems[i].kpiDescription,
+          target: _kpiItems[i].target,
         );
       }),
       strategyReviewDeliverable: List.generate(_deliverableItems.length, (i) {
@@ -351,6 +430,8 @@ class StrategyReviewReportDialogState
           kraRoadmapid: _deliverableItems[i].id,
           actualDate: _kraActualCtrls[i].text.trim(),
           status: _kraStatuses[i].index,
+          keyResultArea: _deliverableItems[i].kraDescription,
+          deliverable: _deliverableItems[i].deliverableDescription,
         );
       }),
       continueText: _continueCtrl.text.trim(),

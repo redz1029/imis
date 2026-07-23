@@ -416,7 +416,10 @@ class _MonthlyReviewListDialogState extends State<MonthlyReviewListDialog> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder:
+          (_) => const Center(
+            child: CircularProgressIndicator(color: primaryColor),
+          ),
     );
 
     final postingDate = saved.postingDate ?? DateTime.now();
