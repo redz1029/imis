@@ -504,22 +504,42 @@ namespace IMIS.Persistence.KraRoadMapModule
                 Id = entity.Id
             };
         }
-
-        private async Task SaveDeliverableHistoryAsync(List<KraRoadMapDeliverable>? existingDeliverables, List<KraRoadMapDeliverable>? updatedDeliverables, long roadmapId, string userId, CancellationToken cancellationToken)
+       
+        private async Task SaveDeliverableHistoryAsync(List<KraRoadMapDeliverable>? existingDeliverables, List<KraRoadMapDeliverable>? updatedDeliverables,
+        long roadmapId,
+        string userId,
+        CancellationToken cancellationToken)
         {
-            if (existingDeliverables == null || updatedDeliverables == null)
+            if (existingDeliverables == null)
                 return;
 
             var db = _repository.GetDbContext();
+
+            updatedDeliverables ??= new List<KraRoadMapDeliverable>();
 
             foreach (var existing in existingDeliverables)
             {
                 var updated = updatedDeliverables.FirstOrDefault(x => x.Id == existing.Id);
 
                 if (updated == null)
-                    continue;
+                {
+                    db.Set<KraRoadmapHistory>().Add(new KraRoadmapHistory
+                    {
+                        Id = 0,
+                        KraRoadMapId = roadmapId,
+                        KraDescription = existing.KraDescription,
+                        DeliverableDescription = existing.DeliverableDescription,
+                        Year = existing.Year,
+                        PostingDate = DateTime.UtcNow,
+                        UserId = userId
+                    });
 
-                bool hasChanges = NormalizeText(existing.KraDescription) != NormalizeText(updated.KraDescription) || NormalizeText(existing.DeliverableDescription) != NormalizeText(updated.DeliverableDescription) ||
+                    continue;
+                }
+
+                // Updated
+                bool hasChanges = NormalizeText(existing.KraDescription) != NormalizeText(updated.KraDescription) ||
+                    NormalizeText(existing.DeliverableDescription) != NormalizeText(updated.DeliverableDescription) ||
                     existing.Year != updated.Year;
 
                 if (!hasChanges)

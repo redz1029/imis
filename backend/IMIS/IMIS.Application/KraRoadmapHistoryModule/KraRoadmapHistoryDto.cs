@@ -27,11 +27,7 @@ namespace IMIS.Application.KraRoadmapHistoryModule
             this.KraRoadmapName = KraRoadmapHistoryDto.KraRoadMap?.Kra?.Name;
             this.PostingDate = KraRoadmapHistoryDto!.PostingDate;
             this.UserId  = KraRoadmapHistoryDto.UserId;
-            this.UserFullName = KraRoadmapHistoryDto.User == null ? null 
-                : $"{KraRoadmapHistoryDto.User.Prefix}" +
-                  $"{KraRoadmapHistoryDto.User.FirstName}" +
-                  $"{KraRoadmapHistoryDto.User.MiddleName}" +
-                  $"{KraRoadmapHistoryDto.User.LastName}".Replace("  ", " ").Trim();
+            this.UserFullName = KraRoadmapHistoryDto.User == null ? null : $"{KraRoadmapHistoryDto.User.Prefix} {KraRoadmapHistoryDto.User.FirstName} {KraRoadmapHistoryDto.User.MiddleName} {KraRoadmapHistoryDto.User.LastName}".Replace("  ", " ").Trim();
         }
         public override KraRoadmapHistory ToEntity()
         {
