@@ -1,4 +1,5 @@
-﻿using Base.Auths;
+﻿using System.Text.RegularExpressions;
+using Base.Auths;
 using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
@@ -490,6 +491,8 @@ namespace IMIS.Persistence.KraRoadMapModule
                 }
 
                 var updatedEntity = dto.ToEntity();
+
+                await SaveDeliverableHistoryAsync(entity.Deliverables, updatedEntity.Deliverables, entity.Id,  currentUser.Id, cancellationToken);
                 UpdateDeliverables(entity, updatedEntity);
                 UpdateKpis(entity, updatedEntity);
 
@@ -500,6 +503,48 @@ namespace IMIS.Persistence.KraRoadMapModule
             {
                 Id = entity.Id
             };
+        }
+
+        private async Task SaveDeliverableHistoryAsync(List<KraRoadMapDeliverable>? existingDeliverables, List<KraRoadMapDeliverable>? updatedDeliverables, long roadmapId, string userId, CancellationToken cancellationToken)
+        {
+            if (existingDeliverables == null || updatedDeliverables == null)
+                return;
+
+            var db = _repository.GetDbContext();
+
+            foreach (var existing in existingDeliverables)
+            {
+                var updated = updatedDeliverables.FirstOrDefault(x => x.Id == existing.Id);
+
+                if (updated == null)
+                    continue;
+
+                bool hasChanges = NormalizeText(existing.KraDescription) != NormalizeText(updated.KraDescription) || NormalizeText(existing.DeliverableDescription) != NormalizeText(updated.DeliverableDescription) ||
+                    existing.Year != updated.Year;
+
+                if (!hasChanges)
+                    continue;
+
+                db.Set<KraRoadmapHistory>().Add(new KraRoadmapHistory
+                {
+                    Id = 0,
+                    KraRoadMapId = roadmapId,
+                    KraDescription = existing.KraDescription,
+                    DeliverableDescription = existing.DeliverableDescription,
+                    Year = existing.Year,
+                    PostingDate = DateTime.UtcNow,
+                    UserId = userId
+                });
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        private static string NormalizeText(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return Regex.Replace(value.Trim(), @"\s+", " ");
         }
         private async Task ValidateUserRoleAsync(string roleId, IList<string> userRoleNames)
         {

@@ -57,6 +57,7 @@ namespace IMIS.Persistence
         public DbSet<PerformanceValidationToolSignatory> PerformanceValidationToolSignatory { get; set; }
         public DbSet<PerformanceValidationTool> PerformanceValidationTool { get; set; }
         public DbSet<CalendarActivity> CalendarActivity { get; set; }
+        public DbSet<KraRoadmapHistory> KraRoadmapHistory { get; set; }
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
         public DbSet<IsoStandard> IsoStandards { get; set; }
