@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="02/24/2026 11:10:55" ReportInfo.Modified="03/12/2026 16:24:42" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="02/24/2026 11:10:55" ReportInfo.Modified="07/24/2026 16:54:10" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -192,34 +192,34 @@ namespace FastReport
   <Dictionary>
     <BusinessObjectDataSource Name="ReportKraDto" ReferenceName="ReportKraDto" DataType="System.Int32" Enabled="true">
       <Column Name="Id" DataType="System.Int32"/>
-      <Column Name="Service_KraName1" DataType="System.String"/>    
-      <Column Name="Service_StrategicObjective1" DataType="System.String"/>        
+      <Column Name="Service_KraName1" DataType="System.String"/>
+      <Column Name="Service_StrategicObjective1" DataType="System.String"/>
       <Column Name="Service_Year1" DataType="System.Int32"/>
       <Column Name="Service_Year2" DataType="System.Int32"/>
       <Column Name="Service_Year3" DataType="System.Int32"/>
       <Column Name="Service_Year4" DataType="System.Int32"/>
-      <Column Name="Service_Year5" DataType="System.Int32"/>		
-      <Column Name="Training_KraName1" DataType="System.String"/> 
-      <Column Name="Training_StrategicObjective1" DataType="System.String"/>  		
+      <Column Name="Service_Year5" DataType="System.Int32"/>
+      <Column Name="Training_KraName1" DataType="System.String"/>
+      <Column Name="Training_StrategicObjective1" DataType="System.String"/>
       <Column Name="Research_KraName1" DataType="System.String"/>
-      <Column Name="Research_StrategicObjective1" DataType="System.String"/>     
+      <Column Name="Research_StrategicObjective1" DataType="System.String"/>
       <Column Name="Linkages_KraName1" DataType="System.String"/>
-      <Column Name="Linkages_StrategicObjective1" DataType="System.String"/>      
+      <Column Name="Linkages_StrategicObjective1" DataType="System.String"/>
       <Column Name="Safety_KraName1" DataType="System.String"/>
-      <Column Name="Safety_StrategicObjective1" DataType="System.String"/>     
+      <Column Name="Safety_StrategicObjective1" DataType="System.String"/>
       <Column Name="HumanResourceKra_KraName1" DataType="System.String"/>
-      <Column Name="HumanResourceKra_StrategicObjective1" DataType="System.String"/>     
+      <Column Name="HumanResourceKra_StrategicObjective1" DataType="System.String"/>
       <Column Name="HumanResourceKra_Year1" DataType="System.Int32"/>
       <Column Name="HumanResourceKra_Year2" DataType="System.Int32"/>
       <Column Name="HumanResourceKra_Year3" DataType="System.Int32"/>
       <Column Name="HumanResourceKra_Year4" DataType="System.Int32"/>
-      <Column Name="HumanResourceKra_Year5" DataType="System.Int32"/>		
+      <Column Name="HumanResourceKra_Year5" DataType="System.Int32"/>
       <Column Name="Infrastructure_KraName1" DataType="System.String"/>
-      <Column Name="Infrastructure_StrategicObjective1" DataType="System.String"/>     
+      <Column Name="Infrastructure_StrategicObjective1" DataType="System.String"/>
       <Column Name="InformationCapital_KraName1" DataType="System.String"/>
-      <Column Name="InformationCapital_StrategicObjective1" DataType="System.String"/>      
+      <Column Name="InformationCapital_StrategicObjective1" DataType="System.String"/>
       <Column Name="FinacialStewardship_KraName1" DataType="System.String"/>
-      <Column Name="FinacialStewardship_StrategicObjective1" DataType="System.String"/>      
+      <Column Name="FinacialStewardship_StrategicObjective1" DataType="System.String"/>
       <BusinessObjectDataSource Name="ServiceList" DataType="System.Int32" Enabled="true">
         <Column Name="KraName" DataType="System.String"/>
         <Column Name="StrategicObjective" DataType="System.String"/>
@@ -330,7 +330,7 @@ namespace FastReport
       </BusinessObjectDataSource>
     </BusinessObjectDataSource>
   </Dictionary>
-  <ReportPage Name="Core" RawPaperSize="9" Watermark.Font="Arial, 60pt" UnlimitedHeight="true">
+  <ReportPage Name="Core" RawPaperSize="9" Watermark.Font="Arial, 60pt">
     <ReportTitleBand Name="ReportTitle1" Width="718.2" Height="95.4">
       <ShapeObject Name="Shape10" Left="9.6" Top="49.6" Width="695.3" Height="45.8" Fill.Color="219, 165, 42, 42"/>
       <ShapeObject Name="Shape11" Left="9.45" Top="9.35" Width="695.5" Height="42.71" Fill.Color="219, 165, 42, 42"/>
@@ -356,7 +356,7 @@ namespace FastReport
       <TextObject Name="Text252" Left="607.95" Top="54.05" Width="44.5" Height="37.9" Text="[ReportKraDto.Service_Year4]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
       <TextObject Name="Text253" Left="655.75" Top="54.05" Width="44.5" Height="37.9" Text="[ReportKraDto.Service_Year5]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
     </ReportTitleBand>
-    <PageHeaderBand Name="PageHeader3" Top="98.07" Width="718.2" Height="130.38" CanGrow="true">
+    <ReportSummaryBand Name="ReportSummary1" Top="98.6" Width="718.2" Height="130.38" CanGrow="true">
       <ShapeObject Name="Shape12" Left="9.6" Top="-1.65" Width="695.5" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
       <LineObject Name="Line53" Left="31.8" Top="-2" Height="132.1" CanGrow="true" GrowToBottom="true"/>
       <TextObject Name="Text254" Left="33.8" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Service_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
@@ -371,29 +371,27 @@ namespace FastReport
       <LineObject Name="Line61" Left="558" Top="-1.55" Height="130.85" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line62" Left="605.8" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line63" Left="655.05" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-      <ChildBand Name="Child1" Top="231.11" Width="718.2" Height="131.85" CanGrow="true" StartNewPage="true">
+      <ChildBand Name="Child8" Top="232.18" Width="718.2" Height="131.38" CanGrow="true">
         <SubreportObject Name="TrainingListPage" Left="199.34" Top="1" Width="503.12" Height="128.9" GrowToBottom="true" ReportPage="Page5" PrintOnParent="true"/>
         <ShapeObject Name="Shape13" Left="9.45" Top="-0.65" Width="695.5" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
         <LineObject Name="Line64" Left="31.65" Top="-1" Height="132.1" CanGrow="true" GrowToBottom="true"/>
-        <TextObject Name="Text265" Left="33.65" Top="1" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Training_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
         <LineObject Name="Line65" Left="181.4" Top="-1.2" Height="132.1" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line66" Left="198.9" Top="-1.55" Height="132.1" CanGrow="true" GrowToBottom="true"/>
-        <TextObject Name="Text266" Left="11.3" Top="2" Width="19.45" Height="126.85" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtService_BeforePrint" Text="[ReportKraDto.Training_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
         <LineObject Name="Line68" Left="402.65" Top="-1" Height="131.85" CanGrow="true" GrowToBottom="true"/>
-        <LineObject Name="Line67" Left="340.6" Height="130.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line69" Left="462.35" Top="-1" Height="131.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line70" Left="510.15" Top="-1" Height="131.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line71" Left="557.85" Top="-0.55" Height="130.85" CanGrow="true" GrowToBottom="true"/>
+        <TextObject Name="Text265" Left="33.65" Top="1" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Training_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+        <TextObject Name="Text266" Left="11.3" Top="2" Width="19.45" Height="126.85" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtService_BeforePrint" Text="[ReportKraDto.Training_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+        <LineObject Name="Line67" Left="340.6" Height="130.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line72" Left="605.65" Height="130.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line73" Left="654.9" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-        <ChildBand Name="Child2" Top="365.63" Width="718.2" Height="130.93" CanGrow="true" StartNewPage="true">
+        <ChildBand Name="Child9" Top="366.76" Width="718.2" Height="130.93" CanGrow="true">
           <SubreportObject Name="ResearchListPage" Left="199.21" Width="504.12" Height="128.9" GrowToBottom="true" ReportPage="Page6" PrintOnParent="true"/>
           <ShapeObject Name="Shape16" Left="9.45" Top="-1.1" Width="695.5" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
           <LineObject Name="Line75" Left="31.65" Top="-1.45" Height="132.1" CanGrow="true" GrowToBottom="true"/>
-          <TextObject Name="Text275" Left="33.65" Top="0.55" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Research_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
           <LineObject Name="Line76" Left="181.4" Top="-1.65" Height="132.1" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line77" Left="198.9" Top="-2" Height="132.1" CanGrow="true" GrowToBottom="true"/>
-          <TextObject Name="Text276" Left="11.3" Top="1.55" Width="19.45" Height="126.85" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtService_BeforePrint" Text="[ReportKraDto.Research_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
           <LineObject Name="Line78" Left="402.65" Top="-1.45" Height="131.85" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line79" Left="340.6" Top="-0.45" Height="130.85" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line80" Left="462.35" Top="-1.45" Height="131.85" CanGrow="true" GrowToBottom="true"/>
@@ -401,14 +399,14 @@ namespace FastReport
           <LineObject Name="Line82" Left="557.85" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line83" Left="605.65" Top="-0.45" Height="130.85" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line84" Left="654.9" Top="-0.45" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-          <ChildBand Name="Child3" Top="499.23" Width="718.2" Height="130.93" CanGrow="true" StartNewPage="true">
+          <TextObject Name="Text275" Left="33.65" Top="0.55" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Research_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+          <TextObject Name="Text276" Left="11.3" Top="1.55" Width="19.45" Height="126.85" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtService_BeforePrint" Text="[ReportKraDto.Research_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+          <ChildBand Name="Child10" Top="500.89" Width="718.2" Height="130.93" CanGrow="true">
             <SubreportObject Name="LinkagesListPage" Left="200.21" Width="502.12" Height="128.9" GrowToBottom="true" ReportPage="Page7" PrintOnParent="true"/>
             <ShapeObject Name="Shape18" Left="9.45" Top="-1.1" Width="695.5" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
             <LineObject Name="Line86" Left="31.65" Top="-1.45" Height="132.1" CanGrow="true" GrowToBottom="true"/>
-            <TextObject Name="Text285" Left="33.65" Top="1" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Linkages_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
             <LineObject Name="Line87" Left="181.4" Top="-1.65" Height="132.1" CanGrow="true" GrowToBottom="true"/>
             <LineObject Name="Line88" Left="198.9" Top="-2" Height="132.1" CanGrow="true" GrowToBottom="true"/>
-            <TextObject Name="Text286" Left="11.3" Top="1" Width="19.45" Height="126.85" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtService_BeforePrint" Text="[ReportKraDto.Linkages_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
             <LineObject Name="Line89" Left="402.65" Top="-1.45" Height="131.85" CanGrow="true" GrowToBottom="true"/>
             <LineObject Name="Line90" Left="340.6" Top="-0.45" Height="130.85" CanGrow="true" GrowToBottom="true"/>
             <LineObject Name="Line91" Left="462.35" Top="-1.45" Height="131.85" CanGrow="true" GrowToBottom="true"/>
@@ -416,11 +414,11 @@ namespace FastReport
             <LineObject Name="Line93" Left="557.85" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
             <LineObject Name="Line94" Left="605.65" Top="-0.45" Height="130.85" CanGrow="true" GrowToBottom="true"/>
             <LineObject Name="Line95" Left="654.9" Top="-0.45" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-            <ChildBand Name="Child4" Top="632.82" Width="718.2" Height="133.93" CanGrow="true" StartNewPage="true">
+            <TextObject Name="Text285" Left="33.65" Top="1" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Linkages_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+            <TextObject Name="Text286" Left="11.3" Top="1" Width="19.45" Height="126.85" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtService_BeforePrint" Text="[ReportKraDto.Linkages_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+            <ChildBand Name="Child11" Top="635.02" Width="718.2" Height="130.93" CanGrow="true">
               <SubreportObject Name="SafetyListPage" Left="200.21" Width="503.12" Height="128.9" GrowToBottom="true" ReportPage="Page8" PrintOnParent="true"/>
               <ShapeObject Name="Shape20" Left="9.45" Top="-1.1" Width="695.5" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-              <TextObject Name="Text295" Left="33.65" Top="1.45" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Safety_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
-              <TextObject Name="Text296" Left="11.3" Top="1.45" Width="19.45" Height="126.85" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtService_BeforePrint" Text="[ReportKraDto.Safety_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
               <LineObject Name="Line97" Left="31.65" Top="-1.45" Height="132.1" CanGrow="true" GrowToBottom="true"/>
               <LineObject Name="Line98" Left="181.4" Top="-1.65" Height="132.1" CanGrow="true" GrowToBottom="true"/>
               <LineObject Name="Line99" Left="198.9" Top="-2" Height="132.1" CanGrow="true" GrowToBottom="true"/>
@@ -431,11 +429,13 @@ namespace FastReport
               <LineObject Name="Line104" Left="557.85" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
               <LineObject Name="Line105" Left="605.65" Top="-0.45" Height="130.85" CanGrow="true" GrowToBottom="true"/>
               <LineObject Name="Line106" Left="654.9" Top="-0.45" Height="130.85" CanGrow="true" GrowToBottom="true"/>
+              <TextObject Name="Text295" Left="33.65" Top="1.45" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Safety_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+              <TextObject Name="Text296" Left="11.3" Top="1.45" Width="19.45" Height="126.85" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtService_BeforePrint" Text="[ReportKraDto.Safety_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
             </ChildBand>
           </ChildBand>
         </ChildBand>
       </ChildBand>
-    </PageHeaderBand>
+    </ReportSummaryBand>
   </ReportPage>
   <ReportPage Name="Support" Watermark.Font="Arial, 60pt">
     <ReportTitleBand Name="ReportTitle2" Width="718.2" Height="95.5">
@@ -463,7 +463,8 @@ namespace FastReport
       <TextObject Name="Text314" Left="607.95" Top="54.15" Width="44.5" Height="37.9" Text="[ReportKraDto.HumanResourceKra_Year4]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
       <TextObject Name="Text315" Left="655.75" Top="54.15" Width="44.5" Height="37.9" Text="[ReportKraDto.HumanResourceKra_Year5]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
     </ReportTitleBand>
-    <PageHeaderBand Name="PageHeader4" Top="97.5" Width="718.2" Height="129.93" CanGrow="true">
+    <ReportSummaryBand Name="ReportSummary2" Top="100.83" Width="718.2" Height="129.93" CanGrow="true">
+      <TextObject Name="Text326" Left="10.9" Width="18.45" Height="127.9" GrowToBottom="true" BeforePrintEvent="Text326_BeforePrint" CanBreak="false" Text="[ReportKraDto.HumanResourceKra_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 10pt, style=Bold"/>
       <SubreportObject Name="HumanResourceListPage" Left="200.21" Top="-1" Width="503.12" Height="128.9" GrowToBottom="true" ReportPage="Page3" PrintOnParent="true"/>
       <ShapeObject Name="Shape24" Left="9.45" Top="-2.1" Width="695.5" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
       <LineObject Name="Line118" Left="31.65" Top="-2.45" Height="132.1" CanGrow="true" GrowToBottom="true"/>
@@ -477,39 +478,40 @@ namespace FastReport
       <LineObject Name="Line125" Left="557.85" Top="-2" Height="130.85" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line126" Left="605.65" Top="-1.45" Height="130.85" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line127" Left="654.9" Top="-1.45" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-      <TextObject Name="Text326" Left="10.9" Width="18.45" Height="127.9" GrowToBottom="true" BeforePrintEvent="Text326_BeforePrint" CanBreak="false" Text="[ReportKraDto.HumanResourceKra_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 10pt, style=Bold"/>
-      <ChildBand Name="Child5" Top="229.43" Width="718.2" Height="130.58" CanGrow="true">
+      <ChildBand Name="Child1" Top="236.1" Width="718.2" Height="130.58" CanGrow="true">
         <SubreportObject Name="InfrastructureListPage" Left="200.21" Width="503.12" Height="128.9" GrowToBottom="true" ReportPage="Page9" PrintOnParent="true"/>
+        <TextObject Name="Text327" Left="33.65" Top="0.2" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Infrastructure_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+        <LineObject Name="Line132" Left="340.6" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
+        <LineObject Name="Line137" Left="605.65" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
+        <LineObject Name="Line138" Left="654.9" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
+        <TextObject Name="Text328" Left="11.9" Top="1" Width="17.5" Height="125.9" GrowToBottom="true" BeforePrintEvent="Text328_BeforePrint" CanBreak="false" Text="[ReportKraDto.Infrastructure_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 10pt, style=Bold"/>
         <ShapeObject Name="Shape26" Left="9.45" Top="-1.45" Width="695.5" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
         <LineObject Name="Line129" Left="31.65" Top="-1.8" Height="132.1" CanGrow="true" GrowToBottom="true"/>
-        <TextObject Name="Text327" Left="33.65" Top="0.2" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.Infrastructure_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
         <LineObject Name="Line130" Left="181.4" Top="-2" Height="132.1" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line131" Left="198.9" Top="-1.35" Height="131.1" CanGrow="true" GrowToBottom="true"/>
-        <LineObject Name="Line132" Left="340.6" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line133" Left="402.65" Top="-1.8" Height="131.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line134" Left="462.35" Top="-1.8" Height="131.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line135" Left="510.15" Top="-1.8" Height="131.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line136" Left="557.85" Top="-1.35" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-        <LineObject Name="Line137" Left="605.65" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-        <LineObject Name="Line138" Left="654.9" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-        <TextObject Name="Text328" Left="11.9" Top="1" Width="17.5" Height="125.9" GrowToBottom="true" BeforePrintEvent="Text328_BeforePrint" CanBreak="false" Text="[ReportKraDto.Infrastructure_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 10pt, style=Bold"/>
-        <ChildBand Name="Child6" Top="362.01" Width="718.2" Height="130.58" CanGrow="true">
+        <ChildBand Name="Child2" Top="372.01" Width="718.2" Height="130.58" CanGrow="true">
           <SubreportObject Name="InformationCapitalListPage" Left="200.21" Width="503.12" Height="128.9" GrowToBottom="true" ReportPage="Page10" PrintOnParent="true"/>
+          <TextObject Name="Text337" Left="33.65" Top="0.2" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.InformationCapital_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+          <LineObject Name="Line143" Left="340.6" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
+          <LineObject Name="Line148" Left="605.65" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
+          <LineObject Name="Line149" Left="654.9" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
+          <TextObject Name="Text338" Left="11.45" Top="1.45" Width="18.9" Height="125.85" GrowToBottom="true" BeforePrintEvent="Text338_BeforePrint" CanBreak="false" Text="[ReportKraDto.InformationCapital_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 10pt, style=Bold"/>
           <ShapeObject Name="Shape28" Left="9.45" Top="-1.45" Width="695.5" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
           <LineObject Name="Line140" Left="31.65" Top="-1.8" Height="132.1" CanGrow="true" GrowToBottom="true"/>
-          <TextObject Name="Text337" Left="33.65" Top="0.2" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.InformationCapital_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
           <LineObject Name="Line141" Left="181.4" Top="-2" Height="132.1" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line142" Left="198.9" Top="-1.35" Height="131.1" CanGrow="true" GrowToBottom="true"/>
-          <LineObject Name="Line143" Left="340.6" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line144" Left="402.65" Top="-1.8" Height="131.85" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line145" Left="462.35" Top="-1.8" Height="131.85" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line146" Left="510.15" Top="-1.8" Height="131.85" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line147" Left="557.85" Top="-1.35" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-          <LineObject Name="Line148" Left="605.65" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-          <LineObject Name="Line149" Left="654.9" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-          <TextObject Name="Text338" Left="11.45" Top="1.45" Width="18.9" Height="125.85" GrowToBottom="true" BeforePrintEvent="Text338_BeforePrint" CanBreak="false" Text="[ReportKraDto.InformationCapital_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 10pt, style=Bold"/>
-          <ChildBand Name="Child7" Top="494.59" Width="718.2" Height="130.58" CanGrow="true">
+          <ChildBand Name="Child3" Top="507.92" Width="718.2" Height="130.58" CanGrow="true">
             <SubreportObject Name="FinancialListPage" Left="199.21" Width="504.12" Height="128.9" GrowToBottom="true" ReportPage="Page11" PrintOnParent="true"/>
+            <TextObject Name="Text347" Left="33.65" Top="0.65" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.FinacialStewardship_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+            <TextObject Name="Text348" Left="11.9" Top="1" Width="17.35" Height="125.85" GrowToBottom="true" BeforePrintEvent="Text348_BeforePrint" CanBreak="false" Text="[ReportKraDto.FinacialStewardship_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 10pt, style=Bold"/>
             <ShapeObject Name="Shape30" Left="9.45" Top="-1.45" Width="695.5" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
             <LineObject Name="Line151" Left="31.65" Top="-1.8" Height="132.1" CanGrow="true" GrowToBottom="true"/>
             <LineObject Name="Line152" Left="181.4" Top="-2" Height="132.1" CanGrow="true" GrowToBottom="true"/>
@@ -521,12 +523,10 @@ namespace FastReport
             <LineObject Name="Line158" Left="557.85" Top="-1.35" Height="130.85" CanGrow="true" GrowToBottom="true"/>
             <LineObject Name="Line159" Left="605.65" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
             <LineObject Name="Line160" Left="654.9" Top="-0.8" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-            <TextObject Name="Text347" Left="33.65" Top="0.65" Width="146.5" Height="126.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" GrowToBottom="true" Text="[ReportKraDto.FinacialStewardship_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
-            <TextObject Name="Text348" Left="11.9" Top="1" Width="17.35" Height="125.85" GrowToBottom="true" BeforePrintEvent="Text348_BeforePrint" CanBreak="false" Text="[ReportKraDto.FinacialStewardship_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 10pt, style=Bold"/>
           </ChildBand>
         </ChildBand>
       </ChildBand>
-    </PageHeaderBand>
+    </ReportSummaryBand>
   </ReportPage>
   <ReportPage Name="Page4" Watermark.Font="Arial, 60pt">
     <DataBand Name="Data1" Width="718.2" Height="76.6" CanGrow="true" CanShrink="true" DataSource="ServiceList">
