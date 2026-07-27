@@ -37,7 +37,6 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
   final _paginationUtils = PaginationUtil(Dio());
   final dio = Dio();
   TextEditingController searchController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
   String? _selectedAuditor;
   String? _selectedOffice;
   String? _selectedPeriod;
@@ -73,7 +72,6 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
       final period = await _commonService.fetchPgsPeriod();
 
       if (!mounted) return;
-
       setState(() {
         officenameList = offices;
         _selectedOffice = offices.isNotEmpty ? offices[0].id.toString() : null;
@@ -301,12 +299,11 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                             (value) => setState(
                               () => _selectedAuditor = value?.id.toString(),
                             ),
-                        validator: (value) {
-                          if (value == null) {
-                            return 'This field is required';
-                          }
-                          return null;
-                        },
+                        validator:
+                            (value) =>
+                                value == null
+                                    ? 'Please select an auditor'
+                                    : null,
                       ),
                       gap14px,
                       SearchDropdown<Office?>(
@@ -327,7 +324,9 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                             ),
                         validator:
                             (value) =>
-                                value == null ? 'Please select office' : null,
+                                value == null
+                                    ? 'Please select an office'
+                                    : null,
                       ),
                       gap14px,
                       SearchDropdown<PgsPeriod>(
@@ -358,7 +357,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                             ),
                         validator:
                             (value) =>
-                                value == null ? 'Please select office' : null,
+                                value == null ? 'Please select a period' : null,
                       ),
                       const SizedBox(height: 24),
                       Row(
@@ -405,7 +404,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                 ),
                               ),
                               onPressed: () async {
-                                if (!_formKey.currentState!.validate()) return;
+                                if (!formKey.currentState!.validate()) return;
                                 final confirmed = await showDialog<bool>(
                                   context: context,
                                   builder:

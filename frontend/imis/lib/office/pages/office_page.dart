@@ -256,6 +256,11 @@ class OfficePageState extends State<OfficePage> {
                       dialogField(
                         label: 'Office Name',
                         controller: officeController,
+                        validator:
+                            (v) =>
+                                (v == null || v.trim().isEmpty)
+                                    ? 'Please fill out this field'
+                                    : null,
                       ),
                       SizedBox(height: 8),
                       SearchDropdown<Map<String, dynamic>>(
@@ -270,6 +275,11 @@ class OfficePageState extends State<OfficePage> {
                         onChanged: (value) {
                           setDialog(() => selectedOfficeType = value?['id']);
                         },
+                        validator:
+                            (value) =>
+                                value == null
+                                    ? 'Please select office type'
+                                    : null,
                       ),
                       SizedBox(height: 8),
 
@@ -285,6 +295,11 @@ class OfficePageState extends State<OfficePage> {
                         onChanged: (value) {
                           setDialog(() => selectedParentOffice = value?['id']);
                         },
+                        validator:
+                            (value) =>
+                                value == null
+                                    ? 'Please select parent office'
+                                    : null,
                       ),
 
                       const SizedBox(height: 24),
