@@ -214,6 +214,125 @@ namespace IMIS.Presentation.UserModule
             })
             .RequireAuthorization();
 
+            roleGroup.MapPut("/roles/{roleId}/performance-validation-tool-permissions-standarduser-role", async (string roleId, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ImisDbContext db) =>
+                {
+                    var role = await roleManager.FindByIdAsync(roleId);
+
+                    if (role == null)
+                        return Results.NotFound(new { message = "Role not found." });
+
+                    var permissions = new[]
+                    {
+                        "ViewPerformanceValidationToolPeriod",
+                        "ConfirmPerformanceValidationTool",
+                        "EditPerformanceValidationTool",
+                        "ViewPerformanceValidationTool"
+                    };
+
+                    var userIds = await db.UserRoles.Where(x => x.RoleId == roleId).Select(x => x.UserId).ToListAsync();
+
+                    int added = 0;
+
+                    foreach (var userId in userIds)
+                    {
+                        var existingClaims = await db.Set<UserClaim<string>>().Where(x => x.UserId == userId && x.RoleId == roleId &&  x.ClaimType == PermissionClaimType.Claim)
+                            .Select(x => x.ClaimValue!)
+                            .ToListAsync();
+
+                        foreach (var permission in permissions)
+                        {
+                            if (existingClaims.Contains(permission))
+                                continue;
+
+                            db.Set<UserClaim<string>>().Add(new UserClaim<string>
+                            {
+                                UserId = userId,
+                                RoleId = roleId,
+                                ClaimType = PermissionClaimType.Claim,
+                                ClaimValue = permission
+                            });
+
+                            added++;
+                        }
+                    }
+
+                    await db.SaveChangesAsync();
+
+                    return Results.Ok(new
+                    {
+                        roleId,
+                        roleName = role.Name,
+                        usersUpdated = userIds.Count,
+                        claimsAdded = added,
+                        message = "Performance Validation Tool permissions granted successfully."
+                    });
+                })
+                .RequireAuthorization();
+
+              roleGroup.MapPut("/roles/{roleId}/performance-validation-tool-permissions-auditor-role", async (string roleId, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ImisDbContext db) =>
+              {
+                  var role = await roleManager.FindByIdAsync(roleId);
+
+                  if (role == null)
+                      return Results.NotFound(new { message = "Role not found." });
+
+                  var permissions = new[]
+                  {
+                      
+                        "DraftPerformanceValidationTool",
+                        "SubmitPerformanceValidationTool",
+                        "ViewPerformanceValidationTool",
+                        "EditPerformanceValidationTool",
+                        "ViewAuditor",
+                        "ViewAuditorTeam",                       
+                        "AddPerformanceValidationToolPeriod",
+                        "ViewPerformanceValidationToolPeriod",
+                        "EditPerformanceValidationToolPeriod",
+                        "DeletePerformanceValidationTool",
+
+                  };
+
+                  var userIds = await db.UserRoles.Where(x => x.RoleId == roleId).Select(x => x.UserId).ToListAsync();
+
+                  int added = 0;
+
+                  foreach (var userId in userIds)
+                  {
+                      var existingClaims = await db.Set<UserClaim<string>>()
+                          .Where(x => x.UserId == userId && x.RoleId == roleId && x.ClaimType == PermissionClaimType.Claim)
+                          .Select(x => x.ClaimValue!)
+                          .ToListAsync();
+
+                      foreach (var permission in permissions)
+                      {
+                          if (existingClaims.Contains(permission))
+                              continue;
+
+                          db.Set<UserClaim<string>>().Add(new UserClaim<string>
+                          {
+                              UserId = userId,
+                              RoleId = roleId,
+                              ClaimType = PermissionClaimType.Claim,
+                              ClaimValue = permission
+                          });
+
+                          added++;
+                      }
+                  }
+
+                  await db.SaveChangesAsync();
+
+                  return Results.Ok(new
+                  {
+                      roleId,
+                      roleName = role.Name,
+                      usersUpdated = userIds.Count,
+                      claimsAdded = added,
+                      message = "Performance Validation Tool permissions granted successfully."
+                  });
+              })
+              .RequireAuthorization();
+
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
             userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
