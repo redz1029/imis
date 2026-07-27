@@ -21,7 +21,8 @@ namespace IMIS.Presentation.PgsModuleAPIs
     {
         private const string _pgsTag = "Performance Governance System";
         public readonly PerformanceGovernanceSystemPermission _performanceGovernanceSystem = new();
-            
+        public readonly PgsSigantoryPermission _pgsSigantoryPermission = new();
+
 
         public PerfomanceGovernanceSystemEndPoints() : base("/pgs")
         {
@@ -288,7 +289,8 @@ namespace IMIS.Presentation.PgsModuleAPIs
 
                 return result ? Results.Ok(new { message = "PGS signatories deleted successfully." }) : Results.NotFound(new { message = "No signatories found." });
             })
-            .WithTags(_pgsTag);
+            .WithTags(_pgsTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSigantoryPermission.Delete));
         }
     }
 }
