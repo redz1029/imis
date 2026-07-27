@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 
-class SearchDropdown<T> extends StatefulWidget {
+class SearchDropdown<T> extends FormField<T> {
   final String? label;
   final String hintText;
   final List<T> items;
   final String Function(T item) itemAsString;
   final T? selectedItem;
   final ValueChanged<T?> onChanged;
-  final String? Function(T?)? validator;
+  @override
   final bool enabled;
 
-  const SearchDropdown({
+  SearchDropdown({
     super.key,
     this.label,
     required this.hintText,
@@ -20,37 +20,43 @@ class SearchDropdown<T> extends StatefulWidget {
     required this.itemAsString,
     required this.selectedItem,
     required this.onChanged,
-    this.validator,
+    super.validator,
     this.enabled = true,
-  });
+  }) : super(
+         initialValue: selectedItem,
+         builder: (field) {
+           final state = field as _SearchDropdownFieldState<T>;
+           return state._buildField();
+         },
+       );
 
   @override
-  State<SearchDropdown<T>> createState() => _SearchableDropdownState<T>();
+  FormFieldState<T> createState() => _SearchDropdownFieldState<T>();
 }
 
-class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
-    with SingleTickerProviderStateMixin {
+class _SearchDropdownFieldState<T> extends FormFieldState<T> {
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   List<T> _filteredItems = [];
-  String? _errorText;
   bool _isOpen = false;
 
   static const double _maxDropdownHeight = 260;
 
+  SearchDropdown<T> get _widget => widget as SearchDropdown<T>;
+
   @override
   void initState() {
     super.initState();
-    _filteredItems = widget.items;
+    _filteredItems = _widget.items;
   }
 
   @override
   void didUpdateWidget(covariant SearchDropdown<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedItem != widget.selectedItem) {
-      setState(() {});
+    if (oldWidget.selectedItem != _widget.selectedItem) {
+      setValue(_widget.selectedItem);
     }
   }
 
@@ -63,7 +69,7 @@ class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
   }
 
   void _toggleOverlay() {
-    if (!widget.enabled) return;
+    if (!_widget.enabled) return;
     if (_overlayEntry == null) {
       _showOverlay();
     } else {
@@ -75,7 +81,7 @@ class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
     final renderObject = context.findRenderObject();
     if (renderObject is! RenderBox || !renderObject.hasSize) return;
 
-    _filteredItems = widget.items;
+    _filteredItems = _widget.items;
     _searchController.clear();
 
     _overlayEntry = _createOverlayEntry(renderObject);
@@ -97,6 +103,15 @@ class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
     } else {
       _isOpen = false;
     }
+  }
+
+  void _selectItem(T item) {
+    _removeOverlay();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      didChange(item);
+      _widget.onChanged(item);
+    });
   }
 
   OverlayEntry _createOverlayEntry(RenderBox renderBox) {
@@ -215,8 +230,8 @@ class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
           if (!mounted) return;
           setOverlayState(() {
             _filteredItems =
-                widget.items.where((item) {
-                  return widget
+                _widget.items.where((item) {
+                  return _widget
                       .itemAsString(item)
                       .toLowerCase()
                       .contains(query.toLowerCase());
@@ -247,18 +262,9 @@ class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
                 itemCount: _filteredItems.length,
                 itemBuilder: (context, index) {
                   final item = _filteredItems[index];
-                  final isSelected = item == widget.selectedItem;
+                  final isSelected = item == value;
                   return InkWell(
-                    onTap: () {
-                      _removeOverlay();
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (!mounted) return;
-                        widget.onChanged(item);
-                        setState(() {
-                          _errorText = widget.validator?.call(item);
-                        });
-                      });
-                    },
+                    onTap: () => _selectItem(item),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
@@ -270,7 +276,7 @@ class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
                               ? primaryColor.withValues(alpha: 0.08)
                               : Colors.transparent,
                       child: Text(
-                        widget.itemAsString(item),
+                        _widget.itemAsString(item),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
                           color: isSelected ? primaryColor : kText,
@@ -285,114 +291,9 @@ class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
     );
   }
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   final displayText =
-  //       widget.selectedItem != null
-  //           ? widget.itemAsString(widget.selectedItem as T)
-  //           : null;
-
-  //   final hasLabel = widget.label != null;
-  //   final borderColor =
-  //       _errorText != null ? kDanger : (_isOpen ? primaryColor : kBorder);
-
-  //   return CompositedTransformTarget(
-  //     link: _layerLink,
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         InkWell(
-  //           onTap: _toggleOverlay,
-  //           borderRadius: BorderRadius.circular(8),
-  //           child: Stack(
-  //             clipBehavior: Clip.none,
-  //             children: [
-  //               Container(
-  //                 padding: EdgeInsets.only(
-  //                   left: 14,
-  //                   right: 14,
-  //                   top: hasLabel ? 13 : 13,
-  //                   bottom: hasLabel ? 13 : 13,
-  //                 ),
-  //                 decoration: BoxDecoration(
-  //                   color:
-  //                       widget.enabled
-  //                           ? kBackground
-  //                           : kBorder.withValues(alpha: 0.3),
-  //                   borderRadius: BorderRadius.circular(8),
-  //                   border: Border.all(
-  //                     color: borderColor,
-  //                     width: _isOpen ? 1.5 : 1,
-  //                   ),
-  //                 ),
-  //                 child: AnimatedDefaultTextStyle(
-  //                   duration: _labelAnimDuration,
-  //                   curve: Curves.easeOut,
-  //                   style: GoogleFonts.plusJakartaSans(
-  //                     fontSize: 13,
-  //                     color: displayText != null ? kText : kMuted,
-  //                   ),
-  //                   child: Row(
-  //                     children: [
-  //                       Expanded(
-  //                         child: Text(
-  //                           displayText ?? (hasLabel ? '' : widget.hintText),
-  //                           overflow: TextOverflow.ellipsis,
-  //                         ),
-  //                       ),
-  //                       Icon(Icons.keyboard_arrow_down_rounded, color: kMuted),
-  //                     ],
-  //                   ),
-  //                 ),
-  //               ),
-  //               if (hasLabel)
-  //                 AnimatedPositioned(
-  //                   duration: _labelAnimDuration,
-  //                   curve: Curves.easeOut,
-  //                   left: 10,
-  //                   top: _isFloating ? -8 : 15,
-  //                   child: AnimatedDefaultTextStyle(
-  //                     duration: _labelAnimDuration,
-  //                     curve: Curves.easeOut,
-  //                     style: GoogleFonts.plusJakartaSans(
-  //                       fontSize: _isFloating ? 11 : 13,
-  //                       fontWeight: FontWeight.w600,
-  //                       color:
-  //                           _errorText != null
-  //                               ? kDanger
-  //                               : (_isFloating ? primaryColor : kMuted),
-  //                     ),
-  //                     child: Container(
-  //                       padding:
-  //                           _isFloating
-  //                               ? const EdgeInsets.symmetric(horizontal: 4)
-  //                               : EdgeInsets.zero,
-  //                       color: _isFloating ? kBackground : Colors.transparent,
-  //                       child: Text(widget.label!),
-  //                     ),
-  //                   ),
-  //                 ),
-  //             ],
-  //           ),
-  //         ),
-  //         if (_errorText != null) ...[
-  //           const SizedBox(height: 4),
-  //           Text(
-  //             _errorText!,
-  //             style: GoogleFonts.plusJakartaSans(fontSize: 11, color: kDanger),
-  //           ),
-  //         ],
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  @override
-  Widget build(BuildContext context) {
-    final displayText =
-        widget.selectedItem != null
-            ? widget.itemAsString(widget.selectedItem as T)
-            : null;
+  Widget _buildField() {
+    final displayText = value != null ? _widget.itemAsString(value as T) : null;
+    final hasError = errorText != null;
 
     return CompositedTransformTarget(
       link: _layerLink,
@@ -406,24 +307,24 @@ class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
               isEmpty: displayText == null,
               isFocused: _isOpen,
               decoration: InputDecoration(
-                labelText: widget.label,
+                labelText: _widget.label,
                 labelStyle: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   color: kMuted,
                 ),
                 floatingLabelStyle: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
-                  color: _errorText != null ? kDanger : primaryColor,
+                  color: hasError ? kDanger : primaryColor,
                   fontWeight: FontWeight.w600,
                 ),
-                hintText: widget.label == null ? widget.hintText : null,
+                hintText: _widget.label == null ? _widget.hintText : null,
                 hintStyle: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   color: kMuted,
                 ),
                 filled: true,
                 fillColor:
-                    widget.enabled
+                    _widget.enabled
                         ? Colors.grey.shade50
                         : kBorder.withValues(alpha: 0.3),
                 contentPadding: const EdgeInsets.symmetric(
@@ -436,14 +337,12 @@ class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: _errorText != null ? kDanger : kBorder,
-                  ),
+                  borderSide: BorderSide(color: hasError ? kDanger : kBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(
-                    color: _errorText != null ? kDanger : primaryColor,
+                    color: hasError ? kDanger : primaryColor,
                     width: 1.5,
                   ),
                 ),
@@ -478,10 +377,10 @@ class _SearchableDropdownState<T> extends State<SearchDropdown<T>>
               ),
             ),
           ),
-          if (_errorText != null) ...[
+          if (hasError) ...[
             const SizedBox(height: 4),
             Text(
-              _errorText!,
+              errorText!,
               style: GoogleFonts.plusJakartaSans(fontSize: 11, color: kDanger),
             ),
           ],
