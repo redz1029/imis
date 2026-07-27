@@ -9,6 +9,7 @@ namespace IMIS.Application.PerformanceValidationToolPeriodModule
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
         public string? Period { get; set; }
+        public bool? IsActive { get; set; }
 
         public PerformanceValidationToolPeriodDto() { }
 
@@ -19,10 +20,11 @@ namespace IMIS.Application.PerformanceValidationToolPeriodModule
             this.StartDate = strategyReviewPeriod.StartDate;
             this.EndDate = strategyReviewPeriod.EndDate;
             this.Period = strategyReviewPeriod.Period;
+            this.IsActive = strategyReviewPeriod.IsActive;
         }
         public override PerformanceValidationToolPeriod ToEntity()
         {
-            return new PerformanceValidationToolPeriod() { Id = Id, StartDate = StartDate, EndDate = EndDate, Period = Period };
+            return new PerformanceValidationToolPeriod() { Id = Id, StartDate = StartDate, EndDate = EndDate, Period = Period, IsActive = IsActive };
         }
     }
 }
