@@ -18,8 +18,8 @@ class StrategyReviewReportServices {
     int pageSize = 15,
     String? searchQuery,
     required String roleId,
-
     String? strategyReviewPeriodId,
+    String? kraRoadMapName,
   }) async {
     final paginationUtil = PaginationUtil(dio);
 
@@ -31,6 +31,8 @@ class StrategyReviewReportServices {
       additionalParams: {
         if (strategyReviewPeriodId != null)
           'strategyReviewPeriodId': strategyReviewPeriodId,
+        if (kraRoadMapName != null && kraRoadMapName.isNotEmpty)
+          'kraRoadMapName': kraRoadMapName,
       },
       fromJson: (json) => StrategyReviewReport.fromJson(json),
     );

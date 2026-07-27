@@ -923,6 +923,7 @@ class _AddEditEventDialogState extends State<AddEditEventDialog> {
                           onChanged: (value) {
                             setState(() => _selectedOffice = value);
                           },
+
                           validator:
                               (value) =>
                                   value == null

@@ -193,27 +193,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
   final permissionService = PermissionService();
   String selectedFilter = "All Process (Core&Support)";
   List<StrategyReviewReport> _strategyReviewList = [];
-  final _dateConverter = const LongDateOnlyConverter();
-  List<StrategyReviewReport> get _filteredReviews {
-    if (selectedFilter == "All Process (Core&Support)") {
-      return _strategyReviewList;
-    }
-    return _strategyReviewList.where((review) {
-      final matchedKra = kraListRoadmap.firstWhere(
-        (k) => k.kraId == review.kraRoadMapId,
-        orElse:
-            () => KraRoadmapRole(
-              id: 0,
-              kraId: 0,
-              roleId: '',
-              kraName: '',
-              strategicObjectives: '',
-            ),
-      );
-      return matchedKra.kraName.trim().toLowerCase() ==
-          selectedFilter.trim().toLowerCase();
-    }).toList();
-  }
 
   @override
   void initState() {
@@ -296,6 +275,10 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
         page: targetPage,
         pageSize: pageSize,
         strategyReviewPeriodId: _selectedPeriodId,
+        kraRoadMapName:
+            selectedFilter == "All Process (Core&Support)"
+                ? null
+                : selectedFilter,
       );
       setState(() {
         _strategyReviewList = result.items;
@@ -652,14 +635,12 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
 
     if (!hasPermission) return noPermissionScreen();
 
-    final displayList = _filteredReviews;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildPageHeader(isMobile, displayList.length),
+          _buildPageHeader(isMobile, _strategyReviewList.length),
           _buildFilterBar(isMobile),
           gap4px,
           Expanded(
@@ -745,7 +726,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                   color: primaryColor,
                                 ),
                               )
-                              : displayList.isEmpty
+                              : _strategyReviewList.isEmpty
                               ? Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -767,28 +748,15 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                 ),
                               )
                               : ListView.separated(
-                                itemCount: displayList.length,
+                                itemCount: _strategyReviewList.length,
                                 separatorBuilder:
                                     (_, __) => Divider(
                                       height: 1,
                                       color: Colors.grey.withValues(alpha: .2),
                                     ),
                                 itemBuilder: (context, index) {
-                                  final review = displayList[index];
+                                  final review = _strategyReviewList[index];
                                   final itemNumber = index + 1;
-
-                                  final matchedKra = kraListRoadmap.firstWhere(
-                                    (k) => k.kraName == review.kraRoadMapName,
-                                    orElse:
-                                        () => KraRoadmapRole(
-                                          id: 0,
-                                          kraId: 0,
-                                          roleId: '',
-                                          kraName:
-                                              'KRA #${review.kraRoadMapName}',
-                                          strategicObjectives: '',
-                                        ),
-                                  );
 
                                   final postingDate = review.postingDate
                                       .substring(0, 10);
@@ -810,16 +778,13 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                           Expanded(
                                             flex: 3,
                                             child: Text(
-                                              matchedKra.kraName,
+                                              review.kraRoadMapName ?? '',
                                               style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
                                             flex: 2,
                                             child: Text(
-                                              // _dateConverter.toJson(
-                                              //   DateTime.parse(postingDate),
-                                              // ),
                                               review.strategyReviewPeriod ?? '',
                                               style: TextStyle(fontSize: 12),
                                             ),
@@ -932,7 +897,6 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                       ),
                                     );
                                   }
-
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
@@ -1101,7 +1065,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          "Process (Core & Support): ${matchedKra.kraName}",
+                                          "Process (Core & Support): ${review.kraRoadMapName ?? ''}",
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w500,
                                             fontSize: 12,
@@ -1340,7 +1304,10 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
           selectedItem: selectedFilter,
           hintText: "Filter KRA",
           searchHint: "Search Process...",
-          onChanged: (value) => setState(() => selectedFilter = value),
+          onChanged: (value) {
+            setState(() => selectedFilter = value);
+            fetchFilter(page: 1);
+          },
         ),
       ),
     );
