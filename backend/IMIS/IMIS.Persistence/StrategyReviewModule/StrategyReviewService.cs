@@ -53,7 +53,7 @@ namespace IMIS.Persistence.StrategyReviewModule
             return await currentUserService!.GetCurrentUserAsync();
         }
      
-        public async Task<DtoPageList<StrategyReviewDto, StrategyReview, long>> GetAllRoleIdAsync(string roleId, int? strategyReviewPeriodId, int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<DtoPageList<StrategyReviewDto, StrategyReview, long>> GetAllRoleIdAsync(string roleId, string? KraRoadmapName, int? strategyReviewPeriodId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
 
@@ -102,6 +102,11 @@ namespace IMIS.Persistence.StrategyReviewModule
                 strategyReviews = strategyReviews.Where(x => x.StrategyReviewPeriodId == strategyReviewPeriodId.Value).ToList();
             }
 
+            // FILTER BY KRA
+            if (!string.IsNullOrWhiteSpace(KraRoadmapName))
+            {
+                strategyReviews = strategyReviews.Where(x => x.KraRoadMap != null && x.KraRoadMap.Kra != null && x.KraRoadMap.Kra.Name.Equals(KraRoadmapName.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+            }
             var totalCount = strategyReviews.Count; 
 
             var pagedItems = strategyReviews.Skip((page - 1) * pageSize).Take(pageSize).ToList();

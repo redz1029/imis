@@ -105,9 +105,9 @@ namespace IMIS.Presentation.StrategyReviewModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReview), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.View));
 
-            app.MapGet("/roleid/{roleId}", async (string roleId, int? strategyReviewPeriodId, int page, int pageSize, IStrategyReviewService service, CancellationToken cancellationToken) =>
+            app.MapGet("/roleid/{roleId}", async (string roleId, string? kraRoadMapName, int? strategyReviewPeriodId, int page, int pageSize, IStrategyReviewService service, CancellationToken cancellationToken) =>
             {
-                var result = await service.GetAllRoleIdAsync(roleId, strategyReviewPeriodId, page, pageSize, cancellationToken);
+                var result = await service.GetAllRoleIdAsync(roleId, kraRoadMapName, strategyReviewPeriodId, page, pageSize, cancellationToken);
 
                 return Results.Ok(result);
             })
