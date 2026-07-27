@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:imis/roadmap/models/kra_roadmap_filter.dart';
 import 'package:imis/roadmap/models/kra_roadmap_role.dart';
 import 'package:imis/roadmap/models/roadmap.dart';
+import 'package:imis/roadmap/models/roadmap_history.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';
@@ -57,6 +58,21 @@ class RoadmapService {
   Future<void> deleteRoadmap(String roadMap) async {
     final url = '${ApiEndpoint().kraRoadMap}/$roadMap';
     await AuthenticatedRequest.delete(dio, url);
+  }
+
+  Future<List<RoadmapHistory>> getRoadmapHistory(String id) async {
+    final url = '${ApiEndpoint().roadmapidlist}/?roadmapid=$id';
+
+    final response = await AuthenticatedRequest.get(dio, url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = response.data;
+      return data
+          .map((json) => RoadmapHistory.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } else {
+      throw Exception('Failed to fetch roadmap history');
+    }
   }
 
   Future<List<dynamic>> getAllKraDescriptions({required int kraId}) async {
