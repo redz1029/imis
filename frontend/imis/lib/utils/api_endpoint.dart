@@ -84,6 +84,8 @@ class ApiEndpoint {
   late String dashboardAuditStatus;
   late String performanceValidationPdfReport;
   late String serviceOfficePeriodReport;
+  late String calendarActivity;
+  late String roadmapidlist;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -169,6 +171,8 @@ class ApiEndpoint {
     performanceValidationPdfReport =
         '$baseUrl/performanceValidationTool/pdf-report';
     serviceOfficePeriodReport = '$baseUrl/pgs/service-office-period-report';
+    calendarActivity = '$baseUrl/calendarActivity';
+    roadmapidlist = '$baseUrl/roadmapidlist';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
