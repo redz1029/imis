@@ -241,7 +241,7 @@ Future<void> viewAuditorSummaryNarrativeReport(
   BuildContext? context,
 }) => _openPdfPreview(
   webEndpoint:
-      "${ApiEndpoint().pgsSummaryNarrativeListReport}?PgsPeriodId=$pgsPeriodId",
+      "${ApiEndpoint().pgsSummaryNarrativeListReport}?PgsPeriodId=$pgsPeriodId&OfficeId=$officeId",
   id: pgsPeriodId,
   name: officeId,
   context: context,

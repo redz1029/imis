@@ -212,7 +212,6 @@ class ManageSummaryNarrativeDialogState
           ),
           child: Column(
             children: [
-              // ── Header ──────────────────────────────────────────────
               _buildHeader(isMobile, isTablet),
 
               if (isMobile) _buildMobileSearch(),
