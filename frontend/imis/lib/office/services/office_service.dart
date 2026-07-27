@@ -16,9 +16,8 @@ class OfficeService {
     String? searchQuery,
   }) async {
     final paginationUtil = PaginationUtil(dio);
-
     return await paginationUtil.fetchPaginatedData<Office>(
-      endpoint: '${ApiEndpoint().office}/page',
+      endpoint: ApiEndpoint().office,
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
@@ -66,10 +65,7 @@ class OfficeService {
   }
 
   Future<List<Office>> getParentOffice() async {
-    final response = await AuthenticatedRequest.get(
-      dio,
-      ApiEndpoint().allOffices,
-    );
+    final response = await AuthenticatedRequest.get(dio, ApiEndpoint().office);
     return (response.data as List).map((e) => Office.fromJson(e)).toList();
   }
 

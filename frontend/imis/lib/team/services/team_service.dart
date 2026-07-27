@@ -18,7 +18,7 @@ class TeamService {
   }) async {
     final paginationUtil = PaginationUtil(dio);
     return await paginationUtil.fetchPaginatedData<Team>(
-      endpoint: '${ApiEndpoint().team}/page',
+      endpoint: ApiEndpoint().team,
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,

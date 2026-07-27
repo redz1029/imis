@@ -9,6 +9,8 @@ class DynamicSideColumn1 extends StatelessWidget {
   final CalendarFormat calendarFormat;
   final Function(DateTime selectedDay, DateTime focusedDay) onDaySelected;
   final Function(CalendarFormat format) onFormatChanged;
+  final int currentImageIndex;
+  final List<String> rotatingImages;
 
   const DynamicSideColumn1({
     super.key,
@@ -17,6 +19,8 @@ class DynamicSideColumn1 extends StatelessWidget {
     required this.calendarFormat,
     required this.onDaySelected,
     required this.onFormatChanged,
+    required this.currentImageIndex,
+    required this.rotatingImages,
   });
 
   @override
@@ -24,22 +28,22 @@ class DynamicSideColumn1 extends StatelessWidget {
     return Column(
       children: [
         Card(
-          color: Theme.of(context).cardColor,
+          color: const Color(0xFFeeeeee),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
             side: BorderSide(color: Colors.grey.shade300, width: 1),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(10.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Calendar', style: TextStyle(fontSize: 12)),
-                const Divider(height: 8),
+                const Text('Calendar', style: TextStyle(fontSize: 14)),
+                const Divider(),
                 SizedBox(
-                  width: 220,
-                  height: 250,
+                  width: 280,
+                  height: 320,
                   child: TableCalendar(
                     firstDay: DateTime.utc(2020, 1, 1),
                     lastDay: DateTime.utc(2030, 12, 31),
@@ -48,34 +52,25 @@ class DynamicSideColumn1 extends StatelessWidget {
                     selectedDayPredicate: (day) => isSameDay(selectedDay, day),
                     onDaySelected: onDaySelected,
                     onFormatChanged: onFormatChanged,
-                    rowHeight: 28,
-                    calendarStyle: CalendarStyle(
-                      defaultTextStyle: const TextStyle(fontSize: 10),
-                      weekendTextStyle: const TextStyle(fontSize: 10),
+                    rowHeight: 40,
+                    calendarStyle: const CalendarStyle(
+                      defaultTextStyle: TextStyle(fontSize: 12),
+                      weekendTextStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.normal,
+                      ),
                       selectedDecoration: BoxDecoration(
                         color: primaryTextColor,
                         shape: BoxShape.circle,
-                      ),
-                      selectedTextStyle: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
                       ),
                       todayDecoration: BoxDecoration(
                         color: primaryColor,
                         shape: BoxShape.circle,
                       ),
-                      todayTextStyle: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                      ),
-                    ),
-                    daysOfWeekStyle: const DaysOfWeekStyle(
-                      weekdayStyle: TextStyle(fontSize: 10),
-                      weekendStyle: TextStyle(fontSize: 10),
                     ),
                     headerStyle: const HeaderStyle(
                       titleTextStyle: TextStyle(
-                        fontSize: 12, // small header
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
                       formatButtonVisible: false,
@@ -89,7 +84,7 @@ class DynamicSideColumn1 extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         Card(
-          color: Theme.of(context).cardColor,
+          color: const Color(0xFFeeeeee),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),

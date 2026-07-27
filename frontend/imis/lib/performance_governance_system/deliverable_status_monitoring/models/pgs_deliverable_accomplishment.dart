@@ -11,13 +11,10 @@ class PgsDeliverableAccomplishment {
   @DateTimeConverter()
   DateTime postingDate;
   String? userId;
-  int? status;
-  DateTime? byWhen;
   int? percentAccomplished;
   String? remarks;
   String? attachmentPath;
-  String? deliverableName;
-  String? pgsStatus;
+
   final bool? isDeleted;
   final String? rowVersion;
   String? auditorRemarks;
@@ -26,15 +23,10 @@ class PgsDeliverableAccomplishment {
     this.pgsDeliverableId,
     this.postingDate,
     this.userId,
-    this.status,
-
     this.percentAccomplished,
     this.remarks,
     this.attachmentPath,
-    this.deliverableName,
-    this.pgsStatus,
     this.auditorRemarks, {
-    this.byWhen,
     this.isDeleted,
     this.rowVersion,
   });

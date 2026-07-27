@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/dashboard/admin_dashboard.dart';
-import 'package:imis/dashboard/officer_dashboard.dart';
 import 'package:imis/dashboard/standard_user_dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,10 +41,7 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: mainBgColor,
-        body: Center(child: CircularProgressIndicator(color: primaryColor)),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_userRoles == null || _userRoles!.isEmpty) {
@@ -54,22 +50,6 @@ class HomePageState extends State<HomePage> {
 
     if (_userRoles!.contains("Administrator")) {
       return const AdminDashboard();
-    }
-
-    final officerRoles = [
-      "Service Officer",
-      "Training Officer",
-      "Research Officer",
-      "Information Officer",
-      "Linkages Officer",
-      "Facilities Officer",
-      "Safety Officer",
-      "HR Officer",
-      "Finance Officer",
-    ];
-
-    if (_userRoles!.any((role) => officerRoles.contains(role))) {
-      return const OfficerDashboard();
     }
 
     return const StandardUserDashboard();

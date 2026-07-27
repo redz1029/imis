@@ -25,8 +25,10 @@ class RoadMapGuidePageState extends State<RoadMapGuidePage> {
                 children: [
                   _buildTitleProject(),
                   SizedBox(height: 24),
+
                   _buildModulesOverview(),
                   SizedBox(height: 24),
+
                   if (selectedModule != null) ...[SizedBox(height: 24)],
                 ],
               ),

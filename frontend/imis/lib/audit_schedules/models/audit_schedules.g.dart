@@ -16,10 +16,9 @@ AuditSchedules _$AuditSchedulesFromJson(
   isActive: json['isActive'] as bool,
   isDeleted: json['isDeleted'] as bool,
   rowVersion: json['rowVersion'] as String?,
-  offices:
-      (json['offices'] as List<dynamic>?)
-          ?.map((e) => Office.fromJson(e as Map<String, dynamic>))
-          .toList(),
+  offices: (json['offices'] as List<dynamic>?)
+      ?.map((e) => Office.fromJson(e as Map<String, dynamic>))
+      .toList(),
   auditableOffices:
       (json['auditableOffices'] as List<dynamic>?)
           ?.map((e) => AuditableOffice.fromJson(e as Map<String, dynamic>))

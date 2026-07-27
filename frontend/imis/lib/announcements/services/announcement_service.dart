@@ -17,7 +17,7 @@ class AnnouncementService {
   }) async {
     final paginationUtil = PaginationUtil(dio);
     return await paginationUtil.fetchPaginatedData<Announcement>(
-      endpoint: '${ApiEndpoint().announcement}/page',
+      endpoint: ApiEndpoint().announcement,
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,

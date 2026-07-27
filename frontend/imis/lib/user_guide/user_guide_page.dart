@@ -264,7 +264,7 @@ class UserGuidePageState extends State<UserGuidePage> {
             ),
           ),
           // Table Rows
-          ...modules.map((module) => _buildModuleRow(module)),
+          ...modules.map((module) => _buildModuleRow(module)).toList(),
         ],
       ),
     );

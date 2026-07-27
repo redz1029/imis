@@ -5,15 +5,8 @@ part 'kpi_roadmap.g.dart';
 class KpiRoadmap {
   final int id;
   final String? kpiDescription;
-  final String? target;
-  final String? baseLine;
 
-  KpiRoadmap({
-    required this.id,
-    this.kpiDescription,
-    this.target,
-    this.baseLine,
-  });
+  KpiRoadmap({required this.id, this.kpiDescription});
 
   factory KpiRoadmap.fromJson(Map<String, dynamic> json) =>
       _$KpiRoadmapFromJson(json);

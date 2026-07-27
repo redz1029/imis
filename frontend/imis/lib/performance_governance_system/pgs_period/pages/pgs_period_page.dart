@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -130,6 +129,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
             }).toList();
       });
     } catch (e) {
+      debugPrint('Error filtering by date range: $e');
       setState(() {
         filteredList = List<PgsPeriod>.from(pgsPeriodList);
       });
@@ -446,27 +446,23 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < 600;
+    bool isMinimized = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
+      backgroundColor: mainBgColor,
+      appBar: AppBar(backgroundColor: mainBgColor, title: Text('PGS Periods')),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "PGS Period Information",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
-                      width: 300,
+                      width: 350,
                       height: 30,
                       child: TextFormField(
                         controller: startDateController,
@@ -532,7 +528,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
 
                     SizedBox(width: 15),
                     SizedBox(
-                      width: 300,
+                      width: 350,
                       height: 30,
                       child: TextFormField(
                         controller: endDateController,
@@ -598,335 +594,252 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                   ],
                 ),
 
-                const Spacer(),
-                if (!isMobile)
-                  ElevatedButton.icon(
-                    onPressed: () => showFormDialog(),
+                if (!isMinimized)
+                  ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 16,
-                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text(
-                      'Add New',
-                      style: TextStyle(color: Colors.white),
+                    onPressed: () => showFormDialog(),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add, color: Colors.white),
+                        SizedBox(width: 5),
+                        Text('Add New', style: TextStyle(color: Colors.white)),
+                      ],
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 26),
+            gap16px,
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 10,
-                      color: Colors.black.withValues(alpha: .05),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    /// DESKTOP HEADER
-                    if (!isMobile)
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Colors.grey.shade300),
+              child: Column(
+                children: [
+                  Container(
+                    color: secondaryColor,
+                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Text('#', style: TextStyle(color: grey)),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'Start Date',
+                            style: TextStyle(color: grey),
                           ),
                         ),
-                        child: Row(
-                          children: const [
-                            Expanded(
-                              flex: 1,
-                              child: Text(
-                                "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                "Start Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                "End Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'End Date',
+                            style: TextStyle(color: grey),
+                          ),
                         ),
-                      ),
-                    const SizedBox(height: 5),
-
-                    Expanded(
-                      child:
-                          _isLoading
-                              ? Center(
-                                child: CircularProgressIndicator(
-                                  color: primaryColor,
-                                ),
-                              )
-                              : ListView.builder(
-                                itemCount: filteredList.length,
-                                itemBuilder: (context, index) {
-                                  final pgsperiod = filteredList[index];
+                        Expanded(
+                          flex: 3,
+                          child: Text('Remarks', style: TextStyle(color: grey)),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Text('Actions', style: TextStyle(color: grey)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Column(
+                        children:
+                            filteredList
+                                .asMap()
+                                .map((index, period) {
                                   int itemNumber =
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
                                       1;
-                                  if (!isMobile) {
-                                    return Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
+                                  return MapEntry(
+                                    index,
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 1,
+                                        horizontal: 10,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(
                                           bottom: BorderSide(
-                                            color: Colors.grey.shade200,
+                                            color: Colors.grey.shade300,
                                           ),
                                         ),
                                       ),
                                       child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
-                                          ),
-                                          Expanded(
-                                            flex: 2,
-                                            child: Text(
-                                              DateTimeConverter().toJson(
-                                                pgsperiod.startDate,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                itemNumber.toString(),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                           ),
                                           Expanded(
-                                            flex: 2,
-                                            child: Text(
-                                              DateTimeConverter().toJson(
-                                                pgsperiod.endDate,
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                DateTimeConverter().toJson(
+                                                  period.startDate,
+                                                ),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                           ),
                                           Expanded(
-                                            flex: 2,
-                                            child: Row(
-                                              children: [
-                                                Tooltip(
-                                                  message: 'Edit',
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      size: 18,
-                                                      Icons.edit_outlined,
-                                                    ),
-                                                    onPressed: () {
-                                                      showFormDialog(
-                                                        id:
-                                                            pgsperiod.id
-                                                                .toString(),
-                                                        startDate:
-                                                            DateTimeConverter()
-                                                                .toJson(
-                                                                  pgsperiod
-                                                                      .startDate,
-                                                                ),
-                                                        endDate:
-                                                            DateTimeConverter()
-                                                                .toJson(
-                                                                  pgsperiod
-                                                                      .endDate,
-                                                                ),
-                                                        remarkrs:
-                                                            pgsperiod.remarks
-                                                                .toString(),
-                                                      );
-                                                    },
-                                                  ),
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                DateTimeConverter().toJson(
+                                                  period.endDate,
                                                 ),
 
-                                                IconButton(
-                                                  icon: const Icon(
-                                                    size: 18,
-                                                    CupertinoIcons
-                                                        .delete_simple,
-                                                    color: Colors.redAccent,
-                                                  ),
-                                                  onPressed:
-                                                      () => showDeleteDialog(
-                                                        pgsperiod.id.toString(),
-                                                      ),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
                                                 ),
-                                              ],
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                period.remarks.toString(),
+
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  IconButton(
+                                                    icon: Icon(Icons.edit),
+                                                    onPressed:
+                                                        () => showFormDialog(
+                                                          id:
+                                                              period.id
+                                                                  .toString(),
+                                                          startDate:
+                                                              DateTimeConverter()
+                                                                  .toJson(
+                                                                    period
+                                                                        .startDate,
+                                                                  ),
+                                                          endDate:
+                                                              DateTimeConverter()
+                                                                  .toJson(
+                                                                    period
+                                                                        .endDate,
+                                                                  ),
+                                                          remarkrs:
+                                                              period.remarks
+                                                                  .toString(),
+                                                        ),
+                                                  ),
+                                                  SizedBox(width: 1),
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.delete,
+                                                      color: primaryColor,
+                                                    ),
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          period.id.toString(),
+                                                        ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ],
                                       ),
-                                    );
-                                  }
-
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey.shade200,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Text(
-                                              "$itemNumber",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const Spacer(),
-                                            PopupMenuButton<String>(
-                                              color:
-                                                  Theme.of(context).cardColor,
-                                              icon: const Icon(Icons.more_vert),
-                                              onSelected: (value) async {
-                                                if (value == 'edit') {
-                                                  showFormDialog(
-                                                    id: pgsperiod.id.toString(),
-                                                    startDate:
-                                                        DateTimeConverter()
-                                                            .toJson(
-                                                              pgsperiod
-                                                                  .startDate,
-                                                            ),
-                                                    endDate: DateTimeConverter()
-                                                        .toJson(
-                                                          pgsperiod.endDate,
-                                                        ),
-                                                    remarkrs:
-                                                        pgsperiod.remarks
-                                                            .toString(),
-                                                  );
-                                                } else if (value == 'delete') {
-                                                  showDeleteDialog(
-                                                    pgsperiod.id.toString(),
-                                                  );
-                                                }
-                                              },
-                                              itemBuilder:
-                                                  (_) => [
-                                                    PopupMenuItem(
-                                                      value: 'edit',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            Icons.edit_outlined,
-                                                            size: 18,
-                                                          ),
-                                                          SizedBox(width: 8),
-                                                          Text('Edit'),
-                                                        ],
-                                                      ),
-                                                    ),
-
-                                                    PopupMenuItem(
-                                                      value: 'delete',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            CupertinoIcons
-                                                                .delete_simple,
-                                                            color: Colors.red,
-                                                            size: 18,
-                                                          ),
-                                                          SizedBox(width: 8),
-                                                          Text('Delete'),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          DateTimeConverter().toJson(
-                                            pgsperiod.startDate,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          DateTimeConverter().toJson(
-                                            pgsperiod.endDate,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                      ],
                                     ),
                                   );
-                                },
-                              ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      color: Theme.of(context).cardColor,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          PaginationInfo(
-                            currentPage: _currentPage,
-                            totalItems: _totalCount,
-                            itemsPerPage: _pageSize,
-                          ),
-                          PaginationControls(
-                            currentPage: _currentPage,
-                            totalItems: _totalCount,
-                            itemsPerPage: _pageSize,
-                            isLoading: _isLoading,
-                            onPageChanged:
-                                (page) => fetchPGSPeriods(page: page),
-                          ),
-                          const SizedBox(width: 60),
-                        ],
+                                })
+                                .values
+                                .toList(),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.all(10),
+              color: secondaryColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchPGSPeriods(page: page),
+                  ),
+                  Container(width: 60),
+                ],
               ),
             ),
           ],
         ),
       ),
+
       floatingActionButton:
-          isMobile
+          isMinimized
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
