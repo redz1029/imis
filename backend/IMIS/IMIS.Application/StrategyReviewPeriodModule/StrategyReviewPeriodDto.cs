@@ -9,6 +9,7 @@ namespace IMIS.Application.StrategyReviewPeriodModule
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
         public string? Quarter { get; set; }
+        public bool? IsActive { get; set; }
 
         public StrategyReviewPeriodDto() { }
 
@@ -18,11 +19,12 @@ namespace IMIS.Application.StrategyReviewPeriodModule
             this.Id = strategyReviewPeriod.Id;
             this.StartDate = strategyReviewPeriod.StartDate;
             this.EndDate = strategyReviewPeriod.EndDate;
-            this.Quarter = strategyReviewPeriod.Quarter;       
+            this.Quarter = strategyReviewPeriod.Quarter;    
+            this.IsActive = strategyReviewPeriod.IsActive;
         }
         public override StrategyReviewPeriod ToEntity()
         {
-            return new StrategyReviewPeriod() { Id = Id, StartDate = StartDate, EndDate = EndDate, Quarter = Quarter };
+            return new StrategyReviewPeriod() { Id = Id, StartDate = StartDate, EndDate = EndDate, Quarter = Quarter, IsActive = IsActive };
         }
     }
 }

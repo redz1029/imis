@@ -7,5 +7,6 @@ namespace IMIS.Domain
         public required DateOnly StartDate { get; set; }
         public required DateOnly EndDate { get; set; }
         public string? Quarter { get; set; }
+        public bool? IsActive { get; set; }
     }
 }
