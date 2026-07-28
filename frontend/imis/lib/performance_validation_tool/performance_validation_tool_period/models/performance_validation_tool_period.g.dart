@@ -15,6 +15,7 @@ PerformanceValidationToolPeriod _$PerformanceValidationToolPeriodFromJson(
   const DateTimeConverter().fromJson(json['endDate'] as String),
   period: json['period'] as String?,
   rowVersion: json['rowVersion'] as String?,
+  isActive: json['isActive'] as bool?,
 );
 
 Map<String, dynamic> _$PerformanceValidationToolPeriodToJson(
@@ -26,4 +27,5 @@ Map<String, dynamic> _$PerformanceValidationToolPeriodToJson(
   'endDate': const DateTimeConverter().toJson(instance.endDate),
   'period': instance.period,
   'rowVersion': instance.rowVersion,
+  'isActive': instance.isActive,
 };

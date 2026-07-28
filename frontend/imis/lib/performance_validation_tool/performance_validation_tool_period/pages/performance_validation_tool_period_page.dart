@@ -74,303 +74,6 @@ class PerformanceValidationToolPeriodPageState
     }
   }
 
-  // void showFormDialog({
-  //   String? id,
-  //   String? startDate,
-  //   String? endDate,
-  //   String? period,
-  // }) {
-  //   DateTime? selectedFromDate =
-  //       startDate != null ? DateTime.tryParse(startDate) : null;
-  //   DateTime? selectedEndDate =
-  //       endDate != null ? DateTime.tryParse(endDate) : null;
-
-  //   final isEdit = id != null;
-  //   TextEditingController periodController = TextEditingController(
-  //     text: period,
-  //   );
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       return StatefulBuilder(builder: (context, setStateDialog){
-  //          Future<void> pickDate({required bool isFrom}) async {
-  //             final picked = await showDatePicker(
-  //               context: context,
-  //               initialDate: DateTime.now(),
-  //               firstDate: DateTime(2000),
-  //               lastDate: DateTime(2101),
-  //               builder:
-  //                   (context, child) => Theme(
-  //                     data: Theme.of(context).copyWith(
-  //                       colorScheme: ColorScheme.light(
-  //                         primary: primaryColor,
-  //                         onPrimary: Colors.white,
-  //                       ),
-  //                       textButtonTheme: TextButtonThemeData(
-  //                         style: TextButton.styleFrom(
-  //                           foregroundColor: primaryColor,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     child: child!,
-  //                   ),
-  //             );
-  //             if (picked == null) return;
-  //             setStateDialog(() {
-  //               if (isFrom) {
-  //                 selectedFromDate = picked;
-  //                 if (selectedEndDate != null &&
-  //                     selectedEndDate!.isBefore(picked)) {
-  //                   selectedEndDate = null;
-  //                 }
-  //               } else {
-  //                 selectedEndDate = picked;
-  //               }
-  //             });
-  //           }
-  //       return AlertDialog(
-  //         backgroundColor: mainBgColor,
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadiusGeometry.circular(12.0),
-  //         ),
-  //         titlePadding: EdgeInsets.zero,
-  //         title: Container(
-  //           width: double.infinity,
-  //           padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-  //           decoration: BoxDecoration(
-  //             color: primaryLightColor,
-  //             borderRadius: BorderRadius.only(
-  //               topLeft: Radius.circular(12),
-  //               topRight: Radius.circular(12),
-  //             ),
-  //           ),
-  //           child: Text(
-  //             id == null ? 'Create PGS Period' : 'Edit PGS Period',
-  //             textAlign: TextAlign.center,
-  //             style: TextStyle(
-  //               fontWeight: FontWeight.bold,
-  //               fontSize: 18,
-  //               color: Colors.white,
-  //             ),
-  //           ),
-  //         ),
-  //         content: Form(
-  //           key: _formKey,
-  //           child: Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               SizedBox(
-  //                 width: 350,
-  //                 height: 60,
-  //                 child: TextFormField(
-  //                   controller: startDateController,
-  //                   decoration: InputDecoration(
-  //                     focusColor: primaryColor,
-  //                     labelText: 'Start Date',
-  //                     floatingLabelStyle: TextStyle(color: primaryColor),
-  //                     border: OutlineInputBorder(),
-  //                     focusedBorder: OutlineInputBorder(
-  //                       borderSide: BorderSide(color: primaryColor),
-  //                     ),
-  //                   ),
-  //                   validator: (value) {
-  //                     if (value == null || value.trim().isEmpty) {
-  //                       return 'Please select a date';
-  //                     }
-  //                     return null;
-  //                   },
-  //                   readOnly: true,
-  //                   onTap: () async {
-  //                     DateTime? picked = await showDatePicker(
-  //                       context: context,
-  //                       initialDate: DateTime.now(),
-  //                       firstDate: DateTime(2000),
-  //                       lastDate: DateTime(2101),
-  //                       builder: (context, child) {
-  //                         return Theme(
-  //                           data: Theme.of(context).copyWith(
-  //                             colorScheme: ColorScheme.light(
-  //                               primary: primaryColor,
-  //                               onPrimary: secondaryColor,
-  //                             ),
-  //                             textButtonTheme: TextButtonThemeData(
-  //                               style: TextButton.styleFrom(
-  //                                 foregroundColor: primaryColor,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                           child: child!,
-  //                         );
-  //                       },
-  //                     );
-  //                     if (picked != null) {
-  //                       startDateController.text =
-  //                           picked.toLocal().toString().split(' ')[0];
-  //                     }
-  //                   },
-  //                 ),
-  //               ),
-  //               gap4px,
-  //               SizedBox(
-  //                 width: 350,
-  //                 height: 60,
-  //                 child: TextFormField(
-  //                   controller: endDateController,
-  //                   decoration: InputDecoration(
-  //                     focusColor: primaryColor,
-  //                     labelText: 'Start Date',
-  //                     floatingLabelStyle: TextStyle(color: primaryColor),
-  //                     border: OutlineInputBorder(),
-  //                     focusedBorder: OutlineInputBorder(
-  //                       borderSide: BorderSide(color: primaryColor),
-  //                     ),
-  //                   ),
-  //                   validator: (value) {
-  //                     if (value == null || value.trim().isEmpty) {
-  //                       return 'Please select a date';
-  //                     }
-  //                     return null;
-  //                   },
-  //                   readOnly: true,
-  //                   onTap: () async {
-  //                     DateTime? picked = await showDatePicker(
-  //                       context: context,
-  //                       initialDate: DateTime.now(),
-  //                       firstDate: DateTime(2000),
-  //                       lastDate: DateTime(2101),
-  //                       builder: (context, child) {
-  //                         return Theme(
-  //                           data: Theme.of(context).copyWith(
-  //                             colorScheme: ColorScheme.light(
-  //                               primary: primaryColor,
-  //                               onPrimary: secondaryColor,
-  //                             ),
-  //                             textButtonTheme: TextButtonThemeData(
-  //                               style: TextButton.styleFrom(
-  //                                 foregroundColor: primaryColor,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                           child: child!,
-  //                         );
-  //                       },
-  //                     );
-  //                     if (picked != null) {
-  //                       endDateController.text =
-  //                           picked.toLocal().toString().split(' ')[0];
-  //                     }
-  //                   },
-  //                 ),
-  //               ),
-  //               gap4px,
-  //               SizedBox(
-  //                 width: 350,
-  //                 height: 60,
-  //                 child: TextFormField(
-  //                   controller: periodController,
-  //                   decoration: InputDecoration(
-  //                     labelText: 'Period Name',
-  //                     focusColor: primaryColor,
-  //                     floatingLabelStyle: TextStyle(color: primaryColor),
-  //                     border: OutlineInputBorder(),
-  //                     focusedBorder: const OutlineInputBorder(
-  //                       borderSide: BorderSide(color: primaryColor),
-  //                     ),
-  //                   ),
-  //                   validator: (value) {
-  //                     if (value == null || value.trim().isEmpty) {
-  //                       return 'Please fill out this field';
-  //                     }
-  //                     return null;
-  //                   },
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () => Navigator.pop(context),
-  //             child: Text('Cancel', style: TextStyle(color: primaryColor)),
-  //           ),
-  //           ElevatedButton(
-  //             style: ElevatedButton.styleFrom(
-  //               backgroundColor: primaryColor,
-  //               shape: RoundedRectangleBorder(
-  //                 borderRadius: BorderRadiusGeometry.circular(4),
-  //               ),
-  //             ),
-  //             onPressed: () async {
-  //               if (_formKey.currentState!.validate()) {
-  //                 bool? confirmAction = await showDialog<bool>(
-  //                   context: context,
-  //                   builder: (context) {
-  //                     return AlertDialog(
-  //                       title: Text(
-  //                         id == null ? 'Confirm Save' : 'Confirm Update',
-  //                       ),
-  //                       content: Text(
-  //                         id == null
-  //                             ? 'Are you sure you want to save this record'
-  //                             : 'Are you sure you want to update this record',
-  //                       ),
-  //                       actions: [
-  //                         TextButton(
-  //                           onPressed: () => Navigator.pop(context, false),
-  //                           child: Text(
-  //                             'No',
-  //                             style: TextStyle(color: primaryColor),
-  //                           ),
-  //                         ),
-  //                         TextButton(
-  //                           onPressed: () {
-  //                             if (_formKey.currentState!.validate()) {
-  //                               Navigator.pop(context, true);
-  //                             }
-  //                           },
-  //                           child: Text(
-  //                             'Yes',
-  //                             style: TextStyle(color: primaryColor),
-  //                           ),
-  //                         ),
-  //                       ],
-  //                     );
-  //                   },
-  //                 );
-
-  //                 if (confirmAction == true) {
-  //                   final validationToolPeriod =
-  //                       PerformanceValidationToolPeriod(
-  //                         int.tryParse(id ?? '0') ?? 0,
-  //                         false,
-  //                         DateTime.parse(startDateController.text),
-  //                         DateTime.parse(endDateController.text),
-  //                       );
-  //                   await _performanceValidationToolPeriodService
-  //                       .createOrUpdatePerformanceValidationToolPeriod(
-  //                         validationToolPeriod,
-  //                       );
-  //                   setState(() {
-  //                     fetchValidationPeriod();
-  //                   });
-  //                   MotionToast.success(
-  //                     toastAlignment: Alignment.topCenter,
-  //                     description: Text('Saved successfully'),
-  //                   ).show(context);
-  //                   Navigator.pop(context);
-  //                 }
-  //               }
-  //             },
-  //             child: Text(
-  //               id == null ? 'Save' : 'Update',
-  //               style: TextStyle(color: Colors.white),
-  //             ),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
   void showFormDialog({
     String? id,
     bool? isDeleted,
@@ -378,6 +81,7 @@ class PerformanceValidationToolPeriodPageState
     String? endDate,
     String? period,
     String? rowVersion,
+    bool isActive = false,
   }) {
     DateTime? selectedFromDate =
         startDate != null ? DateTime.tryParse(startDate) : null;
@@ -591,6 +295,49 @@ class PerformanceValidationToolPeriodPageState
                         label: 'Remarks',
                         controller: periodController,
                       ),
+                      SizedBox(height: 20),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: kBackground,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Active Period',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: kText,
+                                  ),
+                                ),
+                                Text(
+                                  'Currently active as period',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: isActive,
+                              onChanged:
+                                  (val) => setStateDialog(() => isActive = val),
+                              activeColor: primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
                       SizedBox(height: 24),
                       Row(
                         children: [
@@ -798,6 +545,7 @@ class PerformanceValidationToolPeriodPageState
                                         selectedFromDate!,
                                         selectedEndDate!,
                                         period: periodController.text,
+                                        isActive: isActive,
                                       );
                                   await _performanceValidationToolPeriodService
                                       .createOrUpdatePerformanceValidationToolPeriod(
@@ -895,35 +643,60 @@ class PerformanceValidationToolPeriodPageState
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Start Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "End Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 'Remarks',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Status",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -962,7 +735,10 @@ class PerformanceValidationToolPeriodPageState
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text('$itemNumber'),
+                                            child: Text(
+                                              '$itemNumber',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
@@ -970,6 +746,7 @@ class PerformanceValidationToolPeriodPageState
                                               DateTimeConverter().toJson(
                                                 pvtPeriod.startDate,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
@@ -978,11 +755,24 @@ class PerformanceValidationToolPeriodPageState
                                               DateTimeConverter().toJson(
                                                 pvtPeriod.endDate,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
                                             flex: 2,
-                                            child: Text(pvtPeriod.period ?? ''),
+                                            child: Text(
+                                              pvtPeriod.period ?? '',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              (pvtPeriod.isActive ?? false)
+                                                  ? 'Active'
+                                                  : 'Inactive',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
@@ -992,7 +782,7 @@ class PerformanceValidationToolPeriodPageState
                                                   message: 'Edit',
                                                   child: IconButton(
                                                     icon: const Icon(
-                                                      size: 18,
+                                                      size: 16,
                                                       Icons.edit_outlined,
                                                     ),
                                                     onPressed: () {
@@ -1014,6 +804,10 @@ class PerformanceValidationToolPeriodPageState
                                                                 ),
                                                         period:
                                                             pvtPeriod.period,
+                                                        isActive:
+                                                            pvtPeriod
+                                                                .isActive ??
+                                                            false,
                                                       );
                                                     },
                                                   ),
@@ -1021,7 +815,7 @@ class PerformanceValidationToolPeriodPageState
 
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,
@@ -1080,6 +874,9 @@ class PerformanceValidationToolPeriodPageState
                                                           pvtPeriod.endDate,
                                                         ),
                                                     period: pvtPeriod.period,
+                                                    isActive:
+                                                        pvtPeriod.isActive ??
+                                                        false,
                                                   );
                                                 }
 

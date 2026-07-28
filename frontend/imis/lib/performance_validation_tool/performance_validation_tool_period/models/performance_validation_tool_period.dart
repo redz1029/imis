@@ -17,6 +17,7 @@ class PerformanceValidationToolPeriod {
   DateTime endDate;
   String? period;
   String? rowVersion;
+  bool? isActive;
 
   PerformanceValidationToolPeriod(
     this.id,
@@ -25,6 +26,7 @@ class PerformanceValidationToolPeriod {
     this.endDate, {
     this.period,
     this.rowVersion,
+    this.isActive,
   });
 
   factory PerformanceValidationToolPeriod.fromJson(Map<String, dynamic> json) =>
