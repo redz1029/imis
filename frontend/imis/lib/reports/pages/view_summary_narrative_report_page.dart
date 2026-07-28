@@ -322,17 +322,6 @@ class ViewSummaryNarrativeReportPageState
 
                     const SizedBox(height: 10),
 
-                    // Expanded(
-                    //   child:
-                    //       _isLoading
-                    //           ? Center(
-                    //             child: CircularProgressIndicator(
-                    //               color: primaryColor,
-                    //             ),
-                    //           )
-                    //           : ListView.builder(
-                    //             itemCount: filteredList.length,
-                    //             itemBuilder: (context, index) {
                     Expanded(
                       child:
                           _isLoading
@@ -1053,7 +1042,6 @@ class ViewSummaryNarrativeReportPageState
                             ),
                             onPressed: () {
                               _remakrsController.clear();
-
                               Navigator.of(context).pop();
                             },
                           ),
@@ -1067,7 +1055,6 @@ class ViewSummaryNarrativeReportPageState
                             color: Colors.grey[700],
                           ),
                           const SizedBox(width: 8),
-
                           Text(
                             'Summary Narrative Report - ${summary != null ? getPeriodLabel(summary.pgsPeriodId) : selectedPeriodText}',
                             style: const TextStyle(

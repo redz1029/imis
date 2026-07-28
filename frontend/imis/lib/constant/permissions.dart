@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-07-23 10:04:45.031845
+// Last synced: 2026-07-27 19:48:41.304489
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -92,6 +92,10 @@ class AppPermissions {
   static const String addPerformanceGovernanceSystem = 'Add Performance Governance System';
   static const String viewPerformanceGovernanceSystem = 'View Performance Governance System';
   static const String editPerformanceGovernanceSystem = 'Edit Performance Governance System';
+  static const String deleteSignatory = 'Delete Signatory';
+  static const String addSignatory = 'Add Signatory';
+  static const String viewSignatory = 'View Signatory';
+  static const String editSignatory = 'Edit Signatory';
   static const String deleteOperationReviewProtocol = 'Delete Operation Review Protocol';
   static const String addOperationReviewProtocol = 'Add Operation Review Protocol';
   static const String viewOperationReviewProtocol = 'View Operation Review Protocol';

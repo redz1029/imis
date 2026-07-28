@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
@@ -29,7 +30,6 @@ import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/roadmap/pages/roadmap_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
-import 'package:imis/scorecard/pages/score_card_monitoring_page.dart';
 import 'package:imis/scorecard/pages/score_card_report_page.dart';
 import 'package:imis/strategy_review_report/pages/strategy_review_report_page.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/pages/strategy_review_period_page.dart';
@@ -340,9 +340,9 @@ class SidebarState extends State<Sidebar> {
                           fit: BoxFit.contain,
                         ),
                         SizedBox(height: 14),
-                        const Text(
+                        Text(
                           "Welcome Back!",
-                          style: TextStyle(
+                          style: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.bold,
                             fontSize: 24,
                           ),
@@ -624,9 +624,9 @@ class SidebarState extends State<Sidebar> {
                               fit: BoxFit.contain,
                             ),
                             SizedBox(height: 14),
-                            const Text(
+                            Text(
                               "Switch Role",
-                              style: TextStyle(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 24,
                               ),
@@ -1131,9 +1131,9 @@ class SidebarState extends State<Sidebar> {
   Widget getCurrentPage() {
     if (selectedPage == 0) {
       if (selectedSubPage == 0) return HomePage();
-      if (selectedSubPage == 1) return StrategyRoadmapPage();
-      if (selectedSubPage == 2) return const StrategicChangeAgenda();
-      if (selectedSubPage == 3) return OsmCalendarActvityPage();
+      if (selectedSubPage == 1) return OsmCalendarActvityPage();
+      if (selectedSubPage == 2) return StrategyRoadmapPage();
+      if (selectedSubPage == 3) return const StrategicChangeAgenda();
     }
     if (selectedPage == 1) {
       if (selectedSubPage == 0) return const RoadmapPage();
@@ -1141,7 +1141,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 2) return const SwotPage();
       if (selectedSubPage == 3) return const DeliverableStatusMonitoringPage();
       if (selectedSubPage == 8) return const OperationReviewProtocolPage();
-      if (selectedSubPage == 4) return const ScoreCardMonitoringPage();
+      // if (selectedSubPage == 4) return const ScoreCardMonitoringPage();
       if (selectedSubPage == 5) return const ScoreCardReportPage();
       if (selectedSubPage == 7) return const StrategyReviewReportPage();
       if (selectedSubPage == 6) return const ViewSummaryNarrativeReportPage();
@@ -1272,7 +1272,16 @@ class SidebarState extends State<Sidebar> {
                       ),
 
                       const Spacer(),
-
+                      IconButton(
+                        tooltip: 'Notification',
+                        icon: Icon(
+                          Icons.notifications_outlined,
+                          color: Colors.grey[700],
+                          size: 32,
+                        ),
+                        onPressed: () {},
+                      ),
+                      const SizedBox(width: 24),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           double maxWidth =
@@ -1367,40 +1376,115 @@ class SidebarState extends State<Sidebar> {
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
+          (context) => Dialog(
             backgroundColor: Colors.white,
-
-            title: const Text('Logout'),
-            content: const Text('Are you sure you want to logout?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: primaryColor),
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+            child: Container(
+              width: 380,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: kSurface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 32,
+                    offset: const Offset(0, 12),
                   ),
-                ),
-                onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.remove('selectedRole');
-                  await AuthUtil.logout(context);
-                  if (!context.mounted) return;
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                    (route) => false,
-                  );
-                },
-
-                child: Text('Logout', style: TextStyle(color: Colors.white)),
+                ],
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: kDangerLight,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.logout_outlined,
+                      color: primaryColor,
+                      size: 28,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Logout',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: kText,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Are you sure you want to logout?',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: kMuted,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: kBorder),
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: kMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.remove('selectedRole');
+                            await AuthUtil.logout(context);
+                            if (!context.mounted) return;
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                builder: (context) => const LoginPage(),
+                              ),
+                              (route) => false,
+                            );
+                          },
+
+                          child: Text(
+                            'Logout',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
     );
   }
@@ -1510,9 +1594,9 @@ class SidebarState extends State<Sidebar> {
                 children: [
                   if (selectedPage == 0) ...[
                     sidebarSubText("Overview", 0),
-                    sidebarSubText("Strategy Map", 1),
-                    sidebarSubText("Strategic Change Agenda", 2),
-                    sidebarSubText("Calendar of Activities", 3),
+                    sidebarSubText("Calendar of Activities", 1),
+                    sidebarSubText("Strategy Map", 2),
+                    sidebarSubText("Strategic Change Agenda", 3),
                   ],
                   //PGS
                   if (selectedPage == 1) ...[
@@ -1630,42 +1714,6 @@ class SidebarState extends State<Sidebar> {
 
                     PermissionWidget(
                       child:
-                          [
-                                PermissionRoleString.roleAdmin,
-                                PermissionRoleString.trainingOfficer,
-                                PermissionRoleString.hrOfficer,
-                                PermissionRoleString.serviceOfficer,
-                                PermissionRoleString.financeOfficer,
-                                PermissionRoleString.safetyOfficer,
-                                PermissionRoleString.facilityOfficer,
-                                PermissionRoleString.linkagesOfficer,
-                                PermissionRoleString.informationOfficer,
-                                PermissionRoleString.researchOfficer,
-                                PermissionRoleString.coreTeam,
-                                PermissionRoleString.serviceHead,
-                                PermissionRoleString.headAuditor,
-                                PermissionRoleString.mcc,
-                                PermissionRoleString.osm,
-                                PermissionRoleString.pgsAuditor,
-                                PermissionRoleString.twg,
-                              ].contains(selectedRole)
-                              ? ExpandableSidebarItem(
-                                title: "Scorecard",
-                                items: [
-                                  {"title": "Monitoring", "index": 4},
-                                  {"title": "Reports", "index": 5},
-                                ],
-                                selectedSubPage: selectedSubPage,
-                                onTap: (index) {
-                                  setState(() {
-                                    selectedSubPage = index;
-                                  });
-                                },
-                              )
-                              : SizedBox.shrink(),
-                    ),
-                    PermissionWidget(
-                      child:
                           (selectedRole == PermissionRoleString.roleAdmin ||
                                   selectedRole ==
                                       PermissionRoleString.roleStandardUser ||
@@ -1709,6 +1757,70 @@ class SidebarState extends State<Sidebar> {
                                 7,
                               )
                               : const SizedBox.shrink(),
+                    ),
+
+                    // PermissionWidget(
+                    //   child:
+                    //       [
+                    //             PermissionRoleString.roleAdmin,
+                    //             PermissionRoleString.trainingOfficer,
+                    //             PermissionRoleString.hrOfficer,
+                    //             PermissionRoleString.serviceOfficer,
+                    //             PermissionRoleString.financeOfficer,
+                    //             PermissionRoleString.safetyOfficer,
+                    //             PermissionRoleString.facilityOfficer,
+                    //             PermissionRoleString.linkagesOfficer,
+                    //             PermissionRoleString.informationOfficer,
+                    //             PermissionRoleString.researchOfficer,
+                    //             PermissionRoleString.coreTeam,
+                    //             PermissionRoleString.serviceHead,
+                    //             PermissionRoleString.headAuditor,
+                    //             PermissionRoleString.mcc,
+                    //             PermissionRoleString.osm,
+                    //             PermissionRoleString.pgsAuditor,
+                    //             PermissionRoleString.twg,
+                    //           ].contains(selectedRole)
+                    //           ? ExpandableSidebarItem(
+                    //             title: "Scorecard",
+                    //             items: [
+                    //               {"title": "Monitoring", "index": 4},
+                    //               {"title": "Reports", "index": 5},
+                    //             ],
+                    //             selectedSubPage: selectedSubPage,
+                    //             onTap: (index) {
+                    //               setState(() {
+                    //                 selectedSubPage = index;
+                    //               });
+                    //             },
+                    //           )
+                    //           : SizedBox.shrink(),
+                    // ),
+                    PermissionWidget(
+                      child:
+                          [
+                                PermissionRoleString.roleAdmin,
+                                PermissionRoleString.trainingOfficer,
+                                PermissionRoleString.hrOfficer,
+                                PermissionRoleString.serviceOfficer,
+                                PermissionRoleString.financeOfficer,
+                                PermissionRoleString.safetyOfficer,
+                                PermissionRoleString.facilityOfficer,
+                                PermissionRoleString.linkagesOfficer,
+                                PermissionRoleString.informationOfficer,
+                                PermissionRoleString.researchOfficer,
+                                PermissionRoleString.coreTeam,
+                                PermissionRoleString.serviceHead,
+                                PermissionRoleString.headAuditor,
+                                PermissionRoleString.mcc,
+                                PermissionRoleString.osm,
+                                PermissionRoleString.pgsAuditor,
+                                PermissionRoleString.twg,
+                              ].contains(selectedRole)
+                              ? sidebarSubText(
+                                "Core & Support Processes Scorecard ",
+                                5,
+                              )
+                              : SizedBox.shrink(),
                     ),
                     PermissionWidget(
                       child:

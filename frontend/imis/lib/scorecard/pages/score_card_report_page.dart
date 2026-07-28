@@ -100,22 +100,20 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
 
     return Scaffold(
       backgroundColor: mainBgColor,
-      appBar: AppBar(
-        backgroundColor: mainBgColor,
-        title: const Text(
-          'Core & Support Processes Scorecard Report',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            gap16px,
-            Expanded(
+
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildPageHeader(isMobile),
+          gap4px,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
@@ -143,21 +141,30 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                               flex: 1,
                               child: Text(
                                 '#',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 4,
                               child: Text(
                                 'Period',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 'Actions',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -201,7 +208,10 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                           // #
                                           Expanded(
                                             flex: 1,
-                                            child: Text('$itemNumber'),
+                                            child: Text(
+                                              '$itemNumber',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
 
                                           // Period
@@ -210,6 +220,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                             child: Text(
                                               periodText,
                                               overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
 
@@ -224,7 +235,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                                     icon: const Icon(
                                                       Icons
                                                           .description_outlined,
-                                                      size: 18,
+                                                      size: 16,
                                                       color: Colors.blueAccent,
                                                     ),
                                                     onPressed: () {
@@ -261,7 +272,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                                 '$itemNumber. $periodText',
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
+                                                  fontSize: 12,
                                                 ),
                                               ),
                                             ],
@@ -270,7 +281,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                         IconButton(
                                           icon: const Icon(
                                             Icons.description_outlined,
-                                            size: 18,
+                                            size: 16,
                                             color: Colors.blueAccent,
                                           ),
                                           onPressed: () {
@@ -313,8 +324,69 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageHeader(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 900;
+    final isXSmall = width < 700;
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: EdgeInsets.fromLTRB(20, isXSmall ? 12 : 16, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(isXSmall ? 6 : 8),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.scoreboard_outlined,
+                  color: primaryColor,
+                  size: isXSmall ? 18 : 22,
+                ),
+              ),
+              SizedBox(width: isXSmall ? 8 : 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Core & Support Processes Scorecard",
+                      style: TextStyle(
+                        fontSize:
+                            isXSmall
+                                ? 12
+                                : isSmall
+                                ? 14
+                                : 16,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1A1D23),
+                      ),
+                    ),
+                    Text(
+                      "${filteredList.length} core & support processes scorecard${filteredList.length != 1 ? 's' : ''} found",
+                      style: TextStyle(
+                        fontSize: isXSmall ? 10 : 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }

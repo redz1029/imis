@@ -105,7 +105,7 @@ class _RoadmapState extends State<StrategyRoadmapPage> {
                     child: Center(
                       child: InteractiveViewer(
                         child: Image.asset(
-                          'assets/strat_map.png',
+                          'assets/strat_map.jpg',
                           width: double.infinity,
                           height: double.infinity,
                           fit: BoxFit.contain,

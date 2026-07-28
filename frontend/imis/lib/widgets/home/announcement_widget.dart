@@ -123,7 +123,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
               ],
             ),
           ),
-
           gap16px,
           Expanded(
             child: FutureBuilder<List<Announcement>>(
@@ -319,7 +318,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
     );
     bool activeState = isActive;
 
-    bool localIsActive = isActive;
     final isEdit = id != null;
     showDialog(
       context: context,
@@ -638,7 +636,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
                                   fromDate: DateTime.now(),
                                   toDate: DateTime.now(),
                                   description: descriptionController.text,
-                                  isActive: localIsActive,
+                                  isActive: activeState,
                                   isDeleted: false,
                                 );
 
@@ -655,7 +653,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
 
                                   Navigator.pop(context);
                                   if (onSaved != null) {
-                                    onSaved(); // << Call the onSaved callback
+                                    onSaved();
                                   }
 
                                   MotionToast.success(

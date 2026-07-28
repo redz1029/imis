@@ -161,9 +161,9 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final String? userFullName = event.userFullName;
+    // final String? userFullName = event.userFullName;
     final String? officeName = event.officeName;
-    final String officeUser = '$userFullName • $officeName';
+    // final String officeUser = '$userFullName • $officeName';
     return Dialog(
       backgroundColor: kSurface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -217,7 +217,7 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
               _infoCard(
                 Icons.assignment_ind_outlined,
                 'SCHEDULED BY',
-                officeUser,
+                officeName ?? '',
               ),
               if (_hasAttachment) ...[
                 const SizedBox(height: 14),
@@ -367,7 +367,7 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      SelectableText(
                         event.title,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 17,
@@ -377,7 +377,7 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
                       ),
                       if ((event.description ?? '').isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(
+                        SelectableText(
                           event.description!,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
