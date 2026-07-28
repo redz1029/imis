@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: empty_catches, use_build_context_synchronously
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
+import 'package:imis/roadmap/dialog/roadmap_history_dialog.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/roadmap/models/kpi_roadmap.dart';
@@ -84,14 +85,43 @@ const List<_GutQuestion> _gutQuestions = [
 ];
 
 class _KpiEntry {
-  final TextEditingController kpiCtrl;
-  final TextEditingController targetCtrl;
-  final TextEditingController baselineCtrl;
+  final KpiRoadmap? existingKpi;
 
-  _KpiEntry({String kpi = '', String target = '', String baseline = ''})
-    : kpiCtrl = TextEditingController(text: kpi),
-      targetCtrl = TextEditingController(text: target),
-      baselineCtrl = TextEditingController(text: baseline);
+  final TextEditingController kpiCtrl;
+  final TextEditingController baselineCtrl;
+  final TextEditingController targetCtrl;
+
+  final Map<String, TextEditingController> yearTargetCtrls;
+
+  _KpiEntry({this.existingKpi, List<String> year = const []})
+    : kpiCtrl = TextEditingController(text: existingKpi?.kpiDescription ?? ''),
+      targetCtrl = TextEditingController(),
+      baselineCtrl = TextEditingController(),
+      yearTargetCtrls = {for (final y in year) y: TextEditingController()} {
+    for (final item in existingKpi?.items ?? <KpiRoadmapItem>[]) {
+      final key = item.year?.toString();
+
+      if (key != null && yearTargetCtrls.containsKey(key)) {
+        yearTargetCtrls[key]!.text = item.target ?? '';
+      }
+      if (baselineCtrl.text.isEmpty) {
+        baselineCtrl.text = item.baseLine ?? '';
+      }
+      if (targetCtrl.text.isEmpty) {
+        targetCtrl.text = item.target ?? '';
+      }
+    }
+  }
+
+  void dispose() {
+    kpiCtrl.dispose();
+    targetCtrl.dispose();
+    baselineCtrl.dispose();
+
+    for (final controller in yearTargetCtrls.values) {
+      controller.dispose();
+    }
+  }
 }
 
 class _RowEntry {
@@ -383,11 +413,44 @@ class _ExpandableCell extends StatelessWidget {
   }
 }
 
-class _BorderedTextField extends StatelessWidget {
+class CompactCell extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
 
-  const _BorderedTextField({required this.controller, required this.hint});
+  const CompactCell({super.key, required this.controller, required this.hint});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        border: Border(right: BorderSide(color: Colors.grey.shade300)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: TextField(
+        controller: controller,
+        style: const TextStyle(fontSize: 13),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: EdgeInsets.zero,
+        ),
+      ),
+    );
+  }
+}
+
+class BorderedTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+
+  const BorderedTextField({
+    super.key,
+    required this.controller,
+    required this.hint,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -426,9 +489,9 @@ class _BorderedTextField extends StatelessWidget {
   }
 }
 
-class _KpiLabel extends StatelessWidget {
+class KpiLabel extends StatelessWidget {
   final String text;
-  const _KpiLabel(this.text);
+  const KpiLabel(this.text, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -447,6 +510,7 @@ class _StrategicSection extends StatelessWidget {
   final _Screen screen;
   final String? strategicObjective;
   final List<_KpiEntry> kpis;
+  final List<String> years;
   final VoidCallback onAddKpi;
   final void Function(int) onRemoveKpi;
 
@@ -454,6 +518,7 @@ class _StrategicSection extends StatelessWidget {
     required this.screen,
     required this.strategicObjective,
     required this.kpis,
+    required this.years,
     required this.onAddKpi,
     required this.onRemoveKpi,
   });
@@ -462,46 +527,9 @@ class _StrategicSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSmall = screen == _Screen.small;
 
-    Widget kpiPanel = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ...kpis.asMap().entries.map((e) {
-          final idx = e.key;
-          final kpi = e.value;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child:
-                isSmall
-                    ? _KpiRowSmall(
-                      idx: idx,
-                      kpi: kpi,
-                      canDelete: kpis.length > 1,
-                      onDelete: () => _confirmDeleteKpi(context, idx),
-                    )
-                    : _KpiRowLarge(
-                      idx: idx,
-                      kpi: kpi,
-                      canDelete: kpis.length > 1,
-                      onDelete: () => _confirmDeleteKpi(context, idx),
-                    ),
-          );
-        }),
-        PermissionWidget(
-          permission: AppPermissions.editKraRoadMap,
-          child: TextButton.icon(
-            onPressed: onAddKpi,
-            icon: const Icon(Icons.add, size: 15, color: primaryColor),
-            label: const Text(
-              'Add KPI',
-              style: TextStyle(color: primaryColor, fontSize: 14),
-            ),
-          ),
-        ),
-      ],
-    );
-
     Widget objectivePanel = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         const Text(
           'Strategic Objective',
@@ -509,47 +537,46 @@ class _StrategicSection extends StatelessWidget {
             color: primaryColor,
             fontStyle: FontStyle.italic,
             fontWeight: FontWeight.w600,
-            fontSize: 14,
+            fontSize: 13,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           strategicObjective ?? '',
-          style: const TextStyle(fontSize: 14, color: Colors.black87),
+          style: const TextStyle(fontSize: 13, color: Colors.black87),
         ),
       ],
     );
 
-    if (!isSmall) {
+    if (isSmall) {
       return Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
           borderRadius: BorderRadius.circular(8),
           color: Colors.white,
         ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      right: BorderSide(color: Colors.grey.shade300),
-                    ),
-                  ),
-                  child: objectivePanel,
-                ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: kpiPanel,
-                ),
+              child: objectivePanel,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: _KpiTableCompact(
+                screen: screen,
+                kpis: kpis,
+                years: years,
+                onAddKpi: onAddKpi,
+                onRemoveKpi: onRemoveKpi,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
@@ -560,20 +587,282 @@ class _StrategicSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         color: Colors.white,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Left: strategic objective (fixed width)
+            SizedBox(
+              width: 220,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    right: BorderSide(color: Colors.grey.shade300),
+                  ),
+                ),
+                child: objectivePanel,
+              ),
             ),
-            child: objectivePanel,
-          ),
-          Padding(padding: const EdgeInsets.all(10), child: kpiPanel),
-        ],
+            Expanded(
+              child: _KpiTableCompact(
+                screen: screen,
+                kpis: kpis,
+                years: years,
+                onAddKpi: onAddKpi,
+                onRemoveKpi: onRemoveKpi,
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _KpiTableCompact extends StatelessWidget {
+  final _Screen screen;
+  final List<_KpiEntry> kpis;
+  final List<String> years;
+  final VoidCallback onAddKpi;
+  final void Function(int) onRemoveKpi;
+
+  const _KpiTableCompact({
+    required this.screen,
+    required this.kpis,
+    required this.years,
+    required this.onAddKpi,
+    required this.onRemoveKpi,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (screen == _Screen.small) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ...kpis.asMap().entries.map(
+            (e) => _KpiCard(
+              index: e.key,
+              kpi: e.value,
+              years: years,
+              canDelete: kpis.length > 1,
+              onDelete: () => _confirmDeleteKpi(context, e.key),
+            ),
+          ),
+          Align(
+            child: PermissionWidget(
+              permission: AppPermissions.editKraRoadMap,
+              child: TextButton.icon(
+                onPressed: onAddKpi,
+                icon: const Icon(Icons.add, size: 14, color: primaryColor),
+                label: const Text(
+                  'Add KPI',
+                  style: TextStyle(color: primaryColor, fontSize: 13),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          color: Colors.grey.shade100,
+          child: Row(
+            children: [
+              SizedBox(
+                width: kActionColW,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      right: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                  child: const Text(
+                    'Action',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      right: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                  child: const Text(
+                    'KPI',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      right: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                  child: const Text(
+                    'Baseline',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ),
+              ...years.map(
+                (y) => Expanded(
+                  flex: 2,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    child: Text(
+                      y,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1, thickness: 1),
+        ...kpis.asMap().entries.map((e) {
+          final idx = e.key;
+          final kpi = e.value;
+          final isEven = idx % 2 == 0;
+          return Container(
+            decoration: BoxDecoration(
+              color:
+                  isEven ? Colors.white : primaryColor.withValues(alpha: 0.05),
+              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: kActionColW,
+                    child: Center(
+                      child: PermissionWidget(
+                        permission: AppPermissions.editKraRoadMap,
+                        child: IconButton(
+                          icon: Icon(
+                            CupertinoIcons.delete_simple,
+                            color:
+                                kpis.length > 1
+                                    ? Colors.redAccent
+                                    : Colors.grey.shade300,
+                            size: 16,
+                          ),
+                          onPressed:
+                              kpis.length > 1
+                                  ? () => _confirmDeleteKpi(context, idx)
+                                  : null,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 30,
+                            minHeight: 36,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: _ExpandableCell(
+                      controller: kpi.kpiCtrl,
+                      hint: 'KPI ${idx + 1}',
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: _ExpandableCell(
+                      controller: kpi.baselineCtrl,
+                      hint: 'Baseline',
+                    ),
+                  ),
+                  ...years.map(
+                    (y) => Expanded(
+                      flex: 2,
+                      child: _ExpandableCell(
+                        controller:
+                            kpi.yearTargetCtrls[y] ?? TextEditingController(),
+                        hint: 'Target $y',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Align(
+            child: PermissionWidget(
+              permission: AppPermissions.editKraRoadMap,
+              child: TextButton.icon(
+                onPressed: onAddKpi,
+                icon: const Icon(Icons.add, size: 14, color: primaryColor),
+                label: const Text(
+                  'Add KPI',
+                  style: TextStyle(color: primaryColor, fontSize: 13),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 12,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -584,9 +873,7 @@ class _StrategicSection extends StatelessWidget {
       builder:
           (ctx) => AlertDialog(
             title: const Text('Confirm Delete'),
-            content: const Text(
-              'Are you sure you want to remove this KPI? This action cannot be undone.',
-            ),
+            content: const Text('Are you sure you want to remove this KPI?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -617,145 +904,128 @@ class _StrategicSection extends StatelessWidget {
   }
 }
 
-class _KpiRowLarge extends StatelessWidget {
-  final int idx;
+class _KpiCard extends StatelessWidget {
+  final int index;
   final _KpiEntry kpi;
+  final List<String> years;
   final bool canDelete;
   final VoidCallback onDelete;
 
-  const _KpiRowLarge({
-    required this.idx,
+  const _KpiCard({
+    required this.index,
     required this.kpi,
+    required this.years,
     required this.canDelete,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _KpiLabel('KPI ${idx + 1}:'),
-        const SizedBox(width: 5),
-        Expanded(
-          child: _BorderedTextField(controller: kpi.kpiCtrl, hint: 'KPI'),
-        ),
-        const SizedBox(width: 8),
-        _KpiLabel('Target ${idx + 1}:'),
-        const SizedBox(width: 5),
-        Expanded(
-          child: _BorderedTextField(controller: kpi.targetCtrl, hint: 'Target'),
-        ),
-        const SizedBox(width: 8),
-        _KpiLabel('Baseline ${idx + 1}:'),
-        const SizedBox(width: 5),
-        Expanded(
-          child: _BorderedTextField(
-            controller: kpi.baselineCtrl,
-            hint: 'Baseline',
-          ),
-        ),
-        const SizedBox(width: 2),
-        PermissionWidget(
-          permission: AppPermissions.editKraRoadMap,
-          child: IconButton(
-            icon: Icon(
-              CupertinoIcons.delete_simple,
-              color: canDelete ? Colors.red : Colors.grey[300],
-              size: 19,
-            ),
-            onPressed: canDelete ? onDelete : null,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-          ),
-        ),
-      ],
-    );
-  }
-}
+    final screenW = MediaQuery.of(context).size.width;
+    final yearFieldW = (screenW - 60) / 2;
 
-class _KpiRowSmall extends StatelessWidget {
-  final int idx;
-  final _KpiEntry kpi;
-  final bool canDelete;
-  final VoidCallback onDelete;
-
-  const _KpiRowSmall({
-    required this.idx,
-    required this.kpi,
-    required this.canDelete,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(10, 8, 6, 10),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(6),
-        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
       ),
+      padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Text(
-                'KPI ${idx + 1}',
+                'KPI ${index + 1}',
                 style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                   color: primaryColor,
                 ),
               ),
               const Spacer(),
-              if (canDelete)
-                PermissionWidget(
-                  permission: AppPermissions.editKraRoadMap,
-                  child: GestureDetector(
-                    onTap: onDelete,
-                    child: const Icon(
-                      CupertinoIcons.delete_simple,
-                      color: Colors.red,
-                      size: 18,
-                    ),
+              PermissionWidget(
+                permission: AppPermissions.editKraRoadMap,
+                child: IconButton(
+                  icon: Icon(
+                    CupertinoIcons.delete_simple,
+                    color: canDelete ? Colors.redAccent : Colors.grey.shade300,
+                    size: 18,
+                  ),
+                  onPressed: canDelete ? onDelete : null,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 30,
+                    minHeight: 30,
                   ),
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          _SmallLabelField(label: 'KPI', controller: kpi.kpiCtrl),
           const SizedBox(height: 6),
-          _SmallLabelField(label: 'Target', controller: kpi.targetCtrl),
-          const SizedBox(height: 6),
-          _SmallLabelField(label: 'Baseline', controller: kpi.baselineCtrl),
+          const Text(
+            'KPI',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 3),
+          _ExpandableCell(
+            controller: kpi.kpiCtrl,
+            hint: 'KPI description',
+            bordered: true,
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Baseline',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 3),
+          _ExpandableCell(
+            controller: kpi.baselineCtrl,
+            hint: 'Baseline',
+            bordered: true,
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children:
+                years.map((y) {
+                  return SizedBox(
+                    width: yearFieldW,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Target $y',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        _ExpandableCell(
+                          controller:
+                              kpi.yearTargetCtrls[y] ?? TextEditingController(),
+                          hint: '',
+                          bordered: true,
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+          ),
         ],
       ),
-    );
-  }
-}
-
-class _SmallLabelField extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  const _SmallLabelField({required this.label, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.grey,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 3),
-        _BorderedTextField(controller: controller, hint: label),
-      ],
     );
   }
 }
@@ -843,9 +1113,7 @@ class _LargeTableSection extends StatelessWidget {
       builder:
           (ctx) => AlertDialog(
             title: const Text('Confirm Delete'),
-            content: const Text(
-              'Are you sure you want to remove this row? This action cannot be undone.',
-            ),
+            content: const Text('Are you sure you want to remove this row?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -1298,28 +1566,28 @@ class _GutCheckTab extends StatelessWidget {
             'Below 2.5',
             'Poor',
             Colors.red,
-            'The roadmap has significant shortcomings and does not meet the desired criteria.',
+            'The roadmap has significant shortcomings.',
           ),
           const SizedBox(height: 10),
           _buildBand(
             'Between 2.5 and 3.49',
             'Fair',
             Colors.orange,
-            'The roadmap partially meets the criteria but requires improvement in certain areas.',
+            'Partially meets criteria but requires improvement.',
           ),
           const SizedBox(height: 10),
           _buildBand(
             'Between 3.5 and 4.49',
             'Good',
             Colors.green,
-            'The roadmap demonstrates alignment with the desired criteria and fulfills the majority of the requirements.',
+            'Demonstrates alignment and fulfills majority of requirements.',
           ),
           const SizedBox(height: 10),
           _buildBand(
             'Between 4.5 and 5',
             'Excellent',
             const Color(0xFF16A085),
-            'The roadmap strongly aligns with the desired criteria and fulfills all or most of the requirements, indicating a high-quality roadmap.',
+            'Strongly aligns and fulfills all or most requirements.',
           ),
         ],
       ),
@@ -1386,6 +1654,7 @@ class _GutCheckTab extends StatelessWidget {
   }
 }
 
+// --- Main roadmap dialog ------------------------------------------------------
 class _RoadmapMainDialog extends StatefulWidget {
   final String kraName;
   final String strategicObjective;
@@ -1449,18 +1718,13 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
     final roadmap = widget.roadmapToEdit;
 
     if (roadmap != null) {
-      // KPIs
       _kpis =
-          (roadmap.kpis ?? [])
-              .map(
-                (k) => _KpiEntry(
-                  kpi: k.kpiDescription ?? '',
-                  target: k.target ?? '',
-                  baseline: k.baseLine ?? '',
-                ),
-              )
-              .toList();
-      if (_kpis.isEmpty) _kpis = [_KpiEntry()];
+          (roadmap.kpis ?? []).map((k) {
+            final entry = _KpiEntry(existingKpi: k, year: _years);
+
+            return entry;
+          }).toList();
+      if (_kpis.isEmpty) _kpis = [_KpiEntry(year: _years)];
 
       _rows =
           (roadmap.deliverables ?? []).map((group) {
@@ -1481,7 +1745,6 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
       if (_rows.isEmpty) _rows = [_RowEntry(_years)];
 
       final g = roadmap.roadmapGutCheck;
-
       if (g != null) {
         _gutRatings[0] = g.ownership.round();
         _gutRatings[1] = g.alignment.round();
@@ -1492,18 +1755,17 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
         _gutRatings[6] = g.commitment.round();
       }
     } else {
-      _kpis = [_KpiEntry()];
+      _kpis = [_KpiEntry(year: _years)];
       _rows = [_RowEntry(_years)];
     }
   }
 
-  void _addKpi() => setState(() => _kpis.add(_KpiEntry()));
+  void _addKpi() => setState(() => _kpis.add(_KpiEntry(year: _years)));
   void _removeKpi(int i) => setState(() => _kpis.removeAt(i));
   void _addRow() => setState(() => _rows.add(_RowEntry(_years)));
   void _removeRow(int i) => setState(() => _rows.removeAt(i));
 
   double _gutRating(int i) => (_gutRatings[i] ?? 0).toDouble();
-
   double _gutAverage() {
     if (_gutRatings.isEmpty) return 0.0;
     return _gutRatings.values.fold(0, (a, b) => a + b) / _gutRatings.length;
@@ -1515,14 +1777,14 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
       isEdit ? widget.roadmapToEdit!.roadmapGutCheck?.id ?? 0 : 0,
       false,
       isEdit ? widget.roadmapToEdit!.roadmapGutCheck?.rowVersion : null,
-      _gutRating(0), // ownership
-      _gutRating(1), // alignment
-      _gutRating(2), // contribution
-      _gutRating(3), // measurement
-      _gutRating(4), // adaptability
-      _gutRating(5), // coherence
-      _gutRating(6), // commitment
-      _gutAverage(), // totalScore
+      _gutRating(0),
+      _gutRating(1),
+      _gutRating(2),
+      _gutRating(3),
+      _gutRating(4),
+      _gutRating(5),
+      _gutRating(6),
+      _gutAverage(),
     );
   }
 
@@ -1542,6 +1804,7 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
                 screen: screen,
                 strategicObjective: widget.selectedKra.strategicObjectives,
                 kpis: _kpis,
+                years: _years,
                 onAddKpi: _addKpi,
                 onRemoveKpi: _removeKpi,
               ),
@@ -1615,19 +1878,21 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: _StrategicSection(
             screen: screen,
             strategicObjective: widget.selectedKra.strategicObjectives,
             kpis: _kpis,
+            years: _years,
             onAddKpi: _addKpi,
             onRemoveKpi: _removeKpi,
           ),
         ),
-        gap6px,
+        const SizedBox(height: 10),
+        // -- KRA deliverables table (expands to fill remaining space) --
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: _LargeTableSection(
               screen: screen,
               rows: _rows,
@@ -1638,7 +1903,6 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
             ),
           ),
         ),
-        const SizedBox(height: 8),
       ],
     );
   }
@@ -1689,7 +1953,7 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
             backgroundColor: Colors.transparent,
             child: Container(
               width: 380,
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: kSurface,
                 borderRadius: BorderRadius.circular(16),
@@ -1697,7 +1961,7 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.12),
                     blurRadius: 32,
-                    offset: Offset(0, 12),
+                    offset: const Offset(0, 12),
                   ),
                 ],
               ),
@@ -1711,7 +1975,7 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
                       color: kPrimaryBg,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.save_outlined,
                       color: primaryColor,
                       size: 28,
@@ -1772,7 +2036,7 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
                             elevation: 0,
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -1790,7 +2054,6 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
     if (confirm != true) return;
 
     final gutCheck = _buildGutCheck();
-
     Navigator.pop(context);
     await widget.onSave(
       _kpis,
@@ -1862,7 +2125,6 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
                 controller: _tabController,
                 children: [
                   _buildRoadmapTab(context),
-                  // ── pass ratings and callback to GutCheckTab ──
                   _GutCheckTab(
                     roadmapName,
                     ratings: _gutRatings,
@@ -1891,10 +2153,6 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────
-// ROADMAP PAGE
-// ─────────────────────────────────────────────────────────────
 
 class RoadmapPage extends StatefulWidget {
   const RoadmapPage({super.key});
@@ -1953,7 +2211,6 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
       if (selectedRoleName != null) {
         try {
           currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
-          // ignore: empty_catches
         } catch (e) {}
       }
       tempRoleId = currentRole.id;
@@ -2293,7 +2550,6 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
             selectedKra: selectedKra,
             roadmapToEdit: roadmapToEdit,
             onBack: () => showPeriodPanel(selectedKra: selectedKra),
-            // ── onSave now receives gutCheck as 5th argument ──
             onSave: (kpis, rows, years, isEdit, gutCheck) async {
               final List<DeliverableGroup> allGroups = [];
               final yearColumns = years.map((y) => int.parse(y)).toList();
@@ -2345,25 +2601,44 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
               }
 
               kpiList.clear();
+
               for (final kpi in kpis) {
                 final kpiText = kpi.kpiCtrl.text.trim();
-                final targetText = kpi.targetCtrl.text.trim();
                 final baselineText = kpi.baselineCtrl.text.trim();
-                if (kpiText.isEmpty &&
-                    targetText.isEmpty &&
-                    baselineText.isEmpty) {
-                  continue;
-                }
+
+                if (kpiText.isEmpty && baselineText.isEmpty) continue;
+
+                final items =
+                    years.map((y) {
+                      final existingItem = kpi.existingKpi?.items
+                          ?.cast<KpiRoadmapItem?>()
+                          .firstWhere(
+                            (e) => e?.year?.toString() == y,
+                            orElse: () => null,
+                          );
+
+                      return KpiRoadmapItem(
+                        id: isEdit ? (existingItem?.id ?? 0) : 0,
+                        isDeleted: false,
+                        rowVersion: existingItem?.rowVersion,
+                        kraRoadMapId: isEdit ? (kpi.existingKpi?.id ?? 0) : 0,
+                        kpiDescription: kpiText,
+                        target: kpi.yearTargetCtrls[y]?.text.trim() ?? '',
+                        baseLine: baselineText,
+                        year: int.tryParse(y),
+                      );
+                    }).toList();
+
                 kpiList.add(
                   KpiRoadmap(
-                    id: 0,
+                    id: isEdit ? (kpi.existingKpi?.id ?? 0) : 0,
+                    isDeleted: false,
+                    rowVersion: kpi.existingKpi?.rowVersion,
                     kpiDescription: kpiText,
-                    target: targetText,
-                    baseLine: baselineText,
+                    items: items,
                   ),
                 );
               }
-
               final roadmap = Roadmap(
                 isEdit ? roadmapToEdit!.id : 0,
                 selectedKra.kraId,
@@ -2584,21 +2859,27 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                             flex: 1,
                                             child: Text(
                                               "$itemNumber",
-                                              style: TextStyle(fontSize: 12),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
                                             ),
                                           ),
                                           Expanded(
                                             flex: 3,
                                             child: Text(
                                               matchedKra.name,
-                                              style: TextStyle(fontSize: 12),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
                                             ),
                                           ),
                                           Expanded(
                                             flex: 2,
                                             child: Text(
                                               kraPeriod,
-                                              style: TextStyle(fontSize: 12),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
                                             ),
                                           ),
                                           Expanded(
@@ -2653,10 +2934,40 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                     },
                                                   ),
                                                 ),
+                                                Tooltip(
+                                                  message: 'View History',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons.history,
+                                                      size: 16,
+                                                      color: Colors.orange,
+                                                    ),
+                                                    onPressed: () async {
+                                                      final history =
+                                                          await _roadmapService
+                                                              .getRoadmapHistory(
+                                                                roadmap.id
+                                                                    .toString(),
+                                                              );
+                                                      if (!mounted) return;
+                                                      showDialog(
+                                                        barrierDismissible:
+                                                            false,
+                                                        context: context,
+                                                        builder:
+                                                            (ctx) =>
+                                                                RoadmapHistoryDialog(
+                                                                  history:
+                                                                      history,
+                                                                ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
                                                 PermissionWidget(
                                                   permission:
                                                       AppPermissions
-                                                          .editKraRoadMap,
+                                                          .deleteKraRoadMap,
                                                   child: IconButton(
                                                     icon: const Icon(
                                                       CupertinoIcons
@@ -2736,6 +3047,24 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                     context: context,
                                                   );
                                                 }
+                                                if (value == 'roadmapHistory') {
+                                                  final history =
+                                                      await _roadmapService
+                                                          .getRoadmapHistory(
+                                                            roadmap.id
+                                                                .toString(),
+                                                          );
+                                                  if (!mounted) return;
+                                                  showDialog(
+                                                    barrierDismissible: false,
+                                                    context: context,
+                                                    builder:
+                                                        (ctx) =>
+                                                            RoadmapHistoryDialog(
+                                                              history: history,
+                                                            ),
+                                                  );
+                                                }
                                                 if (value == 'delete' &&
                                                     permissionService
                                                         .hasPermission(
@@ -2785,12 +3114,27 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                         ],
                                                       ),
                                                     ),
+                                                    const PopupMenuItem(
+                                                      value: 'roadmapHistory',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.history,
+                                                            size: 16,
+                                                            color:
+                                                                Colors.orange,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('View history'),
+                                                        ],
+                                                      ),
+                                                    ),
                                                     PopupMenuItem(
                                                       value: 'delete',
                                                       child: PermissionWidget(
                                                         permission:
                                                             AppPermissions
-                                                                .editKraRoadMap,
+                                                                .deleteKraRoadMap,
                                                         child: const Row(
                                                           children: [
                                                             Icon(
@@ -2812,12 +3156,12 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         const SizedBox(height: 8),
                                         Text(
                                           "Process (Core & Support): ${matchedKra.name}",
-                                          style: TextStyle(fontSize: 12),
+                                          style: const TextStyle(fontSize: 12),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           "Period: $kraPeriod",
-                                          style: TextStyle(fontSize: 12),
+                                          style: const TextStyle(fontSize: 12),
                                         ),
                                       ],
                                     ),
@@ -2959,10 +3303,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   }
 
   bool get _hasActiveFilters => selectedFilter != "All Process (Core&Support)";
-
-  void _resetFilters() {
-    setState(() => selectedFilter = "All Process (Core&Support)");
-  }
+  void _resetFilters() =>
+      setState(() => selectedFilter = "All Process (Core&Support)");
 
   Widget _buildFilterBar(bool isMobile) {
     return Container(

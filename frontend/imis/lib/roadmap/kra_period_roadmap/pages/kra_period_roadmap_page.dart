@@ -387,6 +387,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                         validator:
                             (_) => selectedEndDate == null ? 'Required' : null,
                       ),
+
                       SizedBox(height: 24),
                       Row(
                         children: [

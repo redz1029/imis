@@ -1,22 +1,53 @@
 import 'package:json_annotation/json_annotation.dart';
+
 part 'kpi_roadmap.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class KpiRoadmap {
   final int id;
+  final bool? isDeleted;
+  final String? rowVersion;
   final String? kpiDescription;
-  final String? target;
-  final String? baseLine;
+  final List<KpiRoadmapItem>? items;
 
   KpiRoadmap({
     required this.id,
+    this.isDeleted,
+    this.rowVersion,
     this.kpiDescription,
-    this.target,
-    this.baseLine,
+    this.items,
   });
 
   factory KpiRoadmap.fromJson(Map<String, dynamic> json) =>
       _$KpiRoadmapFromJson(json);
 
   Map<String, dynamic> toJson() => _$KpiRoadmapToJson(this);
+}
+
+@JsonSerializable()
+class KpiRoadmapItem {
+  final int id;
+  final bool? isDeleted;
+  final String? rowVersion;
+  final int? kraRoadMapId;
+  final String? kpiDescription;
+  final String? target;
+  final String? baseLine;
+  final int? year;
+
+  KpiRoadmapItem({
+    required this.id,
+    this.isDeleted,
+    this.rowVersion,
+    this.kraRoadMapId,
+    this.kpiDescription,
+    this.target,
+    this.baseLine,
+    this.year,
+  });
+
+  factory KpiRoadmapItem.fromJson(Map<String, dynamic> json) =>
+      _$KpiRoadmapItemFromJson(json);
+
+  Map<String, dynamic> toJson() => _$KpiRoadmapItemToJson(this);
 }
