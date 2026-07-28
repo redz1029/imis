@@ -8,6 +8,7 @@ import 'package:imis/user/models/user_login.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:imis/user/pages/registration_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -361,7 +362,6 @@ class _FormPanel extends StatelessWidget {
 
                 const SizedBox(height: 28),
 
-                // Heading
                 RichText(
                   text: const TextSpan(
                     style: TextStyle(
@@ -488,10 +488,16 @@ class _FormPanel extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RegistrationPage(),
+                          ),
+                        );
+                      },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: kText,
-
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(
