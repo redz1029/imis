@@ -17,6 +17,7 @@ class StrategyReviewPeriod {
   String? quarter;
   bool isDeleted;
   String? rowVersion;
+  bool? isActive;
 
   StrategyReviewPeriod(
     this.id,
@@ -25,6 +26,7 @@ class StrategyReviewPeriod {
     this.isDeleted, {
     this.rowVersion,
     this.quarter,
+    this.isActive,
   });
 
   factory StrategyReviewPeriod.fromJson(Map<String, dynamic> json) =>

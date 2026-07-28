@@ -103,6 +103,7 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
     String? endDate,
     String? remarkrs,
     String? rowVersion,
+    bool isActive = false,
   }) {
     TextEditingController quarterController = TextEditingController(
       text: remarkrs,
@@ -317,6 +318,49 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                         label: 'Remarks',
                         controller: quarterController,
                       ),
+                      SizedBox(height: 20),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: kBackground,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Active Period',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: kText,
+                                  ),
+                                ),
+                                Text(
+                                  'Currently active as period',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: isActive,
+                              onChanged:
+                                  (val) => setStateDialog(() => isActive = val),
+                              activeColor: primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
                       SizedBox(height: 24),
                       Row(
                         children: [
@@ -524,6 +568,7 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                     selectedEndDate!,
                                     false,
                                     quarter: quarterController.text,
+                                    isActive: isActive,
                                   );
                                   await _strategyPeriodService
                                       .createOrUpdatePgsPeriod(period);
@@ -619,35 +664,60 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Start Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "End Date",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Quarter",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Status",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -694,6 +764,7 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                               DateTimeConverter().toJson(
                                                 stratperiod.startDate,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
 
@@ -703,12 +774,23 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                               DateTimeConverter().toJson(
                                                 stratperiod.endDate,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
                                             flex: 2,
                                             child: Text(
                                               stratperiod.quarter ?? '',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              (stratperiod.isActive ?? false)
+                                                  ? 'Active'
+                                                  : 'Inactive',
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
@@ -723,7 +805,7 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                                     message: 'Edit',
                                                     child: IconButton(
                                                       icon: const Icon(
-                                                        size: 18,
+                                                        size: 16,
                                                         Icons.edit_outlined,
                                                       ),
                                                       onPressed: () {
@@ -747,6 +829,10 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                                               stratperiod
                                                                   .quarter
                                                                   .toString(),
+                                                          isActive:
+                                                              stratperiod
+                                                                  .isActive ??
+                                                              false,
                                                         );
                                                       },
                                                     ),
@@ -755,7 +841,7 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
 
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,
@@ -814,6 +900,9 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                                     remarkrs:
                                                         stratperiod.quarter
                                                             .toString(),
+                                                    isActive:
+                                                        stratperiod.isActive ??
+                                                        false,
                                                   );
                                                 }
 
@@ -831,7 +920,7 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                                         children: [
                                                           Icon(
                                                             Icons.edit_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Edit'),
@@ -847,7 +936,7 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                                             CupertinoIcons
                                                                 .delete_simple,
                                                             color: Colors.red,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Delete'),
@@ -864,6 +953,12 @@ class _MyWidgetState extends State<StrategyReviewPeriodPage> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(stratperiod.quarter ?? ''),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          (stratperiod.isActive ?? false)
+                                              ? 'Active'
+                                              : 'Inactive',
+                                        ),
                                       ],
                                     ),
                                   );

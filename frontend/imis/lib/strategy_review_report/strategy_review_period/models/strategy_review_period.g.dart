@@ -15,6 +15,7 @@ StrategyReviewPeriod _$StrategyReviewPeriodFromJson(
   json['isDeleted'] as bool,
   rowVersion: json['rowVersion'] as String?,
   quarter: json['quarter'] as String?,
+  isActive: json['isActive'] as bool?,
 );
 
 Map<String, dynamic> _$StrategyReviewPeriodToJson(
@@ -26,4 +27,5 @@ Map<String, dynamic> _$StrategyReviewPeriodToJson(
   'quarter': instance.quarter,
   'isDeleted': instance.isDeleted,
   'rowVersion': instance.rowVersion,
+  'isActive': instance.isActive,
 };
