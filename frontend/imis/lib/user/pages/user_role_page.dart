@@ -912,35 +912,100 @@ class UserRolePageState extends State<UserRolePage> {
                       ),
                     ),
                     gap12px,
-                    CheckboxListTile(
-                      title: Text(
-                        allChecked ? "Uncheck All" : "Check All",
-                        style: GoogleFonts.plusJakartaSans(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                        ),
-                      ),
-                      value: allChecked,
-                      onChanged: (value) async {
-                        setDialogState(() {
-                          for (var item in permissions) {
-                            item['isAssigned'] = value;
-                          }
-                        });
 
-                        await _userRoleService.updatePermission(
-                          userId,
-                          '',
-                          roleId,
-                          permissions,
-                        );
-                      },
-                      fillColor: WidgetStateProperty.resolveWith((states) {
-                        if (states.contains(WidgetState.selected)) {
-                          return primaryColor;
-                        }
-                        return Colors.transparent;
-                      }),
+                    // CheckboxListTile(
+                    //   title: Text(
+                    //     allChecked ? "Uncheck All" : "Check All",
+                    //     style: GoogleFonts.plusJakartaSans(
+                    //       fontWeight: FontWeight.w700,
+                    //       fontSize: 12,
+                    //     ),
+                    //   ),
+                    //   value: allChecked,
+                    //   onChanged: (value) async {
+                    //     setDialogState(() {
+                    //       for (var item in permissions) {
+                    //         item['isAssigned'] = value;
+                    //       }
+                    //     });
+
+                    //     await _userRoleService.updatePermission(
+                    //       userId,
+                    //       '',
+                    //       roleId,
+                    //       permissions,
+                    //     );
+                    //   },
+                    //   fillColor: WidgetStateProperty.resolveWith((states) {
+                    //     if (states.contains(WidgetState.selected)) {
+                    //       return primaryColor;
+                    //     }
+                    //     return Colors.transparent;
+                    //   }),
+                    // ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        InkWell(
+                          borderRadius: BorderRadius.circular(6),
+                          onTap: () async {
+                            final newValue = !allChecked;
+                            setDialogState(() {
+                              for (var item in permissions) {
+                                item['isAssigned'] = newValue;
+                              }
+                            });
+                            await _userRoleService.updatePermission(
+                              userId,
+                              '',
+                              roleId,
+                              permissions,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 4,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  allChecked ? "Uncheck All" : "Check All",
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Checkbox(
+                                  value: allChecked,
+                                  onChanged: (value) async {
+                                    setDialogState(() {
+                                      for (var item in permissions) {
+                                        item['isAssigned'] = value;
+                                      }
+                                    });
+                                    await _userRoleService.updatePermission(
+                                      userId,
+                                      '',
+                                      roleId,
+                                      permissions,
+                                    );
+                                  },
+                                  fillColor: WidgetStateProperty.resolveWith((
+                                    states,
+                                  ) {
+                                    if (states.contains(WidgetState.selected)) {
+                                      return primaryColor;
+                                    }
+                                    return Colors.transparent;
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     gap16px,
                     Divider(),
