@@ -16,7 +16,7 @@ public class KraRoadMapDto : BaseDto<KraRoadMap, long>
     public KraRoadMapPeriodDto? KraRoadMapPeriod { get; set; }
 
     public List<KraRoadMapDeliverableGroupDto>? Deliverables { get; set; }
-    public List<KraRoadMapKpiDto>? Kpis { get; set; }
+    public List<KraRoadMapKpiGroupDto>? Kpis { get; set; }
 
     public required string RoleId { get; set; }
 
@@ -49,7 +49,12 @@ public class KraRoadMapDto : BaseDto<KraRoadMap, long>
             .ToList();
 
         Kpis = entity.Kpis?
-            .Select(k => new KraRoadMapKpiDto(k))
+            .Select(k => new KraRoadMapKpiGroupDto
+            {
+                Id = k.Id,
+                KpiDescription = k.KpiDescription,
+                Items = new List<KraRoadMapKpi> { k }
+            })
             .ToList();
 
         RoleId = entity.RoleId!;
@@ -76,7 +81,14 @@ public class KraRoadMapDto : BaseDto<KraRoadMap, long>
                 })
                 .ToList(),
 
-            Kpis = Kpis?.Select(k => k.ToEntity()).ToList(),
+            Kpis = Kpis?
+                .SelectMany(g => g.Items ?? new List<KraRoadMapKpi>())
+                .Select(k =>
+                {
+                    k.IsDeleted = false;
+                    return k;
+                })
+                .ToList(),
 
             RoleId = RoleId,
 

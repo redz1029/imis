@@ -8,5 +8,6 @@ namespace IMIS.Domain
         public string? KpiDescription { get; set; }
         public string? Target { get; set; }
         public string? BaseLine { get; set; }
+        public int? Year { get; set; }
     }
 }
