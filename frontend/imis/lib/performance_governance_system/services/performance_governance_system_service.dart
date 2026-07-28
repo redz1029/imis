@@ -39,17 +39,38 @@ class PerformanceGovernanceSystemService {
     );
   }
 
-  Future<int?> saveAsDraft(PerformanceGovernanceSystem pgs) async {
+  Future<(int?, String?)> saveAsDraft(PerformanceGovernanceSystem pgs) async {
     final user = await AuthUtil.fetchLoggedUser();
-    if (user == null || user.id == null || user.id!.isEmpty) return 401;
+    if (user == null || user.id == null || user.id!.isEmpty) return (401, null);
 
     final url = '${ApiEndpoint().pgsSaveAsDraft}?userId=${user.id}';
-    final response = await AuthenticatedRequest.post(
-      dio,
-      url,
-      data: pgs.toJson(),
-    );
-    return response.statusCode;
+
+    try {
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: pgs.toJson(),
+      );
+
+      String? message;
+      final data = response.data;
+      if (data is Map) {
+        message = data['message']?.toString() ?? data['title']?.toString();
+      } else if (data is String) {
+        message = data;
+      }
+
+      return (response.statusCode, message);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String? message;
+      if (data is Map) {
+        message = data['message']?.toString() ?? data['title']?.toString();
+      } else if (data is String) {
+        message = data;
+      }
+      return (e.response?.statusCode ?? 500, message);
+    }
   }
 
   Future<PerformanceGovernanceSystem?> fetchSubmitUserId({
@@ -419,6 +440,11 @@ class PerformanceGovernanceSystemService {
 
   Future<void> deleteOperationReviewProtocol(String id) async {
     final url = '${ApiEndpoint.baseUrl}/$id';
+    await AuthenticatedRequest.delete(dio, url);
+  }
+
+  Future<void> deleteSignatoryTimeline(String pgsId) async {
+    final url = '${ApiEndpoint().pgsSignatory}/$pgsId';
     await AuthenticatedRequest.delete(dio, url);
   }
 }

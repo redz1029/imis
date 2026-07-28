@@ -112,7 +112,7 @@ class _PerformanceGovernanceSystemPageState
     'Approved': 0,
     'Disapproved': 0,
   };
-
+  String? _lastResponseMessage;
   int _totalCount = 0;
   String _statusFilter = 'All';
   Future<String> _getRoleId() async {
@@ -280,8 +280,10 @@ class _PerformanceGovernanceSystemPageState
   }
 
   Future<bool> pgsSaveAsDraft(PerformanceGovernanceSystem pgs) async {
-    final statusCode = await _pgsService.saveAsDraft(pgs);
+    final (statusCode, message) = await _pgsService.saveAsDraft(pgs);
     _lastResponseStatusCode = statusCode;
+    _lastResponseMessage = message;
+
     if (statusCode == 200 || statusCode == 201) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('selectedOfficeId');
@@ -678,308 +680,554 @@ class _PerformanceGovernanceSystemPageState
       status = hasNext ? 'Pending' : 'Approved';
     }
     final bool isDraft = pgs.isDraft == true || status == 'Draft';
+
     showDialog(
       context: context,
       builder: (ctx) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380, maxHeight: 520),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
+        bool isDeleting = false;
+
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            Future<void> handleDelete() async {
+              final confirm = await showDialog<bool>(
+                context: ctx,
+                builder:
+                    (confirmCtx) => Dialog(
+                      backgroundColor: Colors.transparent,
+                      child: Container(
+                        width: 340,
+                        padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: getStatusColor(status).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          color: kSurface,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 32,
+                              offset: const Offset(0, 12),
+                            ),
+                          ],
                         ),
-                        child: Icon(
-                          Icons.route_outlined,
-                          color: getStatusColor(status),
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Approval Timeline',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 18),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        onPressed: () => Navigator.pop(ctx),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    pgs.office.name,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(height: 1),
-                  const SizedBox(height: 12),
-                  if (isDraft)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.hourglass_empty,
-                              size: 40,
-                              color: Colors.grey.shade400,
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: kDangerLight,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.delete_outline_rounded,
+                                color: kDanger,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Delete Approval Timeline',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 17,
+                                color: kText,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'No timeline available yet',
-                              style: TextStyle(
+                              'This will remove all signatory records for this PGS. This action cannot be undone.',
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 13,
-                                color: Colors.grey.shade500,
-                                fontWeight: FontWeight.w500,
+                                color: kMuted,
+                                height: 1.5,
                               ),
+                              textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'This document is still in Draft stage.',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey.shade400,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else if (signatories.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.pending_outlined,
-                              size: 40,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              status == 'Draft'
-                                  ? 'Not yet submitted'
-                                  : 'No signatories found',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    Flexible(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: signatories.length,
-                        itemBuilder: (_, index) {
-                          final s = signatories[index];
-                          final isNext = s.isNextStatus == true;
-                          final signatoryJson = s.toJson();
-                          final int nextIndex = signatories.indexWhere(
-                            (sig) => sig.isNextStatus == true,
-                          );
-                          final bool isDone =
-                              nextIndex == -1
-                                  ? true // all approved
-                                  : index < nextIndex;
-                          final bool isPending = isNext;
-
-                          final Color dotColor =
-                              isDone
-                                  ? Colors.green
-                                  : isPending
-                                  ? Colors.orange.shade600
-                                  : Colors.grey.shade300;
-
-                          final Color lineColor =
-                              isDone ? Colors.green : Colors.grey.shade200;
-
-                          final String label =
-                              signatoryJson['label']?.toString() ??
-                              signatoryJson['designation']?.toString() ??
-                              signatoryJson['role']?.toString() ??
-                              'Signatory';
-
-                          final String name =
-                              signatoryJson['signatoryName']?.toString() ??
-                              signatoryJson['name']?.toString() ??
-                              signatoryJson['fullName']?.toString() ??
-                              'Unknown';
-
-                          final bool isLast = index == signatories.length - 1;
-                          return IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            const SizedBox(height: 24),
+                            Row(
                               children: [
-                                SizedBox(
-                                  width: 28,
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        width: 14,
-                                        height: 14,
-                                        margin: const EdgeInsets.only(top: 2),
-                                        decoration: BoxDecoration(
-                                          color: dotColor,
-                                          shape: BoxShape.circle,
-                                          border:
-                                              isPending
-                                                  ? Border.all(
-                                                    color:
-                                                        Colors.orange.shade600,
-                                                    width: 2,
-                                                  )
-                                                  : null,
-                                        ),
-                                        child:
-                                            isDone
-                                                ? const Icon(
-                                                  Icons.check,
-                                                  size: 9,
-                                                  color: Colors.white,
-                                                )
-                                                : isPending
-                                                ? Container(
-                                                  margin: const EdgeInsets.all(
-                                                    3,
-                                                  ),
-                                                  decoration:
-                                                      const BoxDecoration(
-                                                        color: Colors.white,
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                )
-                                                : null,
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed:
+                                        () => Navigator.pop(confirmCtx, false),
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(color: kBorder),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
                                       ),
-                                      // Connecting line
-                                      if (!isLast)
-                                        Expanded(
-                                          child: Container(
-                                            width: 2,
-                                            margin: const EdgeInsets.symmetric(
-                                              vertical: 2,
-                                            ),
-                                            color: lineColor,
-                                          ),
-                                        ),
-                                    ],
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Cancel',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        color: kMuted,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
-                                // Content
                                 Expanded(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: isLast ? 0 : 16,
+                                  child: ElevatedButton.icon(
+                                    onPressed:
+                                        () => Navigator.pop(confirmCtx, true),
+                                    icon: const Icon(
+                                      Icons.delete_rounded,
+                                      size: 16,
+                                      color: Colors.white,
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          label,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            color:
-                                                isDone
-                                                    ? Colors.green.shade700
-                                                    : isPending
-                                                    ? Colors.orange.shade600
-                                                    : Colors.grey.shade500,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        // Name
-                                        Text(
-                                          name,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF1A1D23),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 3),
-                                        // Status badge
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                isDone
-                                                    ? Colors.green.withValues(
-                                                      alpha: 0.1,
-                                                    )
-                                                    : isPending
-                                                    ? Colors.orangeAccent
-                                                        .withValues(alpha: 0.1)
-                                                    : Colors.grey.withValues(
-                                                      alpha: 0.1,
-                                                    ),
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            isDone
-                                                ? 'Done'
-                                                : isPending
-                                                ? 'Pending'
-                                                : 'Waiting',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
-                                              color:
-                                                  isDone
-                                                      ? Colors.green.shade700
-                                                      : isPending
-                                                      ? Colors.orange.shade600
-                                                      : Colors.grey.shade500,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    label: Text(
+                                      'Delete',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: kDanger,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                          );
-                        },
+                          ],
+                        ),
                       ),
                     ),
-                ],
+              );
+
+              if (confirm != true) return;
+
+              setDialogState(() => isDeleting = true);
+              try {
+                await _pgsService.deleteSignatoryTimeline(pgs.id.toString());
+                if (!mounted) return;
+                MotionToast.success(
+                  description: const Text('Timeline deleted successfully'),
+                  toastAlignment: Alignment.topCenter,
+                ).show(context);
+                Navigator.pop(ctx);
+                fetchPgsFilter();
+              } catch (_) {
+                setDialogState(() => isDeleting = false);
+                if (!mounted) return;
+                MotionToast.error(
+                  description: const Text('Failed to delete timeline'),
+                  toastAlignment: Alignment.topCenter,
+                ).show(context);
+              }
+            }
+
+            return Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
-          ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 380,
+                  maxHeight: 560,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: getStatusColor(
+                                    status,
+                                  ).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.route_outlined,
+                                  color: getStatusColor(status),
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              const Expanded(
+                                child: Text(
+                                  'Approval Timeline',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close, size: 18),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed:
+                                    isDeleting
+                                        ? null
+                                        : () => Navigator.pop(ctx),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            pgs.office.name,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Divider(height: 1),
+                        ],
+                      ),
+                    ),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                        child: Column(
+                          children: [
+                            if (isDraft)
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 24,
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.hourglass_empty,
+                                        size: 40,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'No timeline available yet',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade500,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'This document is still in Draft stage.',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else if (signatories.isEmpty)
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 24,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.pending_outlined,
+                                        size: 40,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        status == 'Draft'
+                                            ? 'Not yet submitted'
+                                            : 'No signatories found',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: signatories.length,
+                                itemBuilder: (_, index) {
+                                  final s = signatories[index];
+                                  final isNext = s.isNextStatus == true;
+                                  final signatoryJson = s.toJson();
+                                  final int nextIndex = signatories.indexWhere(
+                                    (sig) => sig.isNextStatus == true,
+                                  );
+                                  final bool isDone =
+                                      nextIndex == -1
+                                          ? true
+                                          : index < nextIndex;
+                                  final bool isPending = isNext;
+
+                                  final Color dotColor =
+                                      isDone
+                                          ? Colors.green
+                                          : isPending
+                                          ? Colors.orange.shade600
+                                          : Colors.grey.shade300;
+
+                                  final Color lineColor =
+                                      isDone
+                                          ? Colors.green
+                                          : Colors.grey.shade200;
+
+                                  final String label =
+                                      signatoryJson['label']?.toString() ??
+                                      signatoryJson['designation']
+                                          ?.toString() ??
+                                      signatoryJson['role']?.toString() ??
+                                      'Signatory';
+
+                                  final String name =
+                                      signatoryJson['signatoryName']
+                                          ?.toString() ??
+                                      signatoryJson['name']?.toString() ??
+                                      signatoryJson['fullName']?.toString() ??
+                                      'Unknown';
+
+                                  final bool isLast =
+                                      index == signatories.length - 1;
+                                  return IntrinsicHeight(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        SizedBox(
+                                          width: 28,
+                                          child: Column(
+                                            children: [
+                                              Container(
+                                                width: 14,
+                                                height: 14,
+                                                margin: const EdgeInsets.only(
+                                                  top: 2,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: dotColor,
+                                                  shape: BoxShape.circle,
+                                                  border:
+                                                      isPending
+                                                          ? Border.all(
+                                                            color:
+                                                                Colors
+                                                                    .orange
+                                                                    .shade600,
+                                                            width: 2,
+                                                          )
+                                                          : null,
+                                                ),
+                                                child:
+                                                    isDone
+                                                        ? const Icon(
+                                                          Icons.check,
+                                                          size: 9,
+                                                          color: Colors.white,
+                                                        )
+                                                        : isPending
+                                                        ? Container(
+                                                          margin:
+                                                              const EdgeInsets.all(
+                                                                3,
+                                                              ),
+                                                          decoration:
+                                                              const BoxDecoration(
+                                                                color:
+                                                                    Colors
+                                                                        .white,
+                                                                shape:
+                                                                    BoxShape
+                                                                        .circle,
+                                                              ),
+                                                        )
+                                                        : null,
+                                              ),
+                                              if (!isLast)
+                                                Expanded(
+                                                  child: Container(
+                                                    width: 2,
+                                                    margin:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 2,
+                                                        ),
+                                                    color: lineColor,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom: isLast ? 0 : 16,
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  label,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color:
+                                                        isDone
+                                                            ? Colors
+                                                                .green
+                                                                .shade700
+                                                            : isPending
+                                                            ? Colors
+                                                                .orange
+                                                                .shade600
+                                                            : Colors
+                                                                .grey
+                                                                .shade500,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  name,
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF1A1D23),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 3),
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 2,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        isDone
+                                                            ? Colors.green
+                                                                .withValues(
+                                                                  alpha: 0.1,
+                                                                )
+                                                            : isPending
+                                                            ? Colors
+                                                                .orangeAccent
+                                                                .withValues(
+                                                                  alpha: 0.1,
+                                                                )
+                                                            : Colors.grey
+                                                                .withValues(
+                                                                  alpha: 0.1,
+                                                                ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    isDone
+                                                        ? 'Done'
+                                                        : isPending
+                                                        ? 'Pending'
+                                                        : 'Waiting',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color:
+                                                          isDone
+                                                              ? Colors
+                                                                  .green
+                                                                  .shade700
+                                                              : isPending
+                                                              ? Colors
+                                                                  .orange
+                                                                  .shade600
+                                                              : Colors
+                                                                  .grey
+                                                                  .shade500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    PermissionWidget(
+                      permission: AppPermissions.deleteSignatory,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: isDeleting ? null : handleDelete,
+                            icon:
+                                isDeleting
+                                    ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                    : const Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                            label: Text(
+                              isDeleting ? 'Deleting...' : 'Delete Signatory',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kDanger,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -1196,6 +1444,7 @@ class _PerformanceGovernanceSystemPageState
                     submitPGS(pgsId: pgsId, updatePgs: pgs, userId: userId),
             lastResponseStatusCode: () => _lastResponseStatusCode,
             userId: userId,
+            lastResponseMessage: () => _lastResponseMessage,
           ),
     );
   }
@@ -2552,6 +2801,7 @@ class _PgsFormDialog extends StatefulWidget {
   final Future<bool> Function(String, PerformanceGovernanceSystem) onSubmit;
   final int? Function() lastResponseStatusCode;
   final String userId;
+  final String? Function() lastResponseMessage; // add this
 
   const _PgsFormDialog({
     required this.officeName,
@@ -2565,6 +2815,7 @@ class _PgsFormDialog extends StatefulWidget {
     required this.lastResponseStatusCode,
     this.existingPgs,
     required this.userId,
+    required this.lastResponseMessage, // add this
   });
 
   @override
@@ -2627,6 +2878,19 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         .where((e) => e.key != excludeIndex && e.value.text.trim().isNotEmpty)
         .map((e) => e.value.text.trim())
         .toList();
+  }
+
+  String _draftFailureMessage() {
+    if (widget.lastResponseStatusCode() == 403) {
+      return "You don't have permission to save as draft.";
+    }
+    if (widget.lastResponseMessage()?.toLowerCase().contains(
+          'already exists',
+        ) ==
+        true) {
+      return "A PGS record already exists for the selected period. Please edit the existing record or select a different PGS period.";
+    }
+    return "Failed to save draft!";
   }
 
   @override
@@ -3053,14 +3317,9 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         success = await widget.onDraft(pgs);
         if (!success) {
           MotionToast.error(
-            description: Text(
-              widget.lastResponseStatusCode() == 403
-                  ? "You don't have permission to save as draft."
-                  : "Failed to save draft!",
-            ),
+            description: Text(_draftFailureMessage()),
             toastAlignment: Alignment.center,
           ).show(context);
-          setState(() => _submitting = false);
           return;
         }
       } else if (actionType == ActionType.submit) {
@@ -3548,6 +3807,17 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          Expanded(
+            child: Text(
+              "Note: Once submitted, this deliverables is not editable. Save as Draft if you need to make changes later.",
+              style: GoogleFonts.plusJakartaSans(
+                color: kMuted,
+                fontSize: 10,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
           if (_submitting)
             const Padding(
               padding: EdgeInsets.only(right: 12),
@@ -3723,6 +3993,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         _groupCell('ALIGNMENT', _fDirect + _fIndirect, primaryColor),
         _groupCell('STRATEGIC CONTRIBUTIONS', _fDeliv, primaryColor),
         _groupCell('40%', _fAction + _fByWhen, primaryColor),
+        // _groupCell('', _fAction + _fByWhen, primaryColor),
       ],
     ),
   );
@@ -4376,7 +4647,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         !_changingKRA.contains(i)) {
       final bool isRoadmapKra = options.contains(savedKra);
       _selectedKRAText[i] = isRoadmapKra ? savedKra : 'Others';
-      // _rows[i].isDirect = isRoadmapKra;
       _isRetrievedData.add(i);
     }
 
@@ -4749,7 +5019,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               ),
               validator:
                   (value) =>
-                      (value == null || value.isEmpty)
+                      (value == null || value.trim().isEmpty)
                           ? 'Please type your KRA'
                           : null,
             ),
