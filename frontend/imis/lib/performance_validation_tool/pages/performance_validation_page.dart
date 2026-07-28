@@ -1,5 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -7,15 +13,23 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
-import 'package:imis/performance_validation_tool/dialog/performance_validation_list_dialog.dart';
+import 'package:imis/performance_validation_tool/dialog/performance_validation_dialog.dart';
+import 'package:imis/performance_validation_tool/models/performance_validation_tool.dart';
 import 'package:imis/performance_validation_tool/services/performance_validation_services.dart';
+import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
+import 'package:motion_toast/motion_toast.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:universal_html/html.dart' as html;
 
 class PerformanceValidationPage extends StatefulWidget {
   const PerformanceValidationPage({super.key});
@@ -155,26 +169,6 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
     await fetchPerformanceValidation();
   }
 
-  void _openValidationList(PerformanceGovernanceSystem pgs) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder:
-          (_) => PerformanceValidationListDialog(
-            pgs: pgs,
-            onFetchAll:
-                (pgsId) => _performanceValidation
-                    .fetchAllPerformanceValidationList(pgsId: pgsId),
-            onFetchById:
-                (id) => _performanceValidation
-                    .fetchPerformanceValidationToolById(id: id),
-            onDelete:
-                (id) =>
-                    _performanceValidation.deletePerformanceValidationTool(id),
-          ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -190,7 +184,6 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   vertical: 8,
@@ -209,59 +202,6 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (!isMobile)
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Colors.grey.shade300),
-                          ),
-                        ),
-                        child: const Row(
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: Text(
-                                "#",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                "Office",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                "Period",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                "Actions",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     const SizedBox(height: 5),
                     Expanded(
                       child:
@@ -292,158 +232,18 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
                                   ],
                                 ),
                               )
-                              : ListView.separated(
+                              : ListView.builder(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
                                 itemCount: filteredList.length,
-                                separatorBuilder:
-                                    (_, __) => Divider(
-                                      height: 1,
-                                      color: Colors.grey.withValues(alpha: .2),
-                                    ),
                                 itemBuilder: (context, index) {
-                                  final itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
                                   final pgs = filteredList[index];
-                                  final officeName = pgs.office.name;
-                                  final startDate = pgs.pgsPeriod.startDate;
-                                  final endDate = pgs.pgsPeriod.endDate;
-                                  final converter = LongDateOnlyConverter();
-                                  final start = converter.toJson(startDate);
-                                  final end = converter.toJson(endDate);
-
-                                  if (!isMobile) {
-                                    return Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              "$itemNumber",
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Text(
-                                              officeName,
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 2,
-                                            child: Text(
-                                              "$start - $end",
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 2,
-                                            child: Row(
-                                              children: [
-                                                PermissionWidget(
-                                                  permission:
-                                                      AppPermissions
-                                                          .viewOperationReviewProtocol,
-                                                  child: Tooltip(
-                                                    message:
-                                                        'Create/Edit Performance Validation Tool',
-                                                    child: IconButton(
-                                                      icon: const Icon(
-                                                        Icons
-                                                            .fact_check_outlined,
-                                                        size: 16,
-                                                        color: primaryColor,
-                                                      ),
-                                                      onPressed:
-                                                          () =>
-                                                              _openValidationList(
-                                                                pgs,
-                                                              ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }
-
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey.shade200,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Text(
-                                              "$itemNumber",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                            const Spacer(),
-                                            PopupMenuButton<String>(
-                                              color:
-                                                  Theme.of(context).cardColor,
-                                              icon: const Icon(Icons.more_vert),
-                                              onSelected: (value) async {
-                                                if (value == 'review') {
-                                                  _openValidationList(pgs);
-                                                }
-                                              },
-                                              itemBuilder:
-                                                  (_) => [
-                                                    const PopupMenuItem(
-                                                      value: 'review',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            Icons
-                                                                .fact_check_outlined,
-                                                            size: 16,
-                                                            color: primaryColor,
-                                                          ),
-                                                          SizedBox(width: 8),
-                                                          Text(
-                                                            'Performance Validation',
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          "Office: $officeName",
-                                          style: TextStyle(fontSize: 12),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          "Period: $start - $end",
-                                          style: TextStyle(fontSize: 12),
-                                        ),
-                                      ],
-                                    ),
+                                  return _PgsValidationTile(
+                                    pgs: pgs,
+                                    performanceValidationService:
+                                        _performanceValidation,
+                                    commonService: _commonService,
                                   );
                                 },
                               ),
@@ -525,14 +325,13 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
                         color: Color(0xFF1A1D23),
                       ),
                     ),
-                    Text(
-                      "$_totalCount performance validation${_totalCount != 1 ? 's' : ''} found",
-
-                      style: TextStyle(
-                        fontSize: isXSmall ? 10 : 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
+                    // Text(
+                    //   "$_totalCount performance validation${_totalCount != 1 ? 's' : ''} found",
+                    //   style: TextStyle(
+                    //     fontSize: isXSmall ? 10 : 12,
+                    //     color: Colors.grey.shade600,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -612,7 +411,6 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
           spacing: 10,
           runSpacing: 10,
           children: [
-            // buildDropdown(child: _serviceDropdown()),
             buildDropdown(
               child: PermissionWidget(
                 permission: AppPermissions.viewOffice,
@@ -758,6 +556,496 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
             });
             fetchFilter();
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _PgsValidationTile extends StatefulWidget {
+  final PerformanceGovernanceSystem pgs;
+  final PerformanceValidationServices performanceValidationService;
+  final CommonService commonService;
+
+  const _PgsValidationTile({
+    required this.pgs,
+    required this.performanceValidationService,
+    required this.commonService,
+  });
+
+  @override
+  State<_PgsValidationTile> createState() => _PgsValidationTileState();
+}
+
+class _PgsValidationTileState extends State<_PgsValidationTile> {
+  bool _expanded = false;
+  bool _loading = false;
+  bool _loaded = false;
+  bool _checkingSignatory = false;
+  List<PerformanceValidationTool> _validations = [];
+
+  String get _pgsId => widget.pgs.id.toString();
+
+  Future<void> _loadValidations() async {
+    setState(() => _loading = true);
+    final list = await widget.performanceValidationService
+        .fetchAllPerformanceValidationList(pgsId: _pgsId);
+    if (!mounted) return;
+    setState(() {
+      _validations = list;
+      _loading = false;
+      _loaded = true;
+    });
+  }
+
+  String _periodLabel(PerformanceValidationTool v) {
+    if (v.validateDate != null) {
+      return LongDateOnlyConverter().toJson(v.validateDate!);
+    }
+    return '—';
+  }
+
+  Future<void> _showNoSignatoryDialog() async {
+    await showDialog(
+      context: context,
+      builder:
+          (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: 380,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 32,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.pending_actions_outlined,
+                      color: Colors.orange.shade700,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Deliverables Not Yet Submitted',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The head of ${widget.pgs.office.name} has not submitted their '
+                    'deliverables yet. Performance validation cannot be created '
+                    'until the head department has submitted.',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'OK',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+
+  Future<void> _openNewValidation() async {
+    setState(() => _checkingSignatory = true);
+
+    String? headUserId;
+    try {
+      final signatories = await widget.commonService.fetchPgsSignatories(
+        widget.pgs.id,
+      );
+      if (signatories.isNotEmpty) {
+        headUserId = signatories.first.signatoryId;
+      }
+    } catch (_) {
+      headUserId = null;
+    }
+
+    if (mounted) setState(() => _checkingSignatory = false);
+
+    if (headUserId == null || headUserId.isEmpty) {
+      if (mounted) await _showNoSignatoryDialog();
+      return;
+    }
+
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PerformanceValidationDialog(pgs: widget.pgs),
+    ).then((saved) {
+      if (saved == true) _loadValidations();
+    });
+  }
+
+  Future<void> _openSavedValidation(PerformanceValidationTool v) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => const Center(
+            child: CircularProgressIndicator(color: primaryColor),
+          ),
+    );
+
+    final user = await AuthUtil.fetchLoggedUser();
+
+    final results = await Future.wait([
+      widget.performanceValidationService.fetchPerformanceValidationToolById(
+        id: v.id,
+      ),
+      if (user != null && user.id != null && user.id!.isNotEmpty)
+        widget.performanceValidationService.getPerformanceValidationByUserId(
+          userId: user.id!,
+          performanceValidationToolId: v.id,
+        )
+      else
+        Future.value(null),
+    ]);
+
+    final data = results[0] as PerformanceValidationTool?;
+
+    if (!mounted) return;
+    Navigator.pop(context);
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder:
+          (_) => PerformanceValidationDialog(pgs: widget.pgs, existing: data),
+    ).then((saved) {
+      if (saved == true) _loadValidations();
+    });
+  }
+
+  void _showDeleteDialog(PerformanceValidationTool v) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Performance Validation',
+            itemName: 'performance validation',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await widget.performanceValidationService
+                    .deletePerformanceValidation(v.id.toString());
+                await _loadValidations();
+                if (mounted) {
+                  MotionToast.success(
+                    description: Text(
+                      'Performance validation deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
+                  ).show(context);
+                }
+              } catch (_) {
+                MotionToast.error(
+                  description: Text(
+                    'Failed to deleted performance validation tool',
+                  ),
+                ).show(context);
+              }
+            },
+          ),
+    );
+  }
+
+  Future<void> _openPrintPreview(PerformanceValidationTool v) async {
+    final dio = Dio();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => const AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: primaryColor),
+                SizedBox(width: 16),
+                Text(
+                  'Generating PDF...',
+                  style: TextStyle(color: primaryColor),
+                ),
+              ],
+            ),
+          ),
+    );
+
+    try {
+      final url = '${ApiEndpoint().performanceValidationPdfReport}/${v.id}';
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        url,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final bytes = Uint8List.fromList(response.data);
+
+        if (kIsWeb) {
+          final blob = html.Blob([bytes], 'application/pdf');
+          final blobUrl = html.Url.createObjectUrlFromBlob(blob);
+          html.window.open(blobUrl, '_blank');
+          Future.delayed(const Duration(seconds: 15), () {
+            html.Url.revokeObjectUrl(blobUrl);
+          });
+        } else if (Platform.isAndroid || Platform.isIOS) {
+          final tempDir = await getTemporaryDirectory();
+          final filePath = '${tempDir.path}/performance_validation_${v.id}.pdf';
+          await File(filePath).writeAsBytes(bytes);
+          final result = await OpenFile.open(filePath);
+          if (result.type != ResultType.done) {
+            debugPrint('OpenFile error: ${result.message}');
+          }
+        } else {
+          final dir =
+              Platform.isWindows
+                  ? await getDownloadsDirectory()
+                  : await getApplicationDocumentsDirectory();
+          final filePath = '${dir!.path}/performance_validation_${v.id}.pdf';
+          await File(filePath).writeAsBytes(bytes);
+          final result = await OpenFile.open(filePath);
+          if (result.type != ResultType.done) {
+            debugPrint('OpenFile error: ${result.message}');
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error opening Performance Validation PDF: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to open PDF. Please try again.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final converter = LongDateOnlyConverter();
+    final start = converter.toJson(widget.pgs.pgsPeriod.startDate);
+    final end = converter.toJson(widget.pgs.pgsPeriod.endDate);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          childrenPadding: EdgeInsets.zero,
+          onExpansionChanged: (open) {
+            setState(() => _expanded = open);
+            if (open && !_loaded) _loadValidations();
+          },
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.business_outlined,
+              color: primaryColor,
+              size: 18,
+            ),
+          ),
+          title: Text(
+            widget.pgs.office.name,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+          subtitle: Text(
+            "$start - $end",
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PermissionWidget(
+                permission: AppPermissions.addPerformanceValidationTool,
+                child:
+                    _checkingSignatory
+                        ? const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: primaryColor,
+                            ),
+                          ),
+                        )
+                        : IconButton(
+                          tooltip: 'Add performance validation',
+                          icon: const Icon(
+                            Icons.note_add_outlined,
+                            color: primaryColor,
+                            size: 20,
+                          ),
+                          onPressed: () async {
+                            if (!_expanded) setState(() => _expanded = true);
+                            if (!_loaded) await _loadValidations();
+                            await _openNewValidation();
+                          },
+                        ),
+              ),
+              const SizedBox(width: 6),
+              const Tooltip(
+                message: 'Expand',
+                child: Icon(Icons.expand_more_rounded, color: kMuted, size: 20),
+              ),
+            ],
+          ),
+          children: [
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              )
+            else if (_validations.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Text(
+                    'No performance validations yet.',
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  ),
+                ),
+              )
+            else
+              Container(
+                margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FB),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _validations.length,
+                  separatorBuilder:
+                      (_, __) =>
+                          Divider(height: 1, color: Colors.grey.shade200),
+                  itemBuilder: (_, i) {
+                    final v = _validations[i];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _periodLabel(v),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'View / Edit',
+                            icon: const Icon(
+                              Icons.fact_check_outlined,
+                              size: 16,
+                              color: primaryColor,
+                            ),
+                            onPressed: () => _openSavedValidation(v),
+                          ),
+                          IconButton(
+                            tooltip: 'Print Preview',
+                            icon: const Icon(
+                              Icons.description_outlined,
+                              size: 16,
+                              color: Colors.blueAccent,
+                            ),
+                            onPressed: () => _openPrintPreview(v),
+                          ),
+                          PermissionWidget(
+                            permission:
+                                AppPermissions.deletePerformanceValidationTool,
+                            child: IconButton(
+                              tooltip: 'Delete',
+                              icon: const Icon(
+                                CupertinoIcons.delete_simple,
+                                size: 16,
+                                color: Colors.red,
+                              ),
+                              onPressed: () => _showDeleteDialog(v),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
         ),
       ),
     );

@@ -905,6 +905,16 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                 ),
                               ),
                             ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Status",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
 
                             Expanded(
                               flex: 2,
@@ -970,6 +980,15 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                               DateTimeConverter().toJson(
                                                 pgsperiod.endDate,
                                               ),
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              (pgsperiod.isActive ?? false)
+                                                  ? 'Active'
+                                                  : 'Inactive',
                                               style: TextStyle(fontSize: 12),
                                             ),
                                           ),
@@ -1080,6 +1099,9 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                                     remarkrs:
                                                         pgsperiod.remarks
                                                             .toString(),
+                                                    isActive:
+                                                        pgsperiod.isActive ??
+                                                        false,
                                                   );
                                                 } else if (value == 'delete') {
                                                   showDeleteDialog(
@@ -1137,6 +1159,12 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                           style: TextStyle(fontSize: 12),
                                         ),
                                         const SizedBox(height: 4),
+                                        Text(
+                                          (pgsperiod.isActive ?? false)
+                                              ? 'Active'
+                                              : 'Inactive',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                       ],
                                     ),
                                   );

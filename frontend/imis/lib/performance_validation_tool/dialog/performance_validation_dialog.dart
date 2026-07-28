@@ -439,8 +439,6 @@ class _PerformanceValidationDialogState
         'December',
       ][m];
 
-  /// Shared confirmation dialog, same visual pattern used in
-  /// OperationsReviewDialog (Confirm Save / Confirm Update).
   Future<bool> _showConfirmDialog({
     required String title,
     required String message,

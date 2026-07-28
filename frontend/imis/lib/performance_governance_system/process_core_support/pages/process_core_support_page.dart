@@ -462,203 +462,6 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
     );
   }
 
-  // void showFormDialog({
-  //   String? id,
-  //   String? name,
-  //   String? remarks,
-  //   String? strategicObjective,
-  // }) {
-  //   TextEditingController nameController = TextEditingController(text: name);
-  //   TextEditingController remarksController = TextEditingController(
-  //     text: remarks,
-  //   );
-
-  //   TextEditingController strategicObjectiveController = TextEditingController(
-  //     text: strategicObjective,
-  //   );
-
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (context) {
-  //       return AlertDialog(
-  //         backgroundColor: mainBgColor,
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(12.0),
-  //         ),
-  //         titlePadding: EdgeInsets.zero,
-  //         title: Container(
-  //           width: double.infinity,
-  //           padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-  //           decoration: BoxDecoration(
-  //             color: primaryLightColor,
-  //             borderRadius: BorderRadius.only(
-  //               topLeft: Radius.circular(12),
-  //               topRight: Radius.circular(12),
-  //             ),
-  //           ),
-  //           child: Text(
-  //             id == null ? 'Create KRA' : 'Edit KRA',
-  //             textAlign: TextAlign.center,
-  //             style: TextStyle(
-  //               fontWeight: FontWeight.bold,
-  //               fontSize: 18,
-  //               color: Colors.white,
-  //             ),
-  //           ),
-  //         ),
-  //         content: Form(
-  //           key: _formKey,
-  //           child: Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               SizedBox(
-  //                 width: 350,
-  //                 height: 65,
-  //                 child: TextFormField(
-  //                   maxLines: null,
-  //                   controller: nameController,
-  //                   decoration: InputDecoration(
-  //                     labelText: 'KRA Name',
-  //                     focusColor: primaryColor,
-  //                     floatingLabelStyle: TextStyle(color: primaryColor),
-  //                     border: OutlineInputBorder(),
-  //                     focusedBorder: const OutlineInputBorder(
-  //                       borderSide: BorderSide(color: primaryColor),
-  //                     ),
-  //                   ),
-  //                   validator: (value) {
-  //                     if (value == null || value.trim().isEmpty) {
-  //                       return 'Please fill out this field';
-  //                     }
-  //                     return null;
-  //                   },
-  //                 ),
-  //               ),
-  //               gap4px,
-  //               SizedBox(
-  //                 width: 350,
-  //                 height: 65,
-  //                 child: TextFormField(
-  //                   maxLines: null,
-  //                   controller: remarksController,
-  //                   decoration: InputDecoration(
-  //                     labelText: 'Remarks',
-  //                     focusColor: primaryColor,
-  //                     floatingLabelStyle: TextStyle(color: primaryColor),
-  //                     border: OutlineInputBorder(),
-  //                     focusedBorder: const OutlineInputBorder(
-  //                       borderSide: BorderSide(color: primaryColor),
-  //                     ),
-  //                   ),
-  //                 ),
-  //               ),
-  //               gap14px,
-  //               SizedBox(
-  //                 width: 350,
-  //                 height: 65,
-  //                 child: TextFormField(
-  //                   maxLines: null,
-  //                   controller: strategicObjectiveController,
-  //                   decoration: InputDecoration(
-  //                     labelText: 'Strategic Contribution',
-  //                     focusColor: primaryColor,
-  //                     floatingLabelStyle: TextStyle(color: primaryColor),
-  //                     border: OutlineInputBorder(),
-  //                     focusedBorder: const OutlineInputBorder(
-  //                       borderSide: BorderSide(color: primaryColor),
-  //                     ),
-  //                   ),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () => Navigator.pop(context),
-  //             style: ElevatedButton.styleFrom(
-  //               shape: RoundedRectangleBorder(
-  //                 borderRadius: BorderRadius.circular(4),
-  //               ),
-  //             ),
-  //             child: Text('Cancel', style: TextStyle(color: primaryColor)),
-  //           ),
-  //           ElevatedButton(
-  //             style: ElevatedButton.styleFrom(
-  //               backgroundColor: primaryColor,
-  //               shape: RoundedRectangleBorder(
-  //                 borderRadius: BorderRadius.circular(4),
-  //               ),
-  //             ),
-  //             onPressed: () async {
-  //               if (_formKey.currentState!.validate()) {
-  //                 bool? confirmAction = await showDialog<bool>(
-  //                   context: context,
-  //                   builder: (context) {
-  //                     return AlertDialog(
-  //                       title: Text(
-  //                         id == null ? "Confirm Save" : "Confirm Update",
-  //                       ),
-  //                       content: Text(
-  //                         id == null
-  //                             ? "Are you sure you want to save this record?"
-  //                             : "Are you sure you want to update this record?",
-  //                       ),
-  //                       actions: [
-  //                         TextButton(
-  //                           onPressed: () => Navigator.pop(context, false),
-  //                           child: Text(
-  //                             "No",
-  //                             style: TextStyle(color: primaryColor),
-  //                           ),
-  //                         ),
-  //                         TextButton(
-  //                           onPressed: () {
-  //                             if (_formKey.currentState!.validate()) {
-  //                               Navigator.pop(context, true);
-  //                             }
-  //                           },
-  //                           child: Text(
-  //                             "Yes",
-  //                             style: TextStyle(color: primaryColor),
-  //                           ),
-  //                         ),
-  //                       ],
-  //                     );
-  //                   },
-  //                 );
-  //                 if (confirmAction == true) {
-  //                   final kra = KeyResultArea(
-  //                     int.tryParse(id ?? '0') ?? 0,
-  //                     nameController.text,
-  //                     remarksController.text,
-  //                     strategicObjectiveController.text,
-  //                     false,
-  //                   );
-  //                   await _processCoreSupportService.createOrUpdateKra(kra);
-  //                   setState(() {
-  //                     fetchKRA();
-  //                   });
-  //                   MotionToast.success(
-  //                     toastAlignment: Alignment.topCenter,
-  //                     description: Text('Saved successfully'),
-  //                   ).show(context);
-  //                   Navigator.pop(context);
-  //                 }
-  //               }
-  //             },
-  //             child: Text(
-  //               id == null ? 'Save' : 'Update',
-  //               style: TextStyle(color: Colors.white),
-  //             ),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -765,14 +568,20 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                               flex: 1,
                               child: Text(
                                 "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
                                 "Core&Support",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             SizedBox(width: 10),
@@ -780,7 +589,10 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                               flex: 4,
                               child: Text(
                                 "Description",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             SizedBox(width: 25),
@@ -788,7 +600,10 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                               flex: 3,
                               child: Text(
                                 "Strategic Objectives",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             SizedBox(width: 25),
@@ -796,7 +611,10 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                               flex: 3,
                               child: Text(
                                 "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],
@@ -837,16 +655,25 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text("$itemNumber"),
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 2,
-                                            child: Text(process.name),
+                                            child: Text(
+                                              process.name,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           SizedBox(width: 10),
                                           Expanded(
                                             flex: 4,
-                                            child: Text(process.remarks ?? ''),
+                                            child: Text(
+                                              process.remarks ?? '',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                           SizedBox(width: 25),
                                           Expanded(
@@ -854,6 +681,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                             child: Text(
                                               maxLines: 3,
                                               process.strategicObjective ?? '',
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           SizedBox(width: 25),
@@ -863,7 +691,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                               children: [
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     Icons.edit_outlined,
                                                   ),
                                                   onPressed: () {
@@ -880,7 +708,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                                 ),
                                                 IconButton(
                                                   icon: const Icon(
-                                                    size: 18,
+                                                    size: 16,
                                                     CupertinoIcons
                                                         .delete_simple,
                                                     color: Colors.redAccent,
@@ -920,6 +748,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                               "$itemNumber",
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                               ),
                                             ),
                                             const Spacer(),
@@ -952,7 +781,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                                         children: [
                                                           Icon(
                                                             Icons.edit_outlined,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Edit'),
@@ -967,7 +796,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                                             CupertinoIcons
                                                                 .delete_simple,
                                                             color: Colors.red,
-                                                            size: 18,
+                                                            size: 16,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Delete'),
@@ -980,14 +809,21 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                         ),
                                         const SizedBox(height: 8),
 
-                                        Text("Core&Support: ${process.name}"),
+                                        Text(
+                                          "Core&Support: ${process.name}",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                         const SizedBox(height: 6),
 
-                                        Text("Description: ${process.remarks}"),
+                                        Text(
+                                          "Description: ${process.remarks}",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                         const SizedBox(height: 6),
 
                                         Text(
                                           "Strategic Objective: ${process.strategicObjective}",
+                                          style: TextStyle(fontSize: 12),
                                         ),
                                       ],
                                     ),

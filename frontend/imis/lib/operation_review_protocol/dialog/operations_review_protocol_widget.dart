@@ -1520,20 +1520,31 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
 
   Widget _buildBottomButtons(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: kBg,
         border: Border(top: BorderSide(color: Colors.grey.shade300)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          Expanded(
+            child: Text(
+              "Note: Once submitted, this review is not editable. Save as Draft if you need to make changes later.",
+              style: GoogleFonts.plusJakartaSans(
+                color: kMuted,
+                fontSize: 10,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+
           OutlinedButton(
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: kBorder),
-              padding: EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadiusGeometry.circular(8),
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
             onPressed: _isSaving ? null : () => Navigator.pop(context),

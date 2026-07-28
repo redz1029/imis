@@ -48,7 +48,6 @@ class OperationReviewProtocolPageState
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-  String _roleId = '';
   List<PerformanceGovernanceSystem> operationReviewprotocolList = [];
   List<PerformanceGovernanceSystem> filteredList = [];
   String? _selectedPeriodId;
@@ -80,8 +79,6 @@ class OperationReviewProtocolPageState
         debugPrint('Role ID is empty, aborting fetch.');
         return;
       }
-
-      setState(() => _roleId = roleId);
 
       final pageList = await _operationReviewProtocolService
           .getOperationReviewProtocolList(
@@ -328,14 +325,14 @@ class OperationReviewProtocolPageState
                         color: Color(0xFF1A1D23),
                       ),
                     ),
-                    Text(
-                      "$_totalCount operation review protocol${_totalCount != 1 ? 's' : ''} found",
+                    // Text(
+                    //   "$_totalCount operation review protocol${_totalCount != 1 ? 's' : ''} found",
 
-                      style: TextStyle(
-                        fontSize: isXSmall ? 10 : 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
+                    //   style: TextStyle(
+                    //     fontSize: isXSmall ? 10 : 12,
+                    //     color: Colors.grey.shade600,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -559,6 +556,7 @@ class OperationReviewProtocolPageState
                 _selectedPeriodId = selected.id.toString();
               }
             });
+
             fetchFilter();
           },
         ),

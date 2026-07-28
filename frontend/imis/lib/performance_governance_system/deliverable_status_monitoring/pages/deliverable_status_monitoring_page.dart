@@ -104,11 +104,25 @@ class _DeliverableStatusMonitoringPageState
     final kra = await _commonService.fetchKra();
     await _loadCurrentUserId();
     if (!mounted) return;
+
+    PgsPeriod? activePeriod;
+    for (final p in period) {
+      if (p.isActive == true) {
+        activePeriod = p;
+        break;
+      }
+    }
+
     setState(() {
       periodList = period;
       officeList = offices;
       kraListOptions = kra;
       isLoading = false;
+      if (activePeriod != null) {
+        selectedPeriod = activePeriod.id;
+        selectedPeriodText =
+            "${_dateConverter.toJson(activePeriod.startDate)} – ${_dateConverter.toJson(activePeriod.endDate)}";
+      }
     });
     fetchFilteredPgsList();
   }
