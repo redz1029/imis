@@ -1057,6 +1057,116 @@ class AdminDashboardState extends State<AdminDashboard> {
     return "${months[date.month - 1]} ${date.year}";
   }
 
+  // Widget _buildStatisticsSection() {
+  //   final double auditRate =
+  //       statTotalDeliverables > 0
+  //           ? (statTotalAudited / statTotalDeliverables).clamp(0.0, 1.0)
+  //           : 0.0;
+
+  //   return Container(
+  //     padding: const EdgeInsets.all(24),
+  //     decoration: BoxDecoration(
+  //       color: Theme.of(context).cardColor,
+  //       borderRadius: BorderRadius.circular(16),
+  //       border: Border.all(color: Colors.grey.shade200),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withValues(alpha: 0.03),
+  //           blurRadius: 16,
+  //           offset: const Offset(0, 4),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Text(
+  //                   "Audit Statistics",
+  //                   style: GoogleFonts.plusJakartaSans(
+  //                     fontSize: 18,
+  //                     fontWeight: FontWeight.w700,
+  //                     color: Colors.black87,
+  //                   ),
+  //                 ),
+  //                 const SizedBox(height: 2),
+  //                 Text(
+  //                   "Overview of Audit Statistics for the Selected Period",
+  //                   style: GoogleFonts.plusJakartaSans(
+  //                     fontSize: 12,
+  //                     color: Colors.grey.shade500,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //             _buildPeriodDropdownPill(),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 24),
+
+  //         if (isLoadingStatistics)
+  //           const Padding(
+  //             padding: EdgeInsets.symmetric(vertical: 40),
+  //             child: Center(
+  //               child: CircularProgressIndicator(color: primaryColor),
+  //             ),
+  //           )
+  //         else
+  //           LayoutBuilder(
+  //             builder: (context, constraints) {
+  //               final isMobile = constraints.maxWidth < 700;
+
+  //               final cards = _buildDeliverableStatCards();
+  //               final donut = _buildAuditDonut(auditRate);
+
+  //               if (isMobile) {
+  //                 return Column(
+  //                   children: [cards, const SizedBox(height: 24), donut],
+  //                 );
+  //               }
+
+  //               return Row(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Expanded(flex: 6, child: cards),
+  //                   const SizedBox(width: 24),
+  //                   Expanded(flex: 4, child: donut),
+  //                 ],
+  //               );
+  //             },
+  //           ),
+  //         if (!isLoadingStatistics) ...[
+  //           const SizedBox(height: 28),
+  //           Divider(color: Colors.grey.shade200, height: 1),
+  //           const SizedBox(height: 24),
+  //           Text(
+  //             "Deliverable Statistics",
+  //             style: GoogleFonts.plusJakartaSans(
+  //               fontSize: 18,
+  //               fontWeight: FontWeight.w700,
+  //               color: Colors.black87,
+  //             ),
+  //           ),
+  //           const SizedBox(height: 4),
+  //           Text(
+  //             "Current deliverable status overview",
+  //             style: GoogleFonts.plusJakartaSans(
+  //               fontSize: 12,
+  //               color: Colors.grey.shade500,
+  //             ),
+  //           ),
+  //           const SizedBox(height: 20),
+  //           _buildDeliverableStatusChart(),
+  //         ],
+  //       ],
+  //     ),
+  //   );
+  // }
   Widget _buildStatisticsSection() {
     final double auditRate =
         statTotalDeliverables > 0
@@ -1080,35 +1190,6 @@ class AdminDashboardState extends State<AdminDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Audit Statistics",
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "Overview of Audit Statistics for the Selected Period",
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                ],
-              ),
-              _buildPeriodDropdownPill(),
-            ],
-          ),
-          const SizedBox(height: 24),
-
           if (isLoadingStatistics)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
@@ -1116,37 +1197,63 @@ class AdminDashboardState extends State<AdminDashboard> {
                 child: CircularProgressIndicator(color: primaryColor),
               ),
             )
-          else
+          else ...[
+            // ===== DELIVERABLE STATISTICS (now first) =====
+
+            // ===== AUDIT STATISTICS (now second) =====
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Audit Statistics",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "Overview of Audit Statistics for the Selected Period",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+                _buildPeriodDropdownPill(),
+              ],
+            ),
+            const SizedBox(height: 24),
             LayoutBuilder(
               builder: (context, constraints) {
                 final isMobile = constraints.maxWidth < 700;
 
+                final cards = _buildDeliverableStatCards();
                 final donut = _buildAuditDonut(auditRate);
-                final bars = _buildComparisonBars();
 
                 if (isMobile) {
                   return Column(
-                    children: [donut, const SizedBox(height: 24), bars],
+                    children: [cards, const SizedBox(height: 24), donut],
                   );
                 }
 
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(flex: 4, child: donut),
+                    Expanded(flex: 6, child: cards),
                     const SizedBox(width: 24),
-                    Expanded(flex: 6, child: bars),
+                    Expanded(flex: 4, child: donut),
                   ],
                 );
               },
             ),
-
-          if (!isLoadingStatistics) ...[
-            const SizedBox(height: 28),
-            Divider(color: Colors.grey.shade200, height: 1),
-            const SizedBox(height: 24),
             Text(
-              "Deliverable Progress",
+              "Deliverable Statistics",
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -1155,15 +1262,96 @@ class AdminDashboardState extends State<AdminDashboard> {
             ),
             const SizedBox(height: 4),
             Text(
-              "Tracking deliverable status trends month-over-month",
+              "Current deliverable status overview",
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 color: Colors.grey.shade500,
               ),
             ),
             const SizedBox(height: 20),
-            _buildAuditStatusDonut(),
+            _buildDeliverableStatusChart(),
+
+            const SizedBox(height: 28),
+            Divider(color: Colors.grey.shade200, height: 1),
+            const SizedBox(height: 24),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeliverableStatCards() {
+    final entries = [
+      _BarEntry(
+        "Total Deliverables",
+        statTotalDeliverables,
+        Icons.assignment_turned_in_outlined,
+        primaryColor,
+      ),
+      _BarEntry(
+        "Total Offices that Produced Deliverables",
+        statTotalOffices,
+        Icons.apartment_outlined,
+        Colors.blue.shade400,
+      ),
+      _BarEntry(
+        "Total Audited Deliverables",
+        statTotalAudited,
+        Icons.fact_check_outlined,
+        Colors.purple.shade200,
+      ),
+    ];
+
+    return Column(
+      children: entries.map((e) => _deliverableStatCard(e)).toList(),
+    );
+  }
+
+  Widget _deliverableStatCard(_BarEntry entry) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: kBackground,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: entry.color.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: entry.color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(entry.icon, color: entry.color, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.label,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  entry.value.toString(),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1307,224 +1495,193 @@ class AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildComparisonBars() {
-    final maxValue = [
-      statTotalDeliverables,
-      statTotalOffices,
-      statTotalAudited,
-    ].fold<int>(0, (prev, e) => e > prev ? e : prev).clamp(1, 999999);
-
+  Widget _buildDeliverableStatusChart() {
     final entries = [
-      _BarEntry(
-        "Total Deliverables",
-        statTotalDeliverables,
-        Icons.assignment_turned_in_outlined,
-        primaryColor,
-      ),
-      _BarEntry(
-        "Total Offices that Produced Deliverables",
-        statTotalOffices,
-        Icons.apartment_outlined,
-        Colors.blue.shade300,
-      ),
-      _BarEntry(
-        "Total Audited Deliverables",
-        statTotalAudited,
-        Icons.fact_check_outlined,
-        kSuccess,
-      ),
+      _ChartBarEntry("Not Started", statNotStarted, Colors.redAccent),
+      _ChartBarEntry("In Progress", statOngoing, Colors.orange.shade300),
+      _ChartBarEntry("Completed", statCompleted, Colors.green.shade400),
+      _ChartBarEntry("Audited", statTotalAudited, Colors.purple.shade200),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children:
-          entries.map((e) {
-            final ratio = e.value / maxValue;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(e.icon, size: 16, color: e.color),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          e.label,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        e.value.toString(),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: e.color,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      height: 10,
-                      color: Colors.grey.shade100,
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
-                          duration: const Duration(milliseconds: 900),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, value, child) {
-                            return FractionallySizedBox(
-                              widthFactor: value,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: e.color,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-    );
-  }
+    final maxValue = entries
+        .map((e) => e.value)
+        .fold<int>(0, (prev, e) => e > prev ? e : prev)
+        .clamp(1, 999999);
 
-  Widget _buildAuditStatusDonut() {
-    final total = statCompleted + statOngoing + statNotStarted;
+    final total = statNotStarted + statOngoing + statCompleted;
 
-    final segments = [
-      _DonutSegment("Completed", statCompleted, Colors.green),
-      _DonutSegment("Ongoing", statOngoing, Colors.orange),
-      _DonutSegment("Not Started", statNotStarted, Colors.redAccent),
-    ];
+    final double notStartedPct =
+        total > 0 ? (statNotStarted / total * 100) : 0.0;
+    final double inProgressPct = total > 0 ? (statOngoing / total * 100) : 0.0;
+    final double completedPct = total > 0 ? (statCompleted / total * 100) : 0.0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 700;
 
+        // ===== LEFT: Total Deliverables (full height) =====
+        final totalCard = Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: kBackground,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: primaryColor, width: 1.5),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment:
+                isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+            children: [
+              Text(
+                total.toString(),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w800,
+                  color: primaryColor,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                "Total Deliverables",
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+        );
+        final percentCards = [
+          _summaryCard("Not Started (%)", notStartedPct, Colors.redAccent),
+          _summaryCard(
+            "In Progress (%)",
+            inProgressPct,
+            Colors.orange.shade300,
+          ),
+          _summaryCard("Completed (%)", completedPct, Colors.green.shade400),
+        ];
+
+        final percentRow =
+            isMobile
+                ? Column(
+                  children:
+                      percentCards
+                          .map(
+                            (c) => Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: c,
+                            ),
+                          )
+                          .toList(),
+                )
+                : Row(
+                  children:
+                      percentCards
+                          .map(
+                            (c) => Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
+                                child: c,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                );
+
         final chart = Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: kBackground,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 900),
-                curve: Curves.easeOutCubic,
-                builder: (context, animValue, child) {
-                  return SizedBox(
-                    width: 160,
-                    height: 160,
-                    child: CustomPaint(
-                      painter: _MultiDonutPainter(
-                        segments: segments,
-                        total: total,
-                        strokeWidth: 14,
-                        animationProgress: animValue,
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              total.toString(),
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            Text(
-                              "Total",
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
-                                color: Colors.grey.shade500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
+              Text(
+                "Deliverable Statistics",
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                children:
+                    entries.map((e) => _legendDot(e.color, e.label)).toList(),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 240,
+                child: _GridChart(entries: entries, maxValue: maxValue),
               ),
             ],
           ),
         );
 
-        final legend = Column(
+        final rightColumn = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children:
-              segments.map((s) {
-                final pct = total > 0 ? (s.value / total * 100) : 0.0;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: s.color,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          s.label,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        "${s.value} (${pct.toStringAsFixed(0)}%)",
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: s.color,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+          children: [percentRow, const SizedBox(height: 20), chart],
         );
 
         if (isMobile) {
-          return Column(children: [chart, const SizedBox(height: 20), legend]);
+          return Column(
+            children: [
+              SizedBox(height: 140, child: totalCard),
+              const SizedBox(height: 20),
+              rightColumn,
+            ],
+          );
         }
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(flex: 4, child: chart),
-            const SizedBox(width: 24),
-            Expanded(flex: 6, child: legend),
-          ],
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(flex: 3, child: totalCard),
+              const SizedBox(width: 24),
+              Expanded(flex: 7, child: rightColumn),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  Widget _summaryCard(String label, double value, Color accentColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      decoration: BoxDecoration(
+        color: kBackground,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value.toStringAsFixed(2),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1668,4 +1825,155 @@ class _MultiDonutPainter extends CustomPainter {
   bool shouldRepaint(covariant _MultiDonutPainter oldDelegate) =>
       oldDelegate.animationProgress != animationProgress ||
       oldDelegate.segments != segments;
+}
+
+class _ChartBarEntry {
+  final String label;
+  final int value;
+  final Color color;
+
+  _ChartBarEntry(this.label, this.value, this.color);
+}
+
+class _GridChart extends StatelessWidget {
+  final List<_ChartBarEntry> entries;
+  final int maxValue;
+
+  const _GridChart({required this.entries, required this.maxValue});
+
+  // rounds maxValue up to a "nice" step count (e.g. 5 gridlines)
+  List<int> get _gridSteps {
+    final step = (maxValue / 4).ceil();
+    final niceStep = step <= 0 ? 1 : step;
+    return List.generate(5, (i) => niceStep * i);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final steps = _gridSteps;
+    final chartMax = steps.last == 0 ? 1 : steps.last;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Y-axis numbers
+        SizedBox(
+          width: 36,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children:
+                steps.reversed
+                    .map(
+                      (s) => Text(
+                        s.toString(),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    )
+                    .toList(),
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Chart area with gridlines behind bars
+        Expanded(
+          child: Stack(
+            children: [
+              // background gridlines
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _GridBackgroundPainter(
+                    lineCount: steps.length,
+                    color: Colors.grey.shade300,
+                  ),
+                ),
+              ),
+              // bars on top
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children:
+                      entries.map((e) => _verticalBar(e, chartMax)).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _verticalBar(_ChartBarEntry entry, int maxValue) {
+    final ratio = maxValue > 0 ? entry.value / maxValue : 0.0;
+
+    return Expanded(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(
+            entry.value.toString(),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 190,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return FractionallySizedBox(
+                    heightFactor: value == 0 ? 0.01 : value,
+                    child: Container(
+                      width: 32,
+                      decoration: BoxDecoration(
+                        color: entry.color,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(6),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GridBackgroundPainter extends CustomPainter {
+  final int lineCount;
+  final Color color;
+
+  _GridBackgroundPainter({required this.lineCount, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = color.withValues(alpha: 0.5)
+          ..strokeWidth = 1;
+
+    // evenly spaced horizontal lines, top = max, bottom = 0
+    for (int i = 0; i < lineCount; i++) {
+      final y = size.height * (i / (lineCount - 1));
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _GridBackgroundPainter oldDelegate) => false;
 }
