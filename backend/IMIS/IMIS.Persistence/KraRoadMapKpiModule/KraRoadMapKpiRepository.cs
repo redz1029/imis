@@ -21,28 +21,26 @@ namespace IMIS.Persistence.KraRoadMapKpiModule
                     !x.IsDeleted)
                 .ToListAsync(cancellationToken);
         }
-
+       
         public async Task<List<KraRoadMapKpi>> GetKpisByRoadMapIdAsync(long kraRoadMapId, int year, CancellationToken cancellationToken)
         {
-            var validRoadMapIds = await ReadOnlyDbContext
-                .Set<KraRoadMap>()
-                .AsNoTracking()
-                .Where(x =>
-                    x.Id == kraRoadMapId &&
-                    x.KraRoadMapPeriod!.StartYear.Year <= year &&
-                    x.KraRoadMapPeriod.EndYear.Year >= year)
-                .Select(x => x.Id)
-                .ToListAsync(cancellationToken);
-
             return await ReadOnlyDbContext
                 .Set<KraRoadMapKpi>()
                 .AsNoTracking()
-                .Where(x =>
-                    !x.IsDeleted &&
-                    validRoadMapIds.Contains(x.KraRoadMapId))
+                .Where(k =>
+                    !k.IsDeleted &&
+                    k.KraRoadMapId == kraRoadMapId &&
+                    k.Year == year &&
+                    ReadOnlyDbContext.Set<KraRoadMap>()
+                        .Any(r =>
+                            r.Id == kraRoadMapId &&
+                            !r.IsDeleted &&
+                            r.KraRoadMapPeriod!.StartYear.Year <= year &&
+                            r.KraRoadMapPeriod.EndYear.Year >= year))
+                .OrderBy(k => k.KpiDescription)
                 .ToListAsync(cancellationToken);
         }
-        
+
         public async Task<List<(long KraRoadMapId, DateTime StartYear, DateTime EndYear)>> GetRoadMapPeriodsForKpisAsync(List<KraRoadMapKpi> kpis, CancellationToken cancellationToken)
         {
             var roadmapIds = kpis
