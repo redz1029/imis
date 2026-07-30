@@ -124,6 +124,10 @@ class StrategyReviewReportDialogState
   bool _isSaving = false;
   final dio = Dio();
 
+  static final List<TextInputFormatter> _numericPercentFormatters = [
+    FilteringTextInputFormatter.allow(RegExp(r'[0-9%]')),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -171,7 +175,6 @@ class StrategyReviewReportDialogState
           _stopCtrl.text = existing.stop ?? '';
           _startCtrl.text = existing.start ?? '';
 
-          // Build measure/target directly from the saved flat fields
           _kpiItems =
               existing.strategyReviewDeliverableKpi
                   ?.map(
@@ -184,7 +187,6 @@ class StrategyReviewReportDialogState
                   .toList() ??
               [];
 
-          // Build keyResultArea/deliverable directly from the saved flat fields
           _deliverableItems =
               existing.strategyReviewDeliverable
                   ?.map(
@@ -306,86 +308,6 @@ class StrategyReviewReportDialogState
     super.dispose();
   }
 
-  // Future<void> _submit() async {
-  //   if (!_formKey.currentState!.validate()) return;
-
-  //   final request = StrategyReviewSaveRequest(
-  //     id: widget.existingReview?.id ?? 0,
-  //     isDeleted: false,
-  //     rowVersion: widget.existingReview?.rowVersion,
-  //     postingDate: DateTime.now().toUtc().toIso8601String(),
-  //     kraRoadMapId: widget.kraRoadMapId,
-  //     strategyReviewPeriodId: _selectedPeriod?.id.toString(),
-  //     strategicObjective: _strategicObjective,
-  //     officeNames: _contributingUnitsCtrl.text.trim(),
-  //     strategyReviewDeliverableKpi: List.generate(_kpiItems.length, (i) {
-  //       final existing = widget.existingReview?.strategyReviewDeliverableKpi
-  //           ?.firstWhere(
-  //             (k) => k.kpiId == _kpiItems[i].id,
-  //             orElse: () => StrategyReviewDeliverableKpiRequest.empty(),
-  //           );
-  //       return StrategyReviewDeliverableKpiRequest(
-  //         id: existing?.kpiId != 0 ? existing?.id ?? 0 : 0,
-  //         strategyReviewId: widget.existingReview?.id ?? 0,
-  //         isDeleted: false,
-  //         rowVersion: existing?.rowVersion,
-  //         kpiId: _kpiItems[i].id,
-  //         actualDate: _measureActualCtrls[i].text.trim(),
-  //         status: _measureStatuses[i].index,
-  //       );
-  //     }),
-  //     strategyReviewDeliverable: List.generate(_deliverableItems.length, (i) {
-  //       final existing = widget.existingReview?.strategyReviewDeliverable
-  //           ?.firstWhere(
-  //             (d) => d.kraRoadmapid == _deliverableItems[i].id,
-  //             orElse: () => StrategyReviewDeliverableRequest.empty(),
-  //           );
-  //       return StrategyReviewDeliverableRequest(
-  //         id: existing?.kraRoadmapid != 0 ? existing?.id ?? 0 : 0,
-  //         isDeleted: false,
-  //         rowVersion: existing?.rowVersion,
-  //         strategyReviewId: widget.existingReview?.id ?? 0,
-  //         kraRoadmapid: _deliverableItems[i].id,
-  //         actualDate: _kraActualCtrls[i].text.trim(),
-  //         status: _kraStatuses[i].index,
-  //       );
-  //     }),
-  //     continueText: _continueCtrl.text.trim(),
-  //     stop: _stopCtrl.text.trim(),
-  //     start: _startCtrl.text.trim(),
-  //     roleId: roleId,
-  //   );
-
-  //   setState(() => _isSaving = true);
-  //   try {
-  //     if (widget.existingReview != null) {
-  //       await _service.updateStrategyReview(request);
-  //     } else {
-  //       await _service.saveStrategyReview(request);
-  //     }
-
-  //     if (!mounted) return;
-  //     MotionToast.success(
-  //       toastAlignment: Alignment.topCenter,
-  //       description: Text(
-  //         widget.existingReview != null
-  //             ? 'Strategy review updated successfully'
-  //             : 'Strategy review saved successfully',
-  //       ),
-  //     ).show(context);
-  //     await Future.delayed(const Duration(milliseconds: 800));
-  //     if (!mounted) return;
-  //     Navigator.of(context).pop();
-  //   } catch (e) {
-  //     debugPrint('Submit error: $e');
-  //     if (!mounted) return;
-  //     setState(() => _isSaving = false);
-  //     MotionToast.error(
-  //       toastAlignment: Alignment.topCenter,
-  //       description: const Text('Failed to save. Please try again.'),
-  //     ).show(context);
-  //   }
-  // }
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -785,7 +707,11 @@ class StrategyReviewReportDialogState
           const SizedBox(width: 8),
           Expanded(
             flex: 2,
-            child: _compactField(_measureActualCtrls[i], 'e.g. 75%'),
+            child: _compactField(
+              _measureActualCtrls[i],
+              'e.g. 75% or 75',
+              inputFormatters: _numericPercentFormatters,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -828,7 +754,11 @@ class StrategyReviewReportDialogState
             _kpiItems[i].target?.isEmpty ?? true ? '—' : _kpiItems[i].target!,
           ),
           const SizedBox(height: 8),
-          _labeledField('Actual to Date', _measureActualCtrls[i]),
+          _labeledField(
+            'e.g. 75% or 75',
+            _measureActualCtrls[i],
+            inputFormatters: _numericPercentFormatters,
+          ),
           const SizedBox(height: 8),
           _labeledStatusDropdown(
             label: 'Status',
@@ -1310,6 +1240,7 @@ class StrategyReviewReportDialogState
     String label,
     TextEditingController ctrl, {
     int maxLines = 1,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1322,6 +1253,7 @@ class StrategyReviewReportDialogState
         TextFormField(
           controller: ctrl,
           maxLines: maxLines,
+          inputFormatters: inputFormatters,
           style: const TextStyle(fontSize: 13),
           decoration: InputDecoration(
             isDense: true,
@@ -1351,10 +1283,12 @@ class StrategyReviewReportDialogState
     TextEditingController ctrl,
     String hint, {
     int maxLines = 1,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextFormField(
       controller: ctrl,
       maxLines: maxLines,
+      inputFormatters: inputFormatters,
       style: const TextStyle(fontSize: 13),
       decoration: InputDecoration(
         isDense: true,
