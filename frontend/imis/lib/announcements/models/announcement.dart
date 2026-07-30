@@ -12,6 +12,7 @@ class Announcement {
   final bool isActive;
   final String? rowVersion;
   final bool? isDeleted;
+  final bool? isRead;
 
   Announcement({
     required this.id,
@@ -22,6 +23,7 @@ class Announcement {
     required this.isActive,
     this.rowVersion,
     this.isDeleted,
+    this.isRead,
   });
 
   factory Announcement.fromJson(Map<String, dynamic> json) =>

@@ -354,6 +354,10 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                                         isActive:
                                                             announcement
                                                                 .isActive,
+                                                        isRead:
+                                                            announcement
+                                                                .isRead ??
+                                                            false,
                                                       );
                                                     },
                                                   ),
@@ -478,11 +482,10 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          "Team Name: ${announcement.title}",
+                                          announcement.title,
                                           style: TextStyle(fontSize: 12),
                                         ),
                                         SizedBox(height: 8),
-
                                         Text(
                                           announcement.isActive
                                               ? 'Active'
@@ -543,6 +546,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
     String? endDate,
     String? description,
     bool isActive = false,
+    bool isRead = false,
   }) {
     final titleController = TextEditingController(text: title);
     final descriptionController = TextEditingController(text: description);
@@ -551,6 +555,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
     // DateTime? selectedEndDate =
     //     endDate != null ? DateTime.tryParse(endDate) : null;
     bool activeState = isActive;
+    bool readState = isRead;
     final isEdit = id != null;
 
     showDialog(
@@ -834,6 +839,50 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Show on Notification',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: kText,
+                                  ),
+                                ),
+                                Text(
+                                  'Notify to all users on the dashboard',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: readState,
+                              onChanged:
+                                  (val) =>
+                                      setStateDialog(() => readState = val),
+                              activeColor: primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 24),
 
                       Row(
@@ -1046,6 +1095,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                       descriptionController.text.trim(),
                                   isActive: activeState,
                                   isDeleted: false,
+                                  isRead: readState,
                                 );
 
                                 try {
