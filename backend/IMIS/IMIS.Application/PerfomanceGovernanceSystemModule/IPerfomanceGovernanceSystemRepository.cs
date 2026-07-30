@@ -30,9 +30,7 @@ namespace IMIS.Application.PgsModule
         Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableByStandardUserAsync(string userId, long? pgsPeriodId,  CancellationToken cancellationToken);
         Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken);
         Task<List<ServiceGroupedAuditDto>> GetPendingAuditsByAuditorSortByServiceAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken);
-        Task<TotalDashboardDeliverableDto> GetTotalDeliverableAsync(List<int> officeIds, int? pgsPeriodId, CancellationToken cancellationToken);
         Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(List<int> officeIds, int? pgsPeriodId, CancellationToken cancellationToken);
-        Task<TotalDashboardAuditedDto> GetTotalAuditedAsync(List<int> officeIds, int? pgsPeriodId, CancellationToken cancellationToken);
         Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(List<int> officeIds, int? pgsPeriodId, CancellationToken cancellationToken);
         Task<List<int>> GetAllOfficeIdsAsync(CancellationToken cancellationToken);
         Task<List<ReportPgsServiceOfficePeriodDto>> GetPgsByServiceOfficePeriodAsync(long? periodId, long? officeId, long? parentOfficeId, CancellationToken cancellationToken);
