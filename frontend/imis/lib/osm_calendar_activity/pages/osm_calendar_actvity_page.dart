@@ -48,13 +48,13 @@ class OsmCalendarActvityPageState extends State<OsmCalendarActvityPage> {
   }
 
   static const List<String> _weekdayLabels = [
+    'SUN',
     'MON',
     'TUE',
     'WED',
     'THU',
     'FRI',
     'SAT',
-    'SUN',
   ];
 
   List<OsmCalendarActivity> _eventsForDay(DateTime day) {
@@ -276,7 +276,7 @@ class OsmCalendarActvityPageState extends State<OsmCalendarActvityPage> {
   Widget _buildMonthGrid() {
     final firstOfMonth = DateTime(_visibleMonth.year, _visibleMonth.month, 1);
 
-    final leadingBlanks = firstOfMonth.weekday - 1;
+    final leadingBlanks = firstOfMonth.weekday % 7;
     final daysInMonth =
         DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0).day;
     final totalCells = leadingBlanks + daysInMonth;
