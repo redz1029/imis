@@ -400,10 +400,13 @@ class _ExpandableCell extends StatelessWidget {
         maxLines: null,
         minLines: 1,
         keyboardType: TextInputType.multiline,
-        style: const TextStyle(fontSize: 14),
+        style: GoogleFonts.plusJakartaSans(fontSize: 12),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+          hintStyle: GoogleFonts.plusJakartaSans(
+            color: Colors.grey,
+            fontSize: 12,
+          ),
           border: InputBorder.none,
           isDense: true,
           contentPadding: EdgeInsets.zero,
@@ -432,7 +435,10 @@ class CompactCell extends StatelessWidget {
         style: const TextStyle(fontSize: 13),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+          hintStyle: GoogleFonts.plusJakartaSans(
+            color: Colors.grey,
+            fontSize: 12,
+          ),
           border: InputBorder.none,
           isDense: true,
           contentPadding: EdgeInsets.zero,
@@ -531,9 +537,9 @@ class _StrategicSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           'Strategic Objective',
-          style: TextStyle(
+          style: GoogleFonts.plusJakartaSans(
             color: primaryColor,
             fontStyle: FontStyle.italic,
             fontWeight: FontWeight.w600,
@@ -543,7 +549,10 @@ class _StrategicSection extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           strategicObjective ?? '',
-          style: const TextStyle(fontSize: 13, color: Colors.black87),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            color: Colors.black87,
+          ),
         ),
       ],
     );
@@ -687,10 +696,10 @@ class _KpiTableCompact extends StatelessWidget {
                       right: BorderSide(color: Colors.grey.shade300),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Action',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
                       color: Colors.black87,
@@ -710,9 +719,9 @@ class _KpiTableCompact extends StatelessWidget {
                       right: BorderSide(color: Colors.grey.shade300),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'KPI',
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
                       color: Colors.black87,
@@ -732,9 +741,9 @@ class _KpiTableCompact extends StatelessWidget {
                       right: BorderSide(color: Colors.grey.shade300),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Baseline',
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
                       color: Colors.black87,
@@ -1889,7 +1898,6 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
           ),
         ),
         const SizedBox(height: 10),
-        // -- KRA deliverables table (expands to fill remaining space) --
         Expanded(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -1918,7 +1926,6 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
       });
     });
 
-    // Duplicate KRA check
     final Set<String> kraSet = {};
     for (final row in _rows) {
       final kraText = row.kraCtrl.text.trim().toLowerCase();
