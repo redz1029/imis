@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="02/24/2026 11:10:55" ReportInfo.Modified="07/31/2026 16:18:12" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="02/24/2026 11:10:55" ReportInfo.Modified="08/03/2026 10:03:16" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -421,7 +421,7 @@ namespace FastReport
       <LineObject Name="Line181" Left="965.45" Top="94.5" Height="19.45" CanGrow="true" GrowToBottom="true"/>
       <TextObject Name="Text378" Left="670.95" Top="95.5" Width="44.23" Height="17.55" Text="Target" HorzAlign="Center" VertAlign="Center" Font="Calibri, 6pt"/>
     </ReportTitleBand>
-    <ReportSummaryBand Name="ReportSummary1" Top="119.08" Width="1047.06" Height="130.38" CanGrow="true">
+    <ReportSummaryBand Name="ReportSummary1" Top="120.41" Width="1047.06" Height="130.38" CanGrow="true">
       <ShapeObject Name="Shape12" Left="14.6" Top="-1.65" Width="1016.8" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
       <SubreportObject Name="ServiceLIstPage" Left="194.35" Top="-0.55" Width="835.9" Height="128.85" GrowToBottom="true" PrintOn="FirstPage, OddPages, EvenPages, RepeatedBand, SinglePage" ReportPage="Page4" PrintOnParent="true"/>
       <LineObject Name="Line53" Left="36.8" Top="-2" Height="132.1" CanGrow="true" GrowToBottom="true"/>
@@ -440,7 +440,7 @@ namespace FastReport
       <LineObject Name="Line183" Left="842.05" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line184" Left="917.65" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line185" Left="965.9" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-      <ChildBand Name="Child8" Top="253.46" Width="1047.06" Height="131.38" CanGrow="true">
+      <ChildBand Name="Child8" Top="256.13" Width="1047.06" Height="131.38" CanGrow="true">
         <ShapeObject Name="Shape13" Left="14.45" Top="-0.65" Width="1017.35" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
         <SubreportObject Name="TrainingListPage" Left="195.34" Top="1" Width="834.42" Height="128.9" GrowToBottom="true" ReportPage="Page5" PrintOnParent="true"/>
         <LineObject Name="Line64" Left="36.65" Top="-1" Height="132.1" CanGrow="true" GrowToBottom="true"/>
@@ -459,7 +459,7 @@ namespace FastReport
         <LineObject Name="Line188" Left="842.05" Height="130.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line189" Left="917.65" Height="130.85" CanGrow="true" GrowToBottom="true"/>
         <LineObject Name="Line190" Left="965.9" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-        <ChildBand Name="Child9" Top="388.84" Width="1047.06" Height="130.93" CanGrow="true">
+        <ChildBand Name="Child9" Top="392.84" Width="1047.06" Height="130.93" CanGrow="true">
           <ShapeObject Name="Shape16" Left="14.45" Top="-1.1" Width="1017.35" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
           <SubreportObject Name="ResearchListPage" Left="194.21" Width="835.97" Height="128.9" GrowToBottom="true" ReportPage="Page6" PrintOnParent="true"/>
           <LineObject Name="Line75" Left="36.65" Top="-1.45" Height="132.1" CanGrow="true" GrowToBottom="true"/>
@@ -478,7 +478,7 @@ namespace FastReport
           <LineObject Name="Line193" Left="842.05" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line194" Left="917.65" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
           <LineObject Name="Line195" Left="965.9" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-          <ChildBand Name="Child10" Top="523.77" Width="1047.06" Height="130.93" CanGrow="true">
+          <ChildBand Name="Child10" Top="529.1" Width="1047.06" Height="130.93" CanGrow="true">
             <ShapeObject Name="Shape18" Left="14.45" Top="-1.1" Width="1017.45" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
             <SubreportObject Name="LinkagesListPage" Left="194.21" Width="835.52" Height="128.9" GrowToBottom="true" ReportPage="Page7" PrintOnParent="true"/>
             <LineObject Name="Line86" Left="36.65" Top="-0.45" Height="131.1" CanGrow="true" GrowToBottom="true"/>
@@ -497,7 +497,7 @@ namespace FastReport
             <LineObject Name="Line197" Left="842.4" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
             <LineObject Name="Line198" Left="917.75" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
             <LineObject Name="Line199" Left="965.9" Top="-1" Height="130.85" CanGrow="true" GrowToBottom="true"/>
-            <ChildBand Name="Child11" Top="658.7" Width="1047.06" Height="130.93" CanGrow="true">
+            <ChildBand Name="Child11" Top="665.37" Width="1047.06" Height="130.93" CanGrow="true">
               <ShapeObject Name="Shape20" Left="14.45" Top="-1.1" Width="1016.8" Height="132.03" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
               <SubreportObject Name="SafetyListPage" Left="194.21" Width="834.97" Height="128.9" GrowToBottom="true" ReportPage="Page8" PrintOnParent="true"/>
               <LineObject Name="Line97" Left="36.65" Top="-1.45" Height="132.1" CanGrow="true" GrowToBottom="true"/>
@@ -652,19 +652,19 @@ namespace FastReport
   <ReportPage Name="Page4" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt">
     <DataBand Name="Data1" Width="1047.06" Height="78.6" CanGrow="true" CanShrink="true" DataSource="ServiceList">
       <ShapeObject Name="Shape49" Left="1.45" Top="1" Width="836.8" Height="75.9" Border.Color="Transparent" Border.Width="0.25" Fill.Color="101, 191, 205, 219" CanGrow="true" GrowToBottom="true"/>
-      <TextObject Name="Text527" Left="5" Top="2.45" Width="167.5" Height="74.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.KpiDescription]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text527" Left="5" Top="2.45" Width="167.5" Height="74.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.KpiDescription]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
       <LineObject Name="Line249" Left="-16" Top="77.6" Width="852.95" CanGrow="true" Diagonal="true"/>
-      <TextObject Name="Text528" Left="177.9" Top="2" Width="57.5" Height="74.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.BaseLine]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
-      <TextObject Name="Text529" Left="236.25" Top="2.45" Width="44.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.Target1]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
-      <TextObject Name="Text530" Left="290.4" Top="2" Width="57.46" Height="74.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.PercentAccomplished1]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
-      <TextObject Name="Text531" Left="408.8" Top="2" Width="58.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.PercentAccomplished2]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
-      <TextObject Name="Text532" Left="355.65" Top="2" Width="49.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.Target2]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
-      <TextObject Name="Text533" Left="473.5" Top="2" Width="47.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.Target3]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
-      <TextObject Name="Text534" Left="529.2" Top="2" Width="63.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.PercentAccomplished3]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
-      <TextObject Name="Text535" Left="596.9" Top="2" Width="53.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.Target4]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
-      <TextObject Name="Text536" Left="656.05" Top="2" Width="57.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.PercentAccomplished4]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
-      <TextObject Name="Text537" Left="722.2" Top="2" Width="47.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.Target5]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
-      <TextObject Name="Text538" Left="769.9" Top="2" Width="64.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.HumanResourceList.PercentAccomplished5]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text528" Left="177.9" Top="2" Width="57.5" Height="74.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.BaseLine]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text529" Left="236.25" Top="2.45" Width="44.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.Target1]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text530" Left="290.4" Top="2" Width="57.46" Height="74.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.PercentAccomplished1]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text531" Left="408.8" Top="2" Width="58.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.PercentAccomplished2]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text532" Left="355.65" Top="2" Width="49.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.Target2]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text533" Left="473.5" Top="2" Width="47.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.Target3]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text534" Left="529.2" Top="2" Width="63.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.PercentAccomplished3]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text535" Left="596.9" Top="2" Width="53.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.Target4]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text536" Left="656.05" Top="2" Width="57.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.PercentAccomplished4]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text537" Left="722.2" Top="2" Width="47.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.Target5]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
+      <TextObject Name="Text538" Left="769.9" Top="2" Width="64.46" Height="73.9" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[ReportKraDto.ServiceList.PercentAccomplished5]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
     </DataBand>
   </ReportPage>
   <ReportPage Name="Page5" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Guides="0" Watermark.Font="Arial, 60pt">
