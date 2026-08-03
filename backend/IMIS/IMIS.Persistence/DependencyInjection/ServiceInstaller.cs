@@ -5,6 +5,7 @@ using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.BreakThroughScoringModule;
 using IMIS.Application.CalendarActivityModule;
+using IMIS.Application.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Application.IsoStandardModule;
 using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadmapCoreSupportProcessModule;
@@ -47,6 +48,7 @@ using IMIS.Persistence.AuditorTeamsModule;
 using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.BreakThroughScoringModule;
 using IMIS.Persistence.CalendarActivityModule;
+using IMIS.Persistence.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Persistence.IsoStandardModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.KraRoadMapAccomplishmentModule;
@@ -83,6 +85,7 @@ using IMIS.Persistence.StrategyReviewPeriodModule;
 using IMIS.Persistence.SWOTAnalysisModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IMIS.Persistence.DependencyInjection
@@ -210,12 +213,15 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IPgsSignatoryRepository, PgsSignatoryRepository>();
             services.AddScoped<IPgsSignatoryService, PgsSignatoryService>();
-
+            
             services.AddScoped<ICalendarActivityRepository, CalendarActivityRepository>();
             services.AddScoped<ICalendarActivityService, CalendarActivityService>();
 
             services.AddScoped<IKraRoadmapHistoryRepository, KraRoadmapHistoryRepository>();
             services.AddScoped<IKraRoadmapHistoryService, KraRoadmapHistoryService>();
+
+            services.AddScoped<IImpactStrategicGoalScoreCardPeriodRepository, ImpactStrategicGoalScoreCardPeriodRepository>();
+            services.AddScoped<IImpactStrategicGoalScoreCardPeriodService, ImpactStrategicGoalScoreCardPeriodService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();
