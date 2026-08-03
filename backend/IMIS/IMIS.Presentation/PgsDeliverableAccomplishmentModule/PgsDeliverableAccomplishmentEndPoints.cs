@@ -225,9 +225,9 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
 
-            app.MapGet("/auditor/pending-audits-sortbyservice-report", async (HttpResponse response, long? auditorId, long? teamId,  long? officeId, long? parentOfficeId, int? month, int? year,  IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>            
+            app.MapGet("/auditor/pending-audits-sortbyservice-report", async (HttpResponse response, long? auditorId, long? teamId,  long? officeId, long? parentOfficeId, int? periodId, int? month, int? year,  IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>            
             {
-                var result = await service.ReportGetPendingAuditsByAuditorSortByServiceAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken).ConfigureAwait(false);
+                var result = await service.ReportGetPendingAuditsByAuditorSortByServiceAsync(auditorId, teamId, officeId, parentOfficeId, periodId, month, year, cancellationToken).ConfigureAwait(false);
 
                 if (result == null || !result.Any())
                     return Results.NotFound();

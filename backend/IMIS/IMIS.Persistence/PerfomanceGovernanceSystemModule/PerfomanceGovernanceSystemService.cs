@@ -156,9 +156,9 @@ namespace IMIS.Persistence.PgsModule
         }
        
         // ===== Report Filter By Service  Auditor ==========
-        public async Task<List<ServiceGroupedAuditDto>> ReportGetPendingAuditsByAuditorSortByServiceAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken)
+        public async Task<List<ServiceGroupedAuditDto>> ReportGetPendingAuditsByAuditorSortByServiceAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodId, int? month, int? year, CancellationToken cancellationToken)
         {
-            var result = await _repository.GetPendingAuditsByAuditorSortByServiceAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken);
+            var result = await _repository.GetPendingAuditsByAuditorSortByServiceAsync(auditorId, teamId, officeId, parentOfficeId, periodId, month, year, cancellationToken);
             
             foreach (var serviceGroup in result)
             {

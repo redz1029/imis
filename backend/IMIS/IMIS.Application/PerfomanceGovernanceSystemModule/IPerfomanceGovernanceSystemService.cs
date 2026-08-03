@@ -23,7 +23,7 @@ namespace IMIS.Application.PgsModule
         Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, string roleid, CancellationToken cancellationToken);
         Task<bool> SoftDeleteDeliverableAsync(int deliverableId, CancellationToken cancellationToken);
         Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>>GetAuditorPgsDeliverableAsync(string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken);
-        Task<List<ServiceGroupedAuditDto>> ReportGetPendingAuditsByAuditorSortByServiceAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken);
+        Task<List<ServiceGroupedAuditDto>> ReportGetPendingAuditsByAuditorSortByServiceAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodId, int? month, int? year, CancellationToken cancellationToken);
         Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken);
         Task<List<AuditorPendingAuditDto>> ReportGetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken);     
         Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(string roleId,int? pgsPeriodId, CancellationToken cancellationToken);

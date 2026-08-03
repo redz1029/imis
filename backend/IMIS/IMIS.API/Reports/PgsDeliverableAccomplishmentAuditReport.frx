@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="06/26/2026 10:39:13" ReportInfo.Modified="07/07/2026 16:51:48" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="06/26/2026 10:39:13" ReportInfo.Modified="08/03/2026 11:23:43" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -58,49 +58,49 @@ namespace FastReport
       <TextObject Name="Text293" Left="9.85" Top="63.25" Width="1026.25" Height="14.8" Text="Sinsuat Avenue, Rosary Heights X, Cotabato City" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
       <TextObject Name="Text59" Left="9.45" Top="111.4" Width="1027.5" Height="28.9" Text="Summary of Validated Deliverables" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 13pt, style=Bold"/>
       <ShapeObject Name="Shape11" Left="9.45" Top="185.55" Width="1026.6" Height="24.8" Fill.Color="IndianRed" CanGrow="true"/>
-      <TextObject Name="Text307" Left="11.35" Top="187.45" Width="169.65" Height="20.9" CanGrow="true" GrowToBottom="true" Text="Team Leader" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
-      <TextObject Name="Text308" Left="279.2" Top="187.45" Width="191.55" Height="20.45" CanGrow="true" GrowToBottom="true" Text="Office Validated" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
-      <TextObject Name="Text309" Left="805.15" Top="187.45" Width="121.55" Height="19.9" CanGrow="true" GrowToBottom="true" Text="No. of Deliverable" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
-      <LineObject Name="Line2" Left="182.75" Top="186.55" Height="23.35"/>
-      <LineObject Name="Line4" Left="472.95" Top="186" Height="23.35"/>
-      <LineObject Name="Line6" Left="928.55" Top="186" Height="23.35"/>
-      <TextObject Name="Text322" Left="930.5" Top="187" Width="102" Height="20.9" CanGrow="true" GrowToBottom="true" Text="Progress" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text307" Left="11.35" Top="187.45" Width="149.65" Height="20.9" CanGrow="true" GrowToBottom="true" Text="Team Leader" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text308" Left="258.2" Top="187.45" Width="191.55" Height="20.45" CanGrow="true" GrowToBottom="true" Text="Office Validated" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text309" Left="775.15" Top="187.45" Width="121.55" Height="19.9" CanGrow="true" GrowToBottom="true" Text="No. of Deliverable" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <LineObject Name="Line2" Left="163.75" Top="186.55" Height="23.35"/>
+      <LineObject Name="Line4" Left="451.95" Top="186" Height="23.35"/>
+      <LineObject Name="Line6" Left="899.65" Top="186" Height="23.35"/>
+      <TextObject Name="Text322" Left="901.6" Top="187" Width="133" Height="20.9" CanGrow="true" GrowToBottom="true" Text="No. Validated Deliverable" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt" TextFill.Color="White"/>
       <TextObject Name="Text326" Left="9.45" Top="140.75" Width="1027.5" Height="28.9" Text="For the Month of [ReportAuditorPendingAuditDto.ReportMonth]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 9pt, style=Bold" MergeMode="Vertical"/>
-      <LineObject Name="Line10" Left="803.8" Top="186.55" Height="23.35"/>
-      <TextObject Name="Text327" Left="185.9" Top="188" Width="87.55" Height="19.9" CanGrow="true" GrowToBottom="true" Text="Team No." HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
-      <LineObject Name="Line12" Left="276.5" Top="185.55" Height="23.35"/>
-      <LineObject Name="Line13" Left="628.15" Top="185.65" Height="23.35"/>
-      <TextObject Name="Text329" Left="474.95" Top="188" Width="151.55" Height="20.45" CanGrow="true" GrowToBottom="true" Text="Department/Unit Head" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
-      <TextObject Name="Text331" Left="631.15" Top="188" Width="171.55" Height="20.45" CanGrow="true" GrowToBottom="true" Text="Service" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <LineObject Name="Line10" Left="771.9" Top="186.55" Height="23.35"/>
+      <TextObject Name="Text327" Left="165.9" Top="188" Width="87.55" Height="19.9" CanGrow="true" GrowToBottom="true" Text="Team No." HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <LineObject Name="Line12" Left="255.5" Top="185.55" Height="23.35"/>
+      <LineObject Name="Line13" Left="607.7" Top="185.65" Height="23.35"/>
+      <TextObject Name="Text329" Left="454.05" Top="188" Width="151.55" Height="20.45" CanGrow="true" GrowToBottom="true" Text="Department/Unit Head" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text331" Left="610.7" Top="188" Width="158.55" Height="20.45" CanGrow="true" GrowToBottom="true" Text="Service" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
     </PageHeaderBand>
-    <GroupHeaderBand Name="GroupHeader1" Top="214.35" Width="1047.06" Height="27.9" Condition="[ReportAuditorPendingAuditDto.AuditorName]">
+    <GroupHeaderBand Name="GroupHeader1" Top="213.55" Width="1047.06" Height="27.9" Condition="[ReportAuditorPendingAuditDto.AuditorName]">
       <TextObject Name="Text1" Left="16.9" Top="1.45" Width="361.1" Height="15.9" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.AuditorName]]" VertAlign="Center" Font="Avenir Book, 9pt"/>
       <LineObject Name="Line14" Left="13.45" Top="21.45" Width="246.8"/>
-      <GroupHeaderBand Name="GroupHeader2" Top="246.25" Width="1047.06" Height="18.9" CanGrow="true" Condition="[ReportAuditorPendingAuditDto.OfficeName]">
-        <TextObject Name="Text4" Left="283.5" Width="189" Height="17.35" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.OfficeName]]" VertAlign="Center" Font="Avenir Book, 9pt"/>
-        <TextObject Name="Text2" Left="186.55" Width="87.05" Height="17.35" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[[ReportAuditorPendingAuditDto.TeamName]]" Duplicates="Hide" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 9pt"/>
-        <TextObject Name="Text3" Left="476.95" Top="1" Width="149.05" Height="15.9" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.AccomplishedBy]]" VertAlign="Center" Font="Avenir Book, 9pt"/>
-        <TextObject Name="Text5" Left="631.15" Top="1" Width="170.85" Height="15.9" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.ParentOfficeName]]" VertAlign="Center" Font="Avenir Book, 9pt"/>
-        <TextObject Name="Text6" Left="808.25" Top="1" Width="117.5" Height="15.9" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.TotalAuditCount]]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 9pt"/>
-        <TextObject Name="Text7" Left="932.1" Top="1" Width="100.5" Height="15.9" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.AuditProgress]]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 9pt"/>
-        <GroupHeaderBand Name="GroupHeader3" Top="269.15" Width="1047.06" Condition="[ReportAuditorPendingAuditDto.AccomplishedBy]">
-          <GroupHeaderBand Name="GroupHeader4" Top="273.15" Width="1047.06" Condition="[ReportAuditorPendingAuditDto.ParentOfficeName]">
-            <GroupHeaderBand Name="GroupHeader5" Top="277.15" Width="1047.06" Condition="[ReportAuditorPendingAuditDto.TotalAuditCount]">
-              <GroupHeaderBand Name="GroupHeader6" Top="281.15" Width="1047.06" Condition="[ReportAuditorPendingAuditDto.AuditProgress]">
-                <DataBand Name="Data1" Top="285.15" Width="1047.06" CanGrow="true" Guides="0" DataSource="ReportAuditorPendingAuditDto"/>
-                <GroupFooterBand Name="GroupFooter6" Top="289.15" Width="1047.06"/>
+      <GroupHeaderBand Name="GroupHeader2" Top="244.65" Width="1047.06" Height="18.9" CanGrow="true" Condition="[ReportAuditorPendingAuditDto.OfficeName]">
+        <TextObject Name="Text4" Left="259.5" Width="189" Height="17.35" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.OfficeName]]" VertAlign="Center" Font="Avenir Book, 9pt"/>
+        <TextObject Name="Text2" Left="166.55" Width="87.05" Height="17.35" CanGrow="true" GrowToBottom="true" CanBreak="false" Text="[[ReportAuditorPendingAuditDto.TeamName]]" Duplicates="Hide" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 9pt"/>
+        <TextObject Name="Text3" Left="456.05" Top="1" Width="149.05" Height="15.9" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.AccomplishedBy]]" VertAlign="Center" Font="Avenir Book, 9pt"/>
+        <TextObject Name="Text5" Left="610.25" Top="1" Width="159.85" Height="15.9" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.ParentOfficeName]]" VertAlign="Center" Font="Avenir Book, 9pt"/>
+        <TextObject Name="Text6" Left="777.25" Top="1" Width="117.5" Height="15.9" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.TotalAuditCount]]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 9pt"/>
+        <TextObject Name="Text7" Left="904.1" Top="1" Width="127.5" Height="15.9" CanGrow="true" GrowToBottom="true" Text="[[ReportAuditorPendingAuditDto.AuditProgress]]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 9pt"/>
+        <GroupHeaderBand Name="GroupHeader3" Top="266.75" Width="1047.06" Condition="[ReportAuditorPendingAuditDto.AccomplishedBy]">
+          <GroupHeaderBand Name="GroupHeader4" Top="269.95" Width="1047.06" Condition="[ReportAuditorPendingAuditDto.ParentOfficeName]">
+            <GroupHeaderBand Name="GroupHeader5" Top="273.15" Width="1047.06" Condition="[ReportAuditorPendingAuditDto.TotalAuditCount]">
+              <GroupHeaderBand Name="GroupHeader6" Top="276.35" Width="1047.06" Condition="[ReportAuditorPendingAuditDto.AuditProgress]">
+                <DataBand Name="Data1" Top="279.55" Width="1047.06" CanGrow="true" Guides="0" DataSource="ReportAuditorPendingAuditDto"/>
+                <GroupFooterBand Name="GroupFooter6" Top="282.75" Width="1047.06"/>
               </GroupHeaderBand>
-              <GroupFooterBand Name="GroupFooter5" Top="293.15" Width="1047.06"/>
+              <GroupFooterBand Name="GroupFooter5" Top="285.95" Width="1047.06"/>
             </GroupHeaderBand>
-            <GroupFooterBand Name="GroupFooter4" Top="297.15" Width="1047.06"/>
+            <GroupFooterBand Name="GroupFooter4" Top="289.15" Width="1047.06"/>
           </GroupHeaderBand>
-          <GroupFooterBand Name="GroupFooter3" Top="301.15" Width="1047.06"/>
+          <GroupFooterBand Name="GroupFooter3" Top="292.35" Width="1047.06"/>
         </GroupHeaderBand>
-        <GroupFooterBand Name="GroupFooter2" Top="305.15" Width="1047.06"/>
+        <GroupFooterBand Name="GroupFooter2" Top="295.55" Width="1047.06"/>
       </GroupHeaderBand>
-      <GroupFooterBand Name="GroupFooter1" Top="309.15" Width="1047.06"/>
+      <GroupFooterBand Name="GroupFooter1" Top="298.75" Width="1047.06"/>
     </GroupHeaderBand>
-    <PageFooterBand Name="PageFooter1" Top="313.15" Width="1047.06" Height="56.7">
+    <PageFooterBand Name="PageFooter1" Top="301.95" Width="1047.06" Height="56.7">
       <TextObject Name="Text320" Left="9.9" Top="39.8" Width="1024.85" Height="12.9" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Arial, 8pt"/>
       <TextObject Name="Text333" Left="9.45" Top="1.45" Width="1025.15" Height="18.9" Text="Note:  Please report the number of audited deliverables based on the accomplishment remarks provided by each auditor." Font="Noto Sans, 9pt"/>
     </PageFooterBand>
