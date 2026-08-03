@@ -143,9 +143,9 @@ namespace IMIS.Persistence.PgsModule
             return await _repository.GetTotalOfficeAsync(officeIds, pgsPeriodId, cancellationToken);
         }
 
-        public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken)
+        public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodid, int? month, int? year, CancellationToken cancellationToken)
         {
-            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken);
+            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, parentOfficeId, periodid, month, year, cancellationToken);
 
             foreach (var item in result)
             {
@@ -172,9 +172,9 @@ namespace IMIS.Persistence.PgsModule
         }
 
         // ==== Audit Accomplishment Report for Auditor ======
-        public async Task<List<AuditorPendingAuditDto>> ReportGetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? month, int? year, CancellationToken cancellationToken)
+        public async Task<List<AuditorPendingAuditDto>> ReportGetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodid, int? month, int? year, CancellationToken cancellationToken)
         {
-            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, parentOfficeId, month, year, cancellationToken);
+            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, parentOfficeId, periodid, month, year, cancellationToken);
 
             foreach (var item in result)
             {
