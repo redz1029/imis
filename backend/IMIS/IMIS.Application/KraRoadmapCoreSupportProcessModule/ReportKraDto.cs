@@ -1,20 +1,17 @@
 ﻿using Base.Primitives;
 using IMIS.Application.KraRoadmapCoreSupportProcessModule;
 using IMIS.Domain;
-
 public class ReportKraDto : BaseDto<KeyResultArea, int>
 {
     public string? Name { get; set; }
     public string? Remarks { get; set; }
     public string? StrategicObjective { get; set; }
-
     public List<ReportKraRoadMapKpiDto>? Kpis { get; set; }
     public List<int>? Years { get; set; }
 
-    public List<ReportKraRowDto> BuildList(int kraStatus) 
+    public List<ReportKraRowDto> BuildList(int kraStatus)
     {
         var list = new List<ReportKraRowDto>();
-
         if (Kpis == null || Id != kraStatus)
             return list;
 
@@ -27,15 +24,18 @@ public class ReportKraDto : BaseDto<KeyResultArea, int>
                 KpiDescription = kpi.KpiDescription,
                 Target = kpi.Target,
                 BaseLine = kpi.BaseLine,
-
                 PercentAccomplished1 = kpi.PercentAccomplished?.ElementAtOrDefault(0),
                 PercentAccomplished2 = kpi.PercentAccomplished?.ElementAtOrDefault(1),
                 PercentAccomplished3 = kpi.PercentAccomplished?.ElementAtOrDefault(2),
                 PercentAccomplished4 = kpi.PercentAccomplished?.ElementAtOrDefault(3),
-                PercentAccomplished5 = kpi.PercentAccomplished?.ElementAtOrDefault(4)
+                PercentAccomplished5 = kpi.PercentAccomplished?.ElementAtOrDefault(4),
+                Target1 = kpi.Targets?.ElementAtOrDefault(0),
+                Target2 = kpi.Targets?.ElementAtOrDefault(1),
+                Target3 = kpi.Targets?.ElementAtOrDefault(2),
+                Target4 = kpi.Targets?.ElementAtOrDefault(3),
+                Target5 = kpi.Targets?.ElementAtOrDefault(4)
             });
         }
-
         return list;
     }
 
@@ -49,20 +49,17 @@ public class ReportKraDto : BaseDto<KeyResultArea, int>
     public List<ReportKraRowDto> HumanResourceList => BuildList(KraStatus.HumanResource);
     public List<ReportKraRowDto> SafetyList => BuildList(KraStatus.Safety);
 
- 
     public int? Year1 => Years?.ElementAtOrDefault(0);
     public int? Year2 => Years?.ElementAtOrDefault(1);
     public int? Year3 => Years?.ElementAtOrDefault(2);
     public int? Year4 => Years?.ElementAtOrDefault(3);
     public int? Year5 => Years?.ElementAtOrDefault(4);
 
-  
     public ReportKraDto()
     {
         Kpis = new List<ReportKraRoadMapKpiDto>();
         Years = new List<int>();
     }
-
     public ReportKraDto(KeyResultArea kra) : this()
     {
         Id = kra.Id;
@@ -70,8 +67,6 @@ public class ReportKraDto : BaseDto<KeyResultArea, int>
         Remarks = kra.Remarks;
         StrategicObjective = kra.StrategicObjective;
     }
-
-
     public override KeyResultArea ToEntity()
     {
         return new KeyResultArea
@@ -83,20 +78,27 @@ public class ReportKraDto : BaseDto<KeyResultArea, int>
         };
     }
 
-
     public class ReportKraRowDto
     {
         public string? KraName { get; set; }
         public string? StrategicObjective { get; set; }
-
         public string? KpiDescription { get; set; }
         public string? Target { get; set; }
         public string? BaseLine { get; set; }
-
-        public decimal? PercentAccomplished1 { get; set; }
-        public decimal? PercentAccomplished2 { get; set; }
-        public decimal? PercentAccomplished3 { get; set; }
-        public decimal? PercentAccomplished4 { get; set; }
-        public decimal? PercentAccomplished5 { get; set; }
+        //public decimal? PercentAccomplished1 { get; set; }
+        //public decimal? PercentAccomplished2 { get; set; }
+        //public decimal? PercentAccomplished3 { get; set; }
+        //public decimal? PercentAccomplished4 { get; set; }
+        //public decimal? PercentAccomplished5 { get; set; }
+        public string? PercentAccomplished1 { get; set; }   
+        public string? PercentAccomplished2 { get; set; }
+        public string? PercentAccomplished3 { get; set; }
+        public string? PercentAccomplished4 { get; set; }
+        public string? PercentAccomplished5 { get; set; }
+        public string? Target1 { get; set; }   
+        public string? Target2 { get; set; }  
+        public string? Target3 { get; set; }  
+        public string? Target4 { get; set; }  
+        public string? Target5 { get; set; }  
     }
 }

@@ -8,12 +8,15 @@ namespace IMIS.Application.KraRoadmapCoreSupportProcessModule
         public string? KpiDescription { get; set; }
         public string? Target { get; set; }
         public string? BaseLine { get; set; }
-
-        public List<decimal>? PercentAccomplished { get; set; }
+        //public List<decimal>? PercentAccomplished { get; set; }
+        public List<string?>? PercentAccomplished { get; set; }
+        public List<string?>? Targets { get; set; }
 
         public ReportKraRoadMapKpiDto()
         {
-            PercentAccomplished = new List<decimal>();
+            //PercentAccomplished = new List<decimal>();
+            PercentAccomplished = new List<string?>();
+            Targets = new List<string?>();
         }
 
         public ReportKraRoadMapKpiDto(KraRoadMapKpi kpi)
@@ -22,7 +25,9 @@ namespace IMIS.Application.KraRoadmapCoreSupportProcessModule
             KpiDescription = kpi.KpiDescription;
             Target = kpi.Target;
             BaseLine = kpi.BaseLine;
-            PercentAccomplished = new List<decimal>();
+            //PercentAccomplished = new List<decimal>();
+            PercentAccomplished = new List<string?>();
+            Targets = new List<string?>();
         }
 
         public override KraRoadMapKpi ToEntity()
