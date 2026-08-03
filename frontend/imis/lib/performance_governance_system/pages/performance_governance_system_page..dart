@@ -24,6 +24,7 @@ import 'package:imis/utils/http_util.dart';
 import 'package:imis/performance_governance_system/dialog/breakthrough_dialog.dart';
 import 'package:imis/widgets/auto_complete_field.dart';
 import 'package:imis/widgets/common/button_filter.dart';
+import 'package:imis/widgets/common/custom_checkbox.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
 import 'package:imis/operation_review_protocol/dialog/monthly_review_dialog_widget.dart';
@@ -53,15 +54,10 @@ const int _fAction = 8;
 class _DeliverableRow {
   int? id;
   int? kraId;
-  bool isDirect;
+  bool? isDirect;
   String byWhen;
 
-  _DeliverableRow({
-    this.id,
-    this.kraId,
-    this.isDirect = true,
-    this.byWhen = '',
-  });
+  _DeliverableRow({this.id, this.kraId, this.isDirect, this.byWhen = ''});
 }
 
 class PerformanceGovernanceSystemPage extends StatefulWidget {
@@ -83,6 +79,7 @@ class _PerformanceGovernanceSystemPageState
   String? selectedStartDateText;
   int _currentPage = 1;
   final _pgsService = PerformanceGovernanceSystemService(Dio());
+  List<Map<String, dynamic>> kraOptions = [];
 
   String? selectedStartPeriod;
   String? selectedEndDate;
@@ -140,12 +137,6 @@ class _PerformanceGovernanceSystemPageState
     return null;
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _fetchData();
-  //   fetchPgsFilter();
-  // }
   @override
   void initState() {
     super.initState();
@@ -1379,26 +1370,26 @@ class _PerformanceGovernanceSystemPageState
       final periods = await _commonService.fetchPgsPeriod();
       final offices = await _commonService.fetchOffices();
       final services = await _commonService.fetchService();
-      var url = ApiEndpoint().pgsperiod;
-      final response = await AuthenticatedRequest.get(dio, url);
-      if (response.statusCode == 200 && response.data is List) {
-        List<PgsPeriod> data =
-            (response.data as List)
-                .map((period) => PgsPeriod.fromJson(period))
-                .toList();
-        if (mounted) {
-          setState(() {
-            periodList = data.map((period) => period.toJson()).toList();
-            filteredListPeriod = List.from(periodList);
-          });
-        }
-      }
+      final kraList = await _commonService.fetchKra();
 
       if (mounted) {
         setState(() {
           pgsPeriodList = periods;
+          periodList = periods.map((period) => period.toJson()).toList();
+          filteredListPeriod = List.from(periodList);
           officeList = offices;
           serviceList = services;
+          kraOptions =
+              kraList
+                  .map(
+                    (e) => {
+                      'id': e.id,
+                      'name': e.name,
+                      'remarks': e.remarks,
+                      'rowVersion': e.rowVersion ?? '',
+                    },
+                  )
+                  .toList();
         });
       }
     } catch (e) {
@@ -1437,6 +1428,8 @@ class _PerformanceGovernanceSystemPageState
             filteredListPeriod: filteredListPeriod,
             commonService: _commonService,
             existingPgs: existingPgs,
+            kraOptions: kraOptions,
+
             onSaved: () => fetchPgsFilter(),
             onDraft: (pgs) => pgsSaveAsDraft(pgs),
             onSubmit:
@@ -2796,6 +2789,7 @@ class _PgsFormDialog extends StatefulWidget {
   final List<Map<String, dynamic>> filteredListPeriod;
   final CommonService commonService;
   final Map<String, dynamic>? existingPgs;
+  final List<Map<String, dynamic>> kraOptions;
   final VoidCallback onSaved;
   final Future<bool> Function(PerformanceGovernanceSystem) onDraft;
   final Future<bool> Function(String, PerformanceGovernanceSystem) onSubmit;
@@ -2814,6 +2808,7 @@ class _PgsFormDialog extends StatefulWidget {
     required this.onSubmit,
     required this.lastResponseStatusCode,
     this.existingPgs,
+    required this.kraOptions,
     required this.userId,
     required this.lastResponseMessage, // add this
   });
@@ -2861,15 +2856,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
   final _roadMapService = RoadmapService(Dio());
   final _dateConverter = const LongDateOnlyConverter();
   final Map<int, List<dynamic>> _kraDescCache = {};
-  // Map<int, String> _initialDelivCtrl = {};
-  // Map<int, String> _initialKraCtrl = {};
-  // Map<int, int?> _initialSelectedKRA = {};
-  // Map<int, String> _initialByWhen = {};
-  // Map<int, bool> _initialIsDirect = {};
-  // int? _initialPeriodId;
-  // double _initialCompetence = 0.0;
-  // double _initialResource = 0.0;
-  // double _initialConfidence = 0.0;
   bool get _isMobile => MediaQuery.sizeOf(context).width < 640;
   List<PgsPeriod> get _activePeriods =>
       widget.periods.where((p) => !p.isDeleted).toList();
@@ -2900,9 +2886,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     _initFromExisting();
     if (_rows.isEmpty) _addRowInternal();
     _loadKraOptions();
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   _takeSnapshot();
-    // });
   }
 
   void _initFromExisting() {
@@ -2976,16 +2959,58 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
     super.dispose();
   }
 
+  // Future<void> _loadKraOptions() async {
+  //   if (_processLoading) return;
+  //   setState(() => _processLoading = true);
+
+  //   try {
+  //     final List<KeyResultArea> result = await widget.commonService.fetchKra();
+  //     if (!mounted) return;
+
+  //     setState(() {
+  //       _options =
+  //           result
+  //               .map(
+  //                 (e) => {
+  //                   'id': e.id,
+  //                   'name': e.name,
+  //                   'remarks': e.remarks,
+  //                   'rowVersion': e.rowVersion ?? '',
+  //                 },
+  //               )
+  //               .toList();
+  //       _processLoading = false;
+
+  //       for (int i = 0; i < _rows.length; i++) {
+  //         final savedKra = _kraCtrl[i]?.text ?? '';
+  //         if (savedKra.isEmpty) continue;
+
+  //         final isDirect = _rows[i].isDirect ?? false;
+
+  //         _selectedKRAText[i] = isDirect ? savedKra : 'Others';
+  //         _isRetrievedData.add(i);
+
+  //         _kraDropdownOptions[i] = [savedKra, 'Others'];
+  //         _hasDataMap[i] = false;
+  //       }
+  //     });
+  //   } catch (e) {
+  //     if (mounted) setState(() => _processLoading = false);
+  //   }
+  // }
   Future<void> _loadKraOptions() async {
     if (_processLoading) return;
     setState(() => _processLoading = true);
 
     try {
-      final List<KeyResultArea> result = await widget.commonService.fetchKra();
-      if (!mounted) return;
-      setState(() {
-        _options =
-            result
+      // Use the cached list passed from parent — no network call needed
+      List<Map<String, dynamic>> result = widget.kraOptions;
+
+      // Fallback only if parent hasn't loaded it yet for some reason
+      if (result.isEmpty) {
+        final fetched = await widget.commonService.fetchKra();
+        result =
+            fetched
                 .map(
                   (e) => {
                     'id': e.id,
@@ -2995,22 +3020,25 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   },
                 )
                 .toList();
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _options = result;
+        _processLoading = false;
 
         for (int i = 0; i < _rows.length; i++) {
           final savedKra = _kraCtrl[i]?.text ?? '';
-          if (savedKra.isNotEmpty) {
-            _selectedKRAText[i] = 'Others';
-            _isRetrievedData.add(i);
+          if (savedKra.isEmpty) continue;
 
-            _kraDropdownOptions[i] = ['Others'];
-            _hasDataMap[i] = false;
-          }
+          final isDirect = _rows[i].isDirect ?? false;
+          _selectedKRAText[i] = isDirect ? savedKra : 'Others';
+          _isRetrievedData.add(i);
+          _kraDropdownOptions[i] = [savedKra, 'Others'];
+          _hasDataMap[i] = false;
         }
-
-        _processLoading = false;
       });
     } catch (e) {
-      debugPrint("Fetch KRA Error: $e");
       if (mounted) setState(() => _processLoading = false);
     }
   }
@@ -3190,6 +3218,15 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         MotionToast.warning(
           title: const Text("Missing Fields"),
           description: Text("Please select a process (KRA) for Row ${i + 1}."),
+          toastAlignment: Alignment.center,
+        ).show(context);
+        return;
+      }
+      final kraText = _kraCtrl[i]?.text.trim() ?? '';
+      if (kraText.isEmpty) {
+        MotionToast.warning(
+          title: const Text("Missing Fields"),
+          description: Text("Please select or type a KRA for Row ${i + 1}."),
           toastAlignment: Alignment.center,
         ).show(context);
         return;
@@ -3414,7 +3451,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           kraId,
           _delivCtrl[i]?.text ?? '',
           _kraCtrl[i]?.text ?? '',
-          row.isDirect,
+          row.isDirect ?? false,
           DateTime.tryParse(row.byWhen) ?? DateTime.now(),
           40,
           _reasonCtrl[i]?.text ?? '',
@@ -4219,20 +4256,106 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             ),
             _dataCell(_buildProcessCell(i), _fProcess, rowColor),
             _dataCell(_buildKraCell(i), _fKra, rowColor),
+
+            // _dataCell(
+            //   Center(
+            //     child: Tooltip(
+            //       message: 'Enable this if you anchor directly to the roadmap',
+            //       child: Checkbox(
+            //         value: row.isDirect,
+            //         activeColor: primaryColor,
+            //         visualDensity: VisualDensity.compact,
+            //         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            //         onChanged:
+            //             (_) =>
+            //                 !hasDeletePermission
+            //                     ? null
+            //                     : setState(() => row.isDirect = true),
+            //       ),
+            //     ),
+            //   ),
+            //   _fDirect,
+            //   rowColor,
+            // ),
+            // Tooltip(
+            //   message:
+            //       _selectedKRAText[i] == 'Others'
+            //           ? 'Locked to Indirect because KRA is is not tied to roadmap'
+            //           : 'Enable this if you anchor directly to the roadmap',
+            //   child: customCheckbox(
+            //     value: row.isDirect,
+            //     activeColor: primaryColor,
+            //     visualDensity: VisualDensity.compact,
+            //     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            //     onChanged:
+            //         (!hasDeletePermission || _selectedKRAText[i] == 'Others')
+            //             ? null
+            //             : (_) => setState(() => row.isDirect = true),
+            //   ),
+            // ),
+            // _dataCell(
+            //   Center(
+            //     child: Tooltip(
+            //       message:
+            //           'For internally initiated actions only (not tied to the roadmap)',
+            //       child: customCheckbox(
+            //         value: !row.isDirect,
+            //         activeColor: primaryColor,
+            //         visualDensity: VisualDensity.compact,
+            //         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            //         onChanged:
+            //             (_) =>
+            //                 !hasDeletePermission
+            //                     ? null
+            //                     : setState(() => row.isDirect = false),
+            //       ),
+            //     ),
+            //   ),
+            //   _fIndirect,
+            //   rowColor,
+            // ),
+            // _dataCell(
+            //   Center(
+            //     child: Tooltip(
+            //       message: 'Enable this if you anchor directly to the roadmap',
+            //       child: customCheckbox(
+            //         value: row.isDirect,
+            //         enabled:
+            //             hasDeletePermission && _selectedKRAText[i] != 'Others',
+            //         onTap: (v) => setState(() => row.isDirect = true),
+            //       ),
+            //     ),
+            //   ),
+            //   _fDirect,
+            //   rowColor,
+            // ),
+            // _dataCell(
+            //   Center(
+            //     child: Tooltip(
+            //       message:
+            //           _selectedKRAText[i] != 'Others'
+            //               ? 'Locked to Direct because KRA is tied to the roadmap'
+            //               : 'For internally initiated actions only (not tied to the roadmap)',
+            //       child: customCheckbox(
+            //         value: !row.isDirect,
+            //         enabled:
+            //             hasDeletePermission && _selectedKRAText[i] == 'Others',
+            //         onTap: (v) => setState(() => row.isDirect = false),
+            //       ),
+            //     ),
+            //   ),
+            //   _fIndirect,
+            //   rowColor,
+            // ),
             _dataCell(
               Center(
                 child: Tooltip(
                   message: 'Enable this if you anchor directly to the roadmap',
-                  child: Checkbox(
-                    value: row.isDirect,
-                    activeColor: primaryColor,
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    onChanged:
-                        (_) =>
-                            !hasDeletePermission
-                                ? null
-                                : setState(() => row.isDirect = true),
+                  child: customCheckbox(
+                    value: row.isDirect == true,
+                    enabled:
+                        hasDeletePermission && _selectedKRAText[i] != 'Others',
+                    onTap: (v) => setState(() => row.isDirect = true),
                   ),
                 ),
               ),
@@ -4243,17 +4366,18 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               Center(
                 child: Tooltip(
                   message:
-                      'For internally initiated actions only (not tied to the roadmap)',
-                  child: Checkbox(
-                    value: !row.isDirect,
-                    activeColor: primaryColor,
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    onChanged:
-                        (_) =>
-                            !hasDeletePermission
-                                ? null
-                                : setState(() => row.isDirect = false),
+                      _selectedKRAText[i] != null &&
+                              _selectedKRAText[i] != 'Others'
+                          ? 'Locked to Direct because KRA is tied to the roadmap'
+                          : 'For internally initiated actions only (not tied to the roadmap)',
+                  child: customCheckbox(
+                    value: row.isDirect == false,
+                    enabled:
+                        hasDeletePermission &&
+                        (_selectedKRAText[i] == null ||
+                            _selectedKRAText[i]!.isEmpty ||
+                            _selectedKRAText[i] == 'Others'),
+                    onTap: (v) => setState(() => row.isDirect = false),
                   ),
                 ),
               ),
@@ -4820,7 +4944,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Full text, no ellipsis — selectable para ma-copy
                   SelectableText(
                     prev,
                     style: TextStyle(
@@ -4833,13 +4956,11 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // Restore button
                       GestureDetector(
                         onTap: () {
                           setState(() {
                             _kraCtrl[i]?.text = prev;
                             _selectedKRAText[i] = 'Others';
-                            // _rows[i].isDirect = false;
                             _changingKRA.remove(i);
                             _previousKRAText.remove(i);
                           });
@@ -4875,7 +4996,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                         ),
                       ),
                       const SizedBox(width: 6),
-                      // Dismiss button
                       GestureDetector(
                         onTap: () {
                           setState(() => _previousKRAText.remove(i));
@@ -4908,6 +5028,8 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
               border: OutlineInputBorder(),
               isDense: true,
             ),
+            validator:
+                (value) => "Please select a process first", // <-- IDAGDAG ITO
           ),
         ),
       );
@@ -4978,6 +5100,11 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                           }
                         });
                       },
+              validator:
+                  (value) =>
+                      value == null
+                          ? "Please select a KRA"
+                          : null, // <-- IDAGDAG ITO
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 isDense: true,
@@ -4988,7 +5115,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         ),
       );
     }
-
     if (isOthers) {
       return Padding(
         padding: const EdgeInsets.all(6),
@@ -5679,11 +5805,11 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             _dataCell(
               Center(
                 child: Icon(
-                  row.isDirect
+                  row.isDirect == true
                       ? Icons.check_box
                       : Icons.check_box_outline_blank,
                   size: 16,
-                  color: row.isDirect ? primaryColor : kTextLight,
+                  color: row.isDirect == true ? primaryColor : kTextLight,
                 ),
               ),
               _fDirect,
@@ -5692,11 +5818,11 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             _dataCell(
               Center(
                 child: Icon(
-                  !row.isDirect
+                  row.isDirect == false
                       ? Icons.check_box
                       : Icons.check_box_outline_blank,
                   size: 16,
-                  color: !row.isDirect ? primaryColor : kTextLight,
+                  color: row.isDirect == false ? primaryColor : kTextLight,
                 ),
               ),
               _fIndirect,
@@ -6044,27 +6170,78 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                     children: [
                       _lbl('Alignment'),
                       const SizedBox(height: 4),
+                      // Row(
+                      //   children: [
+                      //     Checkbox(
+                      //       value: row.isDirect == true,
+                      //       activeColor: primaryColor,
+                      //       visualDensity: VisualDensity.compact,
+                      //       materialTapTargetSize:
+                      //           MaterialTapTargetSize.shrinkWrap,
+                      //       onChanged:
+                      //           (_) => setState(() => row.isDirect = true),
+                      //     ),
+                      //     const Text('Direct', style: TextStyle(fontSize: 12)),
+                      //     const SizedBox(width: 8),
+                      //     Checkbox(
+                      //       value: row.isDirect == false,
+                      //       activeColor: primaryColor,
+                      //       visualDensity: VisualDensity.compact,
+                      //       materialTapTargetSize:
+                      //           MaterialTapTargetSize.shrinkWrap,
+                      //       onChanged:
+                      //           (_) => setState(() => row.isDirect = false),
+                      //     ),
+                      //     const Text(
+                      //       'Indirect',
+                      //       style: TextStyle(fontSize: 12),
+                      //     ),
+                      //   ],
+                      // ),
                       Row(
                         children: [
-                          Checkbox(
-                            value: row.isDirect,
-                            activeColor: primaryColor,
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                            onChanged:
-                                (_) => setState(() => row.isDirect = true),
+                          Tooltip(
+                            message:
+                                'Enable this if you anchor directly to the roadmap',
+                            child: customCheckbox(
+                              value: row.isDirect == true,
+                              enabled:
+                                  hasDeletePermission &&
+                                  _selectedKRAText[i] != 'Others',
+                              onTap: (v) {
+                                if (!hasDeletePermission ||
+                                    _selectedKRAText[i] == 'Others') {
+                                  return;
+                                }
+                                setState(() => row.isDirect = true);
+                              },
+                            ),
                           ),
                           const Text('Direct', style: TextStyle(fontSize: 12)),
                           const SizedBox(width: 8),
-                          Checkbox(
-                            value: !row.isDirect,
-                            activeColor: primaryColor,
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                            onChanged:
-                                (_) => setState(() => row.isDirect = false),
+                          Tooltip(
+                            message:
+                                _selectedKRAText[i] != null &&
+                                        _selectedKRAText[i] != 'Others'
+                                    ? 'Locked to Direct because KRA is tied to the roadmap'
+                                    : 'For internally initiated actions only (not tied to the roadmap)',
+                            child: customCheckbox(
+                              value: row.isDirect == false,
+                              enabled:
+                                  hasDeletePermission &&
+                                  (_selectedKRAText[i] == null ||
+                                      _selectedKRAText[i]!.isEmpty ||
+                                      _selectedKRAText[i] == 'Others'),
+                              onTap: (v) {
+                                final isEnabled =
+                                    hasDeletePermission &&
+                                    (_selectedKRAText[i] == null ||
+                                        _selectedKRAText[i]!.isEmpty ||
+                                        _selectedKRAText[i] == 'Others');
+                                if (!isEnabled) return;
+                                setState(() => row.isDirect = false);
+                              },
+                            ),
                           ),
                           const Text(
                             'Indirect',
@@ -6266,21 +6443,50 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                     ),
                   ),
                 ),
+
+                // Container(
+                //   padding: const EdgeInsets.symmetric(
+                //     horizontal: 8,
+                //     vertical: 3,
+                //   ),
+                //   decoration: BoxDecoration(
+                //     color: row.isDirect ? kPrimaryBg : const Color(0xFFDEEBFF),
+                //     borderRadius: BorderRadius.circular(12),
+                //   ),
+                //   child: Text(
+                //     row.isDirect ? 'Direct' : 'Indirect',
+                //     style: TextStyle(
+                //       fontSize: 10,
+                //       fontWeight: FontWeight.w600,
+                //       color: row.isDirect ? primaryColor : Colors.blueAccent,
+                //     ),
+                //   ),
+                // ),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: row.isDirect ? kPrimaryBg : const Color(0xFFDEEBFF),
+                    color:
+                        row.isDirect == true
+                            ? kPrimaryBg
+                            : const Color(0xFFDEEBFF),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    row.isDirect ? 'Direct' : 'Indirect',
+                    row.isDirect == true
+                        ? 'Direct'
+                        : row.isDirect == false
+                        ? 'Indirect'
+                        : 'Not set',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: row.isDirect ? primaryColor : Colors.blueAccent,
+                      color:
+                          row.isDirect == true
+                              ? primaryColor
+                              : Colors.blueAccent,
                     ),
                   ),
                 ),
@@ -6617,7 +6823,9 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         )['name'];
 
     final String deliverableName = _delivCtrl[index]?.text ?? '';
-    final bool isDirect = _rows[index].isDirect;
+    // final bool isDirect = _rows[index].isDirect;
+    final bool isDirect =
+        _rows[index].isDirect ?? false; // <-- dating: _rows[index].isDirect;
     final parsedByWhen = DateTime.parse(byWhen);
     final String formattedByWhen = DateFormat('MMMM yyyy').format(parsedByWhen);
     final formattedStart = DateFormat.yMMMMd().format(startDate);
@@ -7019,8 +7227,9 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         )['name'];
 
     final String deliverableName = _delivCtrl[index]?.text ?? '';
-    final bool isDirect = _rows[index].isDirect;
-
+    // final bool isDirect = _rows[index].isDirect;
+    final bool isDirect =
+        _rows[index].isDirect ?? false; // <-- dating: _rows[index].isDirect;
     await showDialog<bool>(
       context: context,
       barrierDismissible: false,
