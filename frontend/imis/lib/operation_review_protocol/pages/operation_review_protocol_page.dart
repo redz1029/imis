@@ -158,7 +158,6 @@ class OperationReviewProtocolPageState
     );
     final services = await _commonService.fetchService();
     final periods = await _commonService.fetchPgsPeriod();
-    await _commonService.fetchPgsPeriod();
 
     if (!mounted) return;
     setState(() {
@@ -324,6 +323,7 @@ class OperationReviewProtocolPageState
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1D23),
                       ),
+                      
                     ),
                     // Text(
                     //   "$_totalCount operation review protocol${_totalCount != 1 ? 's' : ''} found",
