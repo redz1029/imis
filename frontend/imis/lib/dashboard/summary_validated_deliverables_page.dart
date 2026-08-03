@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
+import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/common/button_filter.dart';
@@ -74,7 +76,7 @@ class OfficeSummary {
   final int completedCount;
   final int remainingCount;
   final String parentOfficeName;
-  final String accomplishedBy; // NEW
+  final String accomplishedBy;
   const OfficeSummary({
     required this.id,
     required this.name,
@@ -130,12 +132,14 @@ class PendingAuditService {
     int? month,
     int? year,
     int? parentOfficeId,
+    int? periodId,
   }) async {
     final queryParams = <String, dynamic>{};
     if (teamId != null) queryParams['teamId'] = teamId;
     if (month != null) queryParams['month'] = month;
     if (year != null) queryParams['year'] = year;
     if (parentOfficeId != null) queryParams['parentOfficeId'] = parentOfficeId;
+    if (periodId != null) queryParams['periodId'] = periodId;
     try {
       final response = await AuthenticatedRequest.get(
         _dio,
@@ -202,6 +206,12 @@ class SummaryValidatedDeliverablesPageState
   List<TeamSummary> _teams = [];
   List<Team> _allTeams = [];
 
+  List<PgsPeriod> allPgsPeriod = [];
+  List<Map<String, dynamic>> filteredListPeriod = [];
+  int? _selectedPeriodId;
+  bool _isLoadingPeriods = false;
+  final _dateConverter = const LongDateOnlyConverter();
+
   bool _isLoading = false;
   bool _isLoadingTeams = false;
   bool _isLoadingService = false;
@@ -252,6 +262,7 @@ class SummaryValidatedDeliverablesPageState
     _loadTeams();
     _load();
     _loadService();
+    _loadPeriods();
   }
 
   Future<void> _loadTeams() async {
@@ -264,6 +275,44 @@ class SummaryValidatedDeliverablesPageState
       // silent
     } finally {
       if (mounted) setState(() => _isLoadingTeams = false);
+    }
+  }
+
+  Future<void> _loadPeriods() async {
+    if (_isLoadingPeriods) return;
+    setState(() => _isLoadingPeriods = true);
+    try {
+      final periods = await _commonService.fetchPgsPeriod();
+      if (mounted) {
+        setState(() {
+          allPgsPeriod = periods;
+          filteredListPeriod =
+              periods
+                  .map<Map<String, dynamic>>(
+                    (p) => <String, dynamic>{
+                      'id': p.id,
+                      'isActive': p.isActive,
+                      'startDate': p.startDate,
+                      'endDate': p.endDate,
+                    },
+                  )
+                  .toList();
+
+          final activePeriod =
+              filteredListPeriod
+                  .where((p) => p['isActive'] == true)
+                  .firstOrNull;
+          if (activePeriod != null) {
+            _selectedPeriodId = activePeriod['id'] as int?;
+          }
+        });
+        _load();
+      }
+    } catch (e, st) {
+      debugPrint('fetchPgsPeriod failed: $e');
+      debugPrint('$st');
+    } finally {
+      if (mounted) setState(() => _isLoadingPeriods = false);
     }
   }
 
@@ -281,6 +330,10 @@ class SummaryValidatedDeliverablesPageState
   }
 
   Future<void> _load() async {
+    debugPrint(
+      'loading with teamId=$_selectedTeamId month=$_selectedMonth year=$_selectedYear '
+      'serviceId=$_selectedServiceId periodId=$_selectedPeriodId',
+    );
     setState(() {
       _isLoading = true;
       _error = null;
@@ -291,6 +344,7 @@ class SummaryValidatedDeliverablesPageState
         month: _selectedMonth,
         year: _selectedYear,
         parentOfficeId: _selectedServiceId,
+        periodId: _selectedPeriodId,
       );
       if (mounted) {
         setState(() {
@@ -538,6 +592,7 @@ class SummaryValidatedDeliverablesPageState
       officeId: null,
       month: _selectedMonth,
       year: _selectedYear,
+      periodId: _selectedPeriodId,
       context: context,
     );
   }
@@ -550,6 +605,7 @@ class SummaryValidatedDeliverablesPageState
       month: _selectedMonth,
       year: _selectedYear,
       parentOfficeId: _selectedServiceId,
+      periodId: _selectedPeriodId,
       context: context,
     );
   }
@@ -573,12 +629,17 @@ class SummaryValidatedDeliverablesPageState
     setState(() {
       _selectedTeamId = null;
       _selectedMonth = null;
+      _selectedServiceId = null;
+      _selectedPeriodId = null;
     });
     _load();
   }
 
   bool get _hasActiveFilters =>
-      _selectedTeamId != null || _selectedMonth != null;
+      _selectedTeamId != null ||
+      _selectedMonth != null ||
+      _selectedServiceId != null ||
+      _selectedPeriodId != null;
 
   Widget _buildMobileFilters() {
     return Column(
@@ -609,6 +670,8 @@ class SummaryValidatedDeliverablesPageState
         SizedBox(height: 38, child: _servicesDropdown()),
         const SizedBox(height: 8),
         SizedBox(height: 38, child: _teamDropdown()),
+        const SizedBox(height: 8),
+        SizedBox(height: 38, child: _pgsPeriodDropdown()),
         const SizedBox(height: 8),
         SizedBox(height: 38, child: _monthDropdown()),
         const SizedBox(height: 8),
@@ -652,16 +715,26 @@ class SummaryValidatedDeliverablesPageState
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(child: _servicesDropdown()),
-            const SizedBox(width: 10),
-            Expanded(child: _teamDropdown()),
-            const SizedBox(width: 10),
-            Expanded(child: _monthDropdown()),
-            const SizedBox(width: 10),
-            Expanded(child: _yearDropdown()),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const spacing = 10.0;
+            const minItemWidth = 170.0;
+            final itemWidth =
+                (constraints.maxWidth - spacing * 4) / 5 < minItemWidth
+                    ? minItemWidth
+                    : (constraints.maxWidth - spacing * 4) / 5;
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: [
+                SizedBox(width: itemWidth, child: _servicesDropdown()),
+                SizedBox(width: itemWidth, child: _teamDropdown()),
+                SizedBox(width: itemWidth, child: _pgsPeriodDropdown()),
+                SizedBox(width: itemWidth, child: _monthDropdown()),
+                SizedBox(width: itemWidth, child: _yearDropdown()),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -704,6 +777,47 @@ class SummaryValidatedDeliverablesPageState
     );
   }
 
+  Widget _pgsPeriodDropdown() {
+    String labelFor(Map<String, dynamic> p) {
+      final start = _dateConverter.toJson(p['startDate'] as DateTime);
+      final end = _dateConverter.toJson(p['endDate'] as DateTime);
+      return "$start - $end";
+    }
+
+    final selectedLabel =
+        _selectedPeriodId == null
+            ? "All Periods"
+            : filteredListPeriod
+                    .where((p) => p['id'] == _selectedPeriodId)
+                    .map(labelFor)
+                    .firstOrNull ??
+                "All Periods";
+
+    return SearchableDropdown(
+      items: ["All Periods", ...filteredListPeriod.map(labelFor)],
+      selectedItem: selectedLabel,
+      hintText: "Select Period",
+      searchHint: "Search period...",
+      prefixIcon: Icons.event_note_outlined,
+      onChanged: (value) {
+        debugPrint('period dropdown onChanged: $value');
+        setState(() {
+          if (value == "All Periods") {
+            _selectedPeriodId = null;
+          } else {
+            final match = filteredListPeriod.firstWhere(
+              (p) => labelFor(p) == value,
+              orElse: () => <String, dynamic>{},
+            );
+            _selectedPeriodId = match['id'] as int?;
+          }
+          debugPrint('selectedPeriodId now: $_selectedPeriodId');
+          _load();
+        });
+      },
+    );
+  }
+
   Widget _teamDropdown() {
     final teamItems = ["All Teams", ..._allTeams.map((t) => t.name)];
 
@@ -743,10 +857,8 @@ class SummaryValidatedDeliverablesPageState
     return SearchableDropdown(
       items: _monthNamesFull,
       selectedItem:
-          _selectedMonth == null
-              ? null // Show hint instead
-              : _monthNamesFull[_selectedMonth! - 1],
-      hintText: "Select Month", // Required field
+          _selectedMonth == null ? null : _monthNamesFull[_selectedMonth! - 1],
+      hintText: "Select Month",
       searchHint: "Search month...",
       prefixIcon: Icons.calendar_month_outlined,
       onChanged: (value) {
@@ -812,7 +924,7 @@ class SummaryValidatedDeliverablesPageState
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 8,
       mainAxisSpacing: 8,
-      childAspectRatio: isMobile ? 1.6 : 2.2,
+      childAspectRatio: isMobile ? 1.15 : 2.2,
       children: stats.map((s) => _StatCard(data: s)).toList(),
     );
   }
@@ -1070,8 +1182,6 @@ class SummaryValidatedDeliverablesPageState
   }
 }
 
-// ── Widgets ────────────────────────────────────────────────────────────────
-
 class _StatData {
   final String label;
   final String value;
@@ -1122,6 +1232,8 @@ class _StatCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   data.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,

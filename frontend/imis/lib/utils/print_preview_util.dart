@@ -275,6 +275,7 @@ Future<void> openPendingAuditsReportPreviewbyTeam({
   int? auditorId,
   int? officeId,
   int? month,
+  int? periodId,
   required int year,
   BuildContext? context,
 }) async {
@@ -284,6 +285,7 @@ Future<void> openPendingAuditsReportPreviewbyTeam({
   if (auditorId != null) queryParams.add('auditorId=$auditorId');
   if (officeId != null) queryParams.add('officeId=$officeId');
   if (month != null) queryParams.add('month=$month');
+  if (periodId != null) queryParams.add('periodId=$periodId');
   queryParams.add('year=$year');
 
   final queryString = queryParams.join('&');
@@ -303,6 +305,7 @@ Future<void> openPendingAuditsReportPreviewByService({
   int? officeId,
   int? parentOfficeId,
   int? month,
+  int? periodId,
   required int year,
   BuildContext? context,
 }) async {
@@ -312,6 +315,7 @@ Future<void> openPendingAuditsReportPreviewByService({
   if (auditorId != null) queryParams.add('auditorId=$auditorId');
   if (officeId != null) queryParams.add('officeId=$officeId');
   if (month != null) queryParams.add('month=$month');
+  if (periodId != null) queryParams.add('periodId=$periodId');
   if (parentOfficeId != null) queryParams.add('parentOfficeId=$parentOfficeId');
   queryParams.add('year=$year');
 
