@@ -58,7 +58,20 @@ namespace IMIS.Persistence
         public DbSet<PerformanceValidationTool> PerformanceValidationTool { get; set; }
         public DbSet<CalendarActivity> CalendarActivity { get; set; }
         public DbSet<KraRoadmapHistory> KraRoadmapHistory { get; set; }
+
         public DbSet<ImpactStrategicGoalScoreCardPeriod> ImpactStrategicGoalScoreCardPeriod { get; set; }
+
+        public DbSet<ImpactStrategicGoalScoreCard> ImpactStrategicGoalScoreCard { get; set; }
+
+        public DbSet<ImpactScoreCard> ImpactScoreCard { get; set; }
+        public DbSet<ImpactScoreCardIndicator> ImpactScoreCardIndicator { get; set; }
+        public DbSet<ImpactScoreCardTarget> ImpactScoreCardTarget { get; set; }
+
+        public DbSet<ImpactStrategicScoreCard> ImpactStrategicScoreCard { get; set; }
+        public DbSet<ImpactStrategicScoreCardMeasure> ImpactStrategicScoreCardMeasure { get; set; }
+        public DbSet<ImpactStrategicScoreCardTarget> ImpactStrategicScoreCardTarget { get; set; }
+
+
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
         public DbSet<IsoStandard> IsoStandards { get; set; }

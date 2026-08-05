@@ -5,6 +5,7 @@ using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.BreakThroughScoringModule;
 using IMIS.Application.CalendarActivityModule;
+using IMIS.Application.ImpactStrategicGoalScoreCardModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Application.IsoStandardModule;
 using IMIS.Application.KraRoadmapAccomplishmentModule;
@@ -48,6 +49,7 @@ using IMIS.Persistence.AuditorTeamsModule;
 using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.BreakThroughScoringModule;
 using IMIS.Persistence.CalendarActivityModule;
+using IMIS.Persistence.ImpactStrategicGoalScoreCardModule;
 using IMIS.Persistence.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Persistence.IsoStandardModule;
 using IMIS.Persistence.KraModule;
@@ -219,6 +221,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IKraRoadmapHistoryRepository, KraRoadmapHistoryRepository>();
             services.AddScoped<IKraRoadmapHistoryService, KraRoadmapHistoryService>();
+
+            services.AddScoped<IImpactStrategicGoalScoreCardRepository, ImpactStrategicGoalScoreCardRepository>();
+            services.AddScoped<IImpactStrategicGoalScoreCardService, ImpactStrategicGoalScoreCardService>();
 
             services.AddScoped<IImpactStrategicGoalScoreCardPeriodRepository, ImpactStrategicGoalScoreCardPeriodRepository>();
             services.AddScoped<IImpactStrategicGoalScoreCardPeriodService, ImpactStrategicGoalScoreCardPeriodService>();
