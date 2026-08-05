@@ -279,17 +279,23 @@ namespace IMIS.Persistence.KraRoadMapModule
                     .ToList()        
             ))
             .ToList();
-
+          
             dto.Kpis = entity.Kpis?
                 .Where(k => !k.IsDeleted)
-                .Select(k => new KraRoadMapKpiDto
+                .GroupBy(k => k.KpiDescription)
+                .Select(g =>
                 {
-                    Id = k.Id,
-                    KpiDescription = k.KpiDescription,
-                    IsDeleted = false,
-                    RowVersion = k.RowVersion
+                    var k = g.First();
+                    return new KraRoadMapKpiDto
+                    {
+                        Id = k.Id,
+                        KpiDescription = k.KpiDescription,
+                        IsDeleted = false,
+                        RowVersion = k.RowVersion
+                    };
                 })
                 .ToList();
+
 
             return dto;
         }
