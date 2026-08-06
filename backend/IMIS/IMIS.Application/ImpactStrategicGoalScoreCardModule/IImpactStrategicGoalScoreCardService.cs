@@ -8,5 +8,6 @@ namespace IMIS.Application.ImpactStrategicGoalScoreCardModule
     {
         Task<ImpactStrategicGoalScoreCardDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         public Task<DtoPageList<ImpactStrategicGoalScoreCardDto, ImpactStrategicGoalScoreCard, long>> GetPaginatedAsync(long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

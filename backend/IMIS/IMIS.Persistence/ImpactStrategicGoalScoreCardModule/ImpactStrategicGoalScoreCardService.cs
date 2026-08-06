@@ -19,6 +19,19 @@ namespace IMIS.Persistence.ImpactStrategicGoalScoreCardModule
         {
             _repository = repository;
         }
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (entity == null)
+                return false;
+            entity.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+
 
         public async Task<DtoPageList<ImpactStrategicGoalScoreCardDto, ImpactStrategicGoalScoreCard, long>> GetPaginatedAsync(
             long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)

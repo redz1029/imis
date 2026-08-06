@@ -11,6 +11,11 @@ namespace IMIS.Persistence.ImpactStrategicGoalScoreCardModule
         public ImpactStrategicGoalScoreCardRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+        public async Task<ImpactStrategicGoalScoreCard?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<ImpactStrategicGoalScoreCard>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
         public async Task<EntityPageList<ImpactStrategicGoalScoreCard, long>> GetPaginatedAsync(long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _entities

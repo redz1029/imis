@@ -1,6 +1,8 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.ImpactStrategicGoalScoreCardModule;
+using IMIS.Application.KraRoadMapModule;
+using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -56,6 +58,18 @@ namespace IMIS.Presentation.ImpactStrategicGoalScoreCardModule
             .WithTags(_impactStrategicGoalScoreCard)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_impactStrategicGoalScoreCard), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _impactStrategicGoalScoreCardPermission.View));
+
+            app.MapDelete("/{id:int}", async (int id, IImpactStrategicGoalScoreCardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_impactStrategicGoalScoreCard, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Deleted successfully." })
+                              : Results.NotFound(new { message = "RoadMap not found." });
+            })
+          .WithTags(_impactStrategicGoalScoreCard)
+          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _impactStrategicGoalScoreCardPermission.Edit));
         }
     }
 }
