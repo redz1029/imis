@@ -14,6 +14,7 @@ using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadmapHistoryModule;
 using IMIS.Application.KraRoadmapKpiAccomplishmentModule;
 using IMIS.Application.KraRoadMapKpiModule;
+using IMIS.Application.KraRoadmapKpiSequenceModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.KraRoadmapProcessKraAssignmentModule;
@@ -59,6 +60,7 @@ using IMIS.Persistence.KraRoadMapDeliverableModule;
 using IMIS.Persistence.KraRoadmapHistoryModule;
 using IMIS.Persistence.KraRoadMapKpiAccomplishmentModule;
 using IMIS.Persistence.KraRoadMapKpiModule;
+using IMIS.Persistence.KraRoadmapKpiSequenceModule;
 using IMIS.Persistence.KraRoadMapModule;
 using IMIS.Persistence.KraRoadMapPeriodModule;
 using IMIS.Persistence.KraRoadmapProcessKraAssignmentModule;
@@ -227,6 +229,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IImpactStrategicGoalScoreCardPeriodRepository, ImpactStrategicGoalScoreCardPeriodRepository>();
             services.AddScoped<IImpactStrategicGoalScoreCardPeriodService, ImpactStrategicGoalScoreCardPeriodService>();
+
+            services.AddScoped<IKraRoadmapKpiSequenceRepository, KraRoadmapKpiSequenceRepository>();
+            services.AddScoped<IKraRoadmapKpiSequenceService, KraRoadmapKpiSequenceService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

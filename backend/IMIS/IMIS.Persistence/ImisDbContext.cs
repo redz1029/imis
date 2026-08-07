@@ -70,6 +70,7 @@ namespace IMIS.Persistence
         public DbSet<ImpactStrategicScoreCard> ImpactStrategicScoreCard { get; set; }
         public DbSet<ImpactStrategicScoreCardMeasure> ImpactStrategicScoreCardMeasure { get; set; }
         public DbSet<ImpactStrategicScoreCardTarget> ImpactStrategicScoreCardTarget { get; set; }
+        public DbSet<KraRoadmapKpiSequence> KraRoadmapKpiSequence { get; set; }
 
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
