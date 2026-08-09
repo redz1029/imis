@@ -87,6 +87,7 @@ class ApiEndpoint {
   late String calendarActivity;
   late String roadmapidlist;
   late String pgsSignatory;
+  late String impactStrategicGoalScoreCardPeriod;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -175,6 +176,8 @@ class ApiEndpoint {
     calendarActivity = '$baseUrl/calendarActivity';
     roadmapidlist = '$baseUrl/roadmapidlist';
     pgsSignatory = '$baseUrl/pgs/pgssignatory';
+    impactStrategicGoalScoreCardPeriod =
+        '$baseUrl/impactStrategicGoalScoreCardPeriod';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
