@@ -6,7 +6,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
+import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
@@ -30,6 +32,8 @@ import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/roadmap/pages/roadmap_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
+import 'package:imis/scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
+import 'package:imis/scorecard/pages/impact_strategy_scorecard_page.dart';
 import 'package:imis/scorecard/pages/score_card_report_page.dart';
 import 'package:imis/strategy_review_report/pages/strategy_review_report_page.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/pages/strategy_review_period_page.dart';
@@ -86,7 +90,9 @@ class SidebarState extends State<Sidebar> {
   List<String> roleIds = [];
   final dio = Dio();
   int? _hoveredIndex;
-
+  final AnnouncementService _announcementService = AnnouncementService(Dio());
+  final GlobalKey _notificationKey = GlobalKey();
+  List<Announcement> _unreadAnnouncements = [];
   int selectedPage = 0;
   int selectedSubPage = 0;
 
@@ -517,6 +523,143 @@ class SidebarState extends State<Sidebar> {
         );
       },
     );
+  }
+
+  Future<void> _loadUnreadAnnouncements() async {
+    try {
+      final unread = await _announcementService.getUnreadAnnouncements();
+      if (!mounted) return;
+      setState(() => _unreadAnnouncements = unread);
+    } catch (_) {}
+  }
+
+  void _showNotificationMenu(BuildContext context) {
+    final RenderBox renderBox =
+        _notificationKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+
+    showMenu(
+      color: Colors.white,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx - 300,
+        offset.dy + renderBox.size.height,
+        offset.dx + renderBox.size.width,
+        offset.dy + renderBox.size.height + 50,
+      ),
+      constraints: const BoxConstraints(maxWidth: 360),
+      items: [
+        PopupMenuItem<String>(
+          enabled: false,
+          padding: EdgeInsets.zero,
+          child: StatefulBuilder(
+            builder: (context, setMenuState) {
+              return Container(
+                width: 340,
+                constraints: const BoxConstraints(maxHeight: 420),
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _unreadAnnouncements.isEmpty
+                          ? 'Notifications'
+                          : '${_unreadAnnouncements.length} New Notifications',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: kText,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Divider(color: kBorder, height: 1),
+                    const SizedBox(height: 4),
+                    Flexible(
+                      child:
+                          _unreadAnnouncements.isEmpty
+                              ? Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 24,
+                                ),
+                                child: Text(
+                                  'No new notifications.',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              )
+                              : ListView.separated(
+                                shrinkWrap: true,
+                                itemCount: _unreadAnnouncements.length,
+                                separatorBuilder:
+                                    (_, __) =>
+                                        Divider(color: kBorder, height: 1),
+                                itemBuilder: (context, index) {
+                                  final a = _unreadAnnouncements[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          margin: const EdgeInsets.only(top: 5),
+                                          width: 8,
+                                          height: 8,
+                                          decoration: const BoxDecoration(
+                                            color: primaryColor,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                a.title,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                a.description,
+
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 12,
+                                                      color: kMuted,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    ).then((_) => _loadUnreadAnnouncements());
   }
 
   void _showProfileSetting(BuildContext context) {
@@ -1141,7 +1284,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 2) return const SwotPage();
       if (selectedSubPage == 3) return const DeliverableStatusMonitoringPage();
       if (selectedSubPage == 8) return const OperationReviewProtocolPage();
-      // if (selectedSubPage == 4) return const ScoreCardMonitoringPage();
+      if (selectedSubPage == 4) return const ImpactStrategyScorecardPage();
       if (selectedSubPage == 5) return const ScoreCardReportPage();
       if (selectedSubPage == 7) return const StrategyReviewReportPage();
       if (selectedSubPage == 6) return const ViewSummaryNarrativeReportPage();
@@ -1172,6 +1315,9 @@ class SidebarState extends State<Sidebar> {
       }
       if (selectedSubPage == 17) {
         return const PerformanceValidationToolSignatoryPage();
+      }
+      if (selectedSubPage == 18) {
+        return const ImpactStrategicGoalScorecardPeriodPage();
       }
     }
     return HomePage();
@@ -1272,14 +1418,45 @@ class SidebarState extends State<Sidebar> {
                       ),
 
                       const Spacer(),
-                      IconButton(
-                        tooltip: 'Notification',
-                        icon: Icon(
-                          Icons.notifications_outlined,
-                          color: Colors.grey[700],
-                          size: 32,
-                        ),
-                        onPressed: () {},
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          IconButton(
+                            key: _notificationKey,
+                            tooltip: 'Notification',
+                            icon: Icon(
+                              Icons.notifications_outlined,
+                              color: Colors.grey[700],
+                              size: 32,
+                            ),
+                            onPressed: () => _showNotificationMenu(context),
+                          ),
+                          if (_unreadAnnouncements.isNotEmpty)
+                            Positioned(
+                              right: 6,
+                              top: 6,
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: const BoxDecoration(
+                                  color: Colors.redAccent,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  '${_unreadAnnouncements.length}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(width: 24),
                       LayoutBuilder(
@@ -1759,42 +1936,6 @@ class SidebarState extends State<Sidebar> {
                               : const SizedBox.shrink(),
                     ),
 
-                    // PermissionWidget(
-                    //   child:
-                    //       [
-                    //             PermissionRoleString.roleAdmin,
-                    //             PermissionRoleString.trainingOfficer,
-                    //             PermissionRoleString.hrOfficer,
-                    //             PermissionRoleString.serviceOfficer,
-                    //             PermissionRoleString.financeOfficer,
-                    //             PermissionRoleString.safetyOfficer,
-                    //             PermissionRoleString.facilityOfficer,
-                    //             PermissionRoleString.linkagesOfficer,
-                    //             PermissionRoleString.informationOfficer,
-                    //             PermissionRoleString.researchOfficer,
-                    //             PermissionRoleString.coreTeam,
-                    //             PermissionRoleString.serviceHead,
-                    //             PermissionRoleString.headAuditor,
-                    //             PermissionRoleString.mcc,
-                    //             PermissionRoleString.osm,
-                    //             PermissionRoleString.pgsAuditor,
-                    //             PermissionRoleString.twg,
-                    //           ].contains(selectedRole)
-                    //           ? ExpandableSidebarItem(
-                    //             title: "Scorecard",
-                    //             items: [
-                    //               {"title": "Monitoring", "index": 4},
-                    //               {"title": "Reports", "index": 5},
-                    //             ],
-                    //             selectedSubPage: selectedSubPage,
-                    //             onTap: (index) {
-                    //               setState(() {
-                    //                 selectedSubPage = index;
-                    //               });
-                    //             },
-                    //           )
-                    //           : SizedBox.shrink(),
-                    // ),
                     PermissionWidget(
                       child:
                           [
@@ -1816,12 +1957,54 @@ class SidebarState extends State<Sidebar> {
                                 PermissionRoleString.pgsAuditor,
                                 PermissionRoleString.twg,
                               ].contains(selectedRole)
-                              ? sidebarSubText(
-                                "Core & Support Processes Scorecard ",
-                                5,
+                              ? ExpandableSidebarItem(
+                                title: "Scorecard",
+                                items: [
+                                  {
+                                    "title": "Impact and Strategic Goal",
+                                    "index": 4,
+                                  },
+                                  {
+                                    "title": "Core & Support Processes",
+                                    "index": 5,
+                                  },
+                                ],
+                                selectedSubPage: selectedSubPage,
+                                onTap: (index) {
+                                  setState(() {
+                                    selectedSubPage = index;
+                                  });
+                                },
                               )
                               : SizedBox.shrink(),
                     ),
+                    // PermissionWidget(
+                    //   child:
+                    //       [
+                    //             PermissionRoleString.roleAdmin,
+                    //             PermissionRoleString.trainingOfficer,
+                    //             PermissionRoleString.hrOfficer,
+                    //             PermissionRoleString.serviceOfficer,
+                    //             PermissionRoleString.financeOfficer,
+                    //             PermissionRoleString.safetyOfficer,
+                    //             PermissionRoleString.facilityOfficer,
+                    //             PermissionRoleString.linkagesOfficer,
+                    //             PermissionRoleString.informationOfficer,
+                    //             PermissionRoleString.researchOfficer,
+                    //             PermissionRoleString.coreTeam,
+                    //             PermissionRoleString.serviceHead,
+                    //             PermissionRoleString.headAuditor,
+                    //             PermissionRoleString.mcc,
+                    //             PermissionRoleString.osm,
+                    //             PermissionRoleString.pgsAuditor,
+                    //             PermissionRoleString.twg,
+                    //           ].contains(selectedRole)
+                    //           ? sidebarSubText(
+                    //             "Core & Support Processes Scorecard ",
+                    //             5,
+                    //           )
+                    //           : SizedBox.shrink(),
+                    // ),
                     PermissionWidget(
                       child:
                           (selectedRole == PermissionRoleString.roleAdmin ||
@@ -1872,7 +2055,7 @@ class SidebarState extends State<Sidebar> {
                     ),
 
                     ExpandableSidebarItem(
-                      title: "PGS Reports",
+                      title: "Deliverable Reports",
                       items: [
                         {
                           "title": "Summary Validated Deliverables",
@@ -1911,6 +2094,7 @@ class SidebarState extends State<Sidebar> {
                     sidebarSubText("Strategy Review Period", 15),
                     sidebarSubText("Performance Validation Tool Period", 16),
                     sidebarSubText("Performance Validation Tool Signatory", 17),
+                    sidebarSubText("Impact and Strategic Goal Period", 18),
                   ],
                 ],
               ),

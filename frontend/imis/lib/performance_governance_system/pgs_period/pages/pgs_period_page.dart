@@ -864,7 +864,6 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// DESKTOP HEADER
                     if (!isMobile)
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),

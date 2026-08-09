@@ -504,7 +504,6 @@ class SummaryValidatedDeliverablesPageState
     );
   }
 
-  // ── Header (UNCHANGED) ─────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
       color: Colors.white,

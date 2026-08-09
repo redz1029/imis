@@ -37,12 +37,20 @@ class AdminDashboardState extends State<AdminDashboard> {
   List<PgsPeriod> statsPeriodList = [];
   PgsPeriod? selectedStatsPeriod;
   bool isLoadingStatistics = false;
-  int statTotalDeliverables = 0;
+  // int statTotalDeliverables = 0;
   int statTotalOffices = 0;
   int statTotalAudited = 0;
-  int statCompleted = 0;
   int statOngoing = 0;
   int statNotStarted = 0;
+
+  int countAudited = 0;
+  int countCompleted = 0;
+  int countInProgress = 0;
+  int countNotStarted = 0;
+  double percentCompleted = 0;
+  double percentInProgress = 0;
+  double percentNotStarted = 0;
+  int totalDeliverables = 0;
 
   List<User> userList = [];
   List<User> filteredListUser = [];
@@ -119,16 +127,29 @@ class AdminDashboardState extends State<AdminDashboard> {
   Future<void> _loadStatisticsPeriods() async {
     try {
       final periods = await _commonService.fetchPgsPeriod();
+
+      PgsPeriod? activePeriod;
+
+      for (final p in periods) {
+        if (p.isActive == true) {
+          activePeriod = p;
+          break;
+        }
+      }
+
       if (!mounted) return;
+
       setState(() {
         statsPeriodList = periods;
-        selectedStatsPeriod = periods.isNotEmpty ? periods.first : null;
+        selectedStatsPeriod =
+            activePeriod ?? (periods.isNotEmpty ? periods.first : null);
       });
+
       if (selectedStatsPeriod != null) {
         await _fetchStatistics(selectedStatsPeriod!.id);
       }
     } catch (e) {
-      // handle error
+      debugPrint(e.toString());
     }
   }
 
@@ -155,15 +176,7 @@ class AdminDashboardState extends State<AdminDashboard> {
       final results = await Future.wait([
         AuthenticatedRequest.get(
           dio,
-          '${ApiEndpoint().dashboardTotalDeliverables}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
-        ),
-        AuthenticatedRequest.get(
-          dio,
           '${ApiEndpoint().dashboardTotalOffices}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
-        ),
-        AuthenticatedRequest.get(
-          dio,
-          '${ApiEndpoint().dashboardTotalAudited}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
         ),
         AuthenticatedRequest.get(
           dio,
@@ -172,16 +185,33 @@ class AdminDashboardState extends State<AdminDashboard> {
       ]);
 
       if (!mounted) return;
+
+      final auditData = results[1].data;
+
       setState(() {
-        statTotalDeliverables = results[0].data['totalNoDeliverable'] ?? 0;
-        statTotalOffices = results[1].data['totalNoOffice'] ?? 0;
-        statTotalAudited = results[2].data['totalNoAudited'] ?? 0;
-        statCompleted = results[3].data['completed'] ?? 0;
-        statOngoing = results[3].data['ongoing'] ?? 0;
-        statNotStarted = results[3].data['notStarted'] ?? 0;
+        statTotalOffices = results[0].data['totalNoOffice'] ?? 0;
         isLoadingStatistics = false;
+
+        countAudited = auditData['countAudited'] ?? 0;
+        countNotStarted = auditData['countNotStarted'] ?? 0;
+        totalDeliverables = auditData['totalDeliverables'] ?? 0;
+        countCompleted = auditData['countCompleted'] ?? 0;
+        countInProgress = auditData['countInProgress'] ?? 0;
+
+        percentCompleted =
+            (auditData['percentCompleted'] as num?)?.toDouble() ?? 0;
+        percentInProgress =
+            (auditData['percentInProgress'] as num?)?.toDouble() ?? 0;
+        percentNotStarted =
+            (auditData['percentNotStarted'] as num?)?.toDouble() ?? 0;
+
+        // these were never assigned before — root cause ng blangkong chart
+        statTotalAudited = countAudited;
+        statNotStarted = countNotStarted;
+        statOngoing = countInProgress;
       });
     } catch (e) {
+      debugPrint('fetchStatistics error: $e');
       if (mounted) setState(() => isLoadingStatistics = false);
     }
   }
@@ -1057,120 +1087,10 @@ class AdminDashboardState extends State<AdminDashboard> {
     return "${months[date.month - 1]} ${date.year}";
   }
 
-  // Widget _buildStatisticsSection() {
-  //   final double auditRate =
-  //       statTotalDeliverables > 0
-  //           ? (statTotalAudited / statTotalDeliverables).clamp(0.0, 1.0)
-  //           : 0.0;
-
-  //   return Container(
-  //     padding: const EdgeInsets.all(24),
-  //     decoration: BoxDecoration(
-  //       color: Theme.of(context).cardColor,
-  //       borderRadius: BorderRadius.circular(16),
-  //       border: Border.all(color: Colors.grey.shade200),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.black.withValues(alpha: 0.03),
-  //           blurRadius: 16,
-  //           offset: const Offset(0, 4),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Row(
-  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //           children: [
-  //             Column(
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               children: [
-  //                 Text(
-  //                   "Audit Statistics",
-  //                   style: GoogleFonts.plusJakartaSans(
-  //                     fontSize: 18,
-  //                     fontWeight: FontWeight.w700,
-  //                     color: Colors.black87,
-  //                   ),
-  //                 ),
-  //                 const SizedBox(height: 2),
-  //                 Text(
-  //                   "Overview of Audit Statistics for the Selected Period",
-  //                   style: GoogleFonts.plusJakartaSans(
-  //                     fontSize: 12,
-  //                     color: Colors.grey.shade500,
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //             _buildPeriodDropdownPill(),
-  //           ],
-  //         ),
-  //         const SizedBox(height: 24),
-
-  //         if (isLoadingStatistics)
-  //           const Padding(
-  //             padding: EdgeInsets.symmetric(vertical: 40),
-  //             child: Center(
-  //               child: CircularProgressIndicator(color: primaryColor),
-  //             ),
-  //           )
-  //         else
-  //           LayoutBuilder(
-  //             builder: (context, constraints) {
-  //               final isMobile = constraints.maxWidth < 700;
-
-  //               final cards = _buildDeliverableStatCards();
-  //               final donut = _buildAuditDonut(auditRate);
-
-  //               if (isMobile) {
-  //                 return Column(
-  //                   children: [cards, const SizedBox(height: 24), donut],
-  //                 );
-  //               }
-
-  //               return Row(
-  //                 crossAxisAlignment: CrossAxisAlignment.start,
-  //                 children: [
-  //                   Expanded(flex: 6, child: cards),
-  //                   const SizedBox(width: 24),
-  //                   Expanded(flex: 4, child: donut),
-  //                 ],
-  //               );
-  //             },
-  //           ),
-  //         if (!isLoadingStatistics) ...[
-  //           const SizedBox(height: 28),
-  //           Divider(color: Colors.grey.shade200, height: 1),
-  //           const SizedBox(height: 24),
-  //           Text(
-  //             "Deliverable Statistics",
-  //             style: GoogleFonts.plusJakartaSans(
-  //               fontSize: 18,
-  //               fontWeight: FontWeight.w700,
-  //               color: Colors.black87,
-  //             ),
-  //           ),
-  //           const SizedBox(height: 4),
-  //           Text(
-  //             "Current deliverable status overview",
-  //             style: GoogleFonts.plusJakartaSans(
-  //               fontSize: 12,
-  //               color: Colors.grey.shade500,
-  //             ),
-  //           ),
-  //           const SizedBox(height: 20),
-  //           _buildDeliverableStatusChart(),
-  //         ],
-  //       ],
-  //     ),
-  //   );
-  // }
   Widget _buildStatisticsSection() {
     final double auditRate =
-        statTotalDeliverables > 0
-            ? (statTotalAudited / statTotalDeliverables).clamp(0.0, 1.0)
+        totalDeliverables > 0
+            ? (statTotalAudited / totalDeliverables).clamp(0.0, 1.0)
             : 0.0;
 
     return Container(
@@ -1198,14 +1118,40 @@ class AdminDashboardState extends State<AdminDashboard> {
               ),
             )
           else ...[
-            // ===== DELIVERABLE STATISTICS (now first) =====
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //   children: [
+            //     Column(
+            //       crossAxisAlignment: CrossAxisAlignment.start,
+            //       children: [
+            //         Text(
+            //           "Audit Statistics",
+            //           style: GoogleFonts.plusJakartaSans(
+            //             fontSize: 18,
+            //             fontWeight: FontWeight.w700,
+            //             color: Colors.black87,
+            //           ),
+            //         ),
+            //         const SizedBox(height: 2),
+            //         Text(
+            //           "Overview of Audit Statistics for the Selected Period",
+            //           style: GoogleFonts.plusJakartaSans(
+            //             fontSize: 12,
+            //             color: Colors.grey.shade500,
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //     _buildPeriodDropdownPill(),
+            //   ],
+            // ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 480;
 
-            // ===== AUDIT STATISTICS (now second) =====
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+                final titleBlock = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       "Audit Statistics",
@@ -1224,9 +1170,31 @@ class AdminDashboardState extends State<AdminDashboard> {
                       ),
                     ),
                   ],
-                ),
-                _buildPeriodDropdownPill(),
-              ],
+                );
+
+                if (isNarrow) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      titleBlock,
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: _buildPeriodDropdownPill(),
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: titleBlock),
+                    const SizedBox(width: 12),
+                    _buildPeriodDropdownPill(),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 24),
             LayoutBuilder(
@@ -1284,7 +1252,7 @@ class AdminDashboardState extends State<AdminDashboard> {
     final entries = [
       _BarEntry(
         "Total Deliverables",
-        statTotalDeliverables,
+        totalDeliverables,
         Icons.assignment_turned_in_outlined,
         primaryColor,
       ),
@@ -1358,41 +1326,50 @@ class AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildPeriodDropdownPill() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<PgsPeriod>(
-          value: selectedStatsPeriod,
-          icon: Icon(Icons.expand_more, size: 18, color: primaryColor),
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: primaryColor,
-          ),
-          hint: Text(
-            "Select Period",
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 220),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: primaryColor.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<PgsPeriod>(
+            value: selectedStatsPeriod,
+            isExpanded: true,
+            isDense: true,
+            icon: Icon(Icons.expand_more, size: 18, color: primaryColor),
             style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
+              fontWeight: FontWeight.w600,
               color: primaryColor,
             ),
+            hint: Text(
+              "Select Period",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                color: primaryColor,
+              ),
+            ),
+            items:
+                statsPeriodList.map((period) {
+                  return DropdownMenuItem<PgsPeriod>(
+                    value: period,
+                    child: Text(
+                      _formatPeriodLabel(period),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  );
+                }).toList(),
+            onChanged: (period) {
+              if (period == null) return;
+              setState(() => selectedStatsPeriod = period);
+              _fetchStatistics(period.id);
+            },
           ),
-          items:
-              statsPeriodList.map((period) {
-                return DropdownMenuItem<PgsPeriod>(
-                  value: period,
-                  child: Text(_formatPeriodLabel(period)),
-                );
-              }).toList(),
-          onChanged: (period) {
-            if (period == null) return;
-            setState(() => selectedStatsPeriod = period);
-            _fetchStatistics(period.id);
-          },
         ),
       ),
     );
@@ -1465,7 +1442,7 @@ class AdminDashboardState extends State<AdminDashboard> {
               const SizedBox(width: 16),
               _legendDot(
                 Colors.grey.shade300,
-                "${(statTotalDeliverables - statTotalAudited).clamp(0, statTotalDeliverables == 0 ? 0 : statTotalDeliverables)} Pending",
+                "${(totalDeliverables - statTotalAudited).clamp(0, totalDeliverables == 0 ? 0 : totalDeliverables)} Pending",
               ),
             ],
           ),
@@ -1498,8 +1475,8 @@ class AdminDashboardState extends State<AdminDashboard> {
   Widget _buildDeliverableStatusChart() {
     final entries = [
       _ChartBarEntry("Not Started", statNotStarted, Colors.redAccent),
-      _ChartBarEntry("In Progress", statOngoing, Colors.orange.shade300),
-      _ChartBarEntry("Completed", statCompleted, Colors.green.shade400),
+      _ChartBarEntry("On Going", statOngoing, Colors.orange.shade300),
+      _ChartBarEntry("Completed", countCompleted, Colors.green.shade400),
       _ChartBarEntry("Audited", statTotalAudited, Colors.purple.shade200),
     ];
 
@@ -1508,18 +1485,14 @@ class AdminDashboardState extends State<AdminDashboard> {
         .fold<int>(0, (prev, e) => e > prev ? e : prev)
         .clamp(1, 999999);
 
-    final total = statNotStarted + statOngoing + statCompleted;
-
-    final double notStartedPct =
-        total > 0 ? (statNotStarted / total * 100) : 0.0;
-    final double inProgressPct = total > 0 ? (statOngoing / total * 100) : 0.0;
-    final double completedPct = total > 0 ? (statCompleted / total * 100) : 0.0;
+    final total = statNotStarted + statOngoing + countCompleted;
+    final double notStartedPct = percentNotStarted;
+    final double inProgressPct = percentInProgress;
+    final double completedPct = percentCompleted;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 700;
-
-        // ===== LEFT: Total Deliverables (full height) =====
         final totalCard = Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
@@ -1554,11 +1527,7 @@ class AdminDashboardState extends State<AdminDashboard> {
         );
         final percentCards = [
           _summaryCard("Not Started (%)", notStartedPct, Colors.redAccent),
-          _summaryCard(
-            "In Progress (%)",
-            inProgressPct,
-            Colors.orange.shade300,
-          ),
+          _summaryCard("On Going (%)", inProgressPct, Colors.orange.shade300),
           _summaryCard("Completed (%)", completedPct, Colors.green.shade400),
         ];
 
@@ -1664,7 +1633,7 @@ class AdminDashboardState extends State<AdminDashboard> {
       child: Column(
         children: [
           Text(
-            value.toStringAsFixed(2),
+            "${value.toStringAsFixed(0)}%",
             style: GoogleFonts.plusJakartaSans(
               fontSize: 28,
               fontWeight: FontWeight.w800,
@@ -1758,21 +1727,21 @@ class _DonutPainter extends CustomPainter {
       oldDelegate.progress != progress;
 }
 
-class _DonutSegment {
+class DonutSegment {
   final String label;
   final int value;
   final Color color;
 
-  _DonutSegment(this.label, this.value, this.color);
+  DonutSegment(this.label, this.value, this.color);
 }
 
-class _MultiDonutPainter extends CustomPainter {
-  final List<_DonutSegment> segments;
+class MultiDonutPainter extends CustomPainter {
+  final List<DonutSegment> segments;
   final int total;
   final double strokeWidth;
   final double animationProgress;
 
-  _MultiDonutPainter({
+  MultiDonutPainter({
     required this.segments,
     required this.total,
     required this.strokeWidth,
@@ -1822,7 +1791,7 @@ class _MultiDonutPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MultiDonutPainter oldDelegate) =>
+  bool shouldRepaint(covariant MultiDonutPainter oldDelegate) =>
       oldDelegate.animationProgress != animationProgress ||
       oldDelegate.segments != segments;
 }
@@ -1840,8 +1809,6 @@ class _GridChart extends StatelessWidget {
   final int maxValue;
 
   const _GridChart({required this.entries, required this.maxValue});
-
-  // rounds maxValue up to a "nice" step count (e.g. 5 gridlines)
   List<int> get _gridSteps {
     final step = (maxValue / 4).ceil();
     final niceStep = step <= 0 ? 1 : step;
@@ -1967,7 +1934,6 @@ class _GridBackgroundPainter extends CustomPainter {
           ..color = color.withValues(alpha: 0.5)
           ..strokeWidth = 1;
 
-    // evenly spaced horizontal lines, top = max, bottom = 0
     for (int i = 0; i < lineCount; i++) {
       final y = size.height * (i / (lineCount - 1));
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
