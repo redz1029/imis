@@ -33,10 +33,9 @@ namespace IMIS.Persistence.ImpactStrategicGoalScoreCardModule
         }
 
 
-        public async Task<DtoPageList<ImpactStrategicGoalScoreCardDto, ImpactStrategicGoalScoreCard, long>> GetPaginatedAsync(
-            long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<DtoPageList<ImpactStrategicGoalScoreCardDto, ImpactStrategicGoalScoreCard, long>> GetPaginatedAsync(long? periodId, int page, int pageSize, CancellationToken cancellationToken)
         {
-            var result = await _repository.GetPaginatedAsync(pgsPeriodId, page, pageSize, cancellationToken).ConfigureAwait(false);
+            var result = await _repository.GetPaginatedAsync(periodId, page, pageSize, cancellationToken).ConfigureAwait(false);
             if (result.TotalCount == 0)
             {
                 return null;

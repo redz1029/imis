@@ -16,16 +16,16 @@ namespace IMIS.Persistence.ImpactStrategicGoalScoreCardModule
             return await ReadOnlyDbContext.Set<ImpactStrategicGoalScoreCard>()
                 .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
-        public async Task<EntityPageList<ImpactStrategicGoalScoreCard, long>> GetPaginatedAsync(long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<EntityPageList<ImpactStrategicGoalScoreCard, long>> GetPaginatedAsync(long? periodId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _entities
             .AsNoTracking()
             .Include(x => x.ImpactStrategicGoalScoreCardPeriod)
             .AsNoTracking();
 
-            if (pgsPeriodId.HasValue)
+            if (periodId.HasValue)
             {
-                query = query.Where(p => p.ImpactStrategicGoalScoreCardPeriod!.Id == pgsPeriodId.Value);
+                query = query.Where(p => p.ImpactStrategicGoalScoreCardPeriod!.Id == periodId.Value);
             }
             var paginatedResult = await EntityPageList<ImpactStrategicGoalScoreCard, long>
             .CreateAsync(query, page, pageSize, cancellationToken)

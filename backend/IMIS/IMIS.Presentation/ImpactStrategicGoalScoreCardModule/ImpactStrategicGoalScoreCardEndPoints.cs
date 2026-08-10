@@ -48,9 +48,9 @@ namespace IMIS.Presentation.ImpactStrategicGoalScoreCardModule
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _impactStrategicGoalScoreCardPermission.Edit));
 
 
-            app.MapGet("/page/pgsPeriod/{id}", async (long? pgsPeriodId, int page, int pageSize, IImpactStrategicGoalScoreCardService service, CancellationToken cancellationToken) =>
+            app.MapGet("/page/period/{id}", async (long? periodId, int page, int pageSize, IImpactStrategicGoalScoreCardService service, CancellationToken cancellationToken) =>
             {
-                var paginatedimpactStrategicGoalScoreCardDto = await service.GetPaginatedAsync(pgsPeriodId, page, pageSize, cancellationToken).ConfigureAwait(false);
+                var paginatedimpactStrategicGoalScoreCardDto = await service.GetPaginatedAsync(periodId, page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedimpactStrategicGoalScoreCardDto);
             })
             .WithTags(_impactStrategicGoalScoreCard)
