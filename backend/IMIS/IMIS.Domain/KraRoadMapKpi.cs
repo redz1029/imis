@@ -9,5 +9,7 @@ namespace IMIS.Domain
         public string? Target { get; set; }
         public string? BaseLine { get; set; }
         public int? Year { get; set; }
+        public int? KraRoadmapKpiSequenceId { get; set; }
+        public KraRoadmapKpiSequence? KraRoadmapKpiSequence { get; set; }
     }
 }

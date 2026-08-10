@@ -53,6 +53,7 @@ public class KraRoadMapDto : BaseDto<KraRoadMap, long>
             {
                 Id = k.Id,
                 KpiDescription = k.KpiDescription,
+                Sequence = k.KraRoadmapKpiSequence?.SequenceCode,
                 Items = new List<KraRoadMapKpi> { k }
             })
             .ToList();

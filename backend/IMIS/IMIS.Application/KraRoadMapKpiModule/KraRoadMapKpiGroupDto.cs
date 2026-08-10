@@ -1,11 +1,13 @@
 ﻿using Base.Primitives;
 using IMIS.Domain;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace IMIS.Application.KraRoadMapKpiModule
 {
     public class KraRoadMapKpiGroupDto : BaseDto<KraRoadMapKpi, int>
     {
         public string? KpiDescription { get; set; }
+        public string? Sequence { get; set; }
         public List<KraRoadMapKpi>? Items { get; set; }
 
         public KraRoadMapKpiGroupDto() { }
@@ -13,6 +15,7 @@ namespace IMIS.Application.KraRoadMapKpiModule
         {
             Id = kpi.Id;
             KpiDescription = kpi.KpiDescription;
+            Sequence = kpi.KraRoadmapKpiSequence?.SequenceCode;
             Items = new List<KraRoadMapKpi> { kpi };
         }
         public override KraRoadMapKpi ToEntity()

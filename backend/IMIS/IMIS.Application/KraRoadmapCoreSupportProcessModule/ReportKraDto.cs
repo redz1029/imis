@@ -21,6 +21,7 @@ public class ReportKraDto : BaseDto<KeyResultArea, int>
             {
                 KraName = Name,
                 StrategicObjective = StrategicObjective,
+                Sequence = kpi.Sequence,
                 KpiDescription = kpi.KpiDescription,
                 Target = kpi.Target,
                 BaseLine = kpi.BaseLine,
@@ -82,14 +83,10 @@ public class ReportKraDto : BaseDto<KeyResultArea, int>
     {
         public string? KraName { get; set; }
         public string? StrategicObjective { get; set; }
+        public string? Sequence { get; set; }
         public string? KpiDescription { get; set; }
         public string? Target { get; set; }
-        public string? BaseLine { get; set; }
-        //public decimal? PercentAccomplished1 { get; set; }
-        //public decimal? PercentAccomplished2 { get; set; }
-        //public decimal? PercentAccomplished3 { get; set; }
-        //public decimal? PercentAccomplished4 { get; set; }
-        //public decimal? PercentAccomplished5 { get; set; }
+        public string? BaseLine { get; set; }   
         public string? PercentAccomplished1 { get; set; }   
         public string? PercentAccomplished2 { get; set; }
         public string? PercentAccomplished3 { get; set; }

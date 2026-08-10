@@ -243,15 +243,20 @@ namespace IMIS.Persistence.KraRoadMapModule
                 .ToList();
 
             dto.Kpis = entity.Kpis?
-                 .Where(k => !k.IsDeleted)
-                 .GroupBy(k => k.KpiDescription)
-                 .Select(g => new KraRoadMapKpiGroupDto
-                 {
-                     Id = 0,
-                     KpiDescription = g.Key,
-                     Items = g.ToList()
-                 })
-                 .ToList();
+              .Where(k => !k.IsDeleted)
+              .GroupBy(k => new
+              {
+                  k.KpiDescription,
+                  Sequence = k.KraRoadmapKpiSequence?.SequenceCode
+              })
+              .Select(g => new KraRoadMapKpiGroupDto
+              {
+                  Id = 0,
+                  KpiDescription = g.Key.KpiDescription,
+                  Sequence = g.Key.Sequence,
+                  Items = g.ToList()
+              })
+              .ToList();
 
 
             dto.RoadmapGutCheck = entity.RoadmapGutCheck != null
