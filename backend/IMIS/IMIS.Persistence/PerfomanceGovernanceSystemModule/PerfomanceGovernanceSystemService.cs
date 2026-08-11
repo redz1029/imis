@@ -905,6 +905,25 @@ namespace IMIS.Persistence.PgsModule
                     }
                 }
 
+                if (entity.PgsReadinessRating != null)
+                {
+                    if (existing.PgsReadinessRating == null)
+                    {
+                        existing.PgsReadinessRating = entity.PgsReadinessRating;
+                    }
+                    else
+                    {
+                        _repository.GetDbContext()
+                            .Entry(existing.PgsReadinessRating)
+                            .CurrentValues
+                            .SetValues(entity.PgsReadinessRating);
+                    }
+                }
+                else if (existing.PgsReadinessRating != null)
+                {
+                  
+                }
+
                 _repository.GetDbContext().Entry(existing).CurrentValues.SetValues(entity);
 
                 existing.OfficeId = office.Id;
