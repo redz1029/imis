@@ -1,0 +1,67 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+import 'package:imis/scorecard/models/impact_strategic_goal_scorecard.dart';
+import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/http_util.dart';
+import 'package:imis/utils/page_list.dart';
+import 'package:imis/utils/pagination_util.dart';
+
+class ImpactStrategyScorecardService {
+  final Dio dio;
+
+  ImpactStrategyScorecardService(this.dio);
+
+  Future<PageList<ImpactStrategicGoalScoreCard>>
+  getImpactStrategicGoalScorecard({
+    int page = 1,
+    int pageSize = 15,
+    String? searchQuery,
+    String? pgsPeriodId,
+  }) async {
+    final paginationUtil = PaginationUtil(dio);
+    return await paginationUtil.fetchPaginatedData(
+      endpoint: '${ApiEndpoint().impactStrategicGoalScoreCard}/page/pgsPeriod',
+      page: page,
+      pageSize: pageSize,
+      searchQuery: searchQuery,
+      additionalParams: {},
+      fromJson: (json) => ImpactStrategicGoalScoreCard.fromJson(json),
+    );
+  }
+
+  Future<void> saveScorecard(ImpactStrategicGoalScoreCard scorecard) async {
+    final isEdit = scorecard.id > 0;
+    final url =
+        ApiEndpoint().impactStrategicGoalScoreCard +
+        (isEdit ? '/${scorecard.id}' : '');
+
+    final response =
+        isEdit
+            ? await AuthenticatedRequest.put(dio, url, data: scorecard.toJson())
+            : await AuthenticatedRequest.post(
+              dio,
+              url,
+              data: scorecard.toJson(),
+            );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to save impact strategy scorecard');
+    }
+  }
+
+  Future<ImpactStrategicGoalScoreCard?> fetchByPeriodId(int periodId) async {
+    final url =
+        '${ApiEndpoint().impactStrategicGoalScoreCard}/period/$periodId';
+    final response = await AuthenticatedRequest.get(dio, url);
+
+    if (response.statusCode == 200) {
+      if (response.data == null) return null;
+      return ImpactStrategicGoalScoreCard.fromJson(response.data);
+    } else if (response.statusCode == 404) {
+      return null;
+    } else {
+      throw Exception('Failed to fetch impact strategy scorecard');
+    }
+  }
+}
