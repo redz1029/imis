@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="05/07/2026 09:30:21" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="08/13/2026 07:36:10" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -123,15 +123,11 @@ namespace FastReport
       <LineObject Name="Line38" Left="999.2" Top="154.05" Height="49" Diagonal="true"/>
       <TextObject Name="txtPGSYearStatus" Left="44.6" Top="43.7" Width="953" Height="19.8" BeforePrintEvent="txtPGSYearStatus_BeforePrint" Text="PGS DELIVERABLES [ReportPerfomanceGovernanceSystemDto.StartDate] STATUS" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 12pt"/>
       <TextObject Name="txtOfficeStatus" Left="47.25" Top="86.95" Width="260.25" Height="64.8" Text="Office: [ReportPerfomanceGovernanceSystemDto.OfficeName]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
-      <LineObject Name="Line39" Left="718.2" Top="154.2" Height="48.45"/>
-      <LineObject Name="Line40" Left="831.6" Top="154.65" Height="48.45"/>
-      <TextObject Name="Text76" Left="614.25" Top="158.65" Width="100.15" Height="36.9" Text="When" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
-      <TextObject Name="Text77" Left="722.65" Top="158.65" Width="104.15" Height="36.9" Text="Status" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
-      <TextObject Name="Text78" Left="835.5" Top="157.65" Width="158.15" Height="42.9" Text="Remarks" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
+      <TextObject Name="Text76" Left="893.3" Top="158.65" Width="100.15" Height="36.9" Text="When" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 11pt, style=Bold"/>
       <TextObject Name="txtPercentStatus" Left="734.55" Top="88.95" Width="254.8" Height="61.9" BeforePrintEvent="txtPercentStatus_BeforePrint" Text="[ReportPerfomanceGovernanceSystemDto.PercentDeliverables] %" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" VertAlign="Center" WordWrap="false" Font="Avenir Book, 10pt" Trimming="EllipsisCharacter"/>
     </PageHeaderBand>
-    <DataBand Name="Data4" Top="207.1" Width="1047.06" DataSource="ReportPerfomanceGovernanceSystemDto">
-      <DataBand Name="Data5" Top="211.1" Width="1047.06" Height="36.35" CanGrow="true" DataSource="PgsDeliverables">
+    <DataBand Name="Data4" Top="205.1" Width="1047.06" DataSource="ReportPerfomanceGovernanceSystemDto">
+      <DataBand Name="Data5" Top="207.1" Width="1047.06" Height="36.35" CanGrow="true" DataSource="PgsDeliverables">
         <ShapeObject Name="Shape25" Left="43.25" Top="-0.55" Width="957.2" Height="36.9" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
         <TextObject Name="txtKraAndDescriptionStatus" Left="46.7" Top="1.45" Width="95.6" Height="30.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.KraName]&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
         <LineObject Name="Line41" Left="144.55" Height="35.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
@@ -141,23 +137,19 @@ namespace FastReport
         <TextObject Name="txtIndirectStatus" Left="223.8" Top="1.45" Width="86.05" Height="31.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtIndirectStatus_BeforePrint" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
         <TextObject Name="txtDeliverableNameStatus" Left="314" Top="1.45" Width="292.5" Height="31.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.DeliverableName]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
         <LineObject Name="Line44" Left="609.15" Height="35.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-        <LineObject Name="Line45" Left="718" Height="35.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-        <LineObject Name="Line46" Left="831.6" Height="35.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-        <TextObject Name="txtByWhenStatus" Left="612.25" Top="1.45" Width="103.5" Height="31.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.ByWhen]" Format="Date" Format.Format="MMMM yyyy" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
-        <TextObject Name="txtPgsStatus" Left="720.65" Top="0.9" Width="108.5" Height="31.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.Status]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
-        <TextObject Name="txtRemarksStatus" Left="835.05" Top="1.45" Width="158.5" Height="30.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.Remarks]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
+        <TextObject Name="txtByWhenStatus" Left="892.75" Top="1.45" Width="103.5" Height="31.9" Border.Color="Transparent" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.ByWhen]" Format="Date" Format.Format="MMMM yyyy" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
       </DataBand>
     </DataBand>
-    <PageFooterBand Name="PageFooter3" Top="251.45" Width="1047.06" Height="39.45" Guides="0">
-      <TextObject Name="Text79" Left="46.7" Top="1.45" Width="255.15" Height="35.9" CanGrow="true" GrowToBottom="true" Text="PGS Auditor" VertAlign="Center" Font="Avenir Book, 10pt, style=Bold"/>
-      <LineObject Name="Line48" Left="43.8" Top="-0.55" Height="39.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-      <LineObject Name="Line49" Left="999.8" Top="-0.55" Height="39.65" CanGrow="true" CanShrink="true" GrowToBottom="true" Diagonal="true"/>
-      <LineObject Name="Line50" Left="609.25" Top="-0.55" Height="39.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-      <LineObject Name="Line51" Left="831.6" Top="-0.55" Height="40" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-      <LineObject Name="Line47" Left="43.15" Top="38.9" Width="957.1" Diagonal="true"/>
-      <LineObject Name="Line52" Left="44.25" Width="956.1" Diagonal="true"/>
-      <TextObject Name="Text80" Left="612.7" Top="3" Width="78.4" Height="32.9" CanGrow="true" GrowToBottom="true" Text="Signature" VertAlign="Center" Font="Avenir Book, 10pt, style=Bold"/>
-      <TextObject Name="Text81" Left="836.05" Top="2.45" Width="50.05" Height="32.9" CanGrow="true" GrowToBottom="true" Text="Date" VertAlign="Center" Font="Avenir Book, 10pt, style=Bold"/>
-    </PageFooterBand>
+    <ReportSummaryBand Name="ReportSummary1" Top="245.45" Width="1047.06" Height="38.45">
+      <LineObject Name="Line47" Left="43.6" Top="37.9" Width="956.1" Diagonal="true"/>
+      <TextObject Name="Text79" Left="46.7" Top="0.45" Width="207.9" Height="35.9" CanGrow="true" GrowToBottom="true" Text="PGS Auditor" VertAlign="Center" Font="Avenir Book, 10pt, style=Bold"/>
+      <LineObject Name="Line48" Left="43.8" Top="-2.1" Height="39.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+      <LineObject Name="Line49" Left="999.25" Top="-1.55" Height="39.65" CanGrow="true" CanShrink="true" GrowToBottom="true" Diagonal="true"/>
+      <LineObject Name="Line50" Left="609.25" Top="-1.55" Height="39.45" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+      <LineObject Name="Line51" Left="831.6" Top="-1.55" Height="40" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+      <LineObject Name="Line52" Left="44.25" Top="-1" Width="955.1" Diagonal="true"/>
+      <TextObject Name="Text80" Left="612.7" Top="2" Width="78.4" Height="32.9" CanGrow="true" GrowToBottom="true" Text="Signature" VertAlign="Center" Font="Avenir Book, 10pt, style=Bold"/>
+      <TextObject Name="Text81" Left="836.05" Top="1.45" Width="50.05" Height="32.9" CanGrow="true" GrowToBottom="true" Text="Date" VertAlign="Center" Font="Avenir Book, 10pt, style=Bold"/>
+    </ReportSummaryBand>
   </ReportPage>
 </Report>
