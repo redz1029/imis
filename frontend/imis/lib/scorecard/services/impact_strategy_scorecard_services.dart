@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:imis/scorecard/models/impact_strategic_goal_scorecard.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -14,14 +12,16 @@ class ImpactStrategyScorecardService {
 
   Future<PageList<ImpactStrategicGoalScoreCard>>
   getImpactStrategicGoalScorecard({
+    required int periodId,
     int page = 1,
     int pageSize = 15,
     String? searchQuery,
-    String? pgsPeriodId,
   }) async {
     final paginationUtil = PaginationUtil(dio);
+
     return await paginationUtil.fetchPaginatedData(
-      endpoint: '${ApiEndpoint().impactStrategicGoalScoreCard}/page/pgsPeriod',
+      endpoint:
+          '${ApiEndpoint().impactStrategicGoalScoreCard}/page/period/$periodId',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
@@ -51,8 +51,18 @@ class ImpactStrategyScorecardService {
   }
 
   Future<ImpactStrategicGoalScoreCard?> fetchByPeriodId(int periodId) async {
-    final url =
-        '${ApiEndpoint().impactStrategicGoalScoreCard}/period/$periodId';
+    final pageList = await getImpactStrategicGoalScorecard(
+      periodId: periodId,
+      page: 1,
+      pageSize: 1,
+    );
+
+    if (pageList.items.isEmpty) return null;
+    return pageList.items.first;
+  }
+
+  Future<ImpactStrategicGoalScoreCard?> fetchById(int id) async {
+    final url = '${ApiEndpoint().impactStrategicGoalScoreCard}/$id';
     final response = await AuthenticatedRequest.get(dio, url);
 
     if (response.statusCode == 200) {
