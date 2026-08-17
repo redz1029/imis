@@ -88,6 +88,7 @@ class ApiEndpoint {
   late String roadmapidlist;
   late String pgsSignatory;
   late String impactStrategicGoalScoreCardPeriod;
+  late String impactStrategicGoalScoreCard;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -178,6 +179,7 @@ class ApiEndpoint {
     pgsSignatory = '$baseUrl/pgs/pgssignatory';
     impactStrategicGoalScoreCardPeriod =
         '$baseUrl/impactStrategicGoalScoreCardPeriod';
+    impactStrategicGoalScoreCard = '$baseUrl/ImpactStrategicGoalScoreCard';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {

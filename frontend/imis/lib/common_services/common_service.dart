@@ -9,6 +9,8 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/performance_validation_tool/performance_validation_tool_period/models/performance_validation_tool_period.dart';
 import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
 import 'package:imis/roles/models/roles.dart';
+import 'package:imis/scorecard/impact_strategic_goal_scorecard_period/models/impact_strategic_goal_scorecard_period.dart';
+import 'package:imis/scorecard/models/impact_strategic_goal_scorecard.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/models/strategy_review_period.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
@@ -209,4 +211,10 @@ class CommonService {
     (e) => Team.fromJson(e),
     'Failed to fetch team for current user',
   );
+  Future<List<ImpactStrategicGoalScorecardPeriod>> fetchImpactPeriod() =>
+      _fetchList(
+        ApiEndpoint().impactStrategicGoalScoreCardPeriod,
+        (e) => ImpactStrategicGoalScorecardPeriod.fromJson(e),
+        'Failed to fetch impact period',
+      );
 }
