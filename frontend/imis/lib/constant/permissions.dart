@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-07-27 19:48:41.304489
+// Last synced: 2026-08-17 14:18:54.770963
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -113,6 +113,9 @@ class AppPermissions {
   static const String addKraRoadMap = 'Add Kra Road Map';
   static const String viewKraRoadMap = 'View Kra Road Map';
   static const String editKraRoadMap = 'Edit Kra Road Map';
+  static const String addKraRoadmapKpiSequence = 'Add Kra Roadmap Kpi Sequence';
+  static const String viewKraRoadmapKpiSequence = 'View Kra Roadmap Kpi Sequence';
+  static const String editKraRoadmapKpiSequence = 'Edit Kra Roadmap Kpi Sequence';
   static const String addKraRoadMapKpiAccomplishment = 'Add Kra Road Map Kpi Accomplishment';
   static const String viewKraRoadMapKpiAccomplishment = 'View Kra Road Map Kpi Accomplishment';
   static const String editKraRoadMapKpiAccomplishment = 'Edit Kra Road Map Kpi Accomplishment';
@@ -122,6 +125,12 @@ class AppPermissions {
   static const String addIsoStandard = 'Add Iso Standard';
   static const String viewIsoStandard = 'View Iso Standard';
   static const String editIsoStandard = 'Edit Iso Standard';
+  static const String addImpactStrategicGoalScoreCardPeriod = 'Add Impact Strategic Goal Score Card Period';
+  static const String viewImpactStrategicGoalScoreCardPeriod = 'View Impact Strategic Goal Score Card Period';
+  static const String editImpactStrategicGoalScoreCardPeriod = 'Edit Impact Strategic Goal Score Card Period';
+  static const String addImpactStrategicGoalScoreCard = 'Add Impact Strategic Goal Score Card';
+  static const String viewImpactStrategicGoalScoreCard = 'View Impact Strategic Goal Score Card';
+  static const String editImpactStrategicGoalScoreCard = 'Edit Impact Strategic Goal Score Card';
   static const String deleteCalendarActivity = 'Delete Calendar Activity';
   static const String addCalendarActivity = 'Add Calendar Activity';
   static const String viewCalendarActivity = 'View Calendar Activity';
