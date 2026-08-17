@@ -103,12 +103,9 @@ class _KpiEntry {
 
       if (key != null && yearTargetCtrls.containsKey(key)) {
         yearTargetCtrls[key]!.text = item.target ?? '';
-      }
-      if (baselineCtrl.text.isEmpty) {
-        baselineCtrl.text = item.baseLine ?? '';
-      }
-      if (targetCtrl.text.isEmpty) {
-        targetCtrl.text = item.target ?? '';
+      } else if (baselineCtrl.text.isEmpty) {
+        // item's year falls outside the period's year list -> it's the baseline
+        baselineCtrl.text = item.target ?? '';
       }
     }
   }
@@ -2615,6 +2612,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
 
                 if (kpiText.isEmpty && baselineText.isEmpty) continue;
 
+                final baselineYear = period.startYear.year - 1;
+
                 final items =
                     years.map((y) {
                       final existingItem = kpi.existingKpi?.items
@@ -2631,11 +2630,32 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                         kraRoadMapId: isEdit ? (kpi.existingKpi?.id ?? 0) : 0,
                         kpiDescription: kpiText,
                         target: kpi.yearTargetCtrls[y]?.text.trim() ?? '',
-                        baseLine: baselineText,
+                        baseLine: '',
                         year: int.tryParse(y),
                       );
                     }).toList();
 
+                if (baselineText.isNotEmpty) {
+                  final existingBaselineItem = kpi.existingKpi?.items
+                      ?.cast<KpiRoadmapItem?>()
+                      .firstWhere(
+                        (e) => e?.year == baselineYear,
+                        orElse: () => null,
+                      );
+
+                  items.add(
+                    KpiRoadmapItem(
+                      id: isEdit ? (existingBaselineItem?.id ?? 0) : 0,
+                      isDeleted: false,
+                      rowVersion: existingBaselineItem?.rowVersion,
+                      kraRoadMapId: isEdit ? (kpi.existingKpi?.id ?? 0) : 0,
+                      kpiDescription: kpiText,
+                      target: baselineText,
+                      baseLine: '',
+                      year: baselineYear,
+                    ),
+                  );
+                }
                 kpiList.add(
                   KpiRoadmap(
                     id: isEdit ? (kpi.existingKpi?.id ?? 0) : 0,
