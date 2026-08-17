@@ -581,8 +581,8 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                 if (confirmed == true) {
                                   final period = KraRoadmapPeriod(
                                     int.tryParse(id ?? '0') ?? 0,
-                                    DateTime.parse(startDateController.text),
-                                    DateTime.parse(endDateController.text),
+                                    selectedFromDate!,
+                                    selectedFromDate!,
                                     isDeleted: false,
                                     rowVersion: '',
                                   );
