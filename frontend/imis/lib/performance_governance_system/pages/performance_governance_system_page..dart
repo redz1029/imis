@@ -1185,36 +1185,39 @@ class _PerformanceGovernanceSystemPageState
                       padding: const EdgeInsets.all(20),
                       child: SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: isDeleting ? null : handleDelete,
-                          icon:
-                              isDeleting
-                                  ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
+                        child: PermissionWidget(
+                          permission: AppPermissions.deleteSignatory,
+                          child: ElevatedButton.icon(
+                            onPressed: isDeleting ? null : handleDelete,
+                            icon:
+                                isDeleting
+                                    ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                    : const Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 18,
                                       color: Colors.white,
                                     ),
-                                  )
-                                  : const Icon(
-                                    Icons.delete_outline_rounded,
-                                    size: 18,
-                                    color: Colors.white,
-                                  ),
-                          label: Text(
-                            isDeleting ? 'Deleting...' : 'Delete Signatory',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                            label: Text(
+                              isDeleting ? 'Deleting...' : 'Delete Signatory',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kDanger,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kDanger,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                           ),
                         ),
@@ -2302,6 +2305,13 @@ class _PerformanceGovernanceSystemPageState
                             color: Colors.blueAccent,
                           ),
                           onSelected: (value) async {
+                            if (value == 'AllCombinedView') {
+                              await openAllCombinedPGSPreview(
+                                pgs.id.toString(),
+                                officeName,
+                                context: context,
+                              );
+                            }
                             if (value == 'DeliverablesOnly') {
                               await openDeliverablesOnlyPreview(
                                 pgs.id.toString(),
@@ -2323,16 +2333,13 @@ class _PerformanceGovernanceSystemPageState
                                 context: context,
                               );
                             }
-                            if (value == 'AllCombinedView') {
-                              await openAllCombinedPGSPreview(
-                                pgs.id.toString(),
-                                officeName,
-                                context: context,
-                              );
-                            }
                           },
                           itemBuilder:
                               (_) => [
+                                const PopupMenuItem(
+                                  value: 'AllCombinedView',
+                                  child: Text('All Combined View'),
+                                ),
                                 PopupMenuItem(
                                   value: 'DeliverablesOnly',
                                   child: Text('Deliverables Only'),
@@ -2344,10 +2351,6 @@ class _PerformanceGovernanceSystemPageState
                                 const PopupMenuItem(
                                   value: 'PGSDeliverablesStatus',
                                   child: Text('PGS Deliverables Status'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'AllCombinedView',
-                                  child: Text('All Combined View'),
                                 ),
                               ],
                         ),
@@ -3966,7 +3969,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         ),
         _groupCell('ALIGNMENT', _fDirect + _fIndirect, primaryColor),
         _groupCell('STRATEGIC CONTRIBUTIONS', _fDeliv, primaryColor),
-        _groupCell('', _fAction + _fByWhen, primaryColor),
+        _groupCell('40', _fAction + _fByWhen, primaryColor),
       ],
     ),
   );
@@ -3976,13 +3979,13 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _groupCell(
-          'Office: ${officeName.toUpperCase()}',
+          officeName.toUpperCase(),
           _fHandle + _fNo + _fProcess,
           primaryColor,
         ),
         _groupCell('ALIGNMENT', _fDirect + _fIndirect, primaryColor),
         _groupCell('STRATEGIC CONTRIBUTIONS  ', _fDeliv, primaryColor),
-        _groupCell('', _fByWhen + _fAction, primaryColor),
+        _groupCell('40', _fByWhen + _fAction, primaryColor),
       ],
     ),
   );
