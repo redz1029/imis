@@ -1,6 +1,5 @@
 ﻿using Base.Primitives;
 using IMIS.Domain;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace IMIS.Application.KraRoadMapKpiModule
 {

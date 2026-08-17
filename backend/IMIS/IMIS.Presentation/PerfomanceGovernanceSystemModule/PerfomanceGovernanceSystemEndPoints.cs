@@ -2,7 +2,6 @@
 using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
-using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsSignatoryModule;
 using IMIS.Domain;

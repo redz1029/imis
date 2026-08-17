@@ -36,15 +36,36 @@ namespace IMIS.Application.KraRoadMapModule
         public int? Year4 => DeliverableYears?.ElementAtOrDefault(3);
         public int? Year5 => DeliverableYears?.ElementAtOrDefault(4);
 
-        public List<KraRoadMapKpiDto>? Kpis { get; set; }
-
-        public KraRoadMapKpiDto? Kpi1 => Kpis != null && Kpis.Count > 0 ? Kpis[0] : null;
-        public KraRoadMapKpiDto? Kpi2 => Kpis != null && Kpis.Count > 1 ? Kpis[1] : null;
+        // ---------------- KPI ----------------
+        public List<ReportKraRoadMapKpiGroupDto>? Kpis { get; set; }
+        public List<int?>? KpiYears { get; set; }
+   
+        public ReportKraRoadMapKpiGroupDto? Kpi1 => Kpis != null && Kpis.Count > 0 ? Kpis[0] : null;
+        public ReportKraRoadMapKpiGroupDto? Kpi2 => Kpis != null && Kpis.Count > 1 ? Kpis[1] : null;
 
         public string? Kpi1Description => Kpi1?.KpiDescription;
         public string? Kpi2Description => Kpi2?.KpiDescription;
 
-        public RoadmapGutCheckDto? RoadmapGutCheck { get; set; }        
+        public string? Kpi1Sequence => Kpi1?.SequenceCode;
+        public string? Kpi2Sequence => Kpi2?.SequenceCode;
+
+        // ---------------- Kpi1 Year1–5 Target/BaseLine ----------------
+        public string? Kpi1Year1Target => Kpi1?.Year1Target;
+        public string? Kpi1Year2Target => Kpi1?.Year2Target;
+        public string? Kpi1Year3Target => Kpi1?.Year3Target;
+        public string? Kpi1Year4Target => Kpi1?.Year4Target;
+        public string? Kpi1Year5Target => Kpi1?.Year5Target;
+        public string? Kpi1Year6Target => Kpi1?.Year6Target;
+
+        // ---------------- Kpi2 Year1–5 Target/BaseLine ----------------
+        public string? Kpi2Year1Target => Kpi2?.Year1Target;
+        public string? Kpi2Year2Target => Kpi2?.Year2Target;
+        public string? Kpi2Year3Target => Kpi2?.Year3Target;
+        public string? Kpi2Year4Target => Kpi2?.Year4Target;
+        public string? Kpi2Year5Target => Kpi2?.Year5Target;
+        public string? Kpi2Year6Target => Kpi2?.Year6Target;
+
+        public RoadmapGutCheckDto? RoadmapGutCheck { get; set; }
         public double Ownership => RoadmapGutCheck?.Ownership ?? 0;
         public double Alignment => RoadmapGutCheck?.Alignment ?? 0;
         public double Contribution => RoadmapGutCheck?.Contribution ?? 0;
@@ -71,7 +92,7 @@ namespace IMIS.Application.KraRoadMapModule
                 ? new KraRoadMapPeriodDto(entity.KraRoadMapPeriod)
                 : null;
 
-            // ---------------- Collect Years ----------------
+            // ---------------- Collect Deliverable Years ----------------
             DeliverableYears = entity.Deliverables?
                 .Select(d => d.Year)
                 .Distinct()
@@ -87,9 +108,22 @@ namespace IMIS.Application.KraRoadMapModule
                 ))
                 .ToList();
 
-            // ---------------- KPI ----------------
+            // ---------------- Collect KPI Years ----------------
+            KpiYears = entity.Kpis?
+                .Where(k => !k.IsDeleted)
+                .Select(k => k.Year)
+                .Distinct()
+                .OrderBy(y => y)
+                .ToList();
+
+            // ---------------- Group KPIs by Description ----------------
             Kpis = entity.Kpis?
-                .Select(k => new KraRoadMapKpiDto(k))
+                .Where(k => !k.IsDeleted)
+                .GroupBy(k => k.KpiDescription)
+                .Select(g => new ReportKraRoadMapKpiGroupDto(
+                    items: g.Select(k => new KraRoadMapKpiDto(k)).ToList(),
+                    allYears: KpiYears
+                ))
                 .ToList();
 
             UserId = entity.RoleId!;
@@ -107,11 +141,10 @@ namespace IMIS.Application.KraRoadMapModule
                 KraId = KraId,
                 KraRoadMapPeriodId = KraRoadMapPeriodId,
                 Deliverables = Deliverables?.SelectMany(g => g.Items).ToList(),
-                Kpis = Kpis?.Select(k => k.ToEntity()).ToList(),
+                Kpis = Kpis?.SelectMany(g => g.Items).Select(k => k.ToEntity()).ToList(),
                 RoleId = UserId,
                 RoadmapGutCheck = RoadmapGutCheck?.ToEntity()
             };
-
         }
     }
 }

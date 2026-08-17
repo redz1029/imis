@@ -265,45 +265,45 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             return dto;
         }
-
+        
         private ReportKraRoadMapDto ReportMapToDto(KraRoadMap entity)
         {
             if (entity == null) return null!;
-
             var dto = new ReportKraRoadMapDto(entity);
-           
+
             dto.Deliverables = entity.Deliverables?
-            .Where(d => !d.IsDeleted)
-            .GroupBy(d => d.KraDescription)
-            .Select(g => new ReportKraRoadMapDeliverableGroupDto(
-                g.ToList(),         
-                entity.Deliverables?
-                    .Select(d => d.Year)
-                    .Distinct()
-                    .OrderBy(y => y)
-                    .ToList()        
-            ))
-            .ToList();
-          
+                .Where(d => !d.IsDeleted)
+                .GroupBy(d => d.KraDescription)
+                .Select(g => new ReportKraRoadMapDeliverableGroupDto(
+                    g.ToList(),
+                    entity.Deliverables?
+                        .Select(d => d.Year)
+                        .Distinct()
+                        .OrderBy(y => y)
+                        .ToList()
+                ))
+                .ToList();
+
+            // ---------------- KPI ----------------
+            dto.KpiYears = entity.Kpis?
+                .Where(k => !k.IsDeleted)
+                .Select(k => k.Year)
+                .Distinct()
+                .OrderBy(y => y)
+                .ToList();
+
             dto.Kpis = entity.Kpis?
                 .Where(k => !k.IsDeleted)
                 .GroupBy(k => k.KpiDescription)
-                .Select(g =>
-                {
-                    var k = g.First();
-                    return new KraRoadMapKpiDto
-                    {
-                        Id = k.Id,
-                        KpiDescription = k.KpiDescription,
-                        IsDeleted = false,
-                        RowVersion = k.RowVersion
-                    };
-                })
+                .Select(g => new ReportKraRoadMapKpiGroupDto(
+                    g.Select(k => new KraRoadMapKpiDto(k)).ToList(),
+                    dto.KpiYears
+                ))
                 .ToList();
-
 
             return dto;
         }
+
         public async Task<KraRoadMapDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);

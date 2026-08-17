@@ -12,6 +12,7 @@ namespace IMIS.Application.KraRoadMapKpiModule
         public long KraRoadMapId { get; set; }
         public int? Year { get; set; }        
         public int? KraRoadmapKpiSequenceId { get; set; }
+        public string? SequenceCode { get; set; }
 
         public KraRoadMapKpiDto() { }
         [SetsRequiredMembers]
@@ -24,6 +25,7 @@ namespace IMIS.Application.KraRoadMapKpiModule
             this.KraRoadMapId = kraRoadMapKpiDto!.KraRoadMapId;
             this.Year = kraRoadMapKpiDto?.Year;
             this.KraRoadmapKpiSequenceId = kraRoadMapKpiDto?.KraRoadmapKpiSequenceId;
+            this.SequenceCode = kraRoadMapKpiDto?.KraRoadmapKpiSequence?.SequenceCode;
         }
         public override KraRoadMapKpi ToEntity()
         {
