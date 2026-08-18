@@ -48,6 +48,11 @@ namespace IMIS.Persistence.ImpactStrategicGoalScoreCardModule
             var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
             return entity == null ? null : new ImpactStrategicGoalScoreCardDto(entity);
         }
+        public async Task<ReportImpactStrategicGoalScoreCardDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
+            return entity == null ? null : new ReportImpactStrategicGoalScoreCardDto(entity);
+        }
         
         private static ImpactStrategicGoalScoreCard BuildNewEntity(ImpactStrategicGoalScoreCardDto dto) => new()
         {

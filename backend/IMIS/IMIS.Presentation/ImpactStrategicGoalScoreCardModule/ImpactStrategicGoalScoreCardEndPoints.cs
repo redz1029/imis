@@ -1,6 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.ImpactStrategicGoalScoreCardModule;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +38,29 @@ namespace IMIS.Presentation.ImpactStrategicGoalScoreCardModule
             .WithTags(_impactStrategicGoalScoreCard)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_impactStrategicGoalScoreCard), true);
 
+            app.MapGet("report-pdf/{id}", async (int id, IImpactStrategicGoalScoreCardService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var data = await service.ReportGetByIdAsync(id, cancellationToken)
+                    .ConfigureAwait(false);
+
+                var file = await ReportUtil.GeneratePdfReport<ReportImpactStrategicGoalScoreCardDto>(
+                    "ImpactScoreCardReport",
+                    new List<ReportImpactStrategicGoalScoreCardDto> { data! },
+                    "ImpactStrategicGoalScoreCard",
+                    cancellationToken).ConfigureAwait(false);
+
+                var fileName = $"ImpactScoreCardReport{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+
+                //return Results.File(file, "application/pdf", $"ReportImpactStrategicGoalScoreCardDto_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                //var dto = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                //return dto != null ? Results.Ok(dto) : Results.NotFound();
+            })
+            .WithTags(_impactStrategicGoalScoreCard);
+         
             app.MapPut("/{id}", async (int id, [FromBody] ImpactStrategicGoalScoreCardDto impactStrategicGoalScoreCardDto, IImpactStrategicGoalScoreCardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var existingkraRoadMapDto = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
