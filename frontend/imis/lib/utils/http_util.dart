@@ -24,8 +24,9 @@ class AuthenticatedRequest {
         ).show(context);
       }
 
-      navigatorKey.currentState?.pushReplacement(
+      navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const NoConnectionPage()),
+        (route) => false,
       );
 
       return Response<dynamic>(
@@ -57,6 +58,15 @@ class AuthenticatedRequest {
     return (options ?? Options()).copyWith(headers: existingHeaders);
   }
 
+  static Response<dynamic> _sessionExpiredResponse(String url) {
+    return Response<dynamic>(
+      data: {'error': 'session_expired'},
+      statusCode: 401,
+      statusMessage: 'Session Expired',
+      requestOptions: RequestOptions(path: url),
+    );
+  }
+
   static Future<Response<dynamic>> get(
     Dio dio,
     String url, {
@@ -69,6 +79,7 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+      if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
       return await dio.get(
         url,
         options: _mergeOptions(loggedUser!.accessToken!, options),
@@ -96,10 +107,11 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+      if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
+
       final merged = _mergeOptions(loggedUser!.accessToken!, options);
       final headers = Map<String, dynamic>.from(merged.headers as Map? ?? {});
       headers.putIfAbsent(Headers.contentTypeHeader, () => contentType);
-
       return await dio.post(
         url,
         options: merged.copyWith(headers: headers),
@@ -127,6 +139,7 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+      if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
       return await dio.put(
         url,
         options: _mergeOptions(loggedUser!.accessToken!, options),
@@ -152,6 +165,7 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+      if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
       return await dio.delete(
         url,
         options: _mergeOptions(loggedUser!.accessToken!, options),
@@ -177,6 +191,7 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+      if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
       return await dio.patch(
         url,
         options: _mergeOptions(loggedUser!.accessToken!, options),
