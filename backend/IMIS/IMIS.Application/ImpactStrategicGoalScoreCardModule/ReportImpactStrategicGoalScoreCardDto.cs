@@ -14,6 +14,10 @@ namespace IMIS.Application.ImpactStrategicGoalScoreCardModule
 
         public List<ReportImpactScoreCardDto>? ImpactScoreCard { get; set; }
 
+        public List<ReportImpactScoreCardDto>? DuplicateImpactScoreCard { get; set; }
+      
+        public List<ReportNonDuplicateImpactScoreCardDto>? NonDuplicateImpactScoreCard { get; set; }
+
         public List<int?>? ImpactScoreCardYears { get; set; }
         public int? Year1 => ImpactScoreCardYears?.ElementAtOrDefault(0);
         public int? Year2 => ImpactScoreCardYears?.ElementAtOrDefault(1);
@@ -23,7 +27,6 @@ namespace IMIS.Application.ImpactStrategicGoalScoreCardModule
         public int? Year6 => ImpactScoreCardYears?.ElementAtOrDefault(5);
 
         public List<ReportImpactStrategicScoreCardDto>? ImpactStrategicScoreCard { get; set; }
-
 
         public List<int?>? ImpactStrategicScoreCardYears { get; set; }
         public int? StrategicYear1 => ImpactStrategicScoreCardYears?.ElementAtOrDefault(0);
@@ -36,7 +39,6 @@ namespace IMIS.Application.ImpactStrategicGoalScoreCardModule
         public ReportImpactStrategicGoalScoreCardDto() { }
 
         [SetsRequiredMembers]
-    
         public ReportImpactStrategicGoalScoreCardDto(ImpactStrategicGoalScoreCard entity)
         {
             Id = entity.Id;
@@ -71,6 +73,43 @@ namespace IMIS.Application.ImpactStrategicGoalScoreCardModule
                     return dto;
                 })
                 .ToList();
+      
+            if (entity.ImpactScoreCard != null)
+            {
+                var sourceScoreCards = entity.ImpactScoreCard.Where(d => !d.IsDeleted).ToList();
+
+                DuplicateImpactScoreCard = sourceScoreCards
+                    .Where(d => (d.ImpactScoreCardIndicator?.Where(i => !i.IsDeleted).Count() ?? 0) > 1)
+                    .Select(d =>
+                    {
+                        var dto = new ReportImpactScoreCardDto(d);
+                        if (dto.ImpactScoreCardIndicator != null)
+                        {
+                            foreach (var indicator in dto.ImpactScoreCardIndicator)
+                            {
+                                indicator.AllYears = ImpactScoreCardYears;
+                            }
+                        }
+                        return dto;
+                    })
+                    .ToList();
+
+                NonDuplicateImpactScoreCard = sourceScoreCards
+                    .Where(d => (d.ImpactScoreCardIndicator?.Where(i => !i.IsDeleted).Count() ?? 0) <= 1)
+                    .Select(d =>
+                    {
+                        var dto = new ReportNonDuplicateImpactScoreCardDto(d);
+                        if (dto.ImpactScoreCardIndicator != null)
+                        {
+                            foreach (var indicator in dto.ImpactScoreCardIndicator)
+                            {
+                                indicator.AllYears = ImpactScoreCardYears;
+                            }
+                        }
+                        return dto;
+                    })
+                    .ToList();
+            }
 
             ImpactStrategicScoreCardYears = entity.ImpactStrategicScoreCard?
                 .Where(k => !k.IsDeleted)
@@ -99,7 +138,7 @@ namespace IMIS.Application.ImpactStrategicGoalScoreCardModule
                 })
                 .ToList();
         }
-        
+
         public override ImpactStrategicGoalScoreCard ToEntity()
         {
             return new ImpactStrategicGoalScoreCard()

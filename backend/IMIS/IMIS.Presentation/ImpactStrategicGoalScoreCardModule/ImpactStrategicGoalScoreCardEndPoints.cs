@@ -49,7 +49,7 @@ namespace IMIS.Presentation.ImpactStrategicGoalScoreCardModule
                     "ImpactStrategicGoalScoreCard",
                     cancellationToken).ConfigureAwait(false);
 
-                var fileName = $"ImpactScoreCardReport{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                var fileName = $"ImpactScoreCardReport{DateTime.Now:yyyyMMddHHmmss}.pdf"; 
                 response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
                 return Results.File(file, "application/pdf");
 
