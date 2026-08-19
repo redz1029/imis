@@ -33,8 +33,9 @@ import 'package:imis/roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.da
 import 'package:imis/roadmap/pages/roadmap_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
-import 'package:imis/scorecard/pages/impact_strategy_scorecard_page.dart';
+import 'package:imis/scorecard/pages/impact_strategy_goal_scorecard_page.dart';
 import 'package:imis/scorecard/pages/score_card_report_page.dart';
+import 'package:imis/strategic_change_agenda/pages/strategic_change_agenda_page.dart';
 import 'package:imis/strategy_review_report/pages/strategy_review_report_page.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/pages/strategy_review_period_page.dart';
 import 'package:imis/swot/pages/swot_page.dart';
@@ -1284,13 +1285,16 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 2) return const SwotPage();
       if (selectedSubPage == 3) return const DeliverableStatusMonitoringPage();
       if (selectedSubPage == 8) return const OperationReviewProtocolPage();
-      if (selectedSubPage == 4) return const ImpactStrategyScorecardPage();
+      if (selectedSubPage == 4) {
+        return const ImpactStrategyGoalScorecardPage();
+      }
       if (selectedSubPage == 5) return const ScoreCardReportPage();
       if (selectedSubPage == 7) return const StrategyReviewReportPage();
       if (selectedSubPage == 6) return const ViewSummaryNarrativeReportPage();
       if (selectedSubPage == 9) return const PerformanceValidationPage();
       if (selectedSubPage == 10) return SummaryValidatedDeliverablesPage();
       if (selectedSubPage == 11) return PgsServiceOfficePeriodReportPage();
+      if (selectedSubPage == 12) return StrategicChangeAgendaPage();
     }
 
     if (selectedPage == 3) {
@@ -1936,48 +1940,20 @@ class SidebarState extends State<Sidebar> {
                               : const SizedBox.shrink(),
                     ),
 
-                    PermissionWidget(
-                      child:
-                          [
-                                PermissionRoleString.roleAdmin,
-                                PermissionRoleString.trainingOfficer,
-                                PermissionRoleString.hrOfficer,
-                                PermissionRoleString.serviceOfficer,
-                                PermissionRoleString.financeOfficer,
-                                PermissionRoleString.safetyOfficer,
-                                PermissionRoleString.facilityOfficer,
-                                PermissionRoleString.linkagesOfficer,
-                                PermissionRoleString.informationOfficer,
-                                PermissionRoleString.researchOfficer,
-                                PermissionRoleString.coreTeam,
-                                PermissionRoleString.serviceHead,
-                                PermissionRoleString.headAuditor,
-                                PermissionRoleString.mcc,
-                                PermissionRoleString.osm,
-                                PermissionRoleString.pgsAuditor,
-                                PermissionRoleString.twg,
-                              ].contains(selectedRole)
-                              ? ExpandableSidebarItem(
-                                title: "Scorecard",
-                                items: [
-                                  {
-                                    "title": "Impact and Strategic Goal",
-                                    "index": 4,
-                                  },
-                                  {
-                                    "title": "Core & Support Processes",
-                                    "index": 5,
-                                  },
-                                ],
-                                selectedSubPage: selectedSubPage,
-                                onTap: (index) {
-                                  setState(() {
-                                    selectedSubPage = index;
-                                  });
-                                },
-                              )
-                              : SizedBox.shrink(),
+                    ExpandableSidebarItem(
+                      title: "Scorecard",
+                      items: [
+                        {"title": "Impact and Strategic Goal", "index": 4},
+                        {"title": "Core & Support Processes", "index": 5},
+                      ],
+                      selectedSubPage: selectedSubPage,
+                      onTap: (index) {
+                        setState(() {
+                          selectedSubPage = index;
+                        });
+                      },
                     ),
+                    sidebarSubText('Strategic Change Agenda', 12),
                     // PermissionWidget(
                     //   child:
                     //       [
