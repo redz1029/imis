@@ -74,4 +74,12 @@ class ImpactStrategyScorecardService {
       throw Exception('Failed to fetch impact strategy scorecard');
     }
   }
+
+  Future<void> deleteImpactStratgyGoalScorecard(
+    String impactStrategyGoal,
+  ) async {
+    final url =
+        '${ApiEndpoint().impactStrategicGoalScoreCard}/$impactStrategyGoal';
+    await AuthenticatedRequest.delete(dio, url);
+  }
 }

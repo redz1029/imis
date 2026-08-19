@@ -3,8 +3,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/scorecard/models/impact_strategic_goal_scorecard.dart';
 import 'package:imis/scorecard/services/impact_strategy_scorecard_services.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class ScorecardMeasure {
@@ -14,11 +16,7 @@ class ScorecardMeasure {
     String description = '',
     String baseline = '',
     List<String>? targets,
-    // ids of each target, aligned by index to [targets]. index 0 = baseline,
-    // 1..n = yearControllers[0..n-1]. Pass these when loading EXISTING data
-    // so updates edit the same rows instead of inserting new ones.
     List<int>? targetIds,
-    // rowVersion of each target, aligned the same way as targetIds.
     List<String?>? targetRowVersions,
     int yearCount = 5,
   }) : descController = TextEditingController(text: description),
@@ -50,21 +48,17 @@ class ScorecardMeasure {
          ),
        );
 
-  /// id of this measure/indicator itself. 0 = new (not yet saved).
   final int id;
 
-  /// concurrency token for this measure/indicator. null for new rows.
   final String? rowVersion;
 
   final TextEditingController descController;
   final TextEditingController baselineController;
   final List<TextEditingController> yearControllers;
 
-  /// id of the baseline target row (0 = new).
   final int baselineTargetId;
   final String? baselineTargetRowVersion;
 
-  /// ids of each year target row, aligned to [yearControllers] (0 = new).
   final List<int> yearTargetIds;
   final List<String?> yearTargetRowVersions;
 
@@ -263,15 +257,7 @@ class ImpactStrategyScorecardDialog extends StatefulWidget {
   final int periodId;
   final List<String> targetYears;
   final String baselineYear;
-
-  /// Pass the existing scorecard's id when opening this dialog to EDIT an
-  /// already-saved scorecard. Leave null (or 0) when creating a brand new
-  /// one. This is what tells the service whether to PUT (update) or POST
-  /// (create) — without it, every save creates a new duplicate entry.
   final int? scorecardId;
-
-  /// concurrency token for the root scorecard. Pass this together with
-  /// [scorecardId] when editing an existing one.
   final String? scorecardRowVersion;
   final List<ScorecardGroup>? initialImpactGroups;
   final List<ScorecardGroup>? initialStrategicGroups;
@@ -587,32 +573,38 @@ class _ImpactStrategyScorecardDialogState
             ),
           ),
           const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: _isSaving ? null : _handleSave,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
+          PermissionWidget(
+            permission: AppPermissions.addImpactStrategicGoalScoreCard,
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _handleSave,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
+              child:
+                  _isSaving
+                      ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                      : Text(
+                        'Save',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
             ),
-            child:
-                _isSaving
-                    ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                    : Text(
-                      'Save',
-                      style: GoogleFonts.plusJakartaSans(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
           ),
         ],
       ),

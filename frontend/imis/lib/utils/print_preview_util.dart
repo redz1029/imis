@@ -269,6 +269,17 @@ Future<void> openStrategyReviewReportPreview(
   name: strategyReviewReport,
   context: context,
 );
+Future<void> openImpactGoalStrategyReportPreview(
+  String impactGoalStrategyId,
+  String impactGoalStrategyReviewReport, {
+  BuildContext? context,
+}) => _openPdfPreview(
+  webEndpoint:
+      "${ApiEndpoint().impactStrategicGoalScoreCard}/report-pdf/$impactGoalStrategyId",
+  id: impactGoalStrategyId,
+  name: impactGoalStrategyReviewReport,
+  context: context,
+);
 
 Future<void> openPendingAuditsReportPreviewbyTeam({
   int? teamId,
