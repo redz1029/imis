@@ -166,7 +166,22 @@ class OperationReviewProtocolPageState
       pgsPeriodList = periods;
       _isLoading = false;
     });
-    await fetchOperationReview();
+    _applyDefaultActivePeriod();
+  }
+
+  void _applyDefaultActivePeriod() {
+    final activePeriod =
+        pgsPeriodList
+            .where((p) => !p.isDeleted && p.isActive == true)
+            .firstOrNull;
+
+    if (activePeriod != null) {
+      setState(() {
+        _selectedPeriodId = activePeriod.id.toString();
+      });
+    }
+
+    fetchFilter();
   }
 
   @override
@@ -323,7 +338,6 @@ class OperationReviewProtocolPageState
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1D23),
                       ),
-                      
                     ),
                     // Text(
                     //   "$_totalCount operation review protocol${_totalCount != 1 ? 's' : ''} found",
