@@ -151,11 +151,36 @@ class _PerformanceGovernanceSystemPageState
     _applyDefaultActivePeriod();
   }
 
+  // void _applyDefaultActivePeriod() {
+  //   final activePeriod = filteredListPeriod.firstWhere(
+  //     (p) => p['isActive'] == true,
+  //     orElse: () => {},
+  //   );
+
+  //   if (activePeriod.isNotEmpty) {
+  //     final start = _dateConverter.toJson(
+  //       DateTime.parse(activePeriod['startDate']),
+  //     );
+  //     final end = _dateConverter.toJson(
+  //       DateTime.parse(activePeriod['endDate']),
+  //     );
+  //     setState(() {
+  //       _selectedPeriodId = activePeriod['id'];
+  //       selectedPeriodText = "$start - $end";
+  //       selectedStartPeriod = activePeriod['startDate'];
+  //       selectedEndDate = activePeriod['endDate'];
+  //     });
+  //   }
+
+  //   fetchPgsFilter();
+  // }
   void _applyDefaultActivePeriod() {
     final activePeriod = filteredListPeriod.firstWhere(
       (p) => p['isActive'] == true,
       orElse: () => {},
     );
+
+    if (!mounted) return;
 
     if (activePeriod.isNotEmpty) {
       final start = _dateConverter.toJson(
@@ -173,6 +198,58 @@ class _PerformanceGovernanceSystemPageState
     }
 
     fetchPgsFilter();
+  }
+
+  Future<void> fetchPgsFilter({int? page, int pageSize = 15}) async {
+    if (_isLoading) return;
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    final targetPage = page ?? _currentPage;
+    try {
+      UserRegistration? user = await AuthUtil.fetchLoggedUser();
+      if (user == null) return;
+      if (!mounted) return;
+      setState(() => userId = user.id ?? "");
+
+      final roleIdParam = await _getRoleId();
+      final officeOrServiceId = _getOfficeOrServiceId();
+
+      final result = await _pgsService.fetchFilteredPgsWithCounts(
+        roleId: roleIdParam,
+        page: targetPage,
+        pageSize: pageSize,
+        fromDate:
+            selectedStartPeriod != null
+                ? DateFormat(
+                  'yyyy-MM-dd',
+                ).format(DateTime.parse(selectedStartPeriod!))
+                : null,
+        toDate:
+            selectedEndDate != null
+                ? DateFormat(
+                  'yyyy-MM-dd',
+                ).format(DateTime.parse(selectedEndDate!))
+                : null,
+        officeId: officeOrServiceId,
+        statusFilter: _statusFilter,
+      );
+
+      if (mounted) {
+        setState(() {
+          deliverableLists = result['items'];
+          filteredList = result['items'];
+          _currentPage = result['page'];
+          _totalCount = result['totalCount'];
+          _statusCounts = result['statusCounts'];
+        });
+      }
+    } on DioException {
+      debugPrint("Dio error");
+    } catch (e) {
+      debugPrint("Unexpected error");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> fetchPgsList({int page = 1, String? searchQuery}) async {
@@ -212,56 +289,6 @@ class _PerformanceGovernanceSystemPageState
           _totalCount = pageList.totalCount;
           deliverableLists = pageList.items;
           filteredList = List.from(deliverableLists);
-        });
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error");
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> fetchPgsFilter({int? page, int pageSize = 15}) async {
-    if (_isLoading) return;
-    setState(() => _isLoading = true);
-    final targetPage = page ?? _currentPage;
-    try {
-      UserRegistration? user = await AuthUtil.fetchLoggedUser();
-      if (user == null) return;
-      setState(() => userId = user.id ?? "");
-
-      final roleIdParam = await _getRoleId();
-      final officeOrServiceId = _getOfficeOrServiceId();
-
-      final result = await _pgsService.fetchFilteredPgsWithCounts(
-        roleId: roleIdParam,
-        page: targetPage,
-        pageSize: pageSize,
-        fromDate:
-            selectedStartPeriod != null
-                ? DateFormat(
-                  'yyyy-MM-dd',
-                ).format(DateTime.parse(selectedStartPeriod!))
-                : null,
-        toDate:
-            selectedEndDate != null
-                ? DateFormat(
-                  'yyyy-MM-dd',
-                ).format(DateTime.parse(selectedEndDate!))
-                : null,
-        officeId: officeOrServiceId,
-        statusFilter: _statusFilter,
-      );
-
-      if (mounted) {
-        setState(() {
-          deliverableLists = result['items'];
-          filteredList = result['items'];
-          _currentPage = result['page'];
-          _totalCount = result['totalCount'];
-          _statusCounts = result['statusCounts'];
         });
       }
     } on DioException {
