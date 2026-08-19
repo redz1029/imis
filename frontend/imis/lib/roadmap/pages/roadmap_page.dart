@@ -3096,7 +3096,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                     permissionService
                                                         .hasPermission(
                                                           AppPermissions
-                                                              .editKraRoadMap,
+                                                              .deleteKraRoadMap,
                                                         )) {
                                                   showDeleteDialog(
                                                     roadmap.id.toString(),
