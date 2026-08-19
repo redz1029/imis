@@ -184,7 +184,7 @@ class PerformanceGovernanceSystemService {
               : null;
       final params = <String, dynamic>{
         'Page': '1',
-        'PageSize': '500',
+        'PageSize': '70',
         'RoleId': roleId,
         if (fromDate != null) 'FromDate': fromDate,
         if (toDate != null) 'ToDate': toDate,

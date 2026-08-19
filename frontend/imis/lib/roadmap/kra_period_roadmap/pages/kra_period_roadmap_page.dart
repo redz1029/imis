@@ -177,12 +177,6 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
     String? endDate,
     String? rowVersion,
   }) {
-    TextEditingController startDateController = TextEditingController(
-      text: startDate,
-    );
-    TextEditingController endDateController = TextEditingController(
-      text: endDate,
-    );
     DateTime? selectedFromDate =
         startDate != null ? DateTime.tryParse(startDate) : null;
     DateTime? selectedEndDate =
@@ -582,7 +576,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                                   final period = KraRoadmapPeriod(
                                     int.tryParse(id ?? '0') ?? 0,
                                     selectedFromDate!,
-                                    selectedFromDate!,
+                                    selectedEndDate!,
                                     isDeleted: false,
                                     rowVersion: '',
                                   );

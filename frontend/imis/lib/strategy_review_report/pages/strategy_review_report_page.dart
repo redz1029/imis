@@ -687,7 +687,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                             Expanded(
                               flex: 3,
                               child: Text(
-                                "Process (Core & Support)",
+                                "Roadmap",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
@@ -1065,7 +1065,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          "Process (Core & Support): ${review.kraRoadMapName ?? ''}",
+                                          "Roadmap: ${review.kraRoadMapName ?? ''}",
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w500,
                                             fontSize: 12,
@@ -1121,10 +1121,13 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
       ),
       floatingActionButton:
           isMobile
-              ? FloatingActionButton(
-                backgroundColor: primaryColor,
-                onPressed: () => showPeriodPanel(),
-                child: const Icon(Icons.add, color: Colors.white),
+              ? PermissionWidget(
+                permission: AppPermissions.addStrategyReview,
+                child: FloatingActionButton(
+                  backgroundColor: primaryColor,
+                  onPressed: () => showPeriodPanel(),
+                  child: const Icon(Icons.add, color: Colors.white),
+                ),
               )
               : null,
     );

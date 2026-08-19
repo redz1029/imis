@@ -140,12 +140,6 @@ class _PerformanceGovernanceSystemPageState
     return null;
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _fetchData();
-  //   fetchPgsFilter();
-  // }
   @override
   void initState() {
     super.initState();
@@ -2614,7 +2608,6 @@ class _PerformanceGovernanceSystemPageState
               gap4px,
               Row(
                 children: [
-                  const Text("Office: ", style: TextStyle(color: Colors.grey)),
                   Expanded(
                     child: Text(officeName, style: TextStyle(fontSize: 12)),
                   ),
@@ -2623,11 +2616,13 @@ class _PerformanceGovernanceSystemPageState
               gap4px,
               Row(
                 children: [
-                  const Text("Period: ", style: TextStyle(color: Colors.grey)),
                   Expanded(
                     child: Text(
                       "$start - $end",
-                      style: TextStyle(fontSize: 12),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade500,
+                      ),
                     ),
                   ),
                 ],
@@ -3786,7 +3781,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
         children: [
           Expanded(
             child: Text(
-              "Note: Once submitted, this deliverables is not editable. Save as Draft if you need to make changes later.",
+              "Note: Once submitted, these deliverables are not editable. Save as Draft if you need to make changes later.",
               style: GoogleFonts.plusJakartaSans(
                 color: kMuted,
                 fontSize: 10,
