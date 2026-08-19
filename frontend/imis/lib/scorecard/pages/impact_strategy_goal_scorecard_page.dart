@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -7,19 +9,22 @@ import 'package:imis/scorecard/dialog/impact_strategy_scorecard_dialog.dart';
 import 'package:imis/scorecard/impact_strategic_goal_scorecard_period/models/impact_strategic_goal_scorecard_period.dart';
 import 'package:imis/scorecard/models/impact_strategic_goal_scorecard.dart';
 import 'package:imis/scorecard/services/impact_strategy_scorecard_services.dart';
+import 'package:imis/utils/print_preview_util.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:motion_toast/motion_toast.dart';
 
-class ImpactStrategyScorecardPage extends StatefulWidget {
-  const ImpactStrategyScorecardPage({super.key});
+class ImpactStrategyGoalScorecardPage extends StatefulWidget {
+  const ImpactStrategyGoalScorecardPage({super.key});
 
   @override
-  State<ImpactStrategyScorecardPage> createState() =>
-      ImpactStrategyScorecardPageState();
+  State<ImpactStrategyGoalScorecardPage> createState() =>
+      ImpactStrategyGoalScorecardPageState();
 }
 
-class ImpactStrategyScorecardPageState
-    extends State<ImpactStrategyScorecardPage> {
+class ImpactStrategyGoalScorecardPageState
+    extends State<ImpactStrategyGoalScorecardPage> {
   final _impactService = ImpactStrategyScorecardService(Dio());
   final _commonService = CommonService(Dio());
 
@@ -424,6 +429,28 @@ class ImpactStrategyScorecardPageState
                         icon: Icon(Icons.edit_outlined, size: 18),
                         onPressed: () => _handleEdit(impactStrategyGoal),
                       ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.description_outlined,
+                          size: 18,
+                          color: Colors.blueAccent,
+                        ),
+                        onPressed: () {
+                          openImpactGoalStrategyReportPreview(
+                            impactStrategyGoal.id.toString(),
+                            '',
+                            context: context,
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          CupertinoIcons.delete_simple,
+                          size: 16,
+                          color: Colors.redAccent,
+                        ),
+                        onPressed: () {},
+                      ),
                     ],
                   ),
                 ),
@@ -431,8 +458,6 @@ class ImpactStrategyScorecardPageState
             ),
           );
         }
-
-        // Mobile card layout
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 6),
           padding: const EdgeInsets.all(12),
@@ -742,9 +767,6 @@ class ImpactStrategyScorecardPageState
                                     : () {
                                       final period = selectedPeriod!;
                                       Navigator.pop(dialogContext);
-
-                                      // Add New: open a blank dialog right
-                                      // away, no fetch/existence check.
                                       _openScorecardDialogForPeriodData(
                                         periodId: period.id,
                                         startDate: period.startDate,
@@ -776,6 +798,41 @@ class ImpactStrategyScorecardPageState
           },
         );
       },
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Impact Strategy Goal Scorecard',
+            itemName: 'impact strategy goal scorecard',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _impactService.deleteImpactStratgyGoalScorecard(id);
+                await fetchImpactGoalStrageyScoreCard();
+                if (mounted) {
+                  MotionToast.success(
+                    description: Text(
+                      'Impact strategy goal scorecard',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
+                  ).show(context);
+                }
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete strategy goal scorecard',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 
