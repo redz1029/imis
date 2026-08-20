@@ -20,7 +20,7 @@ namespace IMIS.Persistence.StrategyReviewModule
         private readonly IkraRoadMapRepository _kraRoadMapRepository;
         private readonly IKeyResultAreaRepository _kraRepository;
         private readonly IKraRoadMapKpiRepository _kraRoadMapKpiRepository;
-        private readonly IKraRoadMapDeliverableRepository _kraRoadMapDeliverableRepository; 
+        private readonly IKraRoadMapDeliverableRepository _kraRoadMapDeliverableRepository;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
@@ -52,7 +52,7 @@ namespace IMIS.Persistence.StrategyReviewModule
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return await currentUserService!.GetCurrentUserAsync();
         }
-     
+
         public async Task<DtoPageList<StrategyReviewDto, StrategyReview, long>> GetAllRoleIdAsync(string roleId, string? KraRoadmapName, int? strategyReviewPeriodId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
@@ -66,7 +66,7 @@ namespace IMIS.Persistence.StrategyReviewModule
 
             if (role == null)
             {
-                return DtoPageList<StrategyReviewDto, StrategyReview, long>.Create(new List<StrategyReview>(),page,  pageSize, 0);
+                return DtoPageList<StrategyReviewDto, StrategyReview, long>.Create(new List<StrategyReview>(), page, pageSize, 0);
             }
 
             if (!await _userManager.IsInRoleAsync(currentUser, role.Name!))
@@ -107,7 +107,7 @@ namespace IMIS.Persistence.StrategyReviewModule
             {
                 strategyReviews = strategyReviews.Where(x => x.KraRoadMap != null && x.KraRoadMap.Kra != null && x.KraRoadMap.Kra.Name.Equals(KraRoadmapName.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
             }
-            var totalCount = strategyReviews.Count; 
+            var totalCount = strategyReviews.Count;
 
             var pagedItems = strategyReviews.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
@@ -136,9 +136,14 @@ namespace IMIS.Persistence.StrategyReviewModule
                 var kra = await _kraRepository.GetByIdAsync(kraRoadMap.KraId.Value, cancellationToken).ConfigureAwait(false);
                 strategicObjective = kra?.StrategicObjective;
             }
-
-            // GET OFFICES
-            officeNames = await _repository.GetOfficeNamesByKraRoadMapIdAsync(kraRoadMap.Id, cancellationToken).ConfigureAwait(false);
+            // GET KRA  OFFICES
+            if (kraRoadMap.KraId.HasValue)
+            {
+                var kra = await _kraRepository.GetByIdAsync(kraRoadMap.KraId.Value, cancellationToken).ConfigureAwait(false);
+                strategicObjective = kra?.StrategicObjective;
+             
+                officeNames = await _repository.GetOfficeNamesByKraIdAsync(kraRoadMap.KraId.Value, entity.StrategyReviewPeriod.StartDate, entity.StrategyReviewPeriod.EndDate, cancellationToken).ConfigureAwait(false);
+            }
 
             // KPI IDS
             var kpiIds = entity.StrategyReviewDeliverableKpi?.Select(x => x.KraRoadmapid).Distinct().ToList() ?? new List<long>();
@@ -213,8 +218,14 @@ namespace IMIS.Persistence.StrategyReviewModule
                 strategicObjective = kra?.StrategicObjective;
             }
 
-            // GET OFFICES
-            officeNames = await _repository.GetOfficeNamesByKraRoadMapIdAsync(kraRoadMap.Id, cancellationToken).ConfigureAwait(false);
+            // GET OFFICES         
+            if (kraRoadMap.KraId.HasValue)
+            {
+                var kra = await _kraRepository.GetByIdAsync(kraRoadMap.KraId.Value, cancellationToken).ConfigureAwait(false);
+                strategicObjective = kra?.StrategicObjective;
+
+                officeNames = await _repository.GetOfficeNamesByKraIdAsync(kraRoadMap.KraId.Value, entity.StrategyReviewPeriod.StartDate, entity.StrategyReviewPeriod.EndDate,  cancellationToken).ConfigureAwait(false);
+            }
 
             // KPI IDS
             var kpiIds = entity.StrategyReviewDeliverableKpi?.Select(x => x.KraRoadmapid).Distinct().ToList() ?? new List<long>();
@@ -352,7 +363,7 @@ namespace IMIS.Persistence.StrategyReviewModule
 
                 UpdateStrategyReviewDeliverable(entity, updatedEntity);
 
-                await _repository.SaveOrUpdateAsync(entity,  cancellationToken);
+                await _repository.SaveOrUpdateAsync(entity, cancellationToken);
             }
 
             return new StrategyReviewDto(entity)
