@@ -8,9 +8,9 @@ import 'package:imis/performance_governance_system/process_core_support/models/k
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_validation_tool/performance_validation_tool_period/models/performance_validation_tool_period.dart';
 import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
+import 'package:imis/roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/scorecard/impact_strategic_goal_scorecard_period/models/impact_strategic_goal_scorecard_period.dart';
-import 'package:imis/scorecard/models/impact_strategic_goal_scorecard.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/models/strategy_review_period.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
@@ -185,6 +185,14 @@ class CommonService {
       '${ApiEndpoint().office}/$id',
     );
     return Office.fromJson(response.data);
+  }
+
+  Future<RoadmapKpiSequence> getRoadmapSequence(String id) async {
+    final response = await AuthenticatedRequest.get(
+      dio,
+      '${ApiEndpoint().kraroadmapkpiAccomplishment}/$id',
+    );
+    return RoadmapKpiSequence.fromJson(response.data);
   }
 
   Future<AuditorTeamDetail> fetchAuditorTeamByTeamId(int teamId) =>

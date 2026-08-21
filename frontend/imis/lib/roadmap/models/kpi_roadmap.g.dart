@@ -36,6 +36,14 @@ KpiRoadmapItem _$KpiRoadmapItemFromJson(Map<String, dynamic> json) =>
       target: json['target'] as String?,
       baseLine: json['baseLine'] as String?,
       year: (json['year'] as num?)?.toInt(),
+      kraRoadmapKpiSequence:
+          json['kraRoadmapKpiSequence'] == null
+              ? null
+              : RoadmapKpiSequence.fromJson(
+                json['kraRoadmapKpiSequence'] as Map<String, dynamic>,
+              ),
+      kraRoadmapKpiSequenceId:
+          (json['kraRoadmapKpiSequenceId'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$KpiRoadmapItemToJson(KpiRoadmapItem instance) =>
@@ -48,4 +56,6 @@ Map<String, dynamic> _$KpiRoadmapItemToJson(KpiRoadmapItem instance) =>
       'target': instance.target,
       'baseLine': instance.baseLine,
       'year': instance.year,
+      'kraRoadmapKpiSequence': instance.kraRoadmapKpiSequence,
+      'kraRoadmapKpiSequenceId': instance.kraRoadmapKpiSequenceId,
     };

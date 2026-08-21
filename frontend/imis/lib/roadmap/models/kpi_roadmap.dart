@@ -1,3 +1,4 @@
+import 'package:imis/roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'kpi_roadmap.g.dart';
@@ -34,6 +35,8 @@ class KpiRoadmapItem {
   final String? target;
   final String? baseLine;
   final int? year;
+  final RoadmapKpiSequence? kraRoadmapKpiSequence;
+  final int? kraRoadmapKpiSequenceId;
 
   KpiRoadmapItem({
     required this.id,
@@ -44,6 +47,8 @@ class KpiRoadmapItem {
     this.target,
     this.baseLine,
     this.year,
+    this.kraRoadmapKpiSequence,
+    this.kraRoadmapKpiSequenceId,
   });
 
   factory KpiRoadmapItem.fromJson(Map<String, dynamic> json) =>

@@ -3,6 +3,7 @@ import 'package:imis/roadmap/models/kra_roadmap_filter.dart';
 import 'package:imis/roadmap/models/kra_roadmap_role.dart';
 import 'package:imis/roadmap/models/roadmap.dart';
 import 'package:imis/roadmap/models/roadmap_history.dart';
+import 'package:imis/roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';
@@ -121,5 +122,15 @@ class RoadmapService {
     return List<KraRoadmapRole>.from(
       response.data.map((data) => KraRoadmapRole.fromJson(data)),
     );
+  }
+
+  Future<List<RoadmapKpiSequence>> getRoadmapSequence() async {
+    final response = await AuthenticatedRequest.get(
+      dio,
+      ApiEndpoint().kraRoadmapKPISequence, // GET /KraRoadmapKPISequence, no id
+    );
+    return (response.data as List)
+        .map((e) => RoadmapKpiSequence.fromJson(e))
+        .toList();
   }
 }

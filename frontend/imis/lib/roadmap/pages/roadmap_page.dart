@@ -1,5 +1,3 @@
-// ignore_for_file: empty_catches, use_build_context_synchronously
-
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/roadmap/dialog/roadmap_history_dialog.dart';
+import 'package:imis/roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/roadmap/models/kpi_roadmap.dart';
@@ -38,6 +37,7 @@ _Screen _screenOf(BuildContext ctx) {
 
 const double kActionColW = 72.0;
 const double kEnablerColW = 72.0;
+const double kSeqColW = 44.0; // NEW: width for the sequence dropdown
 
 class _GutQuestion {
   final String question;
@@ -93,6 +93,8 @@ class _KpiEntry {
 
   final Map<String, TextEditingController> yearTargetCtrls;
 
+  int? sequenceId; // NEW: selected kraRoadmapKpiSequenceId for this KPI
+
   _KpiEntry({this.existingKpi, List<String> year = const []})
     : kpiCtrl = TextEditingController(text: existingKpi?.kpiDescription ?? ''),
       targetCtrl = TextEditingController(),
@@ -107,6 +109,9 @@ class _KpiEntry {
         // item's year falls outside the period's year list -> it's the baseline
         baselineCtrl.text = item.target ?? '';
       }
+
+      // NEW: grab the sequence id once (all items of a KPI should share the same one)
+      sequenceId ??= item.kraRoadmapKpiSequenceId;
     }
   }
 
@@ -509,21 +514,73 @@ class KpiLabel extends StatelessWidget {
   }
 }
 
+// NEW: small dropdown for assigning a KPI's sequence code (e.g. "1a", "1b")
+class _SeqDropdown extends StatelessWidget {
+  final int? value;
+  final List<RoadmapKpiSequence> sequences;
+  final void Function(int?) onChanged;
+
+  const _SeqDropdown({
+    required this.value,
+    required this.sequences,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final validValue = sequences.any((s) => s.id == value) ? value : null;
+
+    return SizedBox(
+      width: kSeqColW,
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: validValue,
+          isDense: true,
+          isExpanded: true,
+          icon: const Icon(Icons.arrow_drop_down, size: 14),
+          style: const TextStyle(fontSize: 11, color: Colors.black87),
+          hint: const Text(
+            '-',
+            style: TextStyle(fontSize: 11, color: Colors.grey),
+          ),
+          items:
+              sequences
+                  .map(
+                    (s) => DropdownMenuItem<int>(
+                      value: s.id,
+                      child: Text(
+                        s.sequenceCode,
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ),
+                  )
+                  .toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+}
+
 class _StrategicSection extends StatelessWidget {
   final _Screen screen;
   final String? strategicObjective;
   final List<_KpiEntry> kpis;
   final List<String> years;
+  final List<RoadmapKpiSequence> sequences; // NEW
   final VoidCallback onAddKpi;
   final void Function(int) onRemoveKpi;
+  final void Function(int, int?) onSeqChanged; // NEW
 
   const _StrategicSection({
     required this.screen,
     required this.strategicObjective,
     required this.kpis,
     required this.years,
+    required this.sequences,
     required this.onAddKpi,
     required this.onRemoveKpi,
+    required this.onSeqChanged,
   });
 
   @override
@@ -578,8 +635,10 @@ class _StrategicSection extends StatelessWidget {
                 screen: screen,
                 kpis: kpis,
                 years: years,
+                sequences: sequences,
                 onAddKpi: onAddKpi,
                 onRemoveKpi: onRemoveKpi,
+                onSeqChanged: onSeqChanged,
               ),
             ),
           ],
@@ -615,8 +674,10 @@ class _StrategicSection extends StatelessWidget {
                 screen: screen,
                 kpis: kpis,
                 years: years,
+                sequences: sequences,
                 onAddKpi: onAddKpi,
                 onRemoveKpi: onRemoveKpi,
+                onSeqChanged: onSeqChanged,
               ),
             ),
           ],
@@ -630,15 +691,19 @@ class _KpiTableCompact extends StatelessWidget {
   final _Screen screen;
   final List<_KpiEntry> kpis;
   final List<String> years;
+  final List<RoadmapKpiSequence> sequences; // NEW
   final VoidCallback onAddKpi;
   final void Function(int) onRemoveKpi;
+  final void Function(int, int?) onSeqChanged; // NEW
 
   const _KpiTableCompact({
     required this.screen,
     required this.kpis,
     required this.years,
+    required this.sequences,
     required this.onAddKpi,
     required this.onRemoveKpi,
+    required this.onSeqChanged,
   });
 
   @override
@@ -652,8 +717,10 @@ class _KpiTableCompact extends StatelessWidget {
               index: e.key,
               kpi: e.value,
               years: years,
+              sequences: sequences,
               canDelete: kpis.length > 1,
               onDelete: () => _confirmDeleteKpi(context, e.key),
+              onSeqChanged: (v) => onSeqChanged(e.key, v),
             ),
           ),
           Align(
@@ -682,7 +749,7 @@ class _KpiTableCompact extends StatelessWidget {
           child: Row(
             children: [
               SizedBox(
-                width: kActionColW,
+                width: kActionColW + kSeqColW,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     vertical: 8,
@@ -791,30 +858,38 @@ class _KpiTableCompact extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(
-                    width: kActionColW,
-                    child: Center(
-                      child: PermissionWidget(
-                        permission: AppPermissions.editKraRoadMap,
-                        child: IconButton(
-                          icon: Icon(
-                            CupertinoIcons.delete_simple,
-                            color:
+                    width: kActionColW + kSeqColW,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        PermissionWidget(
+                          permission: AppPermissions.editKraRoadMap,
+                          child: IconButton(
+                            icon: Icon(
+                              CupertinoIcons.delete_simple,
+                              color:
+                                  kpis.length > 1
+                                      ? Colors.redAccent
+                                      : Colors.grey.shade300,
+                              size: 16,
+                            ),
+                            onPressed:
                                 kpis.length > 1
-                                    ? Colors.redAccent
-                                    : Colors.grey.shade300,
-                            size: 16,
-                          ),
-                          onPressed:
-                              kpis.length > 1
-                                  ? () => _confirmDeleteKpi(context, idx)
-                                  : null,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 30,
-                            minHeight: 36,
+                                    ? () => _confirmDeleteKpi(context, idx)
+                                    : null,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 28,
+                              minHeight: 36,
+                            ),
                           ),
                         ),
-                      ),
+                        _SeqDropdown(
+                          value: kpi.sequenceId,
+                          sequences: sequences,
+                          onChanged: (v) => onSeqChanged(idx, v),
+                        ),
+                      ],
                     ),
                   ),
                   Expanded(
@@ -914,15 +989,19 @@ class _KpiCard extends StatelessWidget {
   final int index;
   final _KpiEntry kpi;
   final List<String> years;
+  final List<RoadmapKpiSequence> sequences; // NEW
   final bool canDelete;
   final VoidCallback onDelete;
+  final void Function(int?) onSeqChanged; // NEW
 
   const _KpiCard({
     required this.index,
     required this.kpi,
     required this.years,
+    required this.sequences,
     required this.canDelete,
     required this.onDelete,
+    required this.onSeqChanged,
   });
 
   @override
@@ -951,6 +1030,12 @@ class _KpiCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
+              _SeqDropdown(
+                value: kpi.sequenceId,
+                sequences: sequences,
+                onChanged: onSeqChanged,
+              ),
+              const SizedBox(width: 4),
               PermissionWidget(
                 permission: AppPermissions.editKraRoadMap,
                 child: IconButton(
@@ -1700,18 +1785,30 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
 
   final Map<int, int> _gutRatings = {};
 
+  List<RoadmapKpiSequence> _sequences = []; // NEW
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _years = _buildYears();
     _initData();
+    _loadSequences();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadSequences() async {
+    try {
+      final seq = await RoadmapService(Dio()).getRoadmapSequence();
+      if (mounted) setState(() => _sequences = seq);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 
   List<String> _buildYears() {
@@ -1811,8 +1908,10 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
                 strategicObjective: widget.selectedKra.strategicObjectives,
                 kpis: _kpis,
                 years: _years,
+                sequences: _sequences,
                 onAddKpi: _addKpi,
                 onRemoveKpi: _removeKpi,
+                onSeqChanged: (i, v) => setState(() => _kpis[i].sequenceId = v),
               ),
               const SizedBox(height: 14),
               Container(
@@ -1890,8 +1989,10 @@ class _RoadmapMainDialogState extends State<_RoadmapMainDialog>
             strategicObjective: widget.selectedKra.strategicObjectives,
             kpis: _kpis,
             years: _years,
+            sequences: _sequences,
             onAddKpi: _addKpi,
             onRemoveKpi: _removeKpi,
+            onSeqChanged: (i, v) => setState(() => _kpis[i].sequenceId = v),
           ),
         ),
         const SizedBox(height: 10),
@@ -2185,6 +2286,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   final List<KpiRoadmap> kpiList = [];
   final permissionService = PermissionService();
   String selectedFilter = "All Process (Core&Support)";
+  bool _mobileFiltersExpanded = false;
 
   @override
   void initState() {
@@ -2632,6 +2734,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                         target: kpi.yearTargetCtrls[y]?.text.trim() ?? '',
                         baseLine: '',
                         year: int.tryParse(y),
+                        kraRoadmapKpiSequenceId: kpi.sequenceId, // NEW
                       );
                     }).toList();
 
@@ -2653,6 +2756,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                       target: baselineText,
                       baseLine: '',
                       year: baselineYear,
+                      kraRoadmapKpiSequenceId: kpi.sequenceId, // NEW
                     ),
                   );
                 }
@@ -3354,18 +3458,15 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
       children: [
         Row(
           children: [
-            Icon(Icons.tune, size: 15, color: Colors.grey.shade600),
-            const SizedBox(width: 6),
-            Text(
-              "Filter by",
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [_buildRoadmapFilter()],
             ),
-            const Spacer(),
-            if (_hasActiveFilters)
+            Spacer(),
+            if (_hasActiveFilters) ...[
+              const SizedBox(width: 10),
+
               TextButton.icon(
                 onPressed: _resetFilters,
                 icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
@@ -3380,10 +3481,9 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                   ),
                 ),
               ),
+            ],
           ],
         ),
-        const SizedBox(height: 10),
-        Wrap(spacing: 10, runSpacing: 10, children: [_buildRoadmapFilter()]),
       ],
     );
   }
@@ -3409,41 +3509,108 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   }
 
   Widget _buildMobileFilters() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Filter by",
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SizedBox(
-            height: 38,
-            child: SearchableDropdown(
-              items: [
-                "All Process (Core&Support)",
-                ...kraList.map((kra) => kra.name),
-              ],
-              selectedItem: selectedFilter,
-              hintText: "Filter KRA",
-              searchHint: "Search Process...",
-              onChanged: (value) => setState(() => selectedFilter = value),
+        Row(
+          children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () {
+                setState(
+                  () => _mobileFiltersExpanded = !_mobileFiltersExpanded,
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.tune, size: 16, color: primaryColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Filters',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    AnimatedRotation(
+                      turns: _mobileFiltersExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 16,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
+            const Spacer(),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 150),
+              child:
+                  _hasActiveFilters
+                      ? TextButton.icon(
+                        key: const ValueKey('clear'),
+                        onPressed: _resetFilters,
+                        icon: Icon(
+                          Icons.refresh,
+                          size: 14,
+                          color: Colors.red.shade400,
+                        ),
+                        label: Text(
+                          'Clear filters',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.red.shade400,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      )
+                      : const SizedBox.shrink(key: ValueKey('empty')),
+            ),
+          ],
         ),
-        if (_hasActiveFilters) ...[
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: _resetFilters,
-            icon: Icon(Icons.refresh, size: 18, color: Colors.red.shade400),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-          ),
-        ],
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          child:
+              _mobileFiltersExpanded
+                  ? Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 38,
+                          child: PermissionWidget(
+                            permission: AppPermissions.viewOffice,
+                            child: _buildRoadmapFilter(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                  : const SizedBox.shrink(),
+        ),
       ],
     );
   }
