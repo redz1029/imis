@@ -7,9 +7,9 @@ namespace IMIS.Persistence.SWOTAnalysisStrengthWeaknessModule
 {
     public class SWOTAnalysisStrengthWeaknessService : ISWOTAnalysisStrengthWeaknessService
     {
-        private readonly ISWOTAnalysisStrengthWeaknessRepository _repository;
+        private readonly ISWOTAnalysisStrengthWeaknessSettingsRepository _repository;
 
-        public SWOTAnalysisStrengthWeaknessService(ISWOTAnalysisStrengthWeaknessRepository repository)
+        public SWOTAnalysisStrengthWeaknessService(ISWOTAnalysisStrengthWeaknessSettingsRepository repository)
         {
             _repository = repository;
         }

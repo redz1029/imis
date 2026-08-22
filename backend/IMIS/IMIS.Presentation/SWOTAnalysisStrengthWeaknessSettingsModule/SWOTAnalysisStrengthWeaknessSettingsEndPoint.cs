@@ -12,16 +12,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
 {
-    public class SWOTAnalysisStrengthWeaknessEndPoint : CarterModule
+    public class SWOTAnalysisStrengthWeaknessSettingsEndPoint : CarterModule
     {
         private const string _sWOTAnalysisStrengthWeakness = "SWOT Analysis Strength Weakness";
-        public readonly SWOTAnalysisStrengthWeaknessPermission _sWOTAnalysisStrengthWeaknessPermission = new();
-        public SWOTAnalysisStrengthWeaknessEndPoint() : base("/SWOTAnalysisStrengthWeakness")
+        public readonly SWOTAnalysisStrengthWeaknessSettingsPermission _sWOTAnalysisStrengthWeaknessPermission = new();
+        public SWOTAnalysisStrengthWeaknessSettingsEndPoint() : base("/SWOTAnalysisStrengthWeakness")
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/", async ([FromBody] SWOTAnalysisStrengthWeaknessDto sWOTAnalysisStrengthWeaknessDto, ISWOTAnalysisStrengthWeaknessService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] SWOTAnalysisStrengthWeaknessSettingsDto sWOTAnalysisStrengthWeaknessDto, ISWOTAnalysisStrengthWeaknessSettingsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 await service.SaveOrUpdateAsync(sWOTAnalysisStrengthWeaknessDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_sWOTAnalysisStrengthWeakness, cancellationToken);
@@ -30,7 +30,7 @@ namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
           .WithTags(_sWOTAnalysisStrengthWeakness)
           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisStrengthWeaknessPermission.Add));
 
-            app.MapGet("/", async (ISWOTAnalysisStrengthWeaknessService service, CancellationToken cancellationToken) =>
+            app.MapGet("/", async (ISWOTAnalysisStrengthWeaknessSettingsService service, CancellationToken cancellationToken) =>
             {
                 var dto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(dto);
@@ -40,7 +40,7 @@ namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisStrengthWeaknessPermission.View));
 
 
-            app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisStrengthWeaknessDto sWOTAnalysisStrengthWeaknessDto, ISWOTAnalysisStrengthWeaknessService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisStrengthWeaknessSettingsDto sWOTAnalysisStrengthWeaknessDto, ISWOTAnalysisStrengthWeaknessSettingsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 try
                 {
@@ -63,7 +63,7 @@ namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
             .WithTags(_sWOTAnalysisStrengthWeakness)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisStrengthWeaknessPermission.Edit));
 
-            app.MapGet("/page", async (int page, int pageSize, ISWOTAnalysisStrengthWeaknessService service, CancellationToken cancellationToken) =>
+            app.MapGet("/page", async (int page, int pageSize, ISWOTAnalysisStrengthWeaknessSettingsService service, CancellationToken cancellationToken) =>
             {
                 var paginatedSWOT = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedSWOT);
@@ -72,7 +72,7 @@ namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_sWOTAnalysisStrengthWeakness), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisStrengthWeaknessPermission.View));
 
-            app.MapDelete("/{id:int}", async (int id, ISWOTAnalysisStrengthWeaknessService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapDelete("/{id:int}", async (int id, ISWOTAnalysisStrengthWeaknessSettingsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var result = await service.SoftDeleteAsync(id, cancellationToken);
 

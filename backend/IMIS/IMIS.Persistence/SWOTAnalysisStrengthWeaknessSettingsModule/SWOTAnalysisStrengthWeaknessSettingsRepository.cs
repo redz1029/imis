@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.SWOTAnalysisStrengthWeaknessModule
 {
-    public class SWOTAnalysisStrengthWeaknessRepository : BaseRepository<SWOTAnalysisStrengthWeakness, int, ImisDbContext, User>, ISWOTAnalysisStrengthWeaknessRepository
+    public class SWOTAnalysisStrengthWeaknessRepository : BaseRepository<SWOTAnalysisStrengthWeakness, int, ImisDbContext, User>, ISWOTAnalysisStrengthWeaknessSettingsRepository
     {
         public SWOTAnalysisStrengthWeaknessRepository(ImisDbContext dbContext) : base(dbContext)
         {

@@ -2,7 +2,7 @@
 
 namespace IMIS.Domain
 {
-    public class SWOTAnalysisStrengthWeakness :  Entity<int>
+    public class SWOTAnalysisOpportunitiesThreatsSettings : Entity<int>
     {
         public string? InternalContext { get; set; }
     }

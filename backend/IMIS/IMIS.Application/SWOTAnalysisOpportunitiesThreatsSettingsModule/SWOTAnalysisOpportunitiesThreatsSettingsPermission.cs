@@ -2,7 +2,7 @@
 
 namespace IMIS.Application.SWOTAnalysisOpportunitiesThreatsModule
 {
-    public class SWOTAnalysisOpportunitiesThreatsPermission : BaseOperationPermission
+    public class SWOTAnalysisOpportunitiesThreatsSettingsPermission : BaseOperationPermission
     {
         public override string ModuleName => "SWOTAnalysisOpportunitiesThreats";
 

@@ -11,16 +11,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
 {
-    public class SWOTAnalysisOpportunitiesThreatsEndPoint : CarterModule
+    public class SWOTAnalysisOpportunitiesThreatsSettingsEndPoint : CarterModule
     {
         private const string _sWOTAnalysisOpportunitiesThreats = "SWOT Analysis Opportunities Threats";
-        public readonly SWOTAnalysisOpportunitiesThreatsPermission _sWOTAnalysisOpportunitiesThreatsPermission = new();
-        public SWOTAnalysisOpportunitiesThreatsEndPoint() : base("/SWOTAnalysisOpportunitiesThreats")
+        public readonly SWOTAnalysisOpportunitiesThreatsSettingsPermission _sWOTAnalysisOpportunitiesThreatsPermission = new();
+        public SWOTAnalysisOpportunitiesThreatsSettingsEndPoint() : base("/SWOTAnalysisOpportunitiesThreats")
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/", async ([FromBody] SWOTAnalysisOpportunitiesThreatsDto sWOTAnalysisOpportunitiesThreatsDto, ISWOTAnalysisOpportunitiesThreatsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] SWOTAnalysisOpportunitiesThreatsSettingsDto sWOTAnalysisOpportunitiesThreatsDto, ISWOTAnalysisOpportunitiesThreatsSettingsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 await service.SaveOrUpdateAsync(sWOTAnalysisOpportunitiesThreatsDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_sWOTAnalysisOpportunitiesThreats, cancellationToken);
@@ -29,7 +29,7 @@ namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
           .WithTags(_sWOTAnalysisOpportunitiesThreats)
           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisOpportunitiesThreatsPermission.Add));
 
-            app.MapGet("/", async (ISWOTAnalysisOpportunitiesThreatsService service, CancellationToken cancellationToken) =>
+            app.MapGet("/", async (ISWOTAnalysisOpportunitiesThreatsSettingsService service, CancellationToken cancellationToken) =>
             {
                 var dto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(dto);
@@ -39,7 +39,7 @@ namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisOpportunitiesThreatsPermission.View));
 
 
-            app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisOpportunitiesThreatsDto sWOTAnalysisOpportunitiesThreatsDto, ISWOTAnalysisOpportunitiesThreatsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisOpportunitiesThreatsSettingsDto sWOTAnalysisOpportunitiesThreatsDto, ISWOTAnalysisOpportunitiesThreatsSettingsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 try
                 {
@@ -63,7 +63,7 @@ namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisOpportunitiesThreatsPermission.Edit));
 
 
-            app.MapGet("/page", async (int page, int pageSize, ISWOTAnalysisOpportunitiesThreatsService service, CancellationToken cancellationToken) =>
+            app.MapGet("/page", async (int page, int pageSize, ISWOTAnalysisOpportunitiesThreatsSettingsService service, CancellationToken cancellationToken) =>
             {
                 var paginatedSWOT = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedSWOT);
@@ -72,7 +72,7 @@ namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_sWOTAnalysisOpportunitiesThreats), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisOpportunitiesThreatsPermission.View));
 
-            app.MapDelete("/{id:int}", async (int id, ISWOTAnalysisOpportunitiesThreatsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapDelete("/{id:int}", async (int id, ISWOTAnalysisOpportunitiesThreatsSettingsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var result = await service.SoftDeleteAsync(id, cancellationToken);
 

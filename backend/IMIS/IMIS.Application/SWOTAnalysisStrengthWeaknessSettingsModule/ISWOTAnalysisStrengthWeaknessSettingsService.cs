@@ -4,7 +4,7 @@ using IMIS.Domain;
 
 namespace IMIS.Application.SWOTAnalysisStrengthWeaknessModule
 {
-    public interface ISWOTAnalysisStrengthWeaknessService : IService
+    public interface ISWOTAnalysisStrengthWeaknessSettingsService : IService
     {
         public Task<DtoPageList<SWOTAnalysisStrengthWeaknessDto, SWOTAnalysisStrengthWeakness, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<List<SWOTAnalysisStrengthWeaknessDto>?> GetAllAsync(CancellationToken cancellationToken);

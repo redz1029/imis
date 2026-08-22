@@ -237,8 +237,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IKraRoadmapKpiSequenceRepository, KraRoadmapKpiSequenceRepository>();
             services.AddScoped<IKraRoadmapKpiSequenceService, KraRoadmapKpiSequenceService>();
 
-            services.AddScoped<ISWOTAnalysisOpportunitiesThreatsRepository, SWOTAnalysisOpportunitiesThreatsRepository>();
-            services.AddScoped<ISWOTAnalysisOpportunitiesThreatsService, SWOTAnalysisOpportunitiesThreatsService>();
+            services.AddScoped<ISWOTAnalysisOpportunitiesThreatsSettingsRepository, SWOTAnalysisOpportunitiesThreatsSettingsRepository>();
+            services.AddScoped<ISWOTAnalysisOpportunitiesThreatsSettingsService, SWOTAnalysisOpportunitiesThreatsSettingsService>();
 
             services.AddScoped<ISWOTAnalysisStrengthWeaknessRepository, SWOTAnalysisStrengthWeaknessRepository>();
             services.AddScoped<ISWOTAnalysisStrengthWeaknessService, SWOTAnalysisStrengthWeaknessService>();

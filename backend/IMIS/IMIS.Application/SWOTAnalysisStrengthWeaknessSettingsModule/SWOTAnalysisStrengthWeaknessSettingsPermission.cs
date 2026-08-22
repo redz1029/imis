@@ -2,7 +2,7 @@
 
 namespace IMIS.Application.SWOTAnalysisStrengthWeaknessModule
 {
-    public class SWOTAnalysisStrengthWeaknessPermission : BaseOperationPermission
+    public class SWOTAnalysisStrengthWeaknessSettingsPermission : BaseOperationPermission
     {
         public override string ModuleName => "SWOTAnalysisStrengthWeakness";
 
