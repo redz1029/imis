@@ -1,5 +1,4 @@
-﻿using System.Reflection.Emit;
-using Base.Abstractions;
+﻿using Base.Abstractions;
 using Base.Auths;
 using Base.Utilities;
 using IMIS.Domain;
@@ -71,6 +70,8 @@ namespace IMIS.Persistence
         public DbSet<ImpactStrategicScoreCardMeasure> ImpactStrategicScoreCardMeasure { get; set; }
         public DbSet<ImpactStrategicScoreCardTarget> ImpactStrategicScoreCardTarget { get; set; }
         public DbSet<KraRoadmapKpiSequence> KraRoadmapKpiSequence { get; set; }
+        public DbSet<SWOTAnalysisStrengthWeakness> SWOTAnalysisStrengthWeakness { get; set; }
+        public DbSet<SWOTAnalysisOpportunitiesThreats> SWOTAnalysisOpportunitiesThreats { get; set; }
 
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }

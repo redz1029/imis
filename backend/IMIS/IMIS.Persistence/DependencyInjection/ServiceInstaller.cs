@@ -41,6 +41,8 @@ using IMIS.Application.StandardVersionModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Application.StrategyReviewPeriodModule;
 using IMIS.Application.SWOTAnalysisModule;
+using IMIS.Application.SWOTAnalysisOpportunitiesThreatsModule;
+using IMIS.Application.SWOTAnalysisStrengthWeaknessModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Persistence.AnnouncementModule;
@@ -87,6 +89,8 @@ using IMIS.Persistence.StandardVersionModule;
 using IMIS.Persistence.StrategyReviewModule;
 using IMIS.Persistence.StrategyReviewPeriodModule;
 using IMIS.Persistence.SWOTAnalysisModule;
+using IMIS.Persistence.SWOTAnalysisOpportunitiesThreatsModule;
+using IMIS.Persistence.SWOTAnalysisStrengthWeaknessModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
@@ -232,6 +236,12 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IKraRoadmapKpiSequenceRepository, KraRoadmapKpiSequenceRepository>();
             services.AddScoped<IKraRoadmapKpiSequenceService, KraRoadmapKpiSequenceService>();
+
+            services.AddScoped<ISWOTAnalysisOpportunitiesThreatsRepository, SWOTAnalysisOpportunitiesThreatsRepository>();
+            services.AddScoped<ISWOTAnalysisOpportunitiesThreatsService, SWOTAnalysisOpportunitiesThreatsService>();
+
+            services.AddScoped<ISWOTAnalysisStrengthWeaknessRepository, SWOTAnalysisStrengthWeaknessRepository>();
+            services.AddScoped<ISWOTAnalysisStrengthWeaknessService, SWOTAnalysisStrengthWeaknessService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();
