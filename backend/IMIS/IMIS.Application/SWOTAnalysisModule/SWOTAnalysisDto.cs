@@ -1,52 +1,57 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
 using IMIS.Domain;
+using IMIS.Application.SWOTAnalysisSWDeliverablesModule;
+using IMIS.Application.SWOTAnalysisOTDeliverablesModule;
 
 namespace IMIS.Application.SWOTAnalysisModule
 {
-    public class SWOTAnalysisDto : BaseDto<SWOTAnalysis, int>
+    public class SWOTAnalysisDto : BaseDto<SWOTAnalysis, long>
     {
-        public required string UserId { get; set; }
-        public string? Strengths { get; set; }
-        public string? Weaknesses { get; set; }
-        public string? Opportunities { get; set; }
-        public string? Threats { get; set; }
-        public string? LongTermDepartmentStrategicPlan { get; set; }
-        public string? ImmediateNeedsToAchieveVision { get; set; }
-        public string? DepartmentAchievementsAndBestPractices { get; set; }
+        public int? DepartmentId { get; set; }
+        public string? ObjectiveStatement { get; set; }
+        public required string DepartmentChairUserId { get; set; }
+        public required string QMRUserId { get; set; }
+        public required string ServiceHeadUserId { get; set; }
         public DateTime? PostingDate { get; set; }
+
+        public List<SWOTAnalysisSWDeliverablesDto>? SWOTAnalysisSWDeliverables { get; set; }
+        public List<SWOTAnalysisOTDeliverablesDto>? SWOTAnalysisOTDeliverables { get; set; }
 
         public SWOTAnalysisDto() { }
 
         [SetsRequiredMembers]
-        public SWOTAnalysisDto(SWOTAnalysis SWOTAnalysisDto)
+        public SWOTAnalysisDto(SWOTAnalysis swotAnalysis)
         {
-            this.Id = SWOTAnalysisDto.Id;
-            this.UserId = SWOTAnalysisDto.UserId;
-            this.Strengths = SWOTAnalysisDto.Strengths;
-            this.Weaknesses = SWOTAnalysisDto.Weaknesses;
-            this.Opportunities = SWOTAnalysisDto.Opportunities;
-            this.Threats = SWOTAnalysisDto.Threats;
-            this.LongTermDepartmentStrategicPlan = SWOTAnalysisDto.LongTermDepartmentStrategicPlan;
-            this.ImmediateNeedsToAchieveVision = SWOTAnalysisDto.ImmediateNeedsToAchieveVision;
-            this.DepartmentAchievementsAndBestPractices = SWOTAnalysisDto.DepartmentAchievementsAndBestPractices;
-            this.PostingDate = SWOTAnalysisDto.PostingDate;
+            this.Id = swotAnalysis.Id;
+            this.DepartmentId = swotAnalysis.DepartmentId;
+            this.ObjectiveStatement = swotAnalysis.ObjectiveStatement;
+            this.DepartmentChairUserId = swotAnalysis.DepartmentChairUserId;
+            this.QMRUserId = swotAnalysis.QMRUserId;
+            this.ServiceHeadUserId = swotAnalysis.ServiceHeadUserId;
+            this.PostingDate = swotAnalysis.PostingDate;
+
+            this.SWOTAnalysisSWDeliverables = swotAnalysis.SWOTAnalysisSWDeliverables?.Select(d => new SWOTAnalysisSWDeliverablesDto(d)).ToList();
+            this.SWOTAnalysisOTDeliverables = swotAnalysis.SWOTAnalysisOTDeliverables?.Select(d => new SWOTAnalysisOTDeliverablesDto(d)).ToList();
         }
 
         public override SWOTAnalysis ToEntity()
         {
-            return new SWOTAnalysis() 
+            return new SWOTAnalysis()
             {
                 Id = Id,
-                UserId = UserId,
-                Strengths = Strengths,
-                Weaknesses = Weaknesses,
-                Opportunities = Opportunities,
-                Threats = Threats,
+                DepartmentId = DepartmentId,
+                ObjectiveStatement = ObjectiveStatement,
+                DepartmentChairUserId = DepartmentChairUserId,
+                QMRUserId = QMRUserId,
+                ServiceHeadUserId = ServiceHeadUserId,
                 PostingDate = PostingDate,
-                LongTermDepartmentStrategicPlan = LongTermDepartmentStrategicPlan,
-                ImmediateNeedsToAchieveVision = ImmediateNeedsToAchieveVision,
-                DepartmentAchievementsAndBestPractices = DepartmentAchievementsAndBestPractices 
+                SWOTAnalysisSWDeliverables = SWOTAnalysisSWDeliverables?
+                    .Select(d => d.ToEntity())
+                    .ToList(),
+                SWOTAnalysisOTDeliverables = SWOTAnalysisOTDeliverables?
+                    .Select(d => d.ToEntity())
+                    .ToList()
             };
         }
     }

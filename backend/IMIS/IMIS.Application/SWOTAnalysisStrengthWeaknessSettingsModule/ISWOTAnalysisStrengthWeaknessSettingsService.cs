@@ -6,9 +6,9 @@ namespace IMIS.Application.SWOTAnalysisStrengthWeaknessModule
 {
     public interface ISWOTAnalysisStrengthWeaknessSettingsService : IService
     {
-        public Task<DtoPageList<SWOTAnalysisStrengthWeaknessDto, SWOTAnalysisStrengthWeakness, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
-        Task<List<SWOTAnalysisStrengthWeaknessDto>?> GetAllAsync(CancellationToken cancellationToken);
-        Task<SWOTAnalysisStrengthWeaknessDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        public Task<DtoPageList<SWOTAnalysisStrengthWeaknessSettingsDto, SWOTAnalysisStrengthWeaknessSettings, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        Task<List<SWOTAnalysisStrengthWeaknessSettingsDto>?> GetAllAsync(CancellationToken cancellationToken);
+        Task<SWOTAnalysisStrengthWeaknessSettingsDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

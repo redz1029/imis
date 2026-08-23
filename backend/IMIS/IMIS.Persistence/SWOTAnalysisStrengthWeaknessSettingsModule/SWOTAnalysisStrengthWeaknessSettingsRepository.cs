@@ -6,23 +6,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.SWOTAnalysisStrengthWeaknessModule
 {
-    public class SWOTAnalysisStrengthWeaknessRepository : BaseRepository<SWOTAnalysisStrengthWeakness, int, ImisDbContext, User>, ISWOTAnalysisStrengthWeaknessSettingsRepository
+    public class SWOTAnalysisStrengthWeaknessSettingsRepository : BaseRepository<SWOTAnalysisStrengthWeaknessSettings, int, ImisDbContext, User>, ISWOTAnalysisStrengthWeaknessSettingsRepository
     {
-        public SWOTAnalysisStrengthWeaknessRepository(ImisDbContext dbContext) : base(dbContext)
+        public SWOTAnalysisStrengthWeaknessSettingsRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
-        public async Task<SWOTAnalysisStrengthWeakness?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        public async Task<SWOTAnalysisStrengthWeaknessSettings?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
-            return await ReadOnlyDbContext.Set<SWOTAnalysisStrengthWeakness>()
+            return await ReadOnlyDbContext.Set<SWOTAnalysisStrengthWeaknessSettings>()
                 .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
-        public async Task<EntityPageList<SWOTAnalysisStrengthWeakness, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<EntityPageList<SWOTAnalysisStrengthWeaknessSettings, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
 
-            return await EntityPageList<SWOTAnalysisStrengthWeakness, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
+            return await EntityPageList<SWOTAnalysisStrengthWeaknessSettings, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
 
         }
-        public async Task<IEnumerable<SWOTAnalysisStrengthWeakness>> GetAll(CancellationToken cancellationToken)
+        public async Task<IEnumerable<SWOTAnalysisStrengthWeaknessSettings>> GetAll(CancellationToken cancellationToken)
         {
             return await _entities
             .AsNoTracking()

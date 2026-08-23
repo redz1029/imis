@@ -4,6 +4,6 @@ namespace IMIS.Domain
 {
     public class SWOTAnalysisOpportunitiesThreatsSettings : Entity<int>
     {
-        public string? InternalContext { get; set; }
+        public string? ExternalContext { get; set; }
     }
 }

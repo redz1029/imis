@@ -7,7 +7,7 @@ namespace IMIS.Application.SWOTAnalysisOpportunitiesThreatsModule
     public class SWOTAnalysisOpportunitiesThreatsSettingsDto : BaseDto<SWOTAnalysisOpportunitiesThreatsSettings, int>
     {
 
-        public string? InternalContext { get; set; }
+        public string? ExternalContext { get; set; }
 
 
         public SWOTAnalysisOpportunitiesThreatsSettingsDto() { }
@@ -16,11 +16,11 @@ namespace IMIS.Application.SWOTAnalysisOpportunitiesThreatsModule
         public SWOTAnalysisOpportunitiesThreatsSettingsDto(SWOTAnalysisOpportunitiesThreatsSettings entity)
         {
             this.Id = entity.Id;
-            this.InternalContext = entity.InternalContext;       
+            this.ExternalContext = entity.ExternalContext;       
         }
         public override SWOTAnalysisOpportunitiesThreatsSettings ToEntity()
         {
-            return new SWOTAnalysisOpportunitiesThreatsSettings() { Id = Id, InternalContext = InternalContext};
+            return new SWOTAnalysisOpportunitiesThreatsSettings() { Id = Id, ExternalContext = ExternalContext };
         }
     }
 }

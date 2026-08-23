@@ -4,7 +4,7 @@ using IMIS.Domain;
 
 namespace IMIS.Application.SWOTAnalysisStrengthWeaknessModule
 {
-    public class SWOTAnalysisStrengthWeaknessSettingsDto : BaseDto<SWOTAnalysisStrengthWeakness, int>
+    public class SWOTAnalysisStrengthWeaknessSettingsDto : BaseDto<SWOTAnalysisStrengthWeaknessSettings, int>
     {
 
         public string? InternalContext { get; set; }
@@ -13,14 +13,14 @@ namespace IMIS.Application.SWOTAnalysisStrengthWeaknessModule
         public SWOTAnalysisStrengthWeaknessSettingsDto() { }
 
         [SetsRequiredMembers]
-        public SWOTAnalysisStrengthWeaknessSettingsDto(SWOTAnalysisStrengthWeakness entity)
+        public SWOTAnalysisStrengthWeaknessSettingsDto(SWOTAnalysisStrengthWeaknessSettings entity)
         {
             this.Id = entity.Id;
             this.InternalContext = entity.InternalContext;
         }
-        public override SWOTAnalysisStrengthWeakness ToEntity()
+        public override SWOTAnalysisStrengthWeaknessSettings ToEntity()
         {
-            return new SWOTAnalysisStrengthWeakness() { Id = Id, InternalContext = InternalContext };
+            return new SWOTAnalysisStrengthWeaknessSettings() { Id = Id, InternalContext = InternalContext };
         
         }
     }
