@@ -94,8 +94,6 @@ namespace IMIS.Persistence.SWOTAnalysisModule
             return true;
         }
 
-        // ---------- Builders (Id == 0 => brand-new child) ----------
-
         private static SWOTAnalysis BuildNewEntity(SWOTAnalysisDto dto) => new()
         {
             Id = 0,
@@ -124,8 +122,6 @@ namespace IMIS.Persistence.SWOTAnalysisModule
             Opportunities = dto.Opportunities,
             Threats = dto.Threats
         };
-
-        // ---------- Diff-and-update helpers (para sa existing record) ----------
 
         private void UpdateSWDeliverables(SWOTAnalysis existing, List<SWOTAnalysisSWDeliverablesDto>? incoming)
         {
@@ -186,9 +182,6 @@ namespace IMIS.Persistence.SWOTAnalysisModule
                 match.IsDeleted = false;
             }
         }
-
-        // ---------- Save / Update (strongly-typed, same pattern as ImpactStrategicGoalScoreCardService) ----------
-
         public async Task<SWOTAnalysisDto> SaveOrUpdateAsync(SWOTAnalysisDto dto, CancellationToken cancellationToken)
         {
             SWOTAnalysis entity;
@@ -218,8 +211,6 @@ namespace IMIS.Persistence.SWOTAnalysisModule
             return new SWOTAnalysisDto(entity);
         }
 
-        // ---------- Generic interface implementation (dito na-de-delegate) ----------
-
         public Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             if (dto is SWOTAnalysisDto swotDto)
@@ -229,8 +220,6 @@ namespace IMIS.Persistence.SWOTAnalysisModule
 
             throw new NotImplementedException($"SaveOrUpdateAsync is not implemented for DTO: {dto.GetType().Name}");
         }
-
-        // ---------- Helpers ----------
 
         private async Task<bool> IsElevatedUserAsync(User user)
         {

@@ -1,6 +1,5 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
-using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.SWOTAnalysisOpportunitiesThreatsModule;
 using IMIS.Domain;
 

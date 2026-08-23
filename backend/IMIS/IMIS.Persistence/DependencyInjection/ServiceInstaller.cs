@@ -240,8 +240,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<ISWOTAnalysisOpportunitiesThreatsSettingsRepository, SWOTAnalysisOpportunitiesThreatsSettingsRepository>();
             services.AddScoped<ISWOTAnalysisOpportunitiesThreatsSettingsService, SWOTAnalysisOpportunitiesThreatsSettingsService>();
 
-            services.AddScoped<ISWOTAnalysisStrengthWeaknessRepository, SWOTAnalysisStrengthWeaknessRepository>();
-            services.AddScoped<ISWOTAnalysisStrengthWeaknessService, SWOTAnalysisStrengthWeaknessService>();
+            services.AddScoped<ISWOTAnalysisStrengthWeaknessSettingsRepository, SWOTAnalysisStrengthWeaknessSettingsRepository>();
+            services.AddScoped<ISWOTAnalysisStrengthWeaknessSettingsService, SWOTAnalysisStrengthWeaknessSettingsService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

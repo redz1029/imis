@@ -25,16 +25,16 @@ namespace IMIS.Presentation.SWOTAnalysisModule
                 await cache.EvictByTagAsync(_swotAnalysisTag, cancellationToken);
                 return Results.Ok(swotAnalysisDto);
             })
-           .WithTags(_swotAnalysisTag);
-            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.Add));
+           .WithTags(_swotAnalysisTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.Add));
 
             app.MapGet("userId/{userId}", async (string userId, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
                 return result != null ? Results.Ok(result) : Results.NotFound();
             })
-            .WithTags(_swotAnalysisTag).CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true);
-            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
+            .WithTags(_swotAnalysisTag).CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
 
             app.MapGet("/{id}", async (int id, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
             {
@@ -42,8 +42,8 @@ namespace IMIS.Presentation.SWOTAnalysisModule
                 return swotAnalysisDto != null ? Results.Ok(swotAnalysisDto) : Results.NotFound();
             })
             .WithTags(_swotAnalysisTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true);
-            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisDto swotAnalysisDto, ISWOTAnalysisService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -57,8 +57,8 @@ namespace IMIS.Presentation.SWOTAnalysisModule
                 return Results.Ok(swotAnalysisDto);
 
             })
-            .WithTags(_swotAnalysisTag);
-            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.Edit));
+            .WithTags(_swotAnalysisTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.Edit));
             
             app.MapGet("/filter/year", async (int? year, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
             {
