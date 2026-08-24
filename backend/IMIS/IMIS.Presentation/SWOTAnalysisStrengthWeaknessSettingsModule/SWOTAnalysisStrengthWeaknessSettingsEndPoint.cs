@@ -15,7 +15,6 @@ namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
     public class SWOTAnalysisStrengthWeaknessSettingsEndPoint : CarterModule
     {
         private const string _sWOTAnalysisStrengthWeakness = "SWOT Analysis Strength Weakness";
-        public readonly SWOTAnalysisStrengthWeaknessSettingsPermission _sWOTAnalysisStrengthWeaknessPermission = new();
         public SWOTAnalysisStrengthWeaknessSettingsEndPoint() : base("/SWOTAnalysisStrengthWeakness")
         {
         }
@@ -27,8 +26,7 @@ namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
                 await cache.EvictByTagAsync(_sWOTAnalysisStrengthWeakness, cancellationToken);
                 return Results.Ok(sWOTAnalysisStrengthWeaknessDto);
             })
-          .WithTags(_sWOTAnalysisStrengthWeakness)
-          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisStrengthWeaknessPermission.Add));
+          .WithTags(_sWOTAnalysisStrengthWeakness);
 
             app.MapGet("/", async (ISWOTAnalysisStrengthWeaknessSettingsService service, CancellationToken cancellationToken) =>
             {
@@ -36,8 +34,7 @@ namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
                 return Results.Ok(dto);
             })
           .WithTags(_sWOTAnalysisStrengthWeakness)
-          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_sWOTAnalysisStrengthWeakness), true)
-          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisStrengthWeaknessPermission.View));
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_sWOTAnalysisStrengthWeakness), true);
 
 
             app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisStrengthWeaknessSettingsDto sWOTAnalysisStrengthWeaknessDto, ISWOTAnalysisStrengthWeaknessSettingsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -60,8 +57,7 @@ namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
                     return Results.Conflict("The record was modified by another user. Please reload and try again.");
                 }
             })
-            .WithTags(_sWOTAnalysisStrengthWeakness)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisStrengthWeaknessPermission.Edit));
+            .WithTags(_sWOTAnalysisStrengthWeakness);
 
             app.MapGet("/page", async (int page, int pageSize, ISWOTAnalysisStrengthWeaknessSettingsService service, CancellationToken cancellationToken) =>
             {
@@ -69,8 +65,7 @@ namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
                 return Results.Ok(paginatedSWOT);
             })
             .WithTags(_sWOTAnalysisStrengthWeakness)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_sWOTAnalysisStrengthWeakness), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisStrengthWeaknessPermission.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_sWOTAnalysisStrengthWeakness), true);
 
             app.MapDelete("/{id:int}", async (int id, ISWOTAnalysisStrengthWeaknessSettingsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -81,8 +76,7 @@ namespace IMIS.Presentation.SWOTAnalysisStrengthWeaknessModule
                 return result ? Results.Ok(new { message = "SWOT deleted successfully." })
                               : Results.NotFound(new { message = "SWOT not found." });
             })
-            .WithTags(_sWOTAnalysisStrengthWeakness)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisStrengthWeaknessPermission.Delete));
+            .WithTags(_sWOTAnalysisStrengthWeakness);
         }
     }
 }

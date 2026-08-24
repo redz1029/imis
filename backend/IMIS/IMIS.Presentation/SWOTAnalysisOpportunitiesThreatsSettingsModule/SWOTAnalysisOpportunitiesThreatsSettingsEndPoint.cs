@@ -13,8 +13,7 @@ namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
 {
     public class SWOTAnalysisOpportunitiesThreatsSettingsEndPoint : CarterModule
     {
-        private const string _sWOTAnalysisOpportunitiesThreats = "SWOT Analysis Opportunities Threats";
-        public readonly SWOTAnalysisOpportunitiesThreatsSettingsPermission _sWOTAnalysisOpportunitiesThreatsPermission = new();
+        private const string _sWOTAnalysisOpportunitiesThreats = "SWOT Analysis Opportunities Threats";    
         public SWOTAnalysisOpportunitiesThreatsSettingsEndPoint() : base("/SWOTAnalysisOpportunitiesThreats")
         {
         }
@@ -26,8 +25,7 @@ namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
                 await cache.EvictByTagAsync(_sWOTAnalysisOpportunitiesThreats, cancellationToken);
                 return Results.Ok(sWOTAnalysisOpportunitiesThreatsDto);
             })
-          .WithTags(_sWOTAnalysisOpportunitiesThreats)
-          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisOpportunitiesThreatsPermission.Add));
+          .WithTags(_sWOTAnalysisOpportunitiesThreats);
 
             app.MapGet("/", async (ISWOTAnalysisOpportunitiesThreatsSettingsService service, CancellationToken cancellationToken) =>
             {
@@ -35,8 +33,7 @@ namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
                 return Results.Ok(dto);
             })
           .WithTags(_sWOTAnalysisOpportunitiesThreats)
-          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_sWOTAnalysisOpportunitiesThreats), true)
-          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisOpportunitiesThreatsPermission.View));
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_sWOTAnalysisOpportunitiesThreats), true);
 
 
             app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisOpportunitiesThreatsSettingsDto sWOTAnalysisOpportunitiesThreatsDto, ISWOTAnalysisOpportunitiesThreatsSettingsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -59,8 +56,7 @@ namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
                     return Results.Conflict("The record was modified by another user. Please reload and try again.");
                 }
             })
-            .WithTags(_sWOTAnalysisOpportunitiesThreats)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisOpportunitiesThreatsPermission.Edit));
+            .WithTags(_sWOTAnalysisOpportunitiesThreats);
 
 
             app.MapGet("/page", async (int page, int pageSize, ISWOTAnalysisOpportunitiesThreatsSettingsService service, CancellationToken cancellationToken) =>
@@ -69,8 +65,7 @@ namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
                 return Results.Ok(paginatedSWOT);
             })
             .WithTags(_sWOTAnalysisOpportunitiesThreats)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_sWOTAnalysisOpportunitiesThreats), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisOpportunitiesThreatsPermission.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_sWOTAnalysisOpportunitiesThreats), true);
 
             app.MapDelete("/{id:int}", async (int id, ISWOTAnalysisOpportunitiesThreatsSettingsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -81,8 +76,7 @@ namespace IMIS.Presentation.SWOTAnalysisOpportunitiesThreatsModule
                 return result ? Results.Ok(new { message = "SWOT deleted successfully." })
                               : Results.NotFound(new { message = "SWOT not found." });
             })
-            .WithTags(_sWOTAnalysisOpportunitiesThreats)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisOpportunitiesThreatsPermission.Delete));
+            .WithTags(_sWOTAnalysisOpportunitiesThreats);
         }
     }
 }
