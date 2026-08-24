@@ -31,27 +31,46 @@ namespace IMIS.Persistence.PGSModules
                .ToListAsync(cancellationToken)
                .ConfigureAwait(false);
         }
-        
-        public async Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter, List<int>? officeIds, CancellationToken cancellationToken)
+   
+        public async Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter,  List<int>? officeIds, CancellationToken cancellationToken)
         {
             var query = _entities
-            .Include(d => d.PerfomanceGovernanceSystem)
-            .ThenInclude(pgs => pgs!.Office)
-            .Include(d => d.PerfomanceGovernanceSystem)
-            .ThenInclude(pgs => pgs!.PgsPeriod)
-            .Include(d => d.Kra)
-            .Where(d => !d.IsDeleted);
+                .Include(d => d.PerfomanceGovernanceSystem)
+                    .ThenInclude(pgs => pgs!.Office)
+                .Include(d => d.PerfomanceGovernanceSystem)
+                    .ThenInclude(pgs => pgs!.PgsPeriod)
+                .Include(d => d.Kra)
+                .Where(d => !d.IsDeleted);
 
             if (filter.PgsPeriodId.HasValue)
             {
-                query = query.Where(d => d.PerfomanceGovernanceSystem!.PgsPeriod.Id == filter.PgsPeriodId.Value);
+                query = query.Where(d =>
+                    d.PerfomanceGovernanceSystem != null &&
+                    d.PerfomanceGovernanceSystem.PgsPeriod != null &&
+                    d.PerfomanceGovernanceSystem.PgsPeriod.Id ==
+                        filter.PgsPeriodId.Value);
             }
 
             if (filter.OfficeId.HasValue)
             {
-                query = query.Where(d => d.PerfomanceGovernanceSystem!.Office.Id == filter.OfficeId.Value);
+                query = query.Where(d =>
+                    d.PerfomanceGovernanceSystem != null &&
+                    (
+                        d.PerfomanceGovernanceSystem.Office.Id == filter.OfficeId.Value ||
+                        d.PerfomanceGovernanceSystem.Office.ParentOfficeId ==  filter.OfficeId.Value
+                    ));
             }
-
+         
+            if (filter.ServiceId.HasValue)
+            {
+                query = query.Where(d =>
+                    d.PerfomanceGovernanceSystem != null &&
+                    (
+                        d.PerfomanceGovernanceSystem.Office.Id ==  filter.ServiceId.Value ||
+                        d.PerfomanceGovernanceSystem.Office.ParentOfficeId == filter.ServiceId.Value
+                    ));
+            }
+            
             if (filter.IsDirect.HasValue)
             {
                 query = query.Where(d => d.IsDirect == filter.IsDirect.Value);
@@ -64,7 +83,15 @@ namespace IMIS.Persistence.PGSModules
 
             if (officeIds != null && officeIds.Any())
             {
-                query = query.Where(d => d.PerfomanceGovernanceSystem != null && officeIds.Contains(d.PerfomanceGovernanceSystem.Office.Id));
+                query = query.Where(d =>
+                    d.PerfomanceGovernanceSystem != null &&
+                    (
+                        officeIds.Contains(d.PerfomanceGovernanceSystem.Office.Id) ||
+                        (
+                            d.PerfomanceGovernanceSystem.Office.ParentOfficeId.HasValue &&
+                            officeIds.Contains(d.PerfomanceGovernanceSystem.Office.ParentOfficeId.Value)
+                        )
+                    ));
             }
 
             query = query.OrderByDescending(d => d.Id);

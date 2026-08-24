@@ -88,63 +88,77 @@ namespace IMIS.Persistence.PGSModules
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return await currentUserService!.GetCurrentUserAsync();
         }
-       
 
+
+       
         public async Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
 
             if (currentUser == null)
+            {
                 return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
+            }
 
             if (string.IsNullOrWhiteSpace(filter.RoleId))
+            {
                 return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
+            }
 
             var role = await _roleManager.FindByIdAsync(filter.RoleId);
 
             if (role == null)
+            {
                 return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
+            }
 
             if (!filter.PgsPeriodId.HasValue)
             {
-                var currentPeriodId = await _repository.GetCurrentYearPeriodIdAsync(DateTime.Now.Year,cancellationToken);
+                var currentPeriodId = await _repository.GetCurrentYearPeriodIdAsync(DateTime.Now.Year,  cancellationToken);
 
                 if (currentPeriodId == null)
+                {
                     return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
+                }
 
-                filter.PgsPeriodId = (int?)currentPeriodId;
+                filter.PgsPeriodId = (int)currentPeriodId;
             }
 
-            bool hasFullAccess =
-                role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+            var hasFullAccess = role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+
                 role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+
                 role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+
                 role.Name.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase) ||
+
                 role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+
                 role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+
                 role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+
                 role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase);
 
-            List<int>? officeIds = null;
+                List<int>? officeIds = null;
 
             if (!hasFullAccess)
             {
                 officeIds = await _repository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
 
-                if (!officeIds.Any())
+                if (officeIds == null || !officeIds.Any())
+                {
                     return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
+                }
             }
 
-            var filtered = await _repository.GetFilteredAsync(filter, officeIds, cancellationToken);
+            var filtered =  await _repository.GetFilteredAsync(filter, officeIds, cancellationToken);
 
             return PgsDeliverableMonitorPageList.Create(filtered.Items, filter.Page, filter.PageSize, filtered.TotalCount);
         }
-
-        public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(
-         PgsDeliverableMonitorPageList request,
-         IOutputCacheStore cache,
-         CancellationToken cancellationToken)
+        public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(PgsDeliverableMonitorPageList request,  IOutputCacheStore cache,  CancellationToken cancellationToken)
          {
             var updatedItems = new List<PgsDeliverableMonitorDto>();
             bool anyScoreChanged = false;
