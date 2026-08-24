@@ -409,6 +409,28 @@ namespace IMIS.Infrastructure.Auths
                 new ImpactStrategicGoalScoreCardPermission(),
                 new ImpactStrategicGoalScoreCardPeriodPermission());
 
+            await PermissionSeeder.SeedPermissionForRole<PgsEvaluatorRole, IdentityRole>(_roleManager,
+                new KeyResultAreaPermission(),
+                new PgsDeliverableAuditorPermission(),
+                new PgsPeriodPermission(),
+                new PgsSignatoryTemplatePermission(),
+                new PgsSummaryNarrativePermissions(),
+                new PerformanceGovernanceSystemPermission(),
+                new OfficePermission(),
+                new PgsDeliverableAccomplishmentPermission(),
+                new SWOTAnalysisPermission(),
+                new KraRoadMapPermission(),
+                new KraRoadMapPeriodPermission(),
+                new KraRoadMapAccomplishmentPermission(),
+                new KraRoadMapKpiAccomplishmentPermission(),
+                new OperationReviewProtocolPermission(),
+                new StrategyReviewPermission(), 
+                new PerformanceValidationToolPermission(),
+                new PerformanceValidationToolPeriodPermission(),
+                new CalendarActivityPermission(),
+                new ImpactStrategicGoalScoreCardPermission(),
+                new ImpactStrategicGoalScoreCardPeriodPermission());
+
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
                  _roleManager, _userManager, "castillano.mrb", "rama.emg");
