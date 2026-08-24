@@ -64,6 +64,11 @@ namespace IMIS.Persistence.SWOTAnalysisModule
             var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
             return entity != null ? new SWOTAnalysisDto(entity) : null;
         }
+        public async Task<ReportSWOTAnalysisDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
+            return entity != null ? new ReportSWOTAnalysisDto(entity) : null;
+        }
 
         public async Task<List<SWOTAnalysisDto>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
         {

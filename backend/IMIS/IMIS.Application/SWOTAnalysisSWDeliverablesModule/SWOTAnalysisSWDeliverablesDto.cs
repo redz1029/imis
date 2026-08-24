@@ -8,20 +8,21 @@ namespace IMIS.Application.SWOTAnalysisSWDeliverablesModule
     {
         public long? SWOTAnalysisId { get; set; }
         public int? InternalContextId { get; set; }
+        public string? InternalContext { get; set; }
         public string? Opportunities { get; set; }
         public string? Threats { get; set; }
 
         public SWOTAnalysisSWDeliverablesDto() { }
 
         [SetsRequiredMembers]
-        public SWOTAnalysisSWDeliverablesDto(SWOTAnalysisSWDeliverables SWOTAnalysisDto)
+        public SWOTAnalysisSWDeliverablesDto(SWOTAnalysisSWDeliverables entity)
         {
-            this.Id = SWOTAnalysisDto.Id;
-            this.SWOTAnalysisId = SWOTAnalysisDto.SWOTAnalysisId;
-            this.InternalContextId = SWOTAnalysisDto.InternalContextId;
-            this.Opportunities = SWOTAnalysisDto.Opportunities;
-            this.Threats = SWOTAnalysisDto.Threats;
-            this.Threats = SWOTAnalysisDto.Threats;
+            this.Id = entity.Id;
+            this.SWOTAnalysisId = entity.SWOTAnalysisId;
+            this.InternalContextId = entity.InternalContextId;
+            this.InternalContext = entity.InternalContext?.InternalContext;
+            this.Opportunities = entity.Opportunities;
+            this.Threats = entity.Threats;
         }
 
         public override SWOTAnalysisSWDeliverables ToEntity()

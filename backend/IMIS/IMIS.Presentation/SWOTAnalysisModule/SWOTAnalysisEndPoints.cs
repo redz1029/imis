@@ -45,6 +45,15 @@ namespace IMIS.Presentation.SWOTAnalysisModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
 
+            app.MapGet("report-pdf/{id}", async (int id, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
+            {
+                var swotAnalysisDto = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                return swotAnalysisDto != null ? Results.Ok(swotAnalysisDto) : Results.NotFound();
+            })
+            .WithTags(_swotAnalysisTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
+
             app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisDto swotAnalysisDto, ISWOTAnalysisService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var existingPeriod = await service.GetByIdAsync(id, cancellationToken);

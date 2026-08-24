@@ -7,21 +7,22 @@ namespace IMIS.Application.SWOTAnalysisOTDeliverablesModule
     public class SWOTAnalysisOTDeliverablesDto : BaseDto<SWOTAnalysisOTDeliverables, long>
     {
         public long? SWOTAnalysisId { get; set; }
-        public int? ExternalContextId { get; set; }   
+        public int? ExternalContextId { get; set; }
+        public string? ExternalContext { get; set; }
         public string? Opportunities { get; set; }
         public string? Threats { get; set; }
 
         public SWOTAnalysisOTDeliverablesDto() { }
 
         [SetsRequiredMembers]
-        public SWOTAnalysisOTDeliverablesDto(SWOTAnalysisOTDeliverables SWOTAnalysisDto)
+        public SWOTAnalysisOTDeliverablesDto(SWOTAnalysisOTDeliverables entity)
         {
-            this.Id = SWOTAnalysisDto.Id;
-            this.SWOTAnalysisId = SWOTAnalysisDto.SWOTAnalysisId;
-            this.ExternalContextId = SWOTAnalysisDto.ExternalContextId;
-            this.Opportunities = SWOTAnalysisDto.Opportunities;
-            this.Threats = SWOTAnalysisDto.Threats;
-            this.Threats = SWOTAnalysisDto.Threats;     
+            this.Id = entity.Id;
+            this.SWOTAnalysisId = entity.SWOTAnalysisId;
+            this.ExternalContextId = entity.ExternalContextId;
+            this.ExternalContext = entity.ExternalContext?.ExternalContext;
+            this.Opportunities = entity.Opportunities;
+            this.Threats = entity.Threats;
         }
 
         public override SWOTAnalysisOTDeliverables ToEntity()
@@ -31,8 +32,8 @@ namespace IMIS.Application.SWOTAnalysisOTDeliverablesModule
                 Id = Id,
                 SWOTAnalysisId = SWOTAnalysisId,
                 ExternalContextId = ExternalContextId,
-                Opportunities = Opportunities,           
-                Threats = Threats,          
+                Opportunities = Opportunities,
+                Threats = Threats,
             };
         }
     }

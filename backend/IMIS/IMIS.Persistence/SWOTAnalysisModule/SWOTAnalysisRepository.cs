@@ -16,21 +16,28 @@ namespace IMIS.Persistence.SWOTAnalysisModule
         {
             var query = ReadOnlyDbContext.Set<SWOTAnalysis>()
                 .AsNoTracking()
+                .Include(s => s.DepartmentUser)
+                .Include(s => s.QMRUser)
+                .Include(s => s.ServiceHeadUser)
+                .Include(s => s.Department)
                 .Where(s => s.PostingDate.HasValue && s.PostingDate.Value.Year == year)
                 .OrderByDescending(s => s.PostingDate)
                 .Take(noOfResults);
 
-            var result = await query
-                .Select(s => new SWOTAnalysisDto(s))
-                .ToListAsync(cancellationToken);
-
+            var result = await query.Select(s => new SWOTAnalysisDto(s)).ToListAsync(cancellationToken);
             return result.Count > 0 ? result : null;
         }
         public async Task<SWOTAnalysis?> GetByIdWithChildrenAsync(int id, CancellationToken cancellationToken)
         {
-            return await _entities 
+            return await _entities
                 .Include(s => s.SWOTAnalysisSWDeliverables)
+                    .ThenInclude(d => d.InternalContext)
                 .Include(s => s.SWOTAnalysisOTDeliverables)
+                    .ThenInclude(d => d.ExternalContext)
+                .Include(s => s.DepartmentUser)
+                .Include(s => s.QMRUser)
+                .Include(s => s.ServiceHeadUser)
+                .Include(s => s.Department)
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         }
 
