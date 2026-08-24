@@ -150,6 +150,13 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     Name = new TWG().Name,
                     NormalizedName = "TWG",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e6041f",
+                    Name = new PgsEvaluatorRole().Name,
+                    NormalizedName = "EVALUATOR",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
                 }
         );
     }

@@ -13,13 +13,13 @@ namespace IMIS.Domain
         public List<SWOTAnalysisSWDeliverables>? SWOTAnalysisSWDeliverables { get; set; }
         public List<SWOTAnalysisOTDeliverables>? SWOTAnalysisOTDeliverables { get; set; }
 
-        public required string DepartmentChairUserId { get; set; }
+        public  string? DepartmentChairUserId { get; set; }
         [ForeignKey(nameof(DepartmentChairUserId))]
         public virtual User? DepartmentUser { get; set; }
-        public required string QMRUserId { get; set; }
+        public string? QMRUserId { get; set; }
         [ForeignKey(nameof(QMRUserId))]
         public virtual User? QMRUser { get; set; }
-        public required string ServiceHeadUserId { get; set; }
+        public string? ServiceHeadUserId { get; set; }
         [ForeignKey(nameof(ServiceHeadUserId))]
         public virtual User? ServiceHeadUser { get; set; }  
         public DateTime? PostingDate { get; set; }
