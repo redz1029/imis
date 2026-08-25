@@ -429,7 +429,8 @@ namespace IMIS.Infrastructure.Auths
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
-                new ImpactStrategicGoalScoreCardPeriodPermission());
+                new ImpactStrategicGoalScoreCardPeriodPermission(),
+                new BreakThroughScoringPermission());
 
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
