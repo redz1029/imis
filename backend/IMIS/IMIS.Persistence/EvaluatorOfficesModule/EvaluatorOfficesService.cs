@@ -86,6 +86,10 @@ namespace IMIS.Persistence.EvaluatorOfficesModule
             if (isPrivilegedUser)
             {
                 evaluatorOffices = await _repository.GetAllServicesAsync(cancellationToken).ConfigureAwait(false);
+
+                evaluatorOffices = evaluatorOffices
+                   .GroupBy(e => e.OfficeId)
+                   .Select(g => g.First());
             }
             else
             {
