@@ -5,6 +5,7 @@ using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.BreakThroughScoringModule;
 using IMIS.Application.CalendarActivityModule;
+using IMIS.Application.EvaluatorOfficesModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Application.IsoStandardModule;
@@ -52,6 +53,7 @@ using IMIS.Persistence.AuditorTeamsModule;
 using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.BreakThroughScoringModule;
 using IMIS.Persistence.CalendarActivityModule;
+using IMIS.Persistence.EvaluatorOfficesModule;
 using IMIS.Persistence.ImpactStrategicGoalScoreCardModule;
 using IMIS.Persistence.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Persistence.IsoStandardModule;
@@ -242,6 +244,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<ISWOTAnalysisStrengthWeaknessSettingsRepository, SWOTAnalysisStrengthWeaknessSettingsRepository>();
             services.AddScoped<ISWOTAnalysisStrengthWeaknessSettingsService, SWOTAnalysisStrengthWeaknessSettingsService>();
+
+            services.AddScoped<IEvaluatorOfficesRepository, EvaluatorOfficesRepository>();
+            services.AddScoped<IEvaluatorOfficesService, EvaluatorOfficesService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

@@ -9,6 +9,7 @@ namespace IMIS.Application.OfficeModule
         Task<EntityPageList<Office, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<IEnumerable<Office>?> GetAll(CancellationToken cancellationToken);
         Task<IEnumerable<Office>?> GetAllOfficeAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<Office>?> GetOfficeByEvalutorRoleAsync(int? parentOfficeId, CancellationToken cancellationToken);
         Task<IEnumerable<Office>?> GetAllSpecificServicesAsync(CancellationToken cancellationToken);
         Task<List<Office>> GetOfficesForAuditorAsync(string userId, CancellationToken cancellationToken);
         Task<List<int>> GetAuditorOfficeIdsAsync(string userId, CancellationToken cancellationToken);

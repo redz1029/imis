@@ -1,14 +1,17 @@
-﻿using Base.Auths.Permissions;
+﻿using System.Text.Json;
+using Base.Auths.Permissions;
 using Carter;
+using IMIS.Application.EvaluatorOfficesModule;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsModule;
+using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using System.Text.Json;
 
 namespace IMIS.Presentation.PGSModule
 {
@@ -106,6 +109,26 @@ namespace IMIS.Presentation.PGSModule
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAuditorPermission.Score, _pgsDeliverableAuditorPermission.View));
+         
+            app.MapGet("/allofficesbyEvalutorRole", async (int? parentOfficeId, IOfficeService service, CancellationToken cancellationToken) =>
+            {
+                var offices = await service.GetOfficeByEvalutorRoleAsync(parentOfficeId,  cancellationToken).ConfigureAwait(false);
+
+                return Results.Ok(offices);
+            })
+            .WithTags(_pgsTag).CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsTag), true);
+         
+            app.MapGet("officesbyServiceEvaluatorRole/", async (IEvaluatorOfficesService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetAllServicesAsync(cancellationToken).ConfigureAwait(false);
+
+                if (result == null || !result.Any())
+                    return Results.NotFound("No offices found.");
+
+                return Results.Ok(result);
+            })
+           .WithTags(_pgsTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsTag), true);
         }
     }
 }

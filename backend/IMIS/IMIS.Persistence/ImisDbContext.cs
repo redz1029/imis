@@ -72,6 +72,7 @@ namespace IMIS.Persistence
         public DbSet<KraRoadmapKpiSequence> KraRoadmapKpiSequence { get; set; }
         public DbSet<SWOTAnalysisStrengthWeaknessSettings> SWOTAnalysisStrengthWeaknessSettings { get; set; }
         public DbSet<SWOTAnalysisOpportunitiesThreatsSettings> SWOTAnalysisOpportunitiesThreatsSettings { get; set; }
+        public DbSet<EvaluatorOffices> EvaluatorOffices { get; set; }
 
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
