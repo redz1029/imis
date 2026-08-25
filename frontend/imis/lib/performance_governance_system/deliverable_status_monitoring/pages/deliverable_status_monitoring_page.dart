@@ -551,25 +551,31 @@ class _DeliverableStatusMonitoringPageState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.tune, size: 15, color: Colors.grey.shade600),
-            const SizedBox(width: 6),
-            Text(
-              "Filter by",
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+            Expanded(
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _buildOfficeFilter(),
+                  _buildPeriodFilter(),
+                  _buildKraFilter(),
+                  _buildTypeFilter(),
+                  _buildScoreRangeFilter(),
+                  _buildPageFilter(),
+                ],
               ),
             ),
-            const Spacer(),
-            if (_hasActiveFilters)
+            const SizedBox(width: 10),
+            if (_hasActiveFilters) ...[
+              const SizedBox(width: 10),
               TextButton.icon(
                 onPressed: _resetFilters,
-                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+                icon: Icon(Icons.refresh, size: 13, color: Colors.red.shade400),
                 label: Text(
                   'Clear filters',
-                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+                  style: TextStyle(fontSize: 11, color: Colors.red.shade400),
                 ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
@@ -578,19 +584,7 @@ class _DeliverableStatusMonitoringPageState
                   ),
                 ),
               ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            _buildOfficeFilter(),
-            _buildPeriodFilter(),
-            _buildKraFilter(),
-            _buildTypeFilter(),
-            _buildScoreRangeFilter(),
-            _buildPageFilter(),
+            ],
           ],
         ),
       ],

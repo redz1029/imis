@@ -166,7 +166,22 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
       pgsPeriodList = periods;
       _isLoading = false;
     });
-    await fetchPerformanceValidation();
+    _applyDefaultActivePeriod();
+  }
+
+  void _applyDefaultActivePeriod() {
+    final activePeriod =
+        pgsPeriodList
+            .where((p) => !p.isDeleted && p.isActive == true)
+            .firstOrNull;
+
+    if (activePeriod != null) {
+      setState(() {
+        _selectedPeriodId = activePeriod.id.toString();
+      });
+    }
+
+    fetchFilter();
   }
 
   @override

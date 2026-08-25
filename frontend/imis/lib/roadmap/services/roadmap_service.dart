@@ -127,7 +127,7 @@ class RoadmapService {
   Future<List<RoadmapKpiSequence>> getRoadmapSequence() async {
     final response = await AuthenticatedRequest.get(
       dio,
-      ApiEndpoint().kraRoadmapKPISequence, // GET /KraRoadmapKPISequence, no id
+      ApiEndpoint().kraRoadmapKPISequence,
     );
     return (response.data as List)
         .map((e) => RoadmapKpiSequence.fromJson(e))
