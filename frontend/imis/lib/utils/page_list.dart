@@ -1,3 +1,5 @@
+import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart';
+
 class PageList<T> {
   List<T> items;
   int page;
@@ -32,4 +34,9 @@ class PageList<T> {
       json['hasPreviousPage'] as bool,
     );
   }
-}
+
+//   map(AuditorTeamDto Function(json) param0) {}
+
+@override
+  Iterator<T> get itera0tor => items.iterator;
+ }

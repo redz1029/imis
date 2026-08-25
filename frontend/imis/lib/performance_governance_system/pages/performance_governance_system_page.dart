@@ -3565,7 +3565,7 @@ class PerformanceGovernanceSystemPageState
         ? 'Please select either Direct or Indirect.'
         : null;
 
-    bool hasDisapprovePermission = permissionService.hasPermission(
+    permissionService.hasPermission(
       AppPermissions.disapprovePerformanceGovernanceSystem,
     );
     Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;
@@ -4700,37 +4700,6 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildDropdownKraCellPGSDeliverableStatus(
-    int index,
-    String? id,
-    Function setDialogState,
-    int orderLevel,
-  ) {
-    if (!kraDescriptionController.containsKey(index)) {
-      kraDescriptionController[index] = TextEditingController();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Tooltip(
-            message:
-                'Enter a short description of what this KRA focuses on achieving.',
-            child: TextFormField(
-              readOnly: id != null && orderLevel >= 1,
-              controller: kraDescriptionController[index],
-              decoration: const InputDecoration(
-                hintText: "Enter your description here...",
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildKraDescriptionStatus(
     int index,
@@ -4864,42 +4833,6 @@ class PerformanceGovernanceSystemPageState
   // End-----------------------PGS Deliverable Status---------------------
 
   //Start------------Pgs Deliverables Status----------------------------------------------
-  Widget _buildExpandableTextAreaCellPGSDeliverable(
-    int index,
-    String? id,
-    int orderLevel,
-    Function setDialogState,
-  ) {
-    if (!deliverablesControllers.containsKey(index)) {
-      deliverablesControllers[index] = TextEditingController();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 50.0),
-        child: Tooltip(
-          message:
-              'Specify the tangible results or outcomes tied to this responsibility.',
-          child: TextFormField(
-            readOnly: id != null && orderLevel >= 1,
-            controller: deliverablesControllers[index],
-            maxLines: null,
-            keyboardType: TextInputType.multiline,
-            style: TextStyle(fontSize: 14.0),
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.all(8.0),
-            ),
-            onChanged: (value) {
-              deliverableUserEdited[index] = true;
-              setState(() {});
-            },
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildExpandableTextAreaCelStatus(
     int index,

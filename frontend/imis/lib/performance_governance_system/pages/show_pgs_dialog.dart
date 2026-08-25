@@ -1062,7 +1062,7 @@ class _ScoreDropdown extends StatelessWidget {
                 descriptions.length,
                 (i) => DropdownMenuItem(
                   value: i * 0.5,
-                  child: Text('${(i * 0.5).toStringAsFixed(1)}'),
+                  child: Text((i * 0.5).toStringAsFixed(1)),
                 ),
               ),
             ),

@@ -26,16 +26,9 @@ void showAuditDialog(BuildContext context) {
   List<List<ProcessItem>> dayProcesses = [];
   final commonService = CommonService(Dio());
 
-  Map<String, List<String>> teams = {
-    "Team 1": ["Alice", "Bob", "Charlie"],
-    "Team 2": ["David", "Eva"],
-    "Team 3": ["Frank", "Grace"],
-  };
   List<User> userList = [];
-  bool isLoadingUsers = false;
-  String? selectedUserId;
   List<User> selectedUsers = [];
-  bool hasFetchedUsers = false; //
+//
   List<String> clauseTitles = [
     "5.1 Leadership and commitment",
     "5.2 Policy",
@@ -45,9 +38,6 @@ void showAuditDialog(BuildContext context) {
   List<Team> teamList = [];
 
   bool hasFetchedData = false;
-  bool isLoading = false;
-  List<AuditorTeam> selectedTeams = [];
-  AuditorTeam? selectedTeam;
   String getTeamName(int teamId, List<Team> teamList) {
     final team = teamList.firstWhere(
       (t) => t.id == teamId,
@@ -87,7 +77,6 @@ void showAuditDialog(BuildContext context) {
           }
 
           if (!hasFetchedData) {
-            isLoading = true;
 
             Future.wait([
               commonService.fetchUsers(),
@@ -100,7 +89,6 @@ void showAuditDialog(BuildContext context) {
                 teamList = values[2] as List<Team>;
 
                 hasFetchedData = true;
-                isLoading = false;
               });
             });
           }

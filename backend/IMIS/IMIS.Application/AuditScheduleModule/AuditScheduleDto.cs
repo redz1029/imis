@@ -1,24 +1,21 @@
 ﻿using Base.Primitives;
-using IMIS.Application.AuditableOfficesModule;
-using IMIS.Application.AuditorTeamsModule;
 using IMIS.Domain;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace IMIS.Application.AuditScheduleModule
 {
     public class AuditScheduleDto : BaseDto<AuditSchedule, int>
     {
         public required string Purpose { get; set; }
+        public required AuditorTeams? AuditorTeams { get; set; }
         public required string AuditTitle { get; set; }
         public required bool IsActive { get; set; }
 
-        // Navigation DTOs
-        public AuditorTeamsDto? AuditorTeams { get; set; }
-        public List<AuditableOfficesDto>? AuditableOffices { get; set; }
-        public List<AuditScheduleDetailsDto>? AuditScheduleDetails { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+
+        public int AuditPlanId { get; set; }
 
         public AuditScheduleDto() { }
 
@@ -27,21 +24,12 @@ namespace IMIS.Application.AuditScheduleModule
         {
             this.Id = entity.Id;
             this.Purpose = entity.Purpose;
+            this.AuditorTeams = entity.AuditorTeams;
             this.AuditTitle = entity.AuditTitle;
             this.IsActive = entity.IsActive;
-
-            this.AuditorTeams = entity.AuditorTeams != null
-                ? new AuditorTeamsDto(entity.AuditorTeams)
-                : null;
-
-            this.AuditableOffices = entity.AuditableOffices != null
-                ? entity.AuditableOffices.Select(x => new AuditableOfficesDto(x)).ToList()
-                : new List<AuditableOfficesDto>();
-
-            this.AuditScheduleDetails = entity.AuditSchduleDetails != null
-                ? entity.AuditSchduleDetails.Select(x => new AuditScheduleDetailsDto(x)).ToList()
-                : new List<AuditScheduleDetailsDto>();
-
+            this.StartDate = entity.StartDate;
+            this.EndDate = entity.EndDate;
+            this.AuditPlanId = entity.AuditPlanId;
             this.RowVersion = entity.RowVersion;
         }
 
@@ -51,14 +39,12 @@ namespace IMIS.Application.AuditScheduleModule
             {
                 Id = this.Id,
                 Purpose = this.Purpose,
+                AuditorTeams = this.AuditorTeams,
                 AuditTitle = this.AuditTitle,
                 IsActive = this.IsActive,
-
-                AuditorTeams = this.AuditorTeams?.ToEntity(),
-
-                AuditableOffices = this.AuditableOffices?.Select(x => x.ToEntity()).ToList(),
-                AuditSchduleDetails = this.AuditScheduleDetails?.Select(x => x.ToEntity()).ToList(),
-
+                StartDate = this.StartDate,
+                EndDate = this.EndDate,
+                AuditPlanId = this.AuditPlanId,
                 RowVersion = this.RowVersion
             };
         }

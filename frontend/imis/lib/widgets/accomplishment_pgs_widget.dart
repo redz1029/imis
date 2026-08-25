@@ -189,7 +189,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
               valueListenable: selectedStatus,
               builder: (context, status, _) {
                 return DropdownButtonFormField<PgsStatus>(
-                  value: status,
+                  initialValue: status,
                   onChanged: (PgsStatus? newValue) {
                     if (newValue != null) {
                       selectedStatus.value = newValue;

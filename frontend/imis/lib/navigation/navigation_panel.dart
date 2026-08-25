@@ -3,11 +3,14 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
+// ignore: deprecated_member_use
 import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
+import 'package:imis/audit/audit_programme/pages/audit_programme_page.dart';
 import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart';
+import 'package:imis/audit/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/pages/deliverable_status_monitoring_page.dart';
@@ -21,7 +24,6 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
-import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
 import 'package:imis/iso_standard/page/iso_standard_page.dart';
@@ -36,7 +38,7 @@ import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/navigation_screen_factory.dart';
+// import 'package:imis/utils/navigation_screen_factory.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/circle_text_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
@@ -113,10 +115,10 @@ class NavigationPanelState extends State<NavigationPanel> {
         selectedRole = savedRole;
         if (widget.initialScreenIndex != null) {
           _selectedIndex = widget.initialScreenIndex!;
-          _selectedScreen = NavigationScreenFactory.getScreenByIndex(
-            _selectedIndex,
-            selectedRole!,
-          );
+          // _selectedScreen = NavigationScreenFactory.getScreenByIndex(
+          //   _selectedIndex,
+          //   selectedRole!,
+          // );
         }
       });
     } else {
@@ -137,12 +139,12 @@ class NavigationPanelState extends State<NavigationPanel> {
 
         setState(() => selectedRole = singleRole);
 
-        if (_selectedIndex != -1 && mounted) {
-          _selectedScreen = NavigationScreenFactory.getScreenByIndex(
-            _selectedIndex,
-            selectedRole!,
-          );
-        }
+        // if (_selectedIndex != -1 && mounted) {
+        //   _selectedScreen = NavigationScreenFactory.getScreenByIndex(
+        //     _selectedIndex,
+        //     selectedRole!,
+        //   );
+        // }
 
         if (homePageKey.currentState != null) {
           await homePageKey.currentState!.refreshUserRoles();
@@ -854,7 +856,21 @@ class NavigationPanelState extends State<NavigationPanel> {
                     26,
                     () => _setScreen(AuditPlanPage(), 26),
                   ),
+                  _buildListTile(
+                    Icons.event_note_outlined,
 
+                    'Create Audit Programme',
+
+                    29,
+                    () => _setScreen(AuditProgrammePage(), 29),
+                  ),
+                  _buildListTile(
+                                        Icons.event_note_outlined,
+                                        'Audit Schedules',
+                                        30,
+                                        () =>
+                                            _setScreen(AuditSchedulePage(), 30),
+                                      ),
                   PermissionWidget(
                     child: (selectedRole == PermissionString.roleAdmin)
                         ? Theme(
@@ -886,14 +902,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                                         () =>
                                             _setScreen(AnnouncementPage(), 22),
                                       ),
-                                      _buildListTile(
-                                        Icons.date_range,
-                                        hideIcon: true,
-                                        'Audit Schedules',
-                                        4,
-                                        () =>
-                                            _setScreen(AuditSchedulesPage(), 4),
-                                      ),
+                                      
                                       _buildListTile(
                                         Icons.date_range,
                                         hideIcon: true,
@@ -1140,10 +1149,10 @@ class NavigationPanelState extends State<NavigationPanel> {
         if (mounted) {
           setState(() {
             _selectedIndex = args;
-            _selectedScreen = NavigationScreenFactory.getScreenByIndex(
-              _selectedIndex,
-              selectedRole!,
-            );
+            // _selectedScreen = NavigationScreenFactory.getScreenByIndex(
+            //   _selectedIndex,
+            //   selectedRole!,
+            // );
           });
         }
       });

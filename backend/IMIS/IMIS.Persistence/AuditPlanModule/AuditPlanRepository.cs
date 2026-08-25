@@ -14,20 +14,18 @@ namespace IMIS.Persistence.AuditPlanModule
     {
         public AuditPlanRepository(ImisDbContext dbContext) : base(dbContext) { }
 
-        // --- Main entity retrieval ---
         public override async Task<AuditPlan?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            // Fix: Replaced ReadOnlyDbContext with GetDbContext() to ensure EF monitors changes for updates
             return await GetDbContext().Set<AuditPlan>()
                 .Include(x => x.Preparer)
                 .Include(x => x.Entries)
                 .Include(x => x.Approvals)
+                .Include(x => x.AuditSchedules) // Fix: load schedules so date sync has something to write to
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
         public async Task<AuditPlan?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
-            // Fix: Replaced ReadOnlyDbContext with GetDbContext() to properly map deep child nested graphs
             return await GetDbContext().Set<AuditPlan>()
                 .Include(x => x.Preparer)
                 .Include(x => x.Entries)
@@ -41,12 +39,12 @@ namespace IMIS.Persistence.AuditPlanModule
                 .Include(x => x.Entries)
                     .ThenInclude(e => e.AuditPlanProcesses)
                 .Include(x => x.Approvals)
+                .Include(x => x.AuditSchedules) // Fix: needed for the add/update/remove sync in the service layer
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
         public async Task<AuditPlan?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
-            // Fix: Using the write context to ensure status flag tracking changes are persisted seamlessly
             return await GetDbContext().Set<AuditPlan>()
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
@@ -54,10 +52,11 @@ namespace IMIS.Persistence.AuditPlanModule
         public async Task<IEnumerable<AuditPlan>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _entities
-                .AsNoTracking() // Safe for read-only bulk list screens
+                .AsNoTracking()
                 .Include(x => x.Preparer)
                 .Include(x => x.Entries)
                 .Include(x => x.Approvals)
+                .Include(x => x.AuditSchedules) // Fix: list screens can now show schedule counts/dates
                 .ToListAsync(cancellationToken);
         }
 
@@ -68,7 +67,6 @@ namespace IMIS.Persistence.AuditPlanModule
                 .ConfigureAwait(false);
         }
 
-        // --- Child helpers ---
         public async Task<List<int>> GetExistingAuditPlanEntryIdsAsync(int auditPlanId, CancellationToken cancellationToken)
         {
             return await GetDbContext().Set<AuditPlanEntry>()
@@ -89,8 +87,6 @@ namespace IMIS.Persistence.AuditPlanModule
         {
             var context = GetDbContext();
             await context.Set<AuditPlanEntry>().AddRangeAsync(entries, cancellationToken);
-            // Note: SaveChangesAsync is usually dropped here if handled globally by your Service/UnitOfWork layer, 
-            // but keeping it explicit matching your old codebase framework structure.
             await context.SaveChangesAsync(cancellationToken);
         }
 
@@ -101,7 +97,6 @@ namespace IMIS.Persistence.AuditPlanModule
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        // Fix: Added explicit collection removal syncing helpers to clear orphan nodes on application updates
         public void RemoveAuditPlanEntries(List<AuditPlanEntry> entries)
         {
             if (entries == null || !entries.Any()) return;

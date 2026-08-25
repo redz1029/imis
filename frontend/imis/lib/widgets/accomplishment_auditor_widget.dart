@@ -265,7 +265,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                   valueListenable: selectedStatus,
                   builder: (context, status, _) {
                     return DropdownButtonFormField<PgsStatus>(
-                      value: status,
+                      initialValue: status,
 
                       onChanged: (PgsStatus? newValue) {
                         if (newValue != null) {

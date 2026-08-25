@@ -13,8 +13,8 @@ Roadmap _$RoadmapFromJson(Map<String, dynamic> json) => Roadmap(
   json['kraRoadMapPeriod'] == null
       ? null
       : KraRoadmapPeriod.fromJson(
-        json['kraRoadMapPeriod'] as Map<String, dynamic>,
-      ),
+          json['kraRoadMapPeriod'] as Map<String, dynamic>,
+        ),
   (json['deliverables'] as List<dynamic>?)
       ?.map((e) => DeliverableGroup.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -22,10 +22,9 @@ Roadmap _$RoadmapFromJson(Map<String, dynamic> json) => Roadmap(
       ?.map((e) => KpiRoadmap.fromJson(e as Map<String, dynamic>))
       .toList(),
   json['roleId'] as String,
-  kra:
-      json['kra'] == null
-          ? null
-          : KeyResultArea.fromJson(json['kra'] as Map<String, dynamic>),
+  kra: json['kra'] == null
+      ? null
+      : KeyResultArea.fromJson(json['kra'] as Map<String, dynamic>),
   rowVersion: json['rowVersion'] as String?,
   isDeleted: json['isDeleted'] as bool?,
 );

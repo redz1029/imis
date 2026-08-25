@@ -10,10 +10,9 @@ UserPermission _$UserPermissionFromJson(Map<String, dynamic> json) =>
     UserPermission(
       id: json['id'] as String,
       userName: json['userName'] as String,
-      permissions:
-          (json['permissions'] as List<dynamic>)
-              .map((e) => e as String)
-              .toList(),
+      permissions: (json['permissions'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
     );
 
 Map<String, dynamic> _$UserPermissionToJson(UserPermission instance) =>

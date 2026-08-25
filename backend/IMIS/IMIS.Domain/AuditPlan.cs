@@ -1,6 +1,7 @@
 using Base.Primitives;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace IMIS.Domain
 {
@@ -20,13 +21,24 @@ namespace IMIS.Domain
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? LastModifiedDate { get; set; }
 
-        // Fix: Explicit Foreign Key pointing back to the parent Audit Programme
         public int AuditProgrammeId { get; set; }
         public AuditProgramme? AuditProgramme { get; set; }
 
-        // Navigation properties
-        // Fix: Initialize collections to avoid NullReferenceExceptions during mapping steps
         public ICollection<AuditPlanEntry> Entries { get; set; } = new List<AuditPlanEntry>();
         public ICollection<AuditPlanApproval> Approvals { get; set; } = new List<AuditPlanApproval>();
+
+        // Fix: schedules that belong to this plan
+        public ICollection<AuditSchedule> AuditSchedules { get; set; } = new List<AuditSchedule>();
+
+        // Fix: pushes this plan's date range onto every linked schedule.
+        // Call this in the save flow before SaveChangesAsync.
+        public void SyncScheduleDates()
+        {
+            foreach (var schedule in AuditSchedules)
+            {
+                schedule.StartDate = StartDate;
+                schedule.EndDate = EndDate;
+            }
+        }
     }
 }

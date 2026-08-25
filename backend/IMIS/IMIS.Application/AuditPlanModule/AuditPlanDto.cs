@@ -1,6 +1,7 @@
 using Base.Primitives;
 using IMIS.Application.AuditPlanEntryModule;
 using IMIS.Application.AuditPlanApprovalModule;
+using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.IsoAuditorModule;
 using IMIS.Domain;
 using System;
@@ -14,15 +15,11 @@ namespace IMIS.Application.AuditPlanModule
 {
     public class AuditPlanDto : BaseDto<AuditPlan, int>
     {
-
         public required DateTime StartDate { get; set; }
         public required DateTime EndDate { get; set; }
 
-        // Keep the primitive foreign key property for API payload binding
         public int AuditProgrammeId { get; set; }
 
-        // FIX: The crucial attribute to prevent the serializer from entering an infinite loop.
-        // This completely hides the parent back-reference path from the JSON serializer engine and Swagger.
         [JsonIgnore]
         public AuditProgrammeDto? AuditProgramme { get; set; }
 
@@ -34,9 +31,11 @@ namespace IMIS.Application.AuditPlanModule
         public DateTime CreatedDate { get; set; }
         public DateTime? LastModifiedDate { get; set; }
 
-        // Navigation DTOs
         public List<AuditPlanEntryDto> Entries { get; set; } = new();
         public List<AuditPlanApprovalDto> Approvals { get; set; } = new();
+
+        // Fix: schedules linked to this plan, kept in date-sync via AuditPlan.SyncScheduleDates()
+        public List<AuditScheduleDto> AuditSchedules { get; set; } = new();
 
         public AuditPlanDto() { }
 
@@ -50,10 +49,8 @@ namespace IMIS.Application.AuditPlanModule
             this.CreatedDate = entity.CreatedDate;
             this.LastModifiedDate = entity.LastModifiedDate;
 
-            // Map the Parent ID connection safely
             this.AuditProgrammeId = entity.AuditProgrammeId;
 
-            // Map the IsoAuditor relation safely. If it has an Id, we sync it to our DTO's PreparerId property.
             if (entity.Preparer != null)
             {
                 this.Preparer = new IsoAuditorDto(entity.Preparer);
@@ -73,6 +70,10 @@ namespace IMIS.Application.AuditPlanModule
                 ? entity.Approvals.Select(x => new AuditPlanApprovalDto(x)).ToList()
                 : new List<AuditPlanApprovalDto>();
 
+            this.AuditSchedules = entity.AuditSchedules != null
+                ? entity.AuditSchedules.Select(x => new AuditScheduleDto(x)).ToList()
+                : new List<AuditScheduleDto>();
+
             this.RowVersion = entity.RowVersion;
         }
 
@@ -89,11 +90,11 @@ namespace IMIS.Application.AuditPlanModule
 
                 AuditProgrammeId = this.AuditProgrammeId,
 
-                // Entity framework will manage the foreign key association via the navigation object reference
                 Preparer = this.Preparer?.ToEntity(),
 
                 Entries = this.Entries?.Select(x => x.ToEntity()).ToList() ?? new List<AuditPlanEntry>(),
                 Approvals = this.Approvals?.Select(x => x.ToEntity()).ToList() ?? new List<AuditPlanApproval>(),
+                AuditSchedules = this.AuditSchedules?.Select(x => x.ToEntity()).ToList() ?? new List<AuditSchedule>(),
 
                 RowVersion = this.RowVersion
             };

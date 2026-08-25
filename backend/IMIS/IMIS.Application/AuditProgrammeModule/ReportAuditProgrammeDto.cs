@@ -98,8 +98,20 @@ namespace IMIS.Application.AuditProgrammeModule
                             }
                             else if (entry.AuditPlanProcesses != null && entry.AuditPlanProcesses.Any())
                             {
+                                // Concatenates ProcessName + Id for free-text entries (no matched
+                                // Office row), falling back through Office -> ProcessName -> raw ids
+                                // so a row is never left blank in the report.
                                 officeNamesCombined = string.Join(Environment.NewLine, entry.AuditPlanProcesses
-                                    .Select(p => p.Office != null ? (p.Office.Name ?? $"Office {p.OfficeId}") : $"Office {p.OfficeId}"));
+                                    .Select(p =>
+                                    {
+                                        if (p.Office != null)
+                                            return p.Office.Name ?? $"Office {p.OfficeId}";
+
+                                        if (!string.IsNullOrWhiteSpace(p.ProcessName))
+                                            return $"{p.ProcessName} (ID: {p.Id})";
+
+                                        return p.OfficeId != null ? $"Office {p.OfficeId}" : $"Process {p.Id}";
+                                    }));
                             }
 
                             string standardChaptersCombined = "N/A";

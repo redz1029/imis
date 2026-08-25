@@ -15,7 +15,7 @@ namespace IMIS.Presentation.IsoStandardModule
     {
         private const string _tag = "IsoStandard";
 
-        public IsoStandardEndpoint() : base("IsoStandard")
+        public IsoStandardEndpoint() : base("/IsoStandard")
         {
         }
 
@@ -26,6 +26,7 @@ namespace IMIS.Presentation.IsoStandardModule
             app.MapPost("/", async ([FromBody] List<IsoStandardDto> isoDtos, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (isoDtos == null || !isoDtos.Any())
+       
                 {
                     return Results.BadRequest("ISO data list is required.");
                 }

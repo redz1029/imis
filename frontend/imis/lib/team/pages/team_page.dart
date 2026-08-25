@@ -143,291 +143,156 @@ class TeamPageState extends State<TeamPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            width: 420,
-            padding: EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: kSurface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 32,
-                  offset: Offset(0, 12),
+        return AlertDialog(
+          backgroundColor: mainBgColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          title: Text(
+            id == null ? 'Add Team' : 'Edit Team',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: teamController,
+                    decoration: InputDecoration(
+                      labelText: 'Team Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+
+                 SizedBox(
+                 width: 350,
+                  height: 65,
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _selectedimprovementTypeId,
+                    decoration: InputDecoration(
+                      labelText: 'Improvement Type',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+
+                    items:
+                        filteredimprovementType.map((improvementTypeData) {
+                          return DropdownMenuItem<String>(
+                            value: improvementTypeData['id'].toString(),
+                            child: Text(improvementTypeData['name']),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                       _selectedimprovementTypeId = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select an office';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
               ],
             ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Cancel', style: TextStyle(color: primaryColor)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        child: Icon(
-                          Icons.groups_outlined,
-                          color: primaryColor,
-                          size: 22,
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ),
-                      SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isEdit ? 'Edit Team' : 'Create Team',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 17,
-                              color: kText,
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
                             ),
                           ),
-                          Text(
-                            isEdit ? ' Update Team' : 'Add a new Team',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              color: kMuted,
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
                             ),
                           ),
                         ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  Divider(color: kBorder, height: 1),
-                  SizedBox(height: 20),
-                  dialogField(
-                    label: 'Team',
-                    controller: teamController,
-                    validator:
-                        (v) =>
-                            (v == null || v.trim().isEmpty)
-                                ? 'Please fill out this field'
-                                : null,
-                  ),
-                  SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: kBorder),
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadiusGeometry.circular(8),
-                            ),
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: GoogleFonts.plusJakartaSans(
-                              color: kMuted,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          icon: Icon(
-                            isEdit ? Icons.save_rounded : Icons.add_rounded,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                          label: Text(
-                            isEdit ? 'Update' : 'Save',
-                            style: GoogleFonts.plusJakartaSans(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () async {
-                            if (!_formKey.currentState!.validate()) return;
-
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder:
-                                  (ctx) => Dialog(
-                                    backgroundColor: Colors.transparent,
-                                    child: Container(
-                                      width: 340,
-                                      padding: const EdgeInsets.all(24),
-                                      decoration: BoxDecoration(
-                                        color: kSurface,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.12,
-                                            ),
-                                            blurRadius: 32,
-                                            offset: const Offset(0, 12),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 48,
-                                            height: 48,
-                                            decoration: BoxDecoration(
-                                              color: primaryColor.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(14),
-                                            ),
-                                            child: const Icon(
-                                              Icons.help_outline_rounded,
-                                              color: primaryColor,
-                                              size: 26,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 14),
-                                          Text(
-                                            isEdit
-                                                ? 'Confirm Update'
-                                                : 'Confirm Save',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 16,
-                                              color: kText,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            isEdit
-                                                ? 'Are you sure you want to update this team?'
-                                                : 'Are you sure you want to save this team?',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 13,
-                                              color: kMuted,
-                                              height: 1.5,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          const SizedBox(height: 22),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: OutlinedButton(
-                                                  onPressed:
-                                                      () => Navigator.pop(
-                                                        ctx,
-                                                        false,
-                                                      ),
-                                                  style: OutlinedButton.styleFrom(
-                                                    side: const BorderSide(
-                                                      color: kBorder,
-                                                    ),
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 11,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    'No',
-                                                    style:
-                                                        GoogleFonts.plusJakartaSans(
-                                                          color: kMuted,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                child: ElevatedButton(
-                                                  onPressed:
-                                                      () => Navigator.pop(
-                                                        ctx,
-                                                        true,
-                                                      ),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        primaryColor,
-                                                    elevation: 0,
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 11,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    'Yes',
-                                                    style:
-                                                        GoogleFonts.plusJakartaSans(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                            );
-
-                            if (confirmed == true) {
-                              final team = Team(
-                                int.tryParse(id ?? '0') ?? 0,
-                                teamController.text,
-                                isActive,
-                                isDeleted,
-                                rowVersion: '',
-                              );
-                              await _teamService.createTeam(team);
-                              setState(() {
-                                fetchTeam();
-                              });
-                              MotionToast.success(
-                                description: const Text("Saved successfully!"),
-                                toastAlignment: Alignment.topCenter,
-                              ).show(context);
-                              Navigator.pop(context);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      );
+                    },
+                  );
+                  if (confirmAction == true) {
+                    final team = Team(
+                      int.tryParse(id ?? '0') ?? 0,
+                      teamController.text,
+                      isActive,
+                      isDeleted,
+                      rowVersion: '',
+                      improvementType: int.tryParse(_selectedimprovementTypeId ?? '0'),
+                    );
+                    await _teamService.createTeam(team);
+                    setState(() {
+                      fetchTeam();
+                    });
+                    MotionToast.success(
+                      description: const Text("Saved successfully!"),
+                      toastAlignment: Alignment.topCenter,
+                    ).show(context);
+                    Navigator.pop(context);
+                  }
+                }
+              },
+              child: Text(
+                id == null ? 'Save' : 'Update',
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ),

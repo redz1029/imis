@@ -233,6 +233,12 @@ namespace IMIS.Persistence
                 .Property(x => x.Id)
                 .HasColumnName("Id");
 
+            builder.Entity<AuditSchedule>()
+    .HasOne(s => s.AuditPlan)
+    .WithMany(p => p.AuditSchedules)
+    .HasForeignKey(s => s.AuditPlanId)
+    .OnDelete(DeleteBehavior.Restrict); // Fix: avoid multiple cascade paths error
+
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());
                 builder.ApplyConfiguration(new UserConfiguration());
@@ -249,7 +255,8 @@ namespace IMIS.Persistence
                 builder.ApplyConfiguration(new AuditorTeamsConfiguration());
                 builder.ApplyConfiguration(new KraRoadMapRoleConfiguration());
                 builder.ApplyConfiguration(new KraRoadMapPeriodConfiguration());
-                builder.ApplyConfiguration(new AuditChecklistQNAConfiguration());
+            builder.ApplyConfiguration(new AuditChecklistQNAConfiguration());
+
             // ISO Standard configurations
             builder.ApplyConfiguration(new StandardVersionConfiguration());
             builder.ApplyConfiguration(new IsoStandardConfigurations());

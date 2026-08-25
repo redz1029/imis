@@ -25,7 +25,7 @@ void main() async {
           permission.toString(),
         ).replaceAll(' ', '');
         buffer.writeln(
-          "  static const String ${variableName} = '$permission';",
+          "  static const String $variableName = '$permission';",
         );
       }
 

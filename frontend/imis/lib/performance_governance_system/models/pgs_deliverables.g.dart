@@ -22,13 +22,11 @@ PgsDeliverables _$PgsDeliverablesFromJson(Map<String, dynamic> json) =>
       json['isDisapproved'] as bool,
       PgsDeliverables._statusFromJson((json['status'] as num).toInt()),
       (json['perfomanceGovernanceSystemId'] as num?)?.toInt(),
-      pgsDeliverableHistory:
-          (json['pgsDeliverableHistory'] as List<dynamic>?)
-              ?.map(
-                (e) =>
-                    PgsDeliverableHistory.fromJson(e as Map<String, dynamic>),
-              )
-              .toList(),
+      pgsDeliverableHistory: (json['pgsDeliverableHistory'] as List<dynamic>?)
+          ?.map(
+            (e) => PgsDeliverableHistory.fromJson(e as Map<String, dynamic>),
+          )
+          .toList(),
       remarks: json['remarks'] as String?,
       rowVersion: json['rowVersion'] as String?,
     );

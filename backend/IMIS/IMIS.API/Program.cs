@@ -137,11 +137,13 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseCors(allowedOrigins);
-
 if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
+
 app.UseRouting();
+
+app.UseCors(allowedOrigins);
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();

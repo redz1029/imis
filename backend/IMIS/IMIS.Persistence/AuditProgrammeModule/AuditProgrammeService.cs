@@ -320,45 +320,64 @@ namespace IMIS.Application.AuditProgrammeModule
                         foreach (var entry in plan.Entries.OrderBy(e => e.DayNumber).ThenBy(e => e.Time))
                         {
                             // A. Auditable Units Configuration Resolution (Office Names & Departments)
+                            //
+                            // FIX: previously this filtered out (`.Where(app => app.Office != null)`)
+                            // any AuditPlanProcess without a matched Office row *before* selecting a
+                            // display name — meaning free-text entries (ProcessName set, OfficeId
+                            // null) were silently dropped from the list entirely. If an entry only
+                            // had free-text processes, the resulting list was empty and the report
+                            // fell back to "N/A" for that row, even though ProcessName had real data.
+                            // Now every process is included: matched offices resolve their
+                            // department/service hierarchy as before, and free-text processes fall
+                            // back to "ProcessName (ID: x)" instead of being dropped.
                             string officeNamesCombined = "N/A";
                             if (entry.AuditPlanProcesses != null && entry.AuditPlanProcesses.Any())
                             {
                                 var officeNames = entry.AuditPlanProcesses
-                                    .Where(app => app.Office != null)
                                     .Select(app =>
                                     {
-                                        var currentOffice = app.Office;
-                                        var parent = currentOffice.ParentOffice;
-                                        string? departmentName = null;
-                                        string? serviceName = null;
-
-                                        while (parent != null)
+                                        if (app.Office != null)
                                         {
-                                            if (parent.OfficeTypeId == 2)
+                                            var currentOffice = app.Office;
+                                            var parent = currentOffice.ParentOffice;
+                                            string? departmentName = null;
+                                            string? serviceName = null;
+
+                                            while (parent != null)
                                             {
-                                                departmentName = parent.Name;
-                                                break;
+                                                if (parent.OfficeTypeId == 2)
+                                                {
+                                                    departmentName = parent.Name;
+                                                    break;
+                                                }
+
+                                                if (parent.OfficeTypeId == 1)
+                                                {
+                                                    serviceName = parent.Name;
+                                                }
+
+                                                parent = parent.ParentOffice;
                                             }
 
-                                            if (parent.OfficeTypeId == 1)
+                                            if (!string.IsNullOrEmpty(departmentName))
                                             {
-                                                serviceName = parent.Name;
+                                                return $"{departmentName} - {currentOffice.Name}";
                                             }
 
-                                            parent = parent.ParentOffice;
+                                            if (!string.IsNullOrEmpty(serviceName) && currentOffice.Name != serviceName)
+                                            {
+                                                return $"{serviceName} - {currentOffice.Name}";
+                                            }
+
+                                            return currentOffice.Name;
                                         }
 
-                                        if (!string.IsNullOrEmpty(departmentName))
+                                        if (!string.IsNullOrWhiteSpace(app.ProcessName))
                                         {
-                                            return $"{departmentName} - {currentOffice.Name}";
+                                            return app.ProcessName!.Trim();
                                         }
 
-                                        if (!string.IsNullOrEmpty(serviceName) && currentOffice.Name != serviceName)
-                                        {
-                                            return $"{serviceName} - {currentOffice.Name}";
-                                        }
-
-                                        return currentOffice.Name;
+                                        return app.OfficeId != null ? $"Office {app.OfficeId}" : $"Process {app.Id}";
                                     })
                                     .Where(name => !string.IsNullOrEmpty(name))
                                     .ToList();

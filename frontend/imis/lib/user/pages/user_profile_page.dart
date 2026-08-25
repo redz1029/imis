@@ -512,150 +512,122 @@ class UserProfileState extends State<UserProfilePage> {
                   maxHeight: MediaQuery.of(dialogContext).size.height * 0.92,
                 ),
                 decoration: BoxDecoration(
-                  color: kSurface,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 32,
-                      offset: Offset(0, 12),
-                    ),
-                  ],
+                  color: primaryLightColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(24, 24, 24, 0),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: primaryColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              isEdit
-                                  ? Icons.edit_outlined
-                                  : Icons.person_add_alt_1_outlined,
-                              color: primaryColor,
-                              size: 22,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isEdit ? 'Edit User' : 'Create User',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 17,
-                                  color: kText,
-                                ),
-                              ),
-                              Text(
-                                isEdit
-                                    ? 'Update user account details'
-                                    : 'Add a new user account',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  color: kMuted,
+                child: Text(
+                  id == null ? 'Create User' : ' Edit User',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+              content: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                ),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: DropdownButtonFormField<String>(
+                            initialValue:
+                                prefixController.text.isNotEmpty
+                                    ? prefixController.text
+                                    : null,
+                            onChanged: (value) {
+                              prefixController.text = value ?? '';
+                            },
+                            items: [
+                              DropdownMenuItem(value: '', child: Text('')),
+                              ...[
+                                'Mr.',
+                                'Ms.',
+                                'Mrs.',
+                                'Dr.',
+                                'Prof.',
+                                'Engr.',
+                                'Atty.',
+                                'Gen.',
+                              ].map(
+                                (prefix) => DropdownMenuItem(
+                                  value: prefix,
+                                  child: Text(prefix),
                                 ),
                               ),
                             ],
+                            decoration: InputDecoration(
+                              labelText: 'Prefix',
+                              border: OutlineInputBorder(),
+                            ),
                           ),
-                          Spacer(),
-                          IconButton(
-                            icon: Icon(Icons.close, color: kMuted, size: 20),
-                            onPressed: () => Navigator.pop(dialogContext),
-                            padding: EdgeInsets.zero,
-                            constraints: BoxConstraints(),
-                            splashRadius: 18,
+                        ),
+
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: TextFormField(
+                            controller: firstNameController,
+                            decoration: InputDecoration(
+                              labelText: 'First Name',
+                              focusColor: primaryColor,
+                              floatingLabelStyle: TextStyle(
+                                color: primaryColor,
+                              ),
+                              border: OutlineInputBorder(),
+                              focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                            ),
+
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please fill out this field';
+                              }
+                              return null;
+                            },
                           ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    Divider(color: kBorder, height: 1),
-
-                    Flexible(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(24, 20, 24, 8),
-                        child: Form(
-                          key: formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _sectionLabel('Personal Information'),
-                              SizedBox(height: 12),
-
-                              Row(
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: SearchDropdown<String>(
-                                      hintText: 'Select prefix',
-                                      items: const [
-                                        'Mr.',
-                                        'Ms.',
-                                        'Mrs.',
-                                        'Dr.',
-                                        'Prof.',
-                                        'Engr.',
-                                        'Atty.',
-                                        'Gen.',
-                                      ],
-                                      itemAsString: (e) => e,
-                                      selectedItem:
-                                          prefixController.text.isNotEmpty
-                                              ? prefixController.text
-                                              : null,
-                                      onChanged: (v) {
-                                        setDialogState(
-                                          () => prefixController.text = v ?? '',
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  Expanded(
-                                    flex: 2,
-                                    child: _styledField(
-                                      controller: suffixController,
-                                      label: 'Suffix',
-                                    ),
-                                  ),
-                                ],
+                        ),
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: TextFormField(
+                            controller: middleNameController,
+                            decoration: InputDecoration(
+                              labelText: 'Middle Name',
+                              focusColor: primaryColor,
+                              floatingLabelStyle: TextStyle(
+                                color: primaryColor,
                               ),
-                              SizedBox(height: 12),
-
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _styledField(
-                                      controller: firstNameController,
-                                      label: 'First Name',
-                                      required: true,
-                                    ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  Expanded(
-                                    child: _styledField(
-                                      controller: middleNameController,
-                                      label: 'Middle Initial',
-                                    ),
-                                  ),
-                                ],
+                              border: OutlineInputBorder(),
+                              focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
                               ),
-                              SizedBox(height: 12),
-
-                              _styledField(
-                                controller: lastNameController,
-                                label: 'Last Name',
-                                required: true,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: TextFormField(
+                            controller: lastNameController,
+                            decoration: InputDecoration(
+                              labelText: 'Last Name',
+                              focusColor: primaryColor,
+                              floatingLabelStyle: TextStyle(
+                                color: primaryColor,
+                              ),
+                              border: OutlineInputBorder(),
+                              focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
                               ),
                             ),
                             validator: (value) {

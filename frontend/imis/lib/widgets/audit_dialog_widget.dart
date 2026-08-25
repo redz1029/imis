@@ -5,10 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:imis/auditor_team/models/auditor_team.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/iso_standard/models/iso_standard.dart';
-import 'package:imis/iso_standard/service/iso_standard_service.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
-import 'package:imis/utils/page_list.dart';
 import 'package:intl/intl.dart';
 
 import '../common_services/common_service.dart';
@@ -30,11 +28,9 @@ class Batch {
 }
 
 const _kAccentLight = Color(0xFFEFF6FF);
-const _kAccentSoft = Color(0xFFDBEAFE);
 const _kSurface = Color(0xFFFFFFFF);
 const _kBg = Color(0xFFF8FAFC);
 const _kBorder = Color(0xFFE2E8F0);
-const _kBorderFocus = Color.fromARGB(255, 202, 126, 145);
 const _kTextPrimary = Color(0xFF0F172A);
 const _kTextSecondary = Color(0xFF64748B);
 const _kTextMuted = Color.fromARGB(255, 175, 108, 125);

@@ -7,7 +7,8 @@ namespace IMIS.Application.AuditPlanProcessModule
 {
     public class AuditPlanProcessDto : BaseDto<AuditPlanProcess, int>
     {
-        public int OfficeId { get; set; }
+        public int? OfficeId { get; set; }
+        public string? ProcessName { get; set; }
         public int AuditPlanEntryId { get; set; }
 
         public AuditPlanEntryDto? AuditPlanEntry { get; set; }
@@ -21,6 +22,7 @@ namespace IMIS.Application.AuditPlanProcessModule
             {
                 Id = entity.Id;
                 OfficeId = entity.OfficeId;
+                ProcessName = entity.ProcessName;
                 AuditPlanEntryId = entity.AuditPlanEntryId;
             }
         }
@@ -31,6 +33,7 @@ namespace IMIS.Application.AuditPlanProcessModule
             {
                 Id = Id,
                 OfficeId = OfficeId,
+                ProcessName = ProcessName,
                 AuditPlanEntryId = AuditPlanEntryId,
 
                 AuditPlanEntry = null

@@ -13,7 +13,6 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/utils/permission_string.dart';
-import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/dotted_button.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,9 +46,7 @@ class IsoStandardPageState extends State<IsoStandardPage> {
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
-  int _currentPage = 1;
   final int _pageSize = 15;
-  int _totalCount = 0;
   bool _isLoading = false;
   bool _showClause4to10 = false;
   bool _hasAllData = false;
@@ -170,7 +167,6 @@ class IsoStandardPageState extends State<IsoStandardPage> {
 
       if (mounted) {
         setState(() {
-          _currentPage = pageList.page;
           // Show all items (both active and inactive) but filter out deleted ones
           isoStandardList = pageList.items
               .where((item) => !_deletedIds.contains(item.id.toString()))
@@ -180,11 +176,8 @@ class IsoStandardPageState extends State<IsoStandardPage> {
           // Calculate actual total count based on items received
           // If we got less than a full page, we're on the last page
           if (isoStandardList.length < _pageSize) {
-            _totalCount =
-                ((_currentPage - 1) * _pageSize) + isoStandardList.length;
           } else {
             // Subtract deleted items from total count
-            _totalCount = pageList.totalCount - _deletedIds.length;
           }
         });
       }
@@ -213,12 +206,10 @@ class IsoStandardPageState extends State<IsoStandardPage> {
 
       if (mounted) {
         setState(() {
-          _currentPage = 1;
           isoStandardList = pageList.items
               .where((item) => !_deletedIds.contains(item.id.toString()))
               .toList();
           filteredList = List.from(isoStandardList);
-          _totalCount = pageList.totalCount - _deletedIds.length;
           _hasAllData = false;
           _hasAllData = true;
         });
@@ -286,15 +277,17 @@ class IsoStandardPageState extends State<IsoStandardPage> {
     // a consistent flat index used by the existing parent/clauses inference
     // logic. This ensures backend-provided `children` are respected.
     final List<IsoStandard> flatItems = [];
-    void _flatten(IsoStandard i) {
+    void flatten(IsoStandard i) {
       flatItems.add(i);
       if (i.children != null) {
-        for (var c in i.children!) _flatten(c);
+        for (var c in i.children!) {
+          flatten(c);
+        }
       }
     }
 
     for (var it in items) {
-      _flatten(it);
+      flatten(it);
     }
 
     // Helper to normalize clauseRef and produce a version-scoped key
@@ -504,13 +497,6 @@ class IsoStandardPageState extends State<IsoStandardPage> {
     return roots;
   }
 
-  bool _isMajorInFourToTen(String? clauseRef) {
-    if (clauseRef == null) return false;
-    final m = RegExp(r"^\s*(\d+)").firstMatch(clauseRef);
-    if (m == null) return false;
-    final v = int.tryParse(m.group(1) ?? '');
-    return v != null && v >= 4 && v <= 10;
-  }
 
   // Return true only when clauseRef is a pure major number (e.g. '4', '10')
   bool _isMajorRootFourToTen(String? clauseRef) {

@@ -78,4 +78,24 @@ class AuditorTeamService {
         '${ApiEndpoint().roles}/$id'; // ⚠️ possible bug — see note above
     await AuthenticatedRequest.delete(dio, url);
   }
+
+  /// Fetches every AuditorTeam by paging through the existing paginated
+  /// endpoint until all records have been collected. Returns typed
+  /// AuditorTeam objects (each already parsed with its list of Auditor
+  /// records) rather than raw JSON, since getAuditorTeam() already does
+  /// that parsing for us.
+  Future<List<AuditorTeam>> getAuditorTeams() async {
+    final List<AuditorTeam> all = [];
+    int page = 1;
+    const pageSize = 100;
+
+    while (true) {
+      final pageList = await getAuditorTeam(page: page, pageSize: pageSize);
+      all.addAll(pageList.items);
+      if (all.length >= pageList.totalCount || pageList.items.isEmpty) break;
+      page++;
+    }
+
+    return all;
+  }
 }
