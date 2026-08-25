@@ -89,6 +89,9 @@ class ApiEndpoint {
   late String pgsSignatory;
   late String impactStrategicGoalScoreCardPeriod;
   late String impactStrategicGoalScoreCard;
+  late String kraRoadmapKPISequence;
+  late String sWOTAnalysisStrengthWeakness;
+  late String sWOTAnalysisOpportunitiesThreats;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -180,6 +183,10 @@ class ApiEndpoint {
     impactStrategicGoalScoreCardPeriod =
         '$baseUrl/impactStrategicGoalScoreCardPeriod';
     impactStrategicGoalScoreCard = '$baseUrl/ImpactStrategicGoalScoreCard';
+    kraRoadmapKPISequence = '$baseUrl/KraRoadmapKPISequence';
+    sWOTAnalysisStrengthWeakness = '$baseUrl/SWOTAnalysisStrengthWeakness';
+    sWOTAnalysisOpportunitiesThreats =
+        '$baseUrl/SWOTAnalysisOpportunitiesThreats';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
