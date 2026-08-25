@@ -7,7 +7,7 @@ namespace IMIS.Domain
         public long? SWOTAnalysisId { get; set; }
         public int? InternalContextId { get; set; }         
         public SWOTAnalysisStrengthWeaknessSettings? InternalContext { get; set; }
-        public string? Opportunities { get; set; }
-        public string? Threats { get; set; }
+        public string? Strength { get; set; }
+        public string? Weaknesses { get; set; }
     }
 }

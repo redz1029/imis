@@ -9,8 +9,8 @@ namespace IMIS.Application.SWOTAnalysisSWDeliverablesModule
         public long? SWOTAnalysisId { get; set; }
         public int? InternalContextId { get; set; }
         public string? InternalContext { get; set; }
-        public string? Opportunities { get; set; }
-        public string? Threats { get; set; }
+        public string? Strength { get; set; }
+        public string? Weaknesses { get; set; }
 
         public SWOTAnalysisSWDeliverablesDto() { }
 
@@ -21,8 +21,8 @@ namespace IMIS.Application.SWOTAnalysisSWDeliverablesModule
             this.SWOTAnalysisId = entity.SWOTAnalysisId;
             this.InternalContextId = entity.InternalContextId;
             this.InternalContext = entity.InternalContext?.InternalContext;
-            this.Opportunities = entity.Opportunities;
-            this.Threats = entity.Threats;
+            this.Strength = entity.Strength;
+            this.Weaknesses = entity.Weaknesses;
         }
 
         public override SWOTAnalysisSWDeliverables ToEntity()
@@ -32,8 +32,8 @@ namespace IMIS.Application.SWOTAnalysisSWDeliverablesModule
                 Id = Id,
                 SWOTAnalysisId = SWOTAnalysisId,
                 InternalContextId = InternalContextId,
-                Opportunities = Opportunities,
-                Threats = Threats,
+                Strength = Strength,
+                Weaknesses = Weaknesses,
             };
         }
     }
