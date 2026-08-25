@@ -12,6 +12,7 @@ namespace IMIS.Application.AnnouncementModule
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
         public bool IsActive { get; set; }
+        public bool? IsRead { get; set; }
 
         public AnnouncementDto() { }
 
@@ -24,6 +25,7 @@ namespace IMIS.Application.AnnouncementModule
             this.FromDate = announcement.FromDate;
             this.ToDate = announcement.ToDate;
             this.IsActive = announcement.IsActive;
+            this.IsRead = announcement.IsRead;
         }
 
         public override Announcement ToEntity()
@@ -35,6 +37,7 @@ namespace IMIS.Application.AnnouncementModule
                 FromDate = FromDate,
                 ToDate = ToDate,
                 IsActive = IsActive,
+                IsRead = IsRead
             };
         }
     }

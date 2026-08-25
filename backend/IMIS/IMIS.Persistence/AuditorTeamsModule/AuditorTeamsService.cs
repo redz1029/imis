@@ -1,17 +1,18 @@
-﻿using Base.Pagination;
-using Base.Primitives;
+﻿using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Domain;
-using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Application.AuditorTeamsModule
 {
     public class AuditorTeamsService : IAuditorTeamsService
     {
         private readonly IAuditorTeamsRepository _repository;
-        public AuditorTeamsService(IAuditorTeamsRepository repository)
+        private readonly UserManager<User> _userManager;
+        public AuditorTeamsService(IAuditorTeamsRepository repository, UserManager<User> userManager)
         {
             _repository = repository;
+            _userManager = userManager;
         }
         public async Task<bool> SoftDeleteAsync(int teamId, CancellationToken cancellationToken)
         {
@@ -26,20 +27,68 @@ namespace IMIS.Application.AuditorTeamsModule
                 member.IsActive = false;
             }
 
-            await _repository.GetDbContext().SaveChangesAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return true;
         }
-        public async Task<DtoPageList<AuditorTeamsDto, AuditorTeams, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+    
+        public async Task<AuditorTeamsPageDto> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var auditorTeams = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (auditorTeams.TotalCount == 0)
+            var auditorTeams = await _repository.GetAllAsync(cancellationToken);
+
+            foreach (var auditorTeam in auditorTeams.Where(x => x.Auditor != null))
             {
-                return null;
+                var user = await _userManager.FindByIdAsync(auditorTeam.Auditor!.UserId);
+
+                auditorTeam.Auditor.Name = string.Join(" ",
+                    new[]
+                    {
+                        user?.Prefix,
+                        user?.FirstName,
+                        user?.MiddleName,
+                        user?.LastName,
+                        user?.Suffix
+                    }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
             }
-            return DtoPageList<AuditorTeamsDto, AuditorTeams, int>.Create(auditorTeams.Items, page, pageSize, auditorTeams.TotalCount);
+
+            // Group by Team
+            var grouped = auditorTeams.GroupBy(at => at.TeamId).Select(group => new AuditorTeamsDto
+            {
+                Id = group.Key,
+                TeamId = group.Key,
+                Auditors = group
+                    .Where(at => at.Auditor != null)
+                    .Select(at => new AuditorDto
+                    {
+                        Id = at.Auditor!.Id,
+                        Name = at.Auditor.Name,
+                        UserId = at.Auditor.UserId,
+                        IsActive = at.Auditor.IsActive,
+                        IsTeamLeader = at.IsTeamLeader
+                    })
+                    .ToList(),
+                IsActive = group.First().IsActive
+            })
+            .ToList();
+
+            var totalCount = grouped.Count;
+
+            var pagedItems = grouped
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return new AuditorTeamsPageDto
+            {
+                Items = pagedItems,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount               
+            };
         }
+
+
         public async Task<List<AuditorTeamsDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var auditorTeams = await _repository.GetAllAsync(cancellationToken);
@@ -74,28 +123,41 @@ namespace IMIS.Application.AuditorTeamsModule
             if (auditorTeams == null || !auditorTeams.Any())
                 return null;
 
-            var group = auditorTeams.First().TeamId;
+            var auditors = new List<AuditorDto>();
 
-            var dto = new AuditorTeamsDto
+            foreach (var auditorTeam in auditorTeams.Where(x => x.Auditor != null))
+            {
+                var user = await _userManager.FindByIdAsync(auditorTeam.Auditor!.UserId);
+
+                var fullName = string.Join(" ",
+                    new[]
+                    {
+                        user?.Prefix,
+                        user?.FirstName,
+                        user?.MiddleName,
+                        user?.LastName,
+                        user?.Suffix
+                    }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
+
+                auditors.Add(new AuditorDto
+                {
+                    Id = auditorTeam.Auditor.Id,
+                    Name = fullName,
+                    IsTeamLeader = auditorTeam.IsTeamLeader,
+                    IsActive = auditorTeam.Auditor.IsActive,
+                    UserId = auditorTeam.Auditor.UserId
+                });
+            }
+
+            return new AuditorTeamsDto
             {
                 Id = auditorTeams.First().Id,
-                TeamId = group,
-                Auditors = auditorTeams
-                    .Where(at => at.Auditor != null)
-                    .Select(at => new AuditorDto
-                    {
-                        Id = at.Auditor!.Id,
-                        IsTeamLeader = at.IsTeamLeader,
-                        IsActive = at.Auditor.IsActive,
-                        UserId = at.Auditor.UserId,
-                        ImprovementType = at.Auditor.ImprovementType
-                    })
-                    .ToList(),
-                IsActive = auditorTeams.First().IsActive
+                TeamId = auditorTeams.First().TeamId,
+                IsActive = auditorTeams.First().IsActive,
+                Auditors = auditors
             };
-
-            return dto;
-        }
+        }      
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var oDto = dto as AuditorTeamsDto;

@@ -24,8 +24,9 @@ class AuthenticatedRequest {
         ).show(context);
       }
 
-      navigatorKey.currentState?.pushReplacement(
+      navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const NoConnectionPage()),
+        (route) => false,
       );
 
       return Response<dynamic>(
@@ -47,6 +48,25 @@ class AuthenticatedRequest {
     return e.response!;
   }
 
+  /// Merges the Authorization header into any caller-supplied Options,
+  /// preserving responseType, validateStatus, Accept, and other headers.
+  static Options _mergeOptions(String accessToken, [Options? options]) {
+    final existingHeaders = Map<String, dynamic>.from(
+      options?.headers as Map? ?? {},
+    );
+    existingHeaders['Authorization'] = 'Bearer $accessToken';
+    return (options ?? Options()).copyWith(headers: existingHeaders);
+  }
+
+  static Response<dynamic> _sessionExpiredResponse(String url) {
+    return Response<dynamic>(
+      data: {'error': 'session_expired'},
+      statusCode: 401,
+      statusMessage: 'Session Expired',
+      requestOptions: RequestOptions(path: url),
+    );
+  }
+
   static Future<Response<dynamic>> get(
     Dio dio,
     String url, {
@@ -58,7 +78,8 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
-      var response = await dio.get(
+      if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
+      return await dio.get(
         url,
         options: Options(
           headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
@@ -87,15 +108,14 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+      if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
 
-      var response = await dio.post(
+      final merged = _mergeOptions(loggedUser!.accessToken!, options);
+      final headers = Map<String, dynamic>.from(merged.headers as Map? ?? {});
+      headers.putIfAbsent(Headers.contentTypeHeader, () => contentType);
+      return await dio.post(
         url,
-        options: Options(
-          headers: {
-            "Authorization": "Bearer ${loggedUser!.accessToken}",
-            Headers.contentTypeHeader: contentType,
-          },
-        ),
+        options: merged.copyWith(headers: headers),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
@@ -121,8 +141,8 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
-
-      var response = await dio.put(
+      if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
+      return await dio.put(
         url,
         options: Options(
           headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
@@ -150,7 +170,8 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
-      var response = await dio.delete(
+      if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
+      return await dio.delete(
         url,
         options: Options(
           headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
@@ -178,7 +199,8 @@ class AuthenticatedRequest {
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
-      var response = await dio.patch(
+      if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
+      return await dio.patch(
         url,
         options: Options(
           headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},

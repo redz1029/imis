@@ -57,6 +57,45 @@ class AnnouncementService {
     return data.map((json) => Announcement.fromJson(json)).toList();
   }
 
+  /// Returns announcements that are still "unread" for the notification
+  /// bell: isRead == false AND posted (fromDate) less than 24 hours ago.
+  /// Anything unread but older than 24 hours gets silently auto-marked as
+  /// read here so it stops showing up, even if no one opened it.
+  Future<List<Announcement>> getUnreadAnnouncements() async {
+    final all = await getAnnouncements();
+    final stillUnread = <Announcement>[];
+
+    for (final a in all) {
+      if (a.isRead == true) continue;
+
+      final hoursSincePosted = DateTime.now().difference(a.fromDate).inHours;
+      if (hoursSincePosted >= 24) {
+        try {
+          await markAsRead(a);
+        } catch (_) {}
+      } else {
+        stillUnread.add(a);
+      }
+    }
+
+    return stillUnread;
+  }
+
+  Future<void> markAsRead(Announcement a) async {
+    final updated = Announcement(
+      id: a.id,
+      title: a.title,
+      description: a.description,
+      fromDate: a.fromDate,
+      toDate: a.toDate,
+      isActive: a.isActive,
+      rowVersion: a.rowVersion,
+      isDeleted: a.isDeleted,
+      isRead: true,
+    );
+    await updateAnnouncement(updated);
+  }
+
   Future<void> updateAnnouncement(Announcement a) async {
     if (a.id == 0) {
       throw Exception('Announcement ID is required for update.');

@@ -51,15 +51,17 @@ namespace IMIS.Persistence.KraRoadMapDeliverableModule
                     x.EndYear))
                 .ToList();
         }
-        public async Task<List<KraRoadMapDeliverable>> GetByRoadMapIdAsync(long kraRoadMapId, int year,  CancellationToken cancellationToken)
+     
+        public async Task<List<KraRoadMapDeliverable>> GetByRoadMapIdAsync(long kraRoadMapId, int year, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<KraRoadMapDeliverable>()
                 .AsNoTracking()
                 .Where(x =>
                     !x.IsDeleted &&
+                    !x.IsEnabler &&
                     x.KraRoadMapId == kraRoadMapId &&
                     x.Year == year)
                 .ToListAsync(cancellationToken);
-        }       
+        }
     }
 }

@@ -3,18 +3,25 @@ using Base.Primitives;
 
 namespace IMIS.Domain
 {
-    public class SWOTAnalysis : Entity<int>
+    public class SWOTAnalysis : Entity<long>
     {
-        public required string UserId { get; set; }
-        [ForeignKey(nameof(UserId))]
-        public virtual User? User { get; set; }
-        public string? Strengths { get; set; }
-        public string? Weaknesses { get; set; }
-        public string? Opportunities { get; set; }
-        public string? Threats { get; set; }
-        public string? LongTermDepartmentStrategicPlan { get; set; }
-        public string? ImmediateNeedsToAchieveVision { get; set; }
-        public string? DepartmentAchievementsAndBestPractices { get; set; }
+        public int? DepartmentId { get; set; }
+        [ForeignKey(nameof(DepartmentId))]
+        public virtual Office? Department { get; set; }
+        public string? ObjectiveStatement { get; set; }
+       
+        public List<SWOTAnalysisSWDeliverables>? SWOTAnalysisSWDeliverables { get; set; }
+        public List<SWOTAnalysisOTDeliverables>? SWOTAnalysisOTDeliverables { get; set; }
+
+        public  string? DepartmentChairUserId { get; set; }
+        [ForeignKey(nameof(DepartmentChairUserId))]
+        public virtual User? DepartmentUser { get; set; }
+        public string? QMRUserId { get; set; }
+        [ForeignKey(nameof(QMRUserId))]
+        public virtual User? QMRUser { get; set; }
+        public string? ServiceHeadUserId { get; set; }
+        [ForeignKey(nameof(ServiceHeadUserId))]
+        public virtual User? ServiceHeadUser { get; set; }  
         public DateTime? PostingDate { get; set; }
     }
 }

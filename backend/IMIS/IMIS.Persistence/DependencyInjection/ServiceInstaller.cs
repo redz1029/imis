@@ -22,10 +22,15 @@ using IMIS.Application.ImprovementTypeModule;
 using IMIS.Application.IsoAuditorModule;
 using IMIS.Application.IsoAuditProcessModule;
 using IMIS.Application.IsoStandardAuditPlanModule;
+using IMIS.Application.CalendarActivityModule;
+using IMIS.Application.ImpactStrategicGoalScoreCardModule;
+using IMIS.Application.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Application.IsoStandardModule;
 using IMIS.Application.KraRoadMapDeliverableModule;
+using IMIS.Application.KraRoadmapHistoryModule;
 using IMIS.Application.KraRoadmapKpiAccomplishmentModule;
 using IMIS.Application.KraRoadMapKpiModule;
+using IMIS.Application.KraRoadmapKpiSequenceModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.KraRoadmapProcessKraAssignmentModule;
@@ -33,16 +38,27 @@ using IMIS.Application.KraRoadMapRoleAssignmentModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
 using IMIS.Application.OperationReviewProtocolModule;
+using IMIS.Application.PerformanceValidationToolConclusionModule;
+using IMIS.Application.PerformanceValidationToolDeliverableFindingsModule;
+using IMIS.Application.PerformanceValidationToolModule;
+using IMIS.Application.PerformanceValidationToolObjectivesModule;
+using IMIS.Application.PerformanceValidationToolPeriodModule;
+using IMIS.Application.PerformanceValidationToolSignatoryTemplateModule;
+using IMIS.Application.PerformanceValidationToolValidatorsModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
+using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.StandardVersionModule;
 using IMIS.Application.StrategyReviewModule;
+using IMIS.Application.StrategyReviewPeriodModule;
 using IMIS.Application.SWOTAnalysisModule;
+using IMIS.Application.SWOTAnalysisOpportunitiesThreatsModule;
+using IMIS.Application.SWOTAnalysisStrengthWeaknessModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Persistence.AnnouncementModule;
@@ -69,13 +85,18 @@ using IMIS.Persistence.ImprovementTypeModule;
 using IMIS.Persistence.IsoAuditorModule;
 using IMIS.Persistence.IsoAuditProcessModule;
 using IMIS.Persistence.IsoStandardAuditPlanModule;
+using IMIS.Persistence.CalendarActivityModule;
+using IMIS.Persistence.ImpactStrategicGoalScoreCardModule;
+using IMIS.Persistence.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Persistence.IsoStandardModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.KraRoadMapAccomplishmentModule;
 using IMIS.Persistence.KraRoadmapCoreSupportProcessModule;
 using IMIS.Persistence.KraRoadMapDeliverableModule;
+using IMIS.Persistence.KraRoadmapHistoryModule;
 using IMIS.Persistence.KraRoadMapKpiAccomplishmentModule;
 using IMIS.Persistence.KraRoadMapKpiModule;
+using IMIS.Persistence.KraRoadmapKpiSequenceModule;
 using IMIS.Persistence.KraRoadMapModule;
 using IMIS.Persistence.KraRoadMapPeriodModule;
 using IMIS.Persistence.KraRoadmapProcessKraAssignmentModule;
@@ -83,18 +104,30 @@ using IMIS.Persistence.KraRoadMapRoleModule;
 using IMIS.Persistence.OfficeModule;
 using IMIS.Persistence.OfficeTypeModule;
 using IMIS.Persistence.OperationReviewProtocolModule;
+using IMIS.Persistence.PerformanceValidationToolConclusionModule;
+using IMIS.Persistence.PerformanceValidationToolDeliverableFindingsModule;
+using IMIS.Persistence.PerformanceValidationToolModule;
+using IMIS.Persistence.PerformanceValidationToolObjectivesModule;
+using IMIS.Persistence.PerformanceValidationToolPeriodModule;
+using IMIS.Persistence.PerformanceValidationToolSignatoryTemplateModule;
+using IMIS.Persistence.PerformanceValidationToolValidatorsModule;
 using IMIS.Persistence.PgsDeliverableAccomplishmentModule;
 using IMIS.Persistence.PgsModule;
 using IMIS.Persistence.PGSModules;
 using IMIS.Persistence.PgsPeriodModule;
 using IMIS.Persistence.PGSReadinessRatingCancerCareModule;
+using IMIS.Persistence.PgsSignatoryModule;
 using IMIS.Persistence.PgsSignatoryTemplateModule;
 using IMIS.Persistence.PgsSummaryNarrativeModule;
 using IMIS.Persistence.StandardVersionModule;
 using IMIS.Persistence.StrategyReviewModule;
+using IMIS.Persistence.StrategyReviewPeriodModule;
 using IMIS.Persistence.SWOTAnalysisModule;
+using IMIS.Persistence.SWOTAnalysisOpportunitiesThreatsModule;
+using IMIS.Persistence.SWOTAnalysisStrengthWeaknessModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadmapCoreSupportProcessModule;
@@ -200,6 +233,54 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IStrategyReviewRepository, StrategyReviewRepository>();
             services.AddScoped<IStrategyReviewService, StrategyReviewService>();
+
+            services.AddScoped<IStrategyReviewPeriodRepository, StrategyReviewPeriodRepository>();
+            services.AddScoped<IStrategyReviewPeriodService, StrategyReviewPeriodService>();
+
+            services.AddScoped<IPerformanceValidationToolPeriodRepository, PerformanceValidationToolPeriodRepository>();
+            services.AddScoped<IPerformanceValidationToolPeriodService, PerformanceValidationToolPeriodService>();
+
+            services.AddScoped<IPerformanceValidationToolSignatoryTemplateRepository, PerformanceValidationToolSignatoryTemplateRepository>();
+            services.AddScoped<IPerformanceValidationToolSignatoryTemplateService, PerformanceValidationToolSignatoryTemplateService>();
+
+            services.AddScoped<IPerformanceValidationToolObjectivesRepository, PerformanceValidationToolObjectivesRepository>();
+            services.AddScoped<IPerformanceValidationToolObjectivesService, PerformanceValidationToolObjectivesService>();
+
+            services.AddScoped<IPerformanceValidationToolConclusionRepository, PerformanceValidationToolConclusionRepository>();
+            services.AddScoped<IPerformanceValidationToolConclusionService, PerformanceValidationToolConclusionService>();
+
+            services.AddScoped<IPerformanceValidationToolValidatorsRepository, PerformanceValidationToolValidatorsRepository>();
+            services.AddScoped<IPerformanceValidationToolValidatorsService, PerformanceValidationToolValidatorsService>();
+
+            services.AddScoped<IPerformanceValidationToolDeliverableFindingsRepository, PerformanceValidationToolDeliverableFindingsRepository>();
+            services.AddScoped<IPerformanceValidationToolDeliverableFindingsService, PerformanceValidationToolDeliverableFindingsService>();
+
+            services.AddScoped<IPerformanceValidationToolRepository, PerformanceValidationToolRepository>();
+            services.AddScoped<IPerformanceValidationToolService, PerformanceValidationToolService>();
+
+            services.AddScoped<IPgsSignatoryRepository, PgsSignatoryRepository>();
+            services.AddScoped<IPgsSignatoryService, PgsSignatoryService>();
+            
+            services.AddScoped<ICalendarActivityRepository, CalendarActivityRepository>();
+            services.AddScoped<ICalendarActivityService, CalendarActivityService>();
+
+            services.AddScoped<IKraRoadmapHistoryRepository, KraRoadmapHistoryRepository>();
+            services.AddScoped<IKraRoadmapHistoryService, KraRoadmapHistoryService>();
+
+            services.AddScoped<IImpactStrategicGoalScoreCardRepository, ImpactStrategicGoalScoreCardRepository>();
+            services.AddScoped<IImpactStrategicGoalScoreCardService, ImpactStrategicGoalScoreCardService>();
+
+            services.AddScoped<IImpactStrategicGoalScoreCardPeriodRepository, ImpactStrategicGoalScoreCardPeriodRepository>();
+            services.AddScoped<IImpactStrategicGoalScoreCardPeriodService, ImpactStrategicGoalScoreCardPeriodService>();
+
+            services.AddScoped<IKraRoadmapKpiSequenceRepository, KraRoadmapKpiSequenceRepository>();
+            services.AddScoped<IKraRoadmapKpiSequenceService, KraRoadmapKpiSequenceService>();
+
+            services.AddScoped<ISWOTAnalysisOpportunitiesThreatsSettingsRepository, SWOTAnalysisOpportunitiesThreatsSettingsRepository>();
+            services.AddScoped<ISWOTAnalysisOpportunitiesThreatsSettingsService, SWOTAnalysisOpportunitiesThreatsSettingsService>();
+
+            services.AddScoped<ISWOTAnalysisStrengthWeaknessSettingsRepository, SWOTAnalysisStrengthWeaknessSettingsRepository>();
+            services.AddScoped<ISWOTAnalysisStrengthWeaknessSettingsService, SWOTAnalysisStrengthWeaknessSettingsService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

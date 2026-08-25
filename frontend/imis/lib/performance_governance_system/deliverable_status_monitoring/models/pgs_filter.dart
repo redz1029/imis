@@ -4,6 +4,7 @@ part 'pgs_filter.g.dart';
 
 @JsonSerializable()
 class PgsFilter {
+  String? roleId;
   int? pgsPeriodId;
   int? officeId;
   int? kraId;
@@ -14,6 +15,7 @@ class PgsFilter {
   int? pageSize;
 
   PgsFilter(
+    this.roleId,
     this.pgsPeriodId,
     this.officeId,
     this.kraId,

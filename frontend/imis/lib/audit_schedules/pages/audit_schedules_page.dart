@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/audit_schedules/models/audit_schedules_details.dart';
 import 'package:imis/audit_schedules/models/auditable_office.dart';
@@ -517,7 +518,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                             },
                                             child: Icon(
                                               Icons.delete,
-                                              size: 24,
+                                              size: 12,
                                               color: Colors.grey.shade600,
                                             ),
                                           ),

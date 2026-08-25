@@ -79,7 +79,7 @@ namespace IMIS.Presentation.KraRoadMapAccomplishmentModule
                 return Results.Ok(result);
             })
             .WithTags(_kraRoadMapAccomplishmentTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMapAccomplishmentTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMapAccomplishmentTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapAccomplishmentPermission.View));
 
           

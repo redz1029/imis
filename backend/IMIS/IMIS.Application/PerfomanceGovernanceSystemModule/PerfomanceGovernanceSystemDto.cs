@@ -59,7 +59,6 @@ namespace IMIS.Application.PgsModule
             {
                 Id = Id,
                 PgsPeriod = PgsPeriod.ToEntity(),
-
                 Office = Office.ToEntity(),
                 Remarks = Remarks,
                 PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList(),

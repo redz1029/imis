@@ -3,6 +3,7 @@ using Base.Auths.Roles;
 using Base.Primitives;
 using IMIS.Application.KraRoadMapRoleAssignmentModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,7 +39,11 @@ namespace IMIS.Persistence.KraRoadMapRoleModule
 
             List<KraRoadMapRole> roadmaps = new();
 
-            if (userRoleNames.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase)))
+            if (userRoleNames.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase)||
+                userRoleNames.Any(r => r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                userRoleNames.Any(r => r.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) || 
+                userRoleNames.Any(r => r.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
+                userRoleNames.Any(r => r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase)))))))
             {
                 var allRoadmaps = await _repository.GetAll(cancellationToken);
                 roadmaps = allRoadmaps?.ToList() ?? new List<KraRoadMapRole>();

@@ -35,7 +35,7 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
                 return Results.Ok(period);
             })
             .WithTags(_pgsPeriodTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsPeriodTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsPeriodTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] PgsPeriodDto pgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -68,7 +68,7 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
                 return Results.Ok(paginatedPgsPeriod);
             })
             .WithTags(_pgsPeriodTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsPeriodTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsPeriodTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>

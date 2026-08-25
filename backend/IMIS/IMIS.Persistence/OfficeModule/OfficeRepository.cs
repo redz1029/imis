@@ -8,6 +8,21 @@ namespace IMIS.Persistence.OfficeModule
 {
     public class OfficeRepository(ImisDbContext dbContext) : BaseRepository<Office, int, ImisDbContext, User>(dbContext), IOfficeRepository
     {
+        public async Task<string?> GetParentOfficeNameAsync(int officeId, CancellationToken cancellationToken)
+        {
+            var office = await ReadOnlyDbContext.Set<Office>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == officeId, cancellationToken);
+
+            if (office == null || office.ParentOfficeId == null)
+                return null;
+
+            return await ReadOnlyDbContext.Set<Office>()
+                .AsNoTracking()
+                .Where(x => x.Id == office.ParentOfficeId)
+                .Select(x => x.Name)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
         public async Task<EntityPageList<Office, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             return await EntityPageList<Office, int>

@@ -79,7 +79,7 @@ namespace IMIS.Presentation.KraRoadMapKpiAccomplishmentModule
                 return Results.Ok(result);
             })
             .WithTags(_kraRoadMapKpiAccomplishmentTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMapKpiAccomplishmentTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMapKpiAccomplishmentTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapKpiAccomplishmentPermission.View));
             
             app.MapPut("/kraroadmapkpiAccomplishment/{id:int}", async (

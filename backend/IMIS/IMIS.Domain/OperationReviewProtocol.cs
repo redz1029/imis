@@ -50,6 +50,8 @@ namespace IMIS.Domain
         public string? Frequency { get; set; }
 
         public string? MinutesAttachmentPath { get; set; }
-        public DateTime PostingDate { get; set; }      
+        public DateTime PostingDate { get; set; }
+
+        public bool? IsDraft { get; set; }
     }
 }

@@ -14,13 +14,15 @@ import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/pages/view_pdf_summary.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/utils/permission_string.dart';
-import 'package:imis/widgets/pagination_controls.dart';
-import 'package:imis/widgets/permission_widget.dart';
+import 'package:imis/utils/print_preview_util.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ManageSummaryNarrativeReportPage extends StatefulWidget {
   const ManageSummaryNarrativeReportPage({super.key});
@@ -67,7 +69,10 @@ class ManageSummaryNarrativeReportPageState
 
     () async {
       final period = await _commonService.fetchPgsPeriod();
-      final offices = await _deliverableStatusMonitoring.fetchOffices();
+      final roleId = await _getRoleId();
+      final offices = await _deliverableStatusMonitoring.fetchOffices(
+        roleId: roleId,
+      );
       if (!mounted) return;
 
       setState(() {
@@ -111,10 +116,24 @@ class ManageSummaryNarrativeReportPageState
     } catch (e) {
       debugPrint(e.toString());
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<String> _getRoleId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      return currentRole.id;
+    }
+    return '';
   }
 
   String getPeriodLabel(int periodId) {
@@ -142,136 +161,207 @@ class ManageSummaryNarrativeReportPageState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: mainBgColor,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed:
-                              () => Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => const NavigationPanel(
-                                        initialScreenIndex: 16,
-                                      ),
-                                ),
-                                (route) => false,
-                              ),
-                          icon: const Icon(Icons.arrow_back, size: 18),
-                          label: const Text(
-                            "Back",
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: mainBgColor,
-                            foregroundColor: primaryTextColor,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            side: BorderSide(
-                              color: Colors.grey.shade400,
-                              width: 0.8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            elevation: 0,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Manage Report',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            gap12px,
-                            SizedBox(
-                              height: 30,
-                              width: 300,
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: lightGrey),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: primaryColor),
-                                  ),
-                                  floatingLabelBehavior:
-                                      FloatingLabelBehavior.never,
-                                  labelText: 'Search...',
-                                  labelStyle: TextStyle(
-                                    color: grey,
-                                    fontSize: 14,
-                                  ),
-                                  prefixIcon: Icon(Icons.search, size: 20),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  filled: true,
-                                  fillColor: secondaryColor,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    vertical: 5,
-                                    horizontal: 5,
-                                  ),
-                                ),
-                                // onChanged: filterSearchResults,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 8 : 12,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: 700,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
-                    ),
-                    columns: [
-                      DataColumn2(label: const Text('#'), fixedWidth: 40),
-                      DataColumn2(
-                        label: const Text('Office'),
-                        size: ColumnSize.L,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+
+    final dialogWidth =
+        isMobile
+            ? screenWidth
+            : isTablet
+            ? screenWidth * 0.92
+            : screenWidth * 0.80;
+
+    final dialogHeight = isMobile ? screenHeight : screenHeight * 0.90;
+
+    final horizontalPadding =
+        isMobile
+            ? 0.0
+            : isTablet
+            ? 16.0
+            : 24.0;
+    final verticalPadding = isMobile ? 0.0 : 20.0;
+
+    return Dialog(
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight: dialogHeight,
+          minWidth: isMobile ? screenWidth : 320,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: mainBgColor,
+            // Only round corners on non-mobile
+            borderRadius:
+                isMobile ? BorderRadius.zero : BorderRadius.circular(16),
+            boxShadow:
+                isMobile
+                    ? null
+                    : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
                       ),
-                      DataColumn2(
-                        label: const Text('Period'),
-                        size: ColumnSize.L,
-                      ),
-                      const DataColumn(label: Text('Actions')),
                     ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var summary = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
+          ),
+          child: Column(
+            children: [
+              _buildHeader(isMobile, isTablet),
+
+              if (isMobile) _buildMobileSearch(),
+
+              Expanded(
+                child:
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : isMobile
+                        ? _buildMobileList()
+                        : _buildDesktopTable(),
+              ),
+
+              _buildFooter(isMobile),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(bool isMobile, bool isTablet) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: isMobile ? 12 : 16,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius:
+            isMobile
+                ? BorderRadius.zero
+                : const BorderRadius.vertical(top: Radius.circular(16)),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.description_outlined,
+              color: primaryColor,
+              size: isMobile ? 18 : 20,
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          Expanded(
+            child: Text(
+              isMobile ? 'Auditor Reports' : 'Manage Auditor Reports',
+              style: TextStyle(
+                fontSize: isMobile ? 15 : 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+          if (!isMobile) ...[
+            const SizedBox(width: 12),
+            SizedBox(
+              width: isTablet ? 200 : 260,
+              height: 36,
+              child: _searchField(),
+            ),
+            const SizedBox(width: 12),
+          ],
+
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close, size: 20),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.grey.shade100,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileSearch() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: _searchField(),
+    );
+  }
+
+  Widget _searchField() {
+    return TextField(
+      controller: searchController,
+      onChanged: filterSearchResults,
+      decoration: InputDecoration(
+        hintText: 'Search office...',
+        hintStyle: TextStyle(color: grey, fontSize: 13),
+        prefixIcon: const Icon(Icons.search, size: 18),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: primaryColor),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopTable() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: DataTable2(
+        columnSpacing: 12,
+        headingRowColor: WidgetStatePropertyAll(Colors.grey.shade50),
+        dataRowColor: WidgetStatePropertyAll(Colors.white),
+        headingTextStyle: TextStyle(
+          color: Colors.grey.shade600,
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
+        horizontalMargin: 12,
+        minWidth: 560,
+        fixedTopRows: 1,
+        border: TableBorder(
+          horizontalInside: BorderSide(color: Colors.grey.shade100),
+        ),
+        columns: const [
+          DataColumn2(label: Text('#'), fixedWidth: 40),
+          DataColumn2(label: Text('Office'), size: ColumnSize.L),
+          DataColumn2(label: Text('Period'), size: ColumnSize.L),
+          DataColumn(label: Text('Actions')),
+        ],
+        rows:
+            filteredList.asMap().entries.map((entry) {
+              final index = entry.key;
+              final summary = entry.value;
+              final itemNumber = ((_currentPage - 1) * _pageSize) + index + 1;
 
                           return DataRow(
                             cells: [

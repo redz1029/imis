@@ -5,7 +5,6 @@ using IMIS.Domain;
 using IMIS.Persistence.SeedConfigurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using System.Reflection.Emit;
 
 namespace IMIS.Persistence
 {
@@ -47,6 +46,34 @@ namespace IMIS.Persistence
         public DbSet<StrategyReview> StrategyReview { get; set; }
         public DbSet<StrategyReviewDeliverableKpi> StrategyReviewDeliverableKpi { get; set; }
         public DbSet<StrategyReviewDeliverable> StrategyReviewDeliverable { get; set; }
+        public DbSet<StrategyReviewPeriod> StrategyReviewPeriod { get; set; }
+        public DbSet<PerformanceValidationToolPeriod> PerformanceValidationToolPeriod { get; set; }
+        public DbSet<PerformanceValidationToolValidators> PerformanceValidationToolValidators { get; set; }
+        public DbSet<PerformanceValidationToolObjectives> PerformanceValidationToolObjectives { get; set; }
+        public DbSet<PerformanceValidationToolDeliverableFindings> PerformanceValidationToolDeliverableFindings { get; set; }
+        public DbSet<PerformanceValidationToolConclusion> PerformanceValidationToolConclusion { get; set; }
+        public DbSet<PerformanceValidationToolSignatoryTemplate> PerformanceValidationToolSignatoryTemplate { get; set; }
+        public DbSet<PerformanceValidationToolSignatory> PerformanceValidationToolSignatory { get; set; }
+        public DbSet<PerformanceValidationTool> PerformanceValidationTool { get; set; }
+        public DbSet<CalendarActivity> CalendarActivity { get; set; }
+        public DbSet<KraRoadmapHistory> KraRoadmapHistory { get; set; }
+
+        public DbSet<ImpactStrategicGoalScoreCardPeriod> ImpactStrategicGoalScoreCardPeriod { get; set; }
+
+        public DbSet<ImpactStrategicGoalScoreCard> ImpactStrategicGoalScoreCard { get; set; }
+
+        public DbSet<ImpactScoreCard> ImpactScoreCard { get; set; }
+        public DbSet<ImpactScoreCardIndicator> ImpactScoreCardIndicator { get; set; }
+        public DbSet<ImpactScoreCardTarget> ImpactScoreCardTarget { get; set; }
+
+        public DbSet<ImpactStrategicScoreCard> ImpactStrategicScoreCard { get; set; }
+        public DbSet<ImpactStrategicScoreCardMeasure> ImpactStrategicScoreCardMeasure { get; set; }
+        public DbSet<ImpactStrategicScoreCardTarget> ImpactStrategicScoreCardTarget { get; set; }
+        public DbSet<KraRoadmapKpiSequence> KraRoadmapKpiSequence { get; set; }
+        public DbSet<SWOTAnalysisStrengthWeaknessSettings> SWOTAnalysisStrengthWeaknessSettings { get; set; }
+        public DbSet<SWOTAnalysisOpportunitiesThreatsSettings> SWOTAnalysisOpportunitiesThreatsSettings { get; set; }
+
+
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
         public DbSet<IsoStandard> IsoStandards { get; set; }
@@ -81,7 +108,6 @@ namespace IMIS.Persistence
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
-
             base.OnModelCreating(builder);
 
             builder.Entity<User>().ToTable("AspNetUsers");
@@ -102,6 +128,44 @@ namespace IMIS.Persistence
                   .HasForeignKey(x => x.OfficeId);
 
             });
+
+            builder.Entity<StrategyReview>(entity =>
+            {
+                entity.HasOne(x => x.StrategyReviewPeriod)
+                      .WithMany()
+                      .HasForeignKey(x => x.StrategyReviewPeriodId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            
+            builder.Entity<PerformanceValidationToolValidators>()
+                .HasOne<PerformanceValidationTool>()
+                .WithMany(x => x.Validators)
+                .HasForeignKey(x => x.PerformanceValidationToolId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<PerformanceValidationToolDeliverableFindings>()
+                .HasOne<PerformanceValidationTool>()
+                .WithMany(x => x.DeliverableFindings)
+                .HasForeignKey(x => x.PerformanceValidationToolId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<PerformanceValidationToolSignatory>()
+                .HasOne<PerformanceValidationTool>()
+                .WithMany(x => x.PvtSignatories)
+                .HasForeignKey(x => x.PerformanceValidationToolId)
+                .OnDelete(DeleteBehavior.NoAction);
+            
+            builder.Entity<PerformanceValidationToolObjectives>()
+                .HasOne<PerformanceValidationTool>()
+                .WithOne(x => x.Objectives)
+                .HasForeignKey<PerformanceValidationToolObjectives>(x => x.PerformanceValidationToolId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<PerformanceValidationToolConclusion>()
+                .HasOne<PerformanceValidationTool>()
+                .WithOne(x => x.Conclusion)
+                .HasForeignKey<PerformanceValidationToolConclusion>(x => x.PerformanceValidationToolId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<AuditorTeams>()
                     .HasKey(at => at.Id);

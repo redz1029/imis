@@ -18,5 +18,6 @@ namespace IMIS.Application.OfficeModule
         Task<IEnumerable<Office>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
         Task<Office> GetRootParentOffice(Office childOffice, CancellationToken cancellationToken);
         Task<Office?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<string?> GetParentOfficeNameAsync(int officeId, CancellationToken cancellationToken);
     }
 }

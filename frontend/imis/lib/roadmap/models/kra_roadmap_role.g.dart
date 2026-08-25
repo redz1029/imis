@@ -8,7 +8,7 @@ part of 'kra_roadmap_role.dart';
 
 KraRoadmapRole _$KraRoadmapRoleFromJson(Map<String, dynamic> json) =>
     KraRoadmapRole(
-      id: (json['id'] as num?)?.toInt(),
+      id: (json['id'] as num).toInt(),
       rowVersion: json['rowVersion'] as String?,
       isDeleted: json['isDeleted'] as bool?,
       kraId: (json['kraId'] as num).toInt(),

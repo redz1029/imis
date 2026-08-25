@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 
 //REUSABLE CODE//
 
@@ -13,15 +14,32 @@ const grey = Color.fromRGBO(161, 161, 161, 1);
 const lightGrey = Color.fromRGBO(217, 217, 217, 1);
 const lightGrey1 = Color.fromRGBO(245, 245, 245, 1);
 const primaryTextColor = Color.fromRGBO(65, 65, 65, 1);
-const Color peachLight = Color.fromARGB(255, 255, 225, 224);
-
-const Color kOrange = Color(0xFFF4724A);
+const scaffoldBackgroundColor = Color(0xffEDEDED);
+const Color kOrange = Color(0xFFF57F17);
 const Color kGreen = Color(0xFF4DC688);
 const Color kDark = Color(0xFF0F0F0F);
 const Color kText = Color(0xFF111827);
 const Color kMuted = Color(0xFF6B7280);
 const Color kBorder = Color(0xFFE5E7EB);
 const Color kBackground = Color(0xFFFAFAFA);
+const kDanger = Color(0xFFEF4444);
+const kSuccess = Color(0xFF10B981);
+const kSuccessLight = Color(0xFFECFDF5);
+
+const kLabel = Color(0xFF374151);
+const kHint = Color(0xFF9CA3AF);
+const kSurface = Color(0xFFFFFFFF);
+const Color surface = Color(0xFFF5F6FA);
+
+const kCardShadow = Color(0x0A000000);
+const kPrimaryLight = Color(0xFFEBF2FF);
+const kDangerLight = Color(0xFFFEF2F2);
+
+const kPrimaryMedium = Color(0xFFD4919E);
+const kPrimaryBg = Color(0xFFF2D5D9);
+const kBg = Color(0xFFFAF7F8);
+const kTextMid = Color(0xFF6B4E53);
+const kTextLight = Color(0xFF9E8285);
 
 //Sizing
 const gap4px = SizedBox(height: 4);
@@ -212,7 +230,41 @@ Color getStatusColor(String status) {
 
 String getGreeting() {
   final hour = DateTime.now().hour;
-  if (hour < 12) return 'Good Morning';
-  if (hour < 17) return 'Good Afternoon';
-  return 'Good Evening';
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+Color ratingBgColor(double val) {
+  if (val == 1.0) return const Color.fromARGB(255, 156, 85, 103);
+  if (val == 0.5) return const Color(0xFFE88FA0);
+  return const Color(0xFFF2D5D9);
+}
+
+Color ratingTextColor(double val) {
+  if (val == 1.0) return Colors.white;
+  if (val == 0.5) return Colors.white;
+  return kText;
+}
+
+Color statusColor(PgsStatus status) {
+  switch (status) {
+    case PgsStatus.notStarted:
+      return Colors.red;
+    case PgsStatus.onGoing:
+      return Colors.orange;
+    case PgsStatus.completed:
+      return Colors.green;
+  }
+}
+
+String statusLabel(PgsStatus status) {
+  switch (status) {
+    case PgsStatus.notStarted:
+      return 'Not Started';
+    case PgsStatus.onGoing:
+      return 'On Going';
+    case PgsStatus.completed:
+      return 'Completed';
+  }
 }

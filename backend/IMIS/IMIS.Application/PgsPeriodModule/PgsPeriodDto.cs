@@ -9,6 +9,7 @@ namespace IMIS.Application.PgsPeriodModule
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
         public string? Remarks { get; set; }
+        public bool? IsActive { get; set; }
 
         public PgsPeriodDto() { }
 
@@ -21,10 +22,11 @@ namespace IMIS.Application.PgsPeriodModule
             this.Remarks = pgsPeriod.Remarks;
             this.IsDeleted = pgsPeriod.IsDeleted;
             this.RowVersion = pgsPeriod.RowVersion;
+            this.IsActive = pgsPeriod.IsActive;
         }
         public override PgsPeriod ToEntity()
         {
-            return new PgsPeriod() { Id = Id, StartDate = StartDate, EndDate = EndDate, Remarks = Remarks };
+            return new PgsPeriod() { Id = Id, StartDate = StartDate, EndDate = EndDate, Remarks = Remarks, IsActive  = IsActive};
         }      
     }
 }

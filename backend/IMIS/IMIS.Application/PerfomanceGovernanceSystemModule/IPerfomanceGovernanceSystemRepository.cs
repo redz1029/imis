@@ -1,6 +1,8 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.Dashboard;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsModule
@@ -20,10 +22,17 @@ namespace IMIS.Application.PgsModule
         Task<List<PerfomanceGovernanceSystem>> GetByOfficeIdsAsync(List<int> officeIds, CancellationToken cancellationToken);
         Task<PerfomanceGovernanceSystem?> GetByIdForSoftDeleteAsync(int deliverableId, CancellationToken cancellationToken);
         Task<List<PgsSignatoryTemplate>> GetTemplatesByServiceHeadAsync(string userId, CancellationToken cancellationToken);
-
         Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserOfficeOnlyAsync(string userid, CancellationToken cancellationToken);
-
         Task<bool> ExistsByOfficeAndPgsPeriodAsync(int officeId, int pgsPeriodId, CancellationToken cancellationToken);
-
+        Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken);  
+        Task<List<PerfomanceGovernanceSystem>>GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken);
+        Task<List<PerfomanceGovernanceSystem>>GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(string userId, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken);
+        Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableByStandardUserAsync(string userId, long? pgsPeriodId,  CancellationToken cancellationToken);
+        Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodid, int? month, int? year, CancellationToken cancellationToken);
+        Task<List<ServiceGroupedAuditDto>> GetPendingAuditsByAuditorSortByServiceAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodId, int? month, int? year, CancellationToken cancellationToken);
+        Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(List<int> officeIds, int? pgsPeriodId, CancellationToken cancellationToken);
+        Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(List<int> officeIds, int? pgsPeriodId, CancellationToken cancellationToken);
+        Task<List<int>> GetAllOfficeIdsAsync(CancellationToken cancellationToken);
+        Task<List<ReportPgsServiceOfficePeriodDto>> GetPgsByServiceOfficePeriodAsync(long? periodId, long? officeId, long? parentOfficeId, CancellationToken cancellationToken);
     }
 }

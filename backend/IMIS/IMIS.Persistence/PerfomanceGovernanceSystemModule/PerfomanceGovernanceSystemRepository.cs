@@ -1,6 +1,8 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.PerfomanceGovernanceSystemModule; 
+using IMIS.Application.Dashboard;
+using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
@@ -9,6 +11,615 @@ using Microsoft.EntityFrameworkCore;
 public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGovernanceSystem, long, ImisDbContext, User>, IPerfomanceGovernanceSystemRepository
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
+
+    public async Task<List<ReportPgsServiceOfficePeriodDto>> GetPgsByServiceOfficePeriodAsync(long? periodId, long? officeId, long? parentOfficeId, CancellationToken cancellationToken)
+    {
+        var query = from pgs in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking()
+
+            join parentOffice in ReadOnlyDbContext.Set<Office>().AsNoTracking() on pgs.Office.ParentOfficeId equals parentOffice.Id into parentOffices
+
+            from parentOffice in parentOffices.DefaultIfEmpty()
+
+            where
+                !pgs.IsDeleted
+                && !pgs.Office.IsDeleted
+                && (!periodId.HasValue || pgs.PgsPeriod.Id == periodId.Value)
+                && (!officeId.HasValue || pgs.Office.Id == officeId.Value)
+                && (!parentOfficeId.HasValue || pgs.Office.ParentOfficeId == parentOfficeId.Value)
+
+            select new ReportPgsServiceOfficePeriodDto
+            {
+                ServiceName = parentOffice != null ? parentOffice.Name : "Unassigned",
+                OfficeName = pgs.Office.Name,
+                PeriodId = pgs.PgsPeriod.Id,
+                PeriodName = pgs.PgsPeriod.StartDate.ToString("MMM yyyy") + " - " + pgs.PgsPeriod.EndDate.ToString("MMM yyyy"),
+                StartDate = pgs.PgsPeriod.StartDate,
+                EndDate = pgs.PgsPeriod.EndDate
+            };
+
+        var data = await query
+            .OrderBy(x => x.ServiceName)
+            .ThenBy(x => x.OfficeName)
+            .ToListAsync(cancellationToken);
+
+        return data;
+    }
+
+
+    public async Task<List<int>> GetAllOfficeIdsAsync(CancellationToken cancellationToken)
+    {
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted)
+            .Select(x => x.OfficeId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(List<int> officeIds, int? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        var deliverablesQuery =  from d in ReadOnlyDbContext.Set<PgsDeliverable>().AsNoTracking()
+            join p in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking() on d.PerfomanceGovernanceSystemId equals p.Id
+            where !d.IsDeleted
+                  && !p.IsDeleted
+                  && officeIds.Contains(p.OfficeId)
+                  && (!pgsPeriodId.HasValue || p.PgsPeriod.Id == pgsPeriodId.Value)
+            select d.Id;
+
+        var latestAccomplishments = await deliverablesQuery
+            .Select(deliverableId => new
+            {
+                CurrentStatus = ReadOnlyDbContext.Set<PgsDeliverableAccomplishment>()
+                    .Where(a => a.PgsDeliverableId == deliverableId && !a.IsDeleted)
+                    .OrderByDescending(a => a.PercentAccomplished)
+                    .Select(a => (int?)a.Status)
+                    .FirstOrDefault() ?? 0,
+
+                IsAudited = ReadOnlyDbContext.Set<PgsDeliverableAccomplishment>()
+                    .Any(a => a.PgsDeliverableId == deliverableId
+                              && !a.IsDeleted
+                              && a.AuditorRemarks != null
+                              && a.AuditorRemarks.Length > 0)
+            })
+            .ToListAsync(cancellationToken);
+
+        var total = latestAccomplishments.Count;
+        var notStarted = latestAccomplishments.Count(x => x.CurrentStatus == 0);
+        var inProgress = latestAccomplishments.Count(x => x.CurrentStatus == 1);
+        var completed = latestAccomplishments.Count(x => x.CurrentStatus == 2);
+        var audited = latestAccomplishments.Count(x => x.IsAudited);
+
+        return new DashboardAuditStatusDto
+        {
+            TotalDeliverables = total,
+            CountNotStarted = notStarted,
+            CountInProgress = inProgress,
+            CountCompleted = completed,
+            CountAudited = audited,
+            PercentNotStarted = total > 0 ? Math.Round((decimal)notStarted / total * 100, 2) : 0,
+            PercentInProgress = total > 0 ? Math.Round((decimal)inProgress / total * 100, 2) : 0,
+            PercentCompleted = total > 0 ? Math.Round((decimal)completed / total * 100, 2) : 0
+        };
+    }
+      
+    public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(List<int> officeIds, int? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        var query = from office in ReadOnlyDbContext.Set<Office>().AsNoTracking()
+
+            join pgs in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking() on office.Id equals pgs.OfficeId
+
+            where
+                !pgs.IsDeleted
+                && officeIds.Contains(office.Id)
+                && (!pgsPeriodId.HasValue || pgs.PgsPeriod.Id == pgsPeriodId.Value)
+
+            select office.Id;
+
+        return new TotalDashboardOfficeDto
+        {
+            TotalNoOffice = await query
+                .Distinct()
+                .CountAsync(cancellationToken)
+        };
+    }
+  
+     public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(
+     long? auditorId,
+     long? teamId,
+     long? officeId,
+     long? parentOfficeId,
+     int? periodId,
+     int? month,
+     int? year,
+     CancellationToken cancellationToken)
+    {
+        var query =
+            from auditor in ReadOnlyDbContext.Set<Auditor>().AsNoTracking()
+
+            join auditorOffice in ReadOnlyDbContext.Set<AuditorOffices>().AsNoTracking()
+                on auditor.Id equals auditorOffice.AuditorId
+
+            join office in ReadOnlyDbContext.Set<Office>().AsNoTracking()
+                on auditorOffice.OfficeId equals office.Id
+
+            join parentOffice in ReadOnlyDbContext.Set<Office>().AsNoTracking()
+                on office.ParentOfficeId equals parentOffice.Id into parentOffices
+            from parentOffice in parentOffices.DefaultIfEmpty()
+
+            join user in ReadOnlyDbContext.Set<User>().AsNoTracking()
+                on auditor.UserId equals user.Id
+
+            join auditorTeam in ReadOnlyDbContext.Set<AuditorTeams>().AsNoTracking()
+                on auditor.Id equals auditorTeam.AuditorId into auditorTeams
+            from auditorTeam in auditorTeams.DefaultIfEmpty()
+
+            join team in ReadOnlyDbContext.Set<Team>().AsNoTracking()
+                on auditorTeam.TeamId equals team.Id into teams
+            from team in teams.DefaultIfEmpty()
+
+            join pgs in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking()
+                on office.Id equals pgs.OfficeId into pgsList
+            from pgs in pgsList.DefaultIfEmpty()
+
+            join deliverable in ReadOnlyDbContext.Set<PgsDeliverable>().AsNoTracking()
+                on pgs.Id equals deliverable.PerfomanceGovernanceSystemId into deliverables
+            from deliverable in deliverables.DefaultIfEmpty()
+
+            join accomplishment in ReadOnlyDbContext.Set<PgsDeliverableAccomplishment>().AsNoTracking()
+                on deliverable.Id equals accomplishment.PgsDeliverableId into accomplishments
+            from accomplishment in accomplishments.DefaultIfEmpty()
+
+            join userOffice in ReadOnlyDbContext.Set<UserOffices>().AsNoTracking()
+                on office.Id equals userOffice.OfficeId into userOffices
+            from userOffice in userOffices
+                .Where(x => x.IsOfficeHead && x.IsActive && !x.IsDeleted)
+                .DefaultIfEmpty()
+
+            join officeHeadUser in ReadOnlyDbContext.Set<User>().AsNoTracking()
+                on userOffice.UserId equals officeHeadUser.Id into officeHeadUsers
+            from officeHeadUser in officeHeadUsers.DefaultIfEmpty()
+
+            where
+                !auditor.IsDeleted
+                && !auditorOffice.IsDeleted
+                && auditorTeam != null
+                && auditorTeam.IsTeamLeader
+                && (!auditorId.HasValue || auditor.Id == auditorId.Value)
+                && (!teamId.HasValue || (team != null && team.Id == teamId.Value))
+                && (!officeId.HasValue || office.Id == officeId.Value)
+                && (!parentOfficeId.HasValue || office.ParentOfficeId == parentOfficeId.Value)             
+                && (!periodId.HasValue || pgs == null || pgs.PgsPeriod.Id == periodId.Value)
+                && (
+                    accomplishment == null ||
+                    (
+                        (!month.HasValue || accomplishment.PostingDate.Month == month.Value)
+                        && (!year.HasValue || accomplishment.PostingDate.Year == year.Value)
+                    )
+                )
+
+            group new
+            {
+                deliverable,
+                accomplishment,
+                officeHeadUser
+            }
+            by new
+            {
+                AuditorId = auditor.Id,
+
+                user.FirstName,
+                user.MiddleName,
+                user.LastName,
+                user.Prefix,
+                user.Suffix,
+
+                TeamId = team != null ? team.Id : 0,
+                TeamName = team != null ? team.Name : string.Empty,
+
+                OfficeId = office.Id,
+                OfficeName = office.Name,
+
+                ParentOfficeName = parentOffice != null ? parentOffice.Name : string.Empty
+            }
+            into g
+
+            select new
+            {
+                AuditorId = g.Key.AuditorId,
+
+                g.Key.FirstName,
+                g.Key.MiddleName,
+                g.Key.LastName,
+                g.Key.Prefix,
+                g.Key.Suffix,
+
+                TeamId = g.Key.TeamId,
+                TeamName = g.Key.TeamName,
+
+                OfficeId = g.Key.OfficeId,
+                OfficeName = g.Key.OfficeName,
+
+                ParentOfficeName = g.Key.ParentOfficeName,
+
+                TotalAuditCount = g
+                    .Where(x => x.deliverable != null && !x.deliverable.IsDeleted)
+                    .Select(x => x.deliverable.Id)
+                    .Distinct()
+                    .Count(),
+
+                CompletedAuditCount = g
+                    .Where(x =>
+                        x.deliverable != null &&
+                        x.accomplishment != null &&
+                        !x.accomplishment.IsDeleted &&
+                        !string.IsNullOrEmpty(x.accomplishment.AuditorRemarks))
+                    .Select(x => x.deliverable.Id)
+                    .Distinct()
+                    .Count(),
+
+                PendingAuditCount = g
+                    .Where(x =>
+                        x.deliverable != null &&
+                        x.accomplishment != null &&
+                        !x.accomplishment.IsDeleted &&
+                        string.IsNullOrEmpty(x.accomplishment.AuditorRemarks))
+                    .Select(x => x.deliverable.Id)
+                    .Distinct()
+                    .Count(),
+
+                OfficeHeadPrefix = g.Select(x => x.officeHeadUser.Prefix).FirstOrDefault(),
+                OfficeHeadFirstName = g.Select(x => x.officeHeadUser.FirstName).FirstOrDefault(),
+                OfficeHeadMiddleName = g.Select(x => x.officeHeadUser.MiddleName).FirstOrDefault(),
+                OfficeHeadLastName = g.Select(x => x.officeHeadUser.LastName).FirstOrDefault(),
+                OfficeHeadSuffix = g.Select(x => x.officeHeadUser.Suffix).FirstOrDefault()
+            };
+
+        var data = await query
+            .OrderBy(x => x.TeamName)
+            .ThenBy(x => x.OfficeName)
+            .ThenBy(x => x.LastName)
+            .ToListAsync(cancellationToken);
+
+        var reportMonth =
+            month.HasValue && year.HasValue
+                ? new DateTime(year.Value, month.Value, 1).ToString("MMMM yyyy")
+                : month.HasValue
+                    ? new DateTime(DateTime.Now.Year, month.Value, 1).ToString("MMMM")
+                    : year.HasValue
+                        ? year.Value.ToString()
+                        : "All Periods";
+
+        return data.Select(x => new AuditorPendingAuditDto
+        {
+            AuditorId = x.AuditorId,
+
+            AuditorName = string.Join(" ",
+                new[]
+                {
+                    x.Prefix,
+                    x.FirstName,
+                    x.MiddleName,
+                    x.LastName,
+                    x.Suffix
+                }.Where(s => !string.IsNullOrWhiteSpace(s))),
+
+            TeamId = x.TeamId,
+            TeamName = x.TeamName,
+
+            OfficeId = x.OfficeId,
+            OfficeName = x.OfficeName,
+
+            ParentOfficeName = x.ParentOfficeName,
+
+            TotalAuditCount = x.TotalAuditCount,
+            CompletedAuditCount = x.CompletedAuditCount,
+            PendingAuditCount = x.PendingAuditCount,
+
+            AuditProgress = $"{x.CompletedAuditCount} out of {x.TotalAuditCount}",
+
+            ReportMonth = reportMonth,
+
+            AccomplishedBy = string.Join(" ",
+                new[]
+                {
+                    x.OfficeHeadPrefix,
+                    x.OfficeHeadFirstName,
+                    x.OfficeHeadMiddleName,
+                    x.OfficeHeadLastName,
+                    x.OfficeHeadSuffix
+                }.Where(s => !string.IsNullOrWhiteSpace(s)))
+        })
+        .ToList();
+    }
+
+    //Sort by Service Report    
+    public async Task<List<ServiceGroupedAuditDto>> GetPendingAuditsByAuditorSortByServiceAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodId, int? month, int? year, CancellationToken cancellationToken)
+    {
+        var query =
+            from auditor in ReadOnlyDbContext.Set<Auditor>().AsNoTracking()
+
+            join auditorOffice in ReadOnlyDbContext.Set<AuditorOffices>().AsNoTracking()
+                on auditor.Id equals auditorOffice.AuditorId
+
+            join office in ReadOnlyDbContext.Set<Office>().AsNoTracking()
+                on auditorOffice.OfficeId equals office.Id
+
+            join parentOffice in ReadOnlyDbContext.Set<Office>().AsNoTracking()
+                on office.ParentOfficeId equals parentOffice.Id into parentOffices
+            from parentOffice in parentOffices.DefaultIfEmpty()
+
+            join user in ReadOnlyDbContext.Set<User>().AsNoTracking()
+                on auditor.UserId equals user.Id
+
+            join auditorTeam in ReadOnlyDbContext.Set<AuditorTeams>().AsNoTracking()
+                on auditor.Id equals auditorTeam.AuditorId into auditorTeams
+            from auditorTeam in auditorTeams.DefaultIfEmpty()
+
+            join team in ReadOnlyDbContext.Set<Team>().AsNoTracking()
+                on auditorTeam.TeamId equals team.Id into teams
+            from team in teams.DefaultIfEmpty()
+
+            join pgs in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking()
+                on office.Id equals pgs.OfficeId into pgsList
+            from pgs in pgsList.DefaultIfEmpty()
+
+            join deliverable in ReadOnlyDbContext.Set<PgsDeliverable>().AsNoTracking()
+                on pgs.Id equals deliverable.PerfomanceGovernanceSystemId into deliverables
+            from deliverable in deliverables.DefaultIfEmpty()
+
+            join accomplishment in ReadOnlyDbContext.Set<PgsDeliverableAccomplishment>().AsNoTracking()
+                on deliverable.Id equals accomplishment.PgsDeliverableId into accomplishments
+            from accomplishment in accomplishments.DefaultIfEmpty()
+
+            join userOffice in ReadOnlyDbContext.Set<UserOffices>().AsNoTracking()
+                on office.Id equals userOffice.OfficeId into userOffices
+            from userOffice in userOffices
+                .Where(x => x.IsOfficeHead && x.IsActive && !x.IsDeleted)
+                .DefaultIfEmpty()
+
+            join officeHeadUser in ReadOnlyDbContext.Set<User>().AsNoTracking()
+                on userOffice.UserId equals officeHeadUser.Id into officeHeadUsers
+            from officeHeadUser in officeHeadUsers.DefaultIfEmpty()
+
+            where
+                !auditor.IsDeleted
+                && !auditorOffice.IsDeleted
+                && auditorTeam != null
+                && auditorTeam.IsTeamLeader
+                && (!auditorId.HasValue || auditor.Id == auditorId.Value)
+                && (!teamId.HasValue || (team != null && team.Id == teamId.Value))
+                && (!officeId.HasValue || office.Id == officeId.Value)
+                && (!parentOfficeId.HasValue || office.ParentOfficeId == parentOfficeId.Value)            
+                && (!periodId.HasValue || pgs == null || pgs.PgsPeriod.Id == periodId.Value)
+                && (
+                    accomplishment == null ||
+                    (
+                        (!month.HasValue || accomplishment.PostingDate.Month == month.Value)
+                        && (!year.HasValue || accomplishment.PostingDate.Year == year.Value)
+                    )
+                )
+
+            group new
+            {
+                deliverable,
+                accomplishment,
+                officeHeadUser
+            }
+            by new
+            {
+                AuditorId = auditor.Id,
+
+                user.FirstName,
+                user.MiddleName,
+                user.LastName,
+                user.Prefix,
+                user.Suffix,
+                TeamId = team != null ? team.Id : 0,
+                TeamName = team != null ? team.Name : string.Empty,
+                OfficeId = office.Id,
+                OfficeName = office.Name,
+                ParentOfficeName = parentOffice != null ? parentOffice.Name : string.Empty
+            }
+            into g
+
+            select new
+            {
+                AuditorId = g.Key.AuditorId,
+
+                g.Key.FirstName,
+                g.Key.MiddleName,
+                g.Key.LastName,
+                g.Key.Prefix,
+                g.Key.Suffix,
+                TeamId = g.Key.TeamId,
+                TeamName = g.Key.TeamName,
+                OfficeId = g.Key.OfficeId,
+                OfficeName = g.Key.OfficeName,
+                ParentOfficeName = g.Key.ParentOfficeName,
+                TotalAuditCount = g
+                    .Where(x => x.deliverable != null && !x.deliverable.IsDeleted)
+                    .Select(x => x.deliverable.Id)
+                    .Distinct()
+                    .Count(),
+
+                CompletedAuditCount = g
+                    .Where(x =>
+                        x.deliverable != null &&
+                        x.accomplishment != null &&
+                        !x.accomplishment.IsDeleted &&
+                        !string.IsNullOrEmpty(x.accomplishment.AuditorRemarks))
+                    .Select(x => x.deliverable.Id)
+                    .Distinct()
+                    .Count(),
+
+                PendingAuditCount = g
+                    .Where(x =>
+                        x.deliverable != null &&
+                        x.accomplishment != null &&
+                        !x.accomplishment.IsDeleted &&
+                        string.IsNullOrEmpty(x.accomplishment.AuditorRemarks))
+                    .Select(x => x.deliverable.Id)
+                    .Distinct()
+                    .Count(),
+
+                OfficeHeadPrefix = g.Select(x => x.officeHeadUser.Prefix).FirstOrDefault(),
+                OfficeHeadFirstName = g.Select(x => x.officeHeadUser.FirstName).FirstOrDefault(),
+                OfficeHeadMiddleName = g.Select(x => x.officeHeadUser.MiddleName).FirstOrDefault(),
+                OfficeHeadLastName = g.Select(x => x.officeHeadUser.LastName).FirstOrDefault(),
+                OfficeHeadSuffix = g.Select(x => x.officeHeadUser.Suffix).FirstOrDefault()
+            };
+
+        var data = await query
+            .OrderBy(x => x.ParentOfficeName)
+            .ThenBy(x => x.TeamName)
+            .ThenBy(x => x.OfficeName)
+            .ThenBy(x => x.LastName)
+            .ToListAsync(cancellationToken);
+
+        var reportMonth =
+            month.HasValue && year.HasValue
+                ? new DateTime(year.Value, month.Value, 1).ToString("MMMM yyyy")
+                : month.HasValue
+                    ? new DateTime(DateTime.Now.Year, month.Value, 1).ToString("MMMM")
+                    : year.HasValue
+                        ? year.Value.ToString()
+                        : "All Periods";
+
+        var flatList = data.Select(x => new AuditorPendingAuditDto
+        {
+            AuditorId = x.AuditorId,
+
+            AuditorName = string.Join(" ",
+            new[]
+            {
+                x.Prefix,
+                x.FirstName,
+                x.MiddleName,
+                x.LastName,
+                x.Suffix    
+            }.Where(s => !string.IsNullOrWhiteSpace(s))),
+
+            TeamId = x.TeamId,
+            TeamName = x.TeamName,
+            OfficeId = x.OfficeId,
+            OfficeName = x.OfficeName,
+            ParentOfficeName = x.ParentOfficeName,
+            TotalAuditCount = x.TotalAuditCount,
+            CompletedAuditCount = x.CompletedAuditCount,
+            PendingAuditCount = x.PendingAuditCount,
+            AuditProgress = $"{x.CompletedAuditCount} out of {x.TotalAuditCount}",
+            ReportMonth = reportMonth,
+
+            AccomplishedBy = string.Join(" ",
+            new[]
+            {
+                x.OfficeHeadPrefix,
+                x.OfficeHeadFirstName,
+                x.OfficeHeadMiddleName,
+                x.OfficeHeadLastName,
+                x.OfficeHeadSuffix
+            }.Where(s => !string.IsNullOrWhiteSpace(s)))
+        })
+        .ToList();
+
+        var groupedResult = flatList
+            .GroupBy(x => string.IsNullOrEmpty(x.ParentOfficeName) ? "Unassigned" : x.ParentOfficeName)
+            .Select(g => new ServiceGroupedAuditDto
+            {
+                ServiceName = g.Key,
+                Offices = g.ToList()
+            })
+            .ToList();
+
+        return groupedResult;
+    }
+
+    // GET ALL AUDITOR PGS DELIVERABLES    
+    public async Task<List<PerfomanceGovernanceSystem>>
+    GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+            .AsNoTracking()
+            .Include(x => x.Office)
+            .Include(x => x.PgsPeriod)
+            .Include(x => x.PgsReadinessRating)
+            .Include(x => x.PgsDeliverables)
+            .Include(x => x.PgsSignatories)
+            .Where(x => !x.IsDeleted && (!officeId.HasValue || x.OfficeId == officeId.Value) && (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value))
+            .ToListAsync(cancellationToken);
+    }
+
+    // GET BY AUDITOR
+    public async Task<List<PerfomanceGovernanceSystem>>GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(string userId, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        var auditor = await ReadOnlyDbContext.Set<Auditor>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted, cancellationToken);
+
+        if (auditor == null)
+            return [];
+
+        var officeIds = await ReadOnlyDbContext.Set<AuditorOffices>()
+            .AsNoTracking()
+            .Where(x => x.AuditorId == auditor.Id && !x.IsDeleted)
+            .Select(x => x.OfficeId)
+            .ToListAsync(cancellationToken);
+
+        if (!officeIds.Any())
+            return [];
+
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+            .AsNoTracking()
+            .Include(x => x.Office)
+            .Include(x => x.PgsPeriod)
+            .Include(x => x.PgsReadinessRating)
+            .Include(x => x.PgsDeliverables)
+            .Include(x => x.PgsSignatories)
+            .Where(x => !x.IsDeleted && officeIds.Contains(x.OfficeId) && (!officeId.HasValue || x.OfficeId == officeId.Value) && (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value))
+            .ToListAsync(cancellationToken);
+    }
+
+    // GET BY USER AUDITOR
+    public async Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableByStandardUserAsync(string userId, long? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        var officeIds = await ReadOnlyDbContext.Set<UserOffices>()
+            .AsNoTracking()
+            .Where(x =>
+                x.UserId == userId &&
+                x.IsActive &&
+                !x.IsDeleted)
+            .Select(x => x.OfficeId)
+            .ToListAsync(cancellationToken);
+
+        if (!officeIds.Any())
+            return [];
+
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+            .AsNoTracking()
+            .Include(x => x.Office)
+            .Include(x => x.PgsPeriod)
+            .Include(x => x.PgsReadinessRating)
+            .Include(x => x.PgsDeliverables)
+            .Include(x => x.PgsSignatories)
+            .Where(x =>
+                !x.IsDeleted &&
+                officeIds.Contains(x.OfficeId) &&
+                (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+            .AsNoTracking()
+            .Include(x => x.Office)
+            .Include(x => x.PgsPeriod)
+            .Include(x => x.PgsReadinessRating)
+            .Include(x => x.PgsDeliverables)
+            .Include(x => x.PgsSignatories)
+            .Where(x => !x.IsDeleted && (!officeId.HasValue || x.OfficeId == officeId.Value) && (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value)) 
+            .ToListAsync(cancellationToken);
+    }
 
     public async Task<bool> ExistsByOfficeAndPgsPeriodAsync(int officeId, int pgsPeriodId, CancellationToken cancellationToken)
     {

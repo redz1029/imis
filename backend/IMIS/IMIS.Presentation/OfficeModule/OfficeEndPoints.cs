@@ -38,7 +38,7 @@ namespace IMIS.Presentation.OfficeModule
             })
             .WithTags(_officeTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_officeTag), true);
 
             app.MapGet("/alloffices", async (IOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -47,18 +47,18 @@ namespace IMIS.Presentation.OfficeModule
             })
             .WithTags(_officeTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_officeTag), true);
 
-            //// Get offices filtered for PGS Auditor
-            app.MapGet("/pgs-auditor", async (IOfficeService service, CancellationToken cancellationToken) =>
+            //// Get offices filtered for PGS Auditor           
+            app.MapGet("/pgs-auditor/{roleId}", async (string roleId, IOfficeService service, CancellationToken cancellationToken) =>
             {
-                var offices = await service.GetOfficesForPgsAuditorAsync(cancellationToken).ConfigureAwait(false);
+                var offices = await service.GetOfficesForPgsAuditorAsync(roleId, cancellationToken);
                 return Results.Ok(offices);
             })
             .WithTags(_officeTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_officeTag), true);
-         
+
             app.MapGet("/filter/{name}", async (string name, IOfficeService service, CancellationToken cancellationToken) =>
             {
                 int officeNoOfResults = 10;
@@ -66,7 +66,7 @@ namespace IMIS.Presentation.OfficeModule
                 return offices != null ? Results.Ok(offices) : Results.NoContent();
             })
             .WithTags(_officeTag)          
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_officeTag), true);
 
             app.MapGet("/{id}", async (int id, IOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -75,7 +75,7 @@ namespace IMIS.Presentation.OfficeModule
             })
             .WithTags(_officeTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_officeTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] OfficeDto office, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {               
@@ -97,7 +97,7 @@ namespace IMIS.Presentation.OfficeModule
                 return paginatedOffice;
             })
             .WithTags(_officeTag)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_officeTag), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -119,7 +119,7 @@ namespace IMIS.Presentation.OfficeModule
             })
             .WithTags(_officeTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_officeTag), true);
         }
     }
 }

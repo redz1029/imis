@@ -36,7 +36,7 @@ namespace IMIS.Presentation.KraModuleAPI
                 return Results.Ok(keyResultAreaDto);
             })
             .WithTags(_keyAreaResultTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_keyAreaResultTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
 
             app.MapGet("/filter/{name}", async (string name, IKeyResultAreaService service, CancellationToken cancellationToken) =>
@@ -46,7 +46,7 @@ namespace IMIS.Presentation.KraModuleAPI
                 return keyResultArea != null ? Results.Ok(keyResultArea) : Results.NoContent();
             })
             .WithTags(_keyAreaResultTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_keyAreaResultTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
 
             app.MapGet("/{id}", async (int id, IKeyResultAreaService service, CancellationToken cancellationToken) =>
@@ -55,7 +55,7 @@ namespace IMIS.Presentation.KraModuleAPI
                 return keyResultArea != null ? Results.Ok(keyResultArea) : Results.NotFound();
             })
             .WithTags(_keyAreaResultTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_keyAreaResultTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
           
             app.MapPut("/{id}", async (int id, [FromBody] KeyResultAreaDto keyResultAreaDto, IKeyResultAreaService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -78,7 +78,7 @@ namespace IMIS.Presentation.KraModuleAPI
                 return Results.Ok(paginatedKeyResultArea);
             })
             .WithTags(_keyAreaResultTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_keyAreaResultTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IKeyResultAreaService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>

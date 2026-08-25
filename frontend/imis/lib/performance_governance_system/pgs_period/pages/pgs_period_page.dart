@@ -2,6 +2,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/pgs_period/services/pgs_period_service.dart';
@@ -9,7 +10,9 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
+import 'package:imis/widgets/dialog/dialog_field.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -140,44 +143,32 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this PGS Period? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _pgsPeriodService.deletePeriod(id);
-                  await fetchPGSPeriods();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'PGS period',
+            itemName: 'PGS period',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _pgsPeriodService.deletePeriod(id);
+                await fetchPGSPeriods();
+                if (mounted) {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Period deleted successfully'),
+                    description: Text('PGS period deleted successfully'),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete Period'),
-                  );
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete PGS period',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 
@@ -187,258 +178,494 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
     String? startDate,
     String? endDate,
     String? remarkrs,
+    bool isActive = false,
     String? rowVersion,
   }) {
-    TextEditingController startDateController = TextEditingController(
-      text: startDate,
-    );
-    TextEditingController endDateController = TextEditingController(
-      text: endDate,
-    );
+    DateTime? selectedFromDate =
+        startDate != null ? DateTime.tryParse(startDate) : null;
+    DateTime? selectedEndDate =
+        endDate != null ? DateTime.tryParse(endDate) : null;
     TextEditingController remarksController = TextEditingController(
       text: remarkrs,
     );
+    final isEdit = id != null;
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            decoration: BoxDecoration(
-              color: primaryLightColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Text(
-              id == null ? 'Create  PGS Period' : 'Edit PGS Period',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 350,
-                  height: 60,
-                  child: TextFormField(
-                    controller: startDateController,
-                    decoration: InputDecoration(
-                      focusColor: primaryColor,
-                      labelText: 'Start Date',
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please select a date';
-                      }
-                      return null;
-                    },
-                    readOnly: true,
-                    onTap: () async {
-                      DateTime? picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2101),
-                        builder: (context, child) {
-                          return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: ColorScheme.light(
-                                primary: primaryColor,
-                                onPrimary: secondaryColor,
-                              ),
-                              textButtonTheme: TextButtonThemeData(
-                                style: TextButton.styleFrom(
-                                  foregroundColor: primaryColor,
-                                ),
-                              ),
-                            ),
-                            child: child!,
-                          );
-                        },
-                      );
-                      if (picked != null) {
-                        startDateController.text =
-                            picked.toLocal().toString().split(' ')[0];
-                      }
-                    },
-                  ),
-                ),
-                gap4px,
-                SizedBox(
-                  width: 350,
-                  height: 60,
-                  child: TextFormField(
-                    controller: endDateController,
-                    decoration: InputDecoration(
-                      focusColor: primaryColor,
-                      labelText: 'End Date',
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please select a date';
-                      }
-                      return null;
-                    },
-                    readOnly: true,
-                    onTap: () async {
-                      DateTime? picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2101),
-                        builder: (context, child) {
-                          return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: ColorScheme.light(
-                                primary: primaryColor,
-                                onPrimary: secondaryColor,
-                              ),
-                              textButtonTheme: TextButtonThemeData(
-                                style: TextButton.styleFrom(
-                                  foregroundColor: primaryColor,
-                                ),
-                              ),
-                            ),
-                            child: child!,
-                          );
-                        },
-                      );
-
-                      if (picked != null) {
-                        endDateController.text =
-                            picked.toLocal().toString().split(' ')[0];
-                      }
-                    },
-                  ),
-                ),
-
-                SizedBox(
-                  width: 350,
-                  height: 65,
-                  child: TextFormField(
-                    controller: remarksController,
-                    decoration: InputDecoration(
-                      labelText: 'Remarks',
-                      focusColor: primaryColor,
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  bool? confirmAction = await showDialog<bool>(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text(
-                          id == null ? "Confirm Save" : "Confirm Update",
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            Future<void> pickDate({required bool isFrom}) async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2101),
+                builder:
+                    (context, child) => Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: ColorScheme.light(
+                          primary: primaryColor,
+                          onPrimary: Colors.white,
                         ),
-                        content: Text(
-                          id == null
-                              ? "Are you sure you want to save this record?"
-                              : "Are you sure you want to update this record?",
+                        textButtonTheme: TextButtonThemeData(
+                          style: TextButton.styleFrom(
+                            foregroundColor: primaryColor,
+                          ),
                         ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(
-                              "No",
-                              style: TextStyle(color: primaryColor),
+                      ),
+                      child: child!,
+                    ),
+              );
+              if (picked == null) return;
+              setStateDialog(() {
+                if (isFrom) {
+                  selectedFromDate = picked;
+                  if (selectedEndDate != null &&
+                      selectedEndDate!.isBefore(picked)) {
+                    selectedEndDate = null;
+                  }
+                } else {
+                  selectedEndDate = picked;
+                }
+              });
+            }
+
+            Widget dateField({
+              required String label,
+              required DateTime? value,
+              required bool isFrom,
+              required String? Function(String?)? validator,
+            }) {
+              return TextFormField(
+                readOnly: true,
+                controller: TextEditingController(
+                  text: value != null ? "${value.toLocal()}".split(' ')[0] : '',
+                ),
+                onTap: () async {
+                  if (!isFrom && selectedFromDate == null) {
+                    MotionToast.warning(
+                      toastAlignment: Alignment.topCenter,
+                      description: const Text(
+                        'Please select a start date first',
+                      ),
+                    ).show(context);
+                    return;
+                  }
+                  await pickDate(isFrom: isFrom);
+                },
+                validator: validator,
+                style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
+                decoration: InputDecoration(
+                  labelText: label,
+                  labelStyle: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    color: kMuted,
+                  ),
+                  floatingLabelStyle: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  suffixIcon: const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 18,
+                    color: kMuted,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 13,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: kBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: kBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(
+                      color: primaryColor,
+                      width: 1.5,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: kDanger),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: kDanger, width: 1.5),
+                  ),
+                ),
+              );
+            }
+
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 460,
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: kSurface,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 32,
+                      offset: Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.calendar_month_outlined,
+                              color: primaryColor,
+                              size: 22,
                             ),
                           ),
-                          TextButton(
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                Navigator.pop(context, true);
-                              }
-                            },
-                            child: Text(
-                              "Yes",
-                              style: TextStyle(color: primaryColor),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEdit
+                                    ? 'Edit PGS Period'
+                                    : 'Create PGS Period',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: kText,
+                                ),
+                              ),
+                              Text(
+                                isEdit
+                                    ? 'Update PGS period details'
+                                    : 'Add a new PGS period',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Divider(color: kBorder, height: 1),
+                      const SizedBox(height: 20),
+                      dateField(
+                        label: 'Start Date',
+                        value: selectedFromDate,
+                        isFrom: true,
+                        validator:
+                            (_) => selectedFromDate == null ? 'Required' : null,
+                      ),
+                      gap12px,
+                      dateField(
+                        label: 'End Date',
+                        value: selectedEndDate,
+                        isFrom: false,
+                        validator:
+                            (_) => selectedEndDate == null ? 'Required' : null,
+                      ),
+                      gap12px,
+                      dialogField(
+                        label: 'Remarks',
+                        controller: remarksController,
+                      ),
+                      SizedBox(height: 20),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: kBackground,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Active Period',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: kText,
+                                  ),
+                                ),
+                                Text(
+                                  'Currently active as period',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: isActive,
+                              onChanged:
+                                  (val) => setStateDialog(() => isActive = val),
+                              activeColor: primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: kBorder),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              icon: Icon(
+                                isEdit ? Icons.save_rounded : Icons.add_rounded,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                              label: Text(
+                                isEdit ? 'Update' : 'Save',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                if (!_formKey.currentState!.validate()) return;
+
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder:
+                                      (ctx) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          width: 340,
+                                          padding: const EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
+                                                ),
+                                                blurRadius: 32,
+                                                offset: const Offset(0, 12),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.help_outline_rounded,
+                                                  color: primaryColor,
+                                                  size: 26,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 14),
+                                              Text(
+                                                isEdit
+                                                    ? 'Confirm Update'
+                                                    : 'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                isEdit
+                                                    ? 'Are you sure you want to update this announcement?'
+                                                    : 'Are you sure you want to save this announcement?',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 22),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      style: OutlinedButton.styleFrom(
+                                                        side: const BorderSide(
+                                                          color: kBorder,
+                                                        ),
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'No',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Yes',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                );
+                                if (confirmed == true) {
+                                  final period = PgsPeriod(
+                                    int.tryParse(id ?? '0') ?? 0,
+                                    false,
+                                    selectedFromDate!,
+                                    selectedEndDate!,
+                                    remarksController.text,
+                                    isActive: isActive,
+                                  );
+                                  await _pgsPeriodService
+                                      .createOrUpdatePgsPeriod(period);
+                                  setState(() {
+                                    fetchPGSPeriods();
+                                  });
+                                  MotionToast.success(
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text('Saved successfully'),
+                                  ).show(context);
+                                  Navigator.pop(context);
+                                }
+                              },
                             ),
                           ),
                         ],
-                      );
-                    },
-                  );
-
-                  if (confirmAction == true) {
-                    final period = PgsPeriod(
-                      int.tryParse(id ?? '0') ?? 0,
-                      false,
-                      DateTime.parse(startDateController.text),
-                      DateTime.parse(endDateController.text),
-                      remarksController.text,
-                    );
-                    await _pgsPeriodService.createOrUpdatePgsPeriod(period);
-                    setState(() {
-                      fetchPGSPeriods();
-                    });
-                    MotionToast.success(
-                      toastAlignment: Alignment.topCenter,
-                      description: Text('Saved successfully'),
-                    ).show(context);
-                    Navigator.pop(context);
-                  }
-                }
-              },
-              child: Text(
-                id == null ? 'Save' : 'Update',
-                style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -616,6 +843,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
             ),
             gap16px,
             Expanded(
+<<<<<<< HEAD
               child: Column(
                 children: [
                   Container(
@@ -641,6 +869,85 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                             'End Date',
                             style: TextStyle(color: grey),
                           ),
+=======
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Start Date",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "End Date",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Status",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+>>>>>>> master
                         ),
                         Expanded(
                           flex: 3,
@@ -696,6 +1003,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
@@ -713,9 +1021,20 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
+                                              style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              (pgsperiod.isActive ?? false)
+                                                  ? 'Active'
+                                                  : 'Inactive',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+<<<<<<< HEAD
                                             flex: 3,
                                             child: Padding(
                                               padding: EdgeInsets.only(
@@ -728,6 +1047,58 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
 
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
+=======
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Tooltip(
+                                                  message: 'Edit',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      size: 16,
+                                                      Icons.edit_outlined,
+                                                    ),
+                                                    onPressed: () {
+                                                      showFormDialog(
+                                                        id:
+                                                            pgsperiod.id
+                                                                .toString(),
+                                                        startDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  pgsperiod
+                                                                      .startDate,
+                                                                ),
+                                                        endDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  pgsperiod
+                                                                      .endDate,
+                                                                ),
+                                                        remarkrs:
+                                                            pgsperiod.remarks
+                                                                .toString(),
+                                                        isActive:
+                                                            pgsperiod
+                                                                .isActive ??
+                                                            false,
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    size: 16,
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        pgsperiod.id.toString(),
+                                                      ),
+>>>>>>> master
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -742,6 +1113,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                               child: Text(
                                                 period.remarks.toString(),
 
+<<<<<<< HEAD
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -789,6 +1161,95 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                                     icon: Icon(
                                                       Icons.delete,
                                                       color: primaryColor,
+=======
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  showFormDialog(
+                                                    id: pgsperiod.id.toString(),
+                                                    startDate:
+                                                        DateTimeConverter()
+                                                            .toJson(
+                                                              pgsperiod
+                                                                  .startDate,
+                                                            ),
+                                                    endDate: DateTimeConverter()
+                                                        .toJson(
+                                                          pgsperiod.endDate,
+                                                        ),
+                                                    remarkrs:
+                                                        pgsperiod.remarks
+                                                            .toString(),
+                                                    isActive:
+                                                        pgsperiod.isActive ??
+                                                        false,
+                                                  );
+                                                } else if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    pgsperiod.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 16,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
+
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 16,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+>>>>>>> master
                                                     ),
                                                     onPressed:
                                                         () => showDeleteDialog(
@@ -798,9 +1259,36 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                                 ],
                                               ),
                                             ),
+<<<<<<< HEAD
                                           ),
                                         ],
                                       ),
+=======
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          DateTimeConverter().toJson(
+                                            pgsperiod.startDate,
+                                          ),
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          DateTimeConverter().toJson(
+                                            pgsperiod.endDate,
+                                          ),
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          (pgsperiod.isActive ?? false)
+                                              ? 'Active'
+                                              : 'Inactive',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ],
+>>>>>>> master
                                     ),
                                   );
                                 })

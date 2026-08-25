@@ -3,6 +3,7 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/constant/constant.dart';
@@ -10,8 +11,9 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/widgets/custom_toggle.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
+import 'package:imis/widgets/dialog/dialog_field.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class AnnouncementPage extends StatefulWidget {
@@ -99,193 +101,427 @@ class AnnouncementPageState extends State<AnnouncementPage> {
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: const Text('Announcement Information'),
-        backgroundColor: mainBgColor,
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Announcement Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      height: 30,
-                      width: 300,
-                      child: TextField(
-                        focusNode: isSearchfocus,
-                        controller: searchController,
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: lightGrey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelBehavior: FloatingLabelBehavior.never,
-                          labelStyle: TextStyle(color: grey, fontSize: 14),
-                          labelText: 'Search...',
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: isSearchfocus.hasFocus ? primaryColor : grey,
-                            size: 20,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          filled: true,
-                          fillColor: secondaryColor,
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: 5,
-                            horizontal: 5,
-                          ),
-                        ),
-                        onChanged: filterSearchResults,
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    focusNode: isSearchfocus,
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: lightGrey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      labelStyle: TextStyle(color: grey, fontSize: 14),
+                      labelText: 'Search...',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: isSearchfocus.hasFocus ? primaryColor : grey,
+                        size: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      filled: true,
+                      fillColor: secondaryColor,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 5,
+                        horizontal: 5,
                       ),
                     ),
-                    if (!isMinimized)
-                      ElevatedButton.icon(
-                        onPressed: () => showAnnouncementFormDialog(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        label: const Text(
-                          'Add New',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                    onChanged: filterSearchResults,
+                  ),
+                ),
+                const Spacer(),
+                if (!isMobile)
+                  ElevatedButton.icon(
+                    onPressed: () => showAnnouncementFormDialog(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
                       ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 26),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 8 : 12,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: 700,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
-                    ),
-                    columns: [
-                      DataColumn2(label: const Text('#'), fixedWidth: 40),
-                      DataColumn2(
-                        label: const Text('Title'),
-                        size: ColumnSize.L,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Title",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Status",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const DataColumn(label: Text('Status')),
-                      const DataColumn(label: Text('Actions')),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var announcement = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
+                    const SizedBox(height: 5),
 
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(itemNumber.toString())),
-                              DataCell(
-                                Container(
-                                  constraints: BoxConstraints(
-                                    minWidth: 100,
-                                    maxWidth: constraints.maxWidth * 0.4,
-                                  ),
-                                  child: Text(
-                                    announcement.title,
-                                    overflow: TextOverflow.ellipsis,
-                                    softWrap: true,
-                                    maxLines: 2,
-                                  ),
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
                                 ),
-                              ),
-                              DataCell(
-                                Text(
-                                  announcement.isActive ? 'Active' : 'Inactive',
-                                ),
-                              ),
-
-                              DataCell(
-                                Row(
+                              )
+                              : filteredList.isEmpty
+                              ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () {
-                                        showAnnouncementFormDialog(
-                                          id: announcement.id.toString(),
-                                          title: announcement.title,
-                                          fromDate: DateTimeConverter().toJson(
-                                            announcement.fromDate,
-                                          ),
-                                          endDate: DateTimeConverter().toJson(
-                                            announcement.toDate,
-                                          ),
-                                          description: announcement.description,
-                                          isActive: announcement.isActive,
-                                        );
-                                      },
+                                    Icon(
+                                      Icons.campaign_outlined,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
                                     ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: primaryColor,
+                                    const SizedBox(height: 10),
+                                    const Text(
+                                      "No announcement available",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
                                       ),
-                                      onPressed: () {
-                                        showDeleteDialog(
-                                          announcement.id.toString(),
-                                        );
-                                      },
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                  ),
-                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final announcement = filteredList[index];
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              announcement.title,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              announcement.isActive
+                                                  ? 'Active'
+                                                  : 'Inactive',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
 
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Tooltip(
+                                                  message: 'Edit',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      size: 16,
+                                                      Icons.edit_outlined,
+                                                    ),
+                                                    onPressed: () {
+                                                      showAnnouncementFormDialog(
+                                                        id:
+                                                            announcement.id
+                                                                .toString(),
+                                                        title:
+                                                            announcement.title,
+                                                        fromDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  announcement
+                                                                      .fromDate,
+                                                                ),
+                                                        endDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  announcement
+                                                                      .toDate,
+                                                                ),
+                                                        description:
+                                                            announcement
+                                                                .description,
+                                                        isActive:
+                                                            announcement
+                                                                .isActive,
+                                                        isRead:
+                                                            announcement
+                                                                .isRead ??
+                                                            false,
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    size: 16,
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        announcement.id
+                                                            .toString(),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  showAnnouncementFormDialog(
+                                                    id:
+                                                        announcement.id
+                                                            .toString(),
+                                                    title: announcement.title,
+                                                    fromDate:
+                                                        DateTimeConverter()
+                                                            .toJson(
+                                                              announcement
+                                                                  .fromDate,
+                                                            ),
+                                                    endDate: DateTimeConverter()
+                                                        .toJson(
+                                                          announcement.toDate,
+                                                        ),
+                                                    description:
+                                                        announcement
+                                                            .description,
+                                                    isActive:
+                                                        announcement.isActive,
+                                                  );
+                                                }
+
+                                                if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    announcement.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 16,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
+
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 16,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          announcement.title,
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          announcement.isActive
+                                              ? 'Active'
+                                              : 'Inactive',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) => fetchAnnouncement(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
                       ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged: (page) => fetchAnnouncement(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         },
@@ -300,360 +536,603 @@ class AnnouncementPageState extends State<AnnouncementPage> {
     String? endDate,
     String? description,
     bool isActive = false,
+    bool isRead = false,
   }) {
-    TextEditingController titleController = TextEditingController(text: title);
-    TextEditingController descriptionController = TextEditingController(
-      text: description,
-    );
-    DateTime? selectedFromDate =
-        fromDate != null ? DateTime.tryParse(fromDate) : null;
-    DateTime? selectedEndDate =
-        endDate != null ? DateTime.tryParse(endDate) : null;
+    final titleController = TextEditingController(text: title);
+    final descriptionController = TextEditingController(text: description);
+    // DateTime? selectedFromDate =
+    //     fromDate != null ? DateTime.tryParse(fromDate) : null;
+    // DateTime? selectedEndDate =
+    //     endDate != null ? DateTime.tryParse(endDate) : null;
+    bool activeState = isActive;
+    bool readState = isRead;
+    final isEdit = id != null;
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: mainBgColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 20,
-                ),
+          builder: (context, setStateDialog) {
+            // Future<void> pickDate({required bool isFrom}) async {
+            //   final picked = await showDatePicker(
+            //     context: context,
+            //     initialDate: DateTime.now(),
+            //     firstDate: DateTime(2000),
+            //     lastDate: DateTime(2101),
+            //     builder:
+            //         (context, child) => Theme(
+            //           data: Theme.of(context).copyWith(
+            //             colorScheme: ColorScheme.light(
+            //               primary: primaryColor,
+            //               onPrimary: Colors.white,
+            //             ),
+            //             textButtonTheme: TextButtonThemeData(
+            //               style: TextButton.styleFrom(
+            //                 foregroundColor: primaryColor,
+            //               ),
+            //             ),
+            //           ),
+            //           child: child!,
+            //         ),
+            //   );
+            //   if (picked == null) return;
+            //   setStateDialog(() {
+            //     if (isFrom) {
+            //       selectedFromDate = picked;
+            //       if (selectedEndDate != null &&
+            //           selectedEndDate!.isBefore(picked)) {
+            //         selectedEndDate = null;
+            //       }
+            //     } else {
+            //       selectedEndDate = picked;
+            //     }
+            //   });
+            // }
+
+            // Widget dateField({
+            //   required String label,
+            //   required DateTime? value,
+            //   required bool isFrom,
+            //   required String? Function(String?)? validator,
+            // }) {
+            //   return TextFormField(
+            //     readOnly: true,
+            //     controller: TextEditingController(
+            //       text: value != null ? "${value.toLocal()}".split(' ')[0] : '',
+            //     ),
+            //     onTap: () async {
+            //       if (!isFrom && selectedFromDate == null) {
+            //         MotionToast.warning(
+            //           toastAlignment: Alignment.topCenter,
+            //           description: const Text(
+            //             'Please select a start date first',
+            //           ),
+            //         ).show(context);
+            //         return;
+            //       }
+            //       await pickDate(isFrom: isFrom);
+            //     },
+            //     validator: validator,
+            //     style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
+            //     decoration: InputDecoration(
+            //       labelText: label,
+            //       labelStyle: GoogleFonts.plusJakartaSans(
+            //         fontSize: 13,
+            //         color: kMuted,
+            //       ),
+            //       floatingLabelStyle: GoogleFonts.plusJakartaSans(
+            //         fontSize: 12,
+            //         color: primaryColor,
+            //         fontWeight: FontWeight.w600,
+            //       ),
+            //       suffixIcon: const Icon(
+            //         Icons.calendar_today_outlined,
+            //         size: 18,
+            //         color: kMuted,
+            //       ),
+            //       filled: true,
+            //       fillColor: Colors.grey.shade50,
+            //       contentPadding: const EdgeInsets.symmetric(
+            //         horizontal: 14,
+            //         vertical: 13,
+            //       ),
+            //       border: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //         borderSide: const BorderSide(color: kBorder),
+            //       ),
+            //       enabledBorder: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //         borderSide: const BorderSide(color: kBorder),
+            //       ),
+            //       focusedBorder: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //         borderSide: const BorderSide(
+            //           color: primaryColor,
+            //           width: 1.5,
+            //         ),
+            //       ),
+            //       errorBorder: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //         borderSide: const BorderSide(color: kDanger),
+            //       ),
+            //       focusedErrorBorder: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //         borderSide: const BorderSide(color: kDanger, width: 1.5),
+            //       ),
+            //     ),
+            //   );
+            // }
+
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 460,
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: primaryLightColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  id == null ? 'Create Announcement' : 'Manage Announcement',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              content: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Title
-                    SizedBox(
-                      width: 450,
-                      child: TextFormField(
-                        controller: titleController,
-                        decoration: InputDecoration(
-                          labelText: 'Title',
-                          border: const OutlineInputBorder(),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelStyle: const TextStyle(
-                            color: primaryColor,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter a title';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // From Date
-                    SizedBox(
-                      width: 450,
-                      child: TextFormField(
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          focusColor: primaryColor,
-                          labelText: 'From Date',
-                          floatingLabelStyle: TextStyle(color: primaryColor),
-                          suffixIcon: const Icon(Icons.calendar_today),
-                          border: const OutlineInputBorder(),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                        ),
-                        controller: TextEditingController(
-                          text:
-                              selectedFromDate != null
-                                  ? "${selectedFromDate!.toLocal()}".split(
-                                    ' ',
-                                  )[0]
-                                  : '',
-                        ),
-                        onTap: () async {
-                          DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2101),
-                            builder: (context, child) {
-                              return Theme(
-                                data: Theme.of(context).copyWith(
-                                  colorScheme: ColorScheme.light(
-                                    primary: primaryColor,
-                                    onPrimary: secondaryColor,
-                                  ),
-                                  textButtonTheme: TextButtonThemeData(
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: primaryColor,
-                                    ),
-                                  ),
-                                ),
-                                child: child!,
-                              );
-                            },
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedFromDate = picked;
-                              if (selectedEndDate != null &&
-                                  selectedEndDate!.isBefore(
-                                    selectedFromDate!,
-                                  )) {
-                                selectedEndDate = null;
-                              }
-                            });
-                          }
-                        },
-                        validator: (value) {
-                          if (selectedFromDate == null) {
-                            return 'Please select a start date';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // End Date
-                    SizedBox(
-                      width: 450,
-                      child: TextFormField(
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          focusColor: primaryColor,
-                          labelText: 'To Date',
-                          floatingLabelStyle: TextStyle(color: primaryColor),
-                          suffixIcon: const Icon(Icons.calendar_today),
-                          border: const OutlineInputBorder(),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                        ),
-                        controller: TextEditingController(
-                          text:
-                              selectedEndDate != null
-                                  ? "${selectedEndDate!.toLocal()}".split(
-                                    ' ',
-                                  )[0]
-                                  : '',
-                        ),
-                        onTap: () async {
-                          if (selectedFromDate == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Please select the start date first',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
-                          DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2101),
-                            builder: (context, child) {
-                              return Theme(
-                                data: Theme.of(context).copyWith(
-                                  colorScheme: ColorScheme.light(
-                                    primary: primaryColor,
-                                    onPrimary: secondaryColor,
-                                  ),
-                                  textButtonTheme: TextButtonThemeData(
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: primaryColor,
-                                    ),
-                                  ),
-                                ),
-                                child: child!,
-                              );
-                            },
-                          );
-                          if (picked != null) {
-                            setState(() => selectedEndDate = picked);
-                          }
-                        },
-                        validator: (value) {
-                          if (selectedEndDate == null) {
-                            return 'Please select an end date';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Description
-                    SizedBox(
-                      width: 450,
-                      child: TextFormField(
-                        controller: descriptionController,
-                        maxLines: 6,
-                        decoration: InputDecoration(
-                          labelText: 'Description',
-                          alignLabelWithHint: true,
-                          border: const OutlineInputBorder(),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelStyle: const TextStyle(
-                            color: primaryColor,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter a description';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    CustomToggle(
-                      label: "Show on Dashboard",
-                      value: isActive,
-                      activeColor: primaryColor,
-                      inactiveColor: Colors.grey,
-                      onChanged: (val) {
-                        setState(() => isActive = val);
-                      },
+                  color: kSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 32,
+                      offset: const Offset(0, 12),
                     ),
                   ],
                 ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      bool? confirmAction = await showDialog<bool>(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text(
-                              id == null ? "Confirm Save" : "Confirm Update",
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            content: Text(
-                              id == null
-                                  ? "Are you sure you want to save this announcement?"
-                                  : "Are you sure you want to update this announcement?",
+                            child: const Icon(
+                              Icons.campaign_outlined,
+                              color: primaryColor,
+                              size: 22,
                             ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(
-                                  "No",
-                                  style: TextStyle(color: primaryColor),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEdit
+                                    ? 'Edit Announcement'
+                                    : 'Create Announcement',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: kText,
                                 ),
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(
-                                  "Yes",
-                                  style: TextStyle(color: primaryColor),
+                              Text(
+                                isEdit
+                                    ? 'Update announcement details'
+                                    : 'Add a new announcement',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: kMuted,
                                 ),
                               ),
                             ],
-                          );
-                        },
-                      );
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Divider(color: kBorder, height: 1),
+                      const SizedBox(height: 20),
 
-                      if (confirmAction == true) {
-                        final announcement = Announcement(
-                          id: int.tryParse(id ?? '0') ?? 0,
-                          title: titleController.text,
-                          fromDate: selectedFromDate!,
-                          toDate: selectedEndDate!,
-                          description: descriptionController.text,
-                          isActive: isActive,
-                          isDeleted: false,
-                        );
+                      dialogField(
+                        label: 'Title',
+                        controller: titleController,
+                        validator:
+                            (v) =>
+                                (v == null || v.trim().isEmpty)
+                                    ? 'Please fill out this field'
+                                    : null,
+                      ),
+                      // const SizedBox(height: 12),
 
-                        try {
-                          if (announcement.id == 0) {
-                            await _announcement.createAnnouncement(
-                              announcement,
-                            );
-                          } else {
-                            await _announcement.updateAnnouncement(
-                              announcement,
-                            );
-                          }
+                      // // Date row
+                      // Row(
+                      //   children: [
+                      //     Expanded(
+                      //       child: dateField(
+                      //         label: 'From Date',
+                      //         value: selectedFromDate,
+                      //         isFrom: true,
+                      //         validator:
+                      //             (_) =>
+                      //                 selectedFromDate == null
+                      //                     ? 'Required'
+                      //                     : null,
+                      //       ),
+                      //     ),
+                      //     const SizedBox(width: 12),
+                      //     Expanded(
+                      //       child: dateField(
+                      //         label: 'To Date',
+                      //         value: selectedEndDate,
+                      //         isFrom: false,
+                      //         validator:
+                      //             (_) =>
+                      //                 selectedEndDate == null
+                      //                     ? 'Required'
+                      //                     : null,
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
+                      const SizedBox(height: 12),
 
-                          setState(() {
-                            fetchAnnouncement();
-                          });
-
-                          Navigator.pop(context);
-
-                          MotionToast.success(
-                            title: const Text("Saved Successfully"),
-                            toastAlignment: Alignment.topCenter,
-                            description: Text(
-                              announcement.id == 0
-                                  ? "Announcement created successfully!"
-                                  : "Announcement updated successfully!",
+                      dialogField(
+                        label: 'Description',
+                        controller: descriptionController,
+                        maxLines: 4,
+                        validator:
+                            (v) =>
+                                (v == null || v.trim().isEmpty)
+                                    ? 'Please fill out this field'
+                                    : null,
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Show on Dashboard',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: kText,
+                                  ),
+                                ),
+                                Text(
+                                  'Visible to all users on the dashboard',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ).show(context);
-                        } catch (e) {
-                          MotionToast.error(
-                            title: const Text("Error"),
-                            toastAlignment: Alignment.topCenter,
-                            description: Text(
-                              "Failed to save announcement: $e",
+                            Switch(
+                              value: activeState,
+                              onChanged:
+                                  (val) =>
+                                      setStateDialog(() => activeState = val),
+                              activeColor: primaryColor,
                             ),
-                          ).show(context);
-                        }
-                      }
-                    }
-                  },
-                  child: Text(
-                    id == null ? 'Save' : 'Update',
-                    style: const TextStyle(color: Colors.white),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Show on Notification',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: kText,
+                                  ),
+                                ),
+                                Text(
+                                  'Notify to all users on the dashboard',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: kMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: readState,
+                              onChanged:
+                                  (val) =>
+                                      setStateDialog(() => readState = val),
+                              activeColor: primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: kBorder),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              icon: Icon(
+                                isEdit ? Icons.save_rounded : Icons.add_rounded,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                              label: Text(
+                                isEdit ? 'Update' : 'Save',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                if (!_formKey.currentState!.validate()) return;
+
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder:
+                                      (ctx) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          width: 340,
+                                          padding: const EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
+                                                ),
+                                                blurRadius: 32,
+                                                offset: const Offset(0, 12),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.help_outline_rounded,
+                                                  color: primaryColor,
+                                                  size: 26,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 14),
+                                              Text(
+                                                isEdit
+                                                    ? 'Confirm Update'
+                                                    : 'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                isEdit
+                                                    ? 'Are you sure you want to update this announcement?'
+                                                    : 'Are you sure you want to save this announcement?',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 22),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      style: OutlinedButton.styleFrom(
+                                                        side: const BorderSide(
+                                                          color: kBorder,
+                                                        ),
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'No',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Yes',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                );
+
+                                if (confirmed != true) return;
+
+                                final announcement = Announcement(
+                                  id: int.tryParse(id ?? '0') ?? 0,
+                                  title: titleController.text.trim(),
+                                  fromDate: DateTime.now(),
+                                  toDate: DateTime.now(),
+                                  description:
+                                      descriptionController.text.trim(),
+                                  isActive: activeState,
+                                  isDeleted: false,
+                                  isRead: readState,
+                                );
+
+                                try {
+                                  if (announcement.id == 0) {
+                                    await _announcement.createAnnouncement(
+                                      announcement,
+                                    );
+                                  } else {
+                                    await _announcement.updateAnnouncement(
+                                      announcement,
+                                    );
+                                  }
+
+                                  await fetchAnnouncement();
+
+                                  if (!mounted) return;
+
+                                  Navigator.of(context).pop();
+
+                                  MotionToast.success(
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text(
+                                      announcement.id == 0
+                                          ? 'Announcement created successfully!'
+                                          : 'Announcement updated successfully!',
+                                    ),
+                                  ).show(context);
+                                } catch (e, stackTrace) {
+                                  debugPrint('Error saving announcement: $e');
+                                  debugPrintStack(stackTrace: stackTrace);
+
+                                  if (!mounted) return;
+
+                                  MotionToast.error(
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text('Failed to save: $e'),
+                                  ).show(context);
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             );
           },
         );
@@ -665,43 +1144,35 @@ class AnnouncementPageState extends State<AnnouncementPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Team? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _announcement.deleteAnnouncement(id);
-                  await fetchAnnouncement();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Announcement',
+            itemName: 'announcement',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _announcement.deleteAnnouncement(id);
+                await fetchAnnouncement();
+                if (mounted) {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Announcement deleted successfully'),
+                    description: Text(
+                      'Announcement deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
                   ).show(context);
-                } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete Team'));
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete announcement',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 }

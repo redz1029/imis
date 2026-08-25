@@ -35,7 +35,7 @@ namespace IMIS.Presentation.UserOfficeModule
             })
             .WithTags(_userOffice)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_userOffice), true);
 
             app.MapGet("/filter/{name}", async (string name, IUserOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -44,7 +44,7 @@ namespace IMIS.Presentation.UserOfficeModule
                 return userOfficeDto != null ? Results.Ok(userOfficeDto) : Results.NoContent();
             })
             .WithTags(_userOffice)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_userOffice), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.View));
 
             app.MapGet("/{id}", async (int id, IUserOfficeService service, CancellationToken cancellationToken) =>
@@ -53,7 +53,7 @@ namespace IMIS.Presentation.UserOfficeModule
                 return userOffice != null ? Results.Ok(userOffice) : Results.NotFound();
             })
             .WithTags(_userOffice)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_userOffice), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] UserOfficeDto useroffice, IUserOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -81,7 +81,7 @@ namespace IMIS.Presentation.UserOfficeModule
 
             })
             .WithTags(_userOffice)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_userOffice), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IUserOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>

@@ -16,12 +16,33 @@ namespace IMIS.Persistence.OfficeModule
         private readonly IOfficeRepository _repository;
         private readonly ImisDbContext _dbContext;
         private readonly UserManager<User> _userManager;
- 
-        public OfficeService(IOfficeRepository repository, ImisDbContext dbContext, UserManager<User> userManager)
+        private readonly RoleManager<IdentityRole> _roleManager;
+
+        public OfficeService(IOfficeRepository repository, ImisDbContext dbContext, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             _repository = repository;
             _dbContext = dbContext;
             _userManager = userManager;
+            _roleManager = roleManager;
+        }
+        
+        public async Task<OfficeDto?> GetParentOfficeAsync(int officeId, CancellationToken cancellationToken)
+        {
+            var office = await GetByIdAsync(officeId, cancellationToken).ConfigureAwait(false);
+
+            if (office?.ParentOfficeId == null)
+                return null;
+
+            var parentOffice = await GetByIdAsync(office.ParentOfficeId.Value, cancellationToken).ConfigureAwait(false);
+
+            if (parentOffice == null)
+                return null;
+
+            return new OfficeDto
+            {
+                Id = parentOffice.Id,
+                Name = parentOffice.Name
+            };
         }
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
@@ -87,28 +108,32 @@ namespace IMIS.Persistence.OfficeModule
         private async Task<User?> GetCurrentUserAsync()
         {
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
-            return currentUserService != null
-                ? await currentUserService.GetCurrentUserAsync()
-                : null;
-        }        
-        public async Task<List<OfficeDto>> GetOfficesForPgsAuditorAsync(CancellationToken cancellationToken)
+            return currentUserService != null ? await currentUserService.GetCurrentUserAsync() : null;
+        }
+       
+        public async Task<List<OfficeDto>> GetOfficesForPgsAuditorAsync(string roleId, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
-            if (currentUser == null)
-                return new List<OfficeDto>();
 
-            var userRoles = await _userManager.GetRolesAsync(currentUser);
+            if (currentUser == null)
+                return [];
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+                return [];
 
             List<Office> offices;
 
-            if (userRoles.Any(r =>
-                    r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                    r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                    r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                    r.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                    r.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                    r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
-                    r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase)))
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase))
             {
                 offices = await _repository.GetAllForPgsAuditorAsync(cancellationToken);
             }
@@ -117,12 +142,10 @@ namespace IMIS.Persistence.OfficeModule
                 offices = await _repository.GetOfficesForAuditorAsync(currentUser.Id, cancellationToken);
 
                 if (offices == null || !offices.Any())
-                {
-                    return new List<OfficeDto>(); 
-                }
+                    return [];
             }
 
-            return offices.Select(o => ConvOfficeToDTO(o)).ToList();
+            return offices.Select(ConvOfficeToDTO).ToList();
         }
         public async Task<List<OfficeDto>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
         {

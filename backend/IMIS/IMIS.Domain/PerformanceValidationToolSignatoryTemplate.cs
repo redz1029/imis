@@ -1,0 +1,17 @@
+﻿using Base.Primitives;
+
+namespace IMIS.Domain
+{
+    public class PerformanceValidationToolSignatoryTemplate : Entity<int>
+    {
+        public required string Status { get; set; }
+        public required string SignatoryLabel { get; set; }
+        public int OrderLevel { get; set; }
+        public string? DefaultSignatoryId { get; set; }
+        public User? DefaultSignatory { get; set; }
+        public bool IsActive { get; set; }
+        public int OfficeId { get; set; }
+        public Office? Office { get; set; }
+        public string? Position { get; set; }
+    }
+}

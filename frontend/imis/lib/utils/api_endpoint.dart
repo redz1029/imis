@@ -58,7 +58,41 @@ class ApiEndpoint {
   late String kraRoadmapRole;
   late String isoStandard;
   late String standardVersion;
-  late String improvementtype;
+  late String scorecardMonitoringFilter;
+  late String kraroadmapAccomplishment;
+  late String kraroadmapkpiAccomplishment;
+  late String kraRoadmapCoreAndSupport;
+  late String usersFilter;
+  late String allOffices;
+  late String officeServices;
+  late String accomplishmemnt;
+  late String operationReviewProtocol;
+  late String pgsAuditorOperationReview;
+  late String pgsidlist;
+  late String pgs;
+  late String reportProtocol;
+  late String pgsAccomplishment;
+  late String pgsRoadMapPeriodId;
+  late String strategyReview;
+  late String strategyReviewPeriod;
+  late String performanceValidationToolPeriod;
+  late String performanceValidationTool;
+  late String pendingAudits;
+  late String performanceValidationToolSignatoryTemplate;
+  late String dashboardTotalAudited;
+  late String dashboardTotalOffices;
+  late String dashboardTotalDeliverables;
+  late String dashboardAuditStatus;
+  late String performanceValidationPdfReport;
+  late String serviceOfficePeriodReport;
+  late String calendarActivity;
+  late String roadmapidlist;
+  late String pgsSignatory;
+  late String impactStrategicGoalScoreCardPeriod;
+  late String impactStrategicGoalScoreCard;
+  late String kraRoadmapKPISequence;
+  late String sWOTAnalysisStrengthWeakness;
+  late String sWOTAnalysisOpportunitiesThreats;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -113,9 +147,47 @@ class ApiEndpoint {
     kraRoadMapRoleId = '$baseUrl/KRARoadmapRole/roleid';
     kraRoadMapReport = '$baseUrl/kraRoadMap/list-report/pdf';
     kraRoadmapRole = '$baseUrl/kraRoadmapRole/roleid';
-    isoStandard = '$baseUrl/IsoStandard';
-    standardVersion = '$baseUrl/api/StandardVersion';
-    improvementtype = '$baseUrl/improvementtype';
+    standardVersion = '$baseUrl/api/standardVersion';
+    scorecardMonitoringFilter = '$baseUrl/kraRoadMap/filter';
+    kraroadmapAccomplishment = '$baseUrl/kraRoadmapAccomplishment';
+    kraroadmapkpiAccomplishment = '$baseUrl/kraRoadmapKpiAccomplishment';
+    kraRoadmapCoreAndSupport = '$baseUrl/KraRoadmapCoreAndSupport';
+    usersFilter = '$baseUrl/users/filter';
+    allOffices = '$baseUrl/office/alloffices';
+    officeServices = '$baseUrl/office/pgs/services';
+    accomplishmemnt = '$baseUrl/accomplishments';
+    operationReviewProtocol = '$baseUrl/operationReviewProtocol';
+    pgsAuditorOperationReview = '$baseUrl/pgsAuditor/operationReview';
+    pgsidlist = '$baseUrl/pgsidlist';
+    pgs = '$baseUrl/pgs';
+    reportProtocol = '$baseUrl/report/pdf';
+    pgsAccomplishment = '$baseUrl/pgs/accomplishments';
+    pgsRoadMapPeriodId = '$baseUrl/KRARoadmapRole/strategyreview/roleid';
+    strategyReview = '$baseUrl/strategyReview';
+    strategyReviewPeriod = '$baseUrl/strategyReviewPeriod';
+    performanceValidationToolPeriod =
+        '$baseUrl/performanceValidationToolPeriod';
+    performanceValidationTool = '$baseUrl/performanceValidationTool';
+    pendingAudits = '$baseUrl/auditor/pending-audits';
+    performanceValidationToolSignatoryTemplate =
+        '$baseUrl/performanceValidationToolSignatoryTemplate';
+    dashboardTotalDeliverables = '$baseUrl/dashboard/total-deliverables-count';
+    dashboardTotalOffices = '$baseUrl/dashboard/total-offices-count';
+    dashboardTotalAudited = '$baseUrl/dashboard/total-audited-count';
+    dashboardAuditStatus = '$baseUrl/dashboard/audit-status-count';
+    performanceValidationPdfReport =
+        '$baseUrl/performanceValidationTool/pdf-report';
+    serviceOfficePeriodReport = '$baseUrl/pgs/service-office-period-report';
+    calendarActivity = '$baseUrl/calendarActivity';
+    roadmapidlist = '$baseUrl/roadmapidlist';
+    pgsSignatory = '$baseUrl/pgs/pgssignatory';
+    impactStrategicGoalScoreCardPeriod =
+        '$baseUrl/impactStrategicGoalScoreCardPeriod';
+    impactStrategicGoalScoreCard = '$baseUrl/ImpactStrategicGoalScoreCard';
+    kraRoadmapKPISequence = '$baseUrl/KraRoadmapKPISequence';
+    sWOTAnalysisStrengthWeakness = '$baseUrl/SWOTAnalysisStrengthWeakness';
+    sWOTAnalysisOpportunitiesThreats =
+        '$baseUrl/SWOTAnalysisOpportunitiesThreats';
   }
 
   static Future<void> setBaseUrl() async {

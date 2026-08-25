@@ -130,9 +130,10 @@ class AuthUtil {
     await sharedPref.remove(pgsKey);
 
     if (context.mounted) {
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
+        (route) => false,
       );
     }
   }
@@ -145,7 +146,15 @@ class AuthUtil {
 
     if (loggedUser != null) {
       var accessToken = jwtDecode(loggedUser.accessToken!);
-      bool isAccessTokenExpired = accessToken.isExpired ?? true;
+      // accessToken.expiration is already a DateTime!
+      final expirationDate =
+          accessToken.expiration ??
+          DateTime.now().subtract(const Duration(seconds: 1));
+
+      // Check if it expires within the next 30 seconds
+      bool isAccessTokenExpired = DateTime.now()
+          .add(const Duration(seconds: 30))
+          .isAfter(expirationDate);
 
       if (!isAccessTokenExpired) {
         return loggedUser;
@@ -160,7 +169,14 @@ class AuthUtil {
 
       try {
         final refreshToken = jwtDecode(loggedUser.refreshToken!);
-        bool isRefreshTokenExpired = refreshToken.isExpired ?? true;
+
+        // refreshToken.expiration is already a DateTime!
+        final expirationDate =
+            refreshToken.expiration ??
+            DateTime.now().subtract(const Duration(seconds: 1));
+        bool isRefreshTokenExpired = DateTime.now()
+            .add(const Duration(seconds: 30))
+            .isAfter(expirationDate);
 
         if (isRefreshTokenExpired) {
           if (context != null && context.mounted) {
@@ -176,7 +192,13 @@ class AuthUtil {
 
         var refreshResponse = await dio.post(
           refresh,
-          data: jsonEncode(loggedUser),
+          data: loggedUser.toJson(),
+          options: Options(
+            validateStatus:
+                (status) =>
+                    status != null &&
+                    status < 500, // ✅ Prevents Dio from throwing on 401
+          ),
         );
 
         final existingUser = await fetchLoggedUser();
@@ -217,8 +239,8 @@ class AuthUtil {
         barrierDismissible: false,
         context: context,
         builder:
-            (context) => WillPopScope(
-              onWillPop: () async => false,
+            (context) => PopScope(
+              canPop: false,
               child: AlertDialog(
                 title: const Text("Session Expired"),
                 content: const Text("Please log in again to continue."),

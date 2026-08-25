@@ -1,3 +1,5 @@
+import 'package:imis/swot/models/swot_ot_deliverable.dart';
+import 'package:imis/swot/models/swot_sw_deliverable.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -5,36 +7,57 @@ part 'swot.g.dart';
 
 @JsonSerializable()
 class Swot {
-  int id;
+  int? id;
+
   bool? isDeleted;
+
   String? rowVersion;
-  String userId;
-  String strengths;
-  String weaknesses;
-  String opportunities;
-  String threats;
-  String longTermDepartmentStrategicPlan;
-  String immediateNeedsToAchieveVision;
-  String departmentAchievementsAndBestPractices;
+
+  int? departmentId;
+
+  String? departmentName;
+
+  String? objectiveStatement;
+
+  String? departmentChairUserId;
+
+  String? departmentChairUserFullName;
+
+  String? qmrUserId;
+
+  String? qmrUserFullName;
+
+  String? serviceHeadUserId;
+
+  String? serviceHeadUserFullName;
 
   @JsonKey()
   @DateTimeConverter()
-  DateTime postingDate;
+  DateTime? postingDate;
 
-  Swot(
+  List<SwotSwDeliverable>? swotAnalysisSWDeliverables;
+
+  List<SwotOtDeliverable>? swotAnalysisOTDeliverables;
+
+  Swot({
     this.id,
-    this.userId,
-    this.strengths,
-    this.weaknesses,
-    this.opportunities,
-    this.threats,
-    this.longTermDepartmentStrategicPlan,
-    this.immediateNeedsToAchieveVision,
-    this.departmentAchievementsAndBestPractices,
     this.isDeleted,
-    this.postingDate, {
     this.rowVersion,
+    this.departmentId,
+    this.departmentName,
+    this.objectiveStatement,
+    this.departmentChairUserId,
+    this.departmentChairUserFullName,
+    this.qmrUserId,
+    this.qmrUserFullName,
+    this.serviceHeadUserId,
+    this.serviceHeadUserFullName,
+    this.postingDate,
+    this.swotAnalysisSWDeliverables,
+    this.swotAnalysisOTDeliverables,
   });
+
   factory Swot.fromJson(Map<String, dynamic> json) => _$SwotFromJson(json);
+
   Map<String, dynamic> toJson() => _$SwotToJson(this);
 }

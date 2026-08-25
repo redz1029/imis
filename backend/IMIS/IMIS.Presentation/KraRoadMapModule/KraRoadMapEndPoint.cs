@@ -38,7 +38,7 @@ namespace IMIS.Presentation.KraRoadMapModule
                 return Results.Ok(kraRoadMapDto);
             })
            .WithTags(_kraRoadMap)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMap), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
 
             app.MapGet("/{id}", async (int id, IKraRoadMapService service, CancellationToken cancellationToken) =>
@@ -47,7 +47,7 @@ namespace IMIS.Presentation.KraRoadMapModule
                 return kraRoadMapDto != null ? Results.Ok(kraRoadMapDto) : Results.NotFound();
             })
             .WithTags(_kraRoadMap)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMap), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] KraRoadMapDto kraRoadMapDto, IKraRoadMapService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -66,7 +66,7 @@ namespace IMIS.Presentation.KraRoadMapModule
                 return Results.Ok(paginatedkraRoadMapDto);
             })
             .WithTags(_kraRoadMap)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMap), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IKraRoadMapService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -92,7 +92,7 @@ namespace IMIS.Presentation.KraRoadMapModule
                 return Results.Ok(result);
             })
             .WithTags(_kraRoadMap)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMap), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
 
             app.MapGet("/getAllkraDescriptions", async ([FromQuery] int kraId, IKraRoadMapService service, CancellationToken cancellationToken) =>
@@ -116,7 +116,7 @@ namespace IMIS.Presentation.KraRoadMapModule
                     cancellationToken
                 ).ConfigureAwait(false);
 
-                //////Force inline rendering in browser with dynamic timestamp filename
+                //Force inline rendering in browser with dynamic timestamp filename
                 var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
                 return Results.File(file, "application/pdf");
@@ -127,7 +127,7 @@ namespace IMIS.Presentation.KraRoadMapModule
                 //return kraRoadMapDto != null ? Results.Ok(kraRoadMapDto) : Results.NotFound();
             })
            .WithTags(_kraRoadMap)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true);
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMap), true);
 
             ////// Get All roadmap Role        
             app.MapGet("/roleid/{roleId}", async (string roleId, IKraRoadMapService service, CancellationToken cancellationToken) =>

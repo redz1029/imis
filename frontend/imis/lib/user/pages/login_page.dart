@@ -8,6 +8,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/widgets/logo.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:imis/user/pages/registration_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -181,37 +182,55 @@ class LoginPageState extends State<LoginPage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Login',
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w300),
+                // Logo
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'CP',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                gap8px, // Adjust spacing
-                Text(
-                  'Enter your credentials to access your account.',
-                  style: TextStyle(fontSize: 14),
+
+                const SizedBox(height: 28),
+
+                RichText(
+                  text: const TextSpan(
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: kText,
+                      height: 1.2,
+                    ),
+                    children: [
+                      TextSpan(text: 'Sign in to '),
+                      TextSpan(
+                        text: 'CPeMS',
+                        style: TextStyle(color: primaryColor),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-            gap24px,
-            TextFormField(
-              style: TextStyle(fontSize: 16),
-              controller: _usernameController,
-              focusNode: focusIconUsername,
-              onTap: () {
-                FocusScope.of(context).requestFocus(focusIconUsername);
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Please enter some text";
-                }
-                return null;
-              },
-              decoration: InputDecoration(
-                labelText: 'Username',
-                labelStyle: const TextStyle(color: grey, fontSize: 14),
-                prefixIcon: Icon(
-                  Icons.email_outlined,
-                  color: focusIconUsername.hasFocus ? primaryColor : grey,
+
+                const SizedBox(height: 10),
+
+                Text(
+                  'Welcome to CPeMS (Centralized Performance Electronic Management System), please enter your login details below to use the app.',
+                  style: TextStyle(fontSize: 13, color: kMuted, height: 1.5),
                 ),
                 border: const OutlineInputBorder(),
                 focusedBorder: const OutlineInputBorder(
@@ -334,35 +353,51 @@ class LoginPageState extends State<LoginPage> {
                               color: secondaryColor,
                               fontSize: 16,
                             ),
-                          ),
-                        ),
-                      ),
-            ),
-            gap16px,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Don't have an account yet?",
-                  style: TextStyle(fontSize: 14),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RegistrationPage(),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    "Register",
-                    style: TextStyle(color: primaryColor, fontSize: 14),
                   ),
                 ),
+
+                const SizedBox(height: 20),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account?",
+                      style: TextStyle(fontSize: 13, color: kMuted),
+                    ),
+                    const SizedBox(width: 4),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RegistrationPage(),
+                          ),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: kText,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: const Text(
+                        'Sign up',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

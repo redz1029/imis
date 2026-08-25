@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-01-22 13:39:20.282441
+// Last synced: 2026-08-19 15:24:40.052979
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -11,37 +11,148 @@ class AppPermissions {
   static const String addSWOTAnalysis = 'Add S W O T Analysis';
   static const String viewSWOTAnalysis = 'View S W O T Analysis';
   static const String editSWOTAnalysis = 'Edit S W O T Analysis';
+  static const String deleteStrategyReview = 'Delete Strategy Review';
+  static const String addStrategyReview = 'Add Strategy Review';
+  static const String viewStrategyReview = 'View Strategy Review';
+  static const String editStrategyReview = 'Edit Strategy Review';
   static const String addPgsSummaryNarrative = 'Add Pgs Summary Narrative';
   static const String viewPgsSummaryNarrative = 'View Pgs Summary Narrative';
   static const String editPgsSummaryNarrative = 'Edit Pgs Summary Narrative';
   static const String addPgsSignatoryTemplate = 'Add Pgs Signatory Template';
   static const String viewPgsSignatoryTemplate = 'View Pgs Signatory Template';
   static const String editPgsSignatoryTemplate = 'Edit Pgs Signatory Template';
+  static const String addCreateViewRoadmapSetting =
+      'Add Create View Roadmap Setting';
+  static const String viewCreateViewRoadmapSetting =
+      'View Create View Roadmap Setting';
+  static const String editCreateViewRoadmapSetting =
+      'Edit Create View Roadmap Setting';
+  static const String addPGSSetting = 'Add P G S Setting';
+  static const String viewPGSSetting = 'View P G S Setting';
+  static const String editPGSSetting = 'Edit P G S Setting';
+  static const String addCreateViewDeliverablesSetting =
+      'Add Create View Deliverables Setting';
+  static const String viewCreateViewDeliverablesSetting =
+      'View Create View Deliverables Setting';
+  static const String editCreateViewDeliverablesSetting =
+      'Edit Create View Deliverables Setting';
+  static const String addCreateViewOperationReviewProtocolSetting =
+      'Add Create View Operation Review Protocol Setting';
+  static const String viewCreateViewOperationReviewProtocolSetting =
+      'View Create View Operation Review Protocol Setting';
+  static const String editCreateViewOperationReviewProtocolSetting =
+      'Edit Create View Operation Review Protocol Setting';
+  static const String addCreateViewStrategyReviewReportSetting =
+      'Add Create View Strategy Review Report Setting';
+  static const String viewCreateViewStrategyReviewReportSetting =
+      'View Create View Strategy Review Report Setting';
+  static const String editCreateViewStrategyReviewReportSetting =
+      'Edit Create View Strategy Review Report Setting';
+  static const String addCreateViewSwotSetting = 'Add Create View Swot Setting';
+  static const String viewCreateViewSwotSetting =
+      'View Create View Swot Setting';
+  static const String editCreateViewSwotSetting =
+      'Edit Create View Swot Setting';
+  static const String addDeliverableStatusMonitoringSetting =
+      'Add Deliverable Status Monitoring Setting';
+  static const String viewDeliverableStatusMonitoringSetting =
+      'View Deliverable Status Monitoring Setting';
+  static const String editDeliverableStatusMonitoringSetting =
+      'Edit Deliverable Status Monitoring Setting';
+  static const String addPgsAuditorReportSetting =
+      'Add Pgs Auditor Report Setting';
+  static const String viewPgsAuditorReportSetting =
+      'View Pgs Auditor Report Setting';
+  static const String editPgsAuditorReportSetting =
+      'Edit Pgs Auditor Report Setting';
+  static const String addPGSReportSetting = 'Add P G S Report Setting';
+  static const String viewPGSReportSetting = 'View P G S Report Setting';
+  static const String editPGSReportSetting = 'Edit P G S Report Setting';
+  static const String addPgsSetting = 'Add Pgs Setting';
+  static const String viewPgsSetting = 'View Pgs Setting';
+  static const String editPgsSetting = 'Edit Pgs Setting';
+  static const String addScoreCardSetting = 'Add Score Card Setting';
+  static const String viewScoreCardSetting = 'View Score Card Setting';
+  static const String editScoreCardSetting = 'Edit Score Card Setting';
   static const String addPeriod = 'Add Period';
   static const String viewPeriod = 'View Period';
   static const String editPeriod = 'Edit Period';
   static const String addKra = 'Add Kra';
   static const String viewKra = 'View Kra';
   static const String editKra = 'Edit Kra';
-  static const String viewPgsDeliverableMonitor = 'View Pgs Deliverable Monitor';
-  static const String scorePgsDeliverableMonitor = 'Score Pgs Deliverable Monitor';
+  static const String viewPgsDeliverableMonitor =
+      'View Pgs Deliverable Monitor';
+  static const String scorePgsDeliverableMonitor =
+      'Score Pgs Deliverable Monitor';
   static const String addPgsDeliverable = 'Add Pgs Deliverable';
   static const String viewPgsDeliverable = 'View Pgs Deliverable';
   static const String editPgsDeliverable = 'Edit Pgs Deliverable';
-  static const String addPgsDeliverableServiceHead = 'Add Pgs Deliverable Service Head';
-  static const String viewPgsDeliverableServiceHead = 'View Pgs Deliverable Service Head';
-  static const String editPgsDeliverableServiceHead = 'Edit Pgs Deliverable Service Head';
-  static const String addPgsDeliverableAccomplishment = 'Add Pgs Deliverable Accomplishment';
-  static const String viewPgsDeliverableAccomplishment = 'View Pgs Deliverable Accomplishment';
-  static const String editPgsDeliverableAccomplishment = 'Edit Pgs Deliverable Accomplishment';
-  static const String disapprovePerformanceGovernanceSystem = 'Disapprove Performance Governance System';
-  static const String submitPerformanceGovernanceSystem = 'Submit Performance Governance System';
-  static const String confirmPerformanceGovernanceSystem = 'Confirm Performance Governance System';
-  static const String draftPerformanceGovernanceSystem = 'Draft Performance Governance System';
-  static const String deletePerformanceGovernanceSystem = 'Delete Performance Governance System';
-  static const String addPerformanceGovernanceSystem = 'Add Performance Governance System';
-  static const String viewPerformanceGovernanceSystem = 'View Performance Governance System';
-  static const String editPerformanceGovernanceSystem = 'Edit Performance Governance System';
+  static const String addPgsDeliverableServiceHead =
+      'Add Pgs Deliverable Service Head';
+  static const String viewPgsDeliverableServiceHead =
+      'View Pgs Deliverable Service Head';
+  static const String editPgsDeliverableServiceHead =
+      'Edit Pgs Deliverable Service Head';
+  static const String addPgsDeliverableAccomplishment =
+      'Add Pgs Deliverable Accomplishment';
+  static const String viewPgsDeliverableAccomplishment =
+      'View Pgs Deliverable Accomplishment';
+  static const String editPgsDeliverableAccomplishment =
+      'Edit Pgs Deliverable Accomplishment';
+  static const String addPerformanceValidationToolSignatoryTemplate =
+      'Add Performance Validation Tool Signatory Template';
+  static const String viewPerformanceValidationToolSignatoryTemplate =
+      'View Performance Validation Tool Signatory Template';
+  static const String editPerformanceValidationToolSignatoryTemplate =
+      'Edit Performance Validation Tool Signatory Template';
+  static const String addPerformanceValidationToolPeriod =
+      'Add Performance Validation Tool Period';
+  static const String viewPerformanceValidationToolPeriod =
+      'View Performance Validation Tool Period';
+  static const String editPerformanceValidationToolPeriod =
+      'Edit Performance Validation Tool Period';
+  static const String deletePerformanceValidationTool =
+      'Delete Performance Validation Tool';
+  static const String draftPerformanceValidationTool =
+      'Draft Performance Validation Tool';
+  static const String submitPerformanceValidationTool =
+      'Submit Performance Validation Tool';
+  static const String confirmPerformanceValidationTool =
+      'Confirm Performance Validation Tool';
+  static const String addPerformanceValidationTool =
+      'Add Performance Validation Tool';
+  static const String viewPerformanceValidationTool =
+      'View Performance Validation Tool';
+  static const String editPerformanceValidationTool =
+      'Edit Performance Validation Tool';
+  static const String disapprovePerformanceGovernanceSystem =
+      'Disapprove Performance Governance System';
+  static const String submitPerformanceGovernanceSystem =
+      'Submit Performance Governance System';
+  static const String confirmPerformanceGovernanceSystem =
+      'Confirm Performance Governance System';
+  static const String draftPerformanceGovernanceSystem =
+      'Draft Performance Governance System';
+  static const String deletePerformanceGovernanceSystem =
+      'Delete Performance Governance System';
+  static const String addPerformanceGovernanceSystem =
+      'Add Performance Governance System';
+  static const String viewPerformanceGovernanceSystem =
+      'View Performance Governance System';
+  static const String editPerformanceGovernanceSystem =
+      'Edit Performance Governance System';
+  static const String deleteSignatory = 'Delete Signatory';
+  static const String addSignatory = 'Add Signatory';
+  static const String viewSignatory = 'View Signatory';
+  static const String editSignatory = 'Edit Signatory';
+  static const String deleteOperationReviewProtocol =
+      'Delete Operation Review Protocol';
+  static const String addOperationReviewProtocol =
+      'Add Operation Review Protocol';
+  static const String viewOperationReviewProtocol =
+      'View Operation Review Protocol';
+  static const String editOperationReviewProtocol =
+      'Edit Operation Review Protocol';
   static const String addOfficeType = 'Add Office Type';
   static const String viewOfficeType = 'View Office Type';
   static const String editOfficeType = 'Edit Office Type';
@@ -51,9 +162,46 @@ class AppPermissions {
   static const String addKraRoadMapPeriod = 'Add Kra Road Map Period';
   static const String viewKraRoadMapPeriod = 'View Kra Road Map Period';
   static const String editKraRoadMapPeriod = 'Edit Kra Road Map Period';
+  static const String deleteKraRoadMap = 'Delete Kra Road Map';
   static const String addKraRoadMap = 'Add Kra Road Map';
   static const String viewKraRoadMap = 'View Kra Road Map';
   static const String editKraRoadMap = 'Edit Kra Road Map';
+  static const String addKraRoadmapKpiSequence = 'Add Kra Roadmap Kpi Sequence';
+  static const String viewKraRoadmapKpiSequence =
+      'View Kra Roadmap Kpi Sequence';
+  static const String editKraRoadmapKpiSequence =
+      'Edit Kra Roadmap Kpi Sequence';
+  static const String addKraRoadMapKpiAccomplishment =
+      'Add Kra Road Map Kpi Accomplishment';
+  static const String viewKraRoadMapKpiAccomplishment =
+      'View Kra Road Map Kpi Accomplishment';
+  static const String editKraRoadMapKpiAccomplishment =
+      'Edit Kra Road Map Kpi Accomplishment';
+  static const String addKraRoadMapAccomplishment =
+      'Add Kra Road Map Accomplishment';
+  static const String viewKraRoadMapAccomplishment =
+      'View Kra Road Map Accomplishment';
+  static const String editKraRoadMapAccomplishment =
+      'Edit Kra Road Map Accomplishment';
+  static const String addIsoStandard = 'Add Iso Standard';
+  static const String viewIsoStandard = 'View Iso Standard';
+  static const String editIsoStandard = 'Edit Iso Standard';
+  static const String addImpactStrategicGoalScoreCardPeriod =
+      'Add Impact Strategic Goal Score Card Period';
+  static const String viewImpactStrategicGoalScoreCardPeriod =
+      'View Impact Strategic Goal Score Card Period';
+  static const String editImpactStrategicGoalScoreCardPeriod =
+      'Edit Impact Strategic Goal Score Card Period';
+  static const String addImpactStrategicGoalScoreCard =
+      'Add Impact Strategic Goal Score Card';
+  static const String viewImpactStrategicGoalScoreCard =
+      'View Impact Strategic Goal Score Card';
+  static const String editImpactStrategicGoalScoreCard =
+      'Edit Impact Strategic Goal Score Card';
+  static const String deleteCalendarActivity = 'Delete Calendar Activity';
+  static const String addCalendarActivity = 'Add Calendar Activity';
+  static const String viewCalendarActivity = 'View Calendar Activity';
+  static const String editCalendarActivity = 'Edit Calendar Activity';
   static const String addBreakThroughScoring = 'Add Break Through Scoring';
   static const String viewBreakThroughScoring = 'View Break Through Scoring';
   static const String editBreakThroughScoring = 'Edit Break Through Scoring';

@@ -1,9 +1,12 @@
 ﻿using Base.Primitives;
+using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Domain
 {
     public class StrategyReview : Entity<long>
-    {      
+    {
+        public int StrategyReviewPeriodId { get; set; }
+        public StrategyReviewPeriod StrategyReviewPeriod { get; set; } = null!;
         public DateTime PostingDate { get; set; }
         public long KraRoadMapId { get; set; }
         public  KraRoadMap? KraRoadMap { get; set; }
@@ -12,5 +15,7 @@ namespace IMIS.Domain
         public string? Continue { get; set; }
         public string? Start { get; set; }
         public string? Stop { get; set; }
+        public string? RoleId { get; set; }
+        public IdentityRole? Role { get; set; }
     }
 }

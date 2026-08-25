@@ -37,7 +37,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
                 return Results.Ok(pgsSignatoryTemplate);
             })
             .WithTags(_PgsSignatoryTemplate)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_PgsSignatoryTemplate), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
 
             app.MapGet("/{id}", async (int id, IPgsSignatoryTemplateService service, CancellationToken cancellationToken) =>
@@ -46,7 +46,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
                 return pgsSignatoryTemplate != null ? Results.Ok(pgsSignatoryTemplate) : Results.NotFound();
             })
             .WithTags(_PgsSignatoryTemplate)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_PgsSignatoryTemplate), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
 
             app.MapPut("/", async ([FromBody] List<PgsSignatoryTemplateDto> pgsSignatoryTemplateDtos, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -69,7 +69,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
                 return Results.Ok(paginatedSignatoryTemplate);
             })
            .WithTags(_PgsSignatoryTemplate)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_PgsSignatoryTemplate), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>

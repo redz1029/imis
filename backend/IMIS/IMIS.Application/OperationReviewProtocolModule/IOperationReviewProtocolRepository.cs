@@ -13,5 +13,6 @@ namespace IMIS.Application.OperationReviewProtocolModule
         Task<OperationReviewProtocol?> ReportGetByIdAsync(long operationReviewProtocolId, CancellationToken cancellationToken);      
         Task<OperationReviewProtocol?> GetByIdAsync(long id, CancellationToken cancellationToken);      
         Task<List<PgsDeliverableAccomplishment>> GetDeliverableByIdAsync(long performanceGovernanceSystemId, int month, int year, CancellationToken cancellationToken);
+        Task<OperationReviewProtocol?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

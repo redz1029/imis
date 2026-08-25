@@ -1,7 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:dio/dio.dart';
-import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/constant/constant.dart';
@@ -11,9 +12,13 @@ import 'package:imis/user/services/user_role_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:collection/collection.dart';
 import 'package:imis/utils/http_util.dart';
-import 'package:imis/widgets/dotted_button.dart';
-import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/common/button_filter.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:universal_html/html.dart' as html;
+
+import '../../widgets/common/search_dropdown.dart';
 
 class UserRolePage extends StatefulWidget {
   const UserRolePage({super.key});
@@ -23,7 +28,7 @@ class UserRolePage extends StatefulWidget {
 }
 
 class UserRolePageState extends State<UserRolePage> {
-  final _formKey = GlobalKey<FormState>();
+  // final _formKey = GlobalKey<FormState>();
   final _commonService = CommonService(Dio());
   final _userRoleService = UserRoleService(Dio());
   final FocusNode isSearchfocus = FocusNode();
@@ -142,68 +147,86 @@ class UserRolePageState extends State<UserRolePage> {
             )
             .toList();
 
+    final isEdit = id != null;
+    final formKey = GlobalKey<FormState>();
+
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            return AlertDialog(
-              backgroundColor: mainBgColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 480,
+                padding: EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: primaryLightColor,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
+                  color: kSurface,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 32,
+                      offset: Offset(0, 12),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  id == null ? 'Create User Role' : 'Manage User Role',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              content: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 480,
-                      child: DropdownSearch<User?>(
-                        popupProps: PopupProps.menu(
-                          showSearchBox: true,
-                          searchFieldProps: TextFieldProps(
-                            decoration: InputDecoration(
-                              hintText: 'Search User Name...',
-                              filled: true,
-                              fillColor: mainBgColor,
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.admin_panel_settings_outlined,
+                              color: primaryColor,
+                              size: 22,
                             ),
                           ),
-                          itemBuilder:
-                              (context, user, isSelected) => ListTile(
-                                tileColor: mainBgColor,
-                                title: Text(user?.fullName ?? ''),
+                          SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEdit
+                                    ? 'Manage User Role'
+                                    : 'Create User Role',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: kText,
+                                ),
                               ),
-                        ),
+                              Text(
+                                isEdit
+                                    ? 'Update roles assigned to this user'
+                                    : 'Assign roles to a user',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Divider(color: kBorder, height: 1),
+                      const SizedBox(height: 20),
+
+                      SearchDropdown<User?>(
+                        label: 'User',
+                        hintText: 'Search User Name...',
                         items: userList,
                         itemAsString: (u) => u?.fullName ?? '',
                         selectedItem: userList.cast<User?>().firstWhere(
@@ -211,249 +234,502 @@ class UserRolePageState extends State<UserRolePage> {
                           orElse: () => null,
                         ),
                         onChanged:
-                            (value) =>
-                                setState(() => _selectedUserId = value?.id),
+                            (value) => setStateDialog(
+                              () => _selectedUserId = value?.id,
+                            ),
                         validator:
                             (value) =>
                                 value == null ? 'Please select a user' : null,
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                            labelText: 'Select User',
-                            filled: true,
-                            fillColor: mainBgColor,
-                            floatingLabelBehavior: FloatingLabelBehavior.never,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                      ),
+
+                      SizedBox(height: 20),
+
+                      if (isEdit) ...[
+                        Text(
+                          'Current Roles',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: kMuted,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                      ],
+
+                      ...currentRoles.map(
+                        (roleName) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: primaryColor),
+                            decoration: BoxDecoration(
+                              color: kBackground,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: kBorder),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    InkWell(
+                                      borderRadius: BorderRadius.circular(6),
+                                      onTap: () async {
+                                        final role = roleList.firstWhere(
+                                          (r) =>
+                                              r.name.toLowerCase() ==
+                                              roleName.toLowerCase(),
+                                        );
+
+                                        final roleId = role.id;
+
+                                        final permissions =
+                                            await _userRoleService
+                                                .fetchPermissions(
+                                                  _selectedUserId!,
+                                                  roleId,
+                                                );
+
+                                        if (permissions != null) {
+                                          _showPermissionsDialog(
+                                            _selectedUserId!,
+                                            roleId,
+                                            permissions,
+                                          );
+                                        }
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4),
+                                        child: Icon(
+                                          Icons.edit_outlined,
+                                          size: 18,
+                                          color: kMuted,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      roleName,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13,
+                                        color: kText,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(6),
+                                  onTap: () {
+                                    setStateDialog(
+                                      () => currentRoles.remove(roleName),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Icon(
+                                      Icons.close_rounded,
+                                      size: 18,
+                                      color: kMuted,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 16),
-                    Text(id == null ? '' : 'Current Roles'),
-                    SizedBox(height: 8),
-                    ...currentRoles.map(
-                      (roleName) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            color: secondaryColor,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.edit,
-                                      color: primaryTextColor,
+                      SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                final availableRoles =
+                                    roleList
+                                        .where(
+                                          (role) =>
+                                              !currentRoles.contains(role.name),
+                                        )
+                                        .toList();
+                                return Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  child: Container(
+                                    width: 380,
+                                    padding: EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: kSurface,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.12,
+                                          ),
+                                          blurRadius: 32,
+                                          offset: Offset(0, 12),
+                                        ),
+                                      ],
                                     ),
-                                    padding: EdgeInsets.zero,
-                                    constraints: BoxConstraints(),
-                                    onPressed: () async {
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Select Role',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 16,
+                                            color: kText,
+                                          ),
+                                        ),
+                                        SizedBox(height: 12),
+                                        Divider(color: kBorder, height: 1),
+                                        SizedBox(height: 8),
+                                        SizedBox(
+                                          height: 300,
+                                          child:
+                                              availableRoles.isEmpty
+                                                  ? Center(
+                                                    child: Text(
+                                                      'No more roles available',
+                                                      style:
+                                                          GoogleFonts.plusJakartaSans(
+                                                            fontSize: 13,
+                                                            color: kMuted,
+                                                          ),
+                                                    ),
+                                                  )
+                                                  : ListView.builder(
+                                                    shrinkWrap: true,
+                                                    itemCount:
+                                                        availableRoles.length,
+                                                    itemBuilder: (
+                                                      context,
+                                                      index,
+                                                    ) {
+                                                      final role =
+                                                          availableRoles[index];
+                                                      return ListTile(
+                                                        contentPadding:
+                                                            EdgeInsets.zero,
+                                                        title: Text(
+                                                          role.name,
+                                                          style:
+                                                              GoogleFonts.plusJakartaSans(
+                                                                fontSize: 13,
+                                                                color: kText,
+                                                              ),
+                                                        ),
+                                                        trailing: IconButton(
+                                                          icon: Icon(
+                                                            Icons
+                                                                .add_circle_outline,
+                                                            color: primaryColor,
+                                                          ),
+                                                          onPressed: () {
+                                                            setStateDialog(
+                                                              () => currentRoles
+                                                                  .add(
+                                                                    role.name,
+                                                                  ),
+                                                            );
+                                                            Navigator.pop(
+                                                              context,
+                                                            );
+                                                          },
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: TextButton(
+                                            onPressed:
+                                                () => Navigator.pop(context),
+                                            child: Text(
+                                              'Close',
+                                              style:
+                                                  GoogleFonts.plusJakartaSans(
+                                                    color: primaryColor,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          icon: Icon(Icons.add, size: 18, color: primaryColor),
+                          label: Text(
+                            'Add roles',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: kBorder),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: kBorder),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                elevation: 0,
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                if (!formKey.currentState!.validate()) return;
+
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder:
+                                      (ctx) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          width: 340,
+                                          padding: EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
+                                                ),
+                                                blurRadius: 32,
+                                                offset: Offset(0, 12),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
+                                                ),
+                                                child: Icon(
+                                                  Icons.help_outline_rounded,
+                                                  color: primaryColor,
+                                                  size: 26,
+                                                ),
+                                              ),
+                                              SizedBox(height: 14),
+                                              Text(
+                                                isEdit
+                                                    ? 'Confirm Update'
+                                                    : 'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                isEdit
+                                                    ? 'Are you sure you want to update this user role?'
+                                                    : 'Are you sure you want to save this user role?',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              SizedBox(height: 16),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      style:
+                                                          OutlinedButton.styleFrom(
+                                                            side: BorderSide(
+                                                              color: kBorder,
+                                                            ),
+                                                          ),
+                                                      child: Text(
+                                                        'No',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Yes',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                );
+
+                                if (confirmed != true) return;
+                                if (_selectedUserId == null) return;
+
+                                final assignedRoles =
+                                    currentRoles.map((roleName) {
                                       final role = roleList.firstWhere(
                                         (r) =>
                                             r.name.toLowerCase() ==
                                             roleName.toLowerCase(),
+                                        orElse:
+                                            () => Roles(
+                                              'unknown',
+                                              'Unknown',
+                                              '',
+                                              '',
+                                            ),
                                       );
+                                      return RoleAssignment(roleId: role.id);
+                                    }).toList();
 
-                                      final roleId = role.id;
+                                final newUserRole = UserRoles(
+                                  _selectedUserId!,
+                                  assignedRoles,
+                                );
 
-                                      final permissions = await _userRoleService
-                                          .fetchPermissions(
-                                            _selectedUserId!,
-                                            roleId,
-                                          );
-
-                                      if (permissions != null) {
-                                        _showPermissionsDialog(
-                                          _selectedUserId!,
-                                          roleId,
-                                          permissions,
-                                        );
-                                      }
-                                    },
-                                  ),
-                                  SizedBox(width: 10),
-                                  Text(roleName),
-                                ],
-                              ),
-
-                              IconButton(
-                                icon: Icon(
-                                  Icons.close,
-                                  color: primaryTextColor,
-                                ),
-                                padding: EdgeInsets.zero,
-                                constraints: BoxConstraints(),
-                                onPressed: () {
-                                  setStateDialog(
-                                    () => currentRoles.remove(roleName),
+                                if (id == null) {
+                                  await _userRoleService.addUserRoles(
+                                    newUserRole,
                                   );
-                                },
+                                  MotionToast.success(
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text('Saved successfully'),
+                                  ).show(context);
+                                } else {
+                                  await _userRoleService.updateRole(
+                                    _selectedUserId!,
+                                    assignedRoles,
+                                  );
+                                  MotionToast.success(
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text('Updated successfully'),
+                                  ).show(context);
+                                }
+                                await fetchUserRoles(page: _currentPage);
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                isEdit ? 'Update' : 'Save',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ),
-                    SizedBox(height: 16),
-                    DottedButton(
-                      prefixIcon: Icon(Icons.add),
-                      text: "Add roles",
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            final availableRoles =
-                                roleList
-                                    .where(
-                                      (role) =>
-                                          !currentRoles.contains(role.name),
-                                    )
-                                    .toList();
-                            return AlertDialog(
-                              title: Text("Select Role"),
-                              content: SizedBox(
-                                width: 400,
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: availableRoles.length,
-                                  itemBuilder: (context, index) {
-                                    final role = availableRoles[index];
-                                    return ListTile(
-                                      title: Text(role.name),
-                                      trailing: IconButton(
-                                        icon: Icon(Icons.add),
-                                        onPressed: () {
-                                          setStateDialog(
-                                            () => currentRoles.add(role.name),
-                                          );
-                                          Navigator.pop(context);
-                                        },
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(
-                                    "Close",
-                                    style: TextStyle(color: primaryColor),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      bool? confirmAction = await showDialog<bool>(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text(
-                              id == null ? "Confirm Save" : "Confirm Update",
-                            ),
-                            content: Text(
-                              id == null
-                                  ? "Are you sure you want to save this record?"
-                                  : "Are you sure you want to update this record?",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(
-                                  "No",
-                                  style: TextStyle(color: primaryColor),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(
-                                  "Yes",
-                                  style: TextStyle(color: primaryColor),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                      if (confirmAction == true) {
-                        if (_selectedUserId == null) return;
-
-                        final assignedRoles =
-                            currentRoles.map((roleName) {
-                              final role = roleList.firstWhere(
-                                (r) =>
-                                    r.name.toLowerCase() ==
-                                    roleName.toLowerCase(),
-                                orElse:
-                                    () => Roles('unknown', 'Unknown', '', ''),
-                              );
-                              return RoleAssignment(roleId: role.id);
-                            }).toList();
-
-                        final newUserRole = UserRoles(
-                          _selectedUserId!,
-                          assignedRoles,
-                        );
-
-                        if (id == null) {
-                          await _userRoleService.addUserRoles(newUserRole);
-                          MotionToast.success(
-                            toastAlignment: Alignment.topCenter,
-                            description: Text('Saved successfully'),
-                          ).show(context);
-                        } else {
-                          await _userRoleService.updateRole(
-                            _selectedUserId!,
-                            assignedRoles,
-                          );
-                          MotionToast.success(
-                            toastAlignment: Alignment.topCenter,
-                            description: Text('Updated successfully'),
-                          ).show(context);
-                        }
-                        await fetchUserRoles();
-                        Navigator.pop(context);
-                      }
-                    }
-                  },
-                  child: Text(
-                    id == null ? 'Save' : 'Update',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
             );
           },
         );
@@ -465,37 +741,30 @@ class UserRolePageState extends State<UserRolePage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text("Are you sure you want to delete this User Role?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _userRoleService.deleteUserRole(id);
-                  await fetchUserRoles();
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'User Role',
+            itemName: 'user role',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _userRoleService.deleteUserRole(id);
+                await fetchUserRoles();
+                if (mounted) {
                   MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('User role deleted successfully'),
-                  ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete User role'),
+                    description: Text(
+                      'User Role deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
                   );
                 }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+              } catch (_) {
+                MotionToast.error(
+                  description: Text('Faled to delete user role'),
+                ).show(context);
+              }
+            },
+          ),
     );
   }
 
@@ -504,61 +773,189 @@ class UserRolePageState extends State<UserRolePage> {
     String roleId,
     List<dynamic> permissions,
   ) {
+    String searchQuery = '';
+
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             bool allChecked = permissions.every((p) => p['isAssigned'] == true);
+
+            final filteredPermissions =
+                searchQuery.isEmpty
+                    ? permissions
+                    : permissions
+                        .where(
+                          (p) => p['permission']
+                              .toString()
+                              .toLowerCase()
+                              .contains(searchQuery.toLowerCase()),
+                        )
+                        .toList();
+
             return AlertDialog(
               backgroundColor: mainBgColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
               ),
-              title: Text('Permissions'),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Permissions',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
               content: SizedBox(
                 width: 700,
-                height: 350,
+                height: 550,
                 child: Column(
                   children: [
-                    CheckboxListTile(
-                      title: Text(
-                        allChecked ? "Uncheck All" : "Check All",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      value: allChecked,
-                      onChanged: (value) async {
-                        setDialogState(() {
-                          for (var item in permissions) {
-                            item['isAssigned'] = value;
-                          }
-                        });
-
-                        await _userRoleService.updatePermission(
-                          userId,
-                          roleId,
-                          roleId,
-                          permissions,
-                        );
+                    TextField(
+                      onChanged: (value) {
+                        setDialogState(() => searchQuery = value);
                       },
-                      fillColor: WidgetStateProperty.resolveWith((states) {
-                        if (states.contains(WidgetState.selected)) {
-                          return primaryColor;
-                        }
-                        return Colors.transparent;
-                      }),
+                      decoration: InputDecoration(
+                        hintText: 'Search permissions',
+                        hintStyle: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: kMuted,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          size: 20,
+                          color: kMuted,
+                        ),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                      ),
                     ),
+                    gap12px,
+
+                    // CheckboxListTile(
+                    //   title: Text(
+                    //     allChecked ? "Uncheck All" : "Check All",
+                    //     style: GoogleFonts.plusJakartaSans(
+                    //       fontWeight: FontWeight.w700,
+                    //       fontSize: 12,
+                    //     ),
+                    //   ),
+                    //   value: allChecked,
+                    //   onChanged: (value) async {
+                    //     setDialogState(() {
+                    //       for (var item in permissions) {
+                    //         item['isAssigned'] = value;
+                    //       }
+                    //     });
+
+                    //     await _userRoleService.updatePermission(
+                    //       userId,
+                    //       '',
+                    //       roleId,
+                    //       permissions,
+                    //     );
+                    //   },
+                    //   fillColor: WidgetStateProperty.resolveWith((states) {
+                    //     if (states.contains(WidgetState.selected)) {
+                    //       return primaryColor;
+                    //     }
+                    //     return Colors.transparent;
+                    //   }),
+                    // ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        InkWell(
+                          borderRadius: BorderRadius.circular(6),
+                          onTap: () async {
+                            final newValue = !allChecked;
+                            setDialogState(() {
+                              for (var item in permissions) {
+                                item['isAssigned'] = newValue;
+                              }
+                            });
+                            await _userRoleService.updatePermission(
+                              userId,
+                              '',
+                              roleId,
+                              permissions,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 4,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  allChecked ? "Uncheck All" : "Check All",
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Checkbox(
+                                  value: allChecked,
+                                  onChanged: (value) async {
+                                    setDialogState(() {
+                                      for (var item in permissions) {
+                                        item['isAssigned'] = value;
+                                      }
+                                    });
+                                    await _userRoleService.updatePermission(
+                                      userId,
+                                      '',
+                                      roleId,
+                                      permissions,
+                                    );
+                                  },
+                                  fillColor: WidgetStateProperty.resolveWith((
+                                    states,
+                                  ) {
+                                    if (states.contains(WidgetState.selected)) {
+                                      return primaryColor;
+                                    }
+                                    return Colors.transparent;
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    gap16px,
                     Divider(),
-                    gap8px,
                     Expanded(
                       child:
-                          permissions.isNotEmpty
+                          filteredPermissions.isNotEmpty
                               ? ListView.builder(
-                                itemCount: permissions.length,
+                                itemCount: filteredPermissions.length,
                                 itemBuilder: (context, index) {
-                                  final item = permissions[index];
+                                  final item = filteredPermissions[index];
                                   return CheckboxListTile(
-                                    title: Text(item['permission']),
+                                    title: Text(
+                                      item['permission'],
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                     value: item['isAssigned'],
                                     onChanged: (value) async {
                                       setDialogState(() {
@@ -592,12 +989,6 @@ class UserRolePageState extends State<UserRolePage> {
                   ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Close', style: TextStyle(color: primaryColor)),
-                ),
-              ],
             );
           },
         );
@@ -679,76 +1070,214 @@ class UserRolePageState extends State<UserRolePage> {
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
-                  children:
-                      userList
-                          .where(
-                            (user) =>
-                                filteredList.any((ur) => ur.userId == user.id),
-                          )
-                          .map((user) {
-                            final userRolesForUser =
-                                filteredList
-                                    .where((ur) => ur.userId == user.id)
-                                    .toList();
-                            return Card(
-                              color: mainBgColor,
-                              elevation: 0,
-                              margin: EdgeInsets.symmetric(
-                                vertical: 4,
-                                horizontal: 8,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header row (desktop only)
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
-                              child: Theme(
-                                data: Theme.of(
-                                  context,
-                                ).copyWith(dividerColor: Colors.transparent),
-                                child: ExpansionTile(
-                                  collapsedBackgroundColor: secondaryColor,
-                                  backgroundColor: secondaryBgButton,
-                                  tilePadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Name",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 4,
+                              child: Text(
+                                "Roles",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount:
+                            userList
+                                .where(
+                                  (user) => filteredList.any(
+                                    (ur) => ur.userId == user.id,
                                   ),
-                                  childrenPadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  title: Text(user.fullName),
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children:
-                                          userRolesForUser.expand((userRole) {
-                                            return userRole.roles!.map((
-                                              assignedRole,
-                                            ) {
-                                              final matchedRole = roleList
-                                                  .firstWhere(
-                                                    (r) =>
-                                                        r.id ==
-                                                        assignedRole.roleId,
-                                                    orElse:
-                                                        () => Roles(
-                                                          'unknown',
-                                                          'Unknown',
-                                                          '',
-                                                          null,
-                                                        ),
-                                                  );
-                                              return Container(
-                                                width: double.infinity,
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: 4,
-                                                  horizontal: 16,
-                                                ),
-                                                child: Text(matchedRole.name),
-                                              );
-                                            });
-                                          }).toList(),
+                                )
+                                .length,
+                        separatorBuilder:
+                            (context, index) => Divider(
+                              height: 1,
+                              color: Colors.grey.withValues(alpha: 0.2),
+                            ),
+                        itemBuilder: (context, index) {
+                          final filteredUsers =
+                              userList
+                                  .where(
+                                    (user) => filteredList.any(
+                                      (ur) => ur.userId == user.id,
                                     ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
+                                  )
+                                  .toList();
+
+                          final user = filteredUsers[index];
+
+                          final userRolesForUser =
+                              filteredList
+                                  .where((ur) => ur.userId == user.id)
+                                  .toList();
+
+                          final roleChips =
+                              userRolesForUser
+                                  .expand((userRole) => userRole.roles ?? [])
+                                  .map((assignedRole) {
+                                    final matchedRole = roleList.firstWhere(
+                                      (r) => r.id == assignedRole.roleId,
+                                      orElse:
+                                          () => Roles(
+                                            'unknown',
+                                            'Unknown',
+                                            '',
+                                            null,
+                                          ),
+                                    );
+                                    return matchedRole.name;
+                                  })
+                                  .toList();
+
+                          final initials =
+                              user.fullName.trim().isNotEmpty
+                                  ? user.fullName
+                                      .trim()
+                                      .split(' ')
+                                      .map((e) => e[0])
+                                      .take(2)
+                                      .join()
+                                      .toUpperCase()
+                                  : '?';
+
+                          final itemNumber =
+                              ((_currentPage - 1) * _pageSize) + index + 1;
+
+                          Widget buildRoleChips() => Wrap(
+                            spacing: 5,
+                            runSpacing: 4,
+                            children:
+                                roleChips.map((roleName) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: primaryColor.withValues(
+                                        alpha: 0.07,
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      roleName,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: primaryColor,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                          );
+
+                          if (!isMobile) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                                horizontal: 4,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(flex: 1, child: Text("$itemNumber")),
+
+                                  Expanded(
+                                    flex: 3,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: primaryColor.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              initials,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: primaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            user.fullName,
+
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  Expanded(flex: 4, child: buildRoleChips()),
+
+                                  Expanded(
+                                    flex: 2,
+                                    child: Row(
                                       children: [
                                         IconButton(
-                                          icon: Icon(Icons.edit, size: 20),
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            size: 16,
+                                          ),
                                           onPressed:
                                               () => showFormDialog(
                                                 id: user.id,
@@ -756,9 +1285,10 @@ class UserRolePageState extends State<UserRolePage> {
                                               ),
                                         ),
                                         IconButton(
-                                          icon: Icon(
-                                            Icons.delete,
-                                            color: primaryColor,
+                                          icon: const Icon(
+                                            CupertinoIcons.delete_simple,
+                                            color: Colors.redAccent,
+                                            size: 16,
                                           ),
                                           onPressed:
                                               () => showDeleteDialog(user.id),

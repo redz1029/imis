@@ -2,6 +2,7 @@
 using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsModule;
@@ -85,7 +86,8 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                         FrequencyUpdate = form.FrequencyUpdate,
                         Frequency = form.Frequency,
                         MinutesAttachmentPath = uploadedFilePath,
-                        PostingDate = form.PostingDate
+                        PostingDate = form.PostingDate,
+                        IsDraft = form.IsDraft,
                     };
 
                     await service.SaveOrUpdateAsync(dto, cancellationToken);
@@ -115,7 +117,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                 return Results.Ok(result);
             })
             .WithTags(_operationReviewProtocol)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_operationReviewProtocol))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol))
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
 
             app.MapGet("/pgsiddiverable/{id}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
@@ -124,7 +126,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                 return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
             })
             .WithTags(_operationReviewProtocol)          
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_operationReviewProtocol), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
 
             app.MapGet("/pgs/{id:long}/accomplishments", async (long id, int month, int year,  IOperationReviewProtocolService service, CancellationToken cancellationToken) =>
@@ -136,7 +138,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                     : Results.NotFound();
             })
             .WithTags(_operationReviewProtocol)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_operationReviewProtocol), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
 
             app.MapPut("/pgs/accomplishments", async (
@@ -256,7 +258,8 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                     FrequencyUpdate = form.FrequencyUpdate,
                     Frequency = form.Frequency,
                     MinutesAttachmentPath = uploadedFilePath,
-                    PostingDate = form.PostingDate
+                    PostingDate = form.PostingDate,
+                    IsDraft = form.IsDraft,
                 };
 
                 await service.SaveOrUpdateAsync(dto, cancellationToken);
@@ -301,7 +304,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                 return Results.File(fileBytes, contentType);
             })
             .WithTags(_operationReviewProtocol)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);         
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
 
             app.MapGet("/pagelist", async (int page, int pageSize, IOperationReviewProtocolService service, CancellationToken cancellationToken) =>
             {
@@ -337,7 +340,38 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                 //return result != null ? Results.Ok(result) : Results.NotFound();
             })
             .WithTags(_operationReviewProtocol)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_operationReviewProtocol), true);         
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
+
+            app.MapDelete("/{id:int}", async (int id, IOperationReviewProtocolService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_operationReviewProtocol, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Successfully deleted." })
+                              : Results.NotFound(new { message = "Template not found." });
+            })
+           .WithTags(_operationReviewProtocol)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.Delete));
+            
+            app.MapGet("/pgsAuditor/operationReview/{roleId}", async (string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetAuditorPgsDeliverableAsync(roleId, officeId, pgsPeriodId, page, pageSize, cancellationToken).ConfigureAwait(false);
+
+                return Results.Ok(result);
+            })
+            .WithTags(_operationReviewProtocol)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
+          
+            app.MapGet("office/{id}/parent", async (int id, IOfficeService service, CancellationToken cancellationToken) =>
+            {
+                var parentOffice = await service.GetParentOfficeAsync(id, cancellationToken).ConfigureAwait(false);
+
+                return parentOffice != null ? Results.Ok(parentOffice) : Results.NotFound();
+            })
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View)).WithTags(_operationReviewProtocol)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
         }
     }
-}
+}   

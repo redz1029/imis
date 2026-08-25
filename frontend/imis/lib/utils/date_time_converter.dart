@@ -40,3 +40,31 @@ class LongDateOnlyConverter implements JsonConverter<DateTime, String> {
     return _formatter.format(object);
   }
 }
+
+class IsoDateTimeConverter implements JsonConverter<DateTime?, String?> {
+  const IsoDateTimeConverter();
+
+  @override
+  DateTime? fromJson(String? json) {
+    if (json == null) return null;
+    final parsed = DateTime.parse(json);
+
+    final asUtc =
+        parsed.isUtc
+            ? parsed
+            : DateTime.utc(
+              parsed.year,
+              parsed.month,
+              parsed.day,
+              parsed.hour,
+              parsed.minute,
+              parsed.second,
+              parsed.millisecond,
+              parsed.microsecond,
+            );
+    return asUtc.toLocal();
+  }
+
+  @override
+  String? toJson(DateTime? date) => date?.toUtc().toIso8601String();
+}

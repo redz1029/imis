@@ -51,7 +51,7 @@ namespace IMIS.Presentation.UserModule
 
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
-            roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup));
+            roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
             roleGroup.MapGet("page/roles", async (int page, int pageSize, RoleManager<IdentityRole> roleManager) =>
             {
                 page = page <= 0 ? 1 : page;
@@ -74,125 +74,185 @@ namespace IMIS.Presentation.UserModule
                     pageSize,
                 });
             })
-           .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup));
+           .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
             roleGroup.MapPost("/roles", CreateRole);          
-                roleGroup.MapPut("/roles/{roleId}", EditRole);
-                roleGroup.MapDelete("/roles/{roleId}", DeleteRole);
-                roleGroup.MapGet("/roles/permissions", async
-                ([FromServices] IServiceProvider sp) =>
+            roleGroup.MapPut("/roles/{roleId}", EditRole);
+            roleGroup.MapDelete("/roles/{roleId}", DeleteRole);
+            roleGroup.MapGet("/roles/permissions", async
+            ([FromServices] IServiceProvider sp) =>
+            {
+                var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
+                var roles = await roleManager.Roles.ToListAsync();
+                var rolePermissions = new List<object>();
+                foreach (var role in roles)
                 {
-                    var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
-                    var roles = await roleManager.Roles.ToListAsync();
-                    var rolePermissions = new List<object>();
-                    foreach (var role in roles)
+                    var claims = await roleManager.GetClaimsAsync(role);
+                    var permissions = claims.Where(c => c.Type == PermissionClaimType.Claim).Select(c => c.Value).ToList();
+                    rolePermissions.Add(new
                     {
-                        var claims = await roleManager.GetClaimsAsync(role);
-                        var permissions = claims.Where(c => c.Type == PermissionClaimType.Claim).Select(c => c.Value).ToList();
-                        rolePermissions.Add(new
-                        {
-                            role.Id,
-                            role.Name,
-                            Permissions = permissions
-                        });
-                    }
-                    return roles == null ? Results.NoContent() : Results.Ok(rolePermissions);
-                }).WithTags(RoleGroup)
-                .RequireAuthorization()
-                .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup), true);
-          
-                roleGroup.MapGet("/users/{userId}/permissions", async (string userId, string roleId,
-                UserManager<User> userManager,
-                RoleManager<IdentityRole> roleManager,
-                ImisDbContext db
-                ) =>
-                {
-                    var user = await userManager.FindByIdAsync(userId);
-                    if (user == null)
-                        return Results.NotFound(new { message = "User not found." });
+                        role.Id,
+                        role.Name,
+                        Permissions = permissions
+                    });
+                }
+                return roles == null ? Results.NoContent() : Results.Ok(rolePermissions);
+            }).WithTags(RoleGroup)
+            .RequireAuthorization()
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup), true);
+           
+            roleGroup.MapGet("/users/{userId}/permissions", async (string userId, string roleId, string? search, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ImisDbContext db) =>
+            {
+                var user = await userManager.FindByIdAsync(userId);
+                if (user == null)
+                    return Results.NotFound(new { message = "User not found." });
 
+                var role = await roleManager.FindByIdAsync(roleId);
+                if (role == null)
+                    return Results.NotFound(new { message = "Role not found." });
+
+                var roleClaims = await db.Set<IdentityRoleClaim<string>>()
+                    .Where(rc => rc.RoleId == roleId &&
+                                 rc.ClaimType == PermissionClaimType.Claim)
+                    .Select(rc => rc.ClaimValue!)
+                    .ToListAsync();
+
+                var userClaims = await db.Set<UserClaim<string>>()
+                    .Where(c => c.UserId == userId &&
+                                c.ClaimType == PermissionClaimType.Claim &&
+                                c.RoleId == roleId)
+                    .Select(c => c.ClaimValue!)
+                    .ToListAsync();
+
+                var permissions = roleClaims
+                    .Select(p => new
+                    {
+                        OriginalPermission = p,
+                        Permission = System.Text.RegularExpressions.Regex.Replace(p, "(\\B[A-Z])", " $1"),
+                        IsAssigned = userClaims.Contains(p)
+                    });
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    permissions = permissions.Where(p =>
+                        p.Permission.Contains(search, StringComparison.OrdinalIgnoreCase));
+                }
+
+                var finalPermissions = permissions
+                    .OrderBy(p => p.Permission)
+                    .Select(p => new
+                    {
+                        permission = p.Permission,
+                        isAssigned = p.IsAssigned
+                    })
+                    .ToList();
+
+                return Results.Ok(new
+                {
+                    user.Id,
+                    user.UserName,
+                    roleId,
+                    roleName = role.Name,
+                    permissions = finalPermissions
+                });
+            })
+            .RequireAuthorization()
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup), true);
+
+            roleGroup.MapPut("/users/{userId}/{roleId}/permissions", async (string userId, string roleId, RolePermissionUpdateModel request, UserManager<User> userManager, ImisDbContext db) =>
+            {
+                var user = await userManager.FindByIdAsync(userId);
+                if (user == null)
+                    return Results.NotFound(new { message = "User not found." });
+
+                var roleClaims = await db.Set<IdentityRoleClaim<string>>()
+                    .Where(rc => rc.RoleId == roleId && rc.ClaimType == PermissionClaimType.Claim)
+                    .Select(rc => rc.ClaimValue!)
+                    .ToListAsync();
+
+                var currentClaims = await db.Set<UserClaim<string>>()
+                    .Where(c => c.UserId == userId && c.ClaimType == PermissionClaimType.Claim && c.RoleId == roleId)
+                    .ToListAsync();
+
+                foreach (var permission in request.Permissions)
+                {
+                    var normalized = permission.Permission.Replace(" ", "");
+
+                    if (!roleClaims.Contains(normalized)) continue;
+
+                    var existingClaim = currentClaims.FirstOrDefault(c =>
+                        c.ClaimValue!.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+
+                    if (permission.IsAssigned)
+                    {
+                        if (existingClaim == null)
+                        {
+                            var claim = new UserClaim<string>
+                            {
+                                UserId = userId,
+                                RoleId = roleId,           
+                                ClaimType = PermissionClaimType.Claim,
+                                ClaimValue = normalized
+                            };
+                            db.Set<UserClaim<string>>().Add(claim);
+                        }
+                    }
+                    else
+                    {
+                        if (existingClaim != null)
+                        {
+                            db.Set<UserClaim<string>>().Remove(existingClaim);
+                        }
+                    }
+                }
+
+                await db.SaveChangesAsync();
+
+                return Results.Ok(new
+                {
+                    message = "User permissions updated successfully. Please re-login for changes to take effect."
+                });
+            })
+            .RequireAuthorization();
+
+            roleGroup.MapPut("/roles/{roleId}/performance-validation-tool-permissions-standarduser-role", async (string roleId, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ImisDbContext db) =>
+                {
                     var role = await roleManager.FindByIdAsync(roleId);
+
                     if (role == null)
                         return Results.NotFound(new { message = "Role not found." });
 
-                    var roleClaims = await db.Set<IdentityRoleClaim<string>>()
-                        .Where(rc => rc.RoleId == roleId && rc.ClaimType == PermissionClaimType.Claim)
-                        .Select(rc => rc.ClaimValue!)
-                        .ToListAsync();
-
-                    var userClaims = await db.Set<UserClaim<string>>()
-                        .Where(c => c.UserId == userId && c.ClaimType == PermissionClaimType.Claim && c.RoleId == roleId)
-                        .Select(c => c.ClaimValue!)
-                        .ToListAsync();
-
-                    var finalPermissions = roleClaims
-                        .Select(p => new
-                        {
-                            permission = System.Text.RegularExpressions.Regex.Replace(p, "(\\B[A-Z])", " $1"),
-                            isAssigned = userClaims.Contains(p)
-                        })
-                        .OrderBy(p => p.permission)
-                        .ToList();
-
-                    return Results.Ok(new
+                    var permissions = new[]
                     {
-                        user.Id,
-                        user.UserName,
-                        roleId,
-                        roleName = role.Name,
-                        permissions = finalPermissions
-                    });
-                })
-                .RequireAuthorization()
-                .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup), true);
+                        "ViewPerformanceValidationToolPeriod",
+                        "ConfirmPerformanceValidationTool",
+                        "EditPerformanceValidationTool",
+                        "ViewPerformanceValidationTool"
+                    };
 
-                roleGroup.MapPut("/users/{userId}/{roleId}/permissions", async (string userId, string roleId,
-                RolePermissionUpdateModel request,
-                UserManager<User> userManager,
-                ImisDbContext db
-                ) =>
-                {
-                    var user = await userManager.FindByIdAsync(userId);
-                    if (user == null)
-                        return Results.NotFound(new { message = "User not found." });
+                    var userIds = await db.UserRoles.Where(x => x.RoleId == roleId).Select(x => x.UserId).ToListAsync();
 
-                    var roleClaims = await db.Set<IdentityRoleClaim<string>>()
-                        .Where(rc => rc.RoleId == roleId && rc.ClaimType == PermissionClaimType.Claim)
-                        .Select(rc => rc.ClaimValue!)
-                        .ToListAsync();
+                    int added = 0;
 
-                    var currentClaims = await db.Set<UserClaim<string>>()
-                        .Where(c => c.UserId == userId && c.ClaimType == PermissionClaimType.Claim && c.RoleId == roleId)
-                        .ToListAsync();
-
-                    foreach (var permission in request.Permissions)
+                    foreach (var userId in userIds)
                     {
-                        var normalized = permission.Permission.Replace(" ", "");
+                        var existingClaims = await db.Set<UserClaim<string>>().Where(x => x.UserId == userId && x.RoleId == roleId &&  x.ClaimType == PermissionClaimType.Claim)
+                            .Select(x => x.ClaimValue!)
+                            .ToListAsync();
 
-                        if (!roleClaims.Contains(normalized)) continue;
-
-                        var existingClaim = currentClaims.FirstOrDefault(c =>
-                            c.ClaimValue!.Equals(normalized, StringComparison.OrdinalIgnoreCase));
-
-                        if (permission.IsAssigned)
+                        foreach (var permission in permissions)
                         {
-                            if (existingClaim == null)
+                            if (existingClaims.Contains(permission))
+                                continue;
+
+                            db.Set<UserClaim<string>>().Add(new UserClaim<string>
                             {
-                                var claim = new UserClaim<string>
-                                {
-                                    UserId = userId,
-                                    RoleId = roleId,           
-                                    ClaimType = PermissionClaimType.Claim,
-                                    ClaimValue = normalized
-                                };
-                                db.Set<UserClaim<string>>().Add(claim);
-                            }
-                        }
-                        else
-                        {
-                            if (existingClaim != null)
-                            {
-                                db.Set<UserClaim<string>>().Remove(existingClaim);
-                            }
+                                UserId = userId,
+                                RoleId = roleId,
+                                ClaimType = PermissionClaimType.Claim,
+                                ClaimValue = permission
+                            });
+
+                            added++;
                         }
                     }
 
@@ -200,14 +260,82 @@ namespace IMIS.Presentation.UserModule
 
                     return Results.Ok(new
                     {
-                        message = "User permissions updated successfully. Please re-login for changes to take effect."
+                        roleId,
+                        roleName = role.Name,
+                        usersUpdated = userIds.Count,
+                        claimsAdded = added,
+                        message = "Performance Validation Tool permissions granted successfully."
                     });
                 })
                 .RequireAuthorization();
 
+              roleGroup.MapPut("/roles/{roleId}/performance-validation-tool-permissions-auditor-role", async (string roleId, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ImisDbContext db) =>
+              {
+                  var role = await roleManager.FindByIdAsync(roleId);
+
+                  if (role == null)
+                      return Results.NotFound(new { message = "Role not found." });
+
+                  var permissions = new[]
+                  {
+                      
+                        "DraftPerformanceValidationTool",
+                        "SubmitPerformanceValidationTool",
+                        "ViewPerformanceValidationTool",
+                        "EditPerformanceValidationTool",
+                        "ViewAuditor",
+                        "ViewAuditorTeam",                       
+                        "AddPerformanceValidationToolPeriod",
+                        "ViewPerformanceValidationToolPeriod",
+                        "EditPerformanceValidationToolPeriod",
+                        "DeletePerformanceValidationTool",
+
+                  };
+
+                  var userIds = await db.UserRoles.Where(x => x.RoleId == roleId).Select(x => x.UserId).ToListAsync();
+
+                  int added = 0;
+
+                  foreach (var userId in userIds)
+                  {
+                      var existingClaims = await db.Set<UserClaim<string>>()
+                          .Where(x => x.UserId == userId && x.RoleId == roleId && x.ClaimType == PermissionClaimType.Claim)
+                          .Select(x => x.ClaimValue!)
+                          .ToListAsync();
+
+                      foreach (var permission in permissions)
+                      {
+                          if (existingClaims.Contains(permission))
+                              continue;
+
+                          db.Set<UserClaim<string>>().Add(new UserClaim<string>
+                          {
+                              UserId = userId,
+                              RoleId = roleId,
+                              ClaimType = PermissionClaimType.Claim,
+                              ClaimValue = permission
+                          });
+
+                          added++;
+                      }
+                  }
+
+                  await db.SaveChangesAsync();
+
+                  return Results.Ok(new
+                  {
+                      roleId,
+                      roleName = role.Name,
+                      usersUpdated = userIds.Count,
+                      claimsAdded = added,
+                      message = "Performance Validation Tool permissions granted successfully."
+                  });
+              })
+              .RequireAuthorization();
+
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
-            userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup));
+            userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
             userRoleGroup.MapPost("/userRoles", AssignUserRoles);           
             userRoleGroup.MapPut("/updateUserRole", UpdateUserRoles);
             userRoleGroup.MapDelete("/deleteUserRole", DeleteUserRole);      

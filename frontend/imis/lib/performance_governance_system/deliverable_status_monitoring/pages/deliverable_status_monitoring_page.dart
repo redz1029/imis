@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
@@ -14,17 +15,38 @@ import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
+=======
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:imis/constant/permissions.dart';
+import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
+import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/utils/http_util.dart';
+import 'package:imis/utils/permission_service.dart';
+import 'package:imis/widgets/common/filter_bottom_sheet.dart';
+import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
+import 'package:imis/constant/constant.dart';
+>>>>>>> master
 import 'package:intl/intl.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../common_services/common_service.dart';
 import '../../../reports/pages/manage_summary_narrative_report_page.dart';
 import '../../../user/models/user_registration.dart';
 import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
 import '../../../utils/date_time_converter.dart';
+<<<<<<< HEAD
 import '../../../utils/http_util.dart';
 import '../../../utils/permission_string.dart';
+=======
+import '../../../utils/permission_role_string.dart';
+import '../dialog/accomplishment_pgs_auditor_dialog.dart';
+import '../../dialog/breakthrough_dialog.dart';
+>>>>>>> master
 import '../../models/pgs_deliverable_score_history.dart';
 import '../../pgs_period/models/pgs_period.dart';
 import '../models/pgs_deliverable_accomplishment.dart';
@@ -125,6 +147,7 @@ class _DeliverableStatusMonitoringPageState
     _loadCurrentUserId();
   }
 
+<<<<<<< HEAD
   void _syncHeaderScroll() {
     if (_horizontalController.offset != _headerHorizontalController.offset) {
       _horizontalController.jumpTo(_headerHorizontalController.offset);
@@ -135,6 +158,55 @@ class _DeliverableStatusMonitoringPageState
     if (_headerHorizontalController.offset != _horizontalController.offset) {
       _headerHorizontalController.jumpTo(_horizontalController.offset);
     }
+=======
+  Future<void> _initialize() async {
+    setState(() => isLoading = true);
+    final roleId = await _getRoleId();
+    final offices = await _deliverableStatusMonitoring.fetchOffices(
+      roleId: roleId,
+    );
+    final period = await _commonService.fetchPgsPeriod();
+    final kra = await _commonService.fetchKra();
+    await _loadCurrentUserId();
+    if (!mounted) return;
+
+    PgsPeriod? activePeriod;
+    for (final p in period) {
+      if (p.isActive == true) {
+        activePeriod = p;
+        break;
+      }
+    }
+
+    setState(() {
+      periodList = period;
+      officeList = offices;
+      kraListOptions = kra;
+      isLoading = false;
+      if (activePeriod != null) {
+        selectedPeriod = activePeriod.id;
+        selectedPeriodText =
+            "${_dateConverter.toJson(activePeriod.startDate)} – ${_dateConverter.toJson(activePeriod.endDate)}";
+      }
+    });
+    fetchFilteredPgsList();
+>>>>>>> master
+  }
+
+  Future<String> _getRoleId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      return currentRole.id;
+    }
+    return '';
   }
 
   Future<void> _loadCurrentUserId() async {
@@ -241,6 +313,7 @@ class _DeliverableStatusMonitoringPageState
 
       bool allComplete = completedPeriods >= expectedPeriods;
 
+<<<<<<< HEAD
       return allComplete;
     } catch (e) {
       return false;
@@ -256,6 +329,22 @@ class _DeliverableStatusMonitoringPageState
   }
 
   Future<void> fetchFilteredPgsList() async {
+=======
+    setState(() => _isLoading = true);
+    String? roleId;
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      roleId = currentRole.id;
+    }
+>>>>>>> master
     try {
       int? scoreFrom =
           scoreRangeFromController.text.isNotEmpty
@@ -276,6 +365,7 @@ class _DeliverableStatusMonitoringPageState
               : null;
 
       final filter = PgsFilter(
+        roleId,
         selectedPeriod,
         int.tryParse(_selectedOfficeId ?? ''),
         selectedKra,
@@ -345,6 +435,98 @@ class _DeliverableStatusMonitoringPageState
       }
     } catch (e) {
       debugPrint("Error fetching filtered data: $e");
+<<<<<<< HEAD
+=======
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  List<Map<String, dynamic>> _buildMonthlyPeriods(
+    Map<String, dynamic> deliverable,
+  ) {
+    final startDateStr = deliverable['Start Date'] as String? ?? '';
+    final endDateStr = deliverable['End Date'] as String? ?? '';
+    List<Map<String, dynamic>> monthlyPeriods = [];
+    try {
+      final startDate = DateFormat('MMM dd, yyyy').parse(startDateStr);
+      final endDate = DateFormat('MMM dd, yyyy').parse(endDateStr);
+      DateTime current = DateTime(startDate.year, startDate.month);
+      final end = DateTime(endDate.year, endDate.month);
+      while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
+        monthlyPeriods.add({
+          'period': DateFormat('MMMM yyyy').format(current),
+          'month': current.month,
+          'year': current.year,
+        });
+        current = DateTime(current.year, current.month + 1);
+      }
+    } catch (_) {}
+    return monthlyPeriods;
+  }
+
+  Future<bool> _hasCompleteAccomplishmentData(
+    int deliverableId,
+    int expectedPeriods,
+  ) async {
+    try {
+      final accomplishments = await _deliverableStatusMonitoring
+          .fetchAccomplishments(deliverableId);
+      return accomplishments.any(
+        (a) =>
+            a.auditorRemarks != null && a.auditorRemarks!.toString().isNotEmpty,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _checkDeliverablesAvailability(Function setDialogState) async {
+    if (_selectedOffice == null || _selectedPeriod == null) {
+      setDialogState(() => _hasAvailableDeliverables = false);
+      return;
+    }
+    String? roleId;
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      roleId = currentRole.id;
+    }
+    try {
+      final filter = PgsFilter(
+        roleId,
+        int.tryParse(_selectedPeriod!) ?? 0,
+        int.tryParse(_selectedOffice!) ?? 0,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+      );
+      final queryParams =
+          filter.toJson()..removeWhere((key, value) => value == null);
+      final response = await AuthenticatedRequest.get(
+        dio,
+        ApiEndpoint().filterBy,
+        queryParameters: queryParams,
+      );
+      final items =
+          (response.statusCode == 200
+              ? (response.data["items"] as List<dynamic>?)
+              : null) ??
+          [];
+      setDialogState(() => _hasAvailableDeliverables = items.isNotEmpty);
+    } catch (_) {
+      setDialogState(() => _hasAvailableDeliverables = false);
+>>>>>>> master
     }
   }
 
@@ -361,6 +543,7 @@ class _DeliverableStatusMonitoringPageState
       return noPermissionScreen();
     }
     return Scaffold(
+<<<<<<< HEAD
       backgroundColor: mainBgColor,
       appBar: AppBar(
         backgroundColor: mainBgColor,
@@ -858,11 +1041,104 @@ class _DeliverableStatusMonitoringPageState
                           'Filter by',
                           style: TextStyle(color: Colors.black87),
                         ),
+=======
+      backgroundColor: const Color(0xFFF5F6FA),
+      body:
+          isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: primaryColor),
+              )
+              : Column(
+                children: [
+                  _buildPageHeader(isMobile),
+                  _buildFilterBar(isMobile),
+                  gap6px,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      child: _buildTableCard(isMobile),
+                    ),
+                  ),
+                  _buildPagination(),
+                ],
+              ),
+      floatingActionButton: isMobile ? _buildMobileFAB() : null,
+    );
+  }
+
+  Widget _buildPagination() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      color: Theme.of(context).cardColor,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          PaginationInfo(
+            currentPage: currentPage,
+            totalItems: _totalCount,
+            itemsPerPage: pageSize,
+          ),
+          PaginationControls(
+            currentPage: currentPage,
+            totalItems: _totalCount,
+            itemsPerPage: pageSize,
+            isLoading: _isLoading,
+            onPageChanged: (page) => fetchFilteredPgsList(page: page),
+          ),
+          const SizedBox(width: 60),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageHeader(bool isMobile) {
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 900;
+    final isXSmall = width < 700;
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.monitor_heart_outlined,
+                  color: primaryColor,
+                  size: 22,
+                ),
+              ),
+              SizedBox(width: isXSmall ? 8 : 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Deliverables Status Monitoring",
+                      style: TextStyle(
+                        fontSize:
+                            isXSmall
+                                ? 12
+                                : isSmall
+                                ? 14
+                                : 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1D23),
+>>>>>>> master
                       ),
                     ),
                   ],
                 ),
 
+<<<<<<< HEAD
                 Flexible(fit: FlexFit.tight, child: Container()),
                 if (!isMinimized)
                   Row(
@@ -982,6 +1258,140 @@ class _DeliverableStatusMonitoringPageState
               ),
             ),
           ),
+=======
+  Widget _buildHeaderActions() {
+    return Row(
+      children: [
+        PermissionWidget(
+          allowedRoles: [
+            PermissionRoleString.pgsAuditor,
+            PermissionRoleString.roleAdmin,
+          ],
+          child: OutlinedButton.icon(
+            onPressed:
+                () => showDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (_) => const ManageSummaryNarrativeDialog(),
+                ),
+            icon: const Icon(Icons.description_outlined, size: 16),
+            label: const Text('Manage Reports', style: TextStyle(fontSize: 13)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF1A1D23),
+              side: BorderSide(color: Colors.grey.shade300),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        PermissionWidget(
+          allowedRoles: [
+            PermissionRoleString.pgsAuditor,
+            PermissionRoleString.roleAdmin,
+          ],
+          child: ElevatedButton.icon(
+            onPressed: showReportDialog,
+            icon: const Icon(Icons.add, size: 16, color: Colors.white),
+            label: const Text(
+              'Create Report',
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              elevation: 0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterBar(bool isMobile) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+            child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopFilters() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _buildOfficeFilter(),
+                  _buildPeriodFilter(),
+                  _buildKraFilter(),
+                  _buildTypeFilter(),
+                  _buildScoreRangeFilter(),
+                  _buildPageFilter(),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            if (_hasActiveFilters) ...[
+              const SizedBox(width: 10),
+              TextButton.icon(
+                onPressed: _resetFilters,
+                icon: Icon(Icons.refresh, size: 13, color: Colors.red.shade400),
+                label: Text(
+                  'Clear filters',
+                  style: TextStyle(fontSize: 11, color: Colors.red.shade400),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileFilters() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _buildOfficeFilter(),
+          const SizedBox(width: 8),
+          _buildPeriodFilter(),
+          const SizedBox(width: 8),
+          _buildKraFilter(),
+          const SizedBox(width: 8),
+          _buildTypeFilter(),
+          const SizedBox(width: 8),
+          _buildScoreRangeFilter(),
+          if (_hasActiveFilters) ...[
+            const SizedBox(width: 8),
+            _buildClearButton(),
+          ],
+>>>>>>> master
         ],
       ),
       floatingActionButton:
@@ -1810,6 +2220,7 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
+<<<<<<< HEAD
   Widget _buildTableBody() {
     final border = TableBorder.all(color: Colors.grey.shade700, width: 1.0);
 
@@ -1871,6 +2282,9 @@ class _DeliverableStatusMonitoringPageState
     bool isHeader = false,
     TextAlign align = TextAlign.left,
   }) {
+=======
+  Widget _buildTableCard(bool isMobile) {
+>>>>>>> master
     return Container(
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
@@ -1893,10 +2307,46 @@ class _DeliverableStatusMonitoringPageState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+<<<<<<< HEAD
           Center(
             child: Text(
               kra ?? '',
               style: const TextStyle(fontWeight: FontWeight.bold),
+=======
+          SizedBox(
+            width: 40,
+            child: Text(
+              '#',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 5,
+            child: Text(
+              'Deliverable Details',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 220,
+            child: Center(
+              child: Text(
+                'Actions',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
+              ),
+>>>>>>> master
             ),
           ),
         ],
@@ -2057,8 +2507,92 @@ class _DeliverableStatusMonitoringPageState
                     ),
                   ),
                 ),
+<<<<<<< HEAD
               );
             },
+=======
+                Expanded(
+                  child: Text(
+                    d['deliverableName'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1A1D23),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: primaryColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${d['Start Date']} – ${d['End Date']}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 12,
+              runSpacing: 6,
+              children: [
+                _infoChip(
+                  Icons.apartment_outlined,
+                  d['officeName'] ?? '',
+                  Colors.lightBlue,
+                ),
+                _infoChip(Icons.adjust_outlined, d['kra'] ?? '', Colors.green),
+                _infoChip(
+                  Icons.insights,
+                  d['kraDescription'] ?? '',
+                  Colors.orange,
+                ),
+                _infoChip(
+                  d['isDirect'] == true
+                      ? Icons.arrow_right_alt
+                      : Icons.alt_route,
+                  d['isDirect'] == true ? 'Direct' : 'Indirect',
+                  d['isDirect'] == true ? Colors.purple : Colors.teal,
+                ),
+                if (d['byWhen'] != null && d['byWhen'].toString().isNotEmpty)
+                  _infoChip(
+                    Icons.calendar_month_outlined,
+                    d['byWhen'],
+                    Colors.red,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildMobileActionButtons(index, d),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 40,
+            child: Text(
+              '${(currentPage - 1) * pageSize + index + 1}',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+>>>>>>> master
           ),
         ],
       ),
@@ -2077,7 +2611,61 @@ Future<bool?> showAccomplishmentFormDialog(
   final startDate = DateFormat('MMM dd, yyyy').parse(startDateStr);
   final endDate = DateFormat('MMM dd, yyyy').parse(endDateStr);
 
+<<<<<<< HEAD
   List<Map<String, dynamic>> monthlyPeriods = [];
+=======
+  Widget _buildMobileFAB() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        PermissionWidget(
+          allowedRoles: [
+            PermissionRoleString.pgsAuditor,
+            PermissionRoleString.roleAdmin,
+          ],
+          child: FloatingActionButton.extended(
+            heroTag: "manage_audit",
+            backgroundColor: Colors.white,
+            elevation: 2,
+            onPressed:
+                () => showDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (_) => const ManageSummaryNarrativeDialog(),
+                ),
+            icon: Icon(
+              Icons.description_outlined,
+              color: primaryColor,
+              size: 18,
+            ),
+            label: Text(
+              'Manage Reports',
+              style: TextStyle(color: primaryColor, fontSize: 13),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        PermissionWidget(
+          allowedRoles: [
+            PermissionRoleString.pgsAuditor,
+            PermissionRoleString.roleAdmin,
+          ],
+          child: FloatingActionButton.extended(
+            heroTag: "create_report",
+            backgroundColor: primaryColor,
+            elevation: 2,
+            onPressed: showReportDialog,
+            icon: const Icon(Icons.add, color: Colors.white, size: 18),
+            label: const Text(
+              'Create Report',
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+>>>>>>> master
 
   DateTime current = DateTime(startDate.year, startDate.month);
   DateTime end = DateTime(endDate.year, endDate.month);
@@ -2566,6 +3154,7 @@ Future<bool?> showBreakthroughFormDialog(
                                           ),
                                         ),
                                       ),
+<<<<<<< HEAD
                                     ),
                                     Expanded(
                                       flex: 2,
@@ -2589,6 +3178,192 @@ Future<bool?> showBreakthroughFormDialog(
                                   BreakthroughWidget(
                                     deliverableId:
                                         deliverable['pgsDeliverableId'],
+=======
+                                    ],
+                                  ),
+                                ),
+                                ...monthlyPeriods.asMap().entries.map(
+                                  (e) => Column(
+                                    children: [
+                                      const Divider(height: 1),
+                                      AccomplishmentPgsAuditorDialog(
+                                        period: e.value['period'],
+                                        periodIndex: e.key,
+                                        totalPeriods: monthlyPeriods.length,
+                                        deliverableId:
+                                            deliverable['pgsDeliverableId'],
+                                        periodMonth: e.value['month'] as int,
+                                        periodYear: e.value['year'] as int,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  PermissionWidget(
+                    allowedRoles: [
+                      PermissionRoleString.pgsAuditor,
+                      PermissionRoleString.roleAdmin,
+                    ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: () async {
+                            final shouldSave = await showDialog<bool>(
+                              context: context,
+                              builder:
+                                  (ctx) => Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    child: Container(
+                                      width: 380,
+                                      padding: EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: kSurface,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.12,
+                                            ),
+                                            blurRadius: 32,
+                                            offset: Offset(0, 12),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 56,
+                                            height: 56,
+                                            decoration: BoxDecoration(
+                                              color: kPrimaryBg,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Icon(
+                                              Icons.save_outlined,
+                                              color: primaryColor,
+                                              size: 28,
+                                            ),
+                                          ),
+                                          gap16px,
+                                          Text(
+                                            'Confirm Save',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 17,
+                                              color: kText,
+                                            ),
+                                          ),
+                                          gap8px,
+                                          Text(
+                                            'Are you sure you want to save ths accomplishment?',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 13,
+                                              color: kMuted,
+                                              height: 1.5,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          gap24px,
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: OutlinedButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        ctx,
+                                                        false,
+                                                      ),
+                                                  style: OutlinedButton.styleFrom(
+                                                    side: BorderSide(
+                                                      color: kBorder,
+                                                    ),
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          vertical: 12,
+                                                        ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    'Cancel',
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          color: kMuted,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(width: 10),
+                                              Expanded(
+                                                child: ElevatedButton.icon(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        ctx,
+                                                        true,
+                                                      ),
+                                                  label: Text(
+                                                    'Save',
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                  ),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        primaryColor,
+                                                    elevation: 0,
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          vertical: 12,
+                                                        ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+>>>>>>> master
                                   ),
                                 ],
                               ),
@@ -2623,6 +3398,7 @@ Future<bool?> showBreakthroughFormDialog(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4),
                           ),
+<<<<<<< HEAD
                         ),
                         onPressed: () async {
                           final shouldSave = await showDialog<bool>(
@@ -2668,6 +3444,13 @@ Future<bool?> showBreakthroughFormDialog(
                           "Save",
                           style: TextStyle(color: Colors.white),
                         ),
+=======
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      BreakthroughDialog(
+                        deliverableId: deliverable['pgsDeliverableId'],
+>>>>>>> master
                       ),
                     ],
                   ),

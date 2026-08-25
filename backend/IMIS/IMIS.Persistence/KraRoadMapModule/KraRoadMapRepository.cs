@@ -163,12 +163,7 @@ namespace IMIS.Persistence.KraRoadMapModule
             .ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<KraRoadMapFilter>> GetByKraYearAndDescriptionAsync(
-        int kraId,
-        int year,
-        string kraDescription,
-        bool isDirect,
-        CancellationToken cancellationToken)
+        public async Task<IEnumerable<KraRoadMapFilter>> GetByKraYearAndDescriptionAsync(int kraId, int year, string kraDescription, bool isDirect,  CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<KraRoadMap>()
                 .AsNoTracking()
@@ -217,6 +212,7 @@ namespace IMIS.Persistence.KraRoadMapModule
                 .Include(x => x.KraRoadMapPeriod)
                 .Include(x => x.Deliverables)
                 .Include(x => x.Kpis)
+                  .ThenInclude(x => x.KraRoadmapKpiSequence)
                 .Include(x => x.RoadmapGutCheck)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
                 .ConfigureAwait(false);

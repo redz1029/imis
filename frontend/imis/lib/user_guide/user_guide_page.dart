@@ -65,9 +65,6 @@ class UserGuidePageState extends State<UserGuidePage> {
                 ],
               ),
             ),
-
-            // Footer
-            _buildFooter(),
           ],
         ),
       ),
@@ -119,12 +116,14 @@ class UserGuidePageState extends State<UserGuidePage> {
       children: [
         Row(
           children: [
-            Text(
-              'Welcome to the CPeMS (Centralized Performance Electronic Management System) User Guide',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+            Expanded(
+              child: Text(
+                'Welcome to the CPeMS (Centralized Performance Electronic Management System) User Guide',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
               ),
             ),
           ],
@@ -147,12 +146,14 @@ class UserGuidePageState extends State<UserGuidePage> {
           children: [
             Icon(Icons.folder_open, color: primaryColor, size: 24),
             SizedBox(width: 12),
-            Text(
-              'Overview of Projects in CPeMS',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+            Expanded(
+              child: Text(
+                'Overview of Projects in CPeMS',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
               ),
             ),
           ],
@@ -180,12 +181,14 @@ class UserGuidePageState extends State<UserGuidePage> {
           children: [
             Icon(Icons.grid_view, color: primaryColor, size: 24),
             SizedBox(width: 12),
-            Text(
-              'Overview of Modules in CPeMS',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+            Expanded(
+              child: Text(
+                'Overview of Modules in CPeMS',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
               ),
             ),
           ],
@@ -330,19 +333,6 @@ class UserGuidePageState extends State<UserGuidePage> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFooter() {
-    return Container(
-      color: Colors.grey[800],
-      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      child: Center(
-        child: Text(
-          '© 2026 CPeMS. All rights reserved.',
-          style: TextStyle(color: Colors.grey[400], fontSize: 14),
         ),
       ),
     );

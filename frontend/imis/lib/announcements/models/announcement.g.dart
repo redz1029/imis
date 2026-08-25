@@ -15,6 +15,7 @@ Announcement _$AnnouncementFromJson(Map<String, dynamic> json) => Announcement(
   isActive: json['isActive'] as bool,
   rowVersion: json['rowVersion'] as String?,
   isDeleted: json['isDeleted'] as bool?,
+  isRead: json['isRead'] as bool?,
 );
 
 Map<String, dynamic> _$AnnouncementToJson(Announcement instance) =>
@@ -27,4 +28,5 @@ Map<String, dynamic> _$AnnouncementToJson(Announcement instance) =>
       'isActive': instance.isActive,
       'rowVersion': instance.rowVersion,
       'isDeleted': instance.isDeleted,
+      'isRead': instance.isRead,
     };

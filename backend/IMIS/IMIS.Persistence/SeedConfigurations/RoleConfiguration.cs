@@ -130,7 +130,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                 },            
                 new IdentityRole
-                {
+                {   
                     Id = "6b7f1c2e-8a4d-4f90-9e53-0d3a5c2b718f",
                     Name = new SafetyOfficer().Name,
                     NormalizedName = "SAFETY OFFICER",
@@ -139,8 +139,8 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                 new IdentityRole
                 {
                     Id = "5ef7f4d6-712b-4a7c-94d0-cc0fc6a16f88",
-                    Name = "Multi-specialty Governance Council Officer",
-                    NormalizedName = "MULTI-SPECIALTY GOVERNANCE COUNCIL OFFICER",
+                    Name = new MSGC().Name,
+                    NormalizedName = "MULTI-SECTOR GOVERNANCE COUNCIL OFFICER",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                 },
                 new IdentityRole
@@ -148,6 +148,13 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     Id = "9d2a6f4b-3c81-4e7a-b5d2-1f8c6a9e2740",
                     Name = new TWG().Name,
                     NormalizedName = "TWG",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e6041f",
+                    Name = new PgsEvaluatorRole().Name,
+                    NormalizedName = "EVALUATOR",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                 }
         );

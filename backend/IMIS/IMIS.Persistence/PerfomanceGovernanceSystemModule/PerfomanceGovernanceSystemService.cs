@@ -2,8 +2,10 @@
 using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
+using IMIS.Application.Dashboard;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
@@ -41,6 +43,192 @@ namespace IMIS.Persistence.PgsModule
             _roleManager = roleManager;
 
         }
+
+        public async Task<List<ReportPgsServiceOfficePeriodDto>> ReportGetPgsByServiceOfficePeriodAsync(long? periodId, long? officeId, long? parentOfficeId, CancellationToken cancellationToken)
+        {
+            return await _repository.GetPgsByServiceOfficePeriodAsync(periodId, officeId, parentOfficeId, cancellationToken);
+        }
+
+        public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+                return new DashboardAuditStatusDto();
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+                return new DashboardAuditStatusDto();
+
+            List<int> officeIds;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new ServiceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new ResearchOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TrainingOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new LinkagesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new FacilitiesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new FinanceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new InformationOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new HROfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new SafetyOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
+            }
+            else if (role.Name.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                officeIds = await _userOfficeRepository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
+            }
+            else
+            {
+                officeIds = await _userOfficeRepository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
+            }
+
+            if (officeIds == null || !officeIds.Any())
+                return new DashboardAuditStatusDto();
+
+            return await _repository.GetDashboardAuditStatusAsync(officeIds, pgsPeriodId, cancellationToken);
+        }       
+      
+        public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+                return new TotalDashboardOfficeDto();
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+                return new TotalDashboardOfficeDto();
+
+            List<int> officeIds;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new ServiceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new ResearchOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TrainingOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new LinkagesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new FacilitiesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new FinanceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new InformationOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new HROfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new SafetyOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
+            }
+            else
+            {
+                officeIds = await _userOfficeRepository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
+            }
+
+            if (!officeIds.Any())
+                return new TotalDashboardOfficeDto();
+
+            return await _repository.GetTotalOfficeAsync(officeIds, pgsPeriodId, cancellationToken);
+        }
+
+        public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodid, int? month, int? year, CancellationToken cancellationToken)
+        {
+            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, parentOfficeId, periodid, month, year, cancellationToken);
+
+            foreach (var item in result)
+            {
+                item.ParentOfficeName = await _officeRepository.GetParentOfficeNameAsync((int)item.OfficeId, cancellationToken) ?? string.Empty;
+            }
+
+            return result;
+        }
+       
+        // ===== Report Filter By Service  Auditor ==========
+        public async Task<List<ServiceGroupedAuditDto>> ReportGetPendingAuditsByAuditorSortByServiceAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodId, int? month, int? year, CancellationToken cancellationToken)
+        {
+            var result = await _repository.GetPendingAuditsByAuditorSortByServiceAsync(auditorId, teamId, officeId, parentOfficeId, periodId, month, year, cancellationToken);
+            
+            foreach (var serviceGroup in result)
+            {
+                foreach (var office in serviceGroup.Offices)
+                {
+                    office.ParentOfficeName = await _officeRepository.GetParentOfficeNameAsync((int)office.OfficeId, cancellationToken) ?? office.ParentOfficeName;
+                }
+            }
+
+            return result;
+        }
+
+        // ==== Audit Accomplishment Report for Auditor ======
+        public async Task<List<AuditorPendingAuditDto>> ReportGetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodid, int? month, int? year, CancellationToken cancellationToken)
+        {
+            var result = await _repository.GetPendingAuditsByAuditorAsync(auditorId, teamId, officeId, parentOfficeId, periodid, month, year, cancellationToken);
+
+            foreach (var item in result)
+            {
+                item.ParentOfficeName = await _officeRepository.GetParentOfficeNameAsync((int)item.OfficeId, cancellationToken) ?? string.Empty;
+            }
+
+            return result;
+        }
+     
+        //======= Operation Review Protocol / Performance Validation Tool ===========
+        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetAuditorPgsDeliverableAsync(string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+            {
+                return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create([], page, pageSize, 0);
+            }
+               
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+            {
+                return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create([], page, pageSize, 0);
+            }  
+
+            List<PerfomanceGovernanceSystem> systems;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                systems = await _repository.GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(officeId, pgsPeriodId, cancellationToken);
+            }
+            else if (role.Name.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                systems = await _repository.GetOperationReviewProtocolAuditorPgsDeliverableByStandardUserAsync(currentUser.Id, pgsPeriodId, cancellationToken);
+            }
+            else
+            {
+                systems = await _repository.GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(currentUser.Id, officeId, pgsPeriodId, cancellationToken);
+            }
+
+            var totalCount = systems.Count;
+
+            var pagedEntities = systems.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(pagedEntities, page, pageSize, totalCount);
+        }
+
         public async Task<bool> SoftDeleteDeliverableAsync(int deliverableId, CancellationToken cancellationToken)
         {
             var deliverable = await _repository.GetByIdForSoftDeleteAsync(deliverableId, cancellationToken);
@@ -91,199 +279,199 @@ namespace IMIS.Persistence.PgsModule
         }
 
        
-        private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(
-        PerfomanceGovernanceSystem pgs,
-        string userId,
-        CancellationToken cancellationToken)
-        {
-            var dto = new PerfomanceGovernanceSystemDto(pgs)
+            private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(
+            PerfomanceGovernanceSystem pgs,
+            string userId,
+            CancellationToken cancellationToken)
             {
-                PgsDeliverables = pgs.PgsDeliverables?.Select(d => new PGSDeliverableDto(d)).ToList()
-                                  ?? new List<PGSDeliverableDto>(),
-                PgsSignatories = new List<PgsSignatoryDto>()
-            };
-
-            bool hasSavedSignatories = pgs.PgsSignatories != null && pgs.PgsSignatories.Any(s => s.Id > 0);
-            dto.IsDraft = !hasSavedSignatories;
-
-            var userIds = new List<string>();
-
-            // Office heads
-            if (pgs.Office.UserOffices != null)
-            {
-                userIds.AddRange(pgs.Office.UserOffices
-                    .Where(u => u.IsOfficeHead)
-                    .Select(u => u.UserId));
-            }
-
-            // Existing signatories
-            if (pgs.PgsSignatories != null)
-            {
-                userIds.AddRange(pgs.PgsSignatories
-                    .Where(s => s.SignatoryId != null)
-                    .Select(s => s.SignatoryId!));
-            }
-            
-            var templates = await GetInheritedSignatoryTemplatesAsync(pgs.Office, cancellationToken);
-
-            // Include template default signatories
-            userIds.AddRange(
-                templates
-                    .Where(t => !string.IsNullOrEmpty(t.DefaultSignatoryId))
-                    .Select(t => t.DefaultSignatoryId!)
-            );
-
-            userIds = userIds.Distinct().ToList();
-
-            // Load users ONCE
-            var usersDict = await _userManager.Users
-                .Where(u => userIds.Contains(u.Id))
-                .ToDictionaryAsync(u => u.Id, cancellationToken);
-
-            // Helper
-            string GetFullName(string userId)
-            {
-                if (!usersDict.TryGetValue(userId, out var u) || u == null)
-                    return "";
-
-                return string.Join(" ", new[]
+                var dto = new PerfomanceGovernanceSystemDto(pgs)
                 {
-            u.Prefix,
-            u.FirstName,
-            u.MiddleName,
-            u.LastName,
-            u.Suffix
-              }.Where(x => !string.IsNullOrWhiteSpace(x)));
-            }
+                    PgsDeliverables = pgs.PgsDeliverables?.Select(d => new PGSDeliverableDto(d)).ToList()
+                                      ?? new List<PGSDeliverableDto>(),
+                    PgsSignatories = new List<PgsSignatoryDto>()
+                };
 
-            // DISAPPROVED FLOW
-            if (dto.PgsDeliverables.Any(d => d.IsDisapproved))
-            {
-                if (pgs.PgsSignatories?.Any() == true)
+                bool hasSavedSignatories = pgs.PgsSignatories != null && pgs.PgsSignatories.Any(s => s.Id > 0);
+                dto.IsDraft = !hasSavedSignatories;
+
+                var userIds = new List<string>();
+
+                // Office heads
+                if (pgs.Office.UserOffices != null)
                 {
-                    _repository.GetDbContext().RemoveRange(pgs.PgsSignatories);
-                    await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
+                    userIds.AddRange(pgs.Office.UserOffices
+                        .Where(u => u.IsOfficeHead)
+                        .Select(u => u.UserId));
                 }
 
-                dto.PgsSignatories.Clear();
+                // Existing signatories
+                if (pgs.PgsSignatories != null)
+                {
+                    userIds.AddRange(pgs.PgsSignatories
+                        .Where(s => s.SignatoryId != null)
+                        .Select(s => s.SignatoryId!));
+                }
+            
+                var templates = await GetInheritedSignatoryTemplatesAsync(pgs.Office, cancellationToken);
 
-                var childOfficeHeadSig = pgs.Office.UserOffices?.FirstOrDefault(u => u.IsOfficeHead);
+                // Include template default signatories
+                userIds.AddRange(
+                    templates
+                        .Where(t => !string.IsNullOrEmpty(t.DefaultSignatoryId))
+                        .Select(t => t.DefaultSignatoryId!)
+                );
 
-                if (childOfficeHeadSig != null)
+                userIds = userIds.Distinct().ToList();
+
+                // Load users ONCE
+                var usersDict = await _userManager.Users
+                    .Where(u => userIds.Contains(u.Id))
+                    .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+                // Helper
+                string GetFullName(string userId)
+                {
+                    if (!usersDict.TryGetValue(userId, out var u) || u == null)
+                        return "";
+
+                    return string.Join(" ", new[]
+                    {
+                u.Prefix,
+                u.FirstName,
+                u.MiddleName,
+                u.LastName,
+                u.Suffix
+                  }.Where(x => !string.IsNullOrWhiteSpace(x)));
+                }
+
+                // DISAPPROVED FLOW
+                if (dto.PgsDeliverables.Any(d => d.IsDisapproved))
+                {
+                    if (pgs.PgsSignatories?.Any() == true)
+                    {
+                        _repository.GetDbContext().RemoveRange(pgs.PgsSignatories);
+                        await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
+                    }
+
+                    dto.PgsSignatories.Clear();
+
+                    var childOfficeHeadSig = pgs.Office.UserOffices?.FirstOrDefault(u => u.IsOfficeHead);
+
+                    if (childOfficeHeadSig != null)
+                    {
+                        dto.PgsSignatories.Add(new PgsSignatoryDto
+                        {
+                            Id = 0,
+                            PgsId = pgs.Id,
+                            PgsSignatoryTemplateId = null,
+                            SignatoryName = GetFullName(childOfficeHeadSig.UserId),
+                            SignatoryId = childOfficeHeadSig.UserId,
+                            Label = PgsStatus.OfficeHead,
+                            OrderLevel = 0,
+                            Status = PgsStatus.Pending,
+                            IsNextStatus = true
+                        });
+                    }
+
+                    dto.IsDraft = true;
+                    return dto;
+                }
+
+                // EXISTING SIGNATORIES
+                foreach (var s in pgs.PgsSignatories ?? Enumerable.Empty<PgsSignatory>())
+                {
+                    int orderLevel = 0;
+                    string label = PgsStatus.OfficeHead;
+
+                    if (s.PgsSignatoryTemplateId != null)
+                    {
+                        var template = await _signatoryTemplateRepository
+                            .GetByIdAsync(s.PgsSignatoryTemplateId.Value, cancellationToken);
+
+                        if (template != null)
+                        {
+                            orderLevel = template.OrderLevel;
+                            label = template.SignatoryLabel;
+                        }
+                    }
+
+                    dto.PgsSignatories.Add(new PgsSignatoryDto
+                    {
+                        Id = s.Id,
+                        PgsId = pgs.Id,
+                        PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
+                        SignatoryId = s.SignatoryId!,
+                        SignatoryName = s.SignatoryId != null ? GetFullName(s.SignatoryId) : "",
+                        Label = label,
+                        OrderLevel = orderLevel,
+                        Status = s.DateSigned != default ? PgsStatus.Prepared : PgsStatus.Pending,
+                        IsNextStatus = false,
+                        DateSigned = s.DateSigned
+                    });
+                }
+
+                var childOfficeHead = pgs.Office.UserOffices?.FirstOrDefault(u => u.IsOfficeHead);
+
+                var officeTemplates = await _signatoryTemplateRepository
+                    .GetSignatoryTemplateByOfficeIdAsync(pgs.Office.Id, cancellationToken);
+
+                // DEFAULT OFFICE HEAD (fallback)
+                if (!hasSavedSignatories && (officeTemplates == null || !officeTemplates.Any()) && childOfficeHead != null)
                 {
                     dto.PgsSignatories.Add(new PgsSignatoryDto
                     {
                         Id = 0,
                         PgsId = pgs.Id,
                         PgsSignatoryTemplateId = null,
-                        SignatoryName = GetFullName(childOfficeHeadSig.UserId),
-                        SignatoryId = childOfficeHeadSig.UserId,
+                        SignatoryId = childOfficeHead.UserId,
+                        SignatoryName = GetFullName(childOfficeHead.UserId),
                         Label = PgsStatus.OfficeHead,
                         OrderLevel = 0,
                         Status = PgsStatus.Pending,
-                        IsNextStatus = true
+                        IsNextStatus = false
                     });
                 }
 
-                dto.IsDraft = true;
-                return dto;
-            }
-
-            // EXISTING SIGNATORIES
-            foreach (var s in pgs.PgsSignatories ?? Enumerable.Empty<PgsSignatory>())
-            {
-                int orderLevel = 0;
-                string label = PgsStatus.OfficeHead;
-
-                if (s.PgsSignatoryTemplateId != null)
+                // TEMPLATE SIGNATORIES
+                foreach (var t in templates.OrderBy(t => t.OrderLevel))
                 {
-                    var template = await _signatoryTemplateRepository
-                        .GetByIdAsync(s.PgsSignatoryTemplateId.Value, cancellationToken);
+                    bool alreadyExists = dto.PgsSignatories.Any(s =>
+                        s.PgsSignatoryTemplateId == t.Id ||
+                        s.SignatoryId == t.DefaultSignatoryId);
 
-                    if (template != null)
+                    if (alreadyExists) continue;
+
+                    dto.PgsSignatories.Add(new PgsSignatoryDto
                     {
-                        orderLevel = template.OrderLevel;
-                        label = template.SignatoryLabel;
-                    }
+                        Id = 0,
+                        PgsId = pgs.Id,
+                        PgsSignatoryTemplateId = t.Id > 0 ? t.Id : null,
+                        SignatoryId = t.DefaultSignatoryId!,
+                        SignatoryName = GetFullName(t.DefaultSignatoryId!),
+                        Label = t.SignatoryLabel,
+                        OrderLevel = t.OrderLevel,
+                        Status = PgsStatus.Pending,
+                        IsNextStatus = false
+                    });
                 }
 
-                dto.PgsSignatories.Add(new PgsSignatoryDto
-                {
-                    Id = s.Id,
-                    PgsId = pgs.Id,
-                    PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
-                    SignatoryId = s.SignatoryId!,
-                    SignatoryName = s.SignatoryId != null ? GetFullName(s.SignatoryId) : "",
-                    Label = label,
-                    OrderLevel = orderLevel,
-                    Status = s.DateSigned != default ? PgsStatus.Prepared : PgsStatus.Pending,
-                    IsNextStatus = false,
-                    DateSigned = s.DateSigned
-                });
+                // NEXT SIGNATORY
+                var nextPending = dto.PgsSignatories
+                    .Where(s => s.Status!.Equals(PgsStatus.Pending, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(s => s.OrderLevel)
+                    .FirstOrDefault();
+
+                if (nextPending != null)
+                    nextPending.IsNextStatus = true;
+
+                // FINAL FILTER
+                dto.PgsSignatories = dto.PgsSignatories
+                    .Where(s => s.Status!.Equals(PgsStatus.Prepared, StringComparison.OrdinalIgnoreCase) || s.IsNextStatus)
+                    .OrderBy(s => s.OrderLevel)
+                    .ToList();
+
+                return dto;
             }
-
-            var childOfficeHead = pgs.Office.UserOffices?.FirstOrDefault(u => u.IsOfficeHead);
-
-            var officeTemplates = await _signatoryTemplateRepository
-                .GetSignatoryTemplateByOfficeIdAsync(pgs.Office.Id, cancellationToken);
-
-            // DEFAULT OFFICE HEAD (fallback)
-            if (!hasSavedSignatories && (officeTemplates == null || !officeTemplates.Any()) && childOfficeHead != null)
-            {
-                dto.PgsSignatories.Add(new PgsSignatoryDto
-                {
-                    Id = 0,
-                    PgsId = pgs.Id,
-                    PgsSignatoryTemplateId = null,
-                    SignatoryId = childOfficeHead.UserId,
-                    SignatoryName = GetFullName(childOfficeHead.UserId),
-                    Label = PgsStatus.OfficeHead,
-                    OrderLevel = 0,
-                    Status = PgsStatus.Pending,
-                    IsNextStatus = false
-                });
-            }
-
-            // TEMPLATE SIGNATORIES
-            foreach (var t in templates.OrderBy(t => t.OrderLevel))
-            {
-                bool alreadyExists = dto.PgsSignatories.Any(s =>
-                    s.PgsSignatoryTemplateId == t.Id ||
-                    s.SignatoryId == t.DefaultSignatoryId);
-
-                if (alreadyExists) continue;
-
-                dto.PgsSignatories.Add(new PgsSignatoryDto
-                {
-                    Id = 0,
-                    PgsId = pgs.Id,
-                    PgsSignatoryTemplateId = t.Id > 0 ? t.Id : null,
-                    SignatoryId = t.DefaultSignatoryId!,
-                    SignatoryName = GetFullName(t.DefaultSignatoryId!),
-                    Label = t.SignatoryLabel,
-                    OrderLevel = t.OrderLevel,
-                    Status = PgsStatus.Pending,
-                    IsNextStatus = false
-                });
-            }
-
-            // NEXT SIGNATORY
-            var nextPending = dto.PgsSignatories
-                .Where(s => s.Status!.Equals(PgsStatus.Pending, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(s => s.OrderLevel)
-                .FirstOrDefault();
-
-            if (nextPending != null)
-                nextPending.IsNextStatus = true;
-
-            // FINAL FILTER
-            dto.PgsSignatories = dto.PgsSignatories
-                .Where(s => s.Status!.Equals(PgsStatus.Prepared, StringComparison.OrdinalIgnoreCase) || s.IsNextStatus)
-                .OrderBy(s => s.OrderLevel)
-                .ToList();
-
-            return dto;
-        }
         private async Task<IEnumerable<PgsSignatoryTemplate>> GetInheritedSignatoryTemplatesAsync(Office office, CancellationToken cancellationToken)
         {
             if (office == null) return Enumerable.Empty<PgsSignatoryTemplate>();
@@ -337,9 +525,13 @@ namespace IMIS.Persistence.PgsModule
 
             List<PerfomanceGovernanceSystemDto> dtos;
 
-            // ================= ADMIN / PGS CORE TEAM =================
+            // ================= ADMIN / PGS CORE TEAM / TWG / OSM =================
             if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase))
             {
                 var allRecords = (await _repository.GetAll(cancellationToken)).ToList();
                 dtos = await BuildDtos(allRecords, userId, cancellationToken);
@@ -713,6 +905,21 @@ namespace IMIS.Persistence.PgsModule
                     }
                 }
 
+                if (entity.PgsReadinessRating != null)
+                {
+                    
+                    existing.PgsReadinessRating = entity.PgsReadinessRating; // explicitly set Rediness Rating, ewan bakit ayaw nya!!!
+                    
+                    _repository.GetDbContext()
+                        .Entry(existing.PgsReadinessRating)
+                        .CurrentValues
+                        .SetValues(entity.PgsReadinessRating);
+                }
+                else if (existing.PgsReadinessRating != null)
+                {
+                  
+                }
+
                 _repository.GetDbContext().Entry(existing).CurrentValues.SetValues(entity);
 
                 existing.OfficeId = office.Id;
@@ -814,12 +1021,8 @@ namespace IMIS.Persistence.PgsModule
             pgs.PgsSignatories = new List<PgsSignatoryDto>();
             return await SaveOrUpdateAsync(pgs, cancellationToken).ConfigureAwait(false);
         }
-      
-        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(
-        PgsFilter filter,
-        string userId,
-        string roleId,
-        CancellationToken cancellationToken)
+     
+        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, string roleId, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
@@ -846,13 +1049,19 @@ namespace IMIS.Persistence.PgsModule
             var isAdmin = activeRoleName!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase);
             var isPgsManager = activeRoleName.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase);
             var isTWG = activeRoleName.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase);
+            var isOSM = activeRoleName.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase);
+            var isMSGC = activeRoleName.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase);
+            var isPgsAuditorHead = activeRoleName.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase);
+            var isPgsServiceHead = activeRoleName.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase); 
 
-            // =====================  GET PARENT  CHILD OFFICE IDS =====================
+            // =====================  GET ALL OFFICES (needed for the OfficeId filter) =====================
+            var allOffices = await _officeRepository.GetAll(cancellationToken) ?? new List<Office>();
+
+            // ===================== GET PARENT/CHILD OFFICE IDS (from filter, if provided) =====================
             var officeIds = new List<int>();
             if (filter.OfficeId.HasValue)
             {
-                var allOffices = await _officeRepository.GetAll(cancellationToken);
-                officeIds = allOffices!
+                officeIds = allOffices
                     .Where(o => o.Id == filter.OfficeId.Value || o.ParentOfficeId == filter.OfficeId.Value)
                     .Select(o => o.Id)
                     .ToList();
@@ -860,65 +1069,157 @@ namespace IMIS.Persistence.PgsModule
 
             List<PerfomanceGovernanceSystem> filteredEntities;
 
-            // ===================== ADMIN / PGS MANAGER / isTWG =====================
-            if (isPgsManager || isAdmin || isTWG)
+            // ===================== ADMIN / PGS MANAGER / isTWG / isOSM / isMSGC / isPgsAuditorHead =====================
+            if (isPgsManager || isAdmin || isTWG || isOSM || isMSGC || isPgsAuditorHead)
             {
-                var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false)
-                              ?? new List<PerfomanceGovernanceSystemDto>();
+                var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false) ?? new List<PerfomanceGovernanceSystemDto>();
 
-                var filteredDtos = allDtos
-                    .Where(dto =>
-                    {
-                        bool matches = true;
-                        if (filter.OfficeId.HasValue)
-                            matches &= officeIds.Contains(dto.Office.Id);
-                        if (filter.FromDate.HasValue)
-                            matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
-                        if (filter.ToDate.HasValue)
-                            matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
-                        return matches;
-                    })
+                var filteredDtos = allDtos.Where(dto =>
+                {
+                    bool matches = true;
+
+                    if (filter.OfficeId.HasValue)
+                        matches &= officeIds.Contains(dto.Office.Id);
+
+                    if (filter.PeriodId.HasValue)
+                        matches &= dto.PgsPeriod?.Id == filter.PeriodId.Value;
+
+                    if (filter.FromDate.HasValue)
+                        matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
+
+                    if (filter.ToDate.HasValue)
+                        matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
+
+                    return matches;
+                })
                     .ToList();
 
                 var processedDtos = new List<PerfomanceGovernanceSystemDto>();
                 foreach (var dto in filteredDtos)
                 {
-                    var processedDto = await ProcessPGSSignatories(
-                        dto.ToEntity(),
-                        dto.Office.Id.ToString(),
-                        cancellationToken);
-
+                    var processedDto = await ProcessPGSSignatories(dto.ToEntity(), dto.Office.Id.ToString(), cancellationToken);
                     processedDtos.Add(processedDto);
+                }
+
+                filteredEntities = processedDtos.Select(dto => dto.ToEntity()).ToList();
+            }
+            // ===================== SERVICE HEAD (ADDED BRANCH) =====================
+            else if (isPgsServiceHead)
+            {
+                var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false) ?? new List<PerfomanceGovernanceSystemDto>();
+
+                var candidateDtos = allDtos.Where(dto =>
+                {
+                    bool matches = true;
+
+                    if (filter.OfficeId.HasValue)
+                        matches &= officeIds.Contains(dto.Office.Id);
+
+                    if (filter.PeriodId.HasValue)
+                        matches &= dto.PgsPeriod?.Id == filter.PeriodId.Value;
+
+                    if (filter.FromDate.HasValue)
+                        matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
+
+                    if (filter.ToDate.HasValue)
+                        matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
+
+                    return matches;
+                })
+                    .ToList();
+
+                var processedDtos = new List<PerfomanceGovernanceSystemDto>();
+
+                foreach (var dto in candidateDtos)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var pgs = dto.ToEntity();
+                    var processedDto = await ProcessPGSSignatories(pgs, currentUser.Id, cancellationToken);
+                    processedDto.PgsDeliverables = processedDto.PgsDeliverables?.Where(d => !d.IsDeleted).ToList() ?? new();
+
+                    var isUserAssignedToOffice = pgs.Office.UserOffices?.Any(u => u.UserId == currentUser.Id) ?? false;
+                    var canViewAsParent = pgs.Office.ParentOffice?.UserOffices?.Any(u => u.UserId == currentUser.Id) ?? false;
+
+                    var isDraft = processedDto.PgsSignatories == null || !processedDto.PgsSignatories.Any(s => s.Id > 0);
+                    processedDto.IsDraft = isDraft;
+
+                    if (isDraft)
+                    {
+                        var templates = (await GetInheritedSignatoryTemplatesAsync(pgs.Office, cancellationToken))
+                            .OrderBy(t => t.OrderLevel)
+                            .ToList();
+
+                        var firstTemplate = templates.FirstOrDefault();
+                        var officeHead = pgs.Office.UserOffices?.FirstOrDefault(u => u.IsOfficeHead);
+
+                        if (isUserAssignedToOffice || firstTemplate?.DefaultSignatoryId == currentUser.Id || officeHead?.UserId == currentUser.Id)
+                        {
+                            processedDtos.Add(processedDto);
+                        }
+
+                        continue;
+                    }
+
+                    var isNext = processedDto.PgsSignatories?.Any(s => s.SignatoryId == currentUser.Id && s.IsNextStatus) ?? false;
+                    var hasSigned = processedDto.PgsSignatories?.Any(s => s.SignatoryId == currentUser.Id && s.DateSigned != DateTime.MinValue) ?? false;
+                    var isFullySigned = processedDto.PgsSignatories?.All(s => s.DateSigned != DateTime.MinValue) ?? false;
+
+                    if (isUserAssignedToOffice || canViewAsParent || isNext || (isFullySigned && hasSigned))
+                    {
+                        processedDtos.Add(processedDto);
+                    }
                 }
 
                 filteredEntities = processedDtos.Select(dto => dto.ToEntity()).ToList();
             }
             else
             {
-                // ===================== NORMAL USER =====================
-                var userDtos = await GetByUserIdAsync(
-                    currentUser.Id,
-                    roleId,
-                    filter.Page,
-                    filter.PageSize,
-                    cancellationToken).ConfigureAwait(false)
-                    ?? new List<PerfomanceGovernanceSystemDto>();
+                // ===================== NORMAL USER — SEE ALL PGS (DRAFT/PENDING/APPROVED) UNDER THEIR OFFICE(S) =====================
 
-                var filteredDtos = userDtos
-                    .Where(dto =>
+                var userOfficeIds = await _repository.GetDbContext().Set<UserOffices>()
+                    .Where(uo => uo.UserId == currentUser.Id)
+                    .Select(uo => uo.OfficeId)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+
+                if (!userOfficeIds.Any())
+                {
+                    filteredEntities = new List<PerfomanceGovernanceSystem>();
+                }
+                else
+                {
+                    var allDtos = await GetAllAsync(cancellationToken).ConfigureAwait(false) ?? new List<PerfomanceGovernanceSystemDto>();
+
+                    var filteredDtos = allDtos.Where(dto =>
                     {
-                        bool matches = true;
+                        bool matches = userOfficeIds.Contains(dto.Office.Id);
+
                         if (filter.OfficeId.HasValue)
                             matches &= officeIds.Contains(dto.Office.Id);
+
+                        if (filter.PeriodId.HasValue)
+                            matches &= dto.PgsPeriod?.Id == filter.PeriodId.Value;
+
                         if (filter.FromDate.HasValue)
                             matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
+
                         if (filter.ToDate.HasValue)
                             matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
+
                         return matches;
                     })
-                    .ToList();
+                        .ToList();
 
-                filteredEntities = filteredDtos.Select(dto => dto.ToEntity()).ToList();
+                    var processedDtos = new List<PerfomanceGovernanceSystemDto>();
+                    foreach (var dto in filteredDtos)
+                    {
+                        var processedDto = await ProcessPGSSignatories(dto.ToEntity(), dto.Office.Id.ToString(), cancellationToken);
+                        processedDtos.Add(processedDto);
+                    }
+
+                    filteredEntities = processedDtos.Select(dto => dto.ToEntity()).ToList();
+                }
             }
 
             // ===================== APPLY PAGING =====================
@@ -931,15 +1232,14 @@ namespace IMIS.Persistence.PgsModule
             var pagedPgs = DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
                 .Create(pagedEntities, filter.Page, filter.PageSize, totalCount);
 
-            // ===================== SIGNATORY PROCESSING =====================
+            // ===================== SIGNATORY PROCESSING (label/order/status/next-signatory) =====================
             foreach (var item in pagedPgs.Items)
             {
                 if (item.PgsSignatories == null)
                     item.PgsSignatories = new List<PgsSignatoryDto>();
-             
+
                 foreach (var signatory in item.PgsSignatories)
                 {
-                    // ===================== LABEL / ORDER LEVEL FROM TEMPLATE ONLY =====================
                     if (signatory.PgsSignatoryTemplateId.HasValue)
                     {
                         var template = await _signatoryTemplateRepository.GetByIdAsync(signatory.PgsSignatoryTemplateId.Value, cancellationToken);
@@ -951,7 +1251,7 @@ namespace IMIS.Persistence.PgsModule
                         }
                     }
                     else
-                    {                       
+                    {
                         signatory.Label = PgsStatus.PreparedBy;
                         signatory.OrderLevel = 0;
                     }
@@ -960,13 +1260,10 @@ namespace IMIS.Persistence.PgsModule
 
                     if (user != null)
                     {
-                        signatory.SignatoryName =
-                            $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}";
+                        signatory.SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}";
                     }
 
-                    // ===================== STATUS LOGIC =====================
                     signatory.Status = signatory.DateSigned != default ? PgsStatus.Prepared : PgsStatus.Pending;
-
                     signatory.IsNextStatus = false;
                 }
 
@@ -1005,8 +1302,7 @@ namespace IMIS.Persistence.PgsModule
                                 Status = nextTemplate.Status,
                                 Label = nextTemplate.SignatoryLabel,
                                 OrderLevel = nextTemplate.OrderLevel,
-                                SignatoryName =
-                                    $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}",
+                                SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}",
                                 IsNextStatus = true
                             };
 

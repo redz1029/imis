@@ -1,0 +1,65 @@
+﻿using Base.Pagination;
+using Base.Primitives;
+using IMIS.Application.SWOTAnalysisStrengthWeaknessModule;
+using IMIS.Domain;
+
+namespace IMIS.Persistence.SWOTAnalysisStrengthWeaknessModule
+{
+    public class SWOTAnalysisStrengthWeaknessSettingsService : ISWOTAnalysisStrengthWeaknessSettingsService
+    {
+        private readonly ISWOTAnalysisStrengthWeaknessSettingsRepository _repository;
+
+        public SWOTAnalysisStrengthWeaknessSettingsService(ISWOTAnalysisStrengthWeaknessSettingsRepository repository)
+        {
+            _repository = repository;
+        }
+
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var sWOTAnalysisDto = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (sWOTAnalysisDto == null)
+                return false;
+
+            sWOTAnalysisDto.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+        public async Task<DtoPageList<SWOTAnalysisStrengthWeaknessSettingsDto, SWOTAnalysisStrengthWeaknessSettings, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var sWOTAnalysisDto = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (sWOTAnalysisDto.TotalCount == 0)
+            {
+                return null;
+            }
+            return DtoPageList<SWOTAnalysisStrengthWeaknessSettingsDto, SWOTAnalysisStrengthWeaknessSettings, int>.Create(sWOTAnalysisDto.Items, page, pageSize, sWOTAnalysisDto.TotalCount);
+        }
+        public async Task<SWOTAnalysisStrengthWeaknessSettingsDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var sWOTAnalysisDto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return sWOTAnalysisDto != null ? new SWOTAnalysisStrengthWeaknessSettingsDto(sWOTAnalysisDto) : null;
+        }
+        public async Task<List<SWOTAnalysisStrengthWeaknessSettingsDto>?> GetAllAsync(CancellationToken cancellationToken)
+        {
+            var sWOTAnalysisDto = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            if (sWOTAnalysisDto == null)
+                return null;
+
+            return sWOTAnalysisDto.Select(d => new SWOTAnalysisStrengthWeaknessSettingsDto(d)).ToList();
+        }
+        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
+        {
+            var ODto = dto as SWOTAnalysisStrengthWeaknessSettingsDto;
+            var enittyDto = ODto!.ToEntity();
+
+            if (enittyDto.Id == 0)
+                _repository.Add(enittyDto);
+            else
+                await _repository.UpdateAsync(enittyDto, enittyDto.Id, cancellationToken).ConfigureAwait(false);
+
+            await _repository.SaveOrUpdateAsync(enittyDto, cancellationToken).ConfigureAwait(false);
+        }
+    }
+}
