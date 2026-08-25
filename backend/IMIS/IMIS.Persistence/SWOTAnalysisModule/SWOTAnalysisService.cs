@@ -116,8 +116,8 @@ namespace IMIS.Persistence.SWOTAnalysisModule
         {
             Id = 0,
             InternalContextId = dto.InternalContextId,
-            Opportunities = dto.Opportunities,
-            Threats = dto.Threats
+            Strength = dto.Strength,
+            Weaknesses = dto.Weaknesses
         };
 
         private static SWOTAnalysisOTDeliverables BuildNewOTDeliverable(SWOTAnalysisOTDeliverablesDto dto) => new()
@@ -152,8 +152,8 @@ namespace IMIS.Persistence.SWOTAnalysisModule
                 if (match == null) continue;
 
                 match.InternalContextId = itemDto.InternalContextId;
-                match.Opportunities = itemDto.Opportunities;
-                match.Threats = itemDto.Threats;
+                match.Strength = itemDto.Strength;
+                match.Weaknesses = itemDto.Weaknesses;
                 match.IsDeleted = false;
             }
         }
