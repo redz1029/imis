@@ -10,6 +10,7 @@ import 'package:imis/scorecard/impact_strategic_goal_scorecard_period/models/imp
 import 'package:imis/scorecard/models/impact_strategic_goal_scorecard.dart';
 import 'package:imis/scorecard/services/impact_strategy_scorecard_services.dart';
 import 'package:imis/utils/print_preview_util.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:intl/intl.dart';
@@ -335,6 +336,33 @@ class ImpactStrategyGoalScorecardPageState
                       ),
                     SizedBox(height: 5),
                     Expanded(child: _buildListBody(isMobile)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) =>
+                                    fetchImpactGoalStrageyScoreCard(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -420,7 +448,10 @@ class ImpactStrategyGoalScorecardPageState
             child: Row(
               children: [
                 Expanded(flex: 1, child: Text("$itemNumber")),
-                Expanded(flex: 3, child: Text(periodLabel)),
+                Expanded(
+                  flex: 3,
+                  child: Text(periodLabel, style: TextStyle(fontSize: 12)),
+                ),
                 Expanded(
                   flex: 2,
                   child: Row(
@@ -449,7 +480,10 @@ class ImpactStrategyGoalScorecardPageState
                           size: 16,
                           color: Colors.redAccent,
                         ),
-                        onPressed: () {},
+                        onPressed:
+                            () => showDeleteDialog(
+                              impactStrategyGoal.id.toString(),
+                            ),
                       ),
                     ],
                   ),
@@ -458,42 +492,103 @@ class ImpactStrategyGoalScorecardPageState
             ),
           );
         }
+
         return Container(
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "#$itemNumber",
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade500,
-                      ),
+              Row(
+                children: [
+                  Text(
+                    "$itemNumber",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      periodLabel,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  const Spacer(),
+                  PopupMenuButton<String>(
+                    color: Theme.of(context).cardColor,
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (value) async {
+                      if (value == 'edit' &&
+                          permissionService.hasPermission(
+                            AppPermissions.editImpactStrategicGoalScoreCard,
+                          )) {
+                        _handleEdit(impactStrategyGoal);
+                      }
+                      if (value == 'preview') {
+                        openImpactGoalStrategyReportPreview(
+                          impactStrategyGoal.id.toString(),
+                          '',
+                          context: context,
+                        );
+                      }
+                      if (value == 'delete' &&
+                          permissionService.hasPermission(
+                            AppPermissions.editImpactStrategicGoalScoreCard,
+                          )) {
+                        showDeleteDialog(impactStrategyGoal.id.toString());
+                      }
+                    },
+                    itemBuilder:
+                        (_) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: PermissionWidget(
+                              permission: AppPermissions.viewKraRoadMap,
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.edit_outlined, size: 16),
+                                  SizedBox(width: 8),
+                                  Text('Edit'),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'preview',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.description_outlined,
+                                  size: 16,
+                                  color: Colors.blueAccent,
+                                ),
+                                SizedBox(width: 8),
+                                Text('Print preview'),
+                              ],
+                            ),
+                          ),
+
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: PermissionWidget(
+                              permission: AppPermissions.deleteKraRoadMap,
+                              child: const Row(
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.delete_simple,
+                                    color: Colors.red,
+                                    size: 16,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Delete'),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                  ),
+                ],
               ),
-              IconButton(
-                icon: Icon(Icons.edit_outlined, size: 18),
-                onPressed: () => _handleEdit(impactStrategyGoal),
-              ),
+              const SizedBox(height: 8),
+              Text(periodLabel, style: const TextStyle(fontSize: 12)),
             ],
           ),
         );
