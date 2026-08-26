@@ -50,9 +50,18 @@ namespace IMIS.Persistence.SWOTAnalysisModule
                 : await _repository.FilterByYearByUserAsync(currentUser.Id, year, noOfResults, cancellationToken);
         }
 
-        public async Task<DtoPageList<SWOTAnalysisDto, SWOTAnalysis, long>?> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<DtoPageList<SWOTAnalysisDto, SWOTAnalysis, long>?> GetPaginatedByUserIdAsync(string userId, int? officeId, int page, int pageSize, CancellationToken cancellationToken)
         {
-            var pagedEntities = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+                return null;
+
+            bool isElevatedUser = await IsElevatedUserAsync(currentUser);
+
+            var pagedEntities = isElevatedUser
+                ? await _repository.GetPaginatedAllAsync(officeId, page, pageSize, cancellationToken)
+                : await _repository.GetPaginatedByUserIdAsync(currentUser.Id, officeId, page, pageSize, cancellationToken);
+
             if (pagedEntities.TotalCount == 0)
                 return null;
 
@@ -69,22 +78,7 @@ namespace IMIS.Persistence.SWOTAnalysisModule
             var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
             return entity != null ? new ReportSWOTAnalysisDto(entity) : null;
         }
-
-        public async Task<List<SWOTAnalysisDto>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
-        {
-            var currentUser = await GetCurrentUserAsync();
-            if (currentUser == null)
-                return null;
-
-            bool isElevatedUser = await IsElevatedUserAsync(currentUser);
-
-            var swotEntities = isElevatedUser
-                ? await _repository.GetAllAsync(cancellationToken)
-                : await _repository.GetByUserIdAsync(currentUser.Id, cancellationToken) ?? new List<SWOTAnalysis>();
-
-            return swotEntities.Select(e => new SWOTAnalysisDto(e)).ToList();
-        }
-
+             
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);

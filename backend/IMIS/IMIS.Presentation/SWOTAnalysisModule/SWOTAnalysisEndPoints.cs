@@ -26,16 +26,8 @@ namespace IMIS.Presentation.SWOTAnalysisModule
                 return Results.Ok(swotAnalysisDto);
             })
            .WithTags(_swotAnalysisTag)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.Add));
-
-            app.MapGet("userId/{userId}", async (string userId, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
-            {
-                var result = await service.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
-                return result != null ? Results.Ok(result) : Results.NotFound();
-            })
-            .WithTags(_swotAnalysisTag).CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
-
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.Add));
+                  
             app.MapGet("/{id}", async (int id, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
             {
                 var swotAnalysisDto = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -80,11 +72,11 @@ namespace IMIS.Presentation.SWOTAnalysisModule
                 return swotAnalysisDto != null && swotAnalysisDto.Any() ? Results.Ok(swotAnalysisDto) : Results.NoContent();
             })            
             .WithTags(_swotAnalysisTag).CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true);
-
-            app.MapGet("/page", async (int page, int pageSize, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
+          
+            app.MapGet("/page", async (int page, int pageSize, string userId, int? officeId, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
             {
-                var paginatedswotAnalysisDto = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-                return Results.Ok(paginatedswotAnalysisDto);
+                var paginatedswotAnalysisDto = await service.GetPaginatedByUserIdAsync(userId, officeId, page, pageSize, cancellationToken).ConfigureAwait(false);
+                return paginatedswotAnalysisDto != null ? Results.Ok(paginatedswotAnalysisDto) : Results.NotFound();
             })
             .WithTags(_swotAnalysisTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true)
