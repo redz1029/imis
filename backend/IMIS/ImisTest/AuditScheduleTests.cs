@@ -282,6 +282,7 @@ namespace ImisTest
                     auditors!.Add(new AuditorDto() 
                     { 
                         Id = auditor.Id, 
+                        Name = auditor.Name,
                         IsActive = auditor.IsActive ,
                         UserId = auditor.UserId,
                         

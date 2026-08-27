@@ -104,6 +104,7 @@ namespace IMIS.Application.AuditorTeamsModule
                         .Select(at => new AuditorDto
                         {
                             Id = at.Auditor!.Id,
+                            Name = at.Auditor!.Name,
                             IsTeamLeader = at.IsTeamLeader,
                             IsActive = at.Auditor.IsActive,
                             UserId = at.Auditor.UserId,

@@ -6,7 +6,7 @@ namespace IMIS.Application.AuditorModule
 {
     public class AuditorDto : BaseDto<Auditor, int>
     {
-              
+        public required string Name { get; set; }
         public required bool IsActive { get; set; }
         public bool IsTeamLeader { get; set; }
         public bool IsOfficeHead { get; set; }
@@ -20,15 +20,14 @@ namespace IMIS.Application.AuditorModule
             if (auditor != null)
             {
                 Id = auditor.Id;
+                Name = auditor.Name;
                 IsActive = auditor.IsActive;
                 UserId = auditor.UserId;
-                
-                
             }
         }
         public override Auditor ToEntity()
         {
-            return new Auditor() { Id = Id, IsActive = IsActive, UserId = UserId,  };
+            return new Auditor() { Id = Id, Name = Name, IsActive = IsActive, UserId = UserId,  };
         }
     }
 }

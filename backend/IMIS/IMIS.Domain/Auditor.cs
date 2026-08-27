@@ -10,6 +10,7 @@ namespace IMIS.Domain
 
     public class Auditor : Entity<int>
     {
+        public required string Name { get; set; }
         public OrganizationImprovementType ImprovementType;
 
         public required bool IsActive { get; set; }
