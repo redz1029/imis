@@ -17,6 +17,7 @@ import 'package:imis/dashboard/summary_offices_deliverables.dart';
 import 'package:imis/dashboard/summary_validated_deliverables_page.dart';
 import 'package:imis/dashboard/strategic_change_agenda.dart';
 import 'package:imis/dashboard/strategy_roadmap_page.dart';
+import 'package:imis/evaluator_offices/pages/evaluator_offices_page.dart';
 import 'package:imis/office/pages/office_page.dart';
 import 'package:imis/operation_review_protocol/pages/operation_review_protocol_page.dart';
 import 'package:imis/osm_calendar_activity/pages/osm_calendar_actvity_page.dart';
@@ -29,16 +30,18 @@ import 'package:imis/performance_validation_tool/pages/performance_validation_pa
 import 'package:imis/performance_validation_tool/performance_validation_tool_period/pages/performance_validation_tool_period_page.dart';
 import 'package:imis/performance_validation_tool/performance_validation_tool_signatory/pages/performance_validation_tool_signatory_page.dart';
 import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
-import 'package:imis/roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
-import 'package:imis/roadmap/pages/roadmap_page.dart';
+import 'package:imis/performance_validation_tool/pgs_roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
+import 'package:imis/performance_validation_tool/pgs_roadmap/pages/roadmap_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
-import 'package:imis/scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
-import 'package:imis/scorecard/pages/impact_strategy_goal_scorecard_page.dart';
-import 'package:imis/scorecard/pages/score_card_report_page.dart';
-import 'package:imis/strategic_change_agenda/pages/strategic_change_agenda_page.dart';
+import 'package:imis/performance_validation_tool/pgs_scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
+import 'package:imis/performance_validation_tool/pgs_scorecard/pages/impact_strategy_goal_scorecard_page.dart';
+import 'package:imis/performance_validation_tool/pgs_scorecard/pages/score_card_report_page.dart';
+// import 'package:imis/strategic_change_agenda/pages/strategic_change_agenda_page.dart';
 import 'package:imis/strategy_review_report/pages/strategy_review_report_page.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/pages/strategy_review_period_page.dart';
-import 'package:imis/swot/pages/swot_page.dart';
+import 'package:imis/performance_validation_tool/pgs_swot/pages/swot_analysis_page.dart';
+import 'package:imis/performance_validation_tool/pgs_swot/swot_analysis_strength_weakness/pages/swot_analysis_strength_weakness_page.dart';
+import 'package:imis/performance_validation_tool/pgs_swot/swot_opportunies_threats/pages/swot_analysis_opportunities_threats_page.dart';
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/change_password_page.dart';
 import 'package:imis/user/pages/login_page.dart';
@@ -159,6 +162,7 @@ class SidebarState extends State<Sidebar> {
         PermissionRoleString.pgsAuditor,
         PermissionRoleString.headAuditor,
         PermissionRoleString.twg,
+        PermissionRoleString.evaluator,
       ].contains(role);
       if (canSeeRoadmaps) return 0;
 
@@ -196,6 +200,7 @@ class SidebarState extends State<Sidebar> {
         PermissionRoleString.coreTeam,
         PermissionRoleString.twg,
         PermissionRoleString.headAuditor,
+        PermissionRoleString.evaluator,
       ].contains(role);
       if (canSeeMonitoring) return 3;
 
@@ -218,6 +223,7 @@ class SidebarState extends State<Sidebar> {
         PermissionRoleString.headAuditor,
         PermissionRoleString.serviceHead,
         PermissionRoleString.twg,
+        PermissionRoleString.evaluator,
       ].contains(role);
       if (canSeeScorecard) return 4;
 
@@ -234,6 +240,7 @@ class SidebarState extends State<Sidebar> {
         PermissionRoleString.pgsAuditor,
         PermissionRoleString.roleAdmin,
         PermissionRoleString.twg,
+        PermissionRoleString.evaluator,
       ].contains(role);
       if (canSeeOperationReviewProtocol) return 8;
     }
@@ -1282,7 +1289,7 @@ class SidebarState extends State<Sidebar> {
     if (selectedPage == 1) {
       if (selectedSubPage == 0) return const RoadmapPage();
       if (selectedSubPage == 1) return const PerformanceGovernanceSystemPage();
-      if (selectedSubPage == 2) return const SwotPage();
+      if (selectedSubPage == 2) return const SwotAnalysisPage();
       if (selectedSubPage == 3) return const DeliverableStatusMonitoringPage();
       if (selectedSubPage == 8) return const OperationReviewProtocolPage();
       if (selectedSubPage == 4) {
@@ -1294,7 +1301,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 9) return const PerformanceValidationPage();
       if (selectedSubPage == 10) return SummaryValidatedDeliverablesPage();
       if (selectedSubPage == 11) return PgsServiceOfficePeriodReportPage();
-      if (selectedSubPage == 12) return StrategicChangeAgendaPage();
+      // if (selectedSubPage == 12) return StrategicChangeAgendaPage();
     }
 
     if (selectedPage == 3) {
@@ -1322,6 +1329,15 @@ class SidebarState extends State<Sidebar> {
       }
       if (selectedSubPage == 18) {
         return const ImpactStrategicGoalScorecardPeriodPage();
+      }
+      if (selectedSubPage == 19) {
+        return const SwotAnalysisStrengthWeaknessPage();
+      }
+      if (selectedSubPage == 20) {
+        return const SwotAnalysisOpportunitiesThreatsPage();
+      }
+      if (selectedSubPage == 21) {
+        return const EvaluatorOfficesPage();
       }
     }
     return HomePage();
@@ -1809,6 +1825,8 @@ class SidebarState extends State<Sidebar> {
                                   selectedRole ==
                                       PermissionRoleString.hrOfficer ||
                                   selectedRole ==
+                                      PermissionRoleString.evaluator ||
+                                  selectedRole ==
                                       PermissionRoleString.serviceOfficer ||
                                   selectedRole ==
                                       PermissionRoleString.financeOfficer ||
@@ -1885,6 +1903,7 @@ class SidebarState extends State<Sidebar> {
                                 PermissionRoleString.twg,
                                 PermissionRoleString.headAuditor,
                                 PermissionRoleString.msgc,
+                                PermissionRoleString.evaluator,
                               ].contains(selectedRole)
                               ? sidebarSubText(
                                 'Deliverable Status Monitoring',
@@ -1908,7 +1927,9 @@ class SidebarState extends State<Sidebar> {
                                       PermissionRoleString.pgsAuditor ||
                                   selectedRole ==
                                       PermissionRoleString.headAuditor ||
-                                  selectedRole == PermissionRoleString.twg)
+                                  selectedRole == PermissionRoleString.twg ||
+                                  selectedRole ==
+                                      PermissionRoleString.evaluator)
                               ? sidebarSubText(
                                 selectedRole == PermissionRoleString.roleAdmin
                                     ? 'Create/View Strategy Review Report'
@@ -1953,7 +1974,7 @@ class SidebarState extends State<Sidebar> {
                         });
                       },
                     ),
-                    sidebarSubText('Strategic Change Agenda', 12),
+                    // sidebarSubText('Strategic Change Agenda', 12),
                     // PermissionWidget(
                     //   child:
                     //       [
@@ -1994,7 +2015,9 @@ class SidebarState extends State<Sidebar> {
                                       PermissionRoleString.pgsAuditor ||
                                   selectedRole ==
                                       PermissionRoleString.headAuditor ||
-                                  selectedRole == PermissionRoleString.twg)
+                                  selectedRole == PermissionRoleString.twg ||
+                                  selectedRole ==
+                                      PermissionRoleString.evaluator)
                               ? sidebarSubText(
                                 selectedRole == PermissionRoleString.roleAdmin
                                     ? 'Create/View Operation Review Protocol'
@@ -2071,6 +2094,20 @@ class SidebarState extends State<Sidebar> {
                     sidebarSubText("Performance Validation Tool Period", 16),
                     sidebarSubText("Performance Validation Tool Signatory", 17),
                     sidebarSubText("Impact and Strategic Goal Period", 18),
+                    ExpandableSidebarItem(
+                      title: "SWOT",
+                      items: [
+                        {"title": "Strength & Weakness", "index": 19},
+                        {"title": "Opportunities & Threats", "index": 20},
+                      ],
+                      selectedSubPage: selectedSubPage,
+                      onTap: (index) {
+                        setState(() {
+                          selectedSubPage = index;
+                        });
+                      },
+                    ),
+                    sidebarSubText("Evaluator Offices", 21),
                   ],
                 ],
               ),

@@ -3,14 +3,15 @@ import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/auditor_team/models/auditor_team_member.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
+import 'package:imis/office/models/office_evaluators.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_validation_tool/performance_validation_tool_period/models/performance_validation_tool_period.dart';
-import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
-import 'package:imis/roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
+import 'package:imis/performance_validation_tool/pgs_roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
+import 'package:imis/performance_validation_tool/pgs_roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
 import 'package:imis/roles/models/roles.dart';
-import 'package:imis/scorecard/impact_strategic_goal_scorecard_period/models/impact_strategic_goal_scorecard_period.dart';
+import 'package:imis/performance_validation_tool/pgs_scorecard/impact_strategic_goal_scorecard_period/models/impact_strategic_goal_scorecard_period.dart';
 import 'package:imis/strategy_review_report/strategy_review_period/models/strategy_review_period.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
@@ -103,7 +104,18 @@ class CommonService {
     (e) => Auditor.fromJson(e),
     'Failed to fetch auditors',
   );
-
+  Future<List<OfficeEvaluators>> fetchServiceEvalutors() => _fetchList(
+    '${ApiEndpoint().deliverables}/officesbyServiceEvaluatorRole',
+    (e) => OfficeEvaluators.fromJson(e),
+    'Failed to fetch office',
+  );
+  Future<List<Office>> fetchOfficesByEvaluatorRole(
+    int parentOfficeId,
+  ) => _fetchList(
+    '${ApiEndpoint().deliverables}/allofficesbyEvalutorRole?parentOfficeId=$parentOfficeId',
+    (e) => Office.fromJson(e),
+    'Failed to fetch offices by evaluator role',
+  );
   Future<List<PgsPeriod>> fetchPgsPeriod() => _fetchList(
     ApiEndpoint().pgsperiod,
     (e) => PgsPeriod.fromJson(e),

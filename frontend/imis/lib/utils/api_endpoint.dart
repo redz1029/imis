@@ -92,6 +92,7 @@ class ApiEndpoint {
   late String kraRoadmapKPISequence;
   late String sWOTAnalysisStrengthWeakness;
   late String sWOTAnalysisOpportunitiesThreats;
+  late String evaluatorOffices;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -187,6 +188,7 @@ class ApiEndpoint {
     sWOTAnalysisStrengthWeakness = '$baseUrl/SWOTAnalysisStrengthWeakness';
     sWOTAnalysisOpportunitiesThreats =
         '$baseUrl/SWOTAnalysisOpportunitiesThreats';
+    evaluatorOffices = '$baseUrl/evaluatorOffices';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {

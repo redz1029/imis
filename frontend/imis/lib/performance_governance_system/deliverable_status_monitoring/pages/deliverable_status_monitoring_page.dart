@@ -2,7 +2,6 @@
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office_evaluators.dart';
@@ -10,7 +9,6 @@ import 'package:imis/performance_governance_system/process_core_support/models/k
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/common/filter_bottom_sheet.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
@@ -580,18 +578,15 @@ class _DeliverableStatusMonitoringPageState
       children: [
         Row(
           children: [
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                buildDropdown(child: _serviceDropdown()),
-                buildDropdown(child: _officeDropdown()),
-                buildDropdown(child: _periodDropdown()),
-                buildDropdown(child: _kraDropdown()),
-                buildDropdown(child: _typeDropdown()),
-                _buildPageFilter(),
-              ],
-            ),
+            Expanded(child: buildDropdown(child: _serviceDropdown())),
+            const SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _officeDropdown())),
+            const SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _periodDropdown())),
+            const SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _kraDropdown())),
+            const SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _typeDropdown())),
             const Spacer(),
             if (_hasActiveFilters)
               TextButton.icon(
@@ -662,9 +657,6 @@ class _DeliverableStatusMonitoringPageState
               SizedBox(height: 38, child: _kraDropdown()),
               const SizedBox(width: 8),
               SizedBox(height: 38, child: _typeDropdown()),
-              const SizedBox(width: 8),
-
-              _buildPageFilter(),
             ],
           ),
         ),
@@ -855,98 +847,6 @@ class _DeliverableStatusMonitoringPageState
             });
             fetchFilteredPgsList();
           },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPageFilter() {
-    final isActive = pageController.text.isNotEmpty;
-    final label = isActive ? 'Page ${pageController.text}' : 'Pagination';
-    return FilterChipButton(
-      label: label,
-      icon: Icons.layers_outlined,
-      isActive: isActive,
-      onTap: () => _showPaginationDialog(),
-    );
-  }
-
-  void _showPaginationDialog() {
-    final pageCtrl = TextEditingController(text: pageController.text);
-    final sizeCtrl = TextEditingController(text: pageSizeController.text);
-    showDialog(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              children: [
-                Icon(Icons.layers_outlined, color: primaryColor, size: 20),
-                const SizedBox(width: 8),
-                const Text(
-                  'Pagination',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildNumberField('Page number', pageCtrl),
-                const SizedBox(height: 12),
-                _buildNumberField('Page size', sizeCtrl),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    pageController.text = pageCtrl.text;
-                    pageSizeController.text = sizeCtrl.text;
-                  });
-                  Navigator.pop(context);
-                  fetchFilteredPgsList();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Apply',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
-
-  Widget _buildNumberField(String label, TextEditingController ctrl) {
-    return TextField(
-      controller: ctrl,
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(fontSize: 13),
-        isDense: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: primaryColor),
         ),
       ),
     );
