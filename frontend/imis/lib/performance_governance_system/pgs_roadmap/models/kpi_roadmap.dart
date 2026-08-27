@@ -1,4 +1,4 @@
-import 'package:imis/performance_validation_tool/pgs_roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
+import 'package:imis/performance_governance_system/pgs_roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'kpi_roadmap.g.dart';

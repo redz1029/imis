@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
-import 'package:imis/reports/models/pgs_summary_narrative.dart';
+import 'package:imis/performance_governance_system/pgs_reports/models/pgs_summary_narrative.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';

@@ -9,8 +9,8 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
-import 'package:imis/performance_validation_tool/pgs_scorecard/dialog/scorecard_monitoring_accomplishment_dialog.dart';
-import 'package:imis/performance_validation_tool/pgs_scorecard/services/score_card_monitoring_services.dart';
+import 'package:imis/performance_governance_system/pgs_scorecard/dialog/scorecard_monitoring_accomplishment_dialog.dart';
+import 'package:imis/performance_governance_system/pgs_scorecard/services/score_card_monitoring_services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../../common_services/common_service.dart';

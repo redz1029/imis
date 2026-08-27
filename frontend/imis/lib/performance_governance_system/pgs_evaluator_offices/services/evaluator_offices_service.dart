@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
-import 'package:imis/evaluator_offices/models/evaluator_offices.dart';
+import 'package:imis/performance_governance_system/pgs_evaluator_offices/models/evaluator_offices.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/page_list.dart';
 import 'package:imis/utils/pagination_util.dart';
-import '../../utils/http_util.dart';
+import '../../../utils/http_util.dart';
 
 class EvaluatorOfficesService {
   final Dio dio;

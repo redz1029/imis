@@ -1,5 +1,5 @@
-import 'package:imis/performance_validation_tool/pgs_swot/models/swot_ot_deliverable.dart';
-import 'package:imis/performance_validation_tool/pgs_swot/models/swot_sw_deliverable.dart';
+import 'package:imis/performance_governance_system/pgs_swot/models/swot_ot_deliverable.dart';
+import 'package:imis/performance_governance_system/pgs_swot/models/swot_sw_deliverable.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 

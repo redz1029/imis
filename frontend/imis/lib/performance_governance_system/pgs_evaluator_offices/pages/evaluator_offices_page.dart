@@ -6,8 +6,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/evaluator_offices/models/evaluator_offices.dart';
-import 'package:imis/evaluator_offices/services/evaluator_offices_service.dart';
+import 'package:imis/performance_governance_system/pgs_evaluator_offices/models/evaluator_offices.dart';
+import 'package:imis/performance_governance_system/pgs_evaluator_offices/services/evaluator_offices_service.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
@@ -16,8 +16,8 @@ import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/common/search_dropdown.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
-import '../../common_services/common_service.dart';
-import '../../user/models/user.dart';
+import '../../../common_services/common_service.dart';
+import '../../../user/models/user.dart';
 
 class EvaluatorOfficesPage extends StatefulWidget {
   const EvaluatorOfficesPage({super.key});

@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:imis/performance_validation_tool/pgs_scorecard/models/impact_strategic_goal_scorecard.dart';
+import 'package:imis/performance_governance_system/pgs_scorecard/models/impact_strategic_goal_scorecard.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';

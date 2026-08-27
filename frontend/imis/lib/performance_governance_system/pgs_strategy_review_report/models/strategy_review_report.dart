@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:imis/strategy_review_report/models/strategy_review_kpi.dart';
-import 'package:imis/strategy_review_report/models/strategy_review_deliverable.dart';
+import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_kpi.dart';
+import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_deliverable.dart';
 part 'strategy_review_report.g.dart';
 
 @JsonSerializable()

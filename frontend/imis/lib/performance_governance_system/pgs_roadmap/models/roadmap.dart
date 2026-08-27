@@ -1,8 +1,8 @@
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
-import 'package:imis/performance_validation_tool/pgs_roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
-import 'package:imis/performance_validation_tool/pgs_roadmap/models/kpi_roadmap.dart';
-import 'package:imis/performance_validation_tool/pgs_roadmap/models/roadmap_deliverables.dart';
-import 'package:imis/performance_validation_tool/pgs_roadmap/models/roadmap_gut_check.dart';
+import 'package:imis/performance_governance_system/pgs_roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
+import 'package:imis/performance_governance_system/pgs_roadmap/models/kpi_roadmap.dart';
+import 'package:imis/performance_governance_system/pgs_roadmap/models/roadmap_deliverables.dart';
+import 'package:imis/performance_governance_system/pgs_roadmap/models/roadmap_gut_check.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'roadmap.g.dart';

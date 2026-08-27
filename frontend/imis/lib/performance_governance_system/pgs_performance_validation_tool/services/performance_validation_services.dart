@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
-import 'package:imis/performance_validation_tool/models/performance_validation_tool.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/performance_validation_tool.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/page_list.dart';
 import 'package:imis/utils/pagination_util.dart';
-import '../../utils/auth_util.dart';
-import '../../utils/http_util.dart';
+import '../../../utils/auth_util.dart';
+import '../../../utils/http_util.dart';
 
 class PerformanceValidationServices {
   final Dio dio;

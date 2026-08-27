@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:imis/performance_validation_tool/pgs_swot/swot_opportunies_threats/models/swot_analysis_opportunities_threats.dart';
+import 'package:imis/performance_governance_system/pgs_swot/swot_opportunies_threats/models/swot_analysis_opportunities_threats.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';

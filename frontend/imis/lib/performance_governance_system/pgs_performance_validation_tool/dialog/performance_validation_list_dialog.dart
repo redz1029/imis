@@ -11,9 +11,9 @@ import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
-import 'package:imis/performance_validation_tool/dialog/performance_validation_dialog.dart';
-import 'package:imis/performance_validation_tool/models/performance_validation_tool.dart';
-import 'package:imis/performance_validation_tool/services/performance_validation_services.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/dialog/performance_validation_dialog.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/performance_validation_tool.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/services/performance_validation_services.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
@@ -22,7 +22,7 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_html/html.dart' as html;
-import '../../utils/http_util.dart';
+import '../../../utils/http_util.dart';
 
 class PerformanceValidationListDialog extends StatefulWidget {
   final PerformanceGovernanceSystem pgs;

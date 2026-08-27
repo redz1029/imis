@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
-import 'package:imis/performance_validation_tool/pgs_scorecard/models/impact_strategic_goal_scorecard.dart';
-import 'package:imis/performance_validation_tool/pgs_scorecard/services/impact_strategy_scorecard_services.dart';
+import 'package:imis/performance_governance_system/pgs_scorecard/models/impact_strategic_goal_scorecard.dart';
+import 'package:imis/performance_governance_system/pgs_scorecard/services/impact_strategy_scorecard_services.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 

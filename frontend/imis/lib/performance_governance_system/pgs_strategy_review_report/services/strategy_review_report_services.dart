@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:imis/performance_validation_tool/pgs_roadmap/models/kra_roadmap_role.dart';
-import 'package:imis/strategy_review_report/models/strategy_review_deliverable.dart';
-import 'package:imis/strategy_review_report/models/strategy_review_kpi.dart';
-import 'package:imis/strategy_review_report/models/strategy_review_report.dart';
+import 'package:imis/performance_governance_system/pgs_roadmap/models/kra_roadmap_role.dart';
+import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_deliverable.dart';
+import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_kpi.dart';
+import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_report.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';

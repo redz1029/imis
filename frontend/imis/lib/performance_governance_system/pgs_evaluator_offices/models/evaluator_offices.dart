@@ -6,6 +6,7 @@ part 'evaluator_offices.g.dart';
 class EvaluatorOffices {
   final int id;
   final String? userId;
+  final String? userFullName;
   final int officeId;
   final String? officeName;
   final bool? isDeleted;
@@ -14,6 +15,7 @@ class EvaluatorOffices {
   EvaluatorOffices({
     required this.id,
     required this.userId,
+    this.userFullName,
     required this.officeId,
     required this.officeName,
     this.isDeleted,

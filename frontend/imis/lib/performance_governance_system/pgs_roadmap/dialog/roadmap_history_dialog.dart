@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/performance_validation_tool/pgs_roadmap/models/roadmap_history.dart';
+import 'package:imis/performance_governance_system/pgs_roadmap/models/roadmap_history.dart';
 import 'package:imis/utils/date_time_converter.dart';
 
 class RoadmapHistoryDialog extends StatefulWidget {
