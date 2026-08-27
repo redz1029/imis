@@ -7,6 +7,7 @@ class PgsFilter {
   String? roleId;
   int? pgsPeriodId;
   int? officeId;
+  int? serviceId;
   int? kraId;
   bool? isDirect;
   int? scoreRangeFrom;
@@ -18,6 +19,7 @@ class PgsFilter {
     this.roleId,
     this.pgsPeriodId,
     this.officeId,
+    this.serviceId,
     this.kraId,
     this.isDirect,
     this.scoreRangeFrom,

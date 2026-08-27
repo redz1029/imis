@@ -5,11 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/permissions.dart';
+import 'package:imis/office/models/office_evaluators.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/filter_bottom_sheet.dart';
+import 'package:imis/widgets/common/filter_button_widget.dart';
+import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
@@ -67,10 +70,11 @@ class _DeliverableStatusMonitoringPageState
   List<KeyResultArea> kraListOptions = [];
   List<PgsPeriod> periodList = [];
   List<Office> officeList = [];
-
+  List<OfficeEvaluators> serviceList = [];
   int? selectedKra;
   int? selectedPeriod;
   String? _selectedOfficeId;
+  String? _selectedServiceId;
   bool? isDirect;
   String? selectedPeriodText;
 
@@ -82,7 +86,7 @@ class _DeliverableStatusMonitoringPageState
   bool _hasAvailableDeliverables = false;
   String? _selectedOffice;
   String? _selectedPeriod;
-
+  bool _officeListLoading = false;
   int currentPage = 1;
   final int pageSize = 15;
   int _totalCount = 0;
@@ -96,12 +100,11 @@ class _DeliverableStatusMonitoringPageState
 
   Future<void> _initialize() async {
     setState(() => isLoading = true);
-    final roleId = await _getRoleId();
-    final offices = await _deliverableStatusMonitoring.fetchOffices(
-      roleId: roleId,
-    );
+    await _getRoleId();
+
     final period = await _commonService.fetchPgsPeriod();
     final kra = await _commonService.fetchKra();
+    final service = await _commonService.fetchServiceEvalutors();
     await _loadCurrentUserId();
     if (!mounted) return;
 
@@ -115,7 +118,7 @@ class _DeliverableStatusMonitoringPageState
 
     setState(() {
       periodList = period;
-      officeList = offices;
+      serviceList = service;
       kraListOptions = kra;
       isLoading = false;
       if (activePeriod != null) {
@@ -125,6 +128,25 @@ class _DeliverableStatusMonitoringPageState
       }
     });
     fetchFilteredPgsList();
+  }
+
+  Future<void> _loadOfficesForService(String serviceId) async {
+    setState(() {
+      _officeListLoading = true;
+      officeList = [];
+      _selectedOfficeId = null;
+    });
+    try {
+      final offices = await _commonService.fetchOfficesByEvaluatorRole(
+        int.tryParse(serviceId) ?? 0,
+      );
+      if (!mounted) return;
+      setState(() => officeList = offices);
+    } catch (e) {
+      debugPrint('Failed to load offices for service: $e');
+    } finally {
+      if (mounted) setState(() => _officeListLoading = false);
+    }
   }
 
   Future<String> _getRoleId() async {
@@ -170,8 +192,10 @@ class _DeliverableStatusMonitoringPageState
         roleId,
         selectedPeriod,
         int.tryParse(_selectedOfficeId ?? ''),
+        int.tryParse(_selectedServiceId ?? ''),
         selectedKra,
         isDirect,
+
         scoreRangeFromController.text.isNotEmpty
             ? int.tryParse(scoreRangeFromController.text)
             : null,
@@ -302,6 +326,7 @@ class _DeliverableStatusMonitoringPageState
         roleId,
         int.tryParse(_selectedPeriod!) ?? 0,
         int.tryParse(_selectedOffice!) ?? 0,
+        int.tryParse(_selectedOfficeId!) ?? 0,
         null,
         null,
         null,
@@ -331,7 +356,9 @@ class _DeliverableStatusMonitoringPageState
     setState(() {
       selectedPeriod = null;
       selectedPeriodText = null;
+      _selectedServiceId = null;
       _selectedOfficeId = null;
+      officeList = [];
       selectedKra = null;
       isDirect = null;
       scoreRangeFromController.clear();
@@ -343,6 +370,7 @@ class _DeliverableStatusMonitoringPageState
   }
 
   bool get _hasActiveFilters =>
+      _selectedServiceId != null ||
       selectedPeriod != null ||
       _selectedOfficeId != null ||
       selectedKra != null ||
@@ -551,31 +579,27 @@ class _DeliverableStatusMonitoringPageState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _buildOfficeFilter(),
-                  _buildPeriodFilter(),
-                  _buildKraFilter(),
-                  _buildTypeFilter(),
-                  _buildScoreRangeFilter(),
-                  _buildPageFilter(),
-                ],
-              ),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                buildDropdown(child: _serviceDropdown()),
+                buildDropdown(child: _officeDropdown()),
+                buildDropdown(child: _periodDropdown()),
+                buildDropdown(child: _kraDropdown()),
+                buildDropdown(child: _typeDropdown()),
+                _buildPageFilter(),
+              ],
             ),
-            const SizedBox(width: 10),
-            if (_hasActiveFilters) ...[
-              const SizedBox(width: 10),
+            const Spacer(),
+            if (_hasActiveFilters)
               TextButton.icon(
                 onPressed: _resetFilters,
-                icon: Icon(Icons.refresh, size: 13, color: Colors.red.shade400),
+                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
                 label: Text(
                   'Clear filters',
-                  style: TextStyle(fontSize: 11, color: Colors.red.shade400),
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
                 ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
@@ -584,7 +608,6 @@ class _DeliverableStatusMonitoringPageState
                   ),
                 ),
               ),
-            ],
           ],
         ),
       ],
@@ -592,105 +615,248 @@ class _DeliverableStatusMonitoringPageState
   }
 
   Widget _buildMobileFilters() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildOfficeFilter(),
-          const SizedBox(width: 8),
-          _buildPeriodFilter(),
-          const SizedBox(width: 8),
-          _buildKraFilter(),
-          const SizedBox(width: 8),
-          _buildTypeFilter(),
-          const SizedBox(width: 8),
-          _buildScoreRangeFilter(),
-          if (_hasActiveFilters) ...[
-            const SizedBox(width: 8),
-            _buildClearButton(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              "Filter by",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: grey,
+              ),
+            ),
+            const Spacer(),
+            if (_hasActiveFilters)
+              TextButton.icon(
+                onPressed: _resetFilters,
+                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+                label: Text(
+                  'Clear',
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
           ],
-        ],
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              SizedBox(height: 38, child: _serviceDropdown()),
+              const SizedBox(width: 8),
+              SizedBox(height: 38, child: _officeDropdown()),
+              const SizedBox(width: 8),
+              SizedBox(height: 38, child: _periodDropdown()),
+              const SizedBox(width: 8),
+              SizedBox(height: 38, child: _kraDropdown()),
+              const SizedBox(width: 8),
+              SizedBox(height: 38, child: _typeDropdown()),
+              const SizedBox(width: 8),
+
+              _buildPageFilter(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _serviceDropdown() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: ["All Service", ...serviceList.map((s) => s.officeName)],
+          selectedItem:
+              _selectedServiceId == null
+                  ? "Select Service"
+                  : (serviceList
+                          .where(
+                            (s) => s.officeId.toString() == _selectedServiceId,
+                          )
+                          .firstOrNull
+                          ?.officeName ??
+                      "Select Service"),
+          hintText: "Service",
+          searchHint: "Search services...",
+          prefixIcon: Icons.apartment_outlined,
+          onChanged: (value) {
+            final newId =
+                value == "Select Service"
+                    ? null
+                    : serviceList
+                        .firstWhere((s) => s.officeName == value)
+                        .officeId
+                        .toString();
+            setState(() {
+              _selectedServiceId = newId;
+              _selectedOfficeId = null;
+              officeList = [];
+            });
+            if (newId != null) {
+              _loadOfficesForService(newId);
+            }
+            fetchFilteredPgsList();
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildOfficeFilter() {
-    final isActive = _selectedOfficeId != null;
-    final label =
-        isActive
-            ? (officeList
-                .firstWhere(
-                  (o) => o.id.toString() == _selectedOfficeId,
-                  orElse: () => Office(id: 0, name: 'Office'),
-                )
-                .name)
-            : 'Select Office';
-
-    return FilterChipButton(
-      label: label,
-      icon: Icons.apartment_outlined,
-      isActive: isActive,
-      isRequired: true,
-      onTap: () => _showOfficeBottomSheet(),
+  Widget _officeDropdown() {
+    final serviceSelected = _selectedServiceId != null;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: Opacity(
+          opacity: serviceSelected ? 1 : 0.5,
+          child: IgnorePointer(
+            ignoring: !serviceSelected || _officeListLoading,
+            child: SearchableDropdown(
+              items: ["All Offices", ...officeList.map((o) => o.name)],
+              selectedItem:
+                  _selectedOfficeId == null
+                      ? "All Offices"
+                      : (officeList
+                              .where(
+                                (o) => o.id.toString() == _selectedOfficeId,
+                              )
+                              .firstOrNull
+                              ?.name ??
+                          "All Offices"),
+              hintText: serviceSelected ? "Office" : "Select Service first",
+              searchHint: "Search offices...",
+              prefixIcon: Icons.business_outlined,
+              onChanged: (value) {
+                setState(() {
+                  _selectedOfficeId =
+                      value == "All Offices"
+                          ? null
+                          : officeList
+                              .firstWhere((o) => o.name == value)
+                              .id
+                              .toString();
+                });
+                fetchFilteredPgsList();
+              },
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildPeriodFilter() {
-    final isActive = selectedPeriod != null;
-    final label = isActive ? (selectedPeriodText ?? 'Period') : 'All Periods';
-    return FilterChipButton(
-      label: label,
-      icon: Icons.date_range_outlined,
-      isActive: isActive,
-      isEnabled: true,
-      onTap: () => _showPeriodBottomSheet(),
+  Widget _periodDropdown() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: [
+            "All Periods",
+            ...periodList.map(
+              (p) =>
+                  "${_dateConverter.toJson(p.startDate)} – ${_dateConverter.toJson(p.endDate)}",
+            ),
+          ],
+          selectedItem:
+              selectedPeriod == null
+                  ? "All Periods"
+                  : (selectedPeriodText ?? "All Periods"),
+          hintText: "Period",
+          searchHint: "Search periods...",
+          prefixIcon: Icons.date_range_outlined,
+          onChanged: (value) {
+            setState(() {
+              if (value == "All Periods") {
+                selectedPeriod = null;
+                selectedPeriodText = null;
+              } else {
+                final selected = periodList.firstWhere(
+                  (p) =>
+                      "${_dateConverter.toJson(p.startDate)} – ${_dateConverter.toJson(p.endDate)}" ==
+                      value,
+                );
+                selectedPeriod = selected.id;
+                selectedPeriodText = value;
+              }
+            });
+            fetchFilteredPgsList();
+          },
+        ),
+      ),
     );
   }
 
-  Widget _buildKraFilter() {
-    final isActive = selectedKra != null;
-    final label =
-        isActive
-            ? (kraListOptions
-                .firstWhere(
-                  (k) => k.id == selectedKra,
-                  orElse: () => KeyResultArea(0, 'KRA', '', '', false),
-                )
-                .name)
-            : 'All KRA';
-    return FilterChipButton(
-      label: label,
-      icon: Icons.adjust_outlined,
-      isActive: isActive,
-      onTap: () => _showKraBottomSheet(),
+  Widget _kraDropdown() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: ["All KRA", ...kraListOptions.map((k) => k.name)],
+          selectedItem:
+              selectedKra == null
+                  ? "All KRA"
+                  : (kraListOptions
+                          .where((k) => k.id == selectedKra)
+                          .firstOrNull
+                          ?.name ??
+                      "All KRA"),
+          hintText: "KRA",
+          searchHint: "Search KRA...",
+          prefixIcon: Icons.adjust_outlined,
+          onChanged: (value) {
+            setState(() {
+              selectedKra =
+                  value == "All KRA"
+                      ? null
+                      : kraListOptions.firstWhere((k) => k.name == value).id;
+            });
+            fetchFilteredPgsList();
+          },
+        ),
+      ),
     );
   }
 
-  Widget _buildTypeFilter() {
-    final isActive = isDirect != null;
-    final label =
-        isDirect == null ? 'All Types' : (isDirect! ? 'Direct' : 'Indirect');
-    return FilterChipButton(
-      label: label,
-      icon: Icons.directions_outlined,
-      isActive: isActive,
-      onTap: () => _showTypeMenu(),
-    );
-  }
-
-  Widget _buildScoreRangeFilter() {
-    final isActive =
-        scoreRangeFromController.text.isNotEmpty &&
-        scoreRangeToController.text.isNotEmpty;
-    final label =
-        isActive
-            ? '${scoreRangeFromController.text}–${scoreRangeToController.text}'
-            : 'Score Range';
-    return FilterChipButton(
-      label: label,
-      icon: Icons.bar_chart,
-      isActive: isActive,
-      onTap: () => _showScoreRangeDialog(),
+  Widget _typeDropdown() {
+    const items = ["All Alignment", "Direct", "Indirect"];
+    final selected =
+        isDirect == null
+            ? "All Alignment"
+            : (isDirect! ? "Direct" : "Indirect");
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 130, maxWidth: 200),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: items,
+          selectedItem: selected,
+          hintText: "Type",
+          searchHint: "Search alignment...",
+          prefixIcon: Icons.directions_outlined,
+          onChanged: (value) {
+            setState(() {
+              isDirect = value == "All Alignment" ? null : (value == "Direct");
+            });
+            fetchFilteredPgsList();
+          },
+        ),
+      ),
     );
   }
 
@@ -702,358 +868,6 @@ class _DeliverableStatusMonitoringPageState
       icon: Icons.layers_outlined,
       isActive: isActive,
       onTap: () => _showPaginationDialog(),
-    );
-  }
-
-  Widget _buildClearButton() {
-    return GestureDetector(
-      onTap: _resetFilters,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        decoration: BoxDecoration(
-          color: Colors.red.shade50,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.red.shade200),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.close, size: 13, color: Colors.red.shade500),
-            const SizedBox(width: 4),
-            Text(
-              'Clear',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.red.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showOfficeBottomSheet() {
-    final TextEditingController search = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder:
-          (_) => StatefulBuilder(
-            builder:
-                (ctx, setS) => FilterBottomSheet(
-                  title: 'Select Office',
-                  subtitle:
-                      'Required — select an office to monitor its deliverables',
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                        child: TextField(
-                          controller: search,
-                          onChanged: (_) => setS(() {}),
-                          decoration: InputDecoration(
-                            hintText: 'Search offices...',
-                            prefixIcon: const Icon(Icons.search, size: 18),
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: primaryColor),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Flexible(
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
-                            ...officeList
-                                .where(
-                                  (o) => o.name.toLowerCase().contains(
-                                    search.text.toLowerCase(),
-                                  ),
-                                )
-                                .map(
-                                  (o) =>
-                                      _officeListTile(o.id.toString(), o.name),
-                                ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-          ),
-    );
-  }
-
-  Widget _officeListTile(String? id, String name) {
-    final selected = _selectedOfficeId == id;
-    return ListTile(
-      leading: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: selected ? primaryColor : Colors.grey.shade100,
-        ),
-        child: Icon(
-          Icons.apartment,
-          size: 16,
-          color: selected ? Colors.white : Colors.grey.shade500,
-        ),
-      ),
-      title: Text(
-        name,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-      trailing:
-          selected
-              ? Icon(Icons.check_circle, color: primaryColor, size: 18)
-              : null,
-      onTap: () {
-        setState(() => _selectedOfficeId = id?.isEmpty == true ? null : id);
-        Navigator.pop(context);
-        fetchFilteredPgsList();
-      },
-    );
-  }
-
-  void _showPeriodBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder:
-          (_) => FilterBottomSheet(
-            title: 'Select Period',
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                _periodListTile(null, 'All Periods'),
-                ...periodList.map(
-                  (p) => _periodListTile(
-                    p.id,
-                    "${_dateConverter.toJson(p.startDate)} – ${_dateConverter.toJson(p.endDate)}",
-                  ),
-                ),
-              ],
-            ),
-          ),
-    );
-  }
-
-  Widget _periodListTile(int? id, String label) {
-    final selected = selectedPeriod == id;
-    return ListTile(
-      leading: Icon(
-        Icons.date_range_outlined,
-        size: 18,
-        color: selected ? primaryColor : Colors.grey.shade500,
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-      trailing:
-          selected
-              ? Icon(Icons.check_circle, color: primaryColor, size: 18)
-              : null,
-      onTap: () {
-        setState(() {
-          selectedPeriod = id;
-          selectedPeriodText = id == null ? null : label;
-        });
-        Navigator.pop(context);
-        fetchFilteredPgsList();
-      },
-    );
-  }
-
-  void _showKraBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder:
-          (_) => FilterBottomSheet(
-            title: 'Select KRA',
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                _kraListTile(null, 'All KRA'),
-                ...kraListOptions.map((k) => _kraListTile(k.id, k.name)),
-              ],
-            ),
-          ),
-    );
-  }
-
-  Widget _kraListTile(int? id, String name) {
-    final selected = selectedKra == id;
-    return ListTile(
-      leading: Icon(
-        Icons.adjust_outlined,
-        size: 18,
-        color: selected ? primaryColor : Colors.grey.shade500,
-      ),
-      title: Text(
-        name,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-      trailing:
-          selected
-              ? Icon(Icons.check_circle, color: primaryColor, size: 18)
-              : null,
-      onTap: () {
-        setState(() => selectedKra = id);
-        Navigator.pop(context);
-        fetchFilteredPgsList();
-      },
-    );
-  }
-
-  void _showTypeMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder:
-          (_) => FilterBottomSheet(
-            title: 'Deliverable Type',
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _typeListTile(null, 'All Types', Icons.all_inclusive),
-                _typeListTile(true, 'Direct', Icons.arrow_right_alt),
-                _typeListTile(false, 'Indirect', Icons.alt_route),
-              ],
-            ),
-          ),
-    );
-  }
-
-  Widget _typeListTile(bool? value, String label, IconData icon) {
-    final selected = isDirect == value;
-    return ListTile(
-      leading: Icon(
-        icon,
-        size: 18,
-        color: selected ? primaryColor : Colors.grey.shade500,
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-      trailing:
-          selected
-              ? Icon(Icons.check_circle, color: primaryColor, size: 18)
-              : null,
-      onTap: () {
-        setState(() => isDirect = value);
-        Navigator.pop(context);
-        fetchFilteredPgsList();
-      },
-    );
-  }
-
-  // ─── DIALOGS ─────────────────────────────────────────────────────────────────
-
-  void _showScoreRangeDialog() {
-    final fromCtrl = TextEditingController(text: scoreRangeFromController.text);
-    final toCtrl = TextEditingController(text: scoreRangeToController.text);
-    showDialog(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              children: [
-                Icon(Icons.bar_chart, color: primaryColor, size: 20),
-                const SizedBox(width: 8),
-                const Text(
-                  'Score Range',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            content: Row(
-              children: [
-                Expanded(child: _buildNumberField('From', fromCtrl)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    '–',
-                    style: TextStyle(fontSize: 18, color: Colors.grey.shade400),
-                  ),
-                ),
-                Expanded(child: _buildNumberField('To', toCtrl)),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    scoreRangeFromController.clear();
-                    scoreRangeToController.clear();
-                  });
-                  Navigator.pop(context);
-                  fetchFilteredPgsList();
-                },
-                child: const Text(
-                  'Clear',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    scoreRangeFromController.text = fromCtrl.text;
-                    scoreRangeToController.text = toCtrl.text;
-                  });
-                  Navigator.pop(context);
-                  fetchFilteredPgsList();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Apply',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
     );
   }
 
@@ -1270,28 +1084,6 @@ class _DeliverableStatusMonitoringPageState
                 : 'Try adjusting the filters to see more results',
             style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
           ),
-          if (_selectedOfficeId == null) ...[
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _showOfficeBottomSheet,
-              icon: const Icon(
-                Icons.apartment_outlined,
-                size: 16,
-                color: Colors.white,
-              ),
-              label: const Text(
-                'Select Office',
-                style: TextStyle(color: Colors.white, fontSize: 13),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -1350,7 +1142,7 @@ class _DeliverableStatusMonitoringPageState
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '${d['Start Date']} – ${d['End Date']}',
+                d['officeName'] ?? '',
                 style: TextStyle(
                   fontSize: 11,
                   color: primaryColor,
@@ -1364,8 +1156,8 @@ class _DeliverableStatusMonitoringPageState
               runSpacing: 6,
               children: [
                 _infoChip(
-                  Icons.apartment_outlined,
-                  d['officeName'] ?? '',
+                  Icons.calendar_month,
+                  '${d['Start Date']} – ${d['End Date']}',
                   Colors.lightBlue,
                 ),
                 _infoChip(Icons.adjust_outlined, d['kra'] ?? '', Colors.green),
@@ -1430,7 +1222,8 @@ class _DeliverableStatusMonitoringPageState
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            '${d['Start Date']} – ${d['End Date']}',
+            d['officeName'] ?? '',
+
             style: TextStyle(
               fontSize: 11,
               color: primaryColor,
@@ -1453,8 +1246,8 @@ class _DeliverableStatusMonitoringPageState
           runSpacing: 6,
           children: [
             _infoChip(
-              Icons.apartment_outlined,
-              d['officeName'] ?? '',
+              Icons.calendar_month,
+              '${d['Start Date']} – ${d['End Date']}',
               Colors.blue,
             ),
             _infoChip(Icons.adjust_outlined, d['kra'] ?? '', Colors.green),
@@ -2526,7 +2319,7 @@ Future<bool?> showAccomplishmentFormDialog(
                   const SizedBox(height: 16),
                   PermissionWidget(
                     allowedRoles: [
-                      PermissionRoleString.pgsAuditor,
+                      PermissionRoleString.evaluator,
                       PermissionRoleString.roleAdmin,
                     ],
                     child: Row(
