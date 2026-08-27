@@ -100,19 +100,11 @@ namespace IMIS.Persistence.OfficeModule
             var offices = await _repository.GetAllOfficeAsync(cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
         }
-        public async Task<List<OfficeDto>?> GetOfficeByEvalutorRoleAsync(
-      int? parentOfficeId,
-      CancellationToken cancellationToken)
+        public async Task<List<OfficeDto>?> GetOfficeByEvalutorRoleAsync(int? parentOfficeId, CancellationToken cancellationToken)
         {
-            var offices = await _repository
-                .GetOfficeByEvalutorRoleAsync(
-                    parentOfficeId,
-                    cancellationToken)
-                .ConfigureAwait(false);
+            var offices = await _repository.GetOfficeByEvalutorRoleAsync(parentOfficeId,  cancellationToken).ConfigureAwait(false);
 
-            return offices?
-                .Select(ConvOfficeToDTO)
-                .ToList();
+            return offices?.Select(ConvOfficeToDTO).ToList();
         }
         public async Task<List<OfficeDto>?> GetAllSpecificServicesAsync(CancellationToken cancellationToken)
         {
