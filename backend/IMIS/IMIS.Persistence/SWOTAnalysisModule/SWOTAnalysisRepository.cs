@@ -66,25 +66,35 @@ namespace IMIS.Persistence.SWOTAnalysisModule
            
             return await _entities.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
-
-        public async Task<EntityPageList<SWOTAnalysis, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+            
+        public async Task<EntityPageList<SWOTAnalysis, long>> GetPaginatedAllAsync(int? officeId, int page, int pageSize, CancellationToken cancellationToken)
         {
-            return await EntityPageList<SWOTAnalysis, long>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
+            var query = _entities
+                .Include(x => x.Department)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (officeId.HasValue)
+            {
+                query = query.Where(x => x.Department != null && x.Department.Id == officeId.Value);
+            }
+
+            return await EntityPageList<SWOTAnalysis, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<List<SWOTAnalysis>> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<EntityPageList<SWOTAnalysis, long>> GetPaginatedByUserIdAsync(string userId, int? officeId, int page, int pageSize, CancellationToken cancellationToken)
         {
-            return await ReadOnlyDbContext.Set<SWOTAnalysis>()
-                .ToListAsync(cancellationToken);
-        }
+            var query = _entities
+                .Include(x => x.Department)
+                .AsNoTracking()
+                .Where(x => x.DepartmentChairUserId == userId);
 
-        public async Task<List<SWOTAnalysis>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
-        {
-            var entities = await ReadOnlyDbContext.Set<SWOTAnalysis>()
-                .Where(x => x.DepartmentChairUserId == userId)
-                .ToListAsync(cancellationToken);
+            if (officeId.HasValue)
+            {
+                query = query.Where(x => x.Department != null && x.Department.Id == officeId.Value);
+            }
 
-            return entities.Count == 0 ? null : entities;
+            return await EntityPageList<SWOTAnalysis, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
         }
     }
 }

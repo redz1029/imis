@@ -20,19 +20,19 @@ namespace IMIS.Persistence.PGSModules
 
             return period == 0 ? (long?)null : period;
         }
+      
         public async Task<List<int>> GetUserOfficeIdsAsync(string userId, CancellationToken cancellationToken)
-        {           
-            return await ReadOnlyDbContext.Set<AuditorOffices>()
-               .Where(ao => ao.Auditor != null
-                         && ao.Auditor.UserId == userId
-                         && ao.Auditor.IsActive)
-               .Select(ao => ao.OfficeId)
-               .Distinct()
-               .ToListAsync(cancellationToken)
-               .ConfigureAwait(false);
+        {
+            return await ReadOnlyDbContext.Set<EvaluatorOffices>()
+                .Where(eo => eo.UserId == userId)
+                .Where(eo => eo.OfficeId.HasValue)
+                .Select(eo => eo.OfficeId!.Value)
+                .Distinct()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
-   
-        public async Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter,  List<int>? officeIds, CancellationToken cancellationToken)
+       
+        public async Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter, List<int>? officeIds, CancellationToken cancellationToken)
         {
             var query = _entities
                 .Include(d => d.PerfomanceGovernanceSystem)
@@ -55,22 +55,26 @@ namespace IMIS.Persistence.PGSModules
             {
                 query = query.Where(d =>
                     d.PerfomanceGovernanceSystem != null &&
+                    d.PerfomanceGovernanceSystem.Office != null &&
                     (
-                        d.PerfomanceGovernanceSystem.Office.Id == filter.OfficeId.Value ||
-                        d.PerfomanceGovernanceSystem.Office.ParentOfficeId ==  filter.OfficeId.Value
+                        d.PerfomanceGovernanceSystem.Office.Id ==  filter.OfficeId.Value ||
+
+                        d.PerfomanceGovernanceSystem.Office.ParentOfficeId ==
+                            filter.OfficeId.Value
                     ));
             }
-         
+
             if (filter.ServiceId.HasValue)
             {
                 query = query.Where(d =>
                     d.PerfomanceGovernanceSystem != null &&
+                    d.PerfomanceGovernanceSystem.Office != null &&
                     (
                         d.PerfomanceGovernanceSystem.Office.Id ==  filter.ServiceId.Value ||
                         d.PerfomanceGovernanceSystem.Office.ParentOfficeId == filter.ServiceId.Value
                     ));
             }
-            
+
             if (filter.IsDirect.HasValue)
             {
                 query = query.Where(d => d.IsDirect == filter.IsDirect.Value);
@@ -85,18 +89,22 @@ namespace IMIS.Persistence.PGSModules
             {
                 query = query.Where(d =>
                     d.PerfomanceGovernanceSystem != null &&
+                    d.PerfomanceGovernanceSystem.Office != null &&
                     (
                         officeIds.Contains(d.PerfomanceGovernanceSystem.Office.Id) ||
                         (
-                            d.PerfomanceGovernanceSystem.Office.ParentOfficeId.HasValue &&
-                            officeIds.Contains(d.PerfomanceGovernanceSystem.Office.ParentOfficeId.Value)
+                            d.PerfomanceGovernanceSystem.Office.ParentOfficeId.HasValue && officeIds.Contains(d.PerfomanceGovernanceSystem.Office.ParentOfficeId.Value)
                         )
                     ));
             }
 
             query = query.OrderByDescending(d => d.Id);
 
-            return await EntityPageList<PgsDeliverable, long>.CreateAsync(query, filter.Page, filter.PageSize, cancellationToken);
+            return await EntityPageList<PgsDeliverable, long>.CreateAsync(
+                query,
+                filter.Page,
+                filter.PageSize,
+                cancellationToken);
         }
         public async Task<EntityPageList<PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {

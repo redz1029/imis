@@ -90,7 +90,10 @@ namespace IMIS.Persistence.PGSModules
         }
 
 
+
        
+
+
         public async Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
@@ -114,35 +117,54 @@ namespace IMIS.Persistence.PGSModules
 
             if (!filter.PgsPeriodId.HasValue)
             {
-                var currentPeriodId = await _repository.GetCurrentYearPeriodIdAsync(DateTime.Now.Year,  cancellationToken);
+                var currentPeriodId = await _repository.GetCurrentYearPeriodIdAsync(DateTime.Now.Year, cancellationToken);
 
                 if (currentPeriodId == null)
                 {
-                    return PgsDeliverableMonitorPageList.Create([], filter.Page, filter.PageSize, 0);
+                    return PgsDeliverableMonitorPageList.Create([],  filter.Page,  filter.PageSize, 0);
                 }
 
                 filter.PgsPeriodId = (int)currentPeriodId;
             }
 
-            var hasFullAccess = role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+            var hasFullAccess =
+                role.Name!.Equals(
+                    new AdministratorRole().Name,
+                    StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(
+                    new PgsServiceHead().Name,
+                    StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(
+                    new PgsAuditorHead().Name,
+                    StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(
+                    new PgsManagerRole().Name,
+                    StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(
+                    new PgsHead().Name,
+                    StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(
+                    new MCC().Name,
+                    StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(
+                    new OSM().Name,
+                    StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(
+                    new TWG().Name,
+                    StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase);
+                role.Name.Equals(
+                    new MSGC().Name,
+                    StringComparison.OrdinalIgnoreCase);
 
-                List<int>? officeIds = null;
+            List<int>? officeIds = null;
 
             if (!hasFullAccess)
             {
@@ -154,7 +176,7 @@ namespace IMIS.Persistence.PGSModules
                 }
             }
 
-            var filtered =  await _repository.GetFilteredAsync(filter, officeIds, cancellationToken);
+            var filtered = await _repository.GetFilteredAsync(filter, officeIds, cancellationToken);
 
             return PgsDeliverableMonitorPageList.Create(filtered.Items, filter.Page, filter.PageSize, filtered.TotalCount);
         }

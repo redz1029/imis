@@ -506,7 +506,6 @@ class AccomplishmentPgsAuditorDialogState
                 ),
               ),
             ),
-            // ✅ Only Admin/StandardUser can delete attachment
             PermissionWidget(
               allowedRoles: [
                 PermissionRoleString.roleAdmin,

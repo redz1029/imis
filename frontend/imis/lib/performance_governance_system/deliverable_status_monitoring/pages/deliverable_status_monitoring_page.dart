@@ -19,11 +19,14 @@ import 'package:imis/widgets/permission_widget.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/permissions.dart';
+import 'package:imis/office/models/office_evaluators.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/filter_bottom_sheet.dart';
+import 'package:imis/widgets/common/filter_button_widget.dart';
+import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
@@ -110,10 +113,14 @@ class _DeliverableStatusMonitoringPageState
   bool isMenuScoreRange = false;
   bool isMenuOpenPage = false;
   List<KeyResultArea> kraListOptions = [];
+  List<PgsPeriod> periodList = [];
+  List<Office> officeList = [];
+  List<OfficeEvaluators> serviceList = [];
   int? selectedKra;
 
   List<Office> officeList = [];
   String? _selectedOfficeId;
+  String? _selectedServiceId;
   bool? isDirect;
   List<PgsPeriod> periodList = [];
   int? selectedPeriod;
@@ -125,7 +132,14 @@ class _DeliverableStatusMonitoringPageState
   int? officeId;
   int? periodId;
   bool _hasAvailableDeliverables = false;
-  @override
+  String? _selectedOffice;
+  String? _selectedPeriod;
+  bool _officeListLoading = false;
+  int currentPage = 1;
+  final int pageSize = 15;
+  int _totalCount = 0;
+  String userId = "";
+
   @override
   void initState() {
     super.initState();
@@ -161,12 +175,11 @@ class _DeliverableStatusMonitoringPageState
 =======
   Future<void> _initialize() async {
     setState(() => isLoading = true);
-    final roleId = await _getRoleId();
-    final offices = await _deliverableStatusMonitoring.fetchOffices(
-      roleId: roleId,
-    );
+    await _getRoleId();
+
     final period = await _commonService.fetchPgsPeriod();
     final kra = await _commonService.fetchKra();
+    final service = await _commonService.fetchServiceEvalutors();
     await _loadCurrentUserId();
     if (!mounted) return;
 
@@ -180,7 +193,7 @@ class _DeliverableStatusMonitoringPageState
 
     setState(() {
       periodList = period;
-      officeList = offices;
+      serviceList = service;
       kraListOptions = kra;
       isLoading = false;
       if (activePeriod != null) {
@@ -190,7 +203,25 @@ class _DeliverableStatusMonitoringPageState
       }
     });
     fetchFilteredPgsList();
->>>>>>> master
+  }
+
+  Future<void> _loadOfficesForService(String serviceId) async {
+    setState(() {
+      _officeListLoading = true;
+      officeList = [];
+      _selectedOfficeId = null;
+    });
+    try {
+      final offices = await _commonService.fetchOfficesByEvaluatorRole(
+        int.tryParse(serviceId) ?? 0,
+      );
+      if (!mounted) return;
+      setState(() => officeList = offices);
+    } catch (e) {
+      debugPrint('Failed to load offices for service: $e');
+    } finally {
+      if (mounted) setState(() => _officeListLoading = false);
+    }
   }
 
   Future<String> _getRoleId() async {
@@ -368,10 +399,16 @@ class _DeliverableStatusMonitoringPageState
         roleId,
         selectedPeriod,
         int.tryParse(_selectedOfficeId ?? ''),
+        int.tryParse(_selectedServiceId ?? ''),
         selectedKra,
         isDirect,
-        scoreFrom,
-        scoreTo,
+
+        scoreRangeFromController.text.isNotEmpty
+            ? int.tryParse(scoreRangeFromController.text)
+            : null,
+        scoreRangeToController.text.isNotEmpty
+            ? int.tryParse(scoreRangeToController.text)
+            : null,
         page,
         pageSize,
       );
@@ -504,6 +541,7 @@ class _DeliverableStatusMonitoringPageState
         roleId,
         int.tryParse(_selectedPeriod!) ?? 0,
         int.tryParse(_selectedOffice!) ?? 0,
+        int.tryParse(_selectedOfficeId!) ?? 0,
         null,
         null,
         null,
@@ -530,518 +568,55 @@ class _DeliverableStatusMonitoringPageState
     }
   }
 
+  void _resetFilters() {
+    setState(() {
+      selectedPeriod = null;
+      selectedPeriodText = null;
+      _selectedServiceId = null;
+      _selectedOfficeId = null;
+      officeList = [];
+      selectedKra = null;
+      isDirect = null;
+      scoreRangeFromController.clear();
+      scoreRangeToController.clear();
+      pageController.clear();
+      pageSizeController.clear();
+    });
+    fetchFilteredPgsList();
+  }
+
+  bool get _hasActiveFilters =>
+      _selectedServiceId != null ||
+      selectedPeriod != null ||
+      _selectedOfficeId != null ||
+      selectedKra != null ||
+      isDirect != null ||
+      scoreRangeFromController.text.isNotEmpty ||
+      scoreRangeToController.text.isNotEmpty;
+
+  @override
+  void dispose() {
+    _kpiScrollController.dispose();
+    scoreRangeToController.dispose();
+    scoreRangeFromController.dispose();
+    pageController.dispose();
+    pageSizeController.dispose();
+    _findingsController.dispose();
+    _conclusionsController.dispose();
+    _recommendationsController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    double totalWidth =
-        numberColumnWidth + (dataColumns * dataColumnWidth) + 24.0;
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
-    bool hasPermission = permissionService.hasPermission(
-      PermissionString.viewPgsDeliverableMonitor,
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
+    final bool hasPermission = permissionService.hasPermission(
+      AppPermissions.viewPgsDeliverableMonitor,
     );
+    if (!hasPermission) return noPermissionScreen();
 
-    if (!hasPermission) {
-      return noPermissionScreen();
-    }
     return Scaffold(
-<<<<<<< HEAD
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        backgroundColor: mainBgColor,
-        title: const Text(
-          'Deliverables Status Monitoring',
-          style: TextStyle(fontSize: 20),
-        ),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    PopupMenuButton<int>(
-                      color: mainBgColor,
-                      offset: const Offset(0, 40),
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      itemBuilder:
-                          (context) => [
-                            PopupMenuItem<int>(
-                              padding: EdgeInsets.zero,
-                              child: StatefulBuilder(
-                                builder: (
-                                  BuildContext context,
-                                  setDialogState,
-                                ) {
-                                  return Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        PopupMenuButton<String>(
-                                          color: mainBgColor,
-                                          offset: const Offset(0, 30),
-                                          onCanceled: () {
-                                            setDialogState(() {
-                                              isMenuOpenPeriod = false;
-                                            });
-                                          },
-                                          onOpened: () {
-                                            setDialogState(() {
-                                              isMenuOpenPeriod = true;
-                                            });
-                                          },
-                                          onSelected: (String value) {
-                                            setDialogState(() {
-                                              selectedPeriod =
-                                                  value.isEmpty
-                                                      ? null
-                                                      : int.tryParse(value);
-                                              if (selectedPeriod == null) {
-                                                selectedPeriodText =
-                                                    'All Period';
-                                              } else {
-                                                final selected = periodList
-                                                    .firstWhere(
-                                                      (period) =>
-                                                          period.id ==
-                                                          selectedPeriod,
-                                                      orElse:
-                                                          () => PgsPeriod(
-                                                            0,
-                                                            false,
-                                                            DateTime.now(),
-                                                            DateTime.now(),
-                                                            'remarks',
-                                                          ),
-                                                    );
-                                                selectedPeriodText =
-                                                    "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
-                                              }
-                                              isMenuOpenPeriod = false;
-                                              fetchFilteredPgsList();
-                                            });
-                                          },
-                                          itemBuilder: (BuildContext context) {
-                                            final updatedPeriodList = [
-                                              {'id': '', 'name': 'All Period'},
-                                              ...periodList.map(
-                                                (period) => {
-                                                  'id': period.id,
-                                                  'name':
-                                                      "${_dateConverter.toJson(period.startDate)} - ${_dateConverter.toJson(period.endDate)}",
-                                                },
-                                              ),
-                                            ];
-
-                                            return updatedPeriodList.map<
-                                              PopupMenuItem<String>
-                                            >((period) {
-                                              return PopupMenuItem<String>(
-                                                value: period['id'].toString(),
-                                                child: Text(
-                                                  period['name']!.toString(),
-                                                ),
-                                              );
-                                            }).toList();
-                                          },
-                                          child: FilterButton(
-                                            label:
-                                                selectedPeriod == null
-                                                    ? 'All Period'
-                                                    : selectedPeriodText ??
-                                                        'Period',
-                                            isActive: isMenuOpenPeriod,
-                                          ),
-                                        ),
-                                        gap8px,
-
-                                        PopupMenuButton<String>(
-                                          color: mainBgColor,
-                                          offset: const Offset(0, 30),
-                                          onCanceled: () {
-                                            setDialogState(() {
-                                              isMenuOpenOffice = false;
-                                            });
-                                          },
-                                          onOpened: () {
-                                            setDialogState(() {
-                                              isMenuOpenOffice = true;
-                                            });
-                                          },
-                                          onSelected: (String value) {
-                                            setDialogState(() {
-                                              _selectedOfficeId =
-                                                  value.isEmpty ? null : value;
-                                              isMenuOpenOffice = false;
-
-                                              fetchFilteredPgsList();
-                                            });
-                                          },
-                                          itemBuilder: (BuildContext context) {
-                                            final updatedOfficeList = [
-                                              {'id': '', 'name': 'All Offices'},
-                                              ...officeList.map(
-                                                (o) => {
-                                                  'id': o.id,
-                                                  'name': o.name,
-                                                },
-                                              ),
-                                            ];
-
-                                            final searchController =
-                                                TextEditingController();
-                                            ValueNotifier<String> searchQuery =
-                                                ValueNotifier('');
-
-                                            return [
-                                              PopupMenuItem<String>(
-                                                enabled: false,
-                                                height:
-                                                    kMinInteractiveDimension,
-                                                child: Column(
-                                                  children: [
-                                                    TextField(
-                                                      controller:
-                                                          searchController,
-                                                      decoration: InputDecoration(
-                                                        hintText:
-                                                            'Search offices...',
-                                                        hintStyle: TextStyle(
-                                                          color: Colors.grey,
-                                                          fontSize: 12,
-                                                        ),
-                                                        prefixIcon: Icon(
-                                                          Icons.search,
-                                                          size: 18,
-                                                        ),
-                                                        contentPadding:
-                                                            EdgeInsets.symmetric(
-                                                              vertical: 8,
-                                                            ),
-                                                        border:
-                                                            OutlineInputBorder(),
-                                                        isDense: true,
-                                                      ),
-                                                      onChanged: (value) {
-                                                        searchQuery.value =
-                                                            value.toLowerCase();
-                                                      },
-                                                    ),
-                                                    const Divider(
-                                                      height: 16,
-                                                      thickness: 1,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-
-                                              PopupMenuItem<String>(
-                                                enabled: false,
-                                                child: ValueListenableBuilder<
-                                                  String
-                                                >(
-                                                  valueListenable: searchQuery,
-                                                  builder: (context, query, _) {
-                                                    final filteredOffices =
-                                                        updatedOfficeList
-                                                            .where(
-                                                              (
-                                                                office,
-                                                              ) => office['name']
-                                                                  .toString()
-                                                                  .toLowerCase()
-                                                                  .contains(
-                                                                    query,
-                                                                  ),
-                                                            )
-                                                            .toList();
-
-                                                    return ConstrainedBox(
-                                                      constraints:
-                                                          BoxConstraints(
-                                                            maxHeight:
-                                                                MediaQuery.of(
-                                                                  context,
-                                                                ).size.height *
-                                                                0.4,
-                                                          ),
-                                                      child: SingleChildScrollView(
-                                                        child: Column(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          children:
-                                                              filteredOffices
-                                                                  .map<Widget>(
-                                                                    (
-                                                                      office,
-                                                                    ) => ListTile(
-                                                                      dense:
-                                                                          true,
-                                                                      title: Text(
-                                                                        office['name']
-                                                                            .toString(),
-                                                                        style: const TextStyle(
-                                                                          color:
-                                                                              Colors.black,
-                                                                        ),
-                                                                      ),
-                                                                      onTap: () {
-                                                                        Navigator.pop(
-                                                                          context,
-                                                                        );
-                                                                        setDialogState(() {
-                                                                          _selectedOfficeId =
-                                                                              office['id'].toString();
-                                                                          fetchFilteredPgsList();
-                                                                        });
-                                                                      },
-                                                                    ),
-                                                                  )
-                                                                  .toList(),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                            ];
-                                          },
-                                          child: FilterButton(
-                                            label:
-                                                _selectedOfficeId == null
-                                                    ? 'All Offices'
-                                                    : officeList
-                                                        .firstWhere(
-                                                          (office) =>
-                                                              office.id
-                                                                  .toString() ==
-                                                              _selectedOfficeId,
-                                                          orElse:
-                                                              () => Office(
-                                                                id: 0,
-                                                                name:
-                                                                    'All Offices',
-                                                              ),
-                                                        )
-                                                        .name,
-                                            isActive: isMenuOpenOffice,
-                                          ),
-                                        ),
-                                        gap8px,
-                                        PopupMenuButton<int>(
-                                          color: mainBgColor,
-                                          offset: const Offset(0, 30),
-                                          onCanceled: () {
-                                            setDialogState(() {
-                                              isMenuOpenKra = false;
-                                            });
-                                          },
-                                          onOpened: () {
-                                            setDialogState(() {
-                                              isMenuOpenKra = true;
-                                            });
-                                          },
-
-                                          onSelected: (int value) {
-                                            setDialogState(() {
-                                              selectedKra =
-                                                  (value == -1) ? null : value;
-                                              isMenuOpenKra = false;
-
-                                              fetchFilteredPgsList();
-                                            });
-                                          },
-                                          itemBuilder: (BuildContext context) {
-                                            final updatedKraList = [
-                                              {'id': -1, 'name': 'All KRA'},
-                                              ...kraListOptions.map(
-                                                (k) => {
-                                                  'id': k.id,
-                                                  'name': k.name,
-                                                  'remakrs': k.remarks,
-                                                },
-                                              ),
-                                            ];
-
-                                            return updatedKraList
-                                                .map<PopupMenuItem<int>>((kra) {
-                                                  return PopupMenuItem<int>(
-                                                    value: kra['id'] as int,
-                                                    child: Text(
-                                                      kra['name'].toString(),
-                                                    ),
-                                                  );
-                                                })
-                                                .toList();
-                                          },
-                                          child: FilterButton(
-                                            label:
-                                                selectedKra == null
-                                                    ? 'All KRA'
-                                                    : kraListOptions
-                                                        .firstWhere(
-                                                          (kra) =>
-                                                              kra.id ==
-                                                              selectedKra,
-                                                          orElse:
-                                                              () =>
-                                                                  KeyResultArea(
-                                                                    0,
-                                                                    'name',
-                                                                    'remarks',
-                                                                    'strategic',
-                                                                    false,
-                                                                  ),
-                                                        )
-                                                        .name,
-                                            isActive: isMenuOpenKra,
-                                          ),
-                                        ),
-                                        gap8px,
-                                        PopupMenuButton<String>(
-                                          color: mainBgColor,
-                                          offset: const Offset(0, 30),
-                                          onCanceled: () {
-                                            setDialogState(() {
-                                              isMenuOpenType = false;
-                                            });
-                                          },
-                                          onOpened: () {
-                                            setDialogState(() {
-                                              isMenuOpenType = true;
-                                            });
-                                          },
-                                          onSelected: (String value) {
-                                            setDialogState(() {
-                                              if (value.isEmpty) {
-                                                isDirect = null;
-                                              } else if (value == 'true') {
-                                                isDirect = true;
-                                              } else {
-                                                isDirect = false;
-                                              }
-                                              isMenuOpenType = false;
-
-                                              fetchFilteredPgsList();
-                                            });
-                                          },
-                                          itemBuilder: (BuildContext context) {
-                                            return [
-                                              PopupMenuItem<String>(
-                                                value: '',
-                                                child: Text('All Types'),
-                                              ),
-                                              PopupMenuItem<String>(
-                                                value: 'true',
-                                                child: Text('Direct'),
-                                              ),
-                                              PopupMenuItem<String>(
-                                                value: 'false',
-                                                child: Text('Indirect'),
-                                              ),
-                                            ];
-                                          },
-                                          child: FilterButton(
-                                            label:
-                                                isDirect == null
-                                                    ? 'All Types'
-                                                    : isDirect!
-                                                    ? 'Direct'
-                                                    : 'Indirect',
-                                            isActive: isMenuOpenType,
-                                          ),
-                                        ),
-                                        gap8px,
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            GestureDetector(
-                                              key: _menuScoreRangeKey,
-                                              onTap:
-                                                  () => _showScoreRangeMenu(
-                                                    context,
-                                                  ),
-                                              child: FilterButton(
-                                                label:
-                                                    (scoreRangeFromController
-                                                                .text
-                                                                .isEmpty ||
-                                                            scoreRangeToController
-                                                                .text
-                                                                .isEmpty)
-                                                        ? 'Score Range'
-                                                        : 'From ${scoreRangeFromController.text} to ${scoreRangeToController.text}',
-                                                isActive: isMenuScoreRange,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        gap8px,
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            GestureDetector(
-                                              key: _menuPageKey,
-                                              onTap:
-                                                  () => _showPageSizeMenu(
-                                                    context,
-                                                  ),
-                                              child: FilterButton(
-                                                label:
-                                                    (pageController
-                                                                .text
-                                                                .isEmpty ||
-                                                            pageSizeController
-                                                                .text
-                                                                .isEmpty)
-                                                        ? 'Page'
-                                                        : 'From ${pageController.text} to ${pageSizeController.text}',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: mainBgColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          side: BorderSide(
-                            color: Colors.grey.shade400,
-                            width: 0.8,
-                          ),
-                          elevation: 0,
-                        ),
-                        onPressed: null,
-                        icon: Icon(
-                          Icons.filter_alt_outlined,
-                          color: Colors.black87,
-                        ),
-                        label: const Text(
-                          'Filter by',
-                          style: TextStyle(color: Colors.black87),
-                        ),
-=======
       backgroundColor: const Color(0xFFF5F6FA),
       body:
           isLoading
@@ -1333,31 +908,27 @@ class _DeliverableStatusMonitoringPageState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _buildOfficeFilter(),
-                  _buildPeriodFilter(),
-                  _buildKraFilter(),
-                  _buildTypeFilter(),
-                  _buildScoreRangeFilter(),
-                  _buildPageFilter(),
-                ],
-              ),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                buildDropdown(child: _serviceDropdown()),
+                buildDropdown(child: _officeDropdown()),
+                buildDropdown(child: _periodDropdown()),
+                buildDropdown(child: _kraDropdown()),
+                buildDropdown(child: _typeDropdown()),
+                _buildPageFilter(),
+              ],
             ),
-            const SizedBox(width: 10),
-            if (_hasActiveFilters) ...[
-              const SizedBox(width: 10),
+            const Spacer(),
+            if (_hasActiveFilters)
               TextButton.icon(
                 onPressed: _resetFilters,
-                icon: Icon(Icons.refresh, size: 13, color: Colors.red.shade400),
+                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
                 label: Text(
                   'Clear filters',
-                  style: TextStyle(fontSize: 11, color: Colors.red.shade400),
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
                 ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
@@ -1366,7 +937,6 @@ class _DeliverableStatusMonitoringPageState
                   ),
                 ),
               ),
-            ],
           ],
         ),
       ],
@@ -1374,724 +944,56 @@ class _DeliverableStatusMonitoringPageState
   }
 
   Widget _buildMobileFilters() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildOfficeFilter(),
-          const SizedBox(width: 8),
-          _buildPeriodFilter(),
-          const SizedBox(width: 8),
-          _buildKraFilter(),
-          const SizedBox(width: 8),
-          _buildTypeFilter(),
-          const SizedBox(width: 8),
-          _buildScoreRangeFilter(),
-          if (_hasActiveFilters) ...[
-            const SizedBox(width: 8),
-            _buildClearButton(),
-          ],
->>>>>>> master
-        ],
-      ),
-      floatingActionButton:
-          isMinimized
-              ? FloatingActionButton.extended(
-                backgroundColor: primaryColor,
-                onPressed: () {
-                  showReportDialog();
-                },
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text(
-                  'Create Report',
-                  style: TextStyle(color: Colors.white),
-                ),
-              )
-              : null,
-    );
-  }
-
-  void showReportDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              insetPadding: const EdgeInsets.all(20),
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              contentPadding: EdgeInsets.zero,
-              content: SizedBox(
-                width: 900,
-                child: SingleChildScrollView(
-                  child: _buildReportCard(setDialogState),
-                ),
-              ),
-
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    _findingsController.clear();
-                    _recommendationsController.clear();
-                    _conclusionsController.clear();
-                    _selectedOffice = null;
-                    _selectedPeriod = null;
-                    officeId = null;
-                    periodId = null;
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      bool? confirmAction = await showDialog<bool>(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text("Confirm Update"),
-                            content: const Text(
-                              "Are you sure you want to update this record?",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(
-                                  "No",
-                                  style: TextStyle(color: primaryColor),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context, true);
-                                },
-                                child: Text(
-                                  "Yes",
-                                  style: TextStyle(color: primaryColor),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-
-                      if (confirmAction == true) {
-                        final summaryNarrative = PgsSummaryNarrative(
-                          0,
-                          int.tryParse(_selectedPeriod ?? '0') ?? 0,
-                          _findingsController.text,
-                          _recommendationsController.text,
-                          _conclusionsController.text,
-                          int.tryParse(_selectedOffice ?? '0') ?? 0,
-                          isDeleted: false,
-                          rowVersion: '',
-                        );
-
-                        await _summaryNarrativeService.addSummaryNarrative(
-                          summaryNarrative,
-                        );
-                        _findingsController.clear();
-                        _recommendationsController.clear();
-                        _conclusionsController.clear();
-                        _selectedOffice = null;
-                        _selectedPeriod = null;
-                        officeId = null;
-                        periodId = null;
-                        MotionToast.success(
-                          description: const Text("Saved Successfully"),
-                          toastAlignment: Alignment.topCenter,
-                        ).show(context);
-                        Navigator.pop(context);
-                      }
-                    }
-                  },
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildReportCard(Function setDialogState) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 1000),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade400),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 8,
-                  horizontal: 16,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.black87),
-                          onPressed: () {
-                            _findingsController.clear();
-                            _recommendationsController.clear();
-                            _conclusionsController.clear();
-                            _selectedOffice = null;
-                            _selectedPeriod = null;
-                            officeId = null;
-                            periodId = null;
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.insert_drive_file_outlined,
-                          color: Colors.grey[700],
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Summary Narrative Report',
-                          style: TextStyle(fontSize: 14, color: Colors.black87),
-                        ),
-                        const Spacer(),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text.rich(
-                                    TextSpan(
-                                      text: 'Period ',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: '*',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  DropdownSearch<PgsPeriod>(
-                                    popupProps: PopupProps.menu(
-                                      showSearchBox: true,
-                                      fit: FlexFit.loose,
-                                      menuProps: const MenuProps(
-                                        backgroundColor: Colors.white,
-                                        elevation: 2,
-                                      ),
-                                      searchFieldProps: TextFieldProps(
-                                        decoration: InputDecoration(
-                                          hintText: 'Search Period...',
-                                          hintStyle: TextStyle(fontSize: 13),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          prefixIcon: Icon(Icons.search),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: primaryColor,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      itemBuilder:
-                                          (
-                                            context,
-                                            period,
-                                            isSelected,
-                                          ) => ListTile(
-                                            tileColor: Colors.white,
-                                            title: Text(
-                                              "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ),
-                                    ),
-
-                                    items: periodList,
-                                    itemAsString:
-                                        (period) =>
-                                            "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
-                                    selectedItem:
-                                        _selectedPeriod == null
-                                            ? null
-                                            : periodList.firstWhere(
-                                              (office) =>
-                                                  office.id.toString() ==
-                                                  _selectedPeriod,
-                                              orElse:
-                                                  () => PgsPeriod(
-                                                    0,
-                                                    false,
-                                                    DateTime.now(),
-                                                    DateTime.now(),
-                                                    'remarks',
-                                                  ),
-                                            ),
-
-                                    onChanged: (value) {
-                                      setDialogState(() {
-                                        _selectedPeriod = value?.id.toString();
-                                        _findingsController.clear();
-                                        _recommendationsController.clear();
-                                        _conclusionsController.clear();
-                                        _checkDeliverablesAvailability(
-                                          setDialogState,
-                                        );
-                                        _checkDeliverablesAvailability(
-                                          setDialogState,
-                                        );
-                                      });
-                                    },
-                                    validator: (value) {
-                                      if (value == null) {
-                                        return 'Required';
-                                      }
-                                      return null;
-                                    },
-                                    dropdownDecoratorProps:
-                                        DropDownDecoratorProps(
-                                          dropdownSearchDecoration:
-                                              InputDecoration(
-                                                labelText: 'Select Period',
-                                                labelStyle: TextStyle(
-                                                  fontSize: 13,
-                                                ),
-                                                filled: true,
-                                                fillColor: Colors.transparent,
-                                                floatingLabelBehavior:
-                                                    FloatingLabelBehavior.never,
-                                                border: InputBorder.none,
-                                                enabledBorder: InputBorder.none,
-                                                focusedBorder: InputBorder.none,
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 8,
-                                                    ),
-                                              ),
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 24),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text.rich(
-                                    TextSpan(
-                                      text: 'Office ',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: '*',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  DropdownSearch<Office>(
-                                    popupProps: PopupProps.menu(
-                                      showSearchBox: true,
-                                      fit: FlexFit.loose,
-                                      menuProps: const MenuProps(
-                                        backgroundColor: Colors.white,
-                                        elevation: 2,
-                                      ),
-                                      searchFieldProps: TextFieldProps(
-                                        decoration: InputDecoration(
-                                          hintText: 'Search Office Name...',
-                                          hintStyle: TextStyle(fontSize: 13),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          prefixIcon: Icon(Icons.search),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: primaryColor,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      itemBuilder:
-                                          (context, office, isSelected) =>
-                                              ListTile(
-                                                tileColor: Colors.white,
-                                                title: Text(
-                                                  office.name,
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ),
-                                    ),
-                                    items: officeList,
-                                    itemAsString: (office) => office.name,
-                                    selectedItem:
-                                        _selectedOffice == null
-                                            ? null
-                                            : officeList.firstWhere(
-                                              (office) =>
-                                                  office.id.toString() ==
-                                                  _selectedOffice,
-                                              orElse:
-                                                  () => Office(
-                                                    id: 0,
-                                                    name: 'Unknown',
-                                                    officeTypeId: 0,
-                                                    parentOfficeId: 0,
-                                                    isActive: true,
-                                                    isDeleted: false,
-                                                  ),
-                                            ),
-
-                                    onChanged: (value) {
-                                      setDialogState(() {
-                                        _selectedOffice = value?.id.toString();
-                                        _findingsController.clear();
-                                        _recommendationsController.clear();
-                                        _conclusionsController.clear();
-                                        _checkDeliverablesAvailability(
-                                          setDialogState,
-                                        );
-                                        _checkDeliverablesAvailability(
-                                          setDialogState,
-                                        );
-                                      });
-                                    },
-                                    validator: (value) {
-                                      if (value == null) {
-                                        return 'Required';
-                                      }
-                                      return null;
-                                    },
-                                    dropdownDecoratorProps:
-                                        DropDownDecoratorProps(
-                                          dropdownSearchDecoration:
-                                              InputDecoration(
-                                                labelText: 'Select Office',
-                                                labelStyle: TextStyle(
-                                                  fontSize: 13,
-                                                ),
-                                                filled: true,
-                                                fillColor: Colors.transparent,
-                                                floatingLabelBehavior:
-                                                    FloatingLabelBehavior.never,
-                                                border: InputBorder.none,
-                                                enabledBorder: InputBorder.none,
-                                                focusedBorder: InputBorder.none,
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 8,
-                                                    ),
-                                              ),
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (!_hasAvailableDeliverables &&
-                          _selectedOffice != null &&
-                          _selectedPeriod != null)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            "No available deliverables for the selected office and period.",
-                            style: TextStyle(color: Colors.red, fontSize: 10),
-                          ),
-                        ),
-                      const SizedBox(height: 32),
-                      _buildReportSection(
-                        icon: Icons.error_outline_rounded,
-                        iconColor: Colors.blue,
-                        title: "Auditor Findings",
-                        description:
-                            "These will be displayed as separate points in the report.",
-                        controller: _findingsController,
-                        disabled: !_hasAvailableDeliverables,
-                      ),
-                      const SizedBox(height: 24),
-                      _buildReportSection(
-                        icon: Icons.check_circle_outline,
-                        iconColor: Colors.green,
-                        title: "Conclusions",
-                        description:
-                            "These should summarize your analysis and insights.",
-                        controller: _conclusionsController,
-                        disabled: !_hasAvailableDeliverables,
-                      ),
-                      const SizedBox(height: 24),
-                      _buildReportSection(
-                        title: "Recommendations",
-                        icon: Icons.trending_up,
-                        iconColor: Colors.deepOrangeAccent,
-                        description:
-                            "These should be actionable steps for improvement.",
-                        controller: _recommendationsController,
-                        disabled: !_hasAvailableDeliverables,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReportSection({
-    required String title,
-    required String description,
-    required TextEditingController controller,
-    IconData icon = Icons.description_outlined,
-    Color iconColor = Colors.black54,
-    bool disabled = false,
-  }) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 900),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Icon(icon, color: iconColor, size: 20),
-                const SizedBox(width: 6),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              description,
-              style: const TextStyle(fontSize: 13, color: Colors.black54),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              constraints: BoxConstraints(minHeight: 120, maxHeight: 180),
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.transparent),
-              ),
-              child: Scrollbar(
-                thumbVisibility: true,
-                child: SingleChildScrollView(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: TextFormField(
-                      controller: controller,
-                      style: const TextStyle(fontSize: 14),
-                      maxLines: null,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      readOnly: disabled,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: "Type here...",
-                        hintStyle: TextStyle(color: Colors.grey),
-                        disabledBorder: InputBorder.none,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Required';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ),
+            const Text(
+              "Filter by",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: grey,
               ),
             ),
+            const Spacer(),
+            if (_hasActiveFilters)
+              TextButton.icon(
+                onPressed: _resetFilters,
+                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+                label: Text(
+                  'Clear',
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showScoreRangeMenu(BuildContext context) {
-    final RenderBox renderBox =
-        _menuScoreRangeKey.currentContext!.findRenderObject() as RenderBox;
-    final Offset offset = renderBox.localToGlobal(Offset.zero);
-    showMenu(
-      color: secondaryColor,
-      context: context,
-      position: RelativeRect.fromLTRB(
-        offset.dx,
-        offset.dy + renderBox.size.height,
-        offset.dx + renderBox.size.width,
-        offset.dy + renderBox.size.height + 200,
-      ),
-      items: [
-        PopupMenuItem(
-          enabled: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
             children: [
-              const Text(
-                'Score Range',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              gap4px,
-              TextField(
-                controller: scoreRangeFromController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'From',
-                  labelStyle: TextStyle(color: grey, fontSize: 12),
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
+              SizedBox(height: 38, child: _serviceDropdown()),
+              const SizedBox(width: 8),
+              SizedBox(height: 38, child: _officeDropdown()),
+              const SizedBox(width: 8),
+              SizedBox(height: 38, child: _periodDropdown()),
+              const SizedBox(width: 8),
+              SizedBox(height: 38, child: _kraDropdown()),
+              const SizedBox(width: 8),
+              SizedBox(height: 38, child: _typeDropdown()),
+              const SizedBox(width: 8),
 
-                  floatingLabelStyle: TextStyle(
-                    color: primaryColor,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              gap16px,
-              TextField(
-                controller: scoreRangeToController,
-                keyboardType: TextInputType.none,
-                decoration: const InputDecoration(
-                  labelText: 'To',
-                  labelStyle: TextStyle(color: grey, fontSize: 12),
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                  floatingLabelStyle: TextStyle(
-                    color: primaryColor,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              gap16px,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: primaryColor),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    onPressed: () {
-                      scoreRangeFromController.text;
-                      scoreRangeToController.text;
-                      fetchFilteredPgsList();
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      'Apply',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
+              _buildPageFilter(),
             ],
           ),
         ),
@@ -2099,12 +1001,209 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  void _showPageSizeMenu(BuildContext context) {
-    final RenderBox renderBox =
-        _menuPageKey.currentContext!.findRenderObject() as RenderBox;
-    final Offset offset = renderBox.localToGlobal(Offset.zero);
-    showMenu(
-      color: secondaryColor,
+  Widget _serviceDropdown() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: ["All Service", ...serviceList.map((s) => s.officeName)],
+          selectedItem:
+              _selectedServiceId == null
+                  ? "Select Service"
+                  : (serviceList
+                          .where(
+                            (s) => s.officeId.toString() == _selectedServiceId,
+                          )
+                          .firstOrNull
+                          ?.officeName ??
+                      "Select Service"),
+          hintText: "Service",
+          searchHint: "Search services...",
+          prefixIcon: Icons.apartment_outlined,
+          onChanged: (value) {
+            final newId =
+                value == "Select Service"
+                    ? null
+                    : serviceList
+                        .firstWhere((s) => s.officeName == value)
+                        .officeId
+                        .toString();
+            setState(() {
+              _selectedServiceId = newId;
+              _selectedOfficeId = null;
+              officeList = [];
+            });
+            if (newId != null) {
+              _loadOfficesForService(newId);
+            }
+            fetchFilteredPgsList();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _officeDropdown() {
+    final serviceSelected = _selectedServiceId != null;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: Opacity(
+          opacity: serviceSelected ? 1 : 0.5,
+          child: IgnorePointer(
+            ignoring: !serviceSelected || _officeListLoading,
+            child: SearchableDropdown(
+              items: ["All Offices", ...officeList.map((o) => o.name)],
+              selectedItem:
+                  _selectedOfficeId == null
+                      ? "All Offices"
+                      : (officeList
+                              .where(
+                                (o) => o.id.toString() == _selectedOfficeId,
+                              )
+                              .firstOrNull
+                              ?.name ??
+                          "All Offices"),
+              hintText: serviceSelected ? "Office" : "Select Service first",
+              searchHint: "Search offices...",
+              prefixIcon: Icons.business_outlined,
+              onChanged: (value) {
+                setState(() {
+                  _selectedOfficeId =
+                      value == "All Offices"
+                          ? null
+                          : officeList
+                              .firstWhere((o) => o.name == value)
+                              .id
+                              .toString();
+                });
+                fetchFilteredPgsList();
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _periodDropdown() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: [
+            "All Periods",
+            ...periodList.map(
+              (p) =>
+                  "${_dateConverter.toJson(p.startDate)} – ${_dateConverter.toJson(p.endDate)}",
+            ),
+          ],
+          selectedItem:
+              selectedPeriod == null
+                  ? "All Periods"
+                  : (selectedPeriodText ?? "All Periods"),
+          hintText: "Period",
+          searchHint: "Search periods...",
+          prefixIcon: Icons.date_range_outlined,
+          onChanged: (value) {
+            setState(() {
+              if (value == "All Periods") {
+                selectedPeriod = null;
+                selectedPeriodText = null;
+              } else {
+                final selected = periodList.firstWhere(
+                  (p) =>
+                      "${_dateConverter.toJson(p.startDate)} – ${_dateConverter.toJson(p.endDate)}" ==
+                      value,
+                );
+                selectedPeriod = selected.id;
+                selectedPeriodText = value;
+              }
+            });
+            fetchFilteredPgsList();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _kraDropdown() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: ["All KRA", ...kraListOptions.map((k) => k.name)],
+          selectedItem:
+              selectedKra == null
+                  ? "All KRA"
+                  : (kraListOptions
+                          .where((k) => k.id == selectedKra)
+                          .firstOrNull
+                          ?.name ??
+                      "All KRA"),
+          hintText: "KRA",
+          searchHint: "Search KRA...",
+          prefixIcon: Icons.adjust_outlined,
+          onChanged: (value) {
+            setState(() {
+              selectedKra =
+                  value == "All KRA"
+                      ? null
+                      : kraListOptions.firstWhere((k) => k.name == value).id;
+            });
+            fetchFilteredPgsList();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _typeDropdown() {
+    const items = ["All Alignment", "Direct", "Indirect"];
+    final selected =
+        isDirect == null
+            ? "All Alignment"
+            : (isDirect! ? "Direct" : "Indirect");
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 130, maxWidth: 200),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: items,
+          selectedItem: selected,
+          hintText: "Type",
+          searchHint: "Search alignment...",
+          prefixIcon: Icons.directions_outlined,
+          onChanged: (value) {
+            setState(() {
+              isDirect = value == "All Alignment" ? null : (value == "Direct");
+            });
+            fetchFilteredPgsList();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPageFilter() {
+    final isActive = pageController.text.isNotEmpty;
+    final label = isActive ? 'Page ${pageController.text}' : 'Pagination';
+    return FilterChipButton(
+      label: label,
+      icon: Icons.layers_outlined,
+      isActive: isActive,
+      onTap: () => _showPaginationDialog(),
+    );
+  }
+
+  void _showPaginationDialog() {
+    final pageCtrl = TextEditingController(text: pageController.text);
+    final sizeCtrl = TextEditingController(text: pageSizeController.text);
+    showDialog(
       context: context,
       position: RelativeRect.fromLTRB(
         offset.dx,
@@ -2393,113 +1492,66 @@ class _DeliverableStatusMonitoringPageState
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Tooltip(
-            message: 'Click to open Accomplishment Form',
-            child: SizedBox(
-              height: 30,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                    side: const BorderSide(color: Colors.black, width: 1),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  textStyle: const TextStyle(fontSize: 13),
-                  minimumSize: Size.zero,
-                ).copyWith(
-                  overlayColor: WidgetStateProperty.resolveWith<Color?>((
-                    states,
-                  ) {
-                    if (states.contains(WidgetState.hovered) ||
-                        states.contains(WidgetState.pressed)) {
-                      return const Color.fromARGB(255, 221, 221, 221);
-                    }
-                    return null;
-                  }),
-                ),
-                onPressed: () async {
-                  await loadAccomplishments(deliverable['pgsDeliverableId']);
-                  showAccomplishmentFormDialog(context, deliverable, userId);
-                },
-                icon: const Icon(
-                  Icons.bar_chart_outlined,
-                  size: 14,
-                  color: primaryTextColor,
-                ),
-                label: const Text(
-                  'Accomplishment',
-                  style: TextStyle(color: primaryTextColor, fontSize: 10),
-                ),
-              ),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.inbox_outlined,
+              size: 40,
+              color: Colors.grey.shade300,
             ),
           ),
-
-          const SizedBox(width: 8),
-
-          FutureBuilder<bool>(
-            future: _hasCompleteAccomplishmentData(
-              deliverableId,
-              monthlyPeriods.length,
+          const SizedBox(height: 16),
+          Text(
+            _selectedOfficeId == null
+                ? 'Select an office to monitor deliverables'
+                : 'No deliverables found',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade600,
             ),
-            builder: (context, snapshot) {
-              final hasCompleteData = snapshot.data ?? false;
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _selectedOfficeId == null
+                ? 'Use the filter above to get started'
+                : 'Try adjusting the filters to see more results',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+          ),
+        ],
+      ),
+    );
+  }
 
-              return Tooltip(
-                message:
-                    hasCompleteData
-                        ? 'Click to open Breakthrough Scoring'
-                        : "The accomplishment data hasn't been completed yet.",
-                child: SizedBox(
-                  height: 30,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          hasCompleteData
-                              ? Colors.transparent
-                              : Colors.grey.shade300,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        side: BorderSide(
-                          color: hasCompleteData ? Colors.black : Colors.grey,
-                          width: 1,
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      textStyle: const TextStyle(fontSize: 13),
-                      minimumSize: Size.zero,
-                    ).copyWith(
-                      overlayColor: WidgetStateProperty.resolveWith<Color?>((
-                        states,
-                      ) {
-                        if (hasCompleteData &&
-                            (states.contains(WidgetState.hovered) ||
-                                states.contains(WidgetState.pressed))) {
-                          return const Color.fromARGB(255, 221, 221, 221);
-                        }
-                        return null;
-                      }),
-                    ),
-                    onPressed:
-                        hasCompleteData
-                            ? () async {
-                              await loadBreakThrough(deliverableId);
-                              showBreakthroughFormDialog(
-                                context,
-                                deliverable,
-                                userId,
-                              );
-                            }
-                            : null,
-                    icon: Icon(
-                      Icons.star_outline,
-                      size: 14,
-                      color: hasCompleteData ? primaryTextColor : Colors.grey,
-                    ),
-                    label: Text(
-                      'Breakthrough Scoring',
+  Widget _buildDeliverableRow(
+    int index,
+    Map<String, dynamic> d,
+    bool isMobile,
+  ) {
+    if (isMobile) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  margin: const EdgeInsets.only(top: 1, right: 8),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${(currentPage - 1) * pageSize + index + 1}',
                       style: TextStyle(
                         color: hasCompleteData ? primaryTextColor : Colors.grey,
                         fontSize: 10,
@@ -2531,7 +1583,7 @@ class _DeliverableStatusMonitoringPageState
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '${d['Start Date']} – ${d['End Date']}',
+                d['officeName'] ?? '',
                 style: TextStyle(
                   fontSize: 11,
                   color: primaryColor,
@@ -2545,8 +1597,8 @@ class _DeliverableStatusMonitoringPageState
               runSpacing: 6,
               children: [
                 _infoChip(
-                  Icons.apartment_outlined,
-                  d['officeName'] ?? '',
+                  Icons.calendar_month,
+                  '${d['Start Date']} – ${d['End Date']}',
                   Colors.lightBlue,
                 ),
                 _infoChip(Icons.adjust_outlined, d['kra'] ?? '', Colors.green),
@@ -2598,22 +1650,260 @@ class _DeliverableStatusMonitoringPageState
       ),
     );
   }
-}
 
-Future<bool?> showAccomplishmentFormDialog(
-  BuildContext context,
-  Map<String, dynamic> deliverable,
-  String userId,
-) {
-  final startDateStr = deliverable['Start Date'];
-  final endDateStr = deliverable['End Date'];
+  Widget _buildDeliverableDetails(Map<String, dynamic> d) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: primaryColor.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            d['officeName'] ?? '',
 
-  final startDate = DateFormat('MMM dd, yyyy').parse(startDateStr);
-  final endDate = DateFormat('MMM dd, yyyy').parse(endDateStr);
+            style: TextStyle(
+              fontSize: 11,
+              color: primaryColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          d['deliverableName'] ?? '',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1A1D23),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 16,
+          runSpacing: 6,
+          children: [
+            _infoChip(
+              Icons.calendar_month,
+              '${d['Start Date']} – ${d['End Date']}',
+              Colors.blue,
+            ),
+            _infoChip(Icons.adjust_outlined, d['kra'] ?? '', Colors.green),
+            _infoChip(Icons.insights, d['kraDescription'] ?? '', Colors.orange),
+            _infoChip(
+              d['isDirect'] == true ? Icons.arrow_right_alt : Icons.alt_route,
+              d['isDirect'] == true ? 'Direct' : 'Indirect',
+              d['isDirect'] == true ? Colors.purple : Colors.teal,
+            ),
+            if (d['byWhen'] != null && d['byWhen'].toString().isNotEmpty)
+              _infoChip(Icons.calendar_month_outlined, d['byWhen'], Colors.red),
+          ],
+        ),
+      ],
+    );
+  }
 
-<<<<<<< HEAD
-  List<Map<String, dynamic>> monthlyPeriods = [];
-=======
+  Widget _infoChip(IconData icon, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 4),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 200),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(int index, Map<String, dynamic> deliverable) {
+    final deliverableId = deliverable['pgsDeliverableId'];
+    final monthlyPeriods = _buildMonthlyPeriods(deliverable);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _actionButton(
+          icon: Icons.bar_chart_outlined,
+          label: 'Accomplishment',
+          color: primaryColor,
+          onTap: () async {
+            await loadAccomplishments(deliverableId, monthlyPeriods);
+            showAccomplishmentFormDialog(
+              context,
+              deliverable,
+              userId,
+              monthlyPeriods,
+            );
+          },
+        ),
+        const SizedBox(height: 6),
+        FutureBuilder<bool>(
+          future: _hasCompleteAccomplishmentData(
+            deliverableId,
+            monthlyPeriods.length,
+          ),
+          builder: (ctx, snap) {
+            final hasData = snap.data ?? false;
+            return Tooltip(
+              message:
+                  hasData
+                      ? 'Open Breakthrough Scoring'
+                      : 'Complete accomplishment data first',
+              child: _actionButton(
+                icon: Icons.star_outline,
+                label: 'Breakthrough',
+                color: hasData ? primaryColor : Colors.grey,
+                onTap:
+                    hasData
+                        ? () async {
+                          await loadBreakThrough(deliverableId);
+                          showBreakthroughFormDialog(
+                            context,
+                            deliverable,
+                            userId,
+                          );
+                        }
+                        : null,
+                disabled: !hasData,
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileActionButtons(
+    int index,
+    Map<String, dynamic> deliverable,
+  ) {
+    final deliverableId = deliverable['pgsDeliverableId'];
+    final monthlyPeriods = _buildMonthlyPeriods(deliverable);
+
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: _actionButton(
+            icon: Icons.bar_chart_outlined,
+            label: 'View Accomplishment',
+            color: primaryColor,
+            fullWidth: true,
+            onTap: () async {
+              await loadAccomplishments(deliverableId, monthlyPeriods);
+              showAccomplishmentFormDialog(
+                context,
+                deliverable,
+                userId,
+                monthlyPeriods,
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        FutureBuilder<bool>(
+          future: _hasCompleteAccomplishmentData(
+            deliverableId,
+            monthlyPeriods.length,
+          ),
+          builder: (ctx, snap) {
+            final hasData = snap.data ?? false;
+            return SizedBox(
+              width: double.infinity,
+              child: Tooltip(
+                message:
+                    hasData
+                        ? 'Open Breakthrough Scoring'
+                        : 'Complete accomplishment data first',
+                child: _actionButton(
+                  icon: Icons.star_outline,
+                  label: 'Breakthrough Scoring',
+                  color: hasData ? Colors.amber.shade700 : Colors.grey,
+                  fullWidth: true,
+                  onTap:
+                      hasData
+                          ? () async {
+                            await loadBreakThrough(deliverableId);
+                            showBreakthroughFormDialog(
+                              context,
+                              deliverable,
+                              userId,
+                            );
+                          }
+                          : null,
+                  disabled: !hasData,
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    VoidCallback? onTap,
+    bool disabled = false,
+    bool fullWidth = false,
+  }) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: fullWidth ? double.infinity : null,
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: fullWidth ? 10 : 6,
+          ),
+          decoration: BoxDecoration(
+            color:
+                disabled ? Colors.grey.shade50 : color.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color:
+                  disabled
+                      ? Colors.grey.shade200
+                      : color.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisAlignment:
+                fullWidth ? MainAxisAlignment.center : MainAxisAlignment.start,
+            children: [
+              Icon(
+                icon,
+                size: 13,
+                color: disabled ? Colors.grey.shade400 : color,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: disabled ? Colors.grey.shade400 : color,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMobileFAB() {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -3208,7 +2498,7 @@ Future<bool?> showBreakthroughFormDialog(
                   const SizedBox(height: 16),
                   PermissionWidget(
                     allowedRoles: [
-                      PermissionRoleString.pgsAuditor,
+                      PermissionRoleString.evaluator,
                       PermissionRoleString.roleAdmin,
                     ],
                     child: Row(

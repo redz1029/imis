@@ -112,6 +112,7 @@ class _PerformanceGovernanceSystemPageState
     'Approved': 0,
     'Disapproved': 0,
   };
+  bool _mobileFiltersExpanded = false;
   String? _lastResponseMessage;
   int _totalCount = 0;
   String _statusFilter = 'All';
@@ -1665,56 +1666,113 @@ class _PerformanceGovernanceSystemPageState
       children: [
         Row(
           children: [
-            const Text(
-              "Filter by",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: grey,
+            InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () {
+                setState(
+                  () => _mobileFiltersExpanded = !_mobileFiltersExpanded,
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.tune, size: 16, color: primaryColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Filters',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    AnimatedRotation(
+                      turns: _mobileFiltersExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 16,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const Spacer(),
-            if (_hasActiveFilters)
-              TextButton.icon(
-                onPressed: _resetFilters,
-                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
-                label: Text(
-                  'Clear',
-                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 150),
+              child:
+                  _hasActiveFilters
+                      ? TextButton.icon(
+                        key: const ValueKey('clear'),
+                        onPressed: _resetFilters,
+                        icon: Icon(
+                          Icons.refresh,
+                          size: 14,
+                          color: Colors.red.shade400,
+                        ),
+                        label: Text(
+                          'Clear filters',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.red.shade400,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      )
+                      : const SizedBox.shrink(key: ValueKey('empty')),
+            ),
           ],
         ),
-        gap8px,
-        SizedBox(
-          height: 38,
-          child: PermissionWidget(
-            permission: AppPermissions.viewOffice,
-            child: _servicesDropdown(),
-          ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          child:
+              _mobileFiltersExpanded
+                  ? Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 38,
+                          child: PermissionWidget(
+                            permission: AppPermissions.viewOffice,
+                            child: _servicesDropdown(),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 38,
+                          child: PermissionWidget(
+                            permission: AppPermissions.viewOffice,
+                            child: _officeDropdown(),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(height: 38, child: _periodDropdown()),
+                      ],
+                    ),
+                  )
+                  : const SizedBox.shrink(),
         ),
-        SizedBox(
-          height: 38,
-          child: PermissionWidget(
-            permission: AppPermissions.viewOffice,
-            child: _officeDropdown(),
-          ),
-        ),
-        // gap8px,
-        // SizedBox(height: 38, child: _startDateDropdown()),
-        // gap8px,
-
-        // SizedBox(height: 38, child: _endDateDropdown()),
-        gap8px,
-        SizedBox(height: 38, child: _periodDropdown()),
       ],
     );
   }
@@ -1728,37 +1786,6 @@ class _PerformanceGovernanceSystemPageState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.tune, size: 14, color: Colors.grey.shade600),
-            const SizedBox(width: 6),
-            Text(
-              "Filter by",
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
-            const Spacer(),
-            if (_hasActiveFilters)
-              TextButton.icon(
-                onPressed: _resetFilters,
-                icon: Icon(Icons.refresh, size: 13, color: Colors.red.shade400),
-                label: Text(
-                  'Clear filters',
-                  style: TextStyle(fontSize: 11, color: Colors.red.shade400),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
@@ -1776,10 +1803,23 @@ class _PerformanceGovernanceSystemPageState
             ),
             const SizedBox(width: 10),
             Expanded(child: _periodDropdown()),
-            // const SizedBox(width: 10),
-            // Expanded(child: _startDateDropdown()),
-            // const SizedBox(width: 10),
-            // Expanded(child: _endDateDropdown()),
+            if (_hasActiveFilters) ...[
+              const SizedBox(width: 10),
+              TextButton.icon(
+                onPressed: _resetFilters,
+                icon: Icon(Icons.refresh, size: 13, color: Colors.red.shade400),
+                label: Text(
+                  'Clear filters',
+                  style: TextStyle(fontSize: 11, color: Colors.red.shade400),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ],
@@ -1829,31 +1869,38 @@ class _PerformanceGovernanceSystemPageState
       return "$start - $end";
     }
 
-    return SearchableDropdown(
-      items: ["All Periods", ...filteredListPeriod.map(labelFor)],
-      selectedItem: selectedPeriodText,
-      prefixIcon: Icons.calendar_today_outlined,
-      hintText: "All Periods",
-      searchHint: "Search period...",
-      onChanged: (value) {
-        setState(() {
-          if (value == "All Periods") {
-            _selectedPeriodId = null;
-            selectedPeriodText = "All Periods";
-            selectedStartPeriod = null;
-            selectedEndDate = null;
-          } else {
-            final selected = filteredListPeriod.firstWhere(
-              (p) => labelFor(p) == value,
-            );
-            _selectedPeriodId = selected['id'];
-            selectedPeriodText = value;
-            selectedStartPeriod = selected['startDate'];
-            selectedEndDate = selected['endDate'];
-          }
-          fetchPgsFilter();
-        });
-      },
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+
+        child: SearchableDropdown(
+          items: ["All Periods", ...filteredListPeriod.map(labelFor)],
+          selectedItem: selectedPeriodText,
+          prefixIcon: Icons.calendar_today_outlined,
+          hintText: "All Periods",
+          searchHint: "Search period...",
+          onChanged: (value) {
+            setState(() {
+              if (value == "All Periods") {
+                _selectedPeriodId = null;
+                selectedPeriodText = "All Periods";
+                selectedStartPeriod = null;
+                selectedEndDate = null;
+              } else {
+                final selected = filteredListPeriod.firstWhere(
+                  (p) => labelFor(p) == value,
+                );
+                _selectedPeriodId = selected['id'];
+                selectedPeriodText = value;
+                selectedStartPeriod = selected['startDate'];
+                selectedEndDate = selected['endDate'];
+              }
+              fetchPgsFilter();
+            });
+          },
+        ),
+      ),
     );
   }
 
@@ -1902,7 +1949,7 @@ class _PerformanceGovernanceSystemPageState
   //       ),
   //     ],
   //     selectedItem: selectedStartDateText,
-  //     prefixIcon: Icons.calendar_today_outlined,
+  //     prefixIcon: Icons.calendar_today_outlFined,
   //     hintText: "All Start Date",
   //     searchHint: "Search start date...",
   //     onChanged: (value) {

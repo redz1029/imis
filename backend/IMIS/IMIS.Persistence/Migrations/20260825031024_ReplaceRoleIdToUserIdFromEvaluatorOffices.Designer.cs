@@ -4,6 +4,7 @@ using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IMIS.Persistence.Migrations
 {
     [DbContext(typeof(ImisDbContext))]
-    partial class ImisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260825031024_ReplaceRoleIdToUserIdFromEvaluatorOffices")]
+    partial class ReplaceRoleIdToUserIdFromEvaluatorOffices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -134,1393 +137,6 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("Announcement");
                 });
 
-            modelBuilder.Entity("IMIS.Domain.AuditChecklist", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AuditChecklistQNAId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AuditScope")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Auditees")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("AuditorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("FindingAndRemarks")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ItemsAndQuestions")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("QnAId")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<int>("conforming")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditChecklistQNAId");
-
-                    b.HasIndex("AuditorId");
-
-                    b.HasIndex("QnAId");
-
-                    b.ToTable("AuditChecklist");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditChecklistQNA", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<long?>("IsoStandardId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Question")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IsoStandardId");
-
-                    b.ToTable("AuditChecklistQNA");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            IsDeleted = false,
-                            IsoStandardId = 2L,
-                            Question = "Can you please explain how the organization identifies relevant internal andexternal issues?"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            IsDeleted = false,
-                            IsoStandardId = 2L,
-                            Question = "How often do you review and update these issues? Can you provide examples of recent changes?"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            IsDeleted = false,
-                            IsoStandardId = 3L,
-                            Question = "How does the organization go about identifying relevant interested parties?"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            IsDeleted = false,
-                            IsoStandardId = 3L,
-                            Question = "Can you describe the process of determining the requirements and expectations of these interested parties?"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            IsDeleted = false,
-                            IsoStandardId = 3L,
-                            Question = "How often do you review and update the requirements and expectations of interested parties? Can you share any recent updates or changes?"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            IsDeleted = false,
-                            IsoStandardId = 6L,
-                            Question = "Can you walk me through how the organization defined the scope of its QMS?"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            IsDeleted = false,
-                            IsoStandardId = 6L,
-                            Question = "How did you ensure that the scope includes all relevant products, services, and processes covered by the QMS?"
-                        },
-                        new
-                        {
-                            Id = 8,
-                            IsDeleted = false,
-                            IsoStandardId = 6L,
-                            Question = "How were the organization’s context and the requirements of interested parties considered while determining the scope?"
-                        },
-                        new
-                        {
-                            Id = 9,
-                            IsDeleted = false,
-                            IsoStandardId = 6L,
-                            Question = "Is the scope documented and easily accessible to relevant personnel? Can you show me where it is available?"
-                        },
-                        new
-                        {
-                            Id = 10,
-                            IsDeleted = false,
-                            IsoStandardId = 13L,
-                            Question = "How has the organization established, implemented, maintained, and continually improved its QMS?"
-                        },
-                        new
-                        {
-                            Id = 11,
-                            IsDeleted = false,
-                            IsoStandardId = 13L,
-                            Question = "Can you explain how the QMS processes are identified and their interactions determined?"
-                        },
-                        new
-                        {
-                            Id = 12,
-                            IsDeleted = false,
-                            IsoStandardId = 13L,
-                            Question = "How do you document process inputs, outputs, sequences, and interactions?"
-                        },
-                        new
-                        {
-                            Id = 13,
-                            IsDeleted = false,
-                            IsoStandardId = 13L,
-                            Question = "How were responsibilities and authorities assigned to personnel for QMS processes?"
-                        },
-                        new
-                        {
-                            Id = 14,
-                            IsDeleted = false,
-                            IsoStandardId = 13L,
-                            Question = "Can you provide examples of how process performance criteria, resources, and risks are identified and managed?"
-                        },
-                        new
-                        {
-                            Id = 15,
-                            IsDeleted = false,
-                            IsoStandardId = 13L,
-                            Question = "How does the organization establish methods for monitoring, measuring, and controlling QMS processes?"
-                        },
-                        new
-                        {
-                            Id = 16,
-                            IsDeleted = false,
-                            IsoStandardId = 13L,
-                            Question = "Can you share any recent evaluations of QMS processes and improvements made as a result?"
-                        },
-                        new
-                        {
-                            Id = 17,
-                            IsDeleted = false,
-                            IsoStandardId = 27L,
-                            Question = "Can you provide examples of how top management demonstrates leadership and commitment to the QMS??"
-                        },
-                        new
-                        {
-                            Id = 18,
-                            IsDeleted = false,
-                            IsoStandardId = 27L,
-                            Question = "How does top management ensure that quality policy and objectives are established and compatible with the organization’s strategic direction?"
-                        },
-                        new
-                        {
-                            Id = 19,
-                            IsDeleted = false,
-                            IsoStandardId = 27L,
-                            Question = "Can you explain how top management ensures the integration of the QMS into the organization’s processes?"
-                        },
-                        new
-                        {
-                            Id = 20,
-                            IsDeleted = false,
-                            IsoStandardId = 27L,
-                            Question = "How does top management promote the use of a process approach and risk-based thinking within the organization?"
-                        },
-                        new
-                        {
-                            Id = 21,
-                            IsDeleted = false,
-                            IsoStandardId = 27L,
-                            Question = "How does top management ensure that customer requirements are understood and met?"
-                        },
-                        new
-                        {
-                            Id = 22,
-                            IsDeleted = false,
-                            IsoStandardId = 27L,
-                            Question = "Can you share any examples of how top management emphasizes the importance of enhancing customer satisfaction?"
-                        },
-                        new
-                        {
-                            Id = 23,
-                            IsDeleted = false,
-                            IsoStandardId = 43L,
-                            Question = "Can you explain how the quality policy was established, documented, and communicated within the organization?"
-                        },
-                        new
-                        {
-                            Id = 24,
-                            IsDeleted = false,
-                            IsoStandardId = 43L,
-                            Question = "How does the quality policy align with the organization’s purpose and context?"
-                        },
-                        new
-                        {
-                            Id = 25,
-                            IsDeleted = false,
-                            IsoStandardId = 43L,
-                            Question = "Can you provide examples of how the quality policy supports the organization’s strategic direction and provide sa framework for setting quality objectives?"
-                        },
-                        new
-                        {
-                            Id = 26,
-                            IsDeleted = false,
-                            IsoStandardId = 43L,
-                            Question = "How do you ensure the quality policy is available to relevant interested parties?"
-                        },
-                        new
-                        {
-                            Id = 27,
-                            IsDeleted = false,
-                            IsoStandardId = 43L,
-                            Question = "Can you provide examples of how top management ensures the quality policy is understood, implemented, and maintained at all levels of the organization?"
-                        },
-                        new
-                        {
-                            Id = 28,
-                            IsDeleted = false,
-                            IsoStandardId = 53L,
-                            Question = "Can you explain how roles, responsibilities, andauthorities have been assigned, communicated, and understood within the organization?"
-                        },
-                        new
-                        {
-                            Id = 29,
-                            IsDeleted = false,
-                            IsoStandardId = 53L,
-                            Question = "How does top management ensure the QMS conforms to the ISO 9001 requirements?"
-                        },
-                        new
-                        {
-                            Id = 30,
-                            IsDeleted = false,
-                            IsoStandardId = 53L,
-                            Question = "Can you provide examples of how top management ensures processes deliver intended outputs?"
-                        },
-                        new
-                        {
-                            Id = 31,
-                            IsDeleted = false,
-                            IsoStandardId = 53L,
-                            Question = "How do top management review and report on QMS performance, resource needs, and opportunities for improvement?"
-                        },
-                        new
-                        {
-                            Id = 32,
-                            IsDeleted = false,
-                            IsoStandardId = 59L,
-                            Question = "How does the organization identify risks and opportunities associated with the QMS?"
-                        },
-                        new
-                        {
-                            Id = 33,
-                            IsDeleted = false,
-                            IsoStandardId = 59L,
-                            Question = "Can you explain the process for assessing and prioritizing these risks and opportunities?"
-                        },
-                        new
-                        {
-                            Id = 34,
-                            IsDeleted = false,
-                            IsoStandardId = 59L,
-                            Question = "How does the organization determine appropriate actions to address identified risks and opportunities?"
-                        },
-                        new
-                        {
-                            Id = 35,
-                            IsDeleted = false,
-                            IsoStandardId = 59L,
-                            Question = "Can you provide examples of recent actions taken to address risks and opportunities?"
-                        },
-                        new
-                        {
-                            Id = 36,
-                            IsDeleted = false,
-                            IsoStandardId = 71L,
-                            Question = "Can you explain how the organization sets and documents quality objectives?"
-                        },
-                        new
-                        {
-                            Id = 37,
-                            IsDeleted = false,
-                            IsoStandardId = 71L,
-                            Question = "How do you ensure the quality objectives are specific, measurable, achievable, relevant,and time-bound (SMART)?"
-                        },
-                        new
-                        {
-                            Id = 38,
-                            IsDeleted = false,
-                            IsoStandardId = 71L,
-                            Question = "Can you describe the process for determining the necessary resources and actions to achieve the quality objectives?"
-                        },
-                        new
-                        {
-                            Id = 39,
-                            IsDeleted = false,
-                            IsoStandardId = 71L,
-                            Question = "How does the organization evaluate progress toward meeting the quality objectives?"
-                        },
-                        new
-                        {
-                            Id = 40,
-                            IsDeleted = false,
-                            IsoStandardId = 86L,
-                            Question = "Can you explain the process for planning and implementing changes to the QMS?"
-                        },
-                        new
-                        {
-                            Id = 41,
-                            IsDeleted = false,
-                            IsoStandardId = 86L,
-                            Question = "How does the organization ensure that the purpose and potential consequences of changes are considered before implementation?"
-                        },
-                        new
-                        {
-                            Id = 42,
-                            IsDeleted = false,
-                            IsoStandardId = 86L,
-                            Question = "Can you provide examples of recent changes made to the QMS and the planning process followed?"
-                        },
-                        new
-                        {
-                            Id = 43,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "How does the organization determine and provide the necessary resources for the QMS?"
-                        },
-                        new
-                        {
-                            Id = 44,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "Can you share examples of how the organization ensures that resources are available, maintained, and monitored for effectiveness??"
-                        },
-                        new
-                        {
-                            Id = 45,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "How does the organization ensure that it has the required personnel to effectively implement the QMS and maintain its processes??"
-                        },
-                        new
-                        {
-                            Id = 46,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "Can you provide examples of how the organization manages personnel resources to meet its quality objectives?"
-                        },
-                        new
-                        {
-                            Id = 47,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "How does the organization identify and provide the necessary infrastructure for the QMS?"
-                        },
-                        new
-                        {
-                            Id = 48,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "Can you provide examples of how the organization maintains and improves its infrastructure to support its processes and achieve its quality objectives?"
-                        },
-                        new
-                        {
-                            Id = 49,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "How does the organization determine and manage the work environment needed for its processes?"
-                        },
-                        new
-                        {
-                            Id = 50,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "Can you share examples of how the organization ensures that the work environment supports the achievement of its quality objectives?"
-                        },
-                        new
-                        {
-                            Id = 51,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "How does the organization identify and provide the necessary monitoring and measuring resources to ensure valid results?"
-                        },
-                        new
-                        {
-                            Id = 52,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "Can you provide examples of how the organization ensures that monitoring and measuring resources are calibrated and maintained?"
-                        },
-                        new
-                        {
-                            Id = 53,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "How does the organization identify, maintain, andmanage the necessary organizational knowledge for its processes?"
-                        },
-                        new
-                        {
-                            Id = 54,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "Can you share examples of how the organization acquires and shares new knowledge within the organization?"
-                        },
-                        new
-                        {
-                            Id = 55,
-                            IsDeleted = false,
-                            IsoStandardId = 119L,
-                            Question = "How does the organization determine the necessary competence for personnel affecting the QMS performance??"
-                        },
-                        new
-                        {
-                            Id = 56,
-                            IsDeleted = false,
-                            IsoStandardId = 119L,
-                            Question = "Can you explain how the organization ensures that personnel are competent and, if necessary, provide training or other actions to acquire the required competence?"
-                        },
-                        new
-                        {
-                            Id = 57,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "How does the organization identify and provide the necessary monitoring and measuring resources to ensure valid results?"
-                        },
-                        new
-                        {
-                            Id = 58,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "Can you provide examples of how the organization ensures that monitoring and measuring resources are calibrated and maintained?"
-                        },
-                        new
-                        {
-                            Id = 59,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "How does the organization identify, maintain, andmanage the necessary organizational knowledge for its processes?"
-                        },
-                        new
-                        {
-                            Id = 60,
-                            IsDeleted = false,
-                            IsoStandardId = 92L,
-                            Question = "Can you share examples of how the organization acquires and shares new knowledge within the organization?"
-                        },
-                        new
-                        {
-                            Id = 61,
-                            IsDeleted = false,
-                            IsoStandardId = 119L,
-                            Question = "How does the organization determine the necessary competence for personnel affecting the QMS performance??"
-                        },
-                        new
-                        {
-                            Id = 62,
-                            IsDeleted = false,
-                            IsoStandardId = 119L,
-                            Question = "Can you explain how the organization ensures that personnel are competent and, if necessary, provide training or other actions to acquire the required competence?"
-                        },
-                        new
-                        {
-                            Id = 63,
-                            IsDeleted = false,
-                            IsoStandardId = 119L,
-                            Question = "How does the organization evaluate the effectiveness of the actions taken to address competence requirements?"
-                        },
-                        new
-                        {
-                            Id = 64,
-                            IsDeleted = false,
-                            IsoStandardId = 123L,
-                            Question = "How does the organization ensure that personnel are aware of the quality policy, quality objectives, and their contribution to the QMS?"
-                        },
-                        new
-                        {
-                            Id = 65,
-                            IsDeleted = false,
-                            IsoStandardId = 123L,
-                            Question = "Can you provide examples of how the organization promotes awareness of the importance of conforming to QMS requirements and enhancing customer satisfaction??"
-                        },
-                        new
-                        {
-                            Id = 66,
-                            IsDeleted = false,
-                            IsoStandardId = 128L,
-                            Question = "How does the organization determine and implement internal and external communication relevant to the QMS?"
-                        },
-                        new
-                        {
-                            Id = 67,
-                            IsDeleted = false,
-                            IsoStandardId = 128L,
-                            Question = "Can you explain how the organization ensures the effectiveness of its communication processes?"
-                        },
-                        new
-                        {
-                            Id = 68,
-                            IsDeleted = false,
-                            IsoStandardId = 134L,
-                            Question = "How does the organization create, update, and control documented information required by the QMS?"
-                        },
-                        new
-                        {
-                            Id = 69,
-                            IsDeleted = false,
-                            IsoStandardId = 134L,
-                            Question = "Can you provide examples of how the organization ensures the availability and suitability of documented information?"
-                        },
-                        new
-                        {
-                            Id = 70,
-                            IsDeleted = false,
-                            IsoStandardId = 134L,
-                            Question = "How does the organization ensure that documented information is properly identified, described, reviewed, and approved before use?"
-                        },
-                        new
-                        {
-                            Id = 71,
-                            IsDeleted = false,
-                            IsoStandardId = 134L,
-                            Question = "Can you provide examples of recent updates to documented information and the process followed?"
-                        },
-                        new
-                        {
-                            Id = 72,
-                            IsDeleted = false,
-                            IsoStandardId = 134L,
-                            Question = "Can you explain how the organization controls access, distribution, and retrieval of documented information?"
-                        },
-                        new
-                        {
-                            Id = 73,
-                            IsDeleted = false,
-                            IsoStandardId = 134L,
-                            Question = "How does the organization ensure the proper storage, preservation, and disposal of documented information?"
-                        },
-                        new
-                        {
-                            Id = 74,
-                            IsDeleted = false,
-                            IsoStandardId = 152L,
-                            Question = "How does the organization plan, implement, and control its processes to meet requirements and enhance customer satisfaction?"
-                        },
-                        new
-                        {
-                            Id = 75,
-                            IsDeleted = false,
-                            IsoStandardId = 152L,
-                            Question = "Can you provide examples of how the organization ensures effective control over out sourced processes?"
-                        },
-                        new
-                        {
-                            Id = 76,
-                            IsDeleted = false,
-                            IsoStandardId = 162L,
-                            Question = "How does the organization communicate with customers regarding product and service information, inquiries, contracts, and handling customer feedback?"
-                        },
-                        new
-                        {
-                            Id = 77,
-                            IsDeleted = false,
-                            IsoStandardId = 162L,
-                            Question = "Can you share examples of effective customer communication processes?"
-                        },
-                        new
-                        {
-                            Id = 78,
-                            IsDeleted = false,
-                            IsoStandardId = 162L,
-                            Question = "Can you share examples of how the organization acquires and shares new knowledge within the organization?"
-                        },
-                        new
-                        {
-                            Id = 79,
-                            IsDeleted = false,
-                            IsoStandardId = 162L,
-                            Question = "How does the organization determine and review the requirements for its products and services?"
-                        },
-                        new
-                        {
-                            Id = 80,
-                            IsDeleted = false,
-                            IsoStandardId = 162L,
-                            Question = "Can you provide examples of how the organization ensures that it can meet the requirements for products and services before committing to customers?"
-                        },
-                        new
-                        {
-                            Id = 81,
-                            IsDeleted = false,
-                            IsoStandardId = 162L,
-                            Question = "Can you explain the process for reviewing and confirming customer requirements before accepting an order?"
-                        },
-                        new
-                        {
-                            Id = 82,
-                            IsDeleted = false,
-                            IsoStandardId = 162L,
-                            Question = "How does the organization handle changes in requirements and communicate them internally?"
-                        },
-                        new
-                        {
-                            Id = 83,
-                            IsDeleted = false,
-                            IsoStandardId = 162L,
-                            Question = "How does the organization manage changes to requirements for products and services?"
-                        },
-                        new
-                        {
-                            Id = 84,
-                            IsDeleted = false,
-                            IsoStandardId = 162L,
-                            Question = "Can you provide examples of recent changes to requirements and the process followed to ensure proper implementation?"
-                        },
-                        new
-                        {
-                            Id = 85,
-                            IsDeleted = false,
-                            IsoStandardId = 186L,
-                            Question = "How does the organization plan and control the design and development process for its products and services?"
-                        },
-                        new
-                        {
-                            Id = 86,
-                            IsDeleted = false,
-                            IsoStandardId = 186L,
-                            Question = "Can you provide examples of design and development activities, including inputs, controls, outputs, and validation?"
-                        },
-                        new
-                        {
-                            Id = 87,
-                            IsDeleted = false,
-                            IsoStandardId = 222L,
-                            Question = "How does the organization ensure that externally provided processes, products, and services conform to its requirements?"
-                        },
-                        new
-                        {
-                            Id = 88,
-                            IsDeleted = false,
-                            IsoStandardId = 222L,
-                            Question = "Can you provide examples of how the organization evaluates, selects, and monitors external providers and their performance?"
-                        },
-                        new
-                        {
-                            Id = 89,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are production and service provision processes planned and carried out under controlled conditions?"
-                        },
-                        new
-                        {
-                            Id = 90,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are criteria for workmanship established and communicated?"
-                        },
-                        new
-                        {
-                            Id = 91,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are suitable equipment and infrastructure available for production and service provision?"
-                        },
-                        new
-                        {
-                            Id = 92,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are products and services identified throughout the production process?"
-                        },
-                        new
-                        {
-                            Id = 93,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Is traceability maintained, as necessary,to ensure conformity to requirements?"
-                        },
-                        new
-                        {
-                            Id = 94,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are the status of products and services monitored throughout the production process?"
-                        },
-                        new
-                        {
-                            Id = 95,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Is customer or external provider property identified, verified, protected, and safeguarded?"
-                        },
-                        new
-                        {
-                            Id = 96,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are necessary actions taken if the customer or external provider property is lost, damaged, or found to be unsuitable foruse?"
-                        },
-                        new
-                        {
-                            Id = 97,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are products and services preserved during production and service provision to maintain conformity to requirements?"
-                        },
-                        new
-                        {
-                            Id = 98,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Is preservation also applied to the constituent parts of products?"
-                        },
-                        new
-                        {
-                            Id = 99,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are post-delivery activities, such as warranty provisions, maintenance services, and disposal, determined and controlled?"
-                        },
-                        new
-                        {
-                            Id = 100,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are post-delivery activities considered in the risk assessment process?"
-                        },
-                        new
-                        {
-                            Id = 101,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are changes to production and service provision processes properly controlled and documented?"
-                        },
-                        new
-                        {
-                            Id = 102,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are changes reviewed, verified, and validated as appropriate?"
-                        },
-                        new
-                        {
-                            Id = 103,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are changes approved by the responsible person before implementation?"
-                        },
-                        new
-                        {
-                            Id = 104,
-                            IsDeleted = false,
-                            IsoStandardId = 244L,
-                            Question = "Are the consequences of changes evaluated, and necessary actions taken to mitigate any potential adverse effects?"
-                        },
-                        new
-                        {
-                            Id = 105,
-                            IsDeleted = false,
-                            IsoStandardId = 266L,
-                            Question = "How does the organization ensure that products and services meet the specified requirements beforere leasing them to customers?"
-                        },
-                        new
-                        {
-                            Id = 106,
-                            IsDeleted = false,
-                            IsoStandardId = 266L,
-                            Question = "Can you provide examples of release criteria and the process for verifying conformity to requirements?"
-                        },
-                        new
-                        {
-                            Id = 107,
-                            IsDeleted = false,
-                            IsoStandardId = 269L,
-                            Question = "How does the organization control nonconforming outputs to prevent unintended use or delivery?"
-                        },
-                        new
-                        {
-                            Id = 108,
-                            IsDeleted = false,
-                            IsoStandardId = 269L,
-                            Question = "Can you provide examples of how the organization identifies, evaluates, and takes appropriate actions on nonconforming outputs?"
-                        },
-                        new
-                        {
-                            Id = 109,
-                            IsDeleted = false,
-                            IsoStandardId = 281L,
-                            Question = "How does the organization determine what needs to be monitored and measured and the methods, criteria, and timing for monitoring and measurement?"
-                        },
-                        new
-                        {
-                            Id = 110,
-                            IsDeleted = false,
-                            IsoStandardId = 281L,
-                            Question = "Can you provide examples of the organization’s approach to maintaining documented information as evidence of the results?"
-                        },
-                        new
-                        {
-                            Id = 111,
-                            IsDeleted = false,
-                            IsoStandardId = 281L,
-                            Question = "How does the organization monitor and measure customer satisfaction?"
-                        },
-                        new
-                        {
-                            Id = 112,
-                            IsDeleted = false,
-                            IsoStandardId = 281L,
-                            Question = "Can you provide examples of methods used to obtain and analyze customer feedback?"
-                        },
-                        new
-                        {
-                            Id = 113,
-                            IsDeleted = false,
-                            IsoStandardId = 281L,
-                            Question = "How does the organization analyze and evaluate the data and information from its monitoring and measurement activities?"
-                        },
-                        new
-                        {
-                            Id = 114,
-                            IsDeleted = false,
-                            IsoStandardId = 281L,
-                            Question = "Can you provide examples of how the organization uses the analysis results to improve its QMS?"
-                        },
-                        new
-                        {
-                            Id = 115,
-                            IsDeleted = false,
-                            IsoStandardId = 296L,
-                            Question = "Can you explain the organization’s internal audit process, including planning, conducting, reporting, and follow-upactivities?"
-                        },
-                        new
-                        {
-                            Id = 116,
-                            IsDeleted = false,
-                            IsoStandardId = 296L,
-                            Question = "How does the organization ensure that internal audits are objective and impartial?"
-                        },
-                        new
-                        {
-                            Id = 117,
-                            IsDeleted = false,
-                            IsoStandardId = 309L,
-                            Question = "How does the organization conduct management reviews to ensure the continuing suitability, adequacy, and effectiveness of the QMS?"
-                        },
-                        new
-                        {
-                            Id = 118,
-                            IsDeleted = false,
-                            IsoStandardId = 309L,
-                            Question = "Can you provide examples of inputs, outputs, and actions taken as a result of management reviews?"
-                        },
-                        new
-                        {
-                            Id = 119,
-                            IsDeleted = false,
-                            IsoStandardId = 330L,
-                            Question = "How does the organization identify and implement opportunities for improvement in its QMS?"
-                        },
-                        new
-                        {
-                            Id = 120,
-                            IsDeleted = false,
-                            IsoStandardId = 330L,
-                            Question = "Canyouprovideexamplesofrecentimprovementsandtheprocessesusedtoidentifyand implementthem?"
-                        },
-                        new
-                        {
-                            Id = 121,
-                            IsDeleted = false,
-                            IsoStandardId = 334L,
-                            Question = "How does the organization handle nonconformities and take corrective actions to prevent recurrence?"
-                        },
-                        new
-                        {
-                            Id = 122,
-                            IsDeleted = false,
-                            IsoStandardId = 334L,
-                            Question = "Can you provide examples of recent nonconformities, the root cause analysis performed, and the corrective actions taken?"
-                        },
-                        new
-                        {
-                            Id = 123,
-                            IsDeleted = false,
-                            IsoStandardId = 350L,
-                            Question = "How does the organization continually improve the suitability, adequacy, and effectiveness of its QMS?"
-                        },
-                        new
-                        {
-                            Id = 124,
-                            IsDeleted = false,
-                            IsoStandardId = 281L,
-                            Question = "Can you provide examples of how the organization uses data and information from monitoring, measurement, analysis, and evaluation to drive continual improvement?"
-                        });
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditComFindings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Area")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("AuditReportId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CommendableFindings")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditReportId");
-
-                    b.ToTable("AuditComFindings");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditNcarStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<string>("ncarStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AuditNcarStatus");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlan", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AuditPlanStatusId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AuditProgrammeId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PlanStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("PreparerId")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditPlanStatusId");
-
-                    b.HasIndex("AuditProgrammeId");
-
-                    b.HasIndex("PreparerId");
-
-                    b.ToTable("AuditPlans");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanApproval", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ApproverId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ApproverId1")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("AuditPlanId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Comments")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApproverId1");
-
-                    b.HasIndex("AuditPlanId");
-
-                    b.ToTable("AuditPlanApprovals");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanEntry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AuditPlanId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DayNumber")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<DateTime>("Time")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditPlanId");
-
-                    b.ToTable("AuditPlanEntries");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanPersonResponsible", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AuditPlanEntryId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditPlanEntryId");
-
-                    b.ToTable("AuditPlanPersonResponsibles");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanProcess", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AuditPlanEntryId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("OfficeId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ProcessName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditPlanEntryId");
-
-                    b.HasIndex("OfficeId");
-
-                    b.ToTable("AuditPlanProcesses");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AuditPlanStatus");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditProgramme", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AuditCriteria")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AuditLimitations")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AuditMethodology")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AuditPlanObjective")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("For")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("From")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InternalAuditSched")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Purpose")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Reporting")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<string>("ScopeAndFreqAudit")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScopeOfAudit")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SelectionAndEvaluationOfAuditors")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("VerificationOfPreviousNonconformities")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AuditProgramme");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditProgrammeObjective", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AuditProgrammeId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditProgrammeId");
-
-                    b.ToTable("AuditProgrammeObjective");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditReport", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AuditConclisions")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AuditPurpose")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long?>("AuditStandardISOId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("DateofAuditId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("OfficeAuditedId")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditStandardISOId");
-
-                    b.HasIndex("DateofAuditId");
-
-                    b.HasIndex("OfficeAuditedId");
-
-                    b.ToTable("AuditReports");
-                });
-
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
                 {
                     b.Property<int>("Id")
@@ -1529,15 +145,9 @@ namespace IMIS.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AuditPlanId")
-                        .HasColumnType("int");
-
                     b.Property<string>("AuditTitle")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("AuditorTeamsId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
@@ -1548,10 +158,6 @@ namespace IMIS.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Purpose")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -1561,10 +167,6 @@ namespace IMIS.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AuditPlanId");
-
-                    b.HasIndex("AuditorTeamsId");
 
                     b.ToTable("AuditSchedules");
                 });
@@ -1577,110 +179,38 @@ namespace IMIS.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AuditPlanEntryId")
-                        .HasColumnType("int");
-
                     b.Property<int>("AuditScheduleId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("EndDateTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<int>("OfficeId")
+                        .HasColumnType("int");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.HasKey("Id");
+                    b.Property<DateTime>("StartDateTime")
+                        .HasColumnType("datetime2");
 
-                    b.HasIndex("AuditPlanEntryId");
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("AuditScheduleId");
 
+                    b.HasIndex("OfficeId");
+
+                    b.HasIndex("TeamId");
+
                     b.ToTable("AuditScheduleDetails");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditScope", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AuditProcessAuditedId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("AuditReportId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Auditee")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("AuditorTeamsId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditProcessAuditedId");
-
-                    b.HasIndex("AuditReportId");
-
-                    b.HasIndex("AuditorTeamsId");
-
-                    b.ToTable("AuditScope");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditSummaryFIndings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AuditReportId")
-                        .HasColumnType("int");
-
-                    b.Property<long?>("CriteriaId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Findings")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("NcarStatusId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("No")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditReportId");
-
-                    b.HasIndex("CriteriaId");
-
-                    b.HasIndex("NcarStatusId");
-
-                    b.ToTable("AuditSummaryFIndings");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditableOffices", b =>
@@ -1690,17 +220,6 @@ namespace IMIS.Persistence.Migrations
 
                     b.Property<int>("OfficeId")
                         .HasColumnType("int");
-
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
 
                     b.HasKey("AuditScheduleId", "OfficeId");
 
@@ -1717,17 +236,15 @@ namespace IMIS.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AuditorTeamsId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ImprovementTypeId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -1740,10 +257,6 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuditorTeamsId");
-
-                    b.HasIndex("ImprovementTypeId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("Auditors");
@@ -1754,6 +267,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 1,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 1",
                             UserId = "399f5e43-93d8-4a28-b113-d23eccd2ea15"
                         },
                         new
@@ -1761,6 +275,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 2,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 2",
                             UserId = "e765e1f5-bc17-49b1-9c3f-8c5c2c18b420"
                         },
                         new
@@ -1768,6 +283,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 3,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 3",
                             UserId = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f"
                         },
                         new
@@ -1775,6 +291,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 4,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 4",
                             UserId = "f8a17354-91b3-4c0e-9b71-d6af05f4e11e"
                         },
                         new
@@ -1782,6 +299,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 5,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 5",
                             UserId = "9b6d73e5-ff27-44bb-a9d0-f7c58b31c4a1"
                         },
                         new
@@ -1789,6 +307,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 6,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 6",
                             UserId = "a1f6d353-df11-4a17-b2be-49371b8c223d"
                         },
                         new
@@ -1796,6 +315,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 7,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 7",
                             UserId = "f2b28c8e-58cf-47b2-8245-33a7a98a7344"
                         },
                         new
@@ -1803,6 +323,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 8,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 8",
                             UserId = "6db39f4a-9d19-4fc2-b3ab-2aa37851bb71"
                         },
                         new
@@ -1810,6 +331,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 9,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 9",
                             UserId = "c54d18f2-9a21-4f72-92eb-1f5d6e8f58de"
                         },
                         new
@@ -1817,6 +339,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 10,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 10",
                             UserId = "a1a6e8f1-4749-4a8e-8f9b-0b6b2f05f38b"
                         },
                         new
@@ -1824,6 +347,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 11,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 11",
                             UserId = "f79e34aa-f6a2-4ff1-b2e0-4a7c8194e61c"
                         },
                         new
@@ -1831,6 +355,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 12,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 12",
                             UserId = "1b8a5144-b8a6-4df5-bb98-0136d7ebdf24"
                         },
                         new
@@ -1838,6 +363,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 13,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 13",
                             UserId = "6c8454ef-fd19-4db5-9f88-dcd7b13e5c55"
                         },
                         new
@@ -1845,6 +371,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 14,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 14",
                             UserId = "4f5b9c31-d406-4036-b8cd-37cb92d6b211"
                         },
                         new
@@ -1852,6 +379,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 15,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 15",
                             UserId = "0b91d20a-0ab3-4820-b3f2-fbcf01c0af26"
                         },
                         new
@@ -1859,6 +387,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 16,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 16",
                             UserId = "2489fce0-858f-43af-b82a-65ee42cb2e33"
                         },
                         new
@@ -1866,6 +395,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 17,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 17",
                             UserId = "5ff58cb5-9d0c-44b2-bc2a-5f96a3c9d621"
                         },
                         new
@@ -1873,6 +403,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 18,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 18",
                             UserId = "cc505df2-3586-41a1-9d44-b5fc8f28e3a9"
                         },
                         new
@@ -1880,6 +411,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 19,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 19",
                             UserId = "8ea08a3f-066a-41ac-9ef0-ffb47d3657d9"
                         },
                         new
@@ -1887,6 +419,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 20,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 20",
                             UserId = "c79be729-47b3-4907-88e1-0a67dd4e48b1"
                         },
                         new
@@ -1894,6 +427,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 21,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 21",
                             UserId = "de17cb47-83e7-4a6b-b97c-13808e14a7ff"
                         },
                         new
@@ -1901,6 +435,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 22,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 22",
                             UserId = "0ed1f88a-8859-4d6c-9a1f-84aaf19cc45c"
                         },
                         new
@@ -1908,6 +443,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 23,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 23",
                             UserId = "74c35794-54d9-44a4-baf0-b8fa23e2d481"
                         },
                         new
@@ -1915,6 +451,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 24,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 24",
                             UserId = "53a2b071-d36f-4f1f-bf8e-3f7dbf7b8c7b"
                         },
                         new
@@ -1922,6 +459,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 25,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 25",
                             UserId = "28a2a313-bc8e-4225-b8c2-85c2935b315e"
                         },
                         new
@@ -1929,6 +467,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 26,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 26",
                             UserId = "35159a7c-2120-46f6-9135-8a8469b9c7b1"
                         },
                         new
@@ -1936,6 +475,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 27,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 27",
                             UserId = "ec4219b7-dfc6-4966-bf2a-3f1eecf17391"
                         },
                         new
@@ -1943,6 +483,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 28,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 28",
                             UserId = "1a9d8654-1c19-4b60-9491-4e33c176cc64"
                         },
                         new
@@ -1950,6 +491,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 29,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 29",
                             UserId = "1a9d8654-1c19-4b50-9431-4e23c174cc60"
                         },
                         new
@@ -1957,6 +499,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 30,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 30",
                             UserId = "2z9f8451-1n19-4b50-8432-4e23c164cs51"
                         },
                         new
@@ -1964,6 +507,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 31,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 31",
                             UserId = "9c49e0f2-4cb0-45b1-9f0e-4fbd24d25368"
                         },
                         new
@@ -1971,6 +515,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 32,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 32",
                             UserId = "33a13c76-041f-4d68-8f67-41b7dd60c408"
                         },
                         new
@@ -1978,6 +523,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 33,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 33",
                             UserId = "43cd6e17-9d86-4cb9-8d84-298e43a23450"
                         },
                         new
@@ -1985,6 +531,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 34,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 34",
                             UserId = "c77b5df0-836a-4f9e-9f29-d2f6c6cf4074"
                         },
                         new
@@ -1992,6 +539,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 35,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 35",
                             UserId = "5d8a2197-b38b-40b2-940a-845e2a44b622"
                         },
                         new
@@ -1999,6 +547,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 36,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 36",
                             UserId = "c79c6433-d1ad-46a3-ae87-84edb44476de"
                         },
                         new
@@ -2006,6 +555,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 37,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 37",
                             UserId = "f03cf528-c2a5-4820-91a5-6821dc5350f8"
                         },
                         new
@@ -2013,6 +563,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 38,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 38",
                             UserId = "5f33b779-c424-4e4d-89a9-7b8e5ac3e98d"
                         },
                         new
@@ -2020,6 +571,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 39,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 39",
                             UserId = "baf0a172-7e0a-4999-8c03-8f9bfb62150b"
                         },
                         new
@@ -2027,6 +579,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 40,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 40",
                             UserId = "88a1a0b3-943d-47a2-b0bb-f1c8763acaf4"
                         },
                         new
@@ -2034,6 +587,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 41,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 41",
                             UserId = "0ff9af54-f57a-4d1b-a2d6-679b3a4b8c30"
                         },
                         new
@@ -2041,6 +595,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 42,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 42",
                             UserId = "59b4a3e6-30c2-4a8c-8851-78b95cf11f5b"
                         },
                         new
@@ -2048,6 +603,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 43,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 43",
                             UserId = "3db6b5af-4b42-4747-a3f0-3a60b3e36a56"
                         },
                         new
@@ -2055,6 +611,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 44,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 44",
                             UserId = "7gf2b7zj-4b42-2476-f3f3-1x72b3e34aq68"
                         },
                         new
@@ -2062,6 +619,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 45,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 45",
                             UserId = "b83670e3-3d7c-40a4-8d07-5a3c3f6bde91"
                         },
                         new
@@ -2069,6 +627,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 46,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 46",
                             UserId = "3a4c88b0-5f73-41f0-82e7-255e19e8d9d1"
                         },
                         new
@@ -2076,6 +635,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 47,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 47",
                             UserId = "c0b41f2c-0f8d-4a53-b0a9-5cfa02b6a851"
                         },
                         new
@@ -2083,6 +643,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 48,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 48",
                             UserId = "c171e56e-b2e0-43f2-91f1-8f258417bc3d"
                         },
                         new
@@ -2090,6 +651,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 49,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 49",
                             UserId = "43f6a708-995c-4a07-9e90-6d0a5efc32d5"
                         },
                         new
@@ -2097,6 +659,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 50,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 50",
                             UserId = "21d7b7dc-3425-464f-96d5-f6784b19b4cf"
                         },
                         new
@@ -2104,6 +667,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 51,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 51",
                             UserId = "c8dc080e-2c5f-4a8e-b0e0-9c29dc45a31f"
                         },
                         new
@@ -2111,6 +675,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 52,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 52",
                             UserId = "13ab0a0e-5d9a-4e53-a5f0-5cb11a775fe3"
                         },
                         new
@@ -2118,6 +683,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 53,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 53",
                             UserId = "a2a9b64b-1b54-4c49-90e2-4dbf1e59a98e"
                         },
                         new
@@ -2125,6 +691,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 54,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 54",
                             UserId = "49180f4a-cbe7-489b-8fd1-901e79dfe2f5"
                         },
                         new
@@ -2132,6 +699,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 55,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 55",
                             UserId = "dcf663a4-36f5-4fd6-b124-bae31e0c9e2e"
                         },
                         new
@@ -2139,6 +707,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 56,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 56",
                             UserId = "17793347-1bfa-4526-a0af-0ffcf374aa9a"
                         },
                         new
@@ -2146,6 +715,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 57,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 57",
                             UserId = "6f34a16a-6e68-4d8b-9f6a-0e0c07a09ed8"
                         },
                         new
@@ -2153,6 +723,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 58,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 58",
                             UserId = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d"
                         },
                         new
@@ -2160,6 +731,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 59,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 59",
                             UserId = "53ac9d08-f52f-4a25-92d7-10de53f612fa"
                         },
                         new
@@ -2167,6 +739,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 60,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 60",
                             UserId = "827e71e5-479c-47a7-8f91-16327825a02d"
                         },
                         new
@@ -2174,6 +747,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 61,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 61",
                             UserId = "dfb15a5f-9f4e-48e6-b781-f4a62c5bfb0a"
                         },
                         new
@@ -2181,6 +755,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 62,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 62",
                             UserId = "12183b62-26ee-459b-a859-88a94e86c117"
                         },
                         new
@@ -2188,6 +763,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 63,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 63",
                             UserId = "ef529a6b-b381-4db1-a204-913ba73a6721"
                         },
                         new
@@ -2195,6 +771,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 64,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 64",
                             UserId = "969fb51f-26aa-4637-8a8a-96247c7a67a4"
                         },
                         new
@@ -2202,6 +779,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 65,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 65",
                             UserId = "b5870b06-0240-4d35-a6b1-54a76c1e09fc"
                         },
                         new
@@ -2209,6 +787,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 66,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 66",
                             UserId = "bb22c692-bc14-44db-9a6e-5b0196c9a8c2"
                         },
                         new
@@ -2216,6 +795,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 67,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 67",
                             UserId = "5b7ff0c8-b6f9-489c-9f1d-9faadf9e6c6f"
                         },
                         new
@@ -2223,6 +803,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 68,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 68",
                             UserId = "d65e3f58-b23d-4b83-8b15-15e66565d29f"
                         },
                         new
@@ -2230,6 +811,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 69,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 69",
                             UserId = "a1e10c26-4d1d-4f9e-9378-1382457c82ad"
                         },
                         new
@@ -2237,6 +819,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 70,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 70",
                             UserId = "dfc40941-0cfb-46ed-8991-e285aa08c20e"
                         },
                         new
@@ -2244,6 +827,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 71,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 71",
                             UserId = "f23ac0c6-68ac-41c8-94ff-383acbfc3e41"
                         },
                         new
@@ -2251,6 +835,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 72,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 72",
                             UserId = "50e3ff41-8195-4d52-805a-d55efb68f08a"
                         },
                         new
@@ -2258,6 +843,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 73,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 73",
                             UserId = "55c79a0c-4f48-472f-9d13-1801e2e5c167"
                         },
                         new
@@ -2265,6 +851,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 74,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 74",
                             UserId = "2e889d55-159e-44a0-b9c9-44cc9f25c66b"
                         },
                         new
@@ -2272,6 +859,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 75,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 75",
                             UserId = "2ec1e24b-50c6-48b7-8e9c-18c64a42e172"
                         },
                         new
@@ -2279,6 +867,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 76,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 76",
                             UserId = "87234d0c-41c3-44e5-8cb7-5d7a7a9209c8"
                         },
                         new
@@ -2286,6 +875,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 77,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 77",
                             UserId = "39987409-6b12-4a73-a9a3-61c7f117dcab"
                         },
                         new
@@ -2293,6 +883,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 78,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 78",
                             UserId = "56731842-6b12-9a46-k9h2-61c7f212hyex"
                         },
                         new
@@ -2300,6 +891,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 79,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 79",
                             UserId = "c8463e9f-8ac6-40c3-91b1-2385f6a91eb4"
                         },
                         new
@@ -2307,6 +899,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 80,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 80",
                             UserId = "abfc1b6f-9f29-44dd-9c45-cdcddaa6eb83"
                         },
                         new
@@ -2314,6 +907,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 81,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 81",
                             UserId = "db7fba3d-88fc-47cf-b119-f868d9196f02"
                         },
                         new
@@ -2321,6 +915,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 82,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 82",
                             UserId = "7cfd0766-f3d3-47aa-9a48-53d437d6c232"
                         },
                         new
@@ -2328,6 +923,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 83,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 83",
                             UserId = "9821dbf5-0f70-4630-8c68-f2077a3abf08"
                         },
                         new
@@ -2335,6 +931,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 84,
                             IsActive = true,
                             IsDeleted = false,
+                            Name = "Auditor 84",
                             UserId = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00"
                         });
                 });
@@ -6578,9 +5175,6 @@ namespace IMIS.Persistence.Migrations
                     b.Property<int?>("AuditorId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ImprovementType")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -6613,7 +5207,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 1,
                             AuditorId = 19,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6623,7 +5216,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 2,
                             AuditorId = 34,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6633,7 +5225,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 3,
                             AuditorId = 26,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6643,7 +5234,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 4,
                             AuditorId = 54,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6653,7 +5243,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 5,
                             AuditorId = 15,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6663,7 +5252,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 6,
                             AuditorId = 31,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6673,7 +5261,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 7,
                             AuditorId = 14,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6683,7 +5270,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 8,
                             AuditorId = 61,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6693,7 +5279,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 9,
                             AuditorId = 41,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6703,7 +5288,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 10,
                             AuditorId = 58,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6713,7 +5297,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 11,
                             AuditorId = 16,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6723,7 +5306,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 12,
                             AuditorId = 8,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6733,7 +5315,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 13,
                             AuditorId = 17,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6743,7 +5324,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 14,
                             AuditorId = 28,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6753,7 +5333,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 15,
                             AuditorId = 60,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6763,7 +5342,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 16,
                             AuditorId = 11,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6773,7 +5351,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 17,
                             AuditorId = 78,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6783,7 +5360,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 18,
                             AuditorId = 39,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6793,7 +5369,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 19,
                             AuditorId = 27,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6803,7 +5378,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 20,
                             AuditorId = 49,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6813,7 +5387,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 21,
                             AuditorId = 69,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6823,7 +5396,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 22,
                             AuditorId = 74,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6833,7 +5405,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 23,
                             AuditorId = 29,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6843,7 +5414,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 24,
                             AuditorId = 57,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6853,7 +5423,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 25,
                             AuditorId = 9,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6863,7 +5432,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 26,
                             AuditorId = 53,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6873,7 +5441,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 27,
                             AuditorId = 84,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6883,7 +5450,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 28,
                             AuditorId = 82,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6893,7 +5459,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 29,
                             AuditorId = 40,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6903,7 +5468,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 30,
                             AuditorId = 33,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6913,7 +5477,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 31,
                             AuditorId = 20,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6923,7 +5486,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 32,
                             AuditorId = 66,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6933,7 +5495,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 33,
                             AuditorId = 71,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6943,7 +5504,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 34,
                             AuditorId = 75,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6953,7 +5513,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 35,
                             AuditorId = 18,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6963,7 +5522,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 36,
                             AuditorId = 79,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6973,7 +5531,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 37,
                             AuditorId = 30,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6983,7 +5540,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 38,
                             AuditorId = 48,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -6993,7 +5549,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 39,
                             AuditorId = 46,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7003,7 +5558,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 40,
                             AuditorId = 47,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7013,7 +5567,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 41,
                             AuditorId = 38,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7023,7 +5576,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 42,
                             AuditorId = 42,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7033,7 +5585,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 43,
                             AuditorId = 24,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7043,7 +5594,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 44,
                             AuditorId = 62,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7053,7 +5603,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 45,
                             AuditorId = 76,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7063,7 +5612,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 46,
                             AuditorId = 36,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7073,7 +5621,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 47,
                             AuditorId = 3,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7083,7 +5630,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 48,
                             AuditorId = 72,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7093,7 +5639,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 49,
                             AuditorId = 55,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7103,7 +5648,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 50,
                             AuditorId = 59,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7113,7 +5657,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 51,
                             AuditorId = 37,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7123,7 +5666,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 52,
                             AuditorId = 12,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7133,7 +5675,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 53,
                             AuditorId = 10,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7143,7 +5684,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 54,
                             AuditorId = 68,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7153,7 +5693,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 55,
                             AuditorId = 52,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7163,7 +5702,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 56,
                             AuditorId = 65,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7173,7 +5711,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 57,
                             AuditorId = 80,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7183,7 +5720,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 58,
                             AuditorId = 21,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7193,7 +5729,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 59,
                             AuditorId = 43,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7203,7 +5738,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 60,
                             AuditorId = 77,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7213,7 +5747,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 61,
                             AuditorId = 63,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7223,7 +5756,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 62,
                             AuditorId = 73,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7233,7 +5765,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 63,
                             AuditorId = 6,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7243,7 +5774,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 64,
                             AuditorId = 64,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7253,7 +5783,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 65,
                             AuditorId = 44,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7263,7 +5792,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 66,
                             AuditorId = 7,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7273,7 +5801,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 67,
                             AuditorId = 45,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7283,7 +5810,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 68,
                             AuditorId = 56,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7293,7 +5819,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 69,
                             AuditorId = 13,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7303,7 +5828,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 70,
                             AuditorId = 25,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7313,7 +5837,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 71,
                             AuditorId = 23,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7323,7 +5846,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 72,
                             AuditorId = 51,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7333,7 +5855,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 73,
                             AuditorId = 50,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7343,7 +5864,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 74,
                             AuditorId = 81,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7353,7 +5873,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 75,
                             AuditorId = 22,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7363,7 +5882,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 76,
                             AuditorId = 70,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7373,7 +5891,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 77,
                             AuditorId = 32,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7383,7 +5900,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 78,
                             AuditorId = 2,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7393,7 +5909,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 79,
                             AuditorId = 35,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7403,7 +5918,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 80,
                             AuditorId = 67,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7413,7 +5927,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 81,
                             AuditorId = 83,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7423,7 +5936,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 82,
                             AuditorId = 5,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7433,7 +5945,6 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = 83,
                             AuditorId = 4,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             IsTeamLeader = true,
@@ -7826,109 +6337,11 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("ImpactStrategicScoreCardTarget");
                 });
 
-            modelBuilder.Entity("IMIS.Domain.ImprovementType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ImprovementType");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.IsoAuditProcess", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AuditPlanEntryId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditPlanEntryId");
-
-                    b.ToTable("IsoAuditProcess");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.IsoAuditor", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AuditPlanEntryId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("AuditorId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<int?>("TeamId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditPlanEntryId");
-
-                    b.HasIndex("AuditorId");
-
-                    b.HasIndex("TeamId");
-
-                    b.ToTable("IsoAuditors");
-                });
-
             modelBuilder.Entity("IMIS.Domain.IsoStandard", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("Id");
+                        .HasColumnType("bigint");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
@@ -7941,13 +6354,6 @@ namespace IMIS.Persistence.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
-
-                    b.Property<long?>("ParentID")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Particulars")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -7965,3847 +6371,6 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("VersionID");
 
                     b.ToTable("IsoStandards");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            ClauseRef = "4",
-                            Description = "Context of the organization",
-                            IsDeleted = false,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 2L,
-                            ClauseRef = "4.1",
-                            Description = "Understanding the organization and its context",
-                            IsDeleted = false,
-                            ParentID = 1L,
-                            Particulars = "The organization shall determine external and internal issues that are relevant to its purpose and its strategic direction and that affect its ability to achieve the intended result(s) of its quality management system. Issues can include positive and negative factors or conditions for consideration.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 3L,
-                            ClauseRef = "4.2",
-                            Description = "Understanding the needs and expectations of interested parties",
-                            IsDeleted = false,
-                            ParentID = 1L,
-                            Particulars = "Due to their effect or potential effect on the organization’s ability to consistently provide products and services that meet customer and applicable statutory and regulatory requirements, the organization shall determine: The organization shall monitor and review information about these interested parties and their relevant requirements.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 4L,
-                            ClauseRef = "4.2.a",
-                            Description = "The interested parties that are relevant to the quality management system;",
-                            IsDeleted = false,
-                            ParentID = 6L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 5L,
-                            ClauseRef = "4.2.b",
-                            Description = "The requirements of these interested parties that are relevant to the quality management system.",
-                            IsDeleted = false,
-                            ParentID = 6L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 6L,
-                            ClauseRef = "4.3",
-                            Description = "Determining the scope of the quality management system",
-                            IsDeleted = false,
-                            ParentID = 1L,
-                            Particulars = "The organization shall determine the boundaries and applicability of the quality management system to establish its scope.The organization shall apply all the requirements of this International Standard if they are applicable within the determined scope of its quality management system. The scope of the organization’s quality management system shall be available and be maintained as documented information. The scope shall state the types of products and services covered, and provide justification for any requirement of this International Standard that the organization determines is not applicable to the scope of its quality management system. Conformity to this International Standard may only be claimed if the requirements determined as not being applicable do not affect the organization’s ability or responsibility to ensure the conformity of its products and services and the enhancement of customer satisfaction. When determining this scope, the organization shall consider:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 10L,
-                            ClauseRef = "4.3.a",
-                            Description = "The external and internal issues referred to in 4.1;",
-                            IsDeleted = false,
-                            ParentID = 9L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 11L,
-                            ClauseRef = "4.3.b",
-                            Description = "The requirements of relevant interested parties referred to in 4.2;",
-                            IsDeleted = false,
-                            ParentID = 9L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 12L,
-                            ClauseRef = "4.3.c",
-                            Description = "The products and services of the organization.",
-                            IsDeleted = false,
-                            ParentID = 9L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 13L,
-                            ClauseRef = "4.4",
-                            Description = "Quality management system and its processes",
-                            IsDeleted = false,
-                            ParentID = 1L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 14L,
-                            ClauseRef = "4.4.1",
-                            Description = "The organization shall establish, implement, maintain and continually improve a quality management system, including the processes needed and their interactions, in accordance with the requirements of this International Standard.",
-                            IsDeleted = false,
-                            ParentID = 13L,
-                            Particulars = "The organization shall determine the processes needed for the quality management system and their application throughout the organization, and shall:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 15L,
-                            ClauseRef = "4.4.1.a",
-                            Description = "Determine the inputs required and outputs expected;",
-                            IsDeleted = false,
-                            ParentID = 14L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 16L,
-                            ClauseRef = "4.4.1.b",
-                            Description = "Determine sequence and interaction of processes;",
-                            IsDeleted = false,
-                            ParentID = 14L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 17L,
-                            ClauseRef = "4.4.1.c",
-                            Description = "determine and apply the criteria and methods (including monitoring, measurements and related performance indicators) needed to ensure the effective operation and control of these processes;",
-                            IsDeleted = false,
-                            ParentID = 14L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 18L,
-                            ClauseRef = "4.4.1.d",
-                            Description = "determine the resources needed for these processes and ensure their availability;",
-                            IsDeleted = false,
-                            ParentID = 14L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 19L,
-                            ClauseRef = "4.4.1.e",
-                            Description = "assign the responsibilities and authorities for these processes;",
-                            IsDeleted = false,
-                            ParentID = 14L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 20L,
-                            ClauseRef = "4.4.1.f",
-                            Description = "address the risks and opportunities as determined in accordance with the requirements of 6.1;",
-                            IsDeleted = false,
-                            ParentID = 14L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 21L,
-                            ClauseRef = "4.4.1.g",
-                            Description = "evaluate these processes and implement any changes needed to ensure that these processes achieve their intended results;",
-                            IsDeleted = false,
-                            ParentID = 14L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 22L,
-                            ClauseRef = "4.4.1.h",
-                            Description = "improve the processes and the quality management system.",
-                            IsDeleted = false,
-                            ParentID = 14L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 23L,
-                            ClauseRef = "4.4.2",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 13L,
-                            Particulars = "To the extent necessary, the organization shall:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 24L,
-                            ClauseRef = "4.4.2.a",
-                            Description = "maintain documented information to support the operation of its processes;",
-                            IsDeleted = false,
-                            ParentID = 23L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 25L,
-                            ClauseRef = "4.4.2.b",
-                            Description = "retain documented information to have confidence that the processes are being carried out as planned.",
-                            IsDeleted = false,
-                            ParentID = 23L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 26L,
-                            ClauseRef = "5",
-                            Description = "Leadership",
-                            IsDeleted = false,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 27L,
-                            ClauseRef = "5.1",
-                            Description = "Leadership and commitment",
-                            IsDeleted = false,
-                            ParentID = 26L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 28L,
-                            ClauseRef = "5.1.1",
-                            Description = "General",
-                            IsDeleted = false,
-                            ParentID = 27L,
-                            Particulars = "Top management shall demonstrate leadership and commitment with respect to the quality management system by: NOTE Reference to “business” in this International Standard can be interpreted broadly to mean those activities that are core to the purposes of the organization’s existence, whether the organization is public, private, for profit or not for profit.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 29L,
-                            ClauseRef = "5.1.1.a",
-                            Description = "taking accountability for the effectiveness of the quality management system;",
-                            IsDeleted = false,
-                            ParentID = 28L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 30L,
-                            ClauseRef = "5.1.1.b",
-                            Description = "ensuring that the quality policy and quality objectives are established and compatible with the organization;",
-                            IsDeleted = false,
-                            ParentID = 28L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 31L,
-                            ClauseRef = "5.1.1.c",
-                            Description = "ensuring integration of QMS requirements into business processes;",
-                            IsDeleted = false,
-                            ParentID = 28L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 32L,
-                            ClauseRef = "5.1.1.d",
-                            Description = "promoting the use of the process approach and risk-based thinking;",
-                            IsDeleted = false,
-                            ParentID = 28L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 33L,
-                            ClauseRef = "5.1.1.e",
-                            Description = "ensuring necessary resources are available;",
-                            IsDeleted = false,
-                            ParentID = 28L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 34L,
-                            ClauseRef = "5.1.1.f",
-                            Description = "communicating the importance of effective quality management;",
-                            IsDeleted = false,
-                            ParentID = 28L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 35L,
-                            ClauseRef = "5.1.1.g",
-                            Description = "ensuring QMS achieves intended results;",
-                            IsDeleted = false,
-                            ParentID = 28L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 36L,
-                            ClauseRef = "5.1.1.h",
-                            Description = "engaging and supporting persons to contribute to QMS effectiveness;",
-                            IsDeleted = false,
-                            ParentID = 28L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 37L,
-                            ClauseRef = "5.1.1.i",
-                            Description = "promoting improvement;",
-                            IsDeleted = false,
-                            ParentID = 28L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 38L,
-                            ClauseRef = "5.1.1.j",
-                            Description = "supporting other management roles to demonstrate leadership;",
-                            IsDeleted = false,
-                            ParentID = 28L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 39L,
-                            ClauseRef = "5.1.2",
-                            Description = "Customer focus",
-                            IsDeleted = false,
-                            ParentID = 27L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 40L,
-                            ClauseRef = "5.1.2.a",
-                            Description = "customer and statutory requirements are determined and met;",
-                            IsDeleted = false,
-                            ParentID = 39L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 41L,
-                            ClauseRef = "5.1.2.b",
-                            Description = "risks and opportunities affecting conformity are addressed;",
-                            IsDeleted = false,
-                            ParentID = 39L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 42L,
-                            ClauseRef = "5.1.2.c",
-                            Description = "focus on enhancing customer satisfaction is maintained.",
-                            IsDeleted = false,
-                            ParentID = 39L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 43L,
-                            ClauseRef = "5.2",
-                            Description = "Policy",
-                            IsDeleted = false,
-                            ParentID = 26L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 44L,
-                            ClauseRef = "5.2.1",
-                            Description = "Establishing the quality policy",
-                            IsDeleted = false,
-                            ParentID = 43L,
-                            Particulars = "Top management shall establish, implement and maintain a quality policy that:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 45L,
-                            ClauseRef = "5.2.1.a",
-                            Description = "is appropriate to the purpose and context of the organization;",
-                            IsDeleted = false,
-                            ParentID = 44L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 46L,
-                            ClauseRef = "5.2.1.b",
-                            Description = "provides a framework for setting quality objectives;",
-                            IsDeleted = false,
-                            ParentID = 44L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 47L,
-                            ClauseRef = "5.2.1.c",
-                            Description = "includes a commitment to satisfy applicable requirements;",
-                            IsDeleted = false,
-                            ParentID = 44L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 48L,
-                            ClauseRef = "5.2.1.d",
-                            Description = "includes a commitment to continual improvement of the QMS.",
-                            IsDeleted = false,
-                            ParentID = 44L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 49L,
-                            ClauseRef = "5.2.2",
-                            Description = "Communicating the quality policy",
-                            IsDeleted = false,
-                            ParentID = 43L,
-                            Particulars = "The quality policy shall:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 50L,
-                            ClauseRef = "5.2.2.a",
-                            Description = "be available and maintained as documented information;",
-                            IsDeleted = false,
-                            ParentID = 49L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 51L,
-                            ClauseRef = "5.2.2.b",
-                            Description = "be communicated and understood within the organization;",
-                            IsDeleted = false,
-                            ParentID = 49L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 52L,
-                            ClauseRef = "5.2.2.c",
-                            Description = "be available to relevant interested parties.",
-                            IsDeleted = false,
-                            ParentID = 49L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 53L,
-                            ClauseRef = "5.3",
-                            Description = "Organizational roles, responsibilities and authorities",
-                            IsDeleted = false,
-                            ParentID = 26L,
-                            Particulars = "Top management shall ensure that the responsibilities and authorities for relevant roles are assigned, communicated and understood within the organization. Top management shall assign the responsibility and authority for:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 54L,
-                            ClauseRef = "5.3.a",
-                            Description = "ensuring QMS conforms to requirements;",
-                            IsDeleted = false,
-                            ParentID = 53L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 55L,
-                            ClauseRef = "5.3.b",
-                            Description = "ensuring processes deliver intended outputs;",
-                            IsDeleted = false,
-                            ParentID = 53L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 56L,
-                            ClauseRef = "5.3.c",
-                            Description = "reporting on the performance of the quality management system and on opportunities for improvement (see 10.1), in particular to top management;",
-                            IsDeleted = false,
-                            ParentID = 53L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 57L,
-                            ClauseRef = "5.3.d",
-                            Description = "ensuring promotion of customer focus.",
-                            IsDeleted = false,
-                            ParentID = 53L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 58L,
-                            ClauseRef = "6",
-                            Description = "Planning",
-                            IsDeleted = false,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 59L,
-                            ClauseRef = "6.1",
-                            Description = "Actions to address risks and opportunities",
-                            IsDeleted = false,
-                            ParentID = 58L,
-                            Particulars = "When planning for the quality management system, the organization shall consider the context of the organization and the issues referred to in 4.1, as well as the requirements referred to in 4.2. The organization shall determine the risks and opportunities that need to be addressed to:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 60L,
-                            ClauseRef = "6.1.a",
-                            Description = "give assurance that the QMS can achieve its intended results;",
-                            IsDeleted = false,
-                            ParentID = 59L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 61L,
-                            ClauseRef = "6.1.b",
-                            Description = "enhance desirable effects;",
-                            IsDeleted = false,
-                            ParentID = 59L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 62L,
-                            ClauseRef = "6.1.c",
-                            Description = "prevent or reduce undesired effects;",
-                            IsDeleted = false,
-                            ParentID = 59L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 63L,
-                            ClauseRef = "6.1.d",
-                            Description = "achieve improvement.",
-                            IsDeleted = false,
-                            ParentID = 59L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 64L,
-                            ClauseRef = "6.1.2",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 59L,
-                            Particulars = "The organization shall plan actions to address risks and opportunities and evaluate their effectiveness of these actions..",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 65L,
-                            ClauseRef = "6.1.2.a",
-                            Description = "actions to address these risks and opportunities;",
-                            IsDeleted = false,
-                            ParentID = 64L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 66L,
-                            ClauseRef = "6.1.2.b",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 64L,
-                            Particulars = "how to:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 67L,
-                            ClauseRef = "6.1.2.b.1",
-                            Description = "integrate and implement the actions into QMS processes (see 4.4);",
-                            IsDeleted = false,
-                            ParentID = 66L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 68L,
-                            ClauseRef = "6.1.2.b.2",
-                            Description = "evaluate the effectiveness of these actions.",
-                            IsDeleted = false,
-                            ParentID = 66L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 69L,
-                            ClauseRef = "6.1.2.NOTE 1",
-                            Description = "Options to address risks can include avoiding risk, taking risk in order to pursue an opportunity, eliminating the risk source, changing the likelihood or consequences, sharing the risk, or retaining risk by informed decision.",
-                            IsDeleted = false,
-                            ParentID = 64L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 70L,
-                            ClauseRef = "6.1.2.NOTE 2",
-                            Description = "Opportunities can lead to the adoption of new practices, launching new products, opening new markets, addressing new customers, building partnerships, using new technology and other desirable and viable possibilities to address the organization’s or its customers’ needs.",
-                            IsDeleted = false,
-                            ParentID = 64L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 71L,
-                            ClauseRef = "6.2",
-                            Description = "Quality objectives and planning to achieve them",
-                            IsDeleted = false,
-                            ParentID = 58L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 72L,
-                            ClauseRef = "6.2.1",
-                            Description = "The organization shall establish quality objectives at relevant functions, levels and processes needed for the quality management system.",
-                            IsDeleted = false,
-                            ParentID = 71L,
-                            Particulars = "The quality objectives shall: The quality objectives shall:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 73L,
-                            ClauseRef = "6.2.1.a",
-                            Description = "be consistent with the quality policy;",
-                            IsDeleted = false,
-                            ParentID = 72L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 74L,
-                            ClauseRef = "6.2.1.b",
-                            Description = "be measurable;",
-                            IsDeleted = false,
-                            ParentID = 72L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 75L,
-                            ClauseRef = "6.2.1.c",
-                            Description = "take into account applicable requirements;",
-                            IsDeleted = false,
-                            ParentID = 72L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 76L,
-                            ClauseRef = "6.2.1.d",
-                            Description = "be relevant to conformity and customer satisfaction;",
-                            IsDeleted = false,
-                            ParentID = 72L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 77L,
-                            ClauseRef = "6.2.1.e",
-                            Description = "be monitored;",
-                            IsDeleted = false,
-                            ParentID = 72L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 78L,
-                            ClauseRef = "6.2.1.f",
-                            Description = "be communicated;",
-                            IsDeleted = false,
-                            ParentID = 72L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 79L,
-                            ClauseRef = "6.2.1.g",
-                            Description = "be updated as appropriate.",
-                            IsDeleted = false,
-                            ParentID = 72L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 80L,
-                            ClauseRef = "6.2.2",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 71L,
-                            Particulars = "When planning how to achieve quality objectives, the organization shall determine:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 81L,
-                            ClauseRef = "6.2.2.a",
-                            Description = "what will be done;",
-                            IsDeleted = false,
-                            ParentID = 80L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 82L,
-                            ClauseRef = "6.2.2.b",
-                            Description = "what resources will be required;",
-                            IsDeleted = false,
-                            ParentID = 80L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 83L,
-                            ClauseRef = "6.2.2.c",
-                            Description = "who will be responsible;",
-                            IsDeleted = false,
-                            ParentID = 80L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 84L,
-                            ClauseRef = "6.2.2.d",
-                            Description = "when it will be completed;",
-                            IsDeleted = false,
-                            ParentID = 80L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 85L,
-                            ClauseRef = "6.2.2.e",
-                            Description = "how results will be evaluated.",
-                            IsDeleted = false,
-                            ParentID = 80L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 86L,
-                            ClauseRef = "6.3",
-                            Description = "Planning of changes",
-                            IsDeleted = false,
-                            ParentID = 58L,
-                            Particulars = "When the organization determines the need for changes to the quality management system, the changes shall be carried out in a planned manner (see 4.4). The organization shall consider:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 87L,
-                            ClauseRef = "6.3.a",
-                            Description = "purpose of the change and potential consequences;",
-                            IsDeleted = false,
-                            ParentID = 86L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 88L,
-                            ClauseRef = "6.3.b",
-                            Description = "integrity of the QMS;",
-                            IsDeleted = false,
-                            ParentID = 86L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 89L,
-                            ClauseRef = "6.3.c",
-                            Description = "availability of resources;",
-                            IsDeleted = false,
-                            ParentID = 86L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 90L,
-                            ClauseRef = "6.3.d",
-                            Description = "allocation or reallocation of responsibilities and authorities.",
-                            IsDeleted = false,
-                            ParentID = 86L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 91L,
-                            ClauseRef = "7",
-                            Description = "Support",
-                            IsDeleted = false,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 92L,
-                            ClauseRef = "7.1",
-                            Description = "Resources",
-                            IsDeleted = false,
-                            ParentID = 91L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 93L,
-                            ClauseRef = "7.1.1",
-                            Description = "General",
-                            IsDeleted = false,
-                            ParentID = 92L,
-                            Particulars = "The organization shall determine and provide the resources needed for the establishment, implementation, maintenance and continual improvement of the quality management system. The organization shall consider:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 94L,
-                            ClauseRef = "7.1.1.a",
-                            Description = "capabilities and constraints of existing internal resources;",
-                            IsDeleted = false,
-                            ParentID = 93L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 95L,
-                            ClauseRef = "7.1.1.b",
-                            Description = "what needs to be obtained from external providers.",
-                            IsDeleted = false,
-                            ParentID = 93L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 96L,
-                            ClauseRef = "7.1.2",
-                            Description = "People",
-                            IsDeleted = false,
-                            ParentID = 92L,
-                            Particulars = "The organization shall determine and provide the persons necessary for the effective implementation of its quality management system and for the operation and control of its processes.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 97L,
-                            ClauseRef = "7.1.3",
-                            Description = "Infrastructure",
-                            IsDeleted = false,
-                            ParentID = 92L,
-                            Particulars = "The organization shall determine and provide the infrastructure needed for the operation of its processes and to achieve conformity of products and services. ",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 98L,
-                            ClauseRef = "7.1.3.a",
-                            Description = "buildings and associated utilities;",
-                            IsDeleted = false,
-                            ParentID = 97L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 99L,
-                            ClauseRef = "7.1.3.b",
-                            Description = "equipment, including hardware and software;",
-                            IsDeleted = false,
-                            ParentID = 97L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 100L,
-                            ClauseRef = "7.1.3.c",
-                            Description = "transportation resources;",
-                            IsDeleted = false,
-                            ParentID = 97L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 101L,
-                            ClauseRef = "7.1.3.d",
-                            Description = "information and communication technology.",
-                            IsDeleted = false,
-                            ParentID = 97L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 102L,
-                            ClauseRef = "7.1.4",
-                            Description = "Environment for the operation of processes",
-                            IsDeleted = false,
-                            ParentID = 92L,
-                            Particulars = "The organization shall determine, provide and maintain the environment necessary for the operation of its processes and to achieve conformity of products and services. physical (e.g. temperature, heat, humidity, light, airflow, hygiene, noise). NOTE A suitable environment can be a combination of human and physical factors, such as:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 103L,
-                            ClauseRef = "7.1.4.a",
-                            Description = "social (e.g. non-discriminatory, calm, non-confrontational);",
-                            IsDeleted = false,
-                            ParentID = 102L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 104L,
-                            ClauseRef = "7.1.4.b",
-                            Description = "psychological (e.g. stress-reducing, burnout prevention, emotionally protective);",
-                            IsDeleted = false,
-                            ParentID = 102L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 105L,
-                            ClauseRef = "7.1.4.c",
-                            Description = "physical (e.g. temperature, heat, humidity, light, airflow, hygiene, noise).",
-                            IsDeleted = false,
-                            ParentID = 102L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 106L,
-                            ClauseRef = "7.1.5",
-                            Description = "Monitoring and measuring resources",
-                            IsDeleted = false,
-                            ParentID = 92L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 107L,
-                            ClauseRef = "7.1.5.1",
-                            Description = "General",
-                            IsDeleted = false,
-                            ParentID = 106L,
-                            Particulars = "The organization shall determine and provide the resources needed to ensure valid and reliable results when monitoring or measuring is used to verify the conformity of products and services to requirements. \" +\r\n            \"The organization shall retain appropriate documented information as evidence of fitness for purpose of the monitoring and measurement resources.The organization shall retain appropriate documented information as evidence of fitness for purpose of the monitoring and measurement resources.\"",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 108L,
-                            ClauseRef = "7.1.5.1.a",
-                            Description = "are suitable for specific monitoring activities being undertaken;",
-                            IsDeleted = false,
-                            ParentID = 107L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 109L,
-                            ClauseRef = "7.1.5.1.b",
-                            Description = "are maintained to ensure their continuing fitness for their purpose.",
-                            IsDeleted = false,
-                            ParentID = 107L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 110L,
-                            ClauseRef = "7.1.5.2",
-                            Description = "Measurement traceability",
-                            IsDeleted = false,
-                            ParentID = 106L,
-                            Particulars = "The organization shall determine if the validity of previous measurement results has been adversely affected when measuring equipment is found to be unfit for its intended purpose, and shall take appropriate action as necessary. The organization shall determine if the validity of previous measurement results has been adversely affected when measuring equipment is found to be unfit for its intended purpose, and shall take appropriate action as necessary.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 111L,
-                            ClauseRef = "7.1.5.2.a",
-                            Description = "calibrated or verified, or both, at specified intervals, or prior to use, against measurement standards traceable to international or national measurement standards; when no such standards exist, the basis used for calibration or verification shall be retained as documented information;",
-                            IsDeleted = false,
-                            ParentID = 110L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 112L,
-                            ClauseRef = "7.1.5.2.b",
-                            Description = "identified to determine status;",
-                            IsDeleted = false,
-                            ParentID = 110L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 113L,
-                            ClauseRef = "7.1.5.2.c",
-                            Description = "safeguarded from adjustments, damage or deterioration that would invalidate the calibration status and subsequent measurement results.",
-                            IsDeleted = false,
-                            ParentID = 110L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 114L,
-                            ClauseRef = "7.1.6",
-                            Description = "Organizational knowledge",
-                            IsDeleted = false,
-                            ParentID = 92L,
-                            Particulars = "The organization shall determine the knowledge necessary for the operation of its processes and to achieve conformity of products and services. This knowledge shall be maintained and be made available to the extent necessary. When addressing changing needs and trends, the organization shall consider its current knowledge and determine how to acquire or access any necessary additional knowledge and required updates. Organizational knowledge can be based on:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 115L,
-                            ClauseRef = "7.1.6.Note 1",
-                            Description = "Organizational knowledge is knowledge specific to the organization; it is generally gained by experience. It is information that is used and shared to achieve the organization’s objectives.",
-                            IsDeleted = false,
-                            ParentID = 114L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 116L,
-                            ClauseRef = "7.1.6.Note 2",
-                            Description = "NOTE Applicable actions can include, for example, the provision of training to, the mentoring of, or the reassignment of currently employed persons; or the hiring or contracting of competent persons.",
-                            IsDeleted = false,
-                            ParentID = 114L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 117L,
-                            ClauseRef = "7.1.6.a",
-                            Description = "internal sources (e.g. intellectual property; knowledge gained from experience; lessons learned from failures and successful projects; capturing and sharing undocumented knowledge and experience; the results of improvements in processes, products and services);",
-                            IsDeleted = false,
-                            ParentID = 114L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 118L,
-                            ClauseRef = "7.1.6.b",
-                            Description = "external sources (e.g. standards; academia; conferences; gathering knowledge from customers or external providers).",
-                            IsDeleted = false,
-                            ParentID = 114L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 119L,
-                            ClauseRef = "7.2",
-                            Description = "Competence",
-                            IsDeleted = false,
-                            ParentID = 91L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 120L,
-                            ClauseRef = "7.2.a",
-                            Description = "determine the necessary competence of person(s) doing work under its control that affects the performance and effectiveness of the quality management system;",
-                            IsDeleted = false,
-                            ParentID = 117L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 121L,
-                            ClauseRef = "7.2.b",
-                            Description = "ensure that these persons are competent on the basis of appropriate education, training, or experience;",
-                            IsDeleted = false,
-                            ParentID = 117L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 122L,
-                            ClauseRef = "7.2.c",
-                            Description = "where applicable, take actions to acquire the necessary competence, and evaluate the effectiveness of the actions taken;",
-                            IsDeleted = false,
-                            ParentID = 117L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 123L,
-                            ClauseRef = "7.3",
-                            Description = "Awareness",
-                            IsDeleted = false,
-                            ParentID = 91L,
-                            Particulars = "The organization shall ensure that persons doing work under the organization’s control are aware of:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 124L,
-                            ClauseRef = "7.3.a",
-                            Description = "quality policy;",
-                            IsDeleted = false,
-                            ParentID = 121L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 125L,
-                            ClauseRef = "7.3.b",
-                            Description = "relevant quality objectives;",
-                            IsDeleted = false,
-                            ParentID = 121L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 126L,
-                            ClauseRef = "7.3.c",
-                            Description = "their contribution to the effectiveness of the quality management system, including the benefits of improved performance;",
-                            IsDeleted = false,
-                            ParentID = 121L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 127L,
-                            ClauseRef = "7.3.d",
-                            Description = "the implications of not conforming with the quality management system requirements.",
-                            IsDeleted = false,
-                            ParentID = 121L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 128L,
-                            ClauseRef = "7.4",
-                            Description = "Communication",
-                            IsDeleted = false,
-                            ParentID = 91L,
-                            Particulars = "The organization shall determine the internal and external communications relevant to the quality management system, including:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 129L,
-                            ClauseRef = "7.4.a",
-                            Description = "what to communicate;",
-                            IsDeleted = false,
-                            ParentID = 126L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 130L,
-                            ClauseRef = "7.4.b",
-                            Description = "when to communicate;",
-                            IsDeleted = false,
-                            ParentID = 126L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 131L,
-                            ClauseRef = "7.4.c",
-                            Description = "with whom to communicate;",
-                            IsDeleted = false,
-                            ParentID = 126L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 132L,
-                            ClauseRef = "7.4.d",
-                            Description = "how to communicate;",
-                            IsDeleted = false,
-                            ParentID = 126L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 133L,
-                            ClauseRef = "7.4.e",
-                            Description = "who communicates.",
-                            IsDeleted = false,
-                            ParentID = 126L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 134L,
-                            ClauseRef = "7.5",
-                            Description = "Documented information",
-                            IsDeleted = false,
-                            ParentID = 91L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 135L,
-                            ClauseRef = "7.5.1",
-                            Description = "General",
-                            IsDeleted = false,
-                            ParentID = 132L,
-                            Particulars = "The organization’s quality management system shall include:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 136L,
-                            ClauseRef = "7.5.1.a",
-                            Description = "documented information required by this International Standard;",
-                            IsDeleted = false,
-                            ParentID = 133L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 137L,
-                            ClauseRef = "7.5.1.b",
-                            Description = "documented information determined by the organization as being necessary for the effectiveness of the quality management system.",
-                            IsDeleted = false,
-                            ParentID = 133L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 138L,
-                            ClauseRef = "7.5.2",
-                            Description = "Creating and updating",
-                            IsDeleted = false,
-                            ParentID = 132L,
-                            Particulars = "When creating and updating documented information, the organization shall ensure appropriate:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 139L,
-                            ClauseRef = "7.5.2.a",
-                            Description = "identification and description (e.g. a title, date, author, or reference number);",
-                            IsDeleted = false,
-                            ParentID = 136L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 140L,
-                            ClauseRef = "7.5.2.b",
-                            Description = "format (e.g. language, software version, graphics) and media (e.g. paper, electronic);",
-                            IsDeleted = false,
-                            ParentID = 136L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 141L,
-                            ClauseRef = "7.5.2.c",
-                            Description = "review and approval for suitability and adequacy.",
-                            IsDeleted = false,
-                            ParentID = 136L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 142L,
-                            ClauseRef = "7.5.3",
-                            Description = "Control of documented information",
-                            IsDeleted = false,
-                            ParentID = 132L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 143L,
-                            ClauseRef = "7.5.3.1",
-                            Description = "Documented information required by the quality management system and by this International Standard shall be controlled to ensure:",
-                            IsDeleted = false,
-                            ParentID = 140L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 144L,
-                            ClauseRef = "7.5.3.1.a",
-                            Description = "it is available and suitable for use, where and when it is needed;",
-                            IsDeleted = false,
-                            ParentID = 141L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 145L,
-                            ClauseRef = "7.5.3.1.b",
-                            Description = "it is adequately protected (e.g. from loss of confidentiality, improper use, or loss of integrity).",
-                            IsDeleted = false,
-                            ParentID = 141L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 146L,
-                            ClauseRef = "7.5.3.2",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 140L,
-                            Particulars = "Documented information of external origin determined by the organization to be necessary for the planning and operation of the quality management system shall be identified as appropriate, and be controlled.Documented information retained as evidence of conformity shall be protected from unintended alterations. For the control of documented information, the organization shall address the following activities, as applicable:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 147L,
-                            ClauseRef = "7.5.3.2.a",
-                            Description = "distribution and access;",
-                            IsDeleted = false,
-                            ParentID = 144L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 148L,
-                            ClauseRef = "7.5.3.2.b",
-                            Description = "storage and preservation, including preservation of legibility;",
-                            IsDeleted = false,
-                            ParentID = 144L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 149L,
-                            ClauseRef = "7.5.3.2.c",
-                            Description = "control of changes (e.g. version control);",
-                            IsDeleted = false,
-                            ParentID = 144L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 150L,
-                            ClauseRef = "7.5.3.2.d",
-                            Description = "retention and disposition.",
-                            IsDeleted = false,
-                            ParentID = 144L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 151L,
-                            ClauseRef = "8",
-                            Description = "Operation",
-                            IsDeleted = false,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 152L,
-                            ClauseRef = "8.1",
-                            Description = "Operational planning and control",
-                            IsDeleted = false,
-                            ParentID = 149L,
-                            Particulars = "The organization shall plan, implement and control the processes (see 4.4) needed to meet the requirements for the provision of products and services, and to implement the actions determined in Clause 6, by:The output of this planning shall be suitable for the organization’s operations. The organization shall control planned changes and review the consequences of unintended changes, taking action to mitigate any adverse effects, as necessary. The organization shall ensure that outsourced processes are controlled (see 8.4).",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 153L,
-                            ClauseRef = "8.1.a",
-                            Description = "determining the requirements for the products and services;",
-                            IsDeleted = false,
-                            ParentID = 150L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 154L,
-                            ClauseRef = "8.1.b",
-                            Description = "establishing criteria for:",
-                            IsDeleted = false,
-                            ParentID = 150L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 155L,
-                            ClauseRef = "8.1.b.1",
-                            Description = "the processes;",
-                            IsDeleted = false,
-                            ParentID = 152L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 156L,
-                            ClauseRef = "8.1.b.2",
-                            Description = "the acceptance of products and services;",
-                            IsDeleted = false,
-                            ParentID = 152L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 157L,
-                            ClauseRef = "8.1.c",
-                            Description = "determining the resources needed to achieve conformity to the product and service requirements;",
-                            IsDeleted = false,
-                            ParentID = 150L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 158L,
-                            ClauseRef = "8.1.d",
-                            Description = "implementing control of the processes in accordance with criteria;",
-                            IsDeleted = false,
-                            ParentID = 150L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 159L,
-                            ClauseRef = "8.1.e",
-                            Description = "determining, maintaining and retaining documented information to the extent necessary:",
-                            IsDeleted = false,
-                            ParentID = 150L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 160L,
-                            ClauseRef = "8.1.e.1",
-                            Description = "to have confidence processes were carried out as planned;",
-                            IsDeleted = false,
-                            ParentID = 157L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 161L,
-                            ClauseRef = "8.1.e.2",
-                            Description = "to demonstrate the conformity of products and services to their requirements.",
-                            IsDeleted = false,
-                            ParentID = 157L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 162L,
-                            ClauseRef = "8.2",
-                            Description = "Requirements for products and services",
-                            IsDeleted = false,
-                            ParentID = 149L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 163L,
-                            ClauseRef = "8.1.e.2",
-                            Description = "to demonstrate the conformity of products and services to their requirements.",
-                            IsDeleted = false,
-                            ParentID = 157L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 164L,
-                            ClauseRef = "8.2.1",
-                            Description = "Customer communication",
-                            IsDeleted = false,
-                            ParentID = 160L,
-                            Particulars = "Communication with customers shall include:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 165L,
-                            ClauseRef = "8.2.1.a",
-                            Description = "providing information relating to products and services;",
-                            IsDeleted = false,
-                            ParentID = 161L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 166L,
-                            ClauseRef = "8.2.1.b",
-                            Description = "handling enquiries, contracts or orders, including changes;;",
-                            IsDeleted = false,
-                            ParentID = 161L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 167L,
-                            ClauseRef = "8.2.1.c",
-                            Description = "obtaining customer feedback relating to products and services, including customer complaints;;",
-                            IsDeleted = false,
-                            ParentID = 161L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 168L,
-                            ClauseRef = "8.2.1.d",
-                            Description = "handling or controlling customer property;",
-                            IsDeleted = false,
-                            ParentID = 161L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 169L,
-                            ClauseRef = "8.2.1.e",
-                            Description = "establishing specific requirements for contingency actions, when relevant.",
-                            IsDeleted = false,
-                            ParentID = 161L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 170L,
-                            ClauseRef = "8.2.2",
-                            Description = "Determining the requirements for products and services",
-                            IsDeleted = false,
-                            ParentID = 160L,
-                            Particulars = "When determining the requirements for the products and services to be offered to customers, the organization shall ensure that:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 171L,
-                            ClauseRef = "8.2.2.a",
-                            Description = "the requirements for the products and services are defined, including:",
-                            IsDeleted = false,
-                            ParentID = 167L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 172L,
-                            ClauseRef = "8.2.2.a.1",
-                            Description = "any applicable statutory and regulatory requirements;",
-                            IsDeleted = false,
-                            ParentID = 168L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 173L,
-                            ClauseRef = "8.2.2.a.2",
-                            Description = "those considered necessary by the organization;",
-                            IsDeleted = false,
-                            ParentID = 168L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 174L,
-                            ClauseRef = "8.2.2.b",
-                            Description = "the organization can meet the claims for the products and services it offers.",
-                            IsDeleted = false,
-                            ParentID = 167L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 175L,
-                            ClauseRef = "8.2.3",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 160L,
-                            Particulars = "Review of the requirements for products and services",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 176L,
-                            ClauseRef = "8.2.3.1",
-                            Description = "Review before commitment to supply",
-                            IsDeleted = false,
-                            ParentID = 172L,
-                            Particulars = "The organization shall ensure that contract or order requirements differing from those previously defined are resolved. The customer’s requirements shall be confirmed by the organization before acceptance, when the customer does not provide a documented statement of their requirements.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 177L,
-                            ClauseRef = "8.2.3.1.a",
-                            Description = "requirements specified by the customer, including the requirements for delivery and postdelivery activities;",
-                            IsDeleted = false,
-                            ParentID = 173L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 178L,
-                            ClauseRef = "8.2.3.1.b",
-                            Description = "requirements not stated by the customer, but necessary for the specified or intended use, when known;",
-                            IsDeleted = false,
-                            ParentID = 173L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 179L,
-                            ClauseRef = "8.2.3.1.c",
-                            Description = "requirements specified by organization;",
-                            IsDeleted = false,
-                            ParentID = 173L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 180L,
-                            ClauseRef = "8.2.3.1.d",
-                            Description = "statutory and regulatory requirements applicable to the products and services;",
-                            IsDeleted = false,
-                            ParentID = 173L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 181L,
-                            ClauseRef = "8.2.3.1.e",
-                            Description = "contract or order requirements differing from those previously expressed.",
-                            IsDeleted = false,
-                            ParentID = 173L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 182L,
-                            ClauseRef = "8.2.3.2",
-                            Description = "The organization shall retain documented information, as applicable:",
-                            IsDeleted = false,
-                            ParentID = 172L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 183L,
-                            ClauseRef = "8.2.3.2.a",
-                            Description = "on the results of the review;",
-                            IsDeleted = false,
-                            ParentID = 179L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 184L,
-                            ClauseRef = "8.2.3.2.b",
-                            Description = "on any new requirements for products and services.",
-                            IsDeleted = false,
-                            ParentID = 179L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 185L,
-                            ClauseRef = "8.2.4",
-                            Description = "Changes to requirements for products and services",
-                            IsDeleted = false,
-                            ParentID = 160L,
-                            Particulars = "The organization shall ensure that relevant documented information is amended, and that relevant persons are made aware of the changed requirements, when the requirements for products and services are changed.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 186L,
-                            ClauseRef = "8.3",
-                            Description = "Design and development of products and services",
-                            IsDeleted = false,
-                            ParentID = 149L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 187L,
-                            ClauseRef = "8.3.1",
-                            Description = "General",
-                            IsDeleted = false,
-                            ParentID = 183L,
-                            Particulars = "The organization shall establish, implement and maintain a design and development process that is appropriate to ensure the subsequent provision of products and services.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 188L,
-                            ClauseRef = "8.3.2",
-                            Description = "Design and development of products and services",
-                            IsDeleted = false,
-                            ParentID = 183L,
-                            Particulars = "In determining the stages and controls for design and development, the organization shall consider:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 189L,
-                            ClauseRef = "8.3.2.a",
-                            Description = "the nature, duration and complexity of the design and development activities;",
-                            IsDeleted = false,
-                            ParentID = 185L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 190L,
-                            ClauseRef = "8.3.2.b",
-                            Description = "the required process stages, including applicable design and development reviews;",
-                            IsDeleted = false,
-                            ParentID = 185L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 191L,
-                            ClauseRef = "8.3.2.c",
-                            Description = "the required design and development verification and validation activities;",
-                            IsDeleted = false,
-                            ParentID = 185L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 192L,
-                            ClauseRef = "8.3.2.d",
-                            Description = "the responsibilities and authorities involved in the design and development process;",
-                            IsDeleted = false,
-                            ParentID = 185L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 193L,
-                            ClauseRef = "8.3.2.e",
-                            Description = "the internal and external resource needs for the design and development of products and services;;",
-                            IsDeleted = false,
-                            ParentID = 185L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 194L,
-                            ClauseRef = "8.3.2.f",
-                            Description = "The need to control interfaces between persons involved in the design and development process;",
-                            IsDeleted = false,
-                            ParentID = 188L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 195L,
-                            ClauseRef = "8.3.2.g",
-                            Description = "The need for involvement of customers and users in the design and development process;",
-                            IsDeleted = false,
-                            ParentID = 188L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 196L,
-                            ClauseRef = "8.3.2.h",
-                            Description = "The requirements for subsequent provision of products and services;",
-                            IsDeleted = false,
-                            ParentID = 188L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 197L,
-                            ClauseRef = "8.3.2.i",
-                            Description = "The level of control expected by customers and other interested parties;",
-                            IsDeleted = false,
-                            ParentID = 188L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 198L,
-                            ClauseRef = "8.3.2.j",
-                            Description = "Documented information to demonstrate requirements are met;",
-                            IsDeleted = false,
-                            ParentID = 188L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 199L,
-                            ClauseRef = "8.3.3",
-                            Description = "Design and development inputs",
-                            IsDeleted = false,
-                            ParentID = 186L,
-                            Particulars = "The organization shall determine the requirements essential for the specific types of products and services to be designed and developed. The organization shall consider: Inputs shall be adequate for design and development purposes, complete and unambiguous. Conflicting design and development inputs shall be resolved. The organization shall retain documented information on design and development inputs.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 200L,
-                            ClauseRef = "8.3.3.a",
-                            Description = "Functional and performance requirements; ",
-                            IsDeleted = false,
-                            ParentID = 199L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 201L,
-                            ClauseRef = "8.3.3.b",
-                            Description = "Information from previous similar design and development activities; ",
-                            IsDeleted = false,
-                            ParentID = 199L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 202L,
-                            ClauseRef = "8.3.3.c",
-                            Description = "Statutory and regulatory requirements; ",
-                            IsDeleted = false,
-                            ParentID = 199L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 203L,
-                            ClauseRef = "8.3.3.d",
-                            Description = "standards or codes of practice that the organization has committed to implement;",
-                            IsDeleted = false,
-                            ParentID = 199L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 204L,
-                            ClauseRef = "8.3.3.e",
-                            Description = "potential consequences of failure due to the nature of the products and services.",
-                            IsDeleted = false,
-                            ParentID = 199L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 205L,
-                            ClauseRef = "8.3.4",
-                            Description = "Design and development controls",
-                            IsDeleted = false,
-                            ParentID = 186L,
-                            Particulars = "The organization shall apply controls to the design and development process to ensure that:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 206L,
-                            ClauseRef = "8.3.4.a",
-                            Description = "The results to be achieved are defined; ",
-                            IsDeleted = false,
-                            ParentID = 205L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 207L,
-                            ClauseRef = "8.3.4.b",
-                            Description = "reviews are conducted to evaluate the ability of the results of design and development to meet requirements;",
-                            IsDeleted = false,
-                            ParentID = 205L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 208L,
-                            ClauseRef = "8.3.4.c",
-                            Description = "verification activities are conducted to ensure that the design and development outputs meet the input requirements;",
-                            IsDeleted = false,
-                            ParentID = 205L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 209L,
-                            ClauseRef = "8.3.4.d",
-                            Description = "Validation activities conducted to ensure that the resulting products and services meet requirements for the specified application or intended use; ",
-                            IsDeleted = false,
-                            ParentID = 205L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 210L,
-                            ClauseRef = "8.3.4.e",
-                            Description = "any necessary actions are taken on problems determined during the reviews, or verification and validation activities;",
-                            IsDeleted = false,
-                            ParentID = 205L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 211L,
-                            ClauseRef = "8.3.4.f",
-                            Description = "Documented information of these activities is retained. ",
-                            IsDeleted = false,
-                            ParentID = 205L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 212L,
-                            ClauseRef = "8.3.5",
-                            Description = "design and development outputs",
-                            IsDeleted = false,
-                            ParentID = 186L,
-                            Particulars = "The organization shall retain documented information on design and development outputs. The organization shall ensure that design and development outputs.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 213L,
-                            ClauseRef = "8.3.5.a",
-                            Description = "Meet the input requirements",
-                            IsDeleted = false,
-                            ParentID = 212L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 214L,
-                            ClauseRef = "8.3.5.b",
-                            Description = "are adequate for the subsequent process for the provision of products and services",
-                            IsDeleted = false,
-                            ParentID = 212L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 215L,
-                            ClauseRef = "8.3.5.c",
-                            Description = "include or reference monitoring and measuring requirements, as appropriate, and acceptance criteria;",
-                            IsDeleted = false,
-                            ParentID = 212L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 216L,
-                            ClauseRef = "8.3.5.d",
-                            Description = "specify the characteristics of the products and services that are essential for their intended purpose and their safe and proper provision.",
-                            IsDeleted = false,
-                            ParentID = 212L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 217L,
-                            ClauseRef = "8.3.6",
-                            Description = "Design and development changes",
-                            IsDeleted = false,
-                            ParentID = 186L,
-                            Particulars = "The organization shall identify, review and control changes made during, or subsequent to, the design and development of products and services, to the extent necessary to ensure that there is no adverse impact on conformity to requirements. The organization shall retain documented information on:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 218L,
-                            ClauseRef = "8.3.6.a",
-                            Description = "design and development changes; ",
-                            IsDeleted = false,
-                            ParentID = 217L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 219L,
-                            ClauseRef = "8.3.6.b",
-                            Description = "the results of reviews",
-                            IsDeleted = false,
-                            ParentID = 217L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 220L,
-                            ClauseRef = "8.3.6.c",
-                            Description = "the authorization of the changes",
-                            IsDeleted = false,
-                            ParentID = 217L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 221L,
-                            ClauseRef = "8.3.6.d",
-                            Description = "the actions taken to prevent adverse impacts",
-                            IsDeleted = false,
-                            ParentID = 217L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 222L,
-                            ClauseRef = "8.4",
-                            Description = "Control of externally provided processes, products and services",
-                            IsDeleted = false,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 223L,
-                            ClauseRef = "8.4.1",
-                            Description = "General",
-                            IsDeleted = false,
-                            ParentID = 222L,
-                            Particulars = "The organization shall ensure that externally provided processes, products and services conform to requirements.The organization shall determine and apply criteria for the evaluation, selection, monitoring of performance, and re-evaluation of external providers, based on their ability to provide processes or products and services in accordance with requirements. The organization shall retain documented information of these activities and any necessary actions arising from the evaluations.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 224L,
-                            ClauseRef = "8.4.1.a",
-                            Description = "Products and services intended for incorporation into the organization’s own products and services; ",
-                            IsDeleted = false,
-                            ParentID = 223L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 225L,
-                            ClauseRef = "8.4.1.b",
-                            Description = "Products and services provided directly to customers by external providers on behalf of the organization; ",
-                            IsDeleted = false,
-                            ParentID = 223L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 226L,
-                            ClauseRef = "8.4.1.c",
-                            Description = "A process, or part of a process, provided by an external provider as a result of a decision by the organization. ",
-                            IsDeleted = false,
-                            ParentID = 223L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 227L,
-                            ClauseRef = "8.4.2",
-                            Description = "Type and extent of control",
-                            IsDeleted = false,
-                            ParentID = 222L,
-                            Particulars = "The organization shall ensure that externally provided processes, products and services do not adversely affect the organization’s ability to consistently deliver conforming products and services to its customers.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 228L,
-                            ClauseRef = "8.4.2.a",
-                            Description = "ensure that externally provided processes remain within the control of its quality management system;",
-                            IsDeleted = false,
-                            ParentID = 227L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 229L,
-                            ClauseRef = "8.4.2.b",
-                            Description = "define both the controls that it intends to apply to an external provider and those it intends to apply to the resulting output;",
-                            IsDeleted = false,
-                            ParentID = 227L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 230L,
-                            ClauseRef = "8.4.2.c",
-                            Description = "Take into consideration:",
-                            IsDeleted = false,
-                            ParentID = 227L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 231L,
-                            ClauseRef = "8.4.2.c.1",
-                            Description = "the potential impact of the externally provided processes, products and services on the organization’s ability to consistently meet customer and applicable statutory and regulatory requirements;",
-                            IsDeleted = false,
-                            ParentID = 230L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 232L,
-                            ClauseRef = "8.4.2.c.2",
-                            Description = "Effectiveness of controls applied by the external provide;r",
-                            IsDeleted = false,
-                            ParentID = 230L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 233L,
-                            ClauseRef = "8.4.2.d",
-                            Description = "determine the verification, or other activities, necessary to ensure that the externally provided processes, products and services meet requirements.",
-                            IsDeleted = false,
-                            ParentID = 227L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 234L,
-                            ClauseRef = "8.4.3",
-                            Description = "Information for external providers",
-                            IsDeleted = false,
-                            ParentID = 222L,
-                            Particulars = "The organization shall ensure adequacy of requirements prior to communication to external providers.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 235L,
-                            ClauseRef = "8.4.3.a",
-                            Description = "Processes, products and services to be provided",
-                            IsDeleted = false,
-                            ParentID = 234L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 236L,
-                            ClauseRef = "8.4.3.b",
-                            Description = "the approval of:",
-                            IsDeleted = false,
-                            ParentID = 234L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 237L,
-                            ClauseRef = "8.4.3.b.1",
-                            Description = "Products and services",
-                            IsDeleted = false,
-                            ParentID = 236L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 238L,
-                            ClauseRef = "8.4.3.b.2",
-                            Description = "Methods, processes and equipment",
-                            IsDeleted = false,
-                            ParentID = 236L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 239L,
-                            ClauseRef = "8.4.3.b.3",
-                            Description = "the release of products and services",
-                            IsDeleted = false,
-                            ParentID = 236L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 240L,
-                            ClauseRef = "8.4.3.c",
-                            Description = "Competence, including qualification of persons",
-                            IsDeleted = false,
-                            ParentID = 234L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 241L,
-                            ClauseRef = "8.4.3.d",
-                            Description = "External providers’ interactions with the organization",
-                            IsDeleted = false,
-                            ParentID = 234L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 242L,
-                            ClauseRef = "8.4.3.e",
-                            Description = "control and monitoring of the external providers’ performance to be applied by the organization;",
-                            IsDeleted = false,
-                            ParentID = 234L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 243L,
-                            ClauseRef = "8.4.3.f",
-                            Description = "verification or validation activities that the organization, or its customer, intends to perform at the external providers’ premises.",
-                            IsDeleted = false,
-                            ParentID = 234L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 244L,
-                            ClauseRef = "8.5",
-                            Description = "Production and service provision",
-                            IsDeleted = false,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 245L,
-                            ClauseRef = "8.5.1",
-                            Description = "Control of production and service provision",
-                            IsDeleted = false,
-                            ParentID = 244L,
-                            Particulars = "The organization shall implement production and service provision under controlled conditions. Controlled conditions shall include, as applicable:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 246L,
-                            ClauseRef = "8.5.1.a",
-                            Description = "the availability of documented information that defines:",
-                            IsDeleted = false,
-                            ParentID = 245L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 247L,
-                            ClauseRef = "8.5.1.a.1",
-                            Description = "the characteristics of the products to be produced, the services to be provided, or the activities to be performed;",
-                            IsDeleted = false,
-                            ParentID = 246L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 248L,
-                            ClauseRef = "8.5.1.a.2",
-                            Description = "the results to be achieved;",
-                            IsDeleted = false,
-                            ParentID = 246L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 249L,
-                            ClauseRef = "8.5.1.b",
-                            Description = "the availability and use of suitable monitoring and measuring resources;",
-                            IsDeleted = false,
-                            ParentID = 245L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 250L,
-                            ClauseRef = "8.5.1.c",
-                            Description = "the implementation of monitoring and measurement activities at appropriate stages to verify that criteria for control of processes or outputs, and acceptance criteria for products and services, have been met;",
-                            IsDeleted = false,
-                            ParentID = 245L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 251L,
-                            ClauseRef = "8.5.1.d",
-                            Description = "the use of suitable infrastructure and environment for the operation of processes;",
-                            IsDeleted = false,
-                            ParentID = 245L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 252L,
-                            ClauseRef = "8.5.1.e",
-                            Description = "the appointment of competent persons, including any required qualification;",
-                            IsDeleted = false,
-                            ParentID = 245L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 253L,
-                            ClauseRef = "8.5.1.f",
-                            Description = "the validation, and periodic revalidation, of the ability to achieve planned results of the processes for production and service provision, where the resulting output cannot be verified by subsequent monitoring or measurement;",
-                            IsDeleted = false,
-                            ParentID = 245L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 254L,
-                            ClauseRef = "8.5.1.g",
-                            Description = "the implementation of actions to prevent human error;",
-                            IsDeleted = false,
-                            ParentID = 245L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 255L,
-                            ClauseRef = "8.5.1.h",
-                            Description = "the implementation of release, delivery and post-delivery activities.",
-                            IsDeleted = false,
-                            ParentID = 245L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 256L,
-                            ClauseRef = "8.5.2",
-                            Description = "Identification and traceability",
-                            IsDeleted = false,
-                            ParentID = 244L,
-                            Particulars = "The organization shall use suitable means to identify outputs when it is necessary to ensure the conformity of products and services. The organization shall identify the status of outputs with respect to monitoring and measurement requirements throughout production and service provision. The organization shall control the unique identification of the outputs when traceability is a requirement, and shall retain the documented information necessary to enable traceability.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 257L,
-                            ClauseRef = "8.5.3",
-                            Description = "Property belonging to customers or external providers",
-                            IsDeleted = false,
-                            ParentID = 244L,
-                            Particulars = "The organization shall exercise care with property belonging to customers or external providers while it is under the organization’s control or being used by the organization. The organization shall identify, verify, protect and safeguard customers’ or external providers’ property provided for use or incorporation into the products and services. When the property of a customer or external provider is lost, damaged or otherwise found to be unsuitable for use, the organization shall report this to the customer or external provider and retain documented information on what has occurred.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 258L,
-                            ClauseRef = "8.5.4",
-                            Description = "Preservation",
-                            IsDeleted = false,
-                            ParentID = 244L,
-                            Particulars = "The organization shall preserve the outputs during production and service provision, to the extent necessary to ensure conformity to requirements.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 259L,
-                            ClauseRef = "8.5.5",
-                            Description = "Post-delivery activities",
-                            IsDeleted = false,
-                            ParentID = 244L,
-                            Particulars = "The organization shall meet requirements for post-delivery activities associated with the products and services. In determining the extent of post-delivery activities that are required, the organization shall consider:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 260L,
-                            ClauseRef = "8.5.5.a",
-                            Description = "statutory and regulatory requirements;",
-                            IsDeleted = false,
-                            ParentID = 259L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 261L,
-                            ClauseRef = "8.5.5.b",
-                            Description = "the potential undesired consequences associated with its products and services;",
-                            IsDeleted = false,
-                            ParentID = 259L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 262L,
-                            ClauseRef = "8.5.5.c",
-                            Description = "the nature, use and intended lifetime of its products and services;",
-                            IsDeleted = false,
-                            ParentID = 259L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 263L,
-                            ClauseRef = "8.5.5.d",
-                            Description = "customer requirements;",
-                            IsDeleted = false,
-                            ParentID = 259L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 264L,
-                            ClauseRef = "8.5.5.e",
-                            Description = "customer feedback.",
-                            IsDeleted = false,
-                            ParentID = 259L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 265L,
-                            ClauseRef = "8.5.6",
-                            Description = "Control of changes",
-                            IsDeleted = false,
-                            ParentID = 244L,
-                            Particulars = "The organization shall review and control changes for production or service provision, to the extent necessary to ensure continuing conformity with requirements. The organization shall retain documented information describing the results of the review of changes, the person(s) authorizing the change, and any necessary actions arising from the review.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 266L,
-                            ClauseRef = "8.6",
-                            Description = "Release of products and services",
-                            IsDeleted = false,
-                            ParentID = 244L,
-                            Particulars = "The organization shall implement planned arrangements, at appropriate stages, to verify that the product and service requirements have been met. The release of products and services to the customer shall not proceed until the planned arrangements have been satisfactorily completed, unless otherwise approved by a relevant authority and, as applicable, by the customer. The organization shall retain documented information on the release of products and services. The documented information shall include:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 267L,
-                            ClauseRef = "8.6.a",
-                            Description = "evidence of conformity with the acceptance criteria;",
-                            IsDeleted = false,
-                            ParentID = 266L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 268L,
-                            ClauseRef = "8.6.b",
-                            Description = "traceability to the person(s) authorizing the release.",
-                            IsDeleted = false,
-                            ParentID = 266L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 269L,
-                            ClauseRef = "8.7",
-                            Description = "Control of nonconforming outputs",
-                            IsDeleted = false,
-                            ParentID = 244L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 270L,
-                            ClauseRef = "8.7.1",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 269L,
-                            Particulars = "The organization shall ensure that outputs that do not conform to their requirements are identified and controlled to prevent their unintended use or delivery. The organization shall take appropriate action based on the nature of the nonconformity and its effect on the conformity of products and services. This shall also apply to nonconforming products and services detected after delivery of products, during or after the provision of services. Conformity to the requirements shall be verified when nonconforming outputs are corrected. The organization shall deal with nonconforming outputs in one or more of the following ways:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 271L,
-                            ClauseRef = "8.7.1.a",
-                            Description = "Correction;",
-                            IsDeleted = false,
-                            ParentID = 270L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 272L,
-                            ClauseRef = "8.7.1.b",
-                            Description = "segregation, containment, return or suspension of provision of products and services;",
-                            IsDeleted = false,
-                            ParentID = 270L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 273L,
-                            ClauseRef = "8.7.1.c",
-                            Description = "informing the customer;",
-                            IsDeleted = false,
-                            ParentID = 270L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 274L,
-                            ClauseRef = "8.7.1.d",
-                            Description = "obtaining authorization for acceptance under concession.",
-                            IsDeleted = false,
-                            ParentID = 270L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 275L,
-                            ClauseRef = "8.7.2",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 269L,
-                            Particulars = "The organization shall retain documented information that:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 276L,
-                            ClauseRef = "8.7.2.a",
-                            Description = "describes the nonconformity;",
-                            IsDeleted = false,
-                            ParentID = 275L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 277L,
-                            ClauseRef = "8.7.2.b",
-                            Description = "describes the actions taken;",
-                            IsDeleted = false,
-                            ParentID = 275L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 278L,
-                            ClauseRef = "8.7.2.c",
-                            Description = "describes any concessions obtained;",
-                            IsDeleted = false,
-                            ParentID = 275L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 279L,
-                            ClauseRef = "8.7.2.d",
-                            Description = "identifies the authority deciding the action in respect of the nonconformity.",
-                            IsDeleted = false,
-                            ParentID = 275L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 280L,
-                            ClauseRef = "9",
-                            Description = "Performance evaluation",
-                            IsDeleted = false,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 281L,
-                            ClauseRef = "9.1",
-                            Description = "Monitoring, measurement, analysis and evaluation",
-                            IsDeleted = false,
-                            ParentID = 280L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 282L,
-                            ClauseRef = "9.1.1",
-                            Description = "General",
-                            IsDeleted = false,
-                            ParentID = 281L,
-                            Particulars = "The organization shall evaluate the performance and the effectiveness of the quality management system. The organization shall retain appropriate documented information as evidence of the results. The organization shall determine:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 283L,
-                            ClauseRef = "9.1.1.a",
-                            Description = "what needs to be monitored and measured;",
-                            IsDeleted = false,
-                            ParentID = 282L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 284L,
-                            ClauseRef = "9.1.1.b",
-                            Description = "the methods for monitoring, measurement, analysis and evaluation needed to ensure valid results;",
-                            IsDeleted = false,
-                            ParentID = 282L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 285L,
-                            ClauseRef = "9.1.1.c",
-                            Description = "when the monitoring and measuring shall be performed;",
-                            IsDeleted = false,
-                            ParentID = 282L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 286L,
-                            ClauseRef = "9.1.1.d",
-                            Description = "when the results from monitoring and measurement shall be analysed and evaluated.",
-                            IsDeleted = false,
-                            ParentID = 282L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 287L,
-                            ClauseRef = "9.1.2",
-                            Description = "Customer satisfaction",
-                            IsDeleted = false,
-                            ParentID = 281L,
-                            Particulars = "The organization shall monitor customers’ perceptions of the degree to which their needs and expectations have been fulfilled. The organization shall determine the methods for obtaining, monitoring and reviewing this information.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 288L,
-                            ClauseRef = "9.1.3",
-                            Description = "Analysis and evaluation",
-                            IsDeleted = false,
-                            ParentID = 281L,
-                            Particulars = "The organization shall analyse and evaluate appropriate data and information arising from monitoring and measurement. The results of analysis shall be used to evaluate:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 289L,
-                            ClauseRef = "9.1.3.a",
-                            Description = "conformity of products and services;",
-                            IsDeleted = false,
-                            ParentID = 288L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 290L,
-                            ClauseRef = "9.1.3.b",
-                            Description = "the degree of customer satisfaction;",
-                            IsDeleted = false,
-                            ParentID = 288L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 291L,
-                            ClauseRef = "9.1.3.c",
-                            Description = "the performance and effectiveness of the quality management system;",
-                            IsDeleted = false,
-                            ParentID = 288L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 292L,
-                            ClauseRef = "9.1.3.d",
-                            Description = "if planning has been implemented effectively;",
-                            IsDeleted = false,
-                            ParentID = 288L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 293L,
-                            ClauseRef = "9.1.3.e",
-                            Description = "the effectiveness of actions taken to address risks and opportunities;",
-                            IsDeleted = false,
-                            ParentID = 288L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 294L,
-                            ClauseRef = "9.1.3.f",
-                            Description = "the performance of external providers;",
-                            IsDeleted = false,
-                            ParentID = 288L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 295L,
-                            ClauseRef = "9.1.3.g",
-                            Description = "the need for improvements to the quality management system.",
-                            IsDeleted = false,
-                            ParentID = 288L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 296L,
-                            ClauseRef = "9.2",
-                            Description = "Internal audit",
-                            IsDeleted = false,
-                            ParentID = 280L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 297L,
-                            ClauseRef = "9.2.1",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 296L,
-                            Particulars = "The organization shall conduct internal audits at planned intervals to provide information on whether the quality management system:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 298L,
-                            ClauseRef = "9.2.1.a",
-                            Description = "conforms to:",
-                            IsDeleted = false,
-                            ParentID = 297L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 299L,
-                            ClauseRef = "9.2.1.a.1",
-                            Description = "the organization’s own requirements for its quality management system;",
-                            IsDeleted = false,
-                            ParentID = 298L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 300L,
-                            ClauseRef = "9.2.1.a.2",
-                            Description = "the requirements of this International Standard;",
-                            IsDeleted = false,
-                            ParentID = 298L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 301L,
-                            ClauseRef = "9.2.1.b",
-                            Description = "is effectively implemented and maintained.",
-                            IsDeleted = false,
-                            ParentID = 297L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 302L,
-                            ClauseRef = "9.2.2",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 296L,
-                            Particulars = "The organization shall:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 303L,
-                            ClauseRef = "9.2.2.a",
-                            Description = "plan, establish, implement and maintain an audit programme(s) including the frequency, methods, responsibilities, planning requirements and reporting, which shall take into consideration the importance of the processes concerned, changes affecting the organization, and the results of previous audits;",
-                            IsDeleted = false,
-                            ParentID = 302L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 304L,
-                            ClauseRef = "9.2.2.b",
-                            Description = "define the audit criteria and scope for each audit;",
-                            IsDeleted = false,
-                            ParentID = 302L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 305L,
-                            ClauseRef = "9.2.2.c",
-                            Description = "select auditors and conduct audits to ensure objectivity and the impartiality of the audit process;",
-                            IsDeleted = false,
-                            ParentID = 279L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 306L,
-                            ClauseRef = "9.2.2.d",
-                            Description = "ensure that the results of the audits are reported to relevant management;",
-                            IsDeleted = false,
-                            ParentID = 302L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 307L,
-                            ClauseRef = "9.2.2.e",
-                            Description = "take appropriate correction and corrective actions without undue delay;",
-                            IsDeleted = false,
-                            ParentID = 302L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 308L,
-                            ClauseRef = "9.2.2.f",
-                            Description = "retain documented information as evidence of the implementation of the audit programme and the audit results.",
-                            IsDeleted = false,
-                            ParentID = 302L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 309L,
-                            ClauseRef = "9.3",
-                            Description = "Management review",
-                            IsDeleted = false,
-                            ParentID = 280L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 310L,
-                            ClauseRef = "9.3.1",
-                            Description = "General",
-                            IsDeleted = false,
-                            ParentID = 309L,
-                            Particulars = "Top management shall review the organization’s quality management system, at planned intervals, to ensure its continuing suitability, adequacy, effectiveness and alignment with the strategic direction of the organization.",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 311L,
-                            ClauseRef = "9.3.2",
-                            Description = "Management review inputs",
-                            IsDeleted = false,
-                            ParentID = 309L,
-                            Particulars = "The management review shall be planned and carried out taking into consideration:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 312L,
-                            ClauseRef = "9.3.2.a",
-                            Description = "the status of actions from previous management reviews;",
-                            IsDeleted = false,
-                            ParentID = 311L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 313L,
-                            ClauseRef = "9.3.2.b",
-                            Description = "changes in external and internal issues that are relevant to the quality management system;",
-                            IsDeleted = false,
-                            ParentID = 311L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 314L,
-                            ClauseRef = "9.3.2.c",
-                            Description = "information on the performance and effectiveness of the quality management system, including trends in:",
-                            IsDeleted = false,
-                            ParentID = 311L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 315L,
-                            ClauseRef = "9.3.2.c.1",
-                            Description = "customer satisfaction and feedback from relevant interested parties;",
-                            IsDeleted = false,
-                            ParentID = 314L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 316L,
-                            ClauseRef = "9.3.2.c.2",
-                            Description = "the extent to which quality objectives have been met;",
-                            IsDeleted = false,
-                            ParentID = 314L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 317L,
-                            ClauseRef = "9.3.2.c.3",
-                            Description = "process performance and conformity of products and services;",
-                            IsDeleted = false,
-                            ParentID = 314L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 318L,
-                            ClauseRef = "9.3.2.c.4",
-                            Description = "nonconformities and corrective actions;",
-                            IsDeleted = false,
-                            ParentID = 314L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 319L,
-                            ClauseRef = "9.3.2.c.5",
-                            Description = "monitoring and measurement results;",
-                            IsDeleted = false,
-                            ParentID = 314L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 320L,
-                            ClauseRef = "9.3.2.c.6",
-                            Description = "audit results;",
-                            IsDeleted = false,
-                            ParentID = 314L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 321L,
-                            ClauseRef = "9.3.2.c.7",
-                            Description = "the performance of external providers",
-                            IsDeleted = false,
-                            ParentID = 314L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 322L,
-                            ClauseRef = "9.3.2.d",
-                            Description = "the adequacy of resources;",
-                            IsDeleted = false,
-                            ParentID = 311L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 323L,
-                            ClauseRef = "9.3.2.e",
-                            Description = "the effectiveness of actions taken to address risks and opportunities (see 6.1);",
-                            IsDeleted = false,
-                            ParentID = 311L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 324L,
-                            ClauseRef = "9.3.2.f",
-                            Description = "opportunities for improvement",
-                            IsDeleted = false,
-                            ParentID = 311L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 325L,
-                            ClauseRef = "9.3.3",
-                            Description = "Management review outputs",
-                            IsDeleted = false,
-                            ParentID = 309L,
-                            Particulars = "The organization shall retain documented information as evidence of the results of management reviews. The outputs of the management review shall include decisions and actions related to:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 326L,
-                            ClauseRef = "9.3.3.a",
-                            Description = "opportunities for improvement;",
-                            IsDeleted = false,
-                            ParentID = 325L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 327L,
-                            ClauseRef = "9.3.3.b",
-                            Description = "any need for changes to the quality management system;",
-                            IsDeleted = false,
-                            ParentID = 325L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 328L,
-                            ClauseRef = "9.3.3.c",
-                            Description = "resource needs.",
-                            IsDeleted = false,
-                            ParentID = 325L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 329L,
-                            ClauseRef = "10",
-                            Description = "Improvement",
-                            IsDeleted = false,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 330L,
-                            ClauseRef = "10.1",
-                            Description = "General",
-                            IsDeleted = false,
-                            ParentID = 329L,
-                            Particulars = "The organization shall determine and select opportunities for improvement and implement any necessary actions to meet customer requirements and enhance customer satisfaction. These shall include:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 331L,
-                            ClauseRef = "10.1.1.a",
-                            Description = "improving products and services to meet requirements as well as to address future needs and expectations;",
-                            IsDeleted = false,
-                            ParentID = 330L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 332L,
-                            ClauseRef = "10.1.1.b",
-                            Description = "correcting, preventing or reducing undesired effects;",
-                            IsDeleted = false,
-                            ParentID = 330L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 333L,
-                            ClauseRef = "10.1.1.c",
-                            Description = "improving the performance and effectiveness of the quality management system.",
-                            IsDeleted = false,
-                            ParentID = 330L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 334L,
-                            ClauseRef = "10.2",
-                            Description = "Nonconformity and corrective action",
-                            IsDeleted = false,
-                            ParentID = 329L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 335L,
-                            ClauseRef = "10.2.1",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 334L,
-                            Particulars = "Corrective actions shall be appropriate to the effects of the nonconformities encountered. When a nonconformity occurs, including any arising from complaints, the organization shall:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 336L,
-                            ClauseRef = "10.2.1.a",
-                            Description = "react to the nonconformity and, as applicable:",
-                            IsDeleted = false,
-                            ParentID = 335L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 337L,
-                            ClauseRef = "10.2.1.a.1",
-                            Description = "take action control and correct it;",
-                            IsDeleted = false,
-                            ParentID = 336L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 338L,
-                            ClauseRef = "10.2.1.a.2",
-                            Description = "deal with the consequences;",
-                            IsDeleted = false,
-                            ParentID = 336L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 339L,
-                            ClauseRef = "10.2.1.b",
-                            Description = "evaluate the need for action to eliminate the cause(s) of the nonconformity, in order that it does not recur or occur elsewhere, by:",
-                            IsDeleted = false,
-                            ParentID = 335L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 340L,
-                            ClauseRef = "10.2.1.b.1",
-                            Description = "reviewing and analysing the nonconformity;",
-                            IsDeleted = false,
-                            ParentID = 339L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 341L,
-                            ClauseRef = "10.2.1.b.2",
-                            Description = "determining the causes of the nonconformity;",
-                            IsDeleted = false,
-                            ParentID = 339L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 342L,
-                            ClauseRef = "10.2.1.b.3",
-                            Description = "determining if similar nonconformities exist, or could potentially occur;",
-                            IsDeleted = false,
-                            ParentID = 335L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 343L,
-                            ClauseRef = "10.2.1.c",
-                            Description = "implement any action needed;",
-                            IsDeleted = false,
-                            ParentID = 335L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 344L,
-                            ClauseRef = "10.2.1.d",
-                            Description = "review the effectiveness of any corrective action taken;",
-                            IsDeleted = false,
-                            ParentID = 335L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 345L,
-                            ClauseRef = "10.2.1.e",
-                            Description = "update risks and opportunities determined during planning, if necessary;",
-                            IsDeleted = false,
-                            ParentID = 335L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 346L,
-                            ClauseRef = "10.2.1.f",
-                            Description = "make changes to the quality management system, if necessary.",
-                            IsDeleted = false,
-                            ParentID = 335L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 347L,
-                            ClauseRef = "10.2.2",
-                            Description = "",
-                            IsDeleted = false,
-                            ParentID = 334L,
-                            Particulars = "The organization shall retain documented information as evidence of:",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 348L,
-                            ClauseRef = "10.2.2.a",
-                            Description = "the nature of the nonconformities and any subsequent actions taken;",
-                            IsDeleted = false,
-                            ParentID = 347L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 349L,
-                            ClauseRef = "10.2.2.b",
-                            Description = "the results of any corrective action.",
-                            IsDeleted = false,
-                            ParentID = 347L,
-                            Particulars = "",
-                            VersionID = 1,
-                            isActive = true
-                        },
-                        new
-                        {
-                            Id = 350L,
-                            ClauseRef = "10.3",
-                            Description = "Continual improvement",
-                            IsDeleted = false,
-                            ParentID = 329L,
-                            Particulars = "The organization shall continually improve the suitability, adequacy and effectiveness of the quality management system. The organization shall consider the results of analysis and evaluation, and the outputs from management review, to determine if there are needs or opportunities that shall be addressed as part of continual improvement.",
-                            VersionID = 1,
-                            isActive = true
-                        });
-                });
-
-            modelBuilder.Entity("IMIS.Domain.IsoStandardAuditPlan", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<int?>("AuditPlanEntryId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<long?>("IsoStandardId")
-                        .HasColumnType("bigint");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuditPlanEntryId");
-
-                    b.HasIndex("IsoStandardId");
-
-                    b.ToTable("IsoStandardAuditPlans");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KeyResultArea", b =>
@@ -15469,37 +10034,11 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("SWOTAnalysisStrengthWeaknessSettings");
                 });
 
-            modelBuilder.Entity("IMIS.Domain.SWOTAnalysisStrengthWeaknessSettings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("Id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("InternalContext")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SWOTAnalysisStrengthWeaknessSettings");
-                });
-
             modelBuilder.Entity("IMIS.Domain.StandardVersion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("Id");
+                        .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
@@ -15521,15 +10060,6 @@ namespace IMIS.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("StandardVersions");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            IsDeleted = false,
-                            VersionName = "ISO 9001:2015",
-                            isActive = true
-                        });
                 });
 
             modelBuilder.Entity("IMIS.Domain.StrategyReview", b =>
@@ -15703,9 +10233,6 @@ namespace IMIS.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ImprovementType")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -15729,7 +10256,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 1,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 1"
@@ -15737,7 +10263,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 2,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 2"
@@ -15745,7 +10270,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 3,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 3"
@@ -15753,7 +10277,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 4,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 4"
@@ -15761,7 +10284,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 5,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 5"
@@ -15769,7 +10291,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 6,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 6"
@@ -15777,7 +10298,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 7,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 7"
@@ -15785,7 +10305,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 8,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 8"
@@ -15793,7 +10312,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 9,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 9"
@@ -15801,7 +10319,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 10,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 10"
@@ -15809,7 +10326,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 11,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 11"
@@ -15817,7 +10333,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 12,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 12"
@@ -15825,7 +10340,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 13,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 13"
@@ -15833,7 +10347,6 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 14,
-                            ImprovementType = 2,
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 14"
@@ -21658,224 +16171,31 @@ namespace IMIS.Persistence.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("IMIS.Domain.AuditChecklist", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditChecklistQNA", "AuditChecklistQNA")
-                        .WithMany()
-                        .HasForeignKey("AuditChecklistQNAId");
-
-                    b.HasOne("IMIS.Domain.Auditor", "Auditor")
-                        .WithMany()
-                        .HasForeignKey("AuditorId");
-
-                    b.HasOne("IMIS.Domain.AuditChecklistQNA", "QnA")
-                        .WithMany()
-                        .HasForeignKey("QnAId");
-
-                    b.Navigation("AuditChecklistQNA");
-
-                    b.Navigation("Auditor");
-
-                    b.Navigation("QnA");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditChecklistQNA", b =>
-                {
-                    b.HasOne("IMIS.Domain.IsoStandard", "IsoStandard")
-                        .WithMany()
-                        .HasForeignKey("IsoStandardId");
-
-                    b.Navigation("IsoStandard");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditComFindings", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditReport", null)
-                        .WithMany("AuditComFindings")
-                        .HasForeignKey("AuditReportId");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlan", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditPlanStatus", null)
-                        .WithMany("AuditPlans")
-                        .HasForeignKey("AuditPlanStatusId");
-
-                    b.HasOne("IMIS.Domain.AuditProgramme", "AuditProgramme")
-                        .WithMany("AuditPlans")
-                        .HasForeignKey("AuditProgrammeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("IMIS.Domain.IsoAuditor", "Preparer")
-                        .WithMany()
-                        .HasForeignKey("PreparerId");
-
-                    b.Navigation("AuditProgramme");
-
-                    b.Navigation("Preparer");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanApproval", b =>
-                {
-                    b.HasOne("IMIS.Domain.User", "Approver")
-                        .WithMany()
-                        .HasForeignKey("ApproverId1");
-
-                    b.HasOne("IMIS.Domain.AuditPlan", "AuditPlan")
-                        .WithMany("Approvals")
-                        .HasForeignKey("AuditPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Approver");
-
-                    b.Navigation("AuditPlan");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanEntry", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditPlan", "AuditPlan")
-                        .WithMany("Entries")
-                        .HasForeignKey("AuditPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AuditPlan");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanPersonResponsible", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditPlanEntry", "AuditPlanEntry")
-                        .WithMany("ResponsiblePersons")
-                        .HasForeignKey("AuditPlanEntryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AuditPlanEntry");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanProcess", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditPlanEntry", "AuditPlanEntry")
-                        .WithMany("AuditPlanProcesses")
-                        .HasForeignKey("AuditPlanEntryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("IMIS.Domain.Office", "Office")
-                        .WithMany()
-                        .HasForeignKey("OfficeId");
-
-                    b.Navigation("AuditPlanEntry");
-
-                    b.Navigation("Office");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditProgrammeObjective", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditProgramme", "AuditProgramme")
-                        .WithMany("Objectives")
-                        .HasForeignKey("AuditProgrammeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AuditProgramme");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditReport", b =>
-                {
-                    b.HasOne("IMIS.Domain.IsoStandard", "AuditStandardISO")
-                        .WithMany()
-                        .HasForeignKey("AuditStandardISOId");
-
-                    b.HasOne("IMIS.Domain.AuditPlan", "DateofAudit")
-                        .WithMany()
-                        .HasForeignKey("DateofAuditId");
-
-                    b.HasOne("IMIS.Domain.AuditPlanProcess", "OfficeAudited")
-                        .WithMany()
-                        .HasForeignKey("OfficeAuditedId");
-
-                    b.Navigation("AuditStandardISO");
-
-                    b.Navigation("DateofAudit");
-
-                    b.Navigation("OfficeAudited");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditPlan", "AuditPlan")
-                        .WithMany("AuditSchedules")
-                        .HasForeignKey("AuditPlanId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("IMIS.Domain.AuditorTeams", "AuditorTeams")
-                        .WithMany()
-                        .HasForeignKey("AuditorTeamsId");
-
-                    b.Navigation("AuditPlan");
-
-                    b.Navigation("AuditorTeams");
-                });
-
             modelBuilder.Entity("IMIS.Domain.AuditScheduleDetails", b =>
                 {
-                    b.HasOne("IMIS.Domain.AuditPlanEntry", "AuditPlanEntry")
-                        .WithMany()
-                        .HasForeignKey("AuditPlanEntryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("IMIS.Domain.AuditSchedule", "AuditSchedule")
                         .WithMany("AuditSchduleDetails")
                         .HasForeignKey("AuditScheduleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AuditPlanEntry");
+                    b.HasOne("IMIS.Domain.Office", "Office")
+                        .WithMany()
+                        .HasForeignKey("OfficeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("IMIS.Domain.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("AuditSchedule");
-                });
 
-            modelBuilder.Entity("IMIS.Domain.AuditScope", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditPlanProcess", "AuditProcessAudited")
-                        .WithMany()
-                        .HasForeignKey("AuditProcessAuditedId");
+                    b.Navigation("Office");
 
-                    b.HasOne("IMIS.Domain.AuditReport", null)
-                        .WithMany("AuditScope")
-                        .HasForeignKey("AuditReportId");
-
-                    b.HasOne("IMIS.Domain.AuditorTeams", "AuditorTeams")
-                        .WithMany()
-                        .HasForeignKey("AuditorTeamsId");
-
-                    b.Navigation("AuditProcessAudited");
-
-                    b.Navigation("AuditorTeams");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditSummaryFIndings", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditReport", null)
-                        .WithMany("AuditSummaryFIndings")
-                        .HasForeignKey("AuditReportId");
-
-                    b.HasOne("IMIS.Domain.IsoStandard", "Criteria")
-                        .WithMany()
-                        .HasForeignKey("CriteriaId");
-
-                    b.HasOne("IMIS.Domain.AuditNcarStatus", "NcarStatus")
-                        .WithMany()
-                        .HasForeignKey("NcarStatusId");
-
-                    b.Navigation("Criteria");
-
-                    b.Navigation("NcarStatus");
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditableOffices", b =>
@@ -21899,14 +16219,6 @@ namespace IMIS.Persistence.Migrations
 
             modelBuilder.Entity("IMIS.Domain.Auditor", b =>
                 {
-                    b.HasOne("IMIS.Domain.AuditorTeams", null)
-                        .WithMany("Auditors")
-                        .HasForeignKey("AuditorTeamsId");
-
-                    b.HasOne("IMIS.Domain.ImprovementType", null)
-                        .WithMany("Auditors")
-                        .HasForeignKey("ImprovementTypeId");
-
                     b.HasOne("IMIS.Domain.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -22052,38 +16364,6 @@ namespace IMIS.Persistence.Migrations
                         .HasForeignKey("ImpactStrategicScoreCardMeasureId");
                 });
 
-            modelBuilder.Entity("IMIS.Domain.IsoAuditProcess", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditPlanEntry", "AuditPlanEntry")
-                        .WithMany("IsoAuditProcesses")
-                        .HasForeignKey("AuditPlanEntryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AuditPlanEntry");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.IsoAuditor", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditPlanEntry", "AuditPlanEntry")
-                        .WithMany("IsoAuditors")
-                        .HasForeignKey("AuditPlanEntryId");
-
-                    b.HasOne("IMIS.Domain.Auditor", "IsoAuditors")
-                        .WithMany()
-                        .HasForeignKey("AuditorId");
-
-                    b.HasOne("IMIS.Domain.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId");
-
-                    b.Navigation("AuditPlanEntry");
-
-                    b.Navigation("IsoAuditors");
-
-                    b.Navigation("Team");
-                });
-
             modelBuilder.Entity("IMIS.Domain.IsoStandard", b =>
                 {
                     b.HasOne("IMIS.Domain.StandardVersion", "Version")
@@ -22093,21 +16373,6 @@ namespace IMIS.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Version");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.IsoStandardAuditPlan", b =>
-                {
-                    b.HasOne("IMIS.Domain.AuditPlanEntry", "AuditPlanEntry")
-                        .WithMany("IsoStandardAuditPlans")
-                        .HasForeignKey("AuditPlanEntryId");
-
-                    b.HasOne("IMIS.Domain.IsoStandard", "IsoStandard")
-                        .WithMany()
-                        .HasForeignKey("IsoStandardId");
-
-                    b.Navigation("AuditPlanEntry");
-
-                    b.Navigation("IsoStandard");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMap", b =>
@@ -22687,49 +16952,6 @@ namespace IMIS.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("IMIS.Domain.AuditPlan", b =>
-                {
-                    b.Navigation("Approvals");
-
-                    b.Navigation("AuditSchedules");
-
-                    b.Navigation("Entries");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanEntry", b =>
-                {
-                    b.Navigation("AuditPlanProcesses");
-
-                    b.Navigation("IsoAuditProcesses");
-
-                    b.Navigation("IsoAuditors");
-
-                    b.Navigation("IsoStandardAuditPlans");
-
-                    b.Navigation("ResponsiblePersons");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanStatus", b =>
-                {
-                    b.Navigation("AuditPlans");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditProgramme", b =>
-                {
-                    b.Navigation("AuditPlans");
-
-                    b.Navigation("Objectives");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditReport", b =>
-                {
-                    b.Navigation("AuditComFindings");
-
-                    b.Navigation("AuditScope");
-
-                    b.Navigation("AuditSummaryFIndings");
-                });
-
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
                 {
                     b.Navigation("AuditSchduleDetails");
@@ -22769,16 +16991,6 @@ namespace IMIS.Persistence.Migrations
             modelBuilder.Entity("IMIS.Domain.ImpactStrategicScoreCardMeasure", b =>
                 {
                     b.Navigation("ImpactStrategicScoreCardTarget");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditorTeams", b =>
-                {
-                    b.Navigation("Auditors");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.ImprovementType", b =>
-                {
-                    b.Navigation("Auditors");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMap", b =>
