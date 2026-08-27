@@ -36,6 +36,16 @@ RoleInfo getRoleInfo(String role) {
         description:
             "Oversee deliverables and conduct evaluations through scoring and performance assessment.",
       );
+    case PermissionRoleString.evaluator:
+      return RoleInfo(
+        icon: Icons.person_outline,
+        iconColor: Colors.deepOrange,
+        backgroundColor: mainBgColor,
+        borderColor: Colors.grey.shade300,
+        textColor: Colors.black,
+        description:
+            "Oversee deliverables and conduct evaluations through scoring and performance assessment.",
+      );
     case PermissionRoleString.serviceHead:
       return RoleInfo(
         icon: Icons.person_outline,
