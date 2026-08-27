@@ -42,10 +42,11 @@ namespace IMIS.Persistence.EvaluatorOfficesModule
                 return null!;
             return DtoPageList<EvaluatorOfficesDto, EvaluatorOffices, int>.Create(evaluatorOfficesDto.Items, page, pageSize, evaluatorOfficesDto.TotalCount);
         }
+      
         public async Task<EvaluatorOfficesDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var evaluatorOfficesDto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return evaluatorOfficesDto != null ? new EvaluatorOfficesDto(evaluatorOfficesDto) : null;
+            var evaluatorOffices = await _repository.GetByIdWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
+            return evaluatorOffices != null ? new EvaluatorOfficesDto(evaluatorOffices) : null;
         }
         public async Task<List<EvaluatorOfficesDto>?> GetAllAsync(CancellationToken cancellationToken)
         {

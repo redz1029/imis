@@ -11,8 +11,15 @@ namespace IMIS.Persistence.EvaluatorOfficesModule
         public EvaluatorOfficesRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
-     
-      
+        public async Task<EvaluatorOffices?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<EvaluatorOffices>()
+               .Include(e => e.Office)
+                .Include(e => e.User)
+                .FirstOrDefaultAsync(e => e.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         public async Task<EvaluatorOffices?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<EvaluatorOffices>()
@@ -20,9 +27,12 @@ namespace IMIS.Persistence.EvaluatorOfficesModule
         }
         public async Task<EntityPageList<EvaluatorOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
+            var query = _entities
+                .AsNoTracking()
+                .Include(e => e.Office)
+                .Include(e => e.User);
 
-            return await EntityPageList<EvaluatorOffices, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
-
+            return await EntityPageList<EvaluatorOffices, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
         }
         public async Task<IEnumerable<EvaluatorOffices>> GetAll(CancellationToken cancellationToken)
         {
