@@ -1,5 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="07/08/2026 10:25:11" ReportInfo.Modified="07/08/2026 14:02:49" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="07/08/2026 10:25:11" ReportInfo.Modified="08/28/2026 20:23:04" ReportInfo.CreatorVersion="2025.2.0.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+
+    private void TotalDelivrable_BeforePrint(object sender, EventArgs e)
+    {
+        TotalDelivrable.Text = &quot;Total Offices: &quot; + officeCount.ToString();
+    }
+    private int officeCount = 0;
+    private void Data1_BeforePrint(object sender, EventArgs e)
+    {
+        officeCount++;
+    }
+  }
+}
+</ScriptText>
   <Dictionary>
     <BusinessObjectDataSource Name="ReportPgsServiceOfficePeriodDto" ReferenceName="ReportPgsServiceOfficePeriodDto" DataType="System.Int32" Enabled="true">
       <Column Name="ServiceName" DataType="System.String"/>
@@ -23,15 +54,19 @@
       <TextObject Name="Text328" Left="208.1" Top="207.9" Width="339.3" Height="18.9" Text="Offices" VertAlign="Center" Font="Noto Sans, 10pt, style=Bold"/>
       <LineObject Name="Line1" Left="20" Top="228.8" Width="673.3"/>
     </PageHeaderBand>
-    <GroupHeaderBand Name="GroupHeader1" Top="231.47" Width="718.2" Height="37.8" Condition="[ReportPgsServiceOfficePeriodDto.ServiceName]">
+    <GroupHeaderBand Name="GroupHeader1" Top="232" Width="718.2" Height="37.8" Condition="[ReportPgsServiceOfficePeriodDto.ServiceName]">
       <TextObject Name="Text1" Left="21.9" Top="10.45" Width="321.3" Height="18.9" Text="[[ReportPgsServiceOfficePeriodDto.ServiceName]]" VertAlign="Center" Font="Noto Sans, 9pt, style=Bold"/>
       <LineObject Name="Line2" Left="21.9" Top="31.35" Width="318.95"/>
-      <DataBand Name="Data1" Top="271.93" Width="718.2" Height="19.9" CanGrow="true" DataSource="ReportPgsServiceOfficePeriodDto">
+      <DataBand Name="Data1" Top="273" Width="718.2" Height="19.9" CanGrow="true" BeforePrintEvent="Data1_BeforePrint" DataSource="ReportPgsServiceOfficePeriodDto">
         <TextObject Name="Text329" Left="208.35" Top="2" Width="473.6" Height="17.9" Text="[ReportPgsServiceOfficePeriodDto.OfficeName]" VertAlign="Center" Font="Noto Sans, 9pt"/>
       </DataBand>
-      <GroupFooterBand Name="GroupFooter1" Top="294.5" Width="718.2"/>
+      <GroupFooterBand Name="GroupFooter1" Top="296.1" Width="718.2"/>
     </GroupHeaderBand>
-    <PageFooterBand Name="PageFooter1" Top="297.17" Width="718.2" Height="15.35">
+    <ReportSummaryBand Name="ReportSummary1" Top="299.3" Width="718.2" Height="30.8">
+      <TextObject Name="TotalDelivrable" Left="417.6" Top="4.45" Width="278.8" Height="16.9" BeforePrintEvent="TotalDelivrable_BeforePrint" HorzAlign="Right" Font="Noto Sans, 10pt, style=Bold"/>
+      <LineObject Name="Line3" Left="417.55" Top="4" Width="277.95"/>
+    </ReportSummaryBand>
+    <PageFooterBand Name="PageFooter1" Top="333.3" Width="718.2" Height="15.35">
       <TextObject Name="Text29" Left="9.45" Top="1" Width="695.7" Height="14.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
     </PageFooterBand>
   </ReportPage>
