@@ -5,8 +5,7 @@ using IMIS.Domain;
 
 namespace IMIS.Application.OperationReviewProtocolModule
 {
-    public interface IOperationReviewProtocolRepository
-        : IRepository<OperationReviewProtocol, long>
+    public interface IOperationReviewProtocolRepository : IRepository<OperationReviewProtocol, long>
     {
         Task<EntityPageList<OperationReviewProtocol, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<IEnumerable<OperationReviewProtocol>?> GetAll(long? performanceGovernanceSystemId, CancellationToken cancellationToken);    
@@ -14,5 +13,6 @@ namespace IMIS.Application.OperationReviewProtocolModule
         Task<OperationReviewProtocol?> GetByIdAsync(long id, CancellationToken cancellationToken);      
         Task<List<PgsDeliverableAccomplishment>> GetDeliverableByIdAsync(long performanceGovernanceSystemId, int month, int year, CancellationToken cancellationToken);
         Task<OperationReviewProtocol?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<OperationReviewProtocol>> ReportGetAllOprAsync(int? officeId, int? periodId, CancellationToken cancellationToken);
     }
 }

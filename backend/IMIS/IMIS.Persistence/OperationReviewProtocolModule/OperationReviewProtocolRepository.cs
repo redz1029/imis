@@ -10,6 +10,25 @@ namespace IMIS.Persistence.OperationReviewProtocolModule
     {
         public OperationReviewProtocolRepository(ImisDbContext dbContext) : base(dbContext)
         {
+        }      
+        public async Task<IEnumerable<OperationReviewProtocol>> ReportGetAllOprAsync(int? officeId, int? periodId, CancellationToken cancellationToken)
+        {
+            var query = _entities
+                .AsNoTracking()
+                .Include(opr => opr.Department)
+                .Include(opr => opr.Division)
+                .Include(opr => opr.User)
+                .Join(
+                    ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().AsNoTracking(),
+                    opr => opr.PerformanceGovernanceSystemId,
+                    pgs => pgs.Id,
+                    (opr, pgs) => new { Opr = opr, Pgs = pgs }
+                )
+                .Where(x => !officeId.HasValue || x.Pgs.OfficeId == officeId.Value)
+                .Where(x => !periodId.HasValue || x.Pgs.PgsPeriod.Id == periodId.Value)
+                .Select(x => x.Opr);
+
+            return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<OperationReviewProtocol?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)

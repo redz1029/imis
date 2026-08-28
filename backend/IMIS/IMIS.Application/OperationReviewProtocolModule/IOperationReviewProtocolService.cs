@@ -12,5 +12,6 @@ namespace IMIS.Application.OperationReviewProtocolModule
         Task<ReportOperationReviewProtocolDto?> ReportGetByIdAsync(long operationReviewProtocolId, long pgsId, int month, int year, CancellationToken cancellationToken);
         Task<List<ORPPgsDeliverableAccomplishmentDto>> GetDeliverableByIdAsync(long id, int month, int year, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<List<ReportORPListDto>?> ReportGetAllOprAsync(int? officeId, int? periodId, CancellationToken cancellationToken);
     }
 }

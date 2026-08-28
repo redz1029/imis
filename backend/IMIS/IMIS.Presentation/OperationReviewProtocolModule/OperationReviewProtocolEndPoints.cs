@@ -1,11 +1,15 @@
-﻿using Azure;
+﻿using System.Linq;
+using Azure;
 using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
+using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
+using IMIS.Application.StrategyReviewModule;
+using IMIS.Domain;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -99,7 +103,32 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                 .WithTags(_operationReviewProtocol)
                 .DisableAntiforgery()
                 .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.Add));
+          
+            app.MapGet("report-opr-list/", async (int? officeId, int? periodId, IOperationReviewProtocolService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var operationReviewProtocols = await service.ReportGetAllOprAsync(officeId, periodId, cancellationToken).ConfigureAwait(false);
 
+                var reportDtos = operationReviewProtocols?.ToList();
+                if (reportDtos == null || reportDtos.Count == 0)
+                    return Results.NotFound();
+
+                var file = await ReportUtil.GeneratePdfReport<ReportORPListDto>(
+                    "OperationReviewProtocalListReport",
+                    reportDtos,
+                    "OperationReviewProtocol",
+                    cancellationToken).ConfigureAwait(false);
+
+                // FORCE INLINE PDF VIEW IN BROWSER
+                var fileName = $"OperationReviewProtocalListReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"OperationReviewProtocol_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+             .WithTags(_operationReviewProtocol)
+             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true);
+
+           
 
             app.MapGet("/{long}", async (long id, IOperationReviewProtocolService service, CancellationToken cancellationToken) =>
             {
@@ -330,7 +359,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
                     "OperationReviewProtocol", cancellationToken).ConfigureAwait(false);
 
                 // FORCE INLINE PDF VIEW IN BROWSER
-                var fileName = $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                var fileName = $"OperationReviewProtocalListReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 response.Headers.ContentDisposition = $"inline; filename={fileName}";
                 return Results.File(file, "application/pdf");
 
