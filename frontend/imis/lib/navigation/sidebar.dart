@@ -14,9 +14,10 @@ import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
 import 'package:imis/dashboard/summary_offices_deliverables.dart';
-import 'package:imis/dashboard/summary_validated_deliverables_page.dart';
+import 'package:imis/dashboard/monthly_opr_report_page.dart';
 import 'package:imis/dashboard/strategic_change_agenda.dart';
 import 'package:imis/dashboard/strategy_roadmap_page.dart';
+import 'package:imis/dashboard/summary_validated_deliverables_page.dart';
 import 'package:imis/performance_governance_system/pgs_evaluator_offices/pages/evaluator_offices_page.dart';
 import 'package:imis/office/pages/office_page.dart';
 import 'package:imis/performance_governance_system/pgs_operation_review_protocol/pages/operation_review_protocol_page.dart';
@@ -24,12 +25,12 @@ import 'package:imis/osm_calendar_activity/pages/osm_calendar_actvity_page.dart'
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/pages/deliverable_status_monitoring_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page..dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
+import 'package:imis/performance_governance_system/pgs_reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/performance_governance_system/process_core_support/pages/process_core_support_page.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/pages/performance_validation_page.dart';
 import 'package:imis/performance_governance_system/performance_validation_tool_period/pages/performance_validation_tool_period_page.dart';
 import 'package:imis/performance_governance_system/performance_validation_tool_signatory/pages/performance_validation_tool_signatory_page.dart';
-import 'package:imis/performance_governance_system/pgs_reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/pages/roadmap_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
@@ -537,7 +538,10 @@ class SidebarState extends State<Sidebar> {
     try {
       final unread = await _announcementService.getUnreadAnnouncements();
       if (!mounted) return;
-      setState(() => _unreadAnnouncements = unread);
+
+      final notifiable = unread.where((a) => a.isRead == true).toList();
+
+      setState(() => _unreadAnnouncements = notifiable);
     } catch (_) {}
   }
 
@@ -1291,17 +1295,21 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 1) return const PerformanceGovernanceSystemPage();
       if (selectedSubPage == 2) return const SwotAnalysisPage();
       if (selectedSubPage == 3) return const DeliverableStatusMonitoringPage();
-      if (selectedSubPage == 8) return const OperationReviewProtocolPage();
-      if (selectedSubPage == 4) {
+      if (selectedSubPage == 4) return const StrategyReviewReportPage();
+      if (selectedSubPage == 5) {
         return const ImpactStrategyGoalScorecardPage();
       }
-      if (selectedSubPage == 5) return const ScoreCardReportPage();
-      if (selectedSubPage == 7) return const StrategyReviewReportPage();
-      if (selectedSubPage == 6) return const ViewSummaryNarrativeReportPage();
-      if (selectedSubPage == 9) return const PerformanceValidationPage();
-      if (selectedSubPage == 10) return SummaryValidatedDeliverablesPage();
-      if (selectedSubPage == 11) return PgsServiceOfficePeriodReportPage();
-      // if (selectedSubPage == 12) return StrategicChangeAgendaPage();
+      if (selectedSubPage == 6) return const ScoreCardReportPage();
+
+      if (selectedSubPage == 7) return const OperationReviewProtocolPage();
+      if (selectedSubPage == 8) return const PerformanceValidationPage();
+
+      if (selectedSubPage == 9) return const ViewSummaryNarrativeReportPage();
+      if (selectedSubPage == 10) {
+        return const SummaryValidatedDeliverablesPage();
+      }
+      if (selectedSubPage == 11) return SummaryOfficesDeliverables();
+      if (selectedSubPage == 12) return MonthlyOprReportPage();
     }
 
     if (selectedPage == 3) {
@@ -1934,7 +1942,7 @@ class SidebarState extends State<Sidebar> {
                                 selectedRole == PermissionRoleString.roleAdmin
                                     ? 'Create/View Strategy Review Report'
                                     : 'View Strategy Review Report',
-                                7,
+                                4,
                               )
                               : (selectedRole ==
                                       PermissionRoleString.trainingOfficer ||
@@ -1956,7 +1964,7 @@ class SidebarState extends State<Sidebar> {
                                       PermissionRoleString.researchOfficer)
                               ? sidebarSubText(
                                 'Create Strategy Review Report',
-                                7,
+                                4,
                               )
                               : const SizedBox.shrink(),
                     ),
@@ -1964,8 +1972,8 @@ class SidebarState extends State<Sidebar> {
                     ExpandableSidebarItem(
                       title: "Scorecard",
                       items: [
-                        {"title": "Impact and Strategic Goal", "index": 4},
-                        {"title": "Core & Support Processes", "index": 5},
+                        {"title": "Impact and Strategic Goal", "index": 5},
+                        {"title": "Core & Support Processes", "index": 6},
                       ],
                       selectedSubPage: selectedSubPage,
                       onTap: (index) {
@@ -2022,7 +2030,7 @@ class SidebarState extends State<Sidebar> {
                                 selectedRole == PermissionRoleString.roleAdmin
                                     ? 'Create/View Operation Review Protocol'
                                     : "View Operation Review Protocol",
-                                8,
+                                7,
                               )
                               : SizedBox.shrink(),
                     ),
@@ -2039,7 +2047,7 @@ class SidebarState extends State<Sidebar> {
                                 PermissionRoleString.serviceHead,
                                 PermissionRoleString.coreTeam,
                               ].contains(selectedRole)
-                              ? sidebarSubText("Performance Validation Tool", 9)
+                              ? sidebarSubText("Performance Validation Tool", 8)
                               : SizedBox.shrink(),
                     ),
                     PermissionWidget(
@@ -2049,12 +2057,12 @@ class SidebarState extends State<Sidebar> {
                                 PermissionRoleString.roleAdmin,
                                 PermissionRoleString.twg,
                               ].contains(selectedRole)
-                              ? sidebarSubText("PGS Auditor Report", 6)
+                              ? sidebarSubText("PGS Auditor Report", 9)
                               : SizedBox.shrink(),
                     ),
 
                     ExpandableSidebarItem(
-                      title: "Deliverable Reports",
+                      title: "PGS Reports",
                       items: [
                         {
                           "title": "Summary Validated Deliverables",
@@ -2063,6 +2071,11 @@ class SidebarState extends State<Sidebar> {
                         {
                           "title": "Summary of Offices with Deliverables",
                           "index": 11,
+                        },
+                        {
+                          "title":
+                              "Summary of Offices with Monthly Operation Review Protocol",
+                          "index": 12,
                         },
                       ],
                       selectedSubPage: selectedSubPage,
