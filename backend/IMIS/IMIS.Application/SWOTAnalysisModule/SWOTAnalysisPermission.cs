@@ -7,5 +7,6 @@ namespace IMIS.Application.SWOTAnalysisModule
         public override string ModuleName => "SWOTAnalysis";
 
         public override string PermissionGroup => PermissionGrouper.Transaction;
+        public string Delete => $"Delete{ModuleName}";
     }
 }
