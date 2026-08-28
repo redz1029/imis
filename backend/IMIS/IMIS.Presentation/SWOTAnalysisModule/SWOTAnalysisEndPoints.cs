@@ -1,6 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.SWOTAnalysisModule;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -36,15 +37,39 @@ namespace IMIS.Presentation.SWOTAnalysisModule
             .WithTags(_swotAnalysisTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
-
-            app.MapGet("report-pdf/{id}", async (int id, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
+            
+            app.MapGet("report-pdf/{id}", async (int id, ISWOTAnalysisService service, HttpResponse response, CancellationToken cancellationToken) =>
             {
-                var swotAnalysisDto = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-                return swotAnalysisDto != null ? Results.Ok(swotAnalysisDto) : Results.NotFound();
+                var operationReviewProtocolReport = await service.ReportGetByIdAsync(id, cancellationToken);
+
+                if (operationReviewProtocolReport == null)
+                    return Results.NotFound();
+
+                var file = await ReportUtil.GeneratePdfReport<ReportSWOTAnalysisDto>("SWOTAnalysisReport",
+                    new List<ReportSWOTAnalysisDto>
+                    {
+                        operationReviewProtocolReport
+                    },
+                    "SWOTAnalysis", cancellationToken).ConfigureAwait(false);
+
+                // FORCE INLINE PDF VIEW IN BROWSER
+                var fileName = $"SWOTAnalysisReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"SWOTAnalysisReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                //var result = await service.ReportGetByIdAsync(id, pgsId, month, year, cancellationToken).ConfigureAwait(false);
+                //return result != null ? Results.Ok(result) : Results.NotFound();
+
+                //var result = await service.ReportGetByIdAsync(id, cancellationToken);
+
+                //if (result == null)
+                //    return Results.NotFound();
+                //return Results.Ok(result);
             })
             .WithTags(_swotAnalysisTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisDto swotAnalysisDto, ISWOTAnalysisService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
