@@ -165,10 +165,12 @@ class EvaluatorOfficesPageState extends State<EvaluatorOfficesPage> {
     String? id,
     String? selectedUser,
     String? selectedOffice,
+    String? selectedOfficeName,
   }) {
     _selectedUser = selectedUser;
     _selectedOffice = selectedOffice;
     final isEdit = id != null;
+    final selectOfficeName = selectedOfficeName;
     final formKey = GlobalKey<FormState>();
     showDialog(
       context: context,
@@ -281,8 +283,12 @@ class EvaluatorOfficesPageState extends State<EvaluatorOfficesPage> {
                                       item.id.toString() == _selectedOffice,
                                   orElse:
                                       () => Office(
-                                        id: 0,
-                                        name: '',
+                                        id:
+                                            int.tryParse(
+                                              _selectedOffice ?? '0',
+                                            ) ??
+                                            0,
+                                        name: selectOfficeName ?? '',
                                         officeTypeId: 0,
                                         parentOfficeId: 0,
                                         isActive: true,
@@ -678,37 +684,6 @@ class EvaluatorOfficesPageState extends State<EvaluatorOfficesPage> {
                                       index +
                                       1;
 
-                                  final matchedOffice = officenameList
-                                      .firstWhere(
-                                        (office) =>
-                                            office.id ==
-                                            evaluatorOffice.officeId,
-                                        orElse:
-                                            () => Office(
-                                              id: 0,
-                                              name: '',
-                                              officeTypeId: 0,
-                                              parentOfficeId: 0,
-                                              isActive: true,
-                                              isDeleted: false,
-                                            ),
-                                      );
-                                  final officeName = matchedOffice.name;
-
-                                  final matchedUser = userList.firstWhere(
-                                    (u) =>
-                                        u.id ==
-                                        evaluatorOffice.userId.toString(),
-                                    orElse:
-                                        () => User(
-                                          id: '',
-                                          fullName: '',
-                                          position: '',
-                                        ),
-                                  );
-
-                                  final userName = matchedUser.fullName;
-
                                   if (!isMobile) {
                                     return Container(
                                       padding: const EdgeInsets.symmetric(
@@ -733,14 +708,15 @@ class EvaluatorOfficesPageState extends State<EvaluatorOfficesPage> {
                                           Expanded(
                                             flex: 3,
                                             child: Text(
-                                              userName,
+                                              evaluatorOffice.userFullName ??
+                                                  '',
                                               style: TextStyle(fontSize: 12),
                                             ),
                                           ),
                                           Expanded(
                                             flex: 2,
                                             child: Text(
-                                              officeName,
+                                              evaluatorOffice.officeName ?? '',
                                               style: TextStyle(fontSize: 12),
                                             ),
                                           ),
@@ -765,6 +741,9 @@ class EvaluatorOfficesPageState extends State<EvaluatorOfficesPage> {
                                                           evaluatorOffice
                                                               .officeId
                                                               .toString(),
+                                                      selectedOfficeName:
+                                                          evaluatorOffice
+                                                              .officeName,
                                                     );
                                                   },
                                                 ),
@@ -877,13 +856,13 @@ class EvaluatorOfficesPageState extends State<EvaluatorOfficesPage> {
                                         const SizedBox(height: 8),
 
                                         Text(
-                                          "User: $userName",
+                                          evaluatorOffice.userFullName ?? '',
                                           style: TextStyle(fontSize: 12),
                                         ),
                                         const SizedBox(height: 4),
 
                                         Text(
-                                          "Office: $officeName",
+                                          evaluatorOffice.officeName ?? '',
                                           style: TextStyle(fontSize: 12),
                                         ),
                                       ],
