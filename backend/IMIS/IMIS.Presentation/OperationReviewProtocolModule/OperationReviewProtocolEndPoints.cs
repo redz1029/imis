@@ -170,10 +170,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_operationReviewProtocol), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _operationReviewProtocolPermission.View));
 
-            app.MapPut("/pgs/accomplishments", async (
-            List<ORPPgsDeliverableAccomplishmentDto> request,
-            IPgsDeliverableAcomplishmentService service,
-            CancellationToken cancellationToken) =>
+            app.MapPut("/pgs/accomplishments", async (List<ORPPgsDeliverableAccomplishmentDto> request,  IPgsDeliverableAcomplishmentService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.UpdateAccomplishmentsAsync(request, cancellationToken);
 

@@ -549,24 +549,68 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             .ToListAsync(cancellationToken);
     }
 
-    // GET BY AUDITOR
-    public async Task<List<PerfomanceGovernanceSystem>>GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(string userId, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+    // GET BY AUDITOR   
+    private async Task<List<int>> GetDescendantOfficeIdsAsync(List<int> rootOfficeIds, CancellationToken cancellationToken)
     {
-        var auditor = await ReadOnlyDbContext.Set<Auditor>()
+        var allOffices = await ReadOnlyDbContext.Set<Office>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted, cancellationToken);
-
-        if (auditor == null)
-            return [];
-
-        var officeIds = await ReadOnlyDbContext.Set<AuditorOffices>()
-            .AsNoTracking()
-            .Where(x => x.AuditorId == auditor.Id && !x.IsDeleted)
-            .Select(x => x.OfficeId)
+            .Where(x => !x.IsDeleted)
+            .Select(x => new { x.Id, x.ParentOfficeId }) 
             .ToListAsync(cancellationToken);
 
-        if (!officeIds.Any())
+        var childrenLookup = allOffices
+            .Where(x => x.ParentOfficeId.HasValue)
+            .ToLookup(x => x.ParentOfficeId!.Value, x => x.Id);
+
+        var result = new HashSet<int>();
+        var queue = new Queue<int>(rootOfficeIds);
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            if (!result.Add(current))
+                continue;
+
+            foreach (var childId in childrenLookup[current])
+            {
+                if (!result.Contains(childId))
+                    queue.Enqueue(childId);
+            }
+        }
+
+        return result.ToList();
+    }
+
+    // GET BY EVALUATOR
+    public async Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(string userId, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        var assignedOfficeIds = await ReadOnlyDbContext.Set<EvaluatorOffices>()
+            .AsNoTracking()
+            .Where(x => x.UserId == userId && !x.IsDeleted && x.OfficeId.HasValue)
+            .Select(x => x.OfficeId!.Value) 
+            .ToListAsync(cancellationToken);
+
+        if (!assignedOfficeIds.Any())
             return [];
+
+        var allowedOfficeIds = await GetDescendantOfficeIdsAsync(assignedOfficeIds, cancellationToken);
+
+        if (!allowedOfficeIds.Any())
+            return [];
+
+        var finalOfficeIds = allowedOfficeIds;
+
+     
+        if (officeId.HasValue)
+        {
+            var requestedDescendantIds = await GetDescendantOfficeIdsAsync([(int)officeId.Value], cancellationToken);
+            finalOfficeIds = allowedOfficeIds.Intersect(requestedDescendantIds).ToList();
+
+            if (!finalOfficeIds.Any())
+                return [];
+        }
+
+        var officeIdsLong = finalOfficeIds.Select(x => (long)x).ToList();
 
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
             .AsNoTracking()
@@ -575,7 +619,10 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             .Include(x => x.PgsReadinessRating)
             .Include(x => x.PgsDeliverables)
             .Include(x => x.PgsSignatories)
-            .Where(x => !x.IsDeleted && officeIds.Contains(x.OfficeId) && (!officeId.HasValue || x.OfficeId == officeId.Value) && (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value))
+            .Where(x =>
+                !x.IsDeleted &&
+                officeIdsLong.Contains(x.OfficeId) &&
+                (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value))
             .ToListAsync(cancellationToken);
     }
 

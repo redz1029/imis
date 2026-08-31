@@ -183,23 +183,21 @@ namespace IMIS.Persistence.PgsModule
 
             return result;
         }
-     
+        
         //======= Operation Review Protocol / Performance Validation Tool ===========
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetAuditorPgsDeliverableAsync(string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
-
             if (currentUser == null)
             {
                 return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create([], page, pageSize, 0);
             }
-               
-            var role = await _roleManager.FindByIdAsync(roleId);
 
+            var role = await _roleManager.FindByIdAsync(roleId);
             if (role == null)
             {
                 return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create([], page, pageSize, 0);
-            }  
+            }
 
             List<PerfomanceGovernanceSystem> systems;
 
@@ -217,15 +215,17 @@ namespace IMIS.Persistence.PgsModule
             {
                 systems = await _repository.GetOperationReviewProtocolAuditorPgsDeliverableByStandardUserAsync(currentUser.Id, pgsPeriodId, cancellationToken);
             }
-            else
+            else if (role.Name.Equals(new PgsEvaluatorRole().Name, StringComparison.OrdinalIgnoreCase))
             {
                 systems = await _repository.GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(currentUser.Id, officeId, pgsPeriodId, cancellationToken);
             }
+            else
+            {
+                systems = [];
+            }
 
             var totalCount = systems.Count;
-
             var pagedEntities = systems.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
             return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(pagedEntities, page, pageSize, totalCount);
         }
 
