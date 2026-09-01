@@ -122,17 +122,6 @@ class CommonService {
     'Failed to fetch team',
   );
 
-  Future<List<AuditorTeam>> fetchAuditorTeam() => _fetchList(
-    ApiEndpoint().auditorteam,
-    (e) => AuditorTeam.fromJson(e),
-    'Failed to fetch auditor team',
-  );
-
-  Future<List<IsoStandard>> fetchIso() => _fetchList(
-    ApiEndpoint().isoStandard,
-    (e) => IsoStandard.fromJson(e),
-    'Failed to fetch iso',
-  );
   Future<List<KraRoadmapPeriod>> fetchKraPeriod() => _fetchList(
     ApiEndpoint().kraRoadMapPeriod,
     (e) => KraRoadmapPeriod.fromJson(e),
