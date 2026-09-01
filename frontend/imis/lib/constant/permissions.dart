@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-08-19 15:24:40.052979
+// Last synced: 2026-08-28 15:00:02.687284
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -8,6 +8,7 @@ class AppPermissions {
   static const String addTeam = 'Add Team';
   static const String viewTeam = 'View Team';
   static const String editTeam = 'Edit Team';
+  static const String deleteSWOTAnalysis = 'Delete S W O T Analysis';
   static const String addSWOTAnalysis = 'Add S W O T Analysis';
   static const String viewSWOTAnalysis = 'View S W O T Analysis';
   static const String editSWOTAnalysis = 'Edit S W O T Analysis';
