@@ -18,10 +18,9 @@ PvtDeliverableFindings _$PvtDeliverableFindingsFromJson(
   findings: json['findings'] as String?,
   isNC: json['isNC'] as bool?,
   isOFI: json['isOFI'] as bool?,
-  postingDate:
-      json['postingDate'] == null
-          ? null
-          : DateTime.parse(json['postingDate'] as String),
+  postingDate: json['postingDate'] == null
+      ? null
+      : DateTime.parse(json['postingDate'] as String),
 );
 
 Map<String, dynamic> _$PvtDeliverableFindingsToJson(

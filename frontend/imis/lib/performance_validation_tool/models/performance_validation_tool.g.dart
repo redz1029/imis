@@ -14,12 +14,11 @@ PerformanceValidationTool _$PerformanceValidationToolFromJson(
   rowVersion: json['rowVersion'] as String?,
   performanceValidationToolPeriodId:
       (json['performanceValidationToolPeriodId'] as num).toInt(),
-  period:
-      json['period'] == null
-          ? null
-          : PerformanceValidationToolPeriod.fromJson(
-            json['period'] as Map<String, dynamic>,
-          ),
+  period: json['period'] == null
+      ? null
+      : PerformanceValidationToolPeriod.fromJson(
+          json['period'] as Map<String, dynamic>,
+        ),
   officeId: (json['officeId'] as num).toInt(),
   officeHeadUserId: json['officeHeadUserId'] as String?,
   officeHeadName: json['officeHeadName'] as String?,
@@ -32,31 +31,24 @@ PerformanceValidationTool _$PerformanceValidationToolFromJson(
     json['postingDate'],
     const DateTimeConverter().fromJson,
   ),
-  validators:
-      (json['validators'] as List<dynamic>?)
-          ?.map((e) => PvtValidators.fromJson(e as Map<String, dynamic>))
-          .toList(),
-  objectives:
-      json['objectives'] == null
-          ? null
-          : PvtObjectives.fromJson(json['objectives'] as Map<String, dynamic>),
-  deliverableFindings:
-      (json['deliverableFindings'] as List<dynamic>?)
-          ?.map(
-            (e) => PvtDeliverableFindings.fromJson(e as Map<String, dynamic>),
-          )
-          .toList(),
-  conclusion:
-      json['conclusion'] == null
-          ? null
-          : PvtConclusion.fromJson(json['conclusion'] as Map<String, dynamic>),
-  pvtSignatories:
-      (json['pvtSignatories'] as List<dynamic>?)
-          ?.map((e) => PvtSignatories.fromJson(e as Map<String, dynamic>))
-          .toList(),
+  validators: (json['validators'] as List<dynamic>?)
+      ?.map((e) => PvtValidators.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  objectives: json['objectives'] == null
+      ? null
+      : PvtObjectives.fromJson(json['objectives'] as Map<String, dynamic>),
+  deliverableFindings: (json['deliverableFindings'] as List<dynamic>?)
+      ?.map((e) => PvtDeliverableFindings.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  conclusion: json['conclusion'] == null
+      ? null
+      : PvtConclusion.fromJson(json['conclusion'] as Map<String, dynamic>),
+  pvtSignatories: (json['pvtSignatories'] as List<dynamic>?)
+      ?.map((e) => PvtSignatories.fromJson(e as Map<String, dynamic>))
+      .toList(),
   isDraft: json['isDraft'] as bool?,
-  performanceGovernanceSystemId:
-      (json['performanceGovernanceSystemId'] as num).toInt(),
+  performanceGovernanceSystemId: (json['performanceGovernanceSystemId'] as num)
+      .toInt(),
 );
 
 Map<String, dynamic> _$PerformanceValidationToolToJson(

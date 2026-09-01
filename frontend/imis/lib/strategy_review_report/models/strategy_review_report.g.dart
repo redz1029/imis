@@ -70,12 +70,11 @@ _$StrategyReviewDeliverableKpiRequestFromJson(Map<String, dynamic> json) =>
       kpiId: (json['kpiId'] as num).toInt(),
       actualDate: json['actualDate'] as String?,
       status: (json['status'] as num).toInt(),
-      kpiDetails:
-          json['kpiDetails'] == null
-              ? null
-              : StrategyReviewKpi.fromJson(
-                json['kpiDetails'] as Map<String, dynamic>,
-              ),
+      kpiDetails: json['kpiDetails'] == null
+          ? null
+          : StrategyReviewKpi.fromJson(
+              json['kpiDetails'] as Map<String, dynamic>,
+            ),
     );
 
 Map<String, dynamic> _$StrategyReviewDeliverableKpiRequestToJson(
@@ -105,12 +104,11 @@ StrategyReviewDeliverableRequest _$StrategyReviewDeliverableRequestFromJson(
   kraRoadmapid: (json['kraRoadmapid'] as num).toInt(),
   actualDate: json['actualDate'] as String?,
   status: (json['status'] as num).toInt(),
-  kraRoadMapDeliverableDetails:
-      json['kraRoadMapDeliverableDetails'] == null
-          ? null
-          : StrategyReviewDeliverable.fromJson(
-            json['kraRoadMapDeliverableDetails'] as Map<String, dynamic>,
-          ),
+  kraRoadMapDeliverableDetails: json['kraRoadMapDeliverableDetails'] == null
+      ? null
+      : StrategyReviewDeliverable.fromJson(
+          json['kraRoadMapDeliverableDetails'] as Map<String, dynamic>,
+        ),
 );
 
 Map<String, dynamic> _$StrategyReviewDeliverableRequestToJson(

@@ -35,10 +35,9 @@ AuditorTeamDetail _$AuditorTeamDetailFromJson(Map<String, dynamic> json) =>
       isActive: json['isActive'] as bool,
       isDeleted: json['isDeleted'] as bool?,
       rowVersion: json['rowVersion'] as String?,
-      auditors:
-          (json['auditors'] as List<dynamic>)
-              .map((e) => AuditorTeamMember.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      auditors: (json['auditors'] as List<dynamic>)
+          .map((e) => AuditorTeamMember.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$AuditorTeamDetailToJson(AuditorTeamDetail instance) =>
