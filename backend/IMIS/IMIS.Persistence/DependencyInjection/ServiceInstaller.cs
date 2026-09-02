@@ -38,6 +38,7 @@ using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
+using IMIS.Application.ServiceHeadOfficesModule;
 using IMIS.Application.StandardVersionModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Application.StrategyReviewPeriodModule;
@@ -87,6 +88,7 @@ using IMIS.Persistence.PGSReadinessRatingCancerCareModule;
 using IMIS.Persistence.PgsSignatoryModule;
 using IMIS.Persistence.PgsSignatoryTemplateModule;
 using IMIS.Persistence.PgsSummaryNarrativeModule;
+using IMIS.Persistence.ServiceHeadOfficesModule;
 using IMIS.Persistence.StandardVersionModule;
 using IMIS.Persistence.StrategyReviewModule;
 using IMIS.Persistence.StrategyReviewPeriodModule;
@@ -247,6 +249,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IEvaluatorOfficesRepository, EvaluatorOfficesRepository>();
             services.AddScoped<IEvaluatorOfficesService, EvaluatorOfficesService>();
+
+            services.AddScoped<IServiceHeadOfficesRepository, ServiceHeadOfficesRepository>();
+            services.AddScoped<IServiceHeadOfficesService, ServiceHeadOfficesService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

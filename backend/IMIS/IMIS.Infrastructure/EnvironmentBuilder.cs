@@ -24,7 +24,7 @@ namespace IMIS.Infrastructure
 
         public static void SetupEnvironment(this WebApplicationBuilder builder)
         {
-            
+
 
             if (builder.Environment.IsDevelopment())
             {
@@ -45,11 +45,11 @@ namespace IMIS.Infrastructure
             }
             else
             {
-                string tokenPath = "path-of-vault-token-in-server";
-                string vaultUrl = "http://vault-url-here";
+                string tokenPath = "/etc/vault/vault-token";
+                string vaultUrl = "http://192.168.0.73:8200";
                 VaultService vaultService = new(tokenPath, vaultUrl);
 
-                string mounthPath = "imis-demo";
+                string mounthPath = "cpems";
                 var secretDbCreds = vaultService.GetSecret(mounthPath, "db-credentials");
                 DatabaseCredentials.SqlServerConnectionString = vaultService.GetSecretValue(secretDbCreds, _sqlServerConn);
 

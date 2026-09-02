@@ -1,13 +1,13 @@
 ﻿
+using Base.Auths;
+using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.SWOTAnalysisModule;
-using IMIS.Application.SWOTAnalysisSWDeliverablesModule;
 using IMIS.Application.SWOTAnalysisOTDeliverablesModule;
+using IMIS.Application.SWOTAnalysisSWDeliverablesModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
-using Base.Auths;
-using Base.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Persistence.SWOTAnalysisModule
@@ -16,6 +16,7 @@ namespace IMIS.Persistence.SWOTAnalysisModule
     {
         private readonly ISWOTAnalysisRepository _repository;
         private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
         private static readonly string[] ElevatedRoleNames =
         {
@@ -28,10 +29,11 @@ namespace IMIS.Persistence.SWOTAnalysisModule
             new TWG().Name
         };
 
-        public SWOTAnalysisService(ISWOTAnalysisRepository repository, UserManager<User> userManager)
+        public SWOTAnalysisService(ISWOTAnalysisRepository repository, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             _repository = repository;
             _userManager = userManager;
+            _roleManager = roleManager;
         }
 
 
@@ -49,18 +51,39 @@ namespace IMIS.Persistence.SWOTAnalysisModule
                 ? await _repository.FilterByYearAsync(year, noOfResults, cancellationToken)
                 : await _repository.FilterByYearByUserAsync(currentUser.Id, year, noOfResults, cancellationToken);
         }
-
-        public async Task<DtoPageList<SWOTAnalysisDto, SWOTAnalysis, long>?> GetPaginatedByUserIdAsync(string userId, int? officeId, int page, int pageSize, CancellationToken cancellationToken)
+      
+        public async Task<DtoPageList<SWOTAnalysisDto, SWOTAnalysis, long>?> GetPaginatedByUserIdAsync(string userId, string roleId, int? officeId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
+
             if (currentUser == null)
                 return null;
 
-            bool isElevatedUser = await IsElevatedUserAsync(currentUser);
+            var role = await _roleManager.FindByIdAsync(roleId);
 
-            var pagedEntities = isElevatedUser
-                ? await _repository.GetPaginatedAllAsync(officeId, page, pageSize, cancellationToken)
-                : await _repository.GetPaginatedByUserIdAsync(currentUser.Id, officeId, page, pageSize, cancellationToken);
+            if (role == null)
+                return null;
+
+            EntityPageList<SWOTAnalysis, long> pagedEntities;
+
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+              role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+              role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+              role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+              role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+              role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+              role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                pagedEntities = await _repository.GetPaginatedAllAsync(officeId, page,  pageSize, cancellationToken);
+            }
+            else if (role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                pagedEntities = await _repository.GetPaginatedByUserIdAsync(userId, officeId, page, pageSize, cancellationToken); //// Sample lang muna 
+            }
+            else
+            {             
+                pagedEntities = await _repository.GetPaginatedByUserIdAsync(userId, officeId, page, pageSize, cancellationToken);
+            }
 
             if (pagedEntities.TotalCount == 0)
                 return null;
