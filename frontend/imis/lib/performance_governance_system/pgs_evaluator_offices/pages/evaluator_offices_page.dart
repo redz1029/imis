@@ -61,7 +61,7 @@ class EvaluatorOfficesPageState extends State<EvaluatorOfficesPage> {
     );
     () async {
       final users = await _commonService.fetchUsers();
-      final offices = await _commonService.fetchOffices();
+      final offices = await _commonService.fetchAlloffices();
 
       if (!mounted) return;
       setState(() {
@@ -489,7 +489,8 @@ class EvaluatorOfficesPageState extends State<EvaluatorOfficesPage> {
                                     officeId:
                                         int.tryParse(_selectedOffice ?? '0') ??
                                         0,
-                                    officeName: null,
+                                    officeName: '',
+                                    isDeleted: false,
                                   );
                                   await _evaluatorOfficeService
                                       .addEvaluatorsOffice(evaluatorOffice);
