@@ -13,6 +13,7 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/common/button_filter.dart';
+import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
@@ -344,16 +345,9 @@ class MonthlyOprReportPageState extends State<MonthlyOprReportPage> {
       children: [
         Row(
           children: [
-            Icon(Icons.tune, size: 14, color: Colors.grey.shade600),
-            const SizedBox(width: 6),
-            Text(
-              'Filter by',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
+            Expanded(child: buildDropdown(child: _officesDropdown())),
+            SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _periodsDropdown())),
             const Spacer(),
             if (_hasActiveFilters)
               TextButton.icon(
@@ -370,24 +364,6 @@ class MonthlyOprReportPageState extends State<MonthlyOprReportPage> {
                   ),
                 ),
               ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  // SizedBox(width: 220, child: _servicesDropdown()),
-                  SizedBox(width: 220, child: _officesDropdown()),
-                  SizedBox(width: 220, child: _periodsDropdown()),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
             _generateButton(),
           ],
         ),
