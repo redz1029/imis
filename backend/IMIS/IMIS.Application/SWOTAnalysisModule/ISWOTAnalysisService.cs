@@ -8,7 +8,7 @@ namespace IMIS.Application.SWOTAnalysisModule
     {
         Task<SWOTAnalysisDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<ReportSWOTAnalysisDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken);  
-        Task<DtoPageList<SWOTAnalysisDto, SWOTAnalysis, long>?> GetPaginatedByUserIdAsync(string userId, int? officeId, int page, int pageSize, CancellationToken cancellationToken);
+        Task<DtoPageList<SWOTAnalysisDto, SWOTAnalysis, long>?> GetPaginatedByUserIdAsync(string userId, string roleId, int? officeId, int page, int pageSize, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<List<SWOTAnalysisDto>?> FilterByYearAsync(int year, int noOfResults, CancellationToken cancellationToken);
     }

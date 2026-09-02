@@ -98,9 +98,9 @@ namespace IMIS.Presentation.SWOTAnalysisModule
             })            
             .WithTags(_swotAnalysisTag).CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true);
           
-            app.MapGet("/page", async (int page, int pageSize, string userId, int? officeId, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
+            app.MapGet("/page", async (int page, int pageSize, string userId, string roleId, int? officeId, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
             {
-                var paginatedswotAnalysisDto = await service.GetPaginatedByUserIdAsync(userId, officeId, page, pageSize, cancellationToken).ConfigureAwait(false);
+                var paginatedswotAnalysisDto = await service.GetPaginatedByUserIdAsync(userId, roleId, officeId, page, pageSize, cancellationToken).ConfigureAwait(false);
                 return paginatedswotAnalysisDto != null ? Results.Ok(paginatedswotAnalysisDto) : Results.NotFound();
             })
             .WithTags(_swotAnalysisTag)
