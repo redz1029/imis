@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="08/24/2026 08:37:46" ReportInfo.Modified="09/02/2026 16:07:35" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="08/24/2026 08:37:46" ReportInfo.Modified="09/03/2026 08:32:47" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -115,33 +115,33 @@ namespace FastReport
       <TextObject Name="Text321" Left="340.1" Top="32.25" Width="329.05" Height="18.9" Text="Opportunities" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
       <TextObject Name="Text322" Left="682.1" Top="32.25" Width="326.05" Height="18.9" Text="Threats" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
     </PageHeaderBand>
-    <DataBand Name="Data2" Top="67.45" Width="1047.06" Height="41.96" CanGrow="true" DataSource="SWOTAnalysisOTDeliverables">
+    <DataBand Name="Data2" Top="69.58" Width="1047.06" Height="41.96" CanGrow="true" DataSource="SWOTAnalysisOTDeliverables">
       <LineObject Name="Line14" Left="26.35" Height="41.9" Border.Width="2" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line15" Left="1018.6" Height="41.9" Border.Width="2" CanGrow="true" GrowToBottom="true"/>
       <TextObject Name="Text337" Left="47.8" Top="9.45" Width="264.6" Height="18.9" CanGrow="true" GrowToBottom="true" Text="[ReportSWOTAnalysisDto.SWOTAnalysisOTDeliverables.ExternalContext]" Font="Times New Roman, 9pt"/>
       <TextObject Name="Text338" Left="340" Top="9.45" Width="327.95" Height="18.9" Border.Color="DimGray" CanGrow="true" GrowToBottom="true" Text="[ReportSWOTAnalysisDto.SWOTAnalysisOTDeliverables.Opportunities]" Underlines="true" Font="Times New Roman, 9pt"/>
       <TextObject Name="Text339" Left="681.4" Top="9.45" Width="328.1" Height="18.9" Border.Color="DimGray" CanGrow="true" GrowToBottom="true" Text="[ReportSWOTAnalysisDto.SWOTAnalysisOTDeliverables.Threats]" Underlines="true" Font="Times New Roman, 9pt"/>
     </DataBand>
-    <ReportSummaryBand Name="ReportSummary2" Top="129.16" Width="1047.06" Height="82.05" CanGrow="true">
+    <ReportSummaryBand Name="ReportSummary2" Top="135.56" Width="1047.06" Height="100.95" CanGrow="true">
       <TextObject Name="Text323" Left="47.25" Top="8.9" Width="293.7" Height="18.9" Text="Prepared by:" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-      <LineObject Name="Line19" Left="47.25" Top="53.7" Width="292.95" Border.Width="2"/>
-      <TextObject Name="Text324" Left="47.25" Top="53.7" Width="293.7" Height="18.9" Text="Department Chair" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
+      <LineObject Name="Line19" Left="47.25" Top="68.7" Width="292.95" Border.Width="2"/>
+      <TextObject Name="Text324" Left="47.25" Top="68.7" Width="293.7" Height="18.9" Text="Department Chair" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
       <TextObject Name="Text325" Left="378" Top="8.55" Width="293.7" Height="18.9" Text="Review and Verified by:" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-      <LineObject Name="Line20" Left="378" Top="53.35" Width="292.95" Border.Width="2"/>
-      <TextObject Name="Text326" Left="378" Top="53.35" Width="293.7" Height="18.9" Text="Quality Management Representative" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
+      <LineObject Name="Line20" Left="378" Top="68.35" Width="292.95" Border.Width="2"/>
+      <TextObject Name="Text326" Left="378" Top="68.35" Width="293.7" Height="18.9" Text="Quality Management Representative" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
       <TextObject Name="Text327" Left="702.75" Top="8.9" Width="294.7" Height="18.9" Text="Validated by:" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-      <LineObject Name="Line21" Left="702.75" Top="53.7" Width="292.95" Border.Width="2"/>
-      <TextObject Name="Text328" Left="702.75" Top="53.7" Width="294.7" Height="18.9" Text="Service Head" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-      <TextObject Name="Text331" Left="47.25" Top="32.8" Width="293.95" Height="18.9" Text="[ReportSWOTAnalysisDto.DepartmentChairUserFullName]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="Text332" Left="378" Top="32.8" Width="292.95" Height="18.9" Text="[ReportSWOTAnalysisDto.QMRUserFullName]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="Text333" Left="702.3" Top="32.8" Width="294.95" Height="18.9" Text="[ReportSWOTAnalysisDto.ServiceHeadUserFullName]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+      <LineObject Name="Line21" Left="702.75" Top="68.7" Width="292.95" Border.Width="2"/>
+      <TextObject Name="Text328" Left="702.75" Top="68.7" Width="294.7" Height="18.9" Text="Service Head" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
+      <TextObject Name="Text331" Left="47.25" Top="47.8" Width="293.95" Height="18.9" Text="[ReportSWOTAnalysisDto.DepartmentChairUserFullName]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+      <TextObject Name="Text332" Left="378" Top="47.8" Width="292.95" Height="18.9" Text="[ReportSWOTAnalysisDto.QMRUserFullName]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+      <TextObject Name="Text333" Left="702.3" Top="47.8" Width="294.95" Height="18.9" Text="[ReportSWOTAnalysisDto.ServiceHeadUserFullName]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
     </ReportSummaryBand>
-    <ColumnFooterBand Name="ColumnFooter2" Top="112.61" Width="1047.06" Height="13.35" CanGrow="true">
+    <ColumnFooterBand Name="ColumnFooter2" Top="116.88" Width="1047.06" Height="13.35" CanGrow="true">
       <LineObject Name="Line17" Left="1018.85" Height="12.35" Border.Width="2" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line18" Left="26.15" Height="13.35" Border.Width="2" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line16" Left="26.15" Top="12.35" Width="993.45" Border.Width="2" CanGrow="true"/>
     </ColumnFooterBand>
-    <PageFooterBand Name="PageFooter2" Top="214.41" Width="1047.06" Height="28.9">
+    <PageFooterBand Name="PageFooter2" Top="241.84" Width="1047.06" Height="28.9">
       <TextObject Name="Text316" Left="190.45" Top="8.45" Width="641.85" Height="14.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 8pt, style=Bold"/>
       <TextObject Name="Text317" Left="876.6" Top="5" Width="141.75" Height="18.9" Text="QP-01F-11 Rev. 0" HorzAlign="Right" VertAlign="Center" Font="Times New Roman, 8pt, style=Bold"/>
     </PageFooterBand>
