@@ -1,12 +1,14 @@
 import 'package:imis/performance_governance_system/pgs_swot/models/swot_ot_deliverable.dart';
+import 'package:imis/performance_governance_system/pgs_swot/models/swot_ot_deliverable_service_head.dart';
 import 'package:imis/performance_governance_system/pgs_swot/models/swot_sw_deliverable.dart';
+import 'package:imis/performance_governance_system/pgs_swot/models/swot_sw_deliverable_service_head.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'swot_service_head.g.dart';
 
 @JsonSerializable()
-class Swot {
+class SwotServiceHead {
   int? id;
 
   bool? isDeleted;
@@ -23,10 +25,6 @@ class Swot {
 
   String? departmentChairUserFullName;
 
-  String? qmrUserId;
-
-  String? qmrUserFullName;
-
   String? serviceHeadUserId;
 
   String? serviceHeadUserFullName;
@@ -35,11 +33,11 @@ class Swot {
   @DateTimeConverter()
   DateTime? postingDate;
 
-  List<SwotSwDeliverable>? swotAnalysisSWDeliverables;
+  List<SwotSwDeliverableServiceHead>? swotAnalysisSWDeliverables;
 
-  List<SwotOtDeliverable>? swotAnalysisOTDeliverables;
+  List<SwotOtDeliverableServiceHead>? swotAnalysisOTDeliverables;
 
-  Swot({
+  SwotServiceHead({
     this.id,
     this.isDeleted,
     this.rowVersion,
@@ -48,8 +46,6 @@ class Swot {
     this.objectiveStatement,
     this.departmentChairUserId,
     this.departmentChairUserFullName,
-    this.qmrUserId,
-    this.qmrUserFullName,
     this.serviceHeadUserId,
     this.serviceHeadUserFullName,
     this.postingDate,
@@ -57,7 +53,8 @@ class Swot {
     this.swotAnalysisOTDeliverables,
   });
 
-  factory Swot.fromJson(Map<String, dynamic> json) => _$SwotFromJson(json);
+  factory SwotServiceHead.fromJson(Map<String, dynamic> json) =>
+      _$SwotServiceHeadFromJson(json);
 
-  Map<String, dynamic> toJson() => _$SwotToJson(this);
+  Map<String, dynamic> toJson() => _$SwotServiceHeadToJson(this);
 }
