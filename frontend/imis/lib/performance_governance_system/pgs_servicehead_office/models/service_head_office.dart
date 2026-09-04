@@ -5,11 +5,21 @@ part 'service_head_office.g.dart';
 class ServiceHeadOffice {
   int id;
   String userId;
-  String officeId;
+  String? userFullName;
+  int officeId;
+  String? officeName;
   String? rowVersion;
-  String? isDeleted;
+  bool? isDeleted;
 
-  ServiceHeadOffice(this.id, this.userId, this.officeId);
+  ServiceHeadOffice(
+    this.id,
+    this.userId,
+    this.officeId,
+    this.isDeleted, {
+    this.userFullName,
+    this.officeName,
+    this.rowVersion,
+  });
 
   factory ServiceHeadOffice.fromJson(Map<String, dynamic> json) =>
       _$ServiceHeadOfficeFromJson(json);
