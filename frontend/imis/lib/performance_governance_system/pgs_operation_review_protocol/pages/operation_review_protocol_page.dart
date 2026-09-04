@@ -7,6 +7,7 @@ import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
+import 'package:imis/office/models/office_evaluators.dart';
 import 'package:imis/performance_governance_system/pgs_operation_review_protocol/dialog/operations_review_protocol_widget.dart';
 import 'package:imis/performance_governance_system/pgs_operation_review_protocol/models/operations_review_protocol.dart';
 import 'package:imis/performance_governance_system/pgs_operation_review_protocol/services/operation_review_protocol_services.dart';
@@ -41,8 +42,7 @@ class OperationReviewProtocolPage extends StatefulWidget {
 class OperationReviewProtocolPageState
     extends State<OperationReviewProtocolPage> {
   List<Office> officeList = [];
-  List<Office> serviceList = [];
-  String? _selectedOfficeId;
+  List<OfficeEvaluators> serviceList = [];
   String? _selectedServiceId;
   int _currentPage = 1;
   final int _pageSize = 15;
@@ -120,7 +120,7 @@ class OperationReviewProtocolPageState
             roleId: roleIdParam,
             page: targetPage,
             pageSize: pageSize,
-            officeId: _selectedOfficeId,
+            officeId: _selectedServiceId,
             periodId: _selectedPeriodId,
           );
 
@@ -153,17 +153,13 @@ class OperationReviewProtocolPageState
 
   Future<void> _initialize() async {
     setState(() => _isLoading = true);
-    final roleId = await _getRoleId();
-    final offices = await _deliverableStatusMonitoring.fetchOffices(
-      roleId: roleId,
-    );
-    final services = await _commonService.fetchService();
+
+    final service = await _commonService.fetchServiceEvalutors();
     final periods = await _commonService.fetchPgsPeriod();
 
     if (!mounted) return;
     setState(() {
-      officeList = offices;
-      serviceList = services;
+      serviceList = service;
       pgsPeriodList = periods;
       _isLoading = false;
     });
@@ -360,12 +356,9 @@ class OperationReviewProtocolPageState
   }
 
   bool get _hasActiveFilters =>
-      _selectedOfficeId != null ||
-      _selectedServiceId != null ||
-      _selectedPeriodId != null;
+      _selectedServiceId != null || _selectedPeriodId != null;
   void _resetFilters() {
     setState(() {
-      _selectedOfficeId = null;
       _selectedServiceId = null;
       _selectedPeriodId = null;
       filteredList = List.from(operationReviewprotocolList);
@@ -398,13 +391,13 @@ class OperationReviewProtocolPageState
               spacing: 10,
               runSpacing: 10,
               children: [
-                // buildDropdown(child: _serviceDropdown()),
-                buildDropdown(
-                  child: PermissionWidget(
-                    permission: AppPermissions.viewOffice,
-                    child: _officeDropdown(),
-                  ),
-                ),
+                buildDropdown(child: _serviceDropdown()),
+                // buildDropdown(
+                //   child: PermissionWidget(
+                //     permission: AppPermissions.viewOffice,
+                //     child: _officeDropdown(),
+                //   ),
+                // ),
                 buildDropdown(child: _periodDropdown()),
               ],
             ),
@@ -521,13 +514,13 @@ class OperationReviewProtocolPageState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          height: 38,
-                          child: PermissionWidget(
-                            permission: AppPermissions.viewOffice,
-                            child: _officeDropdown(),
-                          ),
-                        ),
+                        // SizedBox(
+                        //   height: 38,
+                        //   child: PermissionWidget(
+                        //     permission: AppPermissions.viewOffice,
+                        //     child: _officeDropdown(),
+                        //   ),
+                        // ),
                         SizedBox(
                           height: 38,
                           child: PermissionWidget(
@@ -544,33 +537,33 @@ class OperationReviewProtocolPageState
     );
   }
 
-  Widget _officeDropdown() {
+  Widget _serviceDropdown() {
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
       child: SizedBox(
         height: 38,
         child: SearchableDropdown(
-          items: ["All Offices", ...officeList.map((o) => o.name)],
+          items: ["All Service", ...serviceList.map((s) => s.officeName)],
           selectedItem:
-              _selectedOfficeId == null
-                  ? "All Offices"
-                  : (officeList
-                          .where((o) => o.id.toString() == _selectedOfficeId)
-                          .firstOrNull
-                          ?.name ??
-                      "All Offices"),
-          hintText: "Office",
-          searchHint: "Search offices...",
+              _selectedServiceId == null
+                  ? null
+                  : (serviceList
+                      .where((s) => s.officeId.toString() == _selectedServiceId)
+                      .firstOrNull
+                      ?.officeName),
+          hintText: "All Service",
+          searchHint: "Search services...",
           prefixIcon: Icons.apartment_outlined,
           onChanged: (value) {
+            final newId =
+                value == "All Service"
+                    ? null
+                    : serviceList
+                        .firstWhere((s) => s.officeName == value)
+                        .officeId
+                        .toString();
             setState(() {
-              _selectedOfficeId =
-                  value == "All Offices"
-                      ? null
-                      : officeList
-                          .firstWhere((o) => o.name == value)
-                          .id
-                          .toString();
+              _selectedServiceId = newId;
             });
             fetchFilter();
           },
