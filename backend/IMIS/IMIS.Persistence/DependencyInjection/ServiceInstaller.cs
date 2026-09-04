@@ -44,6 +44,7 @@ using IMIS.Application.StrategyReviewModule;
 using IMIS.Application.StrategyReviewPeriodModule;
 using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Application.SWOTAnalysisOpportunitiesThreatsModule;
+using IMIS.Application.SWOTAnalysisServiceHeadModule;
 using IMIS.Application.SWOTAnalysisStrengthWeaknessModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
@@ -94,6 +95,7 @@ using IMIS.Persistence.StrategyReviewModule;
 using IMIS.Persistence.StrategyReviewPeriodModule;
 using IMIS.Persistence.SWOTAnalysisModule;
 using IMIS.Persistence.SWOTAnalysisOpportunitiesThreatsModule;
+using IMIS.Persistence.SWOTAnalysisServiceHeadModule;
 using IMIS.Persistence.SWOTAnalysisStrengthWeaknessModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
@@ -252,6 +254,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IServiceHeadOfficesRepository, ServiceHeadOfficesRepository>();
             services.AddScoped<IServiceHeadOfficesService, ServiceHeadOfficesService>();
+
+            services.AddScoped<ISWOTAnalysisServiceHeadRepository, SWOTAnalysisServiceHeadRepository>();
+            services.AddScoped<ISWOTAnalysisServiceHeadService, SWOTAnalysisServiceHeadService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

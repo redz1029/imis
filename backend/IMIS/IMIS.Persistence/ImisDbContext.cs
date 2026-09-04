@@ -74,7 +74,7 @@ namespace IMIS.Persistence
         public DbSet<SWOTAnalysisOpportunitiesThreatsSettings> SWOTAnalysisOpportunitiesThreatsSettings { get; set; }
         public DbSet<EvaluatorOffices> EvaluatorOffices { get; set; }
         public DbSet<ServiceHeadOffices> ServiceHeadOffices { get; set; }
-
+        public DbSet<SWOTAnalysisServiceHead> SWOTAnalysisServiceHead { get; set; }
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
