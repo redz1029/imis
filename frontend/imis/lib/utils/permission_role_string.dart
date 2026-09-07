@@ -20,4 +20,5 @@ class PermissionRoleString {
   static const String researchOfficer = 'Research Officer';
   static const String twg = 'TWG';
   static const String msgc = 'Multi-Sector Governance Council Officer';
+  static const String evaluator = 'Evaluator';
 }

@@ -13,6 +13,7 @@ import 'package:imis/utils/permission_role_string.dart';
 import 'package:imis/widgets/dialog/dialog_field.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AnnouncementList extends StatefulWidget {
   const AnnouncementList({super.key});
@@ -26,6 +27,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
   late Future<List<Announcement>> _announcementsFuture;
   final _announcement = AnnouncementService(Dio());
   final _formKey = GlobalKey<FormState>();
+  final _dateConverter = const LongDateOnlyConverter();
 
   @override
   void initState() {
@@ -44,11 +46,11 @@ class _AnnouncementListState extends State<AnnouncementList> {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.only(top: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFeeeeee),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           Center(
@@ -116,7 +118,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -127,7 +129,9 @@ class _AnnouncementListState extends State<AnnouncementList> {
               future: _announcementsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(
+                    child: CircularProgressIndicator(color: primaryColor),
+                  );
                 }
 
                 if (snapshot.hasError) {
@@ -143,18 +147,11 @@ class _AnnouncementListState extends State<AnnouncementList> {
                 if (announcements.isEmpty) {
                   return const Center(
                     child: Text(
-                      'No active announcements at the moment.',
+                      'No announcements at the moment.',
                       style: TextStyle(color: Colors.grey),
                     ),
                   );
                 }
-
-                final colors = [
-                  Colors.orange,
-                  Colors.green,
-                  Colors.blue,
-                  Colors.red,
-                ];
 
                 return RefreshIndicator(
                   onRefresh: _refreshAnnouncements,
@@ -163,13 +160,12 @@ class _AnnouncementListState extends State<AnnouncementList> {
                     itemBuilder: (context, index) {
                       return _AnnouncementCard(
                         announcement: announcements[index],
-                        borderColor: colors[index % 4],
+                        borderColor: Color(0xFFCD2C58),
                         onEdit: (announcement) {
                           showAnnouncementFormDialog(
                             id: announcement.id.toString(),
                             title: announcement.title,
-                            fromDate: announcement.fromDate.toIso8601String(),
-                            endDate: announcement.toDate.toIso8601String(),
+
                             description: announcement.description,
                             isActive: announcement.isActive,
                           );
@@ -198,7 +194,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
                   _announcementService.getAnnouncementsFromEndpoint(
                     ApiEndpoint().announcement,
                   );
-
               return AlertDialog(
                 backgroundColor: mainBgColor,
                 shape: RoundedRectangleBorder(
@@ -224,7 +219,9 @@ class _AnnouncementListState extends State<AnnouncementList> {
                     future: announcementsFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                          child: CircularProgressIndicator(color: primaryColor),
+                        );
                       } else if (snapshot.hasError) {
                         return Center(child: Text('Error: ${snapshot.error}'));
                       } else {
@@ -258,7 +255,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
                                       ),
                                     ),
                                     subtitle: Text(
-                                      '${ann.description}\nFrom: ${ann.fromDate.toLocal()} - To: ${ann.toDate.toLocal()}',
+                                      '${ann.description}\nFrom: ${_dateConverter.toJson(ann.fromDate)} - To: ${_dateConverter.toJson(ann.toDate)}',
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -271,9 +268,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
                                         showAnnouncementFormDialog(
                                           id: ann.id.toString(),
                                           title: ann.title,
-                                          fromDate:
-                                              ann.fromDate.toIso8601String(),
-                                          endDate: ann.toDate.toIso8601String(),
                                           description: ann.description,
                                           isActive: ann.isActive,
                                           onSaved: () {
@@ -314,11 +308,9 @@ class _AnnouncementListState extends State<AnnouncementList> {
   void showAnnouncementFormDialog({
     String? id,
     String? title,
-    String? fromDate,
-    String? endDate,
     String? description,
     bool isActive = false,
-    Function()? onSaved, // << Callback to refresh parent dialog
+    Function()? onSaved,
   }) {
     TextEditingController titleController = TextEditingController(text: title);
     TextEditingController descriptionController = TextEditingController(
@@ -739,7 +731,6 @@ class _AnnouncementCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),

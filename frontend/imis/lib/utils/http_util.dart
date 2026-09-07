@@ -72,6 +72,7 @@ class AuthenticatedRequest {
     String url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     BuildContext? context,
     CancelToken? cancelToken,
     ProgressCallback? onReceiveProgress,
@@ -81,15 +82,12 @@ class AuthenticatedRequest {
       if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
       return await dio.get(
         url,
-        options: Options(
-          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
-        ),
+        options: _mergeOptions(loggedUser!.accessToken!, options),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
         onReceiveProgress: onReceiveProgress,
       );
-      return response;
     } on DioException catch (e) {
       return _onRequestError(e, context: context);
     }
@@ -100,6 +98,7 @@ class AuthenticatedRequest {
     String url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     BuildContext? context,
     CancelToken? cancelToken,
     ProgressCallback? onSendProgress,
@@ -122,8 +121,6 @@ class AuthenticatedRequest {
         onSendProgress: onSendProgress,
         onReceiveProgress: onReceiveProgress,
       );
-
-      return response;
     } on DioException catch (e) {
       return _onRequestError(e, context: context);
     }
@@ -134,6 +131,7 @@ class AuthenticatedRequest {
     String url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     BuildContext? context,
     CancelToken? cancelToken,
     ProgressCallback? onSendProgress,
@@ -144,17 +142,13 @@ class AuthenticatedRequest {
       if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
       return await dio.put(
         url,
-        options: Options(
-          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
-        ),
+        options: _mergeOptions(loggedUser!.accessToken!, options),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
         onSendProgress: onSendProgress,
         onReceiveProgress: onReceiveProgress,
       );
-
-      return response;
     } on DioException catch (e) {
       return _onRequestError(e, context: context);
     }
@@ -165,6 +159,7 @@ class AuthenticatedRequest {
     String url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     BuildContext? context,
     CancelToken? cancelToken,
   }) async {
@@ -173,15 +168,11 @@ class AuthenticatedRequest {
       if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
       return await dio.delete(
         url,
-        options: Options(
-          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
-        ),
+        options: _mergeOptions(loggedUser!.accessToken!, options),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
       );
-
-      return response;
     } on DioException catch (e) {
       return _onRequestError(e, context: context);
     }
@@ -192,6 +183,7 @@ class AuthenticatedRequest {
     String url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     BuildContext? context,
     CancelToken? cancelToken,
     ProgressCallback? onSendProgress,
@@ -202,17 +194,13 @@ class AuthenticatedRequest {
       if (loggedUser?.accessToken == null) return _sessionExpiredResponse(url);
       return await dio.patch(
         url,
-        options: Options(
-          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
-        ),
+        options: _mergeOptions(loggedUser!.accessToken!, options),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
         onSendProgress: onSendProgress,
         onReceiveProgress: onReceiveProgress,
       );
-
-      return response;
     } on DioException catch (e) {
       return _onRequestError(e, context: context);
     }

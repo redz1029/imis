@@ -1,9 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
-import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/user/models/user_registration.dart';
@@ -37,8 +36,8 @@ class UserProfileState extends State<UserProfilePage> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+  final TextEditingController positionController = TextEditingController();
   final TextEditingController fullNameController = TextEditingController();
-
   final FocusNode focusFirstName = FocusNode();
   final FocusNode focusLastName = FocusNode();
   final FocusNode focusMiddleName = FocusNode();
@@ -66,14 +65,14 @@ class UserProfileState extends State<UserProfilePage> {
   bool _isLoading = false;
   String? selectedPosition;
 
-  Future<void> fetchUserProfile({int page = 1, String? searchQuery}) async {
+  Future<void> fetchUserProfile({int? page, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
-
+    final targetPage = page ?? _currentPage;
     try {
       final pageList = await _userProfileService.getUsers(
-        page: page,
+        page: targetPage,
         pageSize: _pageSize,
         searchQuery: searchQuery,
       );
@@ -173,7 +172,6 @@ class UserProfileState extends State<UserProfilePage> {
     String? suffix,
     String? position,
     bool isEditingpassword = false,
-    String? fullName,
   }) {
     userNameController.text = userName ?? '';
     emailController.text = email ?? '';
@@ -183,6 +181,7 @@ class UserProfileState extends State<UserProfilePage> {
     lastNameController.text = lastName ?? '';
     prefixController.text = prefix ?? '';
     suffixController.text = suffix ?? '';
+    positionController.text = position ?? '';
     selectedPosition =
         JobPositions.positions.contains(position) ? position : null;
     final isEdit = id != null;
@@ -191,32 +190,27 @@ class UserProfileState extends State<UserProfilePage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: mainBgColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          builder: (dialogContext, setDialogState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: 520,
+                  maxHeight: MediaQuery.of(dialogContext).size.height * 0.92,
+                ),
                 decoration: BoxDecoration(
-                  color: primaryLightColor,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
+                  color: mainBgColor,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 32,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  id == null ? 'Change Password' : 'Change Password',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
-              ),
-              content: Form(
-                key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -439,31 +433,36 @@ class UserProfileState extends State<UserProfilePage> {
                                   '',
                                 );
 
-                        if (id == null) {
-                          await _userProfileService.createUser(userProfile);
-                          MotionToast.success(
-                            toastAlignment: Alignment.topCenter,
-                            description: Text('Saved successfully'),
-                          ).show(context);
-                        } else {
-                          await _userProfileService.updateUser(userProfile);
-                          MotionToast.success(
-                            toastAlignment: Alignment.topCenter,
-                            description: Text('Updated successfully'),
-                          ).show(context);
-                        }
-
-                        Navigator.pop(context);
-                      }
-                    }
-                  },
-
-                  child: Text(
-                    id == null ? 'Save' : 'Update',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                                if (id == null) {
+                                  await _userProfileService.createUser(
+                                    userProfile,
+                                  );
+                                  MotionToast.success(
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text('Saved successfully'),
+                                  ).show(dialogContext);
+                                } else {
+                                  await _userProfileService.updateUser(
+                                    userProfile,
+                                  );
+                                  MotionToast.success(
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text('Updated successfully'),
+                                  ).show(dialogContext);
+                                  setState(() {
+                                    fetchUserProfile();
+                                  });
+                                }
+                                Navigator.pop(dialogContext);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             );
           },
         );
@@ -492,6 +491,7 @@ class UserProfileState extends State<UserProfilePage> {
     lastNameController.text = lastName ?? '';
     prefixController.text = prefix ?? '';
     suffixController.text = suffix ?? '';
+    positionController.text = position ?? '';
     selectedPosition =
         JobPositions.positions.contains(position) ? position : null;
 
@@ -501,7 +501,7 @@ class UserProfileState extends State<UserProfilePage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             return Dialog(
@@ -512,189 +512,169 @@ class UserProfileState extends State<UserProfilePage> {
                   maxHeight: MediaQuery.of(dialogContext).size.height * 0.92,
                 ),
                 decoration: BoxDecoration(
-                  color: primaryLightColor,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
+                  color: kSurface,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 32,
+                      offset: Offset(0, 12),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  id == null ? 'Create User' : ' Edit User',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-              content: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.8,
-                  maxWidth: MediaQuery.of(context).size.width * 0.9,
-                ),
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 450,
-                          height: 65,
-                          child: DropdownButtonFormField<String>(
-                            initialValue:
-                                prefixController.text.isNotEmpty
-                                    ? prefixController.text
-                                    : null,
-                            onChanged: (value) {
-                              prefixController.text = value ?? '';
-                            },
-                            items: [
-                              DropdownMenuItem(value: '', child: Text('')),
-                              ...[
-                                'Mr.',
-                                'Ms.',
-                                'Mrs.',
-                                'Dr.',
-                                'Prof.',
-                                'Engr.',
-                                'Atty.',
-                                'Gen.',
-                              ].map(
-                                (prefix) => DropdownMenuItem(
-                                  value: prefix,
-                                  child: Text(prefix),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(24, 24, 24, 0),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              isEdit
+                                  ? Icons.edit_outlined
+                                  : Icons.person_add_alt_1_outlined,
+                              color: primaryColor,
+                              size: 22,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEdit ? 'Edit User' : 'Create User',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: kText,
+                                ),
+                              ),
+                              Text(
+                                isEdit
+                                    ? 'Update user account details'
+                                    : 'Add a new user account',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: kMuted,
                                 ),
                               ),
                             ],
-                            decoration: InputDecoration(
-                              labelText: 'Prefix',
-                              border: OutlineInputBorder(),
-                            ),
                           ),
-                        ),
+                          Spacer(),
+                          IconButton(
+                            icon: Icon(Icons.close, color: kMuted, size: 20),
+                            onPressed: () => Navigator.pop(dialogContext),
+                            padding: EdgeInsets.zero,
+                            constraints: BoxConstraints(),
+                            splashRadius: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Divider(color: kBorder, height: 1),
 
-                        SizedBox(
-                          width: 450,
-                          height: 65,
-                          child: TextFormField(
-                            controller: firstNameController,
-                            decoration: InputDecoration(
-                              labelText: 'First Name',
-                              focusColor: primaryColor,
-                              floatingLabelStyle: TextStyle(
-                                color: primaryColor,
-                              ),
-                              border: OutlineInputBorder(),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                            ),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.fromLTRB(24, 20, 24, 8),
+                        child: Form(
+                          key: formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _sectionLabel('Personal Information'),
+                              SizedBox(height: 12),
 
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please fill out this field';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        SizedBox(
-                          width: 450,
-                          height: 65,
-                          child: TextFormField(
-                            controller: middleNameController,
-                            decoration: InputDecoration(
-                              labelText: 'Middle Name',
-                              focusColor: primaryColor,
-                              floatingLabelStyle: TextStyle(
-                                color: primaryColor,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: SearchDropdown<String>(
+                                      hintText: 'Select prefix',
+                                      items: const [
+                                        'Mr.',
+                                        'Ms.',
+                                        'Mrs.',
+                                        'Dr.',
+                                        'Prof.',
+                                        'Engr.',
+                                        'Atty.',
+                                        'Gen.',
+                                      ],
+                                      itemAsString: (e) => e,
+                                      selectedItem:
+                                          prefixController.text.isNotEmpty
+                                              ? prefixController.text
+                                              : null,
+                                      onChanged: (v) {
+                                        setDialogState(
+                                          () => prefixController.text = v ?? '',
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Expanded(
+                                    flex: 2,
+                                    child: _styledField(
+                                      controller: suffixController,
+                                      label: 'Suffix',
+                                    ),
+                                  ),
+                                ],
                               ),
-                              border: OutlineInputBorder(),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 450,
-                          height: 65,
-                          child: TextFormField(
-                            controller: lastNameController,
-                            decoration: InputDecoration(
-                              labelText: 'Last Name',
-                              focusColor: primaryColor,
-                              floatingLabelStyle: TextStyle(
-                                color: primaryColor,
-                              ),
-                              border: OutlineInputBorder(),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please fill out this field';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
+                              SizedBox(height: 12),
 
-                        SizedBox(
-                          width: 450,
-                          height: 65,
-                          child: TextFormField(
-                            controller: suffixController,
-                            decoration: InputDecoration(
-                              labelText: 'Suffix',
-                              focusColor: primaryColor,
-                              floatingLabelStyle: TextStyle(
-                                color: primaryColor,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _styledField(
+                                      controller: firstNameController,
+                                      label: 'First Name',
+                                      required: true,
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Expanded(
+                                    child: _styledField(
+                                      controller: middleNameController,
+                                      label: 'Middle Initial',
+                                    ),
+                                  ),
+                                ],
                               ),
-                              border: OutlineInputBorder(),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
+                              SizedBox(height: 12),
+
+                              _styledField(
+                                controller: lastNameController,
+                                label: 'Last Name',
+                                required: true,
                               ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 450,
-                          height: 65,
-                          child: TextFormField(
-                            controller: userNameController,
-                            decoration: InputDecoration(
-                              labelText: 'User Name',
-                              focusColor: primaryColor,
-                              floatingLabelStyle: TextStyle(
-                                color: primaryColor,
+                              SizedBox(height: 20),
+
+                              _sectionLabel('Account Information'),
+                              SizedBox(height: 12),
+
+                              _styledField(
+                                controller: userNameController,
+                                label: 'Username',
+                                prefixIcon: Icons.person_outline,
+                                required: true,
                               ),
-                              border: OutlineInputBorder(),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please fill out this field';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        SizedBox(
-                          width: 450,
-                          height: 65,
-                          child: TextFormField(
-                            controller: emailController,
-                            decoration: InputDecoration(
-                              labelText: 'Email',
-                              focusColor: primaryColor,
-                              floatingLabelStyle: TextStyle(
-                                color: primaryColor,
-                              ),
-                              border: OutlineInputBorder(),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
+                              SizedBox(height: 12),
+
+                              _styledField(
+                                controller: emailController,
+                                label: 'Email',
+                                prefixIcon: Icons.email_outlined,
+                                keyboardType: TextInputType.emailAddress,
                               ),
                               SizedBox(height: 12),
 
@@ -1261,7 +1241,9 @@ class UserProfileState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -1640,78 +1622,142 @@ class UserProfileState extends State<UserProfilePage> {
                                                     fontSize: 12,
                                                     color: Colors.grey.shade600,
                                                   ),
-                                        );
-                                      },
-                                    ),
-
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed:
-                                          () => showFormDialog(
-                                            id: user.id.toString(),
-                                            userName: user.userName,
-                                            email: user.email,
-                                            password: user.password,
-                                            firstName: user.firstName,
-                                            middleName: user.middleName,
-                                            lastName: user.lastName,
-                                            prefix: user.prefix,
-                                            suffix: user.suffix,
-                                            position: user.position,
+                                                ),
+                                              ],
+                                            ],
                                           ),
+                                        ),
+
+                                        PopupMenuButton<String>(
+                                          color: Theme.of(context).cardColor,
+                                          icon: Icon(
+                                            Icons.more_vert,
+                                            color: Colors.grey.shade500,
+                                          ),
+                                          onSelected: (value) {
+                                            if (value == 'password') {
+                                              showFormDialogChangePassword(
+                                                id: user.id.toString(),
+                                                userName: user.userName,
+                                                email: user.email,
+                                                password: user.password,
+                                                firstName: user.firstName,
+                                                middleName: user.middleName,
+                                                lastName: user.lastName,
+                                                prefix: user.prefix,
+                                                suffix: user.suffix,
+                                                position: user.position,
+                                              );
+                                            }
+                                            if (value == 'edit') {
+                                              showFormDialog(
+                                                id: user.id.toString(),
+                                                userName: user.userName,
+                                                email: user.email,
+                                                password: user.password,
+                                                firstName: user.firstName,
+                                                middleName: user.middleName,
+                                                lastName: user.lastName,
+                                                prefix: user.prefix,
+                                                suffix: user.suffix,
+                                                position: user.position,
+                                              );
+                                            }
+                                            if (value == 'delete') {
+                                              showDeleteDialog(
+                                                user.id.toString(),
+                                              );
+                                            }
+                                          },
+                                          itemBuilder:
+                                              (_) => [
+                                                PopupMenuItem(
+                                                  value: 'password',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(
+                                                        Icons.security_outlined,
+                                                        size: 18,
+                                                        color:
+                                                            Colors.blueAccent,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Change Password'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(
+                                                        Icons.edit_outlined,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Edit'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      const Icon(
+                                                        CupertinoIcons
+                                                            .delete_simple,
+                                                        color: Colors.redAccent,
+                                                        size: 18,
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      const Text('Delete'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                        ),
+                                      ],
                                     ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: primaryColor,
-                                      ),
-                                      onPressed: () {
-                                        showDeleteDialog(user.id.toString());
-                                      },
-                                    ),
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
-                            ],
-                          );
-                        }).toList(),
-                  ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) => fetchUserProfile(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
                       ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged: (page) => fetchUserProfile(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
-
       floatingActionButton:
-          isMinimized
+          isMobile
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
-                child: Icon(Icons.add, color: Colors.white),
+                child: const Icon(Icons.add, color: Colors.white),
               )
               : null,
     );

@@ -16,7 +16,7 @@ class PgsPeriodService {
   }) async {
     final paginationUtil = PaginationUtil(dio);
     return await paginationUtil.fetchPaginatedData(
-      endpoint: ApiEndpoint().pgsperiod,
+      endpoint: '${ApiEndpoint().pgsperiod}/page',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,

@@ -56,7 +56,6 @@ class ApiEndpoint {
   late String kraRoadMapRoleId;
   late String kraRoadMapReport;
   late String kraRoadmapRole;
-  late String isoStandard;
   late String standardVersion;
   late String scorecardMonitoringFilter;
   late String kraroadmapAccomplishment;
@@ -93,11 +92,12 @@ class ApiEndpoint {
   late String kraRoadmapKPISequence;
   late String sWOTAnalysisStrengthWeakness;
   late String sWOTAnalysisOpportunitiesThreats;
+  late String evaluatorOffices;
+  late String oprReport;
+  late String sWOTAnalysisServiceHead;
+  late String serviceHeadOffices;
   late String auditProgramme;
-  late String auditPlan;
-  late String officeEndpoint;
-  late String teamEndpoint;
-  
+  late String isoStandard;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -193,20 +193,20 @@ class ApiEndpoint {
     sWOTAnalysisStrengthWeakness = '$baseUrl/SWOTAnalysisStrengthWeakness';
     sWOTAnalysisOpportunitiesThreats =
         '$baseUrl/SWOTAnalysisOpportunitiesThreats';
+    evaluatorOffices = '$baseUrl/evaluatorOffices';
+    oprReport = '$baseUrl/report-opr-list';
+    sWOTAnalysisServiceHead = '$baseUrl/sWOTAnalysisServiceHead';
+    serviceHeadOffices = '$baseUrl/serviceHeadOffices';
     auditProgramme = '$baseUrl/auditProgramme';
-    auditPlan = '$baseUrl/auditPlan';
-    office = '$baseUrl/office';
-    team = '$baseUrl/team';
+    isoStandard = '$baseUrl/isoStandard';
   }
-
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
       baseUrl = 'https://localhost:7273';
-    }
-    // else if (kReleaseMode) {
-    //   baseUrl = 'https://api.cpems.crmc.ph';
-    // }
-    else {
+    } else if (kReleaseMode) {
+      baseUrl = 'https://api.cpems.crmc.ph';
+      // baseUrl = 'http://192.168.0.74';
+    } else {
       throw Exception("Test base Url is not specified!");
     }
   }

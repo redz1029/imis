@@ -1,12 +1,17 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/models/pgs_deliverable_accomplishment.dart';
-import 'package:imis/operation_review_protocol/models/operations_review_protocol.dart';
+import 'package:imis/performance_governance_system/pgs_operation_review_protocol/models/operations_review_protocol.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import 'package:imis/utils/api_endpoint.dart';
-
+import 'package:imis/utils/page_list.dart';
+import 'package:imis/utils/pagination_util.dart';
+import '../../utils/auth_util.dart';
 import '../../utils/http_util.dart';
+import '../models/performance_governance_system.dart';
 
 class PerformanceGovernanceSystemService {
   final Dio dio;
@@ -81,13 +86,48 @@ class PerformanceGovernanceSystemService {
         "${ApiEndpoint().fetchPGSUserId}/$userId?pgsId=$pgsId",
       );
 
-    if (response.statusCode == 200 && response.data is List) {
-      return (response.data as List)
-          .map((e) => fromJson(e as Map<String, dynamic>))
-          .toList();
-    } else {
-      throw Exception(errorMessage);
+      if (response.statusCode == 200) {
+        return PerformanceGovernanceSystem.fromJson(response.data);
+      }
+    } on DioException {
+      debugPrint("Dio error");
+    } catch (e) {
+      debugPrint("Unexpected error:");
     }
+    return null;
+  }
+
+  Future<int?> submitPgs({
+    required String pgsId,
+    required PerformanceGovernanceSystem pgs,
+  }) async {
+    final user = await AuthUtil.fetchLoggedUser();
+    if (user == null) return 401;
+
+    final signatoryResponse = await AuthenticatedRequest.get(
+      dio,
+      "${ApiEndpoint().fetchPGSUserId}/${user.id}?pgsId=$pgsId",
+    );
+    if (signatoryResponse.statusCode != 200) {
+      return signatoryResponse.statusCode;
+    }
+
+    final signatoryData = PerformanceGovernanceSystem.fromJson(
+      signatoryResponse.data,
+    );
+
+    final updatedJson = pgs.toJson();
+    updatedJson['id'] = pgsId;
+    updatedJson['pgsSignatories'] =
+        signatoryData.pgsSignatories?.map((s) => s.toJson()).toList();
+
+    final url = '${ApiEndpoint().pgsSubmit}?userId=${user.id}';
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: updatedJson,
+    );
+    return response.statusCode;
   }
 
   Future<void> deletePgs(String pgsId) async {

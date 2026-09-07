@@ -13,7 +13,9 @@ class FilterButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color:
-            isActive ? primaryColor.withValues(alpha: 0.1) : Colors.transparent,
+            isActive
+                ? primaryColor.withValues(alpha: 0.1)
+                : Theme.of(context).cardColor,
         border: Border.all(
           color: isActive ? primaryColor : Colors.grey.shade300,
         ),

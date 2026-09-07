@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:collection/collection.dart';
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -48,34 +47,6 @@ class UserOfficePageState extends State<UserOfficePage> {
   final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
   List<UserOffice> _allUserOffice = [];
-  // Future<void> fetchUserOffice({int page = 1, String? searchQuery}) async {
-  //   if (_isLoading) return;
-
-  //   setState(() => _isLoading = true);
-
-  //   try {
-  //     final pageList = await _userOfficeService.getPgsPeriod(
-  //       page: page,
-  //       pageSize: _pageSize,
-  //       searchQuery: searchQuery,
-  //     );
-
-  //     if (mounted) {
-  //       setState(() {
-  //         _currentPage = pageList.page;
-  //         _totalCount = pageList.totalCount;
-  //         userOfficeList = pageList.items;
-  //         filteredList = List.from(userOfficeList);
-  //       });
-  //     }
-  //   } catch (e) {
-  //     debugPrint(e.toString());
-  //   } finally {
-  //     if (mounted) {
-  //       setState(() => _isLoading = false);
-  //     }
-  //   }
-  // }
 
   Future<void> fetchUserOffice({int page = 1}) async {
     if (_isLoading) return;
@@ -89,7 +60,6 @@ class UserOfficePageState extends State<UserOfficePage> {
       );
 
       if (response.statusCode == 200 && response.data is List) {
-        // Removed the roles filter
         List<UserOffice> allRoles =
             (response.data as List)
                 .map((json) => UserOffice.fromJson(json))
@@ -126,7 +96,7 @@ class UserOfficePageState extends State<UserOfficePage> {
     });
 
     () async {
-      final offices = await _commonService.fetchOffices();
+      final offices = await _commonService.fetchAlloffices();
       final users = await _commonService.fetchUsers();
 
       if (!mounted) return;
@@ -154,7 +124,7 @@ class UserOfficePageState extends State<UserOfficePage> {
     for (var userOffice in userOfficeList) {
       userList.firstWhere(
         (user) => user.id == userOffice.userId,
-        orElse: () => User(id: '', fullName: 'Unknown', position: 'position'),
+        orElse: () => User(id: '', fullName: '', position: ''),
       );
     }
   }
@@ -166,7 +136,7 @@ class UserOfficePageState extends State<UserOfficePage> {
         orElse:
             () => Office(
               id: 0,
-              name: 'Unknown',
+              name: '',
               officeTypeId: 0,
               parentOfficeId: 0,
               isActive: true,
@@ -663,7 +633,9 @@ class UserOfficePageState extends State<UserOfficePage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -1128,11 +1100,11 @@ class UserOfficePageState extends State<UserOfficePage> {
         ),
       ),
       floatingActionButton:
-          isMinimized
+          isMobile
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
-                child: Icon(Icons.add, color: Colors.white),
+                child: const Icon(Icons.add, color: Colors.white),
               )
               : null,
     );

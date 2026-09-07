@@ -234,7 +234,27 @@ Future<void> openRoadmapInNewTab(
   name: kraNme,
   context: context,
 );
+Future<void> openSwotReport(
+  String swotId,
+  String swotName, {
+  BuildContext? context,
+}) => _openPdfPreview(
+  webEndpoint: '${ApiEndpoint().swotAnalysis}/report-pdf/$swotId',
+  id: swotId,
+  name: swotName,
+  context: context,
+);
 
+Future<void> openSwotServiceHeadReport(
+  String swotId,
+  String swotName, {
+  BuildContext? context,
+}) => _openPdfPreview(
+  webEndpoint: '${ApiEndpoint().sWOTAnalysisServiceHead}/report-pdf/$swotId',
+  id: swotId,
+  name: swotName,
+  context: context,
+);
 Future<void> viewAuditorSummaryNarrativeReport(
   String pgsPeriodId,
   String officeId, {

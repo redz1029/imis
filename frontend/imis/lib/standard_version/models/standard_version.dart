@@ -6,16 +6,18 @@ part 'standard_version.g.dart';
 class StandardVersion {
   final int id;
   final String versionName;
-  final bool isActive;
+  final List<dynamic>? isoStandards;
   final String? rowVersion;
   final bool? isDeleted;
+  final bool isActive;
 
   StandardVersion({
     required this.id,
     required this.versionName,
-    required this.isActive,
+    this.isoStandards,
     this.rowVersion,
     this.isDeleted,
+    this.isActive = true,
   });
 
   factory StandardVersion.fromJson(Map<String, dynamic> json) =>
