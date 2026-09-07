@@ -1,5 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.SWOTAnalysisServiceHeadModule
@@ -9,5 +10,6 @@ namespace IMIS.Application.SWOTAnalysisServiceHeadModule
         Task<SWOTAnalysisServiceHeadDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<DtoPageList<SWOTAnalysisServiceHeadDto, SWOTAnalysisServiceHead, long>?> GetPaginatedByUserIdAsync(string userId, string roleId, int? officeId, int page, int pageSize, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<ReportSWOTAnalysisServiceHeadDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
     }
 }

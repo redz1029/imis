@@ -28,7 +28,11 @@ namespace IMIS.Persistence.SWOTAnalysisServiceHeadModule
             _userManager = userManager;
             _roleManager = roleManager;
         }
-
+        public async Task<ReportSWOTAnalysisServiceHeadDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
+            return entity != null ? new ReportSWOTAnalysisServiceHeadDto(entity) : null;
+        }
         public async Task<DtoPageList<SWOTAnalysisServiceHeadDto, SWOTAnalysisServiceHead, long>?> GetPaginatedByUserIdAsync(string userId, string roleId, int? officeId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();

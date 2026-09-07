@@ -1,6 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.SWOTAnalysisServiceHeadModule;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +37,39 @@ namespace IMIS.Presentation.SWOTAnalysisServiceHeadModule
            .WithTags(_swotAnalysisServiceHeadTag)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisServiceHeadTag), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _sWOTAnalysisServiceHeadPermission.View));
+
+            app.MapGet("report-pdf/{id}", async (int id, ISWOTAnalysisServiceHeadService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var sWOTAnalysisServiceHeadDto = await service.ReportGetByIdAsync(id, cancellationToken);
+
+                if (sWOTAnalysisServiceHeadDto == null)
+                    return Results.NotFound();
+
+                var file = await ReportUtil.GeneratePdfReport<ReportSWOTAnalysisServiceHeadDto>("SWOTAnalysisServiceHeadReport",
+                    new List<ReportSWOTAnalysisServiceHeadDto>
+                    {
+                        sWOTAnalysisServiceHeadDto
+                    },
+                    "SWOTAnalysisServiceHead", cancellationToken).ConfigureAwait(false);
+
+                //FORCE INLINE PDF VIEW IN BROWSER
+                var fileName = $"SWOTAnalysisServiceHeadReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"SWOTAnalysisServiceHeadReport{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                //var result = await service.ReportGetByIdAsync(id, pgsId, month, year, cancellationToken).ConfigureAwait(false);
+                //return result != null ? Results.Ok(result) : Results.NotFound();
+
+                //var result = await service.ReportGetByIdAsync(id, cancellationToken);
+
+                //if (result == null)
+                //    return Results.NotFound();
+                //return Results.Ok(result);
+            })
+            .WithTags(_swotAnalysisServiceHeadTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisServiceHeadTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] SWOTAnalysisServiceHeadDto sWOTAnalysisServiceHeadDto, ISWOTAnalysisServiceHeadService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
