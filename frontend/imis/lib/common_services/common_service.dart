@@ -4,6 +4,7 @@ import 'package:imis/auditor_team/models/auditor_team_member.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/office/models/office_evaluators.dart';
+import 'package:imis/performance_governance_system/pgs_servicehead_office/models/service_head_office.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -87,6 +88,12 @@ class CommonService {
     ApiEndpoint().officeServices,
     (e) => Office.fromJson(e),
     'Failed to fetch service',
+  );
+
+  Future<List<ServiceHeadOffice>> fetchServiceHeadOffice() => _fetchList(
+    ApiEndpoint().serviceHeadOffices,
+    (e) => ServiceHeadOffice.fromJson(e),
+    'Failed to load',
   );
   Future<List<PgsSignatory>> fetchPgsSignatories(int pgsId) => _fetchList(
     '${ApiEndpoint().performanceValidationTool}/PgsSignatory?pgsSignatoryId=$pgsId',
