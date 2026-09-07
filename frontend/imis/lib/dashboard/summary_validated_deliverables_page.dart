@@ -10,6 +10,7 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/common/button_filter.dart';
+import 'package:imis/widgets/common/filter_button_widget.dart';
 
 class PendingAuditRecord {
   final int teamId;
@@ -685,16 +686,16 @@ class SummaryValidatedDeliverablesPageState
       children: [
         Row(
           children: [
-            Icon(Icons.tune, size: 14, color: Colors.grey.shade600),
-            const SizedBox(width: 6),
-            Text(
-              "Filter by",
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
+            Expanded(child: buildDropdown(child: _servicesDropdown())),
+            SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _teamDropdown())),
+            SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _pgsPeriodDropdown())),
+            SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _monthDropdown())),
+            SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _yearDropdown())),
+
             const Spacer(),
             if (_hasActiveFilters)
               TextButton.icon(
@@ -712,28 +713,6 @@ class SummaryValidatedDeliverablesPageState
                 ),
               ),
           ],
-        ),
-        const SizedBox(height: 8),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            const spacing = 10.0;
-            const minItemWidth = 170.0;
-            final itemWidth =
-                (constraints.maxWidth - spacing * 4) / 5 < minItemWidth
-                    ? minItemWidth
-                    : (constraints.maxWidth - spacing * 4) / 5;
-            return Wrap(
-              spacing: spacing,
-              runSpacing: spacing,
-              children: [
-                SizedBox(width: itemWidth, child: _servicesDropdown()),
-                SizedBox(width: itemWidth, child: _teamDropdown()),
-                SizedBox(width: itemWidth, child: _pgsPeriodDropdown()),
-                SizedBox(width: itemWidth, child: _monthDropdown()),
-                SizedBox(width: itemWidth, child: _yearDropdown()),
-              ],
-            );
-          },
         ),
       ],
     );
