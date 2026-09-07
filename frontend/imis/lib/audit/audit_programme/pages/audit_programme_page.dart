@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -42,11 +44,11 @@ class AuditPlanEntryRow {
     List<int>? selectedIsoStandardIds,
     TimeOfDay? time,
     this.selectedTeamId,
-  })  : officeText = officeText ?? '',
-        selectedIsoStandardIds = selectedIsoStandardIds ?? <int>[],
-        time = time ?? const TimeOfDay(hour: 9, minute: 0),
-        officeTextController = TextEditingController(text: officeText ?? ''),
-        officeFocusNode = FocusNode();
+  }) : officeText = officeText ?? '',
+       selectedIsoStandardIds = selectedIsoStandardIds ?? <int>[],
+       time = time ?? const TimeOfDay(hour: 9, minute: 0),
+       officeTextController = TextEditingController(text: officeText ?? ''),
+       officeFocusNode = FocusNode();
 
   void dispose() {
     officeTextController.dispose();
@@ -59,18 +61,27 @@ class AuditPlanEntryRow {
     final processes = json['auditPlanProcesses'] ?? json['AuditPlanProcesses'];
     if (processes != null && (processes as List).isNotEmpty) {
       final item = processes[0];
-      officeId = (item['officeId'] ?? item['OfficeId'] ?? item['office']?['id']) as int?;
-      final rawName = item['processName'] ?? item['ProcessName'] ?? item['office']?['name'];
+      officeId =
+          (item['officeId'] ?? item['OfficeId'] ?? item['office']?['id'])
+              as int?;
+      final rawName =
+          item['processName'] ?? item['ProcessName'] ?? item['office']?['name'];
       officeName = rawName?.toString() ?? '';
     }
 
     final List<int> standardIds = [];
-    final standards = json['isoStandardAuditPlans'] ?? json['IsoStandardAuditPlans'];
+    final standards =
+        json['isoStandardAuditPlans'] ?? json['IsoStandardAuditPlans'];
     if (standards != null) {
       for (final item in (standards as List)) {
-        final rawStdId = item['isoStandardId'] ?? item['IsoStandardId'] ?? item['isoStandard']?['id'];
+        final rawStdId =
+            item['isoStandardId'] ??
+            item['IsoStandardId'] ??
+            item['isoStandard']?['id'];
         if (rawStdId != null) {
-          final parsed = rawStdId is int ? rawStdId : int.tryParse(rawStdId.toString());
+          final parsed = rawStdId is int
+              ? rawStdId
+              : int.tryParse(rawStdId.toString());
           if (parsed != null) standardIds.add(parsed);
         }
       }
@@ -80,7 +91,8 @@ class AuditPlanEntryRow {
     final auditors = json['isoAuditors'] ?? json['IsoAuditors'];
     if (auditors != null && (auditors as List).isNotEmpty) {
       final item = auditors[0];
-      teamId = (item['teamId'] ?? item['TeamId'] ?? item['team']?['id']) as int?;
+      teamId =
+          (item['teamId'] ?? item['TeamId'] ?? item['team']?['id']) as int?;
     }
 
     TimeOfDay time = const TimeOfDay(hour: 9, minute: 0);
@@ -88,7 +100,10 @@ class AuditPlanEntryRow {
     if (rawTime != null) {
       final parsed = DateTime.tryParse(rawTime.toString());
       if (parsed != null) {
-        time = TimeOfDay(hour: parsed.toLocal().hour, minute: parsed.toLocal().minute);
+        time = TimeOfDay(
+          hour: parsed.toLocal().hour,
+          minute: parsed.toLocal().minute,
+        );
       }
     }
 
@@ -105,9 +120,18 @@ class AuditPlanEntryRow {
 
   /// [dayDate] is the day group's date — combined with this row's [time] to
   /// produce the full timestamp the backend expects.
-  Map<String, dynamic> toBackendDtoJson(int auditPlanId, {required DateTime dayDate}) {
+  Map<String, dynamic> toBackendDtoJson(
+    int auditPlanId, {
+    required DateTime dayDate,
+  }) {
     final trimmedOfficeText = officeText.trim();
-    final combined = DateTime(dayDate.year, dayDate.month, dayDate.day, time.hour, time.minute);
+    final combined = DateTime(
+      dayDate.year,
+      dayDate.month,
+      dayDate.day,
+      time.hour,
+      time.minute,
+    );
 
     return {
       'id': id ?? 0,
@@ -121,7 +145,7 @@ class AuditPlanEntryRow {
                 'officeId': selectedOfficeId,
                 'processName': trimmedOfficeText,
                 'auditPlanEntryId': 0,
-              }
+              },
             ]
           : [],
       'isoStandardAuditPlans': selectedIsoStandardIds
@@ -129,7 +153,7 @@ class AuditPlanEntryRow {
           .toList(),
       'isoAuditors': selectedTeamId != null
           ? [
-              {'id': 0, 'teamId': selectedTeamId}
+              {'id': 0, 'teamId': selectedTeamId},
             ]
           : [],
     };
@@ -168,7 +192,12 @@ class IsoStandardDto {
     final rawId = json['id'] ?? json['Id'] ?? 0;
     return IsoStandardDto(
       id: rawId is int ? rawId : int.parse(rawId.toString()),
-      clause: json['clauseRef'] ?? json['ClauseRef'] ?? json['clause'] ?? json['Clause'] ?? '',
+      clause:
+          json['clauseRef'] ??
+          json['ClauseRef'] ??
+          json['clause'] ??
+          json['Clause'] ??
+          '',
       name: json['name'] ?? json['Name'],
     );
   }
@@ -206,48 +235,65 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
   final AuditProgrammeService _service = AuditProgrammeService(Dio());
 
-  final TextEditingController _forController = TextEditingController(text: 'ISO-QMR');
-  final TextEditingController _fromController = TextEditingController(text: 'Internal Quality Audit Committee');
+  final TextEditingController _forController = TextEditingController(
+    text: 'ISO-QMR',
+  );
+  final TextEditingController _fromController = TextEditingController(
+    text: 'Internal Quality Audit Committee',
+  );
   final TextEditingController _purposeController = TextEditingController(
-    text: 'Preparation and submission for approval of the ISO Internal Quality Audit Programme.',
+    text:
+        'Preparation and submission for approval of the ISO Internal Quality Audit Programme.',
   );
-  final TextEditingController _internalAuditSchedController = TextEditingController(
-    text: 'Internal Quality Audit will be conducted on April 25 – 28, May 23 – 26, and July 4, 2023.\n\n'
-          'Follow-up/Revisit Internal Audit will be conducted on October 3 – 5, October 24 – 26, and November 8, 2023.',
+  final TextEditingController
+  _internalAuditSchedController = TextEditingController(
+    text:
+        'Internal Quality Audit will be conducted on April 25 – 28, May 23 – 26, and July 4, 2023.\n\n'
+        'Follow-up/Revisit Internal Audit will be conducted on October 3 – 5, October 24 – 26, and November 8, 2023.',
   );
-  final TextEditingController _auditPlanObjectiveController = TextEditingController(
-    text: 'To properly manage the implementation of the Internal Quality Audit activities as per scheduled audit plan.',
+  final TextEditingController
+  _auditPlanObjectiveController = TextEditingController(
+    text:
+        'To properly manage the implementation of the Internal Quality Audit activities as per scheduled audit plan.',
   );
   final TextEditingController _scopeOfAuditController = TextEditingController(
-    text: 'Management Processes, all Core Processes, and Support Processes of all Departments/Sections/Units of the Organization.',
+    text:
+        'Management Processes, all Core Processes, and Support Processes of all Departments/Sections/Units of the Organization.',
   );
   final TextEditingController _objectivesController = TextEditingController(
-    text: '1. To determine the adequacy of the documented quality management system in conformance to the ISO 9001:2015 standards and other regulatory and statutory requirements;\n'
-          '2. To verify legal compliance and adherence to the quality policy and achievement of its objectives and targets; and\n'
-          '3. To determine areas for improvement on all processes including the status of active nonconformities and customer satisfaction surveys.',
+    text:
+        '1. To determine the adequacy of the documented quality management system in conformance to the ISO 9001:2015 standards and other regulatory and statutory requirements;\n'
+        '2. To verify legal compliance and adherence to the quality policy and achievement of its objectives and targets; and\n'
+        '3. To determine areas for improvement on all processes including the status of active nonconformities and customer satisfaction surveys.',
   );
   final TextEditingController _scopeController = TextEditingController(
-    text: 'All Departments/Sections/Units shall be audited twice a year. The first internal audit will be conducted on the second quarter and the follow-up audit will be conducted on the fourth quarter of the year.',
+    text:
+        'All Departments/Sections/Units shall be audited twice a year. The first internal audit will be conducted on the second quarter and the follow-up audit will be conducted on the fourth quarter of the year.',
   );
   final TextEditingController _criteriaController = TextEditingController(
-    text: 'Audit criteria is based on the data presented from the documents and records and are as follows:\n'
-          '1. ISO 9001:2015\n2. Quality Manual\n3. Quality Objectives\n4. Standard Operating Procedure\n5. Statutory, regulatory laws and other applicable laws affecting the Organization',
+    text:
+        'Audit criteria is based on the data presented from the documents and records and are as follows:\n'
+        '1. ISO 9001:2015\n2. Quality Manual\n3. Quality Objectives\n4. Standard Operating Procedure\n5. Statutory, regulatory laws and other applicable laws affecting the Organization',
   );
   final TextEditingController _methodologyController = TextEditingController(
-    text: 'Auditors may use the following Audit Methodologies:\n'
-          '1. IQA Procedure\n2. Using the P-D-C-A Approach/Checklist\n3. QOC - Questions-Observe-Check Method\n4. Others as applicable',
+    text:
+        'Auditors may use the following Audit Methodologies:\n'
+        '1. IQA Procedure\n2. Using the P-D-C-A Approach/Checklist\n3. QOC - Questions-Observe-Check Method\n4. Others as applicable',
   );
-  final TextEditingController _auditorSelectionController = TextEditingController(
-    text: 'The QMR shall select and evaluate based on the IQA Procedure.',
-  );
+  final TextEditingController _auditorSelectionController =
+      TextEditingController(
+        text: 'The QMR shall select and evaluate based on the IQA Procedure.',
+      );
   final TextEditingController _reportingController = TextEditingController(
-    text: 'Results of audits shall be presented during the closing meeting. Final audit reports shall be submitted 1 week after the conduct of each audit.',
+    text:
+        'Results of audits shall be presented during the closing meeting. Final audit reports shall be submitted 1 week after the conduct of each audit.',
   );
   final TextEditingController _verificationController = TextEditingController(
     text: 'All nonconformities still open shall be verified on the next audit.',
   );
   final TextEditingController _limitationsController = TextEditingController(
-    text: 'In order to advocate independence as an audit principle, cross posting of auditors will be implemented. In no case will any auditor be assigned to audit his/her own work or his/her division.',
+    text:
+        'In order to advocate independence as an audit principle, cross posting of auditors will be implemented. In no case will any auditor be assigned to audit his/her own work or his/her division.',
   );
 
   final List<AuditPlanEntryRow> _entries = [];
@@ -305,40 +351,72 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       ]);
 
       if (widget.programmeId != null) {
-        final programme = await _service.getAuditProgrammeById(widget.programmeId!);
+        final programme = await _service.getAuditProgrammeById(
+          widget.programmeId!,
+        );
 
         if (programme != null) {
           final jsonMap = programme.toJson();
 
           _forController.text = jsonMap['for'] ?? jsonMap['For'] ?? '';
           _fromController.text = jsonMap['from'] ?? jsonMap['From'] ?? '';
-          _purposeController.text = jsonMap['purpose'] ?? jsonMap['Purpose'] ?? '';
+          _purposeController.text =
+              jsonMap['purpose'] ?? jsonMap['Purpose'] ?? '';
           _internalAuditSchedController.text =
-              jsonMap['internalAuditSched'] ?? jsonMap['InternalAuditSched'] ?? '';
-          _scopeController.text = jsonMap['scopeAndFreqAudit'] ?? jsonMap['ScopeAndFreqAudit'] ?? '';
+              jsonMap['internalAuditSched'] ??
+              jsonMap['InternalAuditSched'] ??
+              '';
+          _scopeController.text =
+              jsonMap['scopeAndFreqAudit'] ??
+              jsonMap['ScopeAndFreqAudit'] ??
+              '';
 
-          final loadedObjectives = jsonMap['objectives'] as List? ?? jsonMap['Objectives'] as List? ?? [];
+          final loadedObjectives =
+              jsonMap['objectives'] as List? ??
+              jsonMap['Objectives'] as List? ??
+              [];
           if (loadedObjectives.isNotEmpty) {
             _objectivesController.text = loadedObjectives
-                .map((o) => (o['description'] ?? o['Description'] ?? '').toString())
+                .map(
+                  (o) =>
+                      (o['description'] ?? o['Description'] ?? '').toString(),
+                )
                 .where((line) => line.isNotEmpty)
                 .join('\n');
           }
 
-          _auditPlanObjectiveController.text = jsonMap['auditPlanObjective'] ?? jsonMap['AuditPlanObjective'] ?? '';
-          _scopeOfAuditController.text = jsonMap['scopeOfAudit'] ?? jsonMap['ScopeOfAudit'] ?? '';
+          _auditPlanObjectiveController.text =
+              jsonMap['auditPlanObjective'] ??
+              jsonMap['AuditPlanObjective'] ??
+              '';
+          _scopeOfAuditController.text =
+              jsonMap['scopeOfAudit'] ?? jsonMap['ScopeOfAudit'] ?? '';
 
-          _criteriaController.text = jsonMap['auditCriteria'] ?? jsonMap['AuditCriteria'] ?? '';
-          _methodologyController.text = jsonMap['auditMethodology'] ?? jsonMap['AuditMethodology'] ?? '';
-          _auditorSelectionController.text = jsonMap['selectionAndEvaluationOfAuditors'] ?? jsonMap['SelectionAndEvaluationOfAuditors'] ?? '';
-          _reportingController.text = jsonMap['reporting'] ?? jsonMap['Reporting'] ?? '';
-          _verificationController.text = jsonMap['verificationOfPreviousNonconformities'] ?? jsonMap['VerificationOfPreviousNonconformities'] ?? '';
-          _limitationsController.text = jsonMap['auditLimitations'] ?? jsonMap['AuditLimitations'] ?? '';
+          _criteriaController.text =
+              jsonMap['auditCriteria'] ?? jsonMap['AuditCriteria'] ?? '';
+          _methodologyController.text =
+              jsonMap['auditMethodology'] ?? jsonMap['AuditMethodology'] ?? '';
+          _auditorSelectionController.text =
+              jsonMap['selectionAndEvaluationOfAuditors'] ??
+              jsonMap['SelectionAndEvaluationOfAuditors'] ??
+              '';
+          _reportingController.text =
+              jsonMap['reporting'] ?? jsonMap['Reporting'] ?? '';
+          _verificationController.text =
+              jsonMap['verificationOfPreviousNonconformities'] ??
+              jsonMap['VerificationOfPreviousNonconformities'] ??
+              '';
+          _limitationsController.text =
+              jsonMap['auditLimitations'] ?? jsonMap['AuditLimitations'] ?? '';
 
-          final auditPlans = jsonMap['auditPlan'] as List? ?? jsonMap['AuditPlans'] as List? ?? [];
+          final auditPlans =
+              jsonMap['auditPlan'] as List? ??
+              jsonMap['AuditPlans'] as List? ??
+              [];
 
           for (var plan in auditPlans) {
-            final entriesList = plan['entries'] as List? ?? plan['Entries'] as List? ?? [];
+            final entriesList =
+                plan['entries'] as List? ?? plan['Entries'] as List? ?? [];
             for (var entryJson in entriesList) {
               final row = AuditPlanEntryRow.fromJson(entryJson);
               _entries.add(row);
@@ -347,7 +425,9 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               // that day (its 'time' field carries the full date+time).
               if (!_dayDates.containsKey(row.dayNumber)) {
                 final rawTime = entryJson['time'] ?? entryJson['Time'];
-                final parsed = rawTime != null ? DateTime.tryParse(rawTime.toString()) : null;
+                final parsed = rawTime != null
+                    ? DateTime.tryParse(rawTime.toString())
+                    : null;
                 _dayDates[row.dayNumber] = parsed != null
                     ? DateTime(parsed.year, parsed.month, parsed.day)
                     : DateTime.now();
@@ -409,8 +489,9 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     }
   }
 
-  int get _nextDayNumber =>
-      _dayDates.keys.isEmpty ? 1 : (_dayDates.keys.reduce((a, b) => a > b ? a : b) + 1);
+  int get _nextDayNumber => _dayDates.keys.isEmpty
+      ? 1
+      : (_dayDates.keys.reduce((a, b) => a > b ? a : b) + 1);
 
   /// Adds a brand-new day banner (defaults to the day after the latest
   /// existing day) with one blank entry row under it.
@@ -461,7 +542,10 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: primaryThemeColor, onPrimary: Colors.white),
+            colorScheme: const ColorScheme.light(
+              primary: primaryThemeColor,
+              onPrimary: Colors.white,
+            ),
           ),
           child: child!,
         );
@@ -475,7 +559,11 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: primaryThemeColor, fontSize: 13, fontWeight: FontWeight.bold),
+      labelStyle: const TextStyle(
+        color: primaryThemeColor,
+        fontSize: 13,
+        fontWeight: FontWeight.bold,
+      ),
       isDense: true,
       filled: true,
       fillColor: const Color(0xFFFBFBFB),
@@ -501,246 +589,308 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       backgroundColor: const Color(0xFFF4F6F8),
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: primaryThemeColor))
+            ? const Center(
+                child: CircularProgressIndicator(color: primaryThemeColor),
+              )
             : _errorMessage != null
-                ? Center(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)))
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          widget.programmeId == null ? 'Create Audit Programme' : 'Edit Audit Programme',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black87),
-                        ),
-                        const SizedBox(height: 20),
+            ? Center(
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      widget.programmeId == null
+                          ? 'Create Audit Programme'
+                          : 'Edit Audit Programme',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
 
-                        _buildCard(
-                          title: 'PROGRAMME HEADER',
-                          child: Column(
+                    _buildCard(
+                      title: 'PROGRAMME HEADER',
+                      child: Column(
+                        children: [
+                          Row(
                             children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: _forController,
-                                      decoration: _inputDecoration('FOR'),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _forController,
+                                  decoration: _inputDecoration('FOR'),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _fromController,
+                                  decoration: _inputDecoration('FROM'),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _purposeController,
+                            maxLines: 2,
+                            decoration: _inputDecoration('PURPOSE'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    _buildCard(
+                      title: 'I. OBJECTIVES & II. SCOPE AND FREQUENCY OF AUDIT',
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _objectivesController,
+                            maxLines: 4,
+                            decoration: _inputDecoration('I. OBJECTIVES'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _scopeController,
+                            maxLines: 3,
+                            decoration: _inputDecoration(
+                              'II. SCOPE AND FREQUENCY OF AUDIT',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // III. Internal Audit Schedule (narrative) + day-grouped entries
+                    AuditPlanEntriesSection(
+                      internalAuditSchedController:
+                          _internalAuditSchedController,
+                      auditPlanObjectiveController:
+                          _auditPlanObjectiveController,
+                      scopeOfAuditController: _scopeOfAuditController,
+                      entries: _entries,
+                      dayDates: _dayDates,
+                      offices: _offices,
+                      standards: _standards,
+                      teams: _teams,
+                      onAddDay: _addDay,
+                      onAddRowToDay: _addRowToDay,
+                      onRemoveEntry: _removeEntry,
+                      onRemoveDay: _removeDay,
+                      onPickDayDate: _pickDayDate,
+                    ),
+                    const SizedBox(height: 16),
+
+                    _buildCard(
+                      title: 'IV - IX. AUDIT SPECIFICATIONS & PROCEDURES',
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _criteriaController,
+                            maxLines: 4,
+                            decoration: _inputDecoration('IV. AUDIT CRITERIA'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _methodologyController,
+                            maxLines: 4,
+                            decoration: _inputDecoration(
+                              'V. AUDIT METHODOLOGY',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _auditorSelectionController,
+                            maxLines: 2,
+                            decoration: _inputDecoration(
+                              'VI. SELECTION AND EVALUATION OF AUDITORS',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _reportingController,
+                            maxLines: 2,
+                            decoration: _inputDecoration('VII. REPORTING'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _verificationController,
+                            maxLines: 2,
+                            decoration: _inputDecoration(
+                              'VIII. VERIFICATION OF PREVIOUS NONCONFORMITIES / FOLLOW UP ACTIONS',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _limitationsController,
+                            maxLines: 3,
+                            decoration: _inputDecoration(
+                              'IX. AUDIT LIMITATIONS',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryThemeColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          elevation: 2,
+                        ),
+                        onPressed: () async {
+                          bool? confirmAction = await showDialog<bool>(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text(
+                                  widget.programmeId == null
+                                      ? "Confirm Save"
+                                      : "Confirm Update",
+                                ),
+                                content: Text(
+                                  widget.programmeId == null
+                                      ? "Are you sure you want to save this record?"
+                                      : "Are you sure you want to update this record?",
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: Text(
+                                      "No",
+                                      style: TextStyle(
+                                        color: primaryThemeColor,
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: _fromController,
-                                      decoration: _inputDecoration('FROM'),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: Text(
+                                      "Yes",
+                                      style: TextStyle(
+                                        color: primaryThemeColor,
+                                      ),
                                     ),
                                   ),
                                 ],
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _purposeController,
-                                maxLines: 2,
-                                decoration: _inputDecoration('PURPOSE'),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        _buildCard(
-                          title: 'I. OBJECTIVES & II. SCOPE AND FREQUENCY OF AUDIT',
-                          child: Column(
-                            children: [
-                              TextFormField(
-                                controller: _objectivesController,
-                                maxLines: 4,
-                                decoration: _inputDecoration('I. OBJECTIVES'),
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _scopeController,
-                                maxLines: 3,
-                                decoration: _inputDecoration('II. SCOPE AND FREQUENCY OF AUDIT'),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // III. Internal Audit Schedule (narrative) + day-grouped entries
-                        AuditPlanEntriesSection(
-                          internalAuditSchedController: _internalAuditSchedController,
-                          auditPlanObjectiveController: _auditPlanObjectiveController,
-                          scopeOfAuditController: _scopeOfAuditController,
-                          entries: _entries,
-                          dayDates: _dayDates,
-                          offices: _offices,
-                          standards: _standards,
-                          teams: _teams,
-                          onAddDay: _addDay,
-                          onAddRowToDay: _addRowToDay,
-                          onRemoveEntry: _removeEntry,
-                          onRemoveDay: _removeDay,
-                          onPickDayDate: _pickDayDate,
-                        ),
-                        const SizedBox(height: 16),
-
-                        _buildCard(
-                          title: 'IV - IX. AUDIT SPECIFICATIONS & PROCEDURES',
-                          child: Column(
-                            children: [
-                              TextFormField(
-                                controller: _criteriaController,
-                                maxLines: 4,
-                                decoration: _inputDecoration('IV. AUDIT CRITERIA'),
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _methodologyController,
-                                maxLines: 4,
-                                decoration: _inputDecoration('V. AUDIT METHODOLOGY'),
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _auditorSelectionController,
-                                maxLines: 2,
-                                decoration: _inputDecoration('VI. SELECTION AND EVALUATION OF AUDITORS'),
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _reportingController,
-                                maxLines: 2,
-                                decoration: _inputDecoration('VII. REPORTING'),
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _verificationController,
-                                maxLines: 2,
-                                decoration: _inputDecoration('VIII. VERIFICATION OF PREVIOUS NONCONFORMITIES / FOLLOW UP ACTIONS'),
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _limitationsController,
-                                maxLines: 3,
-                                decoration: _inputDecoration('IX. AUDIT LIMITATIONS'),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        SizedBox(
-                          height: 48,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryThemeColor,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                              elevation: 2,
-                            ),
-                            onPressed: () async {
-                              bool? confirmAction = await showDialog<bool>(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: Text(
-                                      widget.programmeId == null ? "Confirm Save" : "Confirm Update",
-                                    ),
-                                    content: Text(
-                                      widget.programmeId == null
-                                          ? "Are you sure you want to save this record?"
-                                          : "Are you sure you want to update this record?",
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context, false),
-                                        child: Text("No", style: TextStyle(color: primaryThemeColor)),
-                                      ),
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context, true),
-                                        child: Text("Yes", style: TextStyle(color: primaryThemeColor)),
-                                      ),
-                                    ],
-                                  );
-                                },
                               );
-
-                              if (confirmAction != true) return;
-
-                              // Overall plan StartDate/EndDate span every day
-                              // that currently has entries.
-                              final allDates = _dayDates.values.toList()..sort();
-                              final startDate = allDates.isNotEmpty ? allDates.first : DateTime.now();
-                              final endDate = allDates.isNotEmpty ? allDates.last : DateTime.now().add(const Duration(days: 30));
-
-                              final payload = {
-                                'id': widget.programmeId ?? 0,
-                                'year': DateTime.now().year,
-                                'for': _forController.text,
-                                'from': _fromController.text,
-                                'purpose': _purposeController.text,
-                                'scopeAndFreqAudit': _scopeController.text,
-                                'internalAuditSched': _internalAuditSchedController.text,
-                                'auditPlanObjective': _auditPlanObjectiveController.text,
-                                'scopeOfAudit': _scopeOfAuditController.text,
-                                'objectives': _objectivesController.text
-                                    .split('\n')
-                                    .map((line) => line.trim())
-                                    .where((line) => line.isNotEmpty)
-                                    .toList()
-                                    .asMap()
-                                    .entries
-                                    .map((e) => {
-                                          'id': 0,
-                                          'sortOrder': e.key,
-                                          'description': e.value,
-                                        })
-                                    .toList(),
-                                'auditCriteria': _criteriaController.text,
-                                'auditMethodology': _methodologyController.text,
-                                'selectionAndEvaluationOfAuditors': _auditorSelectionController.text,
-                                'reporting': _reportingController.text,
-                                'verificationOfPreviousNonconformities': _verificationController.text,
-                                'auditLimitations': _limitationsController.text,
-                                'auditPlan': [
-                                  {
-                                    'id': 0,
-                                    'startDate': startDate.toIso8601String(),
-                                    'endDate': endDate.toIso8601String(),
-                                    'planStatus': 'Draft',
-                                    'entries': _entries
-                                        .map((e) => e.toBackendDtoJson(0, dayDate: _dayDates[e.dayNumber] ?? DateTime.now()))
-                                        .toList(),
-                                  }
-                                ]
-                              };
-
-                              try {
-                                final programme = AuditProgramme.fromJson(payload);
-                                await _service.addOrUpdateAuditProgramme(programme);
-
-                                if (!mounted) return;
-                                MotionToast.success(
-                                  toastAlignment: Alignment.topCenter,
-                                  description: const Text('Saved successfully'),
-                                ).show(context);
-                              } catch (e) {
-                                if (!mounted) return;
-                                MotionToast.error(
-                                  toastAlignment: Alignment.topCenter,
-                                  description: Text('Failed to save: $e'),
-                                ).show(context);
-                              }
                             },
-                            child: const Text(
-                              'SAVE AUDIT PROGRAMME',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                            ),
+                          );
+
+                          if (confirmAction != true) return;
+
+                          // Overall plan StartDate/EndDate span every day
+                          // that currently has entries.
+                          final allDates = _dayDates.values.toList()..sort();
+                          final startDate = allDates.isNotEmpty
+                              ? allDates.first
+                              : DateTime.now();
+                          final endDate = allDates.isNotEmpty
+                              ? allDates.last
+                              : DateTime.now().add(const Duration(days: 30));
+
+                          final payload = {
+                            'id': widget.programmeId ?? 0,
+                            'year': DateTime.now().year,
+                            'for': _forController.text,
+                            'from': _fromController.text,
+                            'purpose': _purposeController.text,
+                            'scopeAndFreqAudit': _scopeController.text,
+                            'internalAuditSched':
+                                _internalAuditSchedController.text,
+                            'auditPlanObjective':
+                                _auditPlanObjectiveController.text,
+                            'scopeOfAudit': _scopeOfAuditController.text,
+                            'objectives': _objectivesController.text
+                                .split('\n')
+                                .map((line) => line.trim())
+                                .where((line) => line.isNotEmpty)
+                                .toList()
+                                .asMap()
+                                .entries
+                                .map(
+                                  (e) => {
+                                    'id': 0,
+                                    'sortOrder': e.key,
+                                    'description': e.value,
+                                  },
+                                )
+                                .toList(),
+                            'auditCriteria': _criteriaController.text,
+                            'auditMethodology': _methodologyController.text,
+                            'selectionAndEvaluationOfAuditors':
+                                _auditorSelectionController.text,
+                            'reporting': _reportingController.text,
+                            'verificationOfPreviousNonconformities':
+                                _verificationController.text,
+                            'auditLimitations': _limitationsController.text,
+                            'auditPlan': [
+                              {
+                                'id': 0,
+                                'startDate': startDate.toIso8601String(),
+                                'endDate': endDate.toIso8601String(),
+                                'planStatus': 'Draft',
+                                'entries': _entries
+                                    .map(
+                                      (e) => e.toBackendDtoJson(
+                                        0,
+                                        dayDate:
+                                            _dayDates[e.dayNumber] ??
+                                            DateTime.now(),
+                                      ),
+                                    )
+                                    .toList(),
+                              },
+                            ],
+                          };
+
+                          try {
+                            final programme = AuditProgramme.fromJson(payload);
+                            await _service.addOrUpdateAuditProgramme(programme);
+
+                            if (!mounted) return;
+                            MotionToast.success(
+                              toastAlignment: Alignment.topCenter,
+                              description: const Text('Saved successfully'),
+                            ).show(context);
+                          } catch (e) {
+                            if (!mounted) return;
+                            MotionToast.error(
+                              toastAlignment: Alignment.topCenter,
+                              description: Text('Failed to save: $e'),
+                            ).show(context);
+                          }
+                        },
+                        child: const Text(
+                          'SAVE AUDIT PROGRAMME',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
                           ),
                         ),
-                        const SizedBox(height: 24),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -752,7 +902,16 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(color: const Color.fromARGB(255, 226, 114, 114).withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: const Color.fromARGB(
+              255,
+              226,
+              114,
+              114,
+            ).withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -814,7 +973,8 @@ class AuditPlanEntriesSection extends StatefulWidget {
   });
 
   @override
-  State<AuditPlanEntriesSection> createState() => _AuditPlanEntriesSectionState();
+  State<AuditPlanEntriesSection> createState() =>
+      _AuditPlanEntriesSectionState();
 }
 
 class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
@@ -823,7 +983,11 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
   InputDecoration _dropdownDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: Colors.grey.shade700, fontSize: 12, fontWeight: FontWeight.w600),
+      labelStyle: TextStyle(
+        color: Colors.grey.shade700,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
@@ -842,13 +1006,19 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
   }
 
   Future<void> _pickTime(AuditPlanEntryRow entry) async {
-    final picked = await showTimePicker(context: context, initialTime: entry.time);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: entry.time,
+    );
     if (picked != null) {
       setState(() => entry.time = picked);
     }
   }
 
-  Future<void> _selectStandards(BuildContext context, AuditPlanEntryRow entry) async {
+  Future<void> _selectStandards(
+    BuildContext context,
+    AuditPlanEntryRow entry,
+  ) async {
     final List<int> tempSelected = List<int>.from(entry.selectedIsoStandardIds);
 
     final result = await showDialog<List<int>>(
@@ -859,14 +1029,21 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
             return AlertDialog(
               title: const Text(
                 'Select Standard Chapters',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryThemeColor),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: primaryThemeColor,
+                ),
               ),
               content: SizedBox(
                 width: 360,
                 child: widget.standards.isEmpty
                     ? const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text('No standards available', style: TextStyle(fontSize: 12)),
+                        child: Text(
+                          'No standards available',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       )
                     : ListView(
                         shrinkWrap: true,
@@ -876,12 +1053,17 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                             dense: true,
                             activeColor: primaryThemeColor,
                             controlAffinity: ListTileControlAffinity.leading,
-                            title: Text(std.displayLabel, style: const TextStyle(fontSize: 13)),
+                            title: Text(
+                              std.displayLabel,
+                              style: const TextStyle(fontSize: 13),
+                            ),
                             value: checked,
                             onChanged: (val) {
                               setDialogState(() {
                                 if (val == true) {
-                                  if (!tempSelected.contains(std.id)) tempSelected.add(std.id);
+                                  if (!tempSelected.contains(std.id)) {
+                                    tempSelected.add(std.id);
+                                  }
                                 } else {
                                   tempSelected.remove(std.id);
                                 }
@@ -894,11 +1076,20 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, null),
-                  child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, tempSelected),
-                  child: const Text('Done', style: TextStyle(color: primaryThemeColor, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Done',
+                    style: TextStyle(
+                      color: primaryThemeColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             );
@@ -919,7 +1110,9 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
       optionsBuilder: (TextEditingValue value) {
         if (value.text.trim().isEmpty) return widget.offices;
         final query = value.text.trim().toLowerCase();
-        return widget.offices.where((o) => o.name.toLowerCase().contains(query));
+        return widget.offices.where(
+          (o) => o.name.toLowerCase().contains(query),
+        );
       },
       displayStringForOption: (o) => o.name,
       onSelected: (OfficeDto selection) {
@@ -933,11 +1126,15 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
           controller: textController,
           focusNode: focusNode,
           style: const TextStyle(fontSize: 12),
-          decoration: _dropdownDecoration('ORGANIZATIONAL UNIT AND PROCESSES').copyWith(
-            hintText: 'Select or type office/process',
-            hintStyle: const TextStyle(fontSize: 12),
-            suffixIcon: const Icon(Icons.arrow_drop_down, color: primaryThemeColor),
-          ),
+          decoration: _dropdownDecoration('ORGANIZATIONAL UNIT AND PROCESSES')
+              .copyWith(
+                hintText: 'Select or type office/process',
+                hintStyle: const TextStyle(fontSize: 12),
+                suffixIcon: const Icon(
+                  Icons.arrow_drop_down,
+                  color: primaryThemeColor,
+                ),
+              ),
           onChanged: (val) {
             entry.officeText = val;
             final match = widget.offices.where((o) => o.name == val);
@@ -970,8 +1167,14 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                         return InkWell(
                           onTap: () => onSelected(option),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            child: Text(option.name, style: const TextStyle(fontSize: 12)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            child: Text(
+                              option.name,
+                              style: const TextStyle(fontSize: 12),
+                            ),
                           ),
                         );
                       },
@@ -998,7 +1201,11 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -1006,7 +1213,12 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
         children: [
           const Text(
             'III. INTERNAL AUDIT SCHEDULE',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryThemeColor, letterSpacing: 0.5),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: primaryThemeColor,
+              letterSpacing: 0.5,
+            ),
           ),
           const Divider(height: 20),
           TextFormField(
@@ -1014,7 +1226,8 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
             maxLines: 3,
             style: const TextStyle(fontSize: 13),
             decoration: _dropdownDecoration('INTERNAL AUDIT SCHEDULE').copyWith(
-              hintText: 'e.g. Internal Quality Audit will be conducted on April 25–28, '
+              hintText:
+                  'e.g. Internal Quality Audit will be conducted on April 25–28, '
                   'May 23–26, and July 4. Follow-up audit will be conducted on '
                   'October 3–5, October 24–26, and November 8.',
               hintStyle: const TextStyle(fontSize: 12),
@@ -1042,16 +1255,33 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
             children: [
               Text(
                 'SCHEDULE',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: const Color.fromARGB(255, 228, 100, 100), letterSpacing: 0.5),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: const Color.fromARGB(255, 228, 100, 100),
+                  letterSpacing: 0.5,
+                ),
               ),
               ElevatedButton.icon(
                 onPressed: widget.onAddDay,
-                icon: const Icon(Icons.calendar_month, size: 16, color: Colors.white),
-                label: const Text('Add Day', style: TextStyle(color: Colors.white, fontSize: 12)),
+                icon: const Icon(
+                  Icons.calendar_month,
+                  size: 16,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Add Day',
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryThemeColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
               ),
             ],
@@ -1092,17 +1322,28 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                       children: [
                         Text(
                           'DAY $day — ${DateFormat('MMMM d, yyyy').format(date).toUpperCase()}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
                         const SizedBox(width: 6),
-                        const Icon(Icons.edit_calendar, size: 14, color: primaryThemeColor),
+                        const Icon(
+                          Icons.edit_calendar,
+                          size: 14,
+                          color: primaryThemeColor,
+                        ),
                       ],
                     ),
                   ),
                 ),
                 if (widget.dayDates.length > 1)
                   IconButton(
-                    icon: const Icon(Icons.close, size: 18, color: Colors.redAccent),
+                    icon: const Icon(
+                      Icons.close,
+                      size: 18,
+                      color: Colors.redAccent,
+                    ),
                     tooltip: 'Remove Day',
                     onPressed: () => widget.onRemoveDay(day),
                   ),
@@ -1116,7 +1357,8 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: dayEntries.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, i) => _buildEntryRow(dayEntries[i], dayEntries.length),
+            itemBuilder: (context, i) =>
+                _buildEntryRow(dayEntries[i], dayEntries.length),
           ),
 
           const SizedBox(height: 8),
@@ -1125,7 +1367,10 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
             child: TextButton.icon(
               onPressed: () => widget.onAddRowToDay(day),
               icon: const Icon(Icons.add, size: 16, color: primaryThemeColor),
-              label: Text('Add Row to Day $day', style: const TextStyle(fontSize: 12, color: primaryThemeColor)),
+              label: Text(
+                'Add Row to Day $day',
+                style: const TextStyle(fontSize: 12, color: primaryThemeColor),
+              ),
             ),
           ),
         ],
@@ -1134,7 +1379,9 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
   }
 
   Widget _buildEntryRow(AuditPlanEntryRow entry, int rowsInThisDay) {
-    final safeTeamValue = widget.teams.any((t) => t.id == entry.selectedTeamId) ? entry.selectedTeamId : null;
+    final safeTeamValue = widget.teams.any((t) => t.id == entry.selectedTeamId)
+        ? entry.selectedTeamId
+        : null;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -1154,8 +1401,15 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(entry.time.format(context), style: const TextStyle(fontSize: 12)),
-                  const Icon(Icons.access_time, size: 14, color: primaryThemeColor),
+                  Text(
+                    entry.time.format(context),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  const Icon(
+                    Icons.access_time,
+                    size: 14,
+                    color: primaryThemeColor,
+                  ),
                 ],
               ),
             ),
@@ -1168,19 +1422,34 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
             onTap: () => _selectStandards(context, entry),
             child: InputDecorator(
               decoration: _dropdownDecoration('STANDARD CHAPTER').copyWith(
-                suffixIcon: const Icon(Icons.arrow_drop_down, color: primaryThemeColor),
+                suffixIcon: const Icon(
+                  Icons.arrow_drop_down,
+                  color: primaryThemeColor,
+                ),
               ),
               child: entry.selectedIsoStandardIds.isEmpty
-                  ? Text('Select Clause(s)', style: TextStyle(fontSize: 12, color: Colors.grey.shade600))
+                  ? Text(
+                      'Select Clause(s)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    )
                   : Wrap(
                       spacing: 4,
                       runSpacing: 4,
                       children: entry.selectedIsoStandardIds.map((id) {
                         final match = widget.standards.where((s) => s.id == id);
-                        final label = match.isNotEmpty ? match.first.displayLabel : 'Clause #$id';
+                        final label = match.isNotEmpty
+                            ? match.first.displayLabel
+                            : 'Clause #$id';
                         return Chip(
-                          label: Text(label, style: const TextStyle(fontSize: 10)),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          label: Text(
+                            label,
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           backgroundColor: primaryThemeColor.withOpacity(0.08),
@@ -1192,24 +1461,46 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
           );
 
           Widget teamDropdown = DropdownButtonFormField<int>(
-            value: safeTeamValue,
+            initialValue: safeTeamValue,
             isExpanded: true,
             hint: const Text('Select Team', style: TextStyle(fontSize: 12)),
             decoration: _dropdownDecoration('AUDITORS'),
             items: widget.teams.isEmpty
-                ? [const DropdownMenuItem<int>(value: null, child: Text('No options available', style: TextStyle(fontSize: 12)))]
+                ? [
+                    const DropdownMenuItem<int>(
+                      value: null,
+                      child: Text(
+                        'No options available',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ]
                 : widget.teams
-                    .map((team) => DropdownMenuItem<int>(
+                      .map(
+                        (team) => DropdownMenuItem<int>(
                           value: team.id,
-                          child: Text(team.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
-                        ))
-                    .toList(),
-            onChanged: widget.teams.isEmpty ? null : (val) => setState(() => entry.selectedTeamId = val),
+                          child: Text(
+                            team.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      )
+                      .toList(),
+            onChanged: widget.teams.isEmpty
+                ? null
+                : (val) => setState(() => entry.selectedTeamId = val),
           );
 
           Widget removeButton = IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-            onPressed: rowsInThisDay > 1 ? () => widget.onRemoveEntry(entry) : null,
+            icon: const Icon(
+              Icons.delete_outline,
+              color: Colors.redAccent,
+              size: 20,
+            ),
+            onPressed: rowsInThisDay > 1
+                ? () => widget.onRemoveEntry(entry)
+                : null,
             tooltip: 'Remove Row',
           );
 

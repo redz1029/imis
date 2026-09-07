@@ -53,10 +53,12 @@ const gap32px = SizedBox(height: 32);
 const gap48px = SizedBox(height: 48);
 const gap60px = SizedBox(height: 60);
 const gap32w = SizedBox(width: 50);
+const kAccentDark = Color(0xFF8B3A4A);
 
 // Job Posiitons
 class JobPositions {
   static const List<String> positions = [
+    '',
     'Chief of Medical Professional Staff II',
     'Medical Center Chief II',
     'Head, Department of Anesthesiology',
@@ -185,7 +187,7 @@ class SwotYear {
 }
 
 Widget getStatusIcon(String status) {
-  double iconSize = 12; // smaller size for all icons
+  double iconSize = 12;
 
   Icon icon;
   Color bgColor = getStatusColor(status);
@@ -217,6 +219,8 @@ Color getStatusColor(String status) {
   switch (status) {
     case 'Draft':
       return Colors.grey[800]!;
+    case 'Pending':
+      return Colors.orange[800]!;
     case 'For Approval':
       return Colors.orange[800]!;
     case 'Approved':

@@ -11,9 +11,7 @@ import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/audit/audit_schedules/models/auditable_offices.dart';
 import 'package:imis/auditor_team/models/auditor_team.dart';
 import 'package:imis/audit/audit_schedules/services/audit_schedule_service.dart';
-import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
-import 'package:imis/auditor_team/services/auditor_team_service.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/common_services/common_service.dart';
@@ -33,20 +31,23 @@ class AuditSchedulePage extends StatefulWidget {
 class _AuditSchedulePageState extends State<AuditSchedulePage> {
   static const Color primaryThemeColor = Color(0xFF883942);
 
-  final AuditSchedulesService _auditScheduleService = AuditSchedulesService(Dio());
-  final AuditPlanService _auditPlanService = AuditPlanService(Dio());
+  final AuditSchedulesService _auditScheduleService = AuditSchedulesService(
+    Dio(),
+  );
   final AuditProgrammeService _programmeService = AuditProgrammeService(Dio());
 
   bool _isLoading = true;
   String? _errorMessage;
 
   int? _resolvedAuditPlanId;
-  List<dynamic> _allAuditPlans = [];
+  final List<dynamic> _allAuditPlans = [];
 
   int _scheduleId = 0;
   dynamic _rowVersion;
 
-  final TextEditingController _purposeController = TextEditingController(text: 'Internal Quality Audit');
+  final TextEditingController _purposeController = TextEditingController(
+    text: 'Internal Quality Audit',
+  );
   final TextEditingController _auditTitleController = TextEditingController();
 
   DateTime _startDate = DateTime.now();
@@ -127,7 +128,9 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       // }
 
       if (widget.auditScheduleId != null) {
-        final existing = await _auditScheduleService.getAuditScheduleById(widget.auditScheduleId!);
+        final existing = await _auditScheduleService.getAuditScheduleById(
+          widget.auditScheduleId!,
+        );
         if (existing != null) {
           _scheduleId = existing.id;
           _rowVersion = existing.rowVersion;
@@ -173,10 +176,9 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
 
   Future<void> _fetchMasterAuditorTeams() async {
     try {
-      final auditorTeamsService = AuditorTeamService(Dio());
       final commonService = CommonService(Dio());
 
-      final teams = await auditorTeamsService.getAuditorTeams();
+      final teams = await commonService.fetchAuditorTeam();
       final List<User> users = await commonService.fetchUsers();
 
       _userNameById = {for (final u in users) u.id: u.fullName};
@@ -195,16 +197,20 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
 
   /// Auditor display name, resolved via userId — the real Auditor model
   /// carries only userId, no name field of its own.
-  String _auditorName(Auditor a) => (a.userId != null ? _userNameById[a.userId] : null) ?? 'Unnamed Auditor';
+  String _auditorName(Auditor a) =>
+      (a.userId != null ? _userNameById[a.userId] : null) ?? 'Unnamed Auditor';
 
   /// Active, non-deleted auditors for the currently selected team, read
   /// straight from the loaded AuditorTeam list.
   List<Auditor> get _selectedTeamRoster {
     if (_selectedTeamId == null) return const [];
-    final match = _auditorTeams.where((t) => t.teamId == _selectedTeamId && t.isActive);
+    final match = _auditorTeams.where(
+      (t) => t.teamId == _selectedTeamId && t.isActive,
+    );
     if (match.isEmpty) return const [];
-    final roster = match.first.auditors.where((a) => !a.isDeleted && a.isActive).toList()
-      ..sort((a, b) => _auditorName(a).compareTo(_auditorName(b)));
+    final roster =
+        match.first.auditors.where((a) => !a.isDeleted && a.isActive).toList()
+          ..sort((a, b) => _auditorName(a).compareTo(_auditorName(b)));
     return roster;
   }
 
@@ -212,19 +218,23 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   /// directly at save time.
   AuditorTeam? get _selectedAuditorTeam {
     if (_selectedTeamId == null) return null;
-    final match = _auditorTeams.where((t) => t.teamId == _selectedTeamId && t.isActive);
+    final match = _auditorTeams.where(
+      (t) => t.teamId == _selectedTeamId && t.isActive,
+    );
     return match.isNotEmpty ? match.first : null;
   }
 
   void _addOffice(Office office) {
     if (_auditableOffices.any((o) => o.officeId == office.id)) return;
     setState(() {
-      _auditableOffices.add(AuditableOffices(
-        id: 0,
-        auditScheduleId: _scheduleId,
-        officeId: office.id,
-        isDeleted: false,
-      ));
+      _auditableOffices.add(
+        AuditableOffices(
+          id: 0,
+          auditScheduleId: _scheduleId,
+          officeId: office.id,
+          isDeleted: false,
+        ),
+      );
       _officeSearchController.clear();
     });
   }
@@ -265,7 +275,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   Future<void> _save() async {
     if (_resolvedAuditPlanId == null) return;
 
-    if (_purposeController.text.trim().isEmpty || _auditTitleController.text.trim().isEmpty) {
+    if (_purposeController.text.trim().isEmpty ||
+        _auditTitleController.text.trim().isEmpty) {
       MotionToast.error(
         toastAlignment: Alignment.topCenter,
         description: const Text('Purpose and Audit Title are required.'),
@@ -277,10 +288,20 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(_scheduleId == 0 ? 'Confirm Save' : 'Confirm Update'),
-        content: Text(_scheduleId == 0 ? 'Save this Audit Schedule?' : 'Update this Audit Schedule?'),
+        content: Text(
+          _scheduleId == 0
+              ? 'Save this Audit Schedule?'
+              : 'Update this Audit Schedule?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text('No', style: TextStyle(color: primaryThemeColor))),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Yes', style: TextStyle(color: primaryThemeColor))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('No', style: TextStyle(color: primaryThemeColor)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Yes', style: TextStyle(color: primaryThemeColor)),
+          ),
         ],
       ),
     );
@@ -313,24 +334,40 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       if (!mounted) return;
       String message = 'Failed to save: $e';
       if (e is DioException && e.response?.data is Map) {
-        final errors = (e.response!.data as Map)['errors'] ?? (e.response!.data as Map)['Errors'];
+        final errors =
+            (e.response!.data as Map)['errors'] ??
+            (e.response!.data as Map)['Errors'];
         if (errors is List && errors.isNotEmpty) message = errors.join('\n');
       }
-      MotionToast.error(toastAlignment: Alignment.topCenter, description: Text(message)).show(context);
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text(message),
+      ).show(context);
     }
   }
 
   InputDecoration _decoration(String label) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: primaryThemeColor, fontSize: 11, fontWeight: FontWeight.w600),
+      labelStyle: const TextStyle(
+        color: primaryThemeColor,
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+      ),
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: Colors.grey.shade300)),
-      enabledBorder:
-          OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: Colors.grey.shade300)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(6),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(6),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
       focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6), borderSide: const BorderSide(color: primaryThemeColor, width: 1.5)),
+        borderRadius: BorderRadius.circular(6),
+        borderSide: const BorderSide(color: primaryThemeColor, width: 1.5),
+      ),
     );
   }
 
@@ -339,7 +376,11 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
-        title: Text(widget.auditScheduleId == null ? 'Create Audit Schedule' : 'Edit Audit Schedule'),
+        title: Text(
+          widget.auditScheduleId == null
+              ? 'Create Audit Schedule'
+              : 'Edit Audit Schedule',
+        ),
         backgroundColor: mainBgColor,
         leading: (_resolvedAuditPlanId != null && widget.auditPlanId == null)
             ? IconButton(
@@ -354,34 +395,49 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             : null,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: primaryThemeColor))
+          ? const Center(
+              child: CircularProgressIndicator(color: primaryThemeColor),
+            )
           : _errorMessage != null
-              ? Center(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)))
-              : _resolvedAuditPlanId == null
-                  ? _buildAuditPlanPicker()
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildAuditeeAndTeamCard(),
-                          const SizedBox(height: 16),
-                          _buildDetailsCard(),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            height: 48,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryThemeColor,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                              ),
-                              onPressed: _save,
-                              child: const Text('SAVE AUDIT SCHEDULE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                        ],
+          ? Center(
+              child: Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
+              ),
+            )
+          : _resolvedAuditPlanId == null
+          ? _buildAuditPlanPicker()
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildAuditeeAndTeamCard(),
+                  const SizedBox(height: 16),
+                  _buildDetailsCard(),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryThemeColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      onPressed: _save,
+                      child: const Text(
+                        'SAVE AUDIT SCHEDULE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -396,19 +452,34 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         final p = _allAuditPlans[i];
         final json = p.toJson();
         final id = (json['id'] ?? json['Id']) as int;
-        final start = DateTime.tryParse((json['startDate'] ?? json['StartDate'] ?? '').toString());
-        final label = start != null ? DateFormat('MMMM d, yyyy').format(start) : 'Audit Plan #$id';
+        final start = DateTime.tryParse(
+          (json['startDate'] ?? json['StartDate'] ?? '').toString(),
+        );
+        final label = start != null
+            ? DateFormat('MMMM d, yyyy').format(start)
+            : 'Audit Plan #$id';
 
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: ListTile(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            title: Text('Audit Plan — $label', style: const TextStyle(fontWeight: FontWeight.w600)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            title: Text(
+              'Audit Plan — $label',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             trailing: const Icon(Icons.chevron_right, color: primaryThemeColor),
             onTap: () {
               setState(() => _resolvedAuditPlanId = id);
@@ -437,12 +508,26 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('AUDITEE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryThemeColor, letterSpacing: 0.5)),
+          const Text(
+            'AUDITEE',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: primaryThemeColor,
+              letterSpacing: 0.5,
+            ),
+          ),
           const Divider(height: 20),
           RawAutocomplete<Office>(
             textEditingController: _officeSearchController,
@@ -450,21 +535,24 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             optionsBuilder: (value) {
               if (value.text.trim().isEmpty) return _offices;
               final query = value.text.trim().toLowerCase();
-              return _offices.where((o) => o.name.toLowerCase().contains(query));
+              return _offices.where(
+                (o) => o.name.toLowerCase().contains(query),
+              );
             },
             displayStringForOption: (o) => o.name,
             onSelected: _addOffice,
-            fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
-              return TextFormField(
-                controller: textController,
-                focusNode: focusNode,
-                style: const TextStyle(fontSize: 12),
-                decoration: _decoration('ADD OFFICE / WARD').copyWith(
-                  hintText: 'Search and select an office',
-                  hintStyle: const TextStyle(fontSize: 11),
-                ),
-              );
-            },
+            fieldViewBuilder:
+                (context, textController, focusNode, onFieldSubmitted) {
+                  return TextFormField(
+                    controller: textController,
+                    focusNode: focusNode,
+                    style: const TextStyle(fontSize: 12),
+                    decoration: _decoration('ADD OFFICE / WARD').copyWith(
+                      hintText: 'Search and select an office',
+                      hintStyle: const TextStyle(fontSize: 11),
+                    ),
+                  );
+                },
             optionsViewBuilder: (context, onSelected, options) {
               return Align(
                 alignment: Alignment.topLeft,
@@ -472,7 +560,10 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
                   elevation: 4,
                   borderRadius: BorderRadius.circular(6),
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 200, minWidth: 240),
+                    constraints: const BoxConstraints(
+                      maxHeight: 200,
+                      minWidth: 240,
+                    ),
                     child: ListView.builder(
                       padding: EdgeInsets.zero,
                       shrinkWrap: true,
@@ -482,8 +573,14 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
                         return InkWell(
                           onTap: () => onSelected(option),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            child: Text(option.name, style: const TextStyle(fontSize: 12)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            child: Text(
+                              option.name,
+                              style: const TextStyle(fontSize: 12),
+                            ),
                           ),
                         );
                       },
@@ -495,17 +592,27 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
           ),
           const SizedBox(height: 10),
           if (_auditableOffices.isEmpty)
-            Text('No offices added yet', style: TextStyle(fontSize: 12, color: Colors.grey.shade600))
+            Text(
+              'No offices added yet',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            )
           else
             Wrap(
               spacing: 6,
               runSpacing: 6,
               children: _auditableOffices.map((o) {
                 return Chip(
-                  label: Text(_officeName(o.officeId), style: const TextStyle(fontSize: 12)),
+                  label: Text(
+                    _officeName(o.officeId),
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   backgroundColor: primaryThemeColor.withValues(alpha: 0.08),
                   labelStyle: const TextStyle(color: primaryThemeColor),
-                  deleteIcon: const Icon(Icons.close, size: 16, color: Colors.redAccent),
+                  deleteIcon: const Icon(
+                    Icons.close,
+                    size: 16,
+                    color: Colors.redAccent,
+                  ),
                   onDeleted: () => _removeOffice(o),
                 );
               }).toList(),
@@ -522,38 +629,84 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('AUDIT TEAM', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryThemeColor, letterSpacing: 0.5)),
+          const Text(
+            'AUDIT TEAM',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: primaryThemeColor,
+              letterSpacing: 0.5,
+            ),
+          ),
           const Divider(height: 20),
           DropdownButtonFormField<int>(
-            value: _teams.any((t) => t.id == _selectedTeamId) ? _selectedTeamId : null,
+            initialValue: _teams.any((t) => t.id == _selectedTeamId)
+                ? _selectedTeamId
+                : null,
             isExpanded: true,
             hint: const Text('Select Team', style: TextStyle(fontSize: 12)),
             decoration: _decoration('TEAM'),
             items: _teams.isEmpty
-                ? [const DropdownMenuItem<int>(value: null, child: Text('No options available', style: TextStyle(fontSize: 12)))]
+                ? [
+                    const DropdownMenuItem<int>(
+                      value: null,
+                      child: Text(
+                        'No options available',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ]
                 : _teams
-                    .map((t) => DropdownMenuItem<int>(value: t.id, child: Text(t.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12))))
-                    .toList(),
-            onChanged: _teams.isEmpty ? null : (val) => setState(() => _selectedTeamId = val),
+                      .map(
+                        (t) => DropdownMenuItem<int>(
+                          value: t.id,
+                          child: Text(
+                            t.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      )
+                      .toList(),
+            onChanged: _teams.isEmpty
+                ? null
+                : (val) => setState(() => _selectedTeamId = val),
           ),
           const SizedBox(height: 10),
           if (_selectedTeamId == null)
-            Text('Select a team to view its members', style: TextStyle(fontSize: 12, color: Colors.grey.shade600))
+            Text(
+              'Select a team to view its members',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            )
           else if (roster.isEmpty)
-            Text('No active members found for this team', style: TextStyle(fontSize: 12, color: Colors.grey.shade600))
+            Text(
+              'No active members found for this team',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            )
           else
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: roster
-                  .map((a) => Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Text('•  ${_auditorName(a)}', style: const TextStyle(fontSize: 12)),
-                      ))
+                  .map(
+                    (a) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        '•  ${_auditorName(a)}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  )
                   .toList(),
             ),
         ],
@@ -567,7 +720,13 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -581,7 +740,9 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
           TextFormField(
             controller: _auditTitleController,
             style: const TextStyle(fontSize: 13),
-            decoration: _decoration('AUDIT TITLE').copyWith(hintText: 'e.g. Medicine Ward ISO Internal Audit'),
+            decoration: _decoration(
+              'AUDIT TITLE',
+            ).copyWith(hintText: 'e.g. Medicine Ward ISO Internal Audit'),
           ),
           const SizedBox(height: 12),
           Row(
@@ -594,8 +755,15 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(DateFormat('MMMM d, yyyy').format(_startDate), style: const TextStyle(fontSize: 12)),
-                        const Icon(Icons.calendar_today, size: 14, color: primaryThemeColor),
+                        Text(
+                          DateFormat('MMMM d, yyyy').format(_startDate),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 14,
+                          color: primaryThemeColor,
+                        ),
                       ],
                     ),
                   ),
@@ -610,8 +778,15 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(DateFormat('MMMM d, yyyy').format(_endDate), style: const TextStyle(fontSize: 12)),
-                        const Icon(Icons.calendar_today, size: 14, color: primaryThemeColor),
+                        Text(
+                          DateFormat('MMMM d, yyyy').format(_endDate),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 14,
+                          color: primaryThemeColor,
+                        ),
                       ],
                     ),
                   ),

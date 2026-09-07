@@ -1,3 +1,5 @@
+// ignore_for_file: library_prefixes
+
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as AuthenticatedRequest;
 import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
@@ -9,11 +11,6 @@ class AuditSchedulesService {
   final Dio dio;
 
   AuditSchedulesService(this.dio);
-
-  // TODO: add an `auditSchedule` getter to ApiEndpoint pointing at your
-  // backend's "/auditSchedule" route (same pattern as `.auditorOffice`,
-  // `.auditorteam`, etc. already do). This service assumes it exists as
-  // `ApiEndpoint().auditSchedule`.
 
   Future<PageList<AuditSchedules>> getAuditSchedule({
     int page = 1,
@@ -62,13 +59,12 @@ class AuditSchedulesService {
     final isUpdating = auditSchedule.id != 0;
     final Map<String, dynamic> requestData = auditSchedule.toJson();
 
-    final response =
-        isUpdating
-            ? await AuthenticatedRequest.put(
-              Uri.parse('$url/${auditSchedule.id}'),
-              body: requestData,
-            )
-            : await AuthenticatedRequest.post(Uri.parse(url), body: requestData);
+    final response = isUpdating
+        ? await AuthenticatedRequest.put(
+            Uri.parse('$url/${auditSchedule.id}'),
+            body: requestData,
+          )
+        : await AuthenticatedRequest.post(Uri.parse(url), body: requestData);
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create/update audit schedule');

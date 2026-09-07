@@ -1,22 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-import 'package:imis/office/models/office.dart';
-import 'package:imis/performance_governance_system/enum/pgs_status.dart';
-import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
-import 'package:imis/reports/models/pgs_summary_narrative.dart';
-import 'package:imis/reports/services/summary_narrative_service.dart';
-import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/accomplishment_auditor_widget.dart';
-import 'package:imis/widgets/breakthrough_widget.dart';
-import 'package:imis/widgets/filter_button_widget.dart';
-import 'package:imis/widgets/no_permission_widget.dart';
-import 'package:imis/widgets/permission_widget.dart';
-=======
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office_evaluators.dart';
@@ -24,35 +9,28 @@ import 'package:imis/performance_governance_system/process_core_support/models/k
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/common/filter_bottom_sheet.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/permission/no_permission_to_view_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:imis/constant/constant.dart';
->>>>>>> master
 import 'package:intl/intl.dart';
-import 'package:imis/constant/constant.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../common_services/common_service.dart';
-import '../../../reports/pages/manage_summary_narrative_report_page.dart';
+import '../../../office/models/office.dart';
+import '../../pgs_reports/models/pgs_summary_narrative.dart';
+import '../../pgs_reports/pages/manage_summary_narrative_report_page.dart';
+import '../../pgs_reports/services/summary_narrative_service.dart';
 import '../../../user/models/user_registration.dart';
 import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
 import '../../../utils/date_time_converter.dart';
-<<<<<<< HEAD
-import '../../../utils/http_util.dart';
-import '../../../utils/permission_string.dart';
-=======
 import '../../../utils/permission_role_string.dart';
 import '../dialog/accomplishment_pgs_auditor_dialog.dart';
 import '../../dialog/breakthrough_dialog.dart';
->>>>>>> master
 import '../../models/pgs_deliverable_score_history.dart';
-import '../../pgs_period/models/pgs_period.dart';
-import '../models/pgs_deliverable_accomplishment.dart';
 import '../models/pgs_filter.dart';
 import '../services/deliverable_status_monitoring_service.dart';
 
@@ -66,10 +44,12 @@ class DeliverableStatusMonitoringPage extends StatefulWidget {
 
 class _DeliverableStatusMonitoringPageState
     extends State<DeliverableStatusMonitoringPage> {
-  final ScrollController _verticalController = ScrollController();
-  final ScrollController _horizontalController = ScrollController();
-  final ScrollController _headerHorizontalController = ScrollController();
+  final ScrollController _kpiScrollController = ScrollController();
+  final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
+    Dio(),
+  );
   final _dateConverter = const LongDateOnlyConverter();
+
   TextEditingController scoreRangeToController = TextEditingController();
   TextEditingController scoreRangeFromController = TextEditingController();
   TextEditingController pageController = TextEditingController();
@@ -80,55 +60,25 @@ class _DeliverableStatusMonitoringPageState
       TextEditingController();
   final _summaryNarrativeService = SummaryNarrativeService(Dio());
   final _formKey = GlobalKey<FormState>();
-  final GlobalKey _menuScoreRangeKey = GlobalKey();
-  final GlobalKey _menuPageKey = GlobalKey();
-  final int dataColumns = 8;
-  final double numberColumnWidth = 70;
-  final double dataColumnWidth = 280;
   final dio = Dio();
   final _commonService = CommonService(Dio());
-  final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
-    Dio(),
-  );
   final permissionService = PermissionService();
+
   List<Map<String, dynamic>> deliverableList = [];
-  List<Map<String, dynamic>> filteredList = [];
-  List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
-  String userId = "";
-  final List<String> headers = [
-    "PERIOD",
-    "OFFICE",
-    "PROCESS (CORE & SUPPORT)",
-    "KRA",
-    "DIRECT",
-    "DELIVERABLES",
-    "BY WHEN",
-    "ACTIONS",
-  ];
-  bool isMenuOpenOffice = false;
-  bool isMenuOpenPeriod = false;
-  bool isMenuOpenPeriodCreateReport = false;
-  bool isMenuOpenKra = false;
-  bool isMenuOpenType = false;
-  bool isMenuScoreRange = false;
-  bool isMenuOpenPage = false;
   List<KeyResultArea> kraListOptions = [];
   List<PgsPeriod> periodList = [];
   List<Office> officeList = [];
   List<OfficeEvaluators> serviceList = [];
   int? selectedKra;
-
-  List<Office> officeList = [];
+  int? selectedPeriod;
   String? _selectedOfficeId;
   String? _selectedServiceId;
   bool? isDirect;
-  List<PgsPeriod> periodList = [];
-  int? selectedPeriod;
-  int? selectedPeriodCreateReport;
   String? selectedPeriodText;
-  String? selectedPeriodTextCreateReport;
-  String? _selectedPeriod;
-  String? _selectedOffice;
+
+  bool isLoading = true;
+  bool _isLoading = false;
+
   int? officeId;
   int? periodId;
   bool _hasAvailableDeliverables = false;
@@ -143,36 +93,9 @@ class _DeliverableStatusMonitoringPageState
   @override
   void initState() {
     super.initState();
-    _headerHorizontalController.addListener(_syncHeaderScroll);
-    _horizontalController.addListener(_syncBodyScroll);
-    () async {
-      final offices = await _deliverableStatusMonitoring.fetchOffices();
-      final period = await _commonService.fetchPgsPeriod();
-      final kra = await _commonService.fetchKra();
-      if (!mounted) return;
-
-      setState(() {
-        officeList = offices;
-        periodList = period;
-        kraListOptions = kra;
-      });
-    }();
-    fetchFilteredPgsList();
-    _loadCurrentUserId();
+    _initialize();
   }
 
-<<<<<<< HEAD
-  void _syncHeaderScroll() {
-    if (_horizontalController.offset != _headerHorizontalController.offset) {
-      _horizontalController.jumpTo(_headerHorizontalController.offset);
-    }
-  }
-
-  void _syncBodyScroll() {
-    if (_headerHorizontalController.offset != _horizontalController.offset) {
-      _headerHorizontalController.jumpTo(_horizontalController.offset);
-    }
-=======
   Future<void> _initialize() async {
     setState(() => isLoading = true);
     await _getRoleId();
@@ -242,125 +165,12 @@ class _DeliverableStatusMonitoringPageState
 
   Future<void> _loadCurrentUserId() async {
     UserRegistration? user = await AuthUtil.processTokenValidity(dio, context);
-
-    setState(() {
-      userId = user!.id ?? "UserId";
-    });
-
-    if (mounted) {
-      setState(() {});
-    }
+    if (mounted) setState(() => userId = user?.id ?? "UserId");
   }
 
-  Future<void> _checkDeliverablesAvailability(Function setDialogState) async {
-    if (_selectedOffice == null || _selectedPeriod == null) {
-      setState(() {
-        _hasAvailableDeliverables = false;
-      });
-      return;
-    }
+  Future<void> fetchFilteredPgsList({int page = 1}) async {
+    if (_isLoading) return;
 
-    try {
-      officeId = int.tryParse(_selectedOffice!) ?? 0;
-      periodId = int.tryParse(_selectedPeriod!) ?? 0;
-
-      final filter = PgsFilter(
-        periodId,
-        officeId,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-      );
-
-      final queryParams =
-          filter.toJson()..removeWhere((key, value) => value == null);
-
-      final response = await AuthenticatedRequest.get(
-        dio,
-        ApiEndpoint().filterBy,
-        queryParameters: queryParams,
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        final items = data["items"] as List<dynamic>? ?? [];
-
-        setDialogState(() {
-          _hasAvailableDeliverables = items.isNotEmpty;
-        });
-      } else {
-        setDialogState(() {
-          _hasAvailableDeliverables = false;
-        });
-      }
-    } catch (e) {
-      debugPrint("Error checking deliverables availability: $e");
-      setDialogState(() {
-        _hasAvailableDeliverables = false;
-      });
-    }
-    setDialogState(() {});
-  }
-
-  Future<bool> _hasCompleteAccomplishmentData(
-    int deliverableId,
-    int expectedPeriods,
-  ) async {
-    try {
-      final List<PgsDeliverableAccomplishment> accomplishments =
-          await _deliverableStatusMonitoring.fetchAccomplishments(
-            deliverableId,
-          );
-
-      if (accomplishments.isEmpty || accomplishments.length < expectedPeriods) {
-        return false;
-      }
-
-      int completedPeriods = 0;
-
-      for (var i = 0; i < accomplishments.length; i++) {
-        var accomplishment = accomplishments[i];
-
-        final status = accomplishment.remarks;
-
-        final attachmentPath = accomplishment.attachmentPath;
-
-        bool hasValidStatus = status != null && status.toString().isNotEmpty;
-
-        bool hasValidAttachment =
-            attachmentPath != null && attachmentPath.isNotEmpty;
-
-        bool isComplete = hasValidStatus && hasValidAttachment;
-
-        if (isComplete) {
-          completedPeriods++;
-        } else {
-          if (!hasValidStatus) debugPrint("    - Missing status: $status");
-        }
-      }
-
-      bool allComplete = completedPeriods >= expectedPeriods;
-
-<<<<<<< HEAD
-      return allComplete;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  @override
-  void dispose() {
-    _verticalController.dispose();
-    _horizontalController.dispose();
-    _headerHorizontalController.dispose();
-    super.dispose();
-  }
-
-  Future<void> fetchFilteredPgsList() async {
-=======
     setState(() => _isLoading = true);
     String? roleId;
     final prefs = await SharedPreferences.getInstance();
@@ -375,26 +185,7 @@ class _DeliverableStatusMonitoringPageState
       }
       roleId = currentRole.id;
     }
->>>>>>> master
     try {
-      int? scoreFrom =
-          scoreRangeFromController.text.isNotEmpty
-              ? int.tryParse(scoreRangeFromController.text)
-              : null;
-      int? scoreTo =
-          scoreRangeToController.text.isNotEmpty
-              ? int.tryParse(scoreRangeToController.text)
-              : null;
-
-      int? page =
-          pageController.text.isNotEmpty
-              ? int.tryParse(pageController.text)
-              : null;
-      int? pageSize =
-          pageSizeController.text.isNotEmpty
-              ? int.tryParse(pageSizeController.text)
-              : null;
-
       final filter = PgsFilter(
         roleId,
         selectedPeriod,
@@ -423,26 +214,22 @@ class _DeliverableStatusMonitoringPageState
       );
 
       if (response.statusCode == 200) {
-        final data = response.data;
-        final items = data["items"] as List<dynamic>? ?? [];
+        final items = (response.data["items"] as List<dynamic>?) ?? [];
 
-        List<Map<String, dynamic>> formattedData =
+        final formattedData =
             items.map((item) {
               String formattedByWhen = '';
+
               if (item['byWhen'] != null &&
                   item['byWhen'].toString().isNotEmpty) {
                 try {
-                  DateTime date = DateTime.parse(item['byWhen'].toString());
-                  formattedByWhen = DateFormat('MMMM, yyyy').format(date);
-                } catch (e) {
+                  formattedByWhen = DateFormat(
+                    'MMMM, yyyy',
+                  ).format(DateTime.parse(item['byWhen'].toString()));
+                } catch (_) {
                   formattedByWhen = item['byWhen'].toString();
                 }
               }
-
-              deliverableHistoryGrouped.firstWhere(
-                (h) => h.pgsDeliverableId == item['pgsDeliverableId'],
-                orElse: () => PgsDeliverableHistoryGrouped(0, null),
-              );
 
               return {
                 'pgsDeliverableId': item['pgsDeliverableId'],
@@ -454,10 +241,7 @@ class _DeliverableStatusMonitoringPageState
                 'isDirect': item['isDirect'],
                 'deliverableName': item['deliverable'],
                 'byWhen': formattedByWhen,
-                'status':
-                    item['status'] is PgsStatus
-                        ? (item['status'] as PgsStatus).name
-                        : item['status'].toString(),
+                'status': item['status'].toString(),
                 'remarks': item['remarks'],
                 'score': item['score'],
               };
@@ -466,14 +250,13 @@ class _DeliverableStatusMonitoringPageState
         if (mounted) {
           setState(() {
             deliverableList = formattedData;
-            filteredList = List.from(formattedData);
+            currentPage = page;
+            _totalCount = response.data["totalCount"] ?? 0;
           });
         }
       }
     } catch (e) {
       debugPrint("Error fetching filtered data: $e");
-<<<<<<< HEAD
-=======
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -564,7 +347,6 @@ class _DeliverableStatusMonitoringPageState
       setDialogState(() => _hasAvailableDeliverables = items.isNotEmpty);
     } catch (_) {
       setDialogState(() => _hasAvailableDeliverables = false);
->>>>>>> master
     }
   }
 
@@ -707,133 +489,20 @@ class _DeliverableStatusMonitoringPageState
                                 : 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1D23),
->>>>>>> master
                       ),
                     ),
                   ],
                 ),
-
-<<<<<<< HEAD
-                Flexible(fit: FlexFit.tight, child: Container()),
-                if (!isMinimized)
-                  Row(
-                    children: [
-                      PermissionWidget(
-                        allowedRoles: [
-                          PermissionString.pgsAuditor,
-                          PermissionString.roleAdmin,
-                        ],
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: mainBgColor,
-
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            side: BorderSide(
-                              color: Colors.grey.shade400,
-                              width: 0.8,
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                builder:
-                                    (context) =>
-                                        ManageSummaryNarrativeReportPage(),
-                              ),
-                              (route) => false,
-                            );
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.description_outlined,
-                                color: const Color.fromARGB(255, 17, 16, 16),
-                              ),
-                              SizedBox(width: 5),
-                              Text(
-                                'Manage Auditor Reports',
-                                style: TextStyle(color: primaryTextColor),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      PermissionWidget(
-                        allowedRoles: [
-                          PermissionString.pgsAuditor,
-                          PermissionString.roleAdmin,
-                        ],
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          onPressed: () {
-                            showReportDialog();
-                          },
-
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.add, color: Colors.white),
-                              SizedBox(width: 5),
-                              Text(
-                                'Create Report',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 60,
-            child: SingleChildScrollView(
-              controller: _headerHorizontalController,
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(width: totalWidth, child: _buildHeader()),
-            ),
-          ),
-          Expanded(
-            child: Scrollbar(
-              controller: _verticalController,
-              thumbVisibility: true,
-              trackVisibility: true,
-              child: Scrollbar(
-                controller: _horizontalController,
-                thumbVisibility: true,
-                trackVisibility: true,
-                notificationPredicate: (notif) => notif.depth == 1,
-                child: SingleChildScrollView(
-                  controller: _verticalController,
-                  scrollDirection: Axis.vertical,
-                  child: SingleChildScrollView(
-                    controller: _horizontalController,
-                    scrollDirection: Axis.horizontal,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: totalWidth,
-                        minHeight: MediaQuery.of(context).size.height - 160,
-                      ),
-                      child: _buildTableBody(),
-                    ),
-                  ),
-                ),
               ),
-            ),
+              if (!isMobile) _buildHeaderActions(),
+            ],
           ),
-=======
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeaderActions() {
     return Row(
       children: [
@@ -909,18 +578,15 @@ class _DeliverableStatusMonitoringPageState
       children: [
         Row(
           children: [
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                buildDropdown(child: _serviceDropdown()),
-                buildDropdown(child: _officeDropdown()),
-                buildDropdown(child: _periodDropdown()),
-                buildDropdown(child: _kraDropdown()),
-                buildDropdown(child: _typeDropdown()),
-                _buildPageFilter(),
-              ],
-            ),
+            Expanded(child: buildDropdown(child: _serviceDropdown())),
+            const SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _officeDropdown())),
+            const SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _periodDropdown())),
+            const SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _kraDropdown())),
+            const SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _typeDropdown())),
             const Spacer(),
             if (_hasActiveFilters)
               TextButton.icon(
@@ -991,9 +657,6 @@ class _DeliverableStatusMonitoringPageState
               SizedBox(height: 38, child: _kraDropdown()),
               const SizedBox(width: 8),
               SizedBox(height: 38, child: _typeDropdown()),
-              const SizedBox(width: 8),
-
-              _buildPageFilter(),
             ],
           ),
         ),
@@ -1189,229 +852,34 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  Widget _buildPageFilter() {
-    final isActive = pageController.text.isNotEmpty;
-    final label = isActive ? 'Page ${pageController.text}' : 'Pagination';
-    return FilterChipButton(
-      label: label,
-      icon: Icons.layers_outlined,
-      isActive: isActive,
-      onTap: () => _showPaginationDialog(),
-    );
-  }
-
-  void _showPaginationDialog() {
-    final pageCtrl = TextEditingController(text: pageController.text);
-    final sizeCtrl = TextEditingController(text: pageSizeController.text);
-    showDialog(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        offset.dx,
-        offset.dy + renderBox.size.height,
-        offset.dx + renderBox.size.width,
-        offset.dy + renderBox.size.height + 200,
+  Widget _buildTableCard(bool isMobile) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.04),
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      items: [
-        PopupMenuItem(
-          enabled: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: pageController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Page',
-                  labelStyle: TextStyle(color: grey, fontSize: 12),
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                  floatingLabelStyle: TextStyle(
-                    color: primaryColor,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              gap16px,
-              TextField(
-                controller: pageSizeController,
-                keyboardType: TextInputType.none,
-                decoration: const InputDecoration(
-                  labelText: 'Page Size',
-                  labelStyle: TextStyle(color: grey, fontSize: 12),
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                  floatingLabelStyle: TextStyle(
-                    color: primaryColor,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              gap16px,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: primaryColor),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    onPressed: () {
-                      pageController.text;
-                      pageSizeController.text;
-                      fetchFilteredPgsList();
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      'Apply',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeader() {
-    final border = TableBorder.all(color: Colors.grey.shade700, width: 1.0);
-
-    Map<int, TableColumnWidth> columnWidths = {
-      0: FixedColumnWidth(numberColumnWidth),
-    };
-    for (int i = 1; i <= dataColumns; i++) {
-      columnWidths[i] = FixedColumnWidth(dataColumnWidth);
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0),
-      child: Table(
-        border: border,
-        columnWidths: columnWidths,
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      child: Column(
         children: [
-          TableRow(
-            decoration: const BoxDecoration(color: primaryLightColor),
-            children: [
-              _cell("#", isHeader: true, align: TextAlign.center),
-              for (final h in headers) _cell(h, isHeader: true),
-            ],
-          ),
+          if (!isMobile) _buildTableHeader(),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
+          Expanded(child: _buildTableBody(isMobile)),
         ],
       ),
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildTableBody() {
-    final border = TableBorder.all(color: Colors.grey.shade700, width: 1.0);
-
-    Map<int, TableColumnWidth> columnWidths = {
-      0: FixedColumnWidth(numberColumnWidth),
-    };
-    for (int i = 1; i <= dataColumns; i++) {
-      columnWidths[i] = FixedColumnWidth(dataColumnWidth);
-    }
-
-    if (deliverableList.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Text("No data available"),
-        ),
-      );
-    }
-
-    List<TableRow> rows =
-        deliverableList.asMap().entries.map((entry) {
-          final int index = entry.key;
-          final deliverable = entry.value;
-
-          return TableRow(
-            children: [
-              _cell("${index + 1}", align: TextAlign.center),
-              _cell(
-                "${deliverable['Start Date']} - ${deliverable['End Date']}",
-              ),
-              _cell(deliverable['officeName'] ?? ''),
-              _buildCoreSupport(deliverable['kra']),
-              _buildKRA(deliverable['kraDescription']),
-              _cell(deliverable['isDirect'] ? "Direct" : "Indirect"),
-              _cell(deliverable['deliverableName'] ?? ''),
-              _cell(deliverable['byWhen'] ?? ''),
-              _buildCreateAccomplishmentAndBreakthroughCell(index, () {
-                debugPrint(
-                  "Create tapped for ID: ${deliverable['pgsDeliverableId']}",
-                );
-              }),
-            ],
-          );
-        }).toList();
-
+  Widget _buildTableHeader() {
     return Padding(
-      padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 12.0),
-      child: Table(
-        border: border,
-        columnWidths: columnWidths,
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        children: rows,
-      ),
-    );
-  }
-
-  Widget _cell(
-    String text, {
-    bool isHeader = false,
-    TextAlign align = TextAlign.left,
-  }) {
-=======
-  Widget _buildTableCard(bool isMobile) {
->>>>>>> master
-    return Container(
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      child: Center(
-        child: Text(
-          text,
-          textAlign: align,
-          style: TextStyle(
-            fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCoreSupport(String? kra) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      child: Row(
         children: [
-<<<<<<< HEAD
-          Center(
-            child: Text(
-              kra ?? '',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-=======
           SizedBox(
             width: 40,
             child: Text(
@@ -1445,7 +913,6 @@ class _DeliverableStatusMonitoringPageState
                   letterSpacing: 0.5,
                 ),
               ),
->>>>>>> master
             ),
           ),
         ],
@@ -1453,43 +920,38 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  Widget _buildKRA(String? description) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [if (description != null) Text(description)],
+  Widget _buildTableBody(bool isMobile) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: primaryColor),
+      );
+    }
+    if (deliverableList.isEmpty) {
+      return _buildEmptyState();
+    }
+    return Scrollbar(
+      controller: _kpiScrollController,
+      thumbVisibility: true,
+      child: ListView.separated(
+        controller: _kpiScrollController,
+        itemCount: deliverableList.length,
+        separatorBuilder:
+            (_, __) => const Divider(
+              height: 1,
+              thickness: 1,
+              color: Color(0xFFEEEFF2),
+            ),
+        itemBuilder: (context, index) {
+          final d = deliverableList[index];
+          return _buildDeliverableRow(index, d, isMobile);
+        },
       ),
     );
   }
 
-  Widget _buildCreateAccomplishmentAndBreakthroughCell(
-    int index,
-    VoidCallback onPressed,
-  ) {
-    final deliverable = deliverableList[index];
-    final deliverableId = deliverable['pgsDeliverableId'];
-
-    final startDateStr = deliverable['Start Date'];
-    final endDateStr = deliverable['End Date'];
-    final startDate = DateFormat('MMM dd, yyyy').parse(startDateStr);
-    final endDate = DateFormat('MMM dd, yyyy').parse(endDateStr);
-
-    List<Map<String, dynamic>> monthlyPeriods = [];
-    DateTime current = DateTime(startDate.year, startDate.month);
-    DateTime end = DateTime(endDate.year, endDate.month);
-
-    while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
-      monthlyPeriods.add({
-        'period': DateFormat('MMMM yyyy').format(current),
-        'month': current.month,
-        'year': current.year,
-      });
-      current = DateTime(current.year, current.month + 1);
-    }
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: Row(
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
@@ -1553,16 +1015,13 @@ class _DeliverableStatusMonitoringPageState
                     child: Text(
                       '${(currentPage - 1) * pageSize + index + 1}',
                       style: TextStyle(
-                        color: hasCompleteData ? primaryTextColor : Colors.grey,
-                        fontSize: 10,
+                        fontSize: 11,
+                        color: primaryColor,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ),
-<<<<<<< HEAD
-              );
-            },
-=======
                 Expanded(
                   child: Text(
                     d['deliverableName'] ?? '',
@@ -1644,8 +1103,9 @@ class _DeliverableStatusMonitoringPageState
                 fontWeight: FontWeight.w500,
               ),
             ),
->>>>>>> master
           ),
+          Expanded(flex: 5, child: _buildDeliverableDetails(d)),
+          SizedBox(width: 220, child: _buildActionButtons(index, d)),
         ],
       ),
     );
@@ -1955,520 +1415,781 @@ class _DeliverableStatusMonitoringPageState
       ],
     );
   }
->>>>>>> master
 
-  DateTime current = DateTime(startDate.year, startDate.month);
-  DateTime end = DateTime(endDate.year, endDate.month);
-
-  while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
-    monthlyPeriods.add({
-      'period': DateFormat('MMMM yyyy').format(current),
-      'month': current.month,
-      'year': current.year,
-    });
-
-    current = DateTime(current.year, current.month + 1);
+  void showReportDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              insetPadding: const EdgeInsets.all(20),
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              contentPadding: EdgeInsets.zero,
+              content: SizedBox(
+                width: 900,
+                child: SingleChildScrollView(
+                  child: _buildReportCard(setDialogState),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    _clearReportForm();
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                PermissionWidget(
+                  permission: AppPermissions.addPgsDeliverableAccomplishment,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        final confirm = await _showConfirmDialog(context);
+                        if (confirm == true) {
+                          final summaryNarrative = PgsSummaryNarrative(
+                            0,
+                            int.tryParse(_selectedPeriod ?? '0') ?? 0,
+                            _findingsController.text,
+                            _recommendationsController.text,
+                            _conclusionsController.text,
+                            int.tryParse(_selectedOffice ?? '0') ?? 0,
+                            isDeleted: false,
+                            rowVersion: '',
+                          );
+                          await _summaryNarrativeService.addSummaryNarrative(
+                            summaryNarrative,
+                          );
+                          _clearReportForm();
+                          MotionToast.success(
+                            description: const Text("Saved Successfully"),
+                            toastAlignment: Alignment.topCenter,
+                          ).show(context);
+                          Navigator.pop(context);
+                        }
+                      }
+                    },
+                    child: const Text(
+                      'Save Report',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
-  return showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) {
-      return Dialog(
-        backgroundColor: mainBgColor,
-        insetPadding: const EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1500),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Scrollable Content
-                Expanded(
-                  child: SingleChildScrollView(
+  void _clearReportForm() {
+    _findingsController.clear();
+    _recommendationsController.clear();
+    _conclusionsController.clear();
+    _selectedOffice = null;
+    _selectedPeriod = null;
+    officeId = null;
+    periodId = null;
+  }
+
+  Future<bool?> _showConfirmDialog(BuildContext ctx) {
+    return showDialog<bool>(
+      context: ctx,
+      builder:
+          (c) => AlertDialog(
+            title: const Text("Confirm Save"),
+            content: const Text("Are you sure you want to save this report?"),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(c, false),
+                child: const Text("No", style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(c, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text("Yes", style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Widget _buildReportCard(Function setDialogState) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 900, maxHeight: 900),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FB),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.insert_drive_file_outlined,
+                      color: primaryColor,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Accomplishment Form - ${DateFormat('MMMM dd, yyyy').format(startDate)} to ${DateFormat('MMMM dd, yyyy').format(endDate)}",
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Office: ${deliverable['officeName'] ?? 'N/A'}",
-                                  ),
-                                  Text(
-                                    "Monthly Tracking Periods: ${monthlyPeriods.length} month(s)",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text("KRA: ${deliverable['kra'] ?? 'N/A'}"),
-                                  Text(
-                                    "Due: ${deliverable['byWhen'] ?? 'N/A'}",
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
-                              ),
-                              Text(
-                                "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                            ],
+                        Text(
+                          'Summary Narrative Report',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 20),
-
-                        // Section title
-                        const Row(
-                          children: [
-                            Icon(Icons.bar_chart_outlined, size: 18),
-                            SizedBox(width: 8),
-                            Text(
-                              "Monthly Accomplishment Tracking",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Dynamic table
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              // Headers
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(8),
-                                    topRight: Radius.circular(8),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: const [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Period",
-                                          style: TextStyle(color: grey),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Status",
-                                          style: TextStyle(color: grey),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Percent Accomplishment",
-                                          style: TextStyle(color: grey),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 3,
-                                      child: Center(
-                                        child: Text(
-                                          "Remarks (Department Head)",
-                                          style: TextStyle(color: grey),
-                                        ),
-                                      ),
-                                    ),
-
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Proof",
-                                          style: TextStyle(color: grey),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 3,
-                                      child: Center(
-                                        child: Text(
-                                          "Remarks (Auditor)",
-                                          style: TextStyle(color: grey),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ...monthlyPeriods.asMap().entries.map((entry) {
-                                final index = entry.key;
-                                final period = entry.value;
-                                return Column(
-                                  children: [
-                                    const Divider(height: 1),
-                                    TrackingRowWidget(
-                                      period: period['period'],
-                                      periodIndex: index,
-                                      totalPeriods: monthlyPeriods.length,
-                                      deliverableId:
-                                          deliverable['pgsDeliverableId'],
-                                    ),
-                                  ],
-                                );
-                              }),
-                            ],
-                          ),
+                        Text(
+                          'Fill in the details below to create an audit report',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],
                     ),
                   ),
-                ),
-                SizedBox(height: 20),
-                PermissionWidget(
-                  allowedRoles: [
-                    PermissionString.pgsAuditor,
-                    PermissionString.roleAdmin,
-                  ],
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(color: primaryColor),
-                        ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: () {
+                      _clearReportForm();
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F9FB),
+                        border: Border.all(color: Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        onPressed: () async {
-                          final shouldSave = await showDialog<bool>(
-                            context: context,
-                            builder:
-                                (ctx) => AlertDialog(
-                                  title: Text("Confirm Save"),
-                                  content: Text(
-                                    "Are you sure you want to save this data?",
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.of(ctx).pop(false),
-                                      child: Text(
-                                        "No",
-                                        style: TextStyle(color: primaryColor),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.of(ctx).pop(true),
-                                      child: Text(
-                                        "Yes",
-                                        style: TextStyle(color: primaryColor),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                      padding: const EdgeInsets.all(16),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 500;
+                          if (isNarrow) {
+                            return Column(
+                              children: [
+                                _buildPeriodDropdown(setDialogState),
+                                const SizedBox(height: 16),
+                                _buildOfficeDropdown(setDialogState),
+                              ],
+                            );
+                          }
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: _buildPeriodDropdown(setDialogState),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: _buildOfficeDropdown(setDialogState),
+                              ),
+                            ],
                           );
-
-                          if (shouldSave != true) return;
-                          MotionToast.success(
-                            description: Text('Saved Successfully'),
-                            toastAlignment: Alignment.topCenter,
-                          ).show(context);
-                          await saveAccomplishmentData(
-                            deliverable['pgsDeliverableId'],
-                            userId,
-                          );
-
-                          Navigator.of(context).pop(true);
                         },
-                        child: Text(
-                          "Save Accomplishment",
-                          style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+
+                    if (!_hasAvailableDeliverables &&
+                        _selectedOffice != null &&
+                        _selectedPeriod != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 14,
+                              color: Colors.orange.shade700,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              "No deliverables found for the selected office and period.",
+                              style: TextStyle(
+                                color: Colors.orange.shade700,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+
+                    const SizedBox(height: 24),
+                    _buildReportSection(
+                      icon: Icons.error_outline_rounded,
+                      iconColor: Colors.blue,
+                      title: "Auditor Findings",
+                      description:
+                          "Separate each finding as a distinct point in the report.",
+                      controller: _findingsController,
+                      disabled: !_hasAvailableDeliverables,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildReportSection(
+                      icon: Icons.check_circle_outline,
+                      iconColor: Colors.green,
+                      title: "Conclusions",
+                      description:
+                          "Summarize your analysis and overall insights.",
+                      controller: _conclusionsController,
+                      disabled: !_hasAvailableDeliverables,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildReportSection(
+                      icon: Icons.trending_up,
+                      iconColor: Colors.deepOrangeAccent,
+                      title: "Recommendations",
+                      description: "List actionable steps for improvement.",
+                      controller: _recommendationsController,
+                      disabled: !_hasAvailableDeliverables,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPeriodDropdown(Function setDialogState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text.rich(
+          TextSpan(
+            text: 'Period ',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            children: [
+              TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownSearch<PgsPeriod>(
+          popupProps: PopupProps.menu(
+            showSearchBox: true,
+            fit: FlexFit.loose,
+            menuProps: const MenuProps(
+              backgroundColor: Colors.white,
+              elevation: 2,
+            ),
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                filled: true,
+                fillColor: Colors.white,
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: primaryColor),
+                ),
+              ),
+            ),
+            itemBuilder:
+                (ctx, period, _) => ListTile(
+                  tileColor: Colors.white,
+                  title: Text(
+                    "${LongDateOnlyConverter().toJson(period.startDate)} – ${LongDateOnlyConverter().toJson(period.endDate)}",
+                    style: const TextStyle(fontSize: 13),
                   ),
                 ),
-              ],
+          ),
+          items: periodList,
+          itemAsString:
+              (p) =>
+                  "${LongDateOnlyConverter().toJson(p.startDate)} – ${LongDateOnlyConverter().toJson(p.endDate)}",
+          selectedItem:
+              _selectedPeriod == null
+                  ? null
+                  : periodList.firstWhere(
+                    (p) => p.id.toString() == _selectedPeriod,
+                    orElse:
+                        () => PgsPeriod(
+                          0,
+                          false,
+                          DateTime.now(),
+                          DateTime.now(),
+                          '',
+                        ),
+                  ),
+          onChanged: (value) {
+            setDialogState(() {
+              _selectedPeriod = value?.id.toString();
+              _clearReportTextFields();
+              _checkDeliverablesAvailability(setDialogState);
+            });
+          },
+          validator: (v) => v == null ? 'Required' : null,
+          dropdownDecoratorProps: DropDownDecoratorProps(
+            dropdownSearchDecoration: InputDecoration(
+              labelText: 'Select Period',
+              labelStyle: const TextStyle(fontSize: 13),
+              filled: true,
+              fillColor: Colors.transparent,
+              floatingLabelBehavior: FloatingLabelBehavior.never,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: primaryColor),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
             ),
           ),
         ),
-      );
-    },
-  );
+      ],
+    );
+  }
+
+  Widget _buildOfficeDropdown(Function setDialogState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text.rich(
+          TextSpan(
+            text: 'Office ',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            children: [
+              TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownSearch<Office>(
+          popupProps: PopupProps.menu(
+            showSearchBox: true,
+            fit: FlexFit.loose,
+            menuProps: const MenuProps(
+              backgroundColor: Colors.white,
+              elevation: 2,
+            ),
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                filled: true,
+                fillColor: Colors.white,
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: primaryColor),
+                ),
+              ),
+            ),
+            itemBuilder:
+                (ctx, office, _) => ListTile(
+                  tileColor: Colors.white,
+                  title: Text(
+                    office.name,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+          ),
+          items: officeList,
+          itemAsString: (o) => o.name,
+          selectedItem:
+              _selectedOffice == null
+                  ? null
+                  : officeList.firstWhere(
+                    (o) => o.id.toString() == _selectedOffice,
+                    orElse: () => Office(id: 0, name: 'Unknown'),
+                  ),
+          onChanged: (value) {
+            setDialogState(() {
+              _selectedOffice = value?.id.toString();
+              _clearReportTextFields();
+              _checkDeliverablesAvailability(setDialogState);
+            });
+          },
+          validator: (v) => v == null ? 'Required' : null,
+          dropdownDecoratorProps: DropDownDecoratorProps(
+            dropdownSearchDecoration: InputDecoration(
+              labelText: 'Select Office',
+              labelStyle: const TextStyle(fontSize: 13),
+              filled: true,
+              fillColor: Colors.transparent,
+              floatingLabelBehavior: FloatingLabelBehavior.never,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: primaryColor),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _clearReportTextFields() {
+    _findingsController.clear();
+    _recommendationsController.clear();
+    _conclusionsController.clear();
+  }
+
+  Widget _buildReportSection({
+    required String title,
+    required String description,
+    required TextEditingController controller,
+    IconData icon = Icons.description_outlined,
+    Color iconColor = Colors.black54,
+    bool disabled = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              icon,
+              color: disabled ? Colors.grey.shade300 : iconColor,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color:
+                    disabled ? Colors.grey.shade400 : const Color(0xFF1A1D23),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          description,
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          constraints: const BoxConstraints(minHeight: 100, maxHeight: 160),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: disabled ? Colors.grey.shade50 : const Color(0xFFF8F9FB),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: disabled ? Colors.grey.shade200 : Colors.grey.shade300,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Scrollbar(
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              child: TextFormField(
+                controller: controller,
+                style: TextStyle(
+                  fontSize: 13,
+                  color:
+                      disabled ? Colors.grey.shade400 : const Color(0xFF1A1D23),
+                ),
+                maxLines: null,
+                readOnly: disabled,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText:
+                      disabled
+                          ? 'Select a period and office first...'
+                          : 'Type here...',
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 13,
+                  ),
+                ),
+                validator:
+                    (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-Future<bool?> showBreakthroughFormDialog(
+Future<bool?> showAccomplishmentFormDialog(
   BuildContext context,
   Map<String, dynamic> deliverable,
   String userId,
+  List<Map<String, dynamic>> monthlyPeriods,
 ) {
   return showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (context) {
-      return Dialog(
-        backgroundColor: mainBgColor,
-        insetPadding: const EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Scrollable Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Breakthrough Form",
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Info section
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+    builder:
+        (context) => Dialog(
+          backgroundColor: mainBgColor,
+          insetPadding: const EdgeInsets.all(20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1500),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Office: ${deliverable['officeName'] ?? 'N/A'}",
+                              Expanded(
+                                child: Text(
+                                  "Accomplishment Form — ${deliverable['Start Date']} to ${deliverable['End Date']}",
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text("KRA: ${deliverable['kra'] ?? 'N/A'}"),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-
-                              Text(
-                                "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
                                 ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () => Navigator.pop(context),
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        const Row(
-                          children: [
-                            Icon(Icons.star_outline, size: 18),
-                            SizedBox(width: 8),
-                            Text(
-                              "Breakthrough Scoring",
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.grey.shade200),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Dynamic table
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              // Headers
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 8,
+                            child: Wrap(
+                              spacing: 24,
+                              runSpacing: 6,
+                              children: [
+                                Text(
+                                  "Office: ${deliverable['officeName'] ?? 'N/A'}",
+                                  style: const TextStyle(fontSize: 13),
                                 ),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(8),
-                                    topRight: Radius.circular(8),
+                                Text(
+                                  "KRA: ${deliverable['kra'] ?? 'N/A'}",
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                Text(
+                                  "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                Text(
+                                  "Due: ${deliverable['byWhen'] ?? 'N/A'}",
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                Text(
+                                  "Periods: ${monthlyPeriods.length} month(s)",
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                child: Row(
-                                  children: const [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Percent Accomplishment",
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Target Achievement",
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Strategic Contribution ",
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Breakthrough Impact",
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Final Score",
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-<<<<<<< HEAD
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Final Grade",
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          const Row(
+                            children: [
+                              Icon(Icons.bar_chart_outlined, size: 18),
+                              SizedBox(width: 8),
+                              Text(
+                                "Monthly Accomplishment Tracking",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-
-                              Column(
-                                children: [
-                                  const Divider(height: 1),
-                                  BreakthroughWidget(
-                                    deliverableId:
-                                        deliverable['pgsDeliverableId'],
-=======
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                    horizontal: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(10),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: const [
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Period",
+                                            style: TextStyle(
+                                              color: grey,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Status",
+                                            style: TextStyle(
+                                              color: grey,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "% Accomplishment",
+                                            style: TextStyle(
+                                              color: grey,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Center(
+                                          child: Text(
+                                            "Remarks (Dept Head)",
+                                            style: TextStyle(
+                                              color: grey,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Proof",
+                                            style: TextStyle(
+                                              color: grey,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Center(
+                                          child: Text(
+                                            "Remarks (Auditor)",
+                                            style: TextStyle(
+                                              color: grey,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -2653,100 +2374,137 @@ Future<bool?> showBreakthroughFormDialog(
                                         ],
                                       ),
                                     ),
->>>>>>> master
                                   ),
-                                ],
-                              ),
-                            ],
+                            );
+                            if (shouldSave != true) return;
+                            MotionToast.success(
+                              description: const Text('Saved Successfully'),
+                              toastAlignment: Alignment.topCenter,
+                            ).show(context);
+                            await saveAccomplishmentData(
+                              deliverable['pgsDeliverableId'],
+                              userId,
+                            );
+                            Navigator.of(context).pop(true);
+                          },
+                          child: const Text(
+                            "Save Accomplishment",
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                ],
+              ),
+            ),
+          ),
+        ),
+  );
+}
 
-                SizedBox(height: 20),
-                PermissionWidget(
-                  allowedRoles: [
-                    PermissionString.pgsAuditor,
-                    PermissionString.roleAdmin,
-                  ],
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+Future<bool?> showBreakthroughFormDialog(
+  BuildContext context,
+  Map<String, dynamic> deliverable,
+  String userId,
+) {
+  return showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) {
+      final size = MediaQuery.of(dialogContext).size;
+      final isMobile = size.width < 700;
+      return Dialog(
+        backgroundColor: const Color(0xFFF3F4F6),
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 0 : 24,
+          vertical: isMobile ? 0 : 24,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(isMobile ? 0 : 16),
+        ),
+        child: SizedBox(
+          width: isMobile ? size.width : 720,
+          height: isMobile ? size.height : size.height * 0.90,
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              DialogHeader(
+                isMobile: isMobile,
+                onClose: () => Navigator.pop(dialogContext),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 14 : 24,
+                    vertical: 16,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(color: primaryColor),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Office: ${deliverable['officeName'] ?? 'N/A'}",
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text("KRA: ${deliverable['kra'] ?? 'N/A'}"),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
+                      const SizedBox(height: 20),
+                      const Row(
+                        children: [
+                          Icon(Icons.star_outline, size: 18),
+                          SizedBox(width: 8),
+                          Text(
+                            "Breakthrough Scoring",
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-<<<<<<< HEAD
-                        ),
-                        onPressed: () async {
-                          final shouldSave = await showDialog<bool>(
-                            context: context,
-                            builder:
-                                (ctx) => AlertDialog(
-                                  title: Text("Confirm Save"),
-                                  content: Text(
-                                    "Are you sure you want to save this data?",
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.of(ctx).pop(false),
-                                      child: Text(
-                                        "No",
-                                        style: TextStyle(color: primaryColor),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.of(ctx).pop(true),
-                                      child: Text(
-                                        "Yes",
-                                        style: TextStyle(color: primaryColor),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                          );
-
-                          if (shouldSave != true) return;
-                          MotionToast.success(
-                            description: Text('Saved Successfully'),
-                            toastAlignment: Alignment.topCenter,
-                          ).show(context);
-                          await saveBreakthroughData(
-                            deliverable['pgsDeliverableId'],
-                          );
-                          Navigator.of(context).pop(true);
-                        },
-                        child: Text(
-                          "Save",
-                          style: TextStyle(color: Colors.white),
-                        ),
-=======
                         ],
                       ),
                       const SizedBox(height: 12),
                       BreakthroughDialog(
                         deliverableId: deliverable['pgsDeliverableId'],
->>>>>>> master
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              DialogFooter(
+                isMobile: isMobile,
+                dialogContext: dialogContext,
+                deliverableId: deliverable['pgsDeliverableId'],
+              ),
+            ],
           ),
         ),
       );
@@ -2757,9 +2515,7 @@ Future<bool?> showBreakthroughFormDialog(
 class PgsDeliverableHistoryGrouped {
   final int pgsDeliverableId;
   final List<PgsDeliverableScoreHistory>? scoreHistory;
-
   PgsDeliverableHistoryGrouped(this.pgsDeliverableId, this.scoreHistory);
-
   factory PgsDeliverableHistoryGrouped.fromJson(Map<String, dynamic> json) {
     return PgsDeliverableHistoryGrouped(
       json['pgsDeliverableId'] as int,

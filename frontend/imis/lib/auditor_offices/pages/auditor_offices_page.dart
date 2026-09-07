@@ -99,17 +99,9 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
     for (var auditorOffice in auditorOfficeList) {
       userList.firstWhere(
         (user) => user.id == auditorOffice.auditorId.toString(),
-        orElse: () => User(id: '', fullName: 'Unknown', position: 'position'),
+        orElse: () => User(id: '', fullName: '', position: ''),
       );
     }
-  }
-
-  void _onSearchChanged(String query) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      filterSearchResults(query);
-    });
   }
 
   Future<void> fetchAuditorOffice({int? page, String? searchQuery}) async {
@@ -149,12 +141,12 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
     ) {
       final auditor = auditorList.firstWhere(
         (a) => a.id.toString() == auditorOffice.auditorId.toString(),
-        orElse: () => Auditor(id: 0, userId: ''),
+        orElse: () => Auditor(id: 0, name: '', userId: ''),
       );
 
       final user = userList.firstWhere(
         (u) => u.id.toString() == auditor.userId.toString(),
-        orElse: () => User(id: '', fullName: 'Unknown', position: ''),
+        orElse: () => User(id: '', fullName: '', position: ''),
       );
 
       final office = officenameList.firstWhere(
@@ -162,7 +154,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
         orElse:
             () => Office(
               id: 0,
-              name: 'Unknown',
+              name: '',
               officeTypeId: 0,
               parentOfficeId: 0,
               isActive: true,
@@ -187,7 +179,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
         orElse:
             () => Office(
               id: 0,
-              name: 'Unknown',
+              name: '',
               officeTypeId: 0,
               parentOfficeId: 0,
               isActive: true,
@@ -589,19 +581,20 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: Text("Auditor's Office Information"),
-        backgroundColor: mainBgColor,
-      ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              "Auditor Office Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SizedBox(
                   height: 30,
@@ -618,7 +611,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search',
+                      labelText: 'Search...',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -634,13 +627,19 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                         horizontal: 5,
                       ),
                     ),
-                    onChanged: _onSearchChanged,
+                    onChanged: filterSearchResults,
                   ),
                 ),
-                if (!isMinimized)
-                  ElevatedButton(
+                const Spacer(),
+                if (!isMobile)
+                  ElevatedButton.icon(
+                    onPressed: () => showFormDialog(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -763,7 +762,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                         orElse:
                                             () => Office(
                                               id: 0,
-                                              name: 'Unknown',
+                                              name: '',
                                               officeTypeId: 0,
                                               parentOfficeId: 0,
                                               isActive: true,
@@ -777,6 +776,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                     orElse:
                                         () => Auditor(
                                           id: 0,
+                                          name: '',
                                           userId: '',
                                         ),
                                   );
@@ -786,7 +786,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                     orElse:
                                         () => User(
                                           id: '',
-                                          fullName: 'Unknown',
+                                          fullName: '',
                                           position: '',
                                         ),
                                   );
@@ -808,29 +808,20 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                   final period =
                                       "${LongDateOnlyConverter().toJson(matchedPeriod.startDate)} - ${LongDateOnlyConverter().toJson(matchedPeriod.endDate)}";
 
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 10,
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(
                                           bottom: BorderSide(
-                                            color: Colors.grey.shade300,
+                                            color: Colors.grey.shade200,
                                           ),
                                         ),
                                       ),
                                       child: Row(
                                         children: [
-                                          SizedBox(
-                                            width: 80,
-                                            child: Text(
-                                              itemNumber.toString(),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
                                           Expanded(
                                             flex: 1,
                                             child: Text(
@@ -859,15 +850,9 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                               style: TextStyle(fontSize: 12),
                                             ),
                                           ),
+
                                           Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              period,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            width: 160,
+                                            flex: 3,
                                             child: Row(
                                               children: [
                                                 IconButton(
@@ -1060,6 +1045,14 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
           ],
         ),
       ),
+      floatingActionButton:
+          isMobile
+              ? FloatingActionButton(
+                backgroundColor: primaryColor,
+                onPressed: () => showFormDialog(),
+                child: Icon(Icons.add, color: Colors.white),
+              )
+              : null,
     );
   }
 

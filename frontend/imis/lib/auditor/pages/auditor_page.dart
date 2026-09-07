@@ -118,7 +118,7 @@ class AuditorMainPageState extends State<AuditorPage> {
         orElse: () => User(id: '', fullName: 'Unknown', position: ''),
       );
 
-      return (auditor.userId ?? '').toLowerCase().contains(
+      return (auditor.name ?? '').toLowerCase().contains(
             search.toLowerCase(),
           ) ||
           (user.fullName).toLowerCase().contains(search.toLowerCase());
@@ -133,35 +133,34 @@ class AuditorMainPageState extends State<AuditorPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder:
-          (ctx) => DeleteDialog(
-            title: 'Auditor',
-            itemName: 'auditor',
-            onDelete: () async {
-              Navigator.pop(ctx);
-              try {
-                await _auditorService.deleteAuditor(id);
-                await fetchAuditors();
-                if (mounted) {
-                  MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text(
-                      'auditor deleted successfully',
-                      style: GoogleFonts.plusJakartaSans(),
-                    ),
-                  ).show(context);
-                }
-              } catch (_) {
-                MotionToast.error(
-                  toastAlignment: Alignment.topCenter,
-                  description: Text(
-                    'Failed to delete auditor',
-                    style: GoogleFonts.plusJakartaSans(),
-                  ),
-                );
-              }
-            },
-          ),
+      builder: (ctx) => DeleteDialog(
+        title: 'Auditor',
+        itemName: 'auditor',
+        onDelete: () async {
+          Navigator.pop(ctx);
+          try {
+            await _auditorService.deleteAuditor(id);
+            await fetchAuditors();
+            if (mounted) {
+              MotionToast.success(
+                toastAlignment: Alignment.topCenter,
+                description: Text(
+                  'auditor deleted successfully',
+                  style: GoogleFonts.plusJakartaSans(),
+                ),
+              ).show(context);
+            }
+          } catch (_) {
+            MotionToast.error(
+              toastAlignment: Alignment.topCenter,
+              description: Text(
+                'Failed to delete auditor',
+                style: GoogleFonts.plusJakartaSans(),
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -263,13 +262,10 @@ class AuditorMainPageState extends State<AuditorPage> {
                           (u) => u?.id == _selectedUserId,
                           orElse: () => null,
                         ),
-                        onChanged:
-                            (value) => setStateDialog(
-                              () => _selectedUserId = value?.id,
-                            ),
-                        validator:
-                            (value) =>
-                                value == null ? 'Please select a user' : null,
+                        onChanged: (value) =>
+                            setStateDialog(() => _selectedUserId = value?.id),
+                        validator: (value) =>
+                            value == null ? 'Please select a user' : null,
                       ),
                       SizedBox(height: 20),
                       Container(
@@ -307,9 +303,9 @@ class AuditorMainPageState extends State<AuditorPage> {
                             ),
                             Switch(
                               value: isActive,
-                              onChanged:
-                                  (val) => setStateDialog(() => isActive = val),
-                              activeColor: primaryColor,
+                              onChanged: (val) =>
+                                  setStateDialog(() => isActive = val),
+                              activeThumbColor: primaryColor,
                             ),
                           ],
                         ),
@@ -359,99 +355,88 @@ class AuditorMainPageState extends State<AuditorPage> {
                                 if (!formKey.currentState!.validate()) return;
                                 final confirmed = await showDialog<bool>(
                                   context: context,
-                                  builder:
-                                      (ctx) => Dialog(
-                                        backgroundColor: Colors.transparent,
-                                        child: Container(
-                                          width: 340,
-                                          padding: EdgeInsets.all(24),
-                                          decoration: BoxDecoration(
-                                            color: kSurface,
-                                            borderRadius: BorderRadius.circular(
-                                              16,
+                                  builder: (ctx) => Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    child: Container(
+                                      width: 340,
+                                      padding: EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: kSurface,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.12,
                                             ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withValues(
-                                                  alpha: 0.12,
-                                                ),
-                                                blurRadius: 32,
-                                                offset: Offset(0, 12),
-                                              ),
-                                            ],
+                                            blurRadius: 32,
+                                            offset: Offset(0, 12),
                                           ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
+                                        ],
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: primaryColor.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                            ),
+                                            child: Icon(
+                                              Icons.help_outline_rounded,
+                                            ),
+                                          ),
+                                          SizedBox(height: 14),
+                                          Text(
+                                            isEdit
+                                                ? 'Confirm Update'
+                                                : 'Confirm Save',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 16,
+                                              color: kText,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            isEdit
+                                                ? 'Are your sure you want to save update this auditor'
+                                                : 'Are you you want to save this auditor',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 13,
+                                              color: kMuted,
+                                              height: 1.5,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          Row(
                                             children: [
-                                              Container(
-                                                width: 48,
-                                                height: 48,
-                                                decoration: BoxDecoration(
-                                                  color: primaryColor
-                                                      .withValues(alpha: 0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(14),
-                                                ),
-                                                child: Icon(
-                                                  Icons.help_outline_rounded,
-                                                ),
-                                              ),
-                                              SizedBox(height: 14),
-                                              Text(
-                                                isEdit
-                                                    ? 'Confirm Update'
-                                                    : 'Confirm Save',
-                                                style:
-                                                    GoogleFonts.plusJakartaSans(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      fontSize: 16,
-                                                      color: kText,
-                                                    ),
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                isEdit
-                                                    ? 'Are your sure you want to save update this auditor'
-                                                    : 'Are you you want to save this auditor',
-                                                style:
-                                                    GoogleFonts.plusJakartaSans(
-                                                      fontSize: 13,
-                                                      color: kMuted,
-                                                      height: 1.5,
-                                                    ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: OutlinedButton(
-                                                      onPressed:
-                                                          () => Navigator.pop(
-                                                            ctx,
-                                                            false,
-                                                          ),
-                                                      child: Text(
-                                                        'No',
-                                                        style:
-                                                            GoogleFonts.plusJakartaSans(
-                                                              color: kMuted,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                            ),
-                                                      ),
-                                                    ),
+                                              Expanded(
+                                                child: OutlinedButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, false),
+                                                  child: Text(
+                                                    'No',
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          color: kMuted,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
                                                   ),
-                                                  const SizedBox(width: 10),
-                                                  Expanded(
-                                                    child: ElevatedButton(
-                                                      onPressed:
-                                                          () => Navigator.pop(
-                                                            ctx,
-                                                            true,
-                                                          ),
-                                                      style: ElevatedButton.styleFrom(
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: ElevatedButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, true),
+                                                  style:
+                                                      ElevatedButton.styleFrom(
                                                         backgroundColor:
                                                             primaryColor,
                                                         elevation: 0,
@@ -460,25 +445,23 @@ class AuditorMainPageState extends State<AuditorPage> {
                                                               vertical: 11,
                                                             ),
                                                       ),
-                                                      child: Text(
-                                                        'Yes',
-                                                        style:
-                                                            GoogleFonts.plusJakartaSans(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                            ),
-                                                      ),
-                                                    ),
+                                                  child: Text(
+                                                    'Yes',
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
                                                   ),
-                                                ],
+                                                ),
                                               ),
                                             ],
                                           ),
-                                        ),
+                                        ],
                                       ),
+                                    ),
+                                  ),
                                 );
                                 if (confirmed == true) {
                                   final auditor = Auditor(
@@ -730,7 +713,9 @@ class AuditorMainPageState extends State<AuditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -864,116 +849,33 @@ class AuditorMainPageState extends State<AuditorPage> {
                     const SizedBox(height: 5),
 
                     Expanded(
-                      child:
-                          _isLoading
-                              ? Center(
-                                child: CircularProgressIndicator(
-                                  color: primaryColor,
-                                ),
-                              )
-                              : ListView.builder(
-                                itemCount: filteredList.length,
-                                itemBuilder: (context, index) {
-                                  int itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
-                                  final auditor = filteredList[index];
+                      child: _isLoading
+                          ? Center(
+                              child: CircularProgressIndicator(
+                                color: primaryColor,
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: filteredList.length,
+                              itemBuilder: (context, index) {
+                                int itemNumber =
+                                    ((_currentPage - 1) * _pageSize) +
+                                    index +
+                                    1;
+                                final auditor = filteredList[index];
 
-                                  final matchUserName = userList.firstWhere(
-                                    (user) => user.id == auditor.userId,
-                                    orElse:
-                                        () => User(
-                                          id: '',
-                                          fullName: '',
-                                          position: '',
-                                        ),
-                                  );
-                                  final userName = matchUserName.fullName;
+                                final matchUserName = userList.firstWhere(
+                                  (user) => user.id == auditor.userId,
+                                  orElse: () =>
+                                      User(id: '', fullName: '', position: ''),
+                                );
+                                final userName = matchUserName.fullName;
 
-                                  if (!isMobile) {
-                                    return Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade200,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              "$itemNumber",
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                          ),
-
-                                          Expanded(
-                                            flex: 3,
-                                            child: Text(
-                                              userName,
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                          ),
-
-                                          Expanded(
-                                            flex: 2,
-                                            child: Row(
-                                              children: [
-                                                Tooltip(
-                                                  message: 'Edit',
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      size: 16,
-                                                      Icons.edit_outlined,
-                                                    ),
-                                                    onPressed: () {
-                                                      showFormDialog(
-                                                        id:
-                                                            auditor.id
-                                                                .toString(),
-                                                        name:
-                                                            auditor.name ?? '',
-                                                        selectedUserId:
-                                                            auditor.userId ??
-                                                            '',
-                                                        isActive:
-                                                            auditor.isActive,
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-
-                                                IconButton(
-                                                  icon: const Icon(
-                                                    size: 16,
-                                                    CupertinoIcons
-                                                        .delete_simple,
-                                                    color: Colors.redAccent,
-                                                  ),
-                                                  onPressed:
-                                                      () => showDeleteDialog(
-                                                        auditor.id.toString(),
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }
-
+                                if (!isMobile) {
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
+                                      vertical: 6,
                                     ),
-                                    margin: const EdgeInsets.only(bottom: 12),
                                     decoration: BoxDecoration(
                                       border: Border(
                                         bottom: BorderSide(
@@ -981,86 +883,157 @@ class AuditorMainPageState extends State<AuditorPage> {
                                         ),
                                       ),
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                    child: Row(
                                       children: [
-                                        Row(
-                                          children: [
-                                            Text(
-                                              "$itemNumber",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
+                                        Expanded(
+                                          flex: 1,
+                                          child: Text(
+                                            "$itemNumber",
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ),
+
+                                        Expanded(
+                                          flex: 3,
+                                          child: Text(
+                                            userName,
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ),
+
+                                        Expanded(
+                                          flex: 2,
+                                          child: Row(
+                                            children: [
+                                              Tooltip(
+                                                message: 'Edit',
+                                                child: IconButton(
+                                                  icon: const Icon(
+                                                    size: 16,
+                                                    Icons.edit_outlined,
+                                                  ),
+                                                  onPressed: () {
+                                                    showFormDialog(
+                                                      id: auditor.id.toString(),
+                                                      name: auditor.name ?? '',
+                                                      selectedUserId:
+                                                          auditor.userId ?? '',
+                                                      isActive:
+                                                          auditor.isActive,
+                                                    );
+                                                  },
+                                                ),
                                               ),
-                                            ),
-                                            const Spacer(),
-                                            PopupMenuButton<String>(
-                                              color:
-                                                  Theme.of(context).cardColor,
-                                              icon: const Icon(Icons.more_vert),
-                                              onSelected: (value) async {
-                                                if (value == 'edit') {
-                                                  showFormDialog(
-                                                    id: auditor.id.toString(),
-                                                    name: auditor.name ?? '',
-                                                    selectedUserId:
-                                                        auditor.userId ?? '',
-                                                    isActive: auditor.isActive,
-                                                  );
-                                                }
 
-                                                if (value == 'delete') {
-                                                  showDeleteDialog(
-                                                    auditor.id.toString(),
-                                                  );
-                                                }
-                                              },
-                                              itemBuilder:
-                                                  (_) => [
-                                                    PopupMenuItem(
-                                                      value: 'edit',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            Icons.edit_outlined,
-                                                            size: 16,
-                                                          ),
-                                                          SizedBox(width: 8),
-                                                          Text('Edit'),
-                                                        ],
-                                                      ),
+                                              IconButton(
+                                                icon: const Icon(
+                                                  size: 16,
+                                                  CupertinoIcons.delete_simple,
+                                                  color: Colors.redAccent,
+                                                ),
+                                                onPressed: () =>
+                                                    showDeleteDialog(
+                                                      auditor.id.toString(),
                                                     ),
-
-                                                    PopupMenuItem(
-                                                      value: 'delete',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            CupertinoIcons
-                                                                .delete_simple,
-                                                            color: Colors.red,
-                                                            size: 16,
-                                                          ),
-                                                          SizedBox(width: 8),
-                                                          Text('Delete'),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                            ),
-                                          ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          "Name: $userName",
-                                          style: TextStyle(fontSize: 12),
-                                        ),
-                                        const SizedBox(height: 4),
                                       ],
                                     ),
                                   );
-                                },
-                              ),
+                                }
+
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Colors.grey.shade200,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            "$itemNumber",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          PopupMenuButton<String>(
+                                            color: Theme.of(context).cardColor,
+                                            icon: const Icon(Icons.more_vert),
+                                            onSelected: (value) async {
+                                              if (value == 'edit') {
+                                                showFormDialog(
+                                                  id: auditor.id.toString(),
+                                                  name: auditor.name ?? '',
+                                                  selectedUserId:
+                                                      auditor.userId ?? '',
+                                                  isActive: auditor.isActive,
+                                                );
+                                              }
+
+                                              if (value == 'delete') {
+                                                showDeleteDialog(
+                                                  auditor.id.toString(),
+                                                );
+                                              }
+                                            },
+                                            itemBuilder: (_) => [
+                                              PopupMenuItem(
+                                                value: 'edit',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.edit_outlined,
+                                                      size: 16,
+                                                    ),
+                                                    SizedBox(width: 8),
+                                                    Text('Edit'),
+                                                  ],
+                                                ),
+                                              ),
+
+                                              PopupMenuItem(
+                                                value: 'delete',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      CupertinoIcons
+                                                          .delete_simple,
+                                                      color: Colors.red,
+                                                      size: 16,
+                                                    ),
+                                                    SizedBox(width: 8),
+                                                    Text('Delete'),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        "Name: $userName",
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      const SizedBox(height: 4),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
                     ),
                     Container(
                       padding: const EdgeInsets.all(10),
@@ -1091,15 +1064,13 @@ class AuditorMainPageState extends State<AuditorPage> {
           ],
         ),
       ),
-
-      floatingActionButton:
-          isMinimized
-              ? FloatingActionButton(
-                backgroundColor: primaryColor,
-                onPressed: () => showFormDialog(),
-                child: Icon(Icons.add, color: Colors.white),
-              )
-              : null,
+      floatingActionButton: isMobile
+          ? FloatingActionButton(
+              backgroundColor: primaryColor,
+              onPressed: () => showFormDialog(),
+              child: Icon(Icons.add, color: Colors.white),
+            )
+          : null,
     );
   }
 }

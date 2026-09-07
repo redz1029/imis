@@ -7,27 +7,30 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/office/services/office_service.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/common/button_filter.dart';
+import 'package:imis/widgets/common/filter_button_widget.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:universal_html/html.dart' as html;
 
-class PgsServiceOfficePeriodReportPage extends StatefulWidget {
-  const PgsServiceOfficePeriodReportPage({super.key});
+class SummaryOfficesDeliverables extends StatefulWidget {
+  const SummaryOfficesDeliverables({super.key});
 
   @override
-  State<PgsServiceOfficePeriodReportPage> createState() =>
-      _PgsServiceOfficePeriodReportPageState();
+  State<SummaryOfficesDeliverables> createState() =>
+      SummaryOfficesDeliverablesState();
 }
 
-class _PgsServiceOfficePeriodReportPageState
-    extends State<PgsServiceOfficePeriodReportPage> {
+class SummaryOfficesDeliverablesState
+    extends State<SummaryOfficesDeliverables> {
   final _commonService = CommonService(Dio());
   final _officeService = OfficeService(Dio());
   final _dio = Dio();
@@ -47,6 +50,7 @@ class _PgsServiceOfficePeriodReportPageState
 
   Uint8List? _pdfBytes;
   String? _error;
+  bool _mobileFiltersExpanded = false;
 
   @override
   void initState() {
@@ -315,33 +319,113 @@ class _PgsServiceOfficePeriodReportPageState
       children: [
         Row(
           children: [
-            Text(
-              'Filter by',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: kMuted,
+            InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () {
+                setState(
+                  () => _mobileFiltersExpanded = !_mobileFiltersExpanded,
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.tune, size: 16, color: primaryColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Filters',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    AnimatedRotation(
+                      turns: _mobileFiltersExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 16,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const Spacer(),
-            if (_hasActiveFilters)
-              TextButton.icon(
-                onPressed: _resetFilters,
-                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
-                label: Text(
-                  'Clear',
-                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
-                ),
-              ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 150),
+              child:
+                  _hasActiveFilters
+                      ? TextButton.icon(
+                        key: const ValueKey('clear'),
+                        onPressed: _resetFilters,
+                        icon: Icon(
+                          Icons.refresh,
+                          size: 14,
+                          color: Colors.red.shade400,
+                        ),
+                        label: Text(
+                          'Clear filters',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.red.shade400,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      )
+                      : const SizedBox.shrink(key: ValueKey('empty')),
+            ),
           ],
         ),
-        SizedBox(height: 38, child: _servicesDropdown()),
-        const SizedBox(height: 8),
-        SizedBox(height: 38, child: _officesDropdown()),
-        const SizedBox(height: 8),
-        SizedBox(height: 38, child: _periodsDropdown()),
-        const SizedBox(height: 12),
-        Align(alignment: Alignment.centerRight, child: _generateButton()),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          child:
+              _mobileFiltersExpanded
+                  ? Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 38,
+                          child: PermissionWidget(
+                            permission: AppPermissions.viewOffice,
+                            child: _officesDropdown(),
+                          ),
+                        ),
+                        gap4px,
+                        SizedBox(
+                          height: 38,
+                          child: PermissionWidget(
+                            permission: AppPermissions.viewOffice,
+                            child: _periodsDropdown(),
+                          ),
+                        ),
+                        gap6px,
+                        SizedBox(height: 38, child: _generateButton()),
+                      ],
+                    ),
+                  )
+                  : const SizedBox.shrink(),
+        ),
       ],
     );
   }
@@ -352,16 +436,11 @@ class _PgsServiceOfficePeriodReportPageState
       children: [
         Row(
           children: [
-            Icon(Icons.tune, size: 14, color: Colors.grey.shade600),
-            const SizedBox(width: 6),
-            Text(
-              'Filter by',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
+            Expanded(child: buildDropdown(child: _servicesDropdown())),
+            const SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _officesDropdown())),
+            const SizedBox(width: 10),
+            Expanded(child: buildDropdown(child: _periodsDropdown())),
             const Spacer(),
             if (_hasActiveFilters)
               TextButton.icon(
@@ -378,24 +457,6 @@ class _PgsServiceOfficePeriodReportPageState
                   ),
                 ),
               ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  SizedBox(width: 220, child: _servicesDropdown()),
-                  SizedBox(width: 220, child: _officesDropdown()),
-                  SizedBox(width: 220, child: _periodsDropdown()),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
             _generateButton(),
           ],
         ),

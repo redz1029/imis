@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
@@ -112,50 +114,46 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
   void _showImageViewer(ImageProvider image, String title) {
     showDialog(
       context: context,
-      builder:
-          (_) => Dialog(
-            backgroundColor: Colors.black87,
-            insetPadding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+      builder: (_) => Dialog(
+        backgroundColor: Colors.black87,
+        insetPadding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.75,
-                    maxWidth: MediaQuery.of(context).size.width,
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                  child: InteractiveViewer(
-                    child: Image(image: image, fit: BoxFit.contain),
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
+                ],
+              ),
             ),
-          ),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.75,
+                maxWidth: MediaQuery.of(context).size.width,
+              ),
+              child: InteractiveViewer(
+                child: Image(image: image, fit: BoxFit.contain),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
     );
   }
 
@@ -245,8 +243,8 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
                         permission: AppPermissions.deleteCalendarActivity,
                         child: Expanded(
                           child: OutlinedButton.icon(
-                            onPressed:
-                                () => showDeleteDialog(event.id.toString()),
+                            onPressed: () =>
+                                showDeleteDialog(event.id.toString()),
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(color: kBorder),
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -313,37 +311,36 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder:
-          (ctx) => DeleteDialog(
-            title: 'Event',
-            itemName: 'event',
-            onDelete: () async {
-              Navigator.pop(ctx);
-              try {
-                await _service.deleteCalendar(id);
-                if (!mounted) return;
-                MotionToast.success(
-                  toastAlignment: Alignment.topCenter,
-                  description: Text(
-                    'Event deleted successfully',
-                    style: GoogleFonts.plusJakartaSans(),
-                  ),
-                ).show(context);
-                Navigator.pop(context);
-                widget.onDelete?.call();
-              } catch (e) {
-                debugPrint('Delete calendar failed: $e');
-                if (!mounted) return;
-                MotionToast.error(
-                  toastAlignment: Alignment.topCenter,
-                  description: Text(
-                    'Failed to delete event',
-                    style: GoogleFonts.plusJakartaSans(),
-                  ),
-                ).show(context);
-              }
-            },
-          ),
+      builder: (ctx) => DeleteDialog(
+        title: 'Event',
+        itemName: 'event',
+        onDelete: () async {
+          Navigator.pop(ctx);
+          try {
+            await _service.deleteCalendar(id);
+            if (!mounted) return;
+            MotionToast.success(
+              toastAlignment: Alignment.topCenter,
+              description: Text(
+                'Event deleted successfully',
+                style: GoogleFonts.plusJakartaSans(),
+              ),
+            ).show(context);
+            Navigator.pop(context);
+            widget.onDelete?.call();
+          } catch (e) {
+            debugPrint('Delete calendar failed: $e');
+            if (!mounted) return;
+            MotionToast.error(
+              toastAlignment: Alignment.topCenter,
+              description: Text(
+                'Failed to delete event',
+                style: GoogleFonts.plusJakartaSans(),
+              ),
+            ).show(context);
+          }
+        },
+      ),
     );
   }
 
@@ -405,7 +402,7 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
     final accent = highlightColor;
     final bgColor = accent?.withOpacity(0.08) ?? kBackground;
     final borderColor = accent ?? kBorder;
-    final iconBg = accent?.withOpacity(0.15) ?? kSurface;
+    final iconBg = accent?.withValues(alpha: 0.15) ?? kSurface;
     final iconColor = accent ?? kMuted;
     final labelColor = accent ?? kMuted;
 
@@ -475,47 +472,43 @@ class _EventDetailDialogState extends State<EventDetailDialog> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child:
-                  _isPdf
-                      ? Container(
-                        width: 56,
-                        height: 56,
-                        color: Colors.red.shade50,
-                        child: Icon(
-                          Icons.picture_as_pdf,
-                          color: Colors.red.shade400,
-                          size: 28,
-                        ),
-                      )
-                      : _imageLoading
-                      ? Container(
-                        width: 56,
-                        height: 56,
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                      )
-                      : (_imageBytes != null && !_imageFailed)
-                      ? Image.memory(
-                        _imageBytes!,
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                      )
-                      : Container(
-                        width: 56,
-                        height: 56,
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.broken_image,
-                          color: Colors.grey,
+              child: _isPdf
+                  ? Container(
+                      width: 56,
+                      height: 56,
+                      color: Colors.red.shade50,
+                      child: Icon(
+                        Icons.picture_as_pdf,
+                        color: Colors.red.shade400,
+                        size: 28,
+                      ),
+                    )
+                  : _imageLoading
+                  ? Container(
+                      width: 56,
+                      height: 56,
+                      color: Colors.grey[200],
+                      child: const Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
+                    )
+                  : (_imageBytes != null && !_imageFailed)
+                  ? Image.memory(
+                      _imageBytes!,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      width: 56,
+                      height: 56,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -643,18 +636,16 @@ class _AddEditEventDialogState extends State<AddEditEventDialog> {
         if (widget.existing?.officeId != null) {
           _selectedOffice = _officeList.firstWhere(
             (o) => o.id == widget.existing!.officeId,
-            orElse:
-                () =>
-                    _officeList.isNotEmpty
-                        ? _officeList.first
-                        : Office(
-                          id: 0,
-                          name: '',
-                          officeTypeId: null,
-                          parentOfficeId: null,
-                          isDeleted: false,
-                          isActive: true,
-                        ),
+            orElse: () => _officeList.isNotEmpty
+                ? _officeList.first
+                : Office(
+                    id: 0,
+                    name: '',
+                    officeTypeId: null,
+                    parentOfficeId: null,
+                    isDeleted: false,
+                    isActive: true,
+                  ),
           );
         }
       });
@@ -678,19 +669,18 @@ class _AddEditEventDialogState extends State<AddEditEventDialog> {
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
-      builder:
-          (context, child) => Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.light(
-                primary: primaryColor,
-                onPrimary: Colors.white,
-              ),
-              textButtonTheme: TextButtonThemeData(
-                style: TextButton.styleFrom(foregroundColor: primaryColor),
-              ),
-            ),
-            child: child!,
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: primaryColor,
+            onPrimary: Colors.white,
           ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(foregroundColor: primaryColor),
+          ),
+        ),
+        child: child!,
+      ),
     );
     if (picked != null) setState(() => _selectedDate = picked);
   }
@@ -864,11 +854,9 @@ class _AddEditEventDialogState extends State<AddEditEventDialog> {
                   dialogField(
                     label: 'Title',
                     controller: _titleController,
-                    validator:
-                        (v) =>
-                            (v == null || v.trim().isEmpty)
-                                ? 'Please fill out this field'
-                                : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Please fill out this field'
+                        : null,
                   ),
                   const SizedBox(height: 14),
 
@@ -924,11 +912,8 @@ class _AddEditEventDialogState extends State<AddEditEventDialog> {
                             setState(() => _selectedOffice = value);
                           },
 
-                          validator:
-                              (value) =>
-                                  value == null
-                                      ? 'Please select an office'
-                                      : null,
+                          validator: (value) =>
+                              value == null ? 'Please select an office' : null,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1039,19 +1024,19 @@ class _AddEditEventDialogState extends State<AddEditEventDialog> {
                                 color: c,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color:
-                                      isSelected ? kText : Colors.transparent,
+                                  color: isSelected
+                                      ? kText
+                                      : Colors.transparent,
                                   width: 2,
                                 ),
                               ),
-                              child:
-                                  isSelected
-                                      ? const Icon(
-                                        Icons.check,
-                                        size: 14,
-                                        color: Colors.white,
-                                      )
-                                      : null,
+                              child: isSelected
+                                  ? const Icon(
+                                      Icons.check,
+                                      size: 14,
+                                      color: Colors.white,
+                                    )
+                                  : null,
                             ),
                           ),
                         );
@@ -1170,8 +1155,9 @@ class _AddEditEventDialogState extends State<AddEditEventDialog> {
                                 borderRadius: BorderRadiusGeometry.circular(8),
                               ),
                             ),
-                            onPressed:
-                                _isSaving ? null : () => Navigator.pop(context),
+                            onPressed: _isSaving
+                                ? null
+                                : () => Navigator.pop(context),
                             child: Text(
                               'Cancel',
                               style: GoogleFonts.plusJakartaSans(
@@ -1195,25 +1181,22 @@ class _AddEditEventDialogState extends State<AddEditEventDialog> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
-                            child:
-                                _isSaving
-                                    ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                    : Text(
-                                      _isEditMode
-                                          ? 'Save Changes'
-                                          : 'Add Event',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
                                     ),
+                                  )
+                                : Text(
+                                    _isEditMode ? 'Save Changes' : 'Add Event',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],

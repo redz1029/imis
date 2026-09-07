@@ -26,22 +26,51 @@ class DeliverableStatusMonitoringService {
     }
   }
 
-  Future<void> saveAccomplishment(FormData formData) async {
-    final id =
-        formData.fields
-            .firstWhere((f) => f.key == 'id', orElse: () => MapEntry('id', ''))
-            .value;
+  Future<void> saveAccomplishment(FormData formData, {int? id}) async {
     final url =
-        ApiEndpoint().pgsDeliverableAccomplishment +
-        (id.isNotEmpty ? '/$id' : '');
+        ApiEndpoint().pgsDeliverableAccomplishment + (id != null ? '/$id' : '');
 
     final response =
-        id.isNotEmpty
+        id != null
             ? await AuthenticatedRequest.put(dio, url, data: formData)
             : await AuthenticatedRequest.post(dio, url, data: formData);
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create/update PGS accomplishment');
+    }
+  }
+
+  Future<void> updateAccomplishmentStatus(
+    PgsDeliverableAccomplishment acc,
+    int newStatus,
+  ) async {
+    final url = ApiEndpoint().pgsAccomplishment;
+
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: [
+        {
+          'id': acc.id,
+          'isDeleted': acc.isDeleted ?? false,
+          'rowVersion': acc.rowVersion,
+          'pgsDeliverableId': acc.pgsDeliverableId,
+          'status': newStatus,
+          'postingDate': acc.postingDate.toIso8601String(),
+          'userId': acc.userId,
+          'percentAccomplished': acc.percentAccomplished ?? 0,
+          'remarks': acc.remarks ?? '',
+          'auditorRemarks': acc.auditorRemarks ?? '',
+          'attachmentPath': acc.attachmentPath ?? '',
+          'deliverableName': acc.deliverableName ?? '',
+          'pgsStatus': acc.pgsStatus ?? '',
+          'byWhen': acc.byWhen?.toIso8601String(),
+        },
+      ],
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to update accomplishment status');
     }
   }
 

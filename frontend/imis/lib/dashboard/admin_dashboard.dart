@@ -19,7 +19,6 @@ import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/home/dynamic_side_column.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../../performance_governance_system/enum/pgs_status.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -224,26 +223,33 @@ class AdminDashboardState extends State<AdminDashboard> {
     if (user != null) {
       setState(() {
         office = officeName ?? [];
+        final rawName = (user.firstName ?? "firstName").trim();
+
+        firstName = rawName.toLowerCase().replaceFirstMapped(
+          RegExp(r'^[a-z]'),
+          (m) => m.group(0)!.toUpperCase(),
+        );
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.width < 600;
-
     return Scaffold(
-      backgroundColor: mainBgColor,
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(child: _buildMainLayout()),
       ),
     );
   }
 
-  Widget _buildDesktopLayout() {
-    return SingleChildScrollView(
-      child: Column(
+  Widget _buildMainLayout() {
+    final width = MediaQuery.of(context).size.width;
+    final bool isMobile = width < 800;
+
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildWelcome(),
           const SizedBox(height: 16),
@@ -714,157 +720,195 @@ class AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildStatusWidget(List<PgsDeliverables> deliverablesList) {
-    final statusCounts = countStatuses(deliverablesList);
-
-    int getCount(PgsStatus status) => statusCounts[status] ?? 0;
-
-    final List<PgsStatus> statusesToDisplay = [
-      PgsStatus.notStarted,
-      PgsStatus.onGoing,
-      PgsStatus.completed,
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
+    return "${months[date.month - 1]} ${date.day}, ${date.year}";
+  }
 
-    final Map<PgsStatus, Color> statusColors = {
-      PgsStatus.notStarted: Colors.grey.shade700,
+  Widget _sectionLabel(String label) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: Colors.black87,
+        letterSpacing: 0.2,
+      ),
+    );
+  }
 
-      PgsStatus.completed: Colors.green,
-      PgsStatus.onGoing: Colors.deepOrange,
-    };
-
-    List<Widget> buildStatusRows() {
-      List<Widget> rows = [];
-      for (int i = 0; i < statusesToDisplay.length; i += 3) {
-        final status1 = statusesToDisplay[i];
-        final status2 =
-            (i + 1 < statusesToDisplay.length)
-                ? statusesToDisplay[i + 1]
-                : null;
-        final status3 =
-            (i + 2 < statusesToDisplay.length)
-                ? statusesToDisplay[i + 2]
-                : null;
-        final int totalCount = statusesToDisplay.fold(
-          0,
-          (sum, status) => sum + getCount(status),
-        );
-
-        rows.add(
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _changeItem({
+    required IconData icon,
+    required Color iconColor,
+    required Color bgColor,
+    required String title,
+    required String subtitle,
+    bool isBadge = false,
+    String? badgeLabel,
+    Color? badgeColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      getStatusLabel(status1),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: statusColors[status1] ?? Colors.black,
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
-
-                    Text(
-                      totalCount > 0
-                          ? "${((getCount(status1) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status1)})"
-                          : "0% (0)",
-                      style: const TextStyle(color: Colors.black54),
-                    ),
+                    if (isBadge && badgeLabel != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: badgeColor?.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color:
+                                badgeColor?.withValues(alpha: 0.3) ??
+                                Colors.transparent,
+                          ),
+                        ),
+                        child: Text(
+                          badgeLabel,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: badgeColor,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
-              ),
-              // Status 2
-              Expanded(
-                child:
-                    status2 != null
-                        ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              getStatusLabel(status2),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: statusColors[status2] ?? Colors.black,
-                              ),
-                            ),
-                            Text(
-                              totalCount > 0
-                                  ? "${((getCount(status2) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status2)})"
-                                  : "0% (0)",
-                              style: const TextStyle(color: Colors.black54),
-                            ),
-                          ],
-                        )
-                        : Container(),
-              ),
-
-              Expanded(
-                child:
-                    status3 != null
-                        ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              getStatusLabel(status3),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: statusColors[status3] ?? Colors.black,
-                              ),
-                            ),
-                            Text(
-                              totalCount > 0
-                                  ? "${((getCount(status3) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status3)})"
-                                  : "0% (0)",
-                              style: const TextStyle(color: Colors.black54),
-                            ),
-                          ],
-                        )
-                        : Container(),
-              ),
-            ],
-          ),
-        );
-        rows.add(const SizedBox(height: 16));
-      }
-      return rows;
-    }
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300, width: 1),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: mainBgColor,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "PGS Status",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    height: 1.4,
                   ),
-                  const SizedBox(height: 16),
-                  ...buildStatusRows(),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(width: 16),
-
-            _buildPieChart(deliverablesList),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _welcomeCard() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isNarrow = constraints.maxWidth < 500;
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 150, 68, 89),
+                Color.fromARGB(255, 180, 91, 112),
+                Color.fromARGB(255, 190, 100, 120),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child:
+              isNarrow
+                  ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "${getGreeting()}, ${firstName.split(' ')[0]}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Welcome to CPeMS - Centralized Performance Electronic Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Center(
+                        child: Image.asset('assets/image1.png', height: 200),
+                      ),
+                    ],
+                  )
+                  : Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "${getGreeting()}, ${firstName.split(' ')[0]}",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Welcome to CPeMS - Centralized Performance Electronic Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Image.asset('assets/image1.png', height: 150),
+                    ],
+                  ),
+        );
+      },
     );
   }
 
@@ -950,38 +994,62 @@ class AdminDashboardState extends State<AdminDashboard> {
       height: 110,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade100, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            flex: 2,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  count,
+                  item.count,
                   style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: color,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                    height: 1,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
-                  title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  item.label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  height: 3,
+                  width: 32,
+                  decoration: BoxDecoration(
+                    color: item.color,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
               ],
             ),
           ),
-          Expanded(
-            flex: 1,
-            child: FittedBox(
-              fit: BoxFit.contain,
-              child: Image.asset(iconAsset),
+
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: item.color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(item.icon, color: item.color, size: 22),
           ),

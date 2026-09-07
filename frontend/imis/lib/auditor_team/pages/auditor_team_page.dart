@@ -34,13 +34,6 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
   List<dynamic> filteredList = [];
   List<Team> teamList = [];
   List<Auditor> auditorList = [];
-   List<Map<String, dynamic>> filteredimprovementType = [];
-     List<Map<String, dynamic>> filteredimprovement = [];
-  String? _selectedImprovementTypeFilter; // Filter: null = All, or specific ID
-
-  int? selectTeam;
-  int? selectAuditor;
-  String? selectTeamText;
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
@@ -92,7 +85,7 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
           auditorTeamList = pageList.items;
-          _applyImprovementTypeFilter();
+          filteredList = List.from(auditorTeamList);
         });
         _fadeCtrl.forward(from: 0);
       }
@@ -112,135 +105,321 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
   }
 
   @override
-  void initState() {
-    super.initState();
-    isSearchfocus.addListener(() {
-      setState(() {});
-    });
-    fetchAuditorTeam();
+  Widget build(BuildContext context) {
+    final isNarrow = MediaQuery.of(context).size.width < 600;
+    final uniqueTeams = {
+      for (var item in filteredList) item.teamId: item,
+    }.values.toList();
 
-    () async {
-      final auditors = await _commonService.fetchAuditors();
-      final team = await _commonService.fetchTeam();
-      final users = await _commonService.fetchUsers();
-      if (!mounted) return;
-
-      setState(() {
-        auditorList = auditors;
-        teamList = team;
-        userList = users;
-      });
-    }();
-
-     _teamService
-        .getImprovementType()
-        .then((data) {
-          if (mounted) {
-            setState(() {
-              filteredimprovement =
-                  data.map((improvementType) => improvementType.toJson()).toList();
-              filteredimprovementType = List.from(filteredimprovement);
-              if (filteredimprovementType.isNotEmpty) {
-              }
-            });
-          }
-        })
-        .catchError((error) {
-          debugPrint("Failed to fetch data");
-        });
-
-    if (filteredimprovementType.isNotEmpty) {
-    }
+    return Scaffold(
+      backgroundColor: kBackground,
+      appBar: _buildAppBar(),
+      body: FadeTransition(
+        opacity: _fadeCtrl,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              _buildToolbar(isNarrow, uniqueTeams.length),
+              const SizedBox(height: 16),
+              Expanded(
+                child: _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(color: primaryColor),
+                      )
+                    : uniqueTeams.isEmpty
+                    ? _empty()
+                    : _list(uniqueTeams),
+              ),
+              const SizedBox(height: 12),
+              _buildPagination(),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: isNarrow
+          ? FloatingActionButton.extended(
+              backgroundColor: primaryColor,
+              onPressed: () => showAuditorTeamFormDialog(),
+              icon: const Icon(Icons.add_rounded, color: Colors.white),
+              label: Text(
+                'Add',
+                style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            )
+          : null,
+    );
   }
 
-  String getUserFullName(String? userId) {
-    if (userId == null || userList.isEmpty) return 'Unknown';
-    final user = userList.firstWhere(
-      (user) => user.id == userId,
-      orElse: () => User(id: '', fullName: 'Unknown', position: ''),
-    );
-    return user.fullName;
-  }
+  PreferredSizeWidget _buildAppBar() => AppBar(
+    elevation: 0,
+    backgroundColor: kSurface,
+    surfaceTintColor: Colors.transparent,
+    titleSpacing: 0,
+    leading: Padding(padding: const EdgeInsets.all(4)),
+    title: Text(
+      'Auditor Team Information',
+      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 24, color: kText),
+    ),
+    bottom: PreferredSize(
+      preferredSize: const Size.fromHeight(1),
+      child: Container(height: 1, color: kBorder),
+    ),
+  );
 
-  // Check if auditor is already in another team with the same improvement type
-  bool isAuditorInSameImprovementType(int auditorId, int currentTeamId) {
-    // Get the improvement type of the currently selected team
-    final currentTeam = teamList.firstWhere(
-      (t) => t.id == currentTeamId,
-      orElse: () => Team(0, '', false, false, improvementType: 0),
-    );
-    final currentImprovementType = currentTeam.improvementType;
+  Widget _buildToolbar(bool isNarrow, int teamCount) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      color: kSurface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: kBorder),
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 38,
+            child: TextField(
+              focusNode: _searchFocus,
+              controller: _searchController,
+              style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
+              decoration: InputDecoration(
+                hintText: 'Search by team or auditor…',
+                hintStyle: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  color: kMuted,
+                ),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  size: 18,
+                  color: _searchFocus.hasFocus ? primaryColor : kMuted,
+                ),
+                filled: true,
+                fillColor: kBackground,
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: kBorder),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: kBorder),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: primaryColor, width: 1.5),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (!isNarrow) ...[
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: kPrimaryLight,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.groups_rounded, size: 14, color: primaryColor),
+                const SizedBox(width: 6),
+                Text(
+                  '$teamCount Teams',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: primaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton.icon(
+            onPressed: () => showAuditorTeamFormDialog(),
+            icon: const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+            label: Text(
+              'Add Team',
+              style: GoogleFonts.plusJakartaSans(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
 
-    // Check all auditor teams
-    for (var auditorTeam in auditorTeamList) {
-      // Skip if it's the same team we're editing
-      if (auditorTeam.teamId == currentTeamId) continue;
+  Widget _buildPagination() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      color: kSurface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: kBorder),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        PaginationInfo(
+          currentPage: _currentPage,
+          totalItems: _totalCount,
+          itemsPerPage: _pageSize,
+        ),
+        PaginationControls(
+          currentPage: _currentPage,
+          totalItems: _totalCount,
+          itemsPerPage: _pageSize,
+          isLoading: _isLoading,
+          onPageChanged: (p) => fetchAuditorTeam(page: p),
+        ),
+        const SizedBox(width: 60),
+      ],
+    ),
+  );
 
-      // Get the team's improvement type
-      final team = teamList.firstWhere(
-        (t) => t.id == auditorTeam.teamId,
-        orElse: () => Team(0, '', false, false, improvementType: 0),
+  Widget _list(List<dynamic> uniqueTeams) => ListView.separated(
+    itemCount: uniqueTeams.length,
+    separatorBuilder: (_, __) => const SizedBox(height: 8),
+    itemBuilder: (ctx, i) {
+      final auditorTeam = uniqueTeams[i];
+      final auditors = List<Auditor>.from(auditorTeam.auditors);
+      final isActive = auditorTeam.isActive == true;
+
+      return _TeamCard(
+        teamName: getTeamNameById(auditorTeam.teamId, teamList),
+        auditors: auditors,
+        isActive: isActive,
+        onEdit: () => showAuditorTeamFormDialog(id: auditorTeam.id.toString()),
+        onDelete: () => showDeleteDialog(auditorTeam.id.toString()),
+      );
+    },
+  );
+
+  Widget _empty() => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: kPrimaryLight,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Icon(
+            Icons.groups_rounded,
+            size: 40,
+            color: primaryColor,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'No Auditor Teams Found',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: kText,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Create an auditor team to get started.',
+          style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kMuted),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton.icon(
+          onPressed: () => showAuditorTeamFormDialog(),
+          icon: const Icon(Icons.add_rounded, size: 16),
+          label: Text(
+            'Create First Team',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryColor,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Future<void> showAuditorTeamFormDialog({String? id}) async {
+    int? initialTeamId;
+    List<Auditor> initialAuditors = [];
+    bool initialIsActive = true;
+
+    if (id != null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) =>
+            Center(child: CircularProgressIndicator(color: primaryColor)),
       );
 
-      // If same improvement type, check if auditor is in this team
-      if (team.improvementType == currentImprovementType) {
-        final hasAuditor = auditorTeam.auditors.any((a) => a.id == auditorId);
-        if (hasAuditor) {
-          return true; // Auditor found in another team with same improvement type
+      try {
+        final detail = await _adutiorTeamService.getAuditorTeamById(id);
+        initialTeamId = detail.teamId;
+        initialIsActive = detail.isActive;
+        initialAuditors = detail.auditors
+            .map(
+              (m) => Auditor(
+                id: m.id,
+                name: m.name,
+                userId: m.userId,
+                isActive: m.isActive,
+                isTeamLeader: m.isTeamLeader,
+                isOfficeHead: m.isOfficeHead,
+                isDeleted: m.isDeleted,
+              ),
+            )
+            .toList();
+        if (mounted) Navigator.pop(context);
+      } catch (e) {
+        if (mounted) Navigator.pop(context);
+        if (mounted) {
+          MotionToast.error(
+            toastAlignment: Alignment.topCenter,
+            description: Text(
+              'Failed to load auditor team',
+              style: GoogleFonts.plusJakartaSans(),
+            ),
+          ).show(context);
         }
+        return;
       }
     }
-    return false; // Auditor not in any other team with same improvement type
-  }
 
-  // Get the team name where auditor is already assigned (same improvement type)
-  String? getAuditorExistingTeam(int auditorId, int currentTeamId) {
-    final currentTeam = teamList.firstWhere(
-      (t) => t.id == currentTeamId,
-      orElse: () => Team(0, '', false, false, improvementType: 0),
+    if (!mounted) return;
+    _openAuditorTeamFormDialog(
+      id: id,
+      teamId: initialTeamId,
+      auditors: initialAuditors,
+      isActive: initialIsActive,
     );
-    final currentImprovementType = currentTeam.improvementType;
-
-    for (var auditorTeam in auditorTeamList) {
-      if (auditorTeam.teamId == currentTeamId) continue;
-
-      final team = teamList.firstWhere(
-        (t) => t.id == auditorTeam.teamId,
-        orElse: () => Team(0, '', false, false, improvementType: 0),
-      );
-
-      if (team.improvementType == currentImprovementType) {
-        final hasAuditor = auditorTeam.auditors.any((a) => a.id == auditorId);
-        if (hasAuditor) {
-          return team.name;
-        }
-      }
-    }
-    return null;
-  }
-
-  void _applyImprovementTypeFilter() {
-    if (_selectedImprovementTypeFilter == null) {
-      // Show all auditor teams
-      filteredList = List.from(auditorTeamList);
-    } else {
-      // Filter by improvement type
-      filteredList = auditorTeamList.where((auditorTeam) {
-        // Find the team associated with this auditor team
-        final team = teamList.firstWhere(
-          (t) => t.id == auditorTeam.teamId,
-          orElse: () => Team(0, '', false, false, improvementType: 0),
-        );
-        // Check if team's improvement type matches the selected filter
-        return team.improvementType.toString() == _selectedImprovementTypeFilter;
-      }).toList();
-    }
-  }
-
-  @override
-  void dispose() {
-    isSearchfocus.dispose();
-    super.dispose();
   }
 
   void _openAuditorTeamFormDialog({
@@ -369,11 +548,8 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
                                   fontSize: 13,
                                   color: kText,
                                 ),
-                                validator:
-                                    (v) =>
-                                        v == null
-                                            ? 'Please choose a team'
-                                            : null,
+                                validator: (v) =>
+                                    v == null ? 'Please choose a team' : null,
                                 decoration: InputDecoration(
                                   hintText: 'Select Team',
                                   hintStyle: GoogleFonts.plusJakartaSans(
@@ -388,21 +564,40 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
                                   ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(
+                                      color: kBorder,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(
+                                      color: kBorder,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(
+                                      color: primaryColor,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(
+                                      color: kDanger,
+                                    ),
                                   ),
                                 ),
-                                initialValue: selectTeam,
-                                items:
-                                    teamList
-                                        .map(
-                                          (team) => DropdownMenuItem<int>(
-                                            value: team.id,
-                                            child: Text(team.name),
-                                          ),
-                                        )
-                                        .toList(),
-                                onChanged:
-                                    (value) =>
-                                        setDialog(() => selectTeam = value),
+                                items: teamList
+                                    .map(
+                                      (team) => DropdownMenuItem<int>(
+                                        value: team.id,
+                                        child: Text(team.name),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) =>
+                                    setDialog(() => selectTeam = value),
                               ),
 
                               const SizedBox(height: 28),
@@ -471,22 +666,18 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: selectedAuditors.length,
-                                  separatorBuilder:
-                                      (_, __) => const SizedBox(height: 8),
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(height: 8),
                                   itemBuilder: (_, i) {
                                     final auditor = selectedAuditors[i];
                                     return _AuditorRow(
                                       auditor: auditor,
-                                      onToggleLeader:
-                                          (val) => setDialog(
-                                            () => auditor.isTeamLeader = val,
-                                          ),
-                                      onRemove:
-                                          () => setDialog(
-                                            () => selectedAuditors.remove(
-                                              auditor,
-                                            ),
-                                          ),
+                                      onToggleLeader: (val) => setDialog(
+                                        () => auditor.isTeamLeader = val,
+                                      ),
+                                      onRemove: () => setDialog(
+                                        () => selectedAuditors.remove(auditor),
+                                      ),
                                     );
                                   },
                                 ),
@@ -572,10 +763,9 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
                                     ),
                                     Switch(
                                       value: isActive,
-                                      onChanged:
-                                          (val) =>
-                                              setDialog(() => isActive = val),
-                                      activeColor: primaryColor,
+                                      onChanged: (val) =>
+                                          setDialog(() => isActive = val),
+                                      activeThumbColor: primaryColor,
                                     ),
                                   ],
                                 ),
@@ -625,14 +815,12 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
 
                                 final confirmed = await _confirm(
                                   ctx,
-                                  title:
-                                      isEdit
-                                          ? 'Confirm Update'
-                                          : 'Confirm Save',
-                                  body:
-                                      isEdit
-                                          ? 'Are you sure you want to update this auditor team?'
-                                          : 'Are you sure you want to save this auditor team?',
+                                  title: isEdit
+                                      ? 'Confirm Update'
+                                      : 'Confirm Save',
+                                  body: isEdit
+                                      ? 'Are you sure you want to update this auditor team?'
+                                      : 'Are you sure you want to save this auditor team?',
                                   confirmLabel: isEdit ? 'Update' : 'Save',
                                 );
                                 if (confirmed != true) return;
@@ -716,12 +904,8 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
     required String confirmLabel,
   }) => showDialog<bool>(
     context: ctx,
-    builder:
-        (_) => _ConfirmDialog(
-          title: title,
-          body: body,
-          confirmLabel: confirmLabel,
-        ),
+    builder: (_) =>
+        _ConfirmDialog(title: title, body: body, confirmLabel: confirmLabel),
   );
 
   void _showAvailableAuditorsDialog(
@@ -763,57 +947,55 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
                 Divider(color: kBorder, height: 1),
                 Expanded(
                   child: ListView(
-                    children:
-                        auditorList
-                            .where(
-                              (auditor) =>
-                                  !selectedAuditors.any(
-                                    (sel) => sel.id == auditor.id,
-                                  ),
-                            )
-                            .map((auditor) {
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  radius: 14,
-                                  backgroundColor: kPrimaryLight,
-                                  child: Text(
-                                    (auditor.name ?? 'A')
-                                        .substring(0, 1)
-                                        .toUpperCase(),
-                                    style: GoogleFonts.plusJakartaSans(
-                                      color: primaryColor,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                                title: Text(
-                                  auditor.name.toString(),
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13,
-                                    color: kText,
-                                  ),
-                                ),
-                                trailing: const Icon(
-                                  Icons.person_add,
+                    children: auditorList
+                        .where(
+                          (auditor) => !selectedAuditors.any(
+                            (sel) => sel.id == auditor.id,
+                          ),
+                        )
+                        .map((auditor) {
+                          return ListTile(
+                            leading: CircleAvatar(
+                              radius: 14,
+                              backgroundColor: kPrimaryLight,
+                              child: Text(
+                                (auditor.name ?? 'A')
+                                    .substring(0, 1)
+                                    .toUpperCase(),
+                                style: GoogleFonts.plusJakartaSans(
                                   color: primaryColor,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
                                 ),
-                                onTap: () {
-                                  onSelect(
-                                    Auditor(
-                                      id: auditor.id,
-                                      name: auditor.name,
-                                      userId: auditor.userId,
-                                      isActive: auditor.isActive,
-                                      isTeamLeader: false,
-                                      isOfficeHead: auditor.isOfficeHead,
-                                    ),
-                                  );
-                                  Navigator.pop(context);
-                                },
+                              ),
+                            ),
+                            title: Text(
+                              auditor.name.toString(),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                color: kText,
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.person_add,
+                              color: primaryColor,
+                            ),
+                            onTap: () {
+                              onSelect(
+                                Auditor(
+                                  id: auditor.id,
+                                  name: auditor.name,
+                                  userId: auditor.userId,
+                                  isActive: auditor.isActive,
+                                  isTeamLeader: false,
+                                  isOfficeHead: auditor.isOfficeHead,
+                                ),
                               );
-                            })
-                            .toList(),
+                              Navigator.pop(context);
+                            },
+                          );
+                        })
+                        .toList(),
                   ),
                 ),
                 Align(
@@ -838,35 +1020,34 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder:
-          (ctx) => DeleteDialog(
-            title: 'Auditor Team',
-            itemName: 'auditor team',
-            onDelete: () async {
-              Navigator.pop(ctx);
-              try {
-                await _adutiorTeamService.deleteAuditorTeam(id);
-                await fetchAuditorTeam();
-                if (mounted) {
-                  MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text(
-                      'Auditor team deleted successfully',
-                      style: GoogleFonts.plusJakartaSans(),
-                    ),
-                  ).show(context);
-                }
-              } catch (_) {
-                MotionToast.error(
-                  toastAlignment: Alignment.topCenter,
-                  description: Text(
-                    'Failed to delete auditor team',
-                    style: GoogleFonts.plusJakartaSans(),
-                  ),
-                );
-              }
-            },
-          ),
+      builder: (ctx) => DeleteDialog(
+        title: 'Auditor Team',
+        itemName: 'auditor team',
+        onDelete: () async {
+          Navigator.pop(ctx);
+          try {
+            await _adutiorTeamService.deleteAuditorTeam(id);
+            await fetchAuditorTeam();
+            if (mounted) {
+              MotionToast.success(
+                toastAlignment: Alignment.topCenter,
+                description: Text(
+                  'Auditor team deleted successfully',
+                  style: GoogleFonts.plusJakartaSans(),
+                ),
+              ).show(context);
+            }
+          } catch (_) {
+            MotionToast.error(
+              toastAlignment: Alignment.topCenter,
+              description: Text(
+                'Failed to delete auditor team',
+                style: GoogleFonts.plusJakartaSans(),
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 }
@@ -935,10 +1116,9 @@ class _TeamCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color:
-                      isActive
-                          ? kSuccessLight
-                          : Colors.grey.withValues(alpha: 0.15),
+                  color: isActive
+                      ? kSuccessLight
+                      : Colors.grey.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -989,8 +1169,8 @@ class _TeamCard extends StatelessWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: auditors.length,
-                separatorBuilder:
-                    (_, __) => const Divider(height: 1, color: kBorder),
+                separatorBuilder: (_, __) =>
+                    const Divider(height: 1, color: kBorder),
                 itemBuilder: (ctx, i) {
                   final a = auditors[i];
                   return Padding(
@@ -1004,10 +1184,9 @@ class _TeamCard extends StatelessWidget {
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(
-                            color:
-                                a.isTeamLeader
-                                    ? kPrimaryLight
-                                    : Colors.grey.shade200,
+                            color: a.isTeamLeader
+                                ? kPrimaryLight
+                                : Colors.grey.shade200,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -1022,10 +1201,9 @@ class _TeamCard extends StatelessWidget {
                             a.name ?? '',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 13,
-                              fontWeight:
-                                  a.isTeamLeader
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
+                              fontWeight: a.isTeamLeader
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                               color: kText,
                             ),
                           ),
@@ -1084,18 +1262,18 @@ class _AuditorRow extends StatelessWidget {
       color: kBackground,
       borderRadius: BorderRadius.circular(10),
       border: Border.all(
-        color:
-            auditor.isTeamLeader
-                ? primaryColor.withValues(alpha: 0.4)
-                : kBorder,
+        color: auditor.isTeamLeader
+            ? primaryColor.withValues(alpha: 0.4)
+            : kBorder,
       ),
     ),
     child: Row(
       children: [
         CircleAvatar(
           radius: 14,
-          backgroundColor:
-              auditor.isTeamLeader ? primaryColor : Colors.grey.shade300,
+          backgroundColor: auditor.isTeamLeader
+              ? primaryColor
+              : Colors.grey.shade300,
           child: Icon(
             auditor.isTeamLeader ? Icons.star_rounded : Icons.person,
             size: 15,

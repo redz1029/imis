@@ -5,32 +5,25 @@ part 'iso_standard.g.dart';
 
 @JsonSerializable()
 class IsoStandard {
-
   final int id;
-  final int? parentID;
   final int versionID;
-  final StandardVersion? version;
-  final String particulars;
   final String clauseRef;
-  final String? description;
+  final String description;
   final String? rowVersion;
-  final bool? isDeleted;
+  final StandardVersion version;
+  final bool? isdelete;
   final bool isActive;
-  final List<IsoStandard>? children;
 
   IsoStandard({
     required this.id,
-    this.parentID,
     required this.versionID,
-    this.version,
-    required this.particulars,
     required this.clauseRef,
-    this.description,
+    required this.description,
     this.rowVersion,
-    this.isDeleted = false,
+    required this.version,
+    this.isdelete = false,
     this.isActive = true,
-    this.children,
-  }); 
+  });
 
   factory IsoStandard.fromJson(Map<String, dynamic> json) =>
       _$IsoStandardFromJson(json);

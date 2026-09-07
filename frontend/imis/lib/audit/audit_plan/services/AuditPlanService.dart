@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:imis/audit/audit_plan/models/audit_plan.dart';
@@ -26,7 +28,9 @@ class AuditPlanService {
       if (e.response?.statusCode == 404) {
         return null;
       }
-      debugPrint('Error fetching audit plan for programme $programmeId: ${e.message}');
+      debugPrint(
+        'Error fetching audit plan for programme $programmeId: ${e.message}',
+      );
       rethrow;
     } catch (e) {
       rethrow;

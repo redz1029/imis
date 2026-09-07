@@ -10,9 +10,10 @@ AuditPlanProcess _$AuditPlanProcessFromJson(Map<String, dynamic> json) =>
     AuditPlanProcess(
       id: (json['id'] as num).toInt(),
       officeId: (json['officeId'] as num?)?.toInt(),
-      office: json['office'] == null
-          ? null
-          : Office.fromJson(json['office'] as Map<String, dynamic>),
+      office:
+          json['office'] == null
+              ? null
+              : Office.fromJson(json['office'] as Map<String, dynamic>),
       processName: json['processName'] as String?,
       auditPlanEntryId: (json['auditPlanEntryId'] as num).toInt(),
     );

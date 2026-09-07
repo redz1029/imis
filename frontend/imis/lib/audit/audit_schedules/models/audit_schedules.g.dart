@@ -18,12 +18,14 @@ AuditSchedules _$AuditSchedulesFromJson(
   isDeleted: json['isDeleted'] as bool,
   rowVersion: json['rowVersion'] as String?,
   auditPlanId: (json['auditPlanId'] as num).toInt(),
-  auditorTeams: json['auditorTeams'] == null
-      ? null
-      : AuditorTeam.fromJson(json['auditorTeams'] as Map<String, dynamic>),
-  offices: (json['offices'] as List<dynamic>?)
-      ?.map((e) => Office.fromJson(e as Map<String, dynamic>))
-      .toList(),
+  auditorTeams:
+      json['auditorTeams'] == null
+          ? null
+          : AuditorTeam.fromJson(json['auditorTeams'] as Map<String, dynamic>),
+  offices:
+      (json['offices'] as List<dynamic>?)
+          ?.map((e) => Office.fromJson(e as Map<String, dynamic>))
+          .toList(),
   auditableOffices:
       (json['auditableOffices'] as List<dynamic>?)
           ?.map((e) => AuditableOffices.fromJson(e as Map<String, dynamic>))
@@ -51,7 +53,6 @@ Map<String, dynamic> _$AuditSchedulesToJson(
   'auditorTeams': instance.auditorTeams?.toJson(),
   'offices': instance.offices?.map((e) => e.toJson()).toList(),
   'auditableOffices': instance.auditableOffices.map((e) => e.toJson()).toList(),
-  'auditSchduleDetails': instance.auditSchduleDetails
-      .map((e) => e.toJson())
-      .toList(),
+  'auditSchduleDetails':
+      instance.auditSchduleDetails.map((e) => e.toJson()).toList(),
 };
