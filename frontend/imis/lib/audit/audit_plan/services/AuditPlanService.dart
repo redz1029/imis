@@ -40,16 +40,18 @@ class AuditPlanService {
   /// Save (POST) or Update (PUT) an Audit Plan
   Future<AuditPlan> saveAuditPlan(AuditPlan auditPlan) async {
     final bool isUpdate = auditPlan.id > 0;
-    final url = isUpdate
-        ? '${ApiEndpoint().auditProgramme}/auditPlan/${auditPlan.id}'
-        : '${ApiEndpoint().auditProgramme}/auditPlan';
+    final url =
+        isUpdate
+            ? '${ApiEndpoint().auditProgramme}/auditPlan/${auditPlan.id}'
+            : '${ApiEndpoint().auditProgramme}/auditPlan';
 
     try {
       final Map<String, dynamic> requestData = auditPlan.toJson();
 
-      final response = isUpdate
-          ? await AuthenticatedRequest.put(_dio, url, data: requestData)
-          : await AuthenticatedRequest.post(_dio, url, data: requestData);
+      final response =
+          isUpdate
+              ? await AuthenticatedRequest.put(_dio, url, data: requestData)
+              : await AuthenticatedRequest.post(_dio, url, data: requestData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AuditPlan.fromJson(response.data as Map<String, dynamic>);
@@ -104,6 +106,7 @@ class AuditPlanService {
       startDate: startDate,
       endDate: endDate,
       entries: [],
+      isDeleted: false,
     );
   }
 }

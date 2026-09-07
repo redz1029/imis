@@ -4,40 +4,32 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'audit_plan.g.dart';
 
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable()
 class AuditPlan {
-  int id;
-  bool isDeleted;
-
-  @JsonKey(includeIfNull: false)
-  String? rowVersion;
-
-  // Set default to 0 instead of nullable int? to match non-nullable C# 'int AuditProgrammeId'
-  int auditProgrammeId;
-
-  String planStatus;
+  final int id;
+  final bool isDeleted;
+  final String? rowVersion;
+  final int auditProgrammeId;
+  final String planStatus;
 
   @DateTimeConverter()
-  DateTime startDate;
+  final DateTime startDate;
 
   @DateTimeConverter()
-  DateTime endDate;
+  final DateTime endDate;
 
-  List<AuditPlanEntry> entries;
+  final List<AuditPlanEntry> entries;
 
-  AuditPlan({
-    this.id = 0,
-    this.isDeleted = false,
-    String? rowVersion,
-    this.auditProgrammeId = 0,
-    this.planStatus = "Draft",
-    DateTime? startDate,
-    DateTime? endDate,
-    List<AuditPlanEntry>? entries,
-  })  : rowVersion = (rowVersion != null && rowVersion.isNotEmpty) ? rowVersion : null,
-        startDate = startDate ?? DateTime.now(),
-        endDate = endDate ?? DateTime.now(),
-        entries = entries ?? [];
+  const AuditPlan({
+    required this.id,
+    required this.isDeleted,
+    this.rowVersion,
+    required this.auditProgrammeId,
+    required this.planStatus,
+    required this.startDate,
+    required this.endDate,
+    required this.entries,
+  });
 
   factory AuditPlan.fromJson(Map<String, dynamic> json) =>
       _$AuditPlanFromJson(json);
