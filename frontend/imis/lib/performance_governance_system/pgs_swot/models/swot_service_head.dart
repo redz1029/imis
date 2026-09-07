@@ -1,6 +1,4 @@
-import 'package:imis/performance_governance_system/pgs_swot/models/swot_ot_deliverable.dart';
 import 'package:imis/performance_governance_system/pgs_swot/models/swot_ot_deliverable_service_head.dart';
-import 'package:imis/performance_governance_system/pgs_swot/models/swot_sw_deliverable.dart';
 import 'package:imis/performance_governance_system/pgs_swot/models/swot_sw_deliverable_service_head.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -33,9 +31,9 @@ class SwotServiceHead {
   @DateTimeConverter()
   DateTime? postingDate;
 
-  List<SwotSwDeliverableServiceHead>? swotAnalysisSWDeliverables;
+  List<SwotSwDeliverableServiceHead>? swotAnalysisSWDeliverablesServiceHead;
 
-  List<SwotOtDeliverableServiceHead>? swotAnalysisOTDeliverables;
+  List<SwotOtDeliverableServiceHead>? swotAnalysisOTDeliverablesServiceHead;
 
   SwotServiceHead({
     this.id,
@@ -49,8 +47,8 @@ class SwotServiceHead {
     this.serviceHeadUserId,
     this.serviceHeadUserFullName,
     this.postingDate,
-    this.swotAnalysisSWDeliverables,
-    this.swotAnalysisOTDeliverables,
+    this.swotAnalysisSWDeliverablesServiceHead,
+    this.swotAnalysisOTDeliverablesServiceHead,
   });
 
   factory SwotServiceHead.fromJson(Map<String, dynamic> json) =>
