@@ -48,8 +48,8 @@ namespace IMIS.Persistence.PgsModule
         {
             return await _repository.GetPgsByServiceOfficePeriodAsync(periodId, officeId, parentOfficeId, cancellationToken);
         }
-
-        public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
+        
+        public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(string roleId, int? pgsPeriodId, int? parentOfficeId, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
 
@@ -63,27 +63,31 @@ namespace IMIS.Persistence.PgsModule
 
             List<int> officeIds;
 
-            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new ServiceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new ResearchOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new TrainingOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new LinkagesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new FacilitiesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new FinanceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new InformationOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new HROfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new SafetyOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase))
+            var roleName = role.Name ?? string.Empty;
+
+            if (
+                roleName.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new ServiceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new ResearchOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new TrainingOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new LinkagesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new FacilitiesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new FinanceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new InformationOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new HROfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new SafetyOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase)
+            )
             {
                 officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
             }
-            else if (role.Name.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase))
+            else if (roleName.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase))
             {
                 officeIds = await _userOfficeRepository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
             }
@@ -95,10 +99,39 @@ namespace IMIS.Persistence.PgsModule
             if (officeIds == null || !officeIds.Any())
                 return new DashboardAuditStatusDto();
 
-            return await _repository.GetDashboardAuditStatusAsync(officeIds, pgsPeriodId, cancellationToken);
-        }       
-      
-        public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
+            return await _repository.GetDashboardAuditStatusAsync(officeIds, pgsPeriodId, parentOfficeId, cancellationToken);
+        }
+        // ====== Get Total Audit Status Deliverable StandardUser ========    
+        public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsyncStandardUser(string roleId, int? pgsPeriodId, int? parentOfficeId, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+                return new DashboardAuditStatusDto();
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+                return new DashboardAuditStatusDto();
+
+            List<int> officeIds;
+
+            if (role.Name!.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
+            }
+            else
+            {
+                officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
+            }
+
+            if (officeIds == null || !officeIds.Any())
+                return new DashboardAuditStatusDto();
+
+            return await _repository.GetDashboardAuditStatusAsync(officeIds, pgsPeriodId, parentOfficeId, cancellationToken);
+        }
+        
+        public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(string roleId, int? pgsPeriodId, int? parentOfficeId, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
 
@@ -112,23 +145,27 @@ namespace IMIS.Persistence.PgsModule
 
             List<int> officeIds;
 
-            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new ServiceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new ResearchOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new TrainingOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new LinkagesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new FacilitiesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new FinanceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new InformationOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new HROfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new SafetyOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase))
+            var roleName = role.Name ?? string.Empty;
+
+            if (
+                roleName.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new ServiceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new ResearchOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new TrainingOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new LinkagesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new FacilitiesOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new FinanceOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new InformationOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new HROfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new SafetyOfficer().Name, StringComparison.OrdinalIgnoreCase) ||
+                roleName.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase)
+            )
             {
                 officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
             }
@@ -140,7 +177,38 @@ namespace IMIS.Persistence.PgsModule
             if (!officeIds.Any())
                 return new TotalDashboardOfficeDto();
 
-            return await _repository.GetTotalOfficeAsync(officeIds, pgsPeriodId, cancellationToken);
+            return await _repository.GetTotalOfficeAsync(officeIds, pgsPeriodId, parentOfficeId, cancellationToken);
+        }
+
+        // ====== Get Total Office StandardUser ========
+      
+        public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsyncStandardUser(string roleId, int? pgsPeriodId, int? parentOfficeId, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+
+            if (currentUser == null)
+                return new TotalDashboardOfficeDto();
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+                return new TotalDashboardOfficeDto();
+
+            List<int> officeIds;
+
+            if (role.Name!.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
+            }
+            else
+            {
+                officeIds = await _repository.GetAllOfficeIdsAsync(cancellationToken);
+            }
+
+            if (!officeIds.Any())
+                return new TotalDashboardOfficeDto();
+
+            return await _repository.GetTotalOfficeAsync(officeIds, pgsPeriodId, parentOfficeId, cancellationToken);
         }
 
         public async Task<List<AuditorPendingAuditDto>> GetPendingAuditsByAuditorAsync(long? auditorId, long? teamId, long? officeId, long? parentOfficeId, int? periodid, int? month, int? year, CancellationToken cancellationToken)
