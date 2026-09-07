@@ -4,7 +4,7 @@ publish_to: "none"
 version: 0.1.0
 
 environment:
-  sdk: ^3.8.0
+  sdk: ^3.7.0
 
 dependencies:
   build_runner: ^2.4.15
@@ -68,13 +68,8 @@ flutter:
     - assets/team.png
     - assets/office.png
     - assets/auditor.png
-    - assets/pic1.jpg
-    - assets/pic2.jpg
     - assets/forgotpass.png
     - assets/image1.png
-    - assets/image2.png
-    - assets/image3.png
-    - assets/image4.png
     - assets/no_connection.png
     - assets/roadmap1.png
     - assets/roadmap2.png

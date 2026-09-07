@@ -5,80 +5,51 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/team/models/team.dart';
-import 'package:imis/team/services/team_service.dart';
+import 'package:imis/performance_governance_system/pgs_swot/swot_analysis_strength_weakness/models/swot_analysis_strength_weakness.dart';
+import 'package:imis/performance_governance_system/pgs_swot/swot_opportunies_threats/models/swot_analysis_opportunities_threats.dart';
+import 'package:imis/performance_governance_system/pgs_swot/swot_opportunies_threats/services/swot_analysis_opportunities_threats_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/dialog/dialog_field.dart';
 import 'package:motion_toast/motion_toast.dart';
 
-class TeamPage extends StatefulWidget {
-  const TeamPage({super.key});
+class SwotAnalysisOpportunitiesThreatsPage extends StatefulWidget {
+  const SwotAnalysisOpportunitiesThreatsPage({super.key});
 
   @override
-  TeamPageState createState() => TeamPageState();
+  SwotAnalysisOpportunitiesThreatsPageState createState() =>
+      SwotAnalysisOpportunitiesThreatsPageState();
 }
 
-class TeamPageState extends State<TeamPage> {
-  final _teamService = TeamService(Dio());
-  final _paginationUtils = PaginationUtil(Dio());
-  late FilterSearchResultUtil<Team> teamSearchUtil;
+class SwotAnalysisOpportunitiesThreatsPageState
+    extends State<SwotAnalysisOpportunitiesThreatsPage> {
   final _formKey = GlobalKey<FormState>();
-  List<Team> teamList = [];
-  List<Team> filteredList = [];
+  final _swotStrenghtWeakness = SwotAnalysisOpportunitiesThreatsService(Dio());
 
-  final TextEditingController searchController = TextEditingController();
-  final FocusNode isSearchfocus = FocusNode();
-
-  String statusFilter = 'Active';
-  final List<String> statusOptions = ['Active', 'Inactive'];
+  final _paginationUtils = PaginationUtil(Dio());
+  late FilterSearchResultUtil<SwotAnalysisStrengthWeakness> kraSearchUtil;
+  List<SwotAnalysisOpportunitiesThreats> kraList = [];
+  List<SwotAnalysisOpportunitiesThreats> filteredList = [];
+  TextEditingController searchController = TextEditingController();
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-
-  final Dio dio = Dio();
-
-  Future<void> fetchTeam({int page = 1, String? searchQuery}) async {
-    if (_isLoading) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final pageList = await _teamService.getTeam(
-        page: page,
-        pageSize: _pageSize,
-        searchQuery: searchQuery,
-      );
-
-      if (mounted) {
-        setState(() {
-          _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
-          teamList = pageList.items;
-          filteredList = List.from(teamList);
-        });
-      }
-    } catch (e) {
-      debugPrint(e.toString());
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
+  final FocusNode isSearchfocus = FocusNode();
+  final dio = Dio();
 
   @override
   void initState() {
     super.initState();
-    fetchTeam();
-    teamSearchUtil = FilterSearchResultUtil<Team>(
+    fetchSwotOpportunities();
+    kraSearchUtil = FilterSearchResultUtil<SwotAnalysisStrengthWeakness>(
       paginationUtils: _paginationUtils,
-      endpoint: ApiEndpoint().team,
+      endpoint: ApiEndpoint().sWOTAnalysisStrengthWeakness,
       pageSize: _pageSize,
-      fromJson: (json) => Team.fromJson(json),
+      fromJson: (json) => SwotAnalysisStrengthWeakness.fromJson(json),
     );
     isSearchfocus.addListener(() {
       setState(() {});
@@ -91,26 +62,81 @@ class TeamPageState extends State<TeamPage> {
     super.dispose();
   }
 
-  Future<void> filterSearchResults(String query) async {
-    final results = await teamSearchUtil.filter(
-      query,
-      (team, search) =>
-          (team.name).toLowerCase().contains(search.toLowerCase()),
-    );
+  Future<void> fetchSwotOpportunities({
+    int page = 1,
+    String? searchQuery,
+  }) async {
+    if (_isLoading) return;
 
-    setState(() {
-      filteredList = results;
-    });
+    setState(() => _isLoading = true);
+
+    try {
+      final pageList = await _swotStrenghtWeakness.getSwotOpportunitiesThreats(
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          kraList = pageList.items;
+          filteredList = List.from(kraList);
+        });
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  void showFormDialog({
-    String? id,
-    bool isDeleted = false,
-    String? name,
-    bool isActive = false,
-  }) {
+  void showDeleteDialog(String id) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (ctx) {
+        return DeleteDialog(
+          title: 'Process (Core&Support)',
+          itemName: 'process (core&support)',
+          onDelete: () async {
+            Navigator.pop(ctx);
+            try {
+              await _swotStrenghtWeakness.deleteSwotStrengthWeakness(id);
+              fetchSwotOpportunities();
+              if (mounted) {
+                MotionToast.success(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Deleted sucessfully',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                ).show(context);
+              }
+            } catch (_) {
+              MotionToast.error(
+                toastAlignment: Alignment.topCenter,
+                description: Text(
+                  'Failed to delete',
+                  style: GoogleFonts.plusJakartaSans(),
+                ),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
+  void showFormDialog({String? id, String? internalContext}) {
+    final internalContextController = TextEditingController(
+      text: internalContext,
+    );
     final isEdit = id != null;
-    TextEditingController teamController = TextEditingController(text: name);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -119,7 +145,7 @@ class TeamPageState extends State<TeamPage> {
           backgroundColor: Colors.transparent,
           child: Container(
             width: 420,
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: kSurface,
               borderRadius: BorderRadius.circular(16),
@@ -127,7 +153,7 @@ class TeamPageState extends State<TeamPage> {
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 32,
-                  offset: Offset(0, 12),
+                  offset: const Offset(0, 12),
                 ),
               ],
             ),
@@ -146,18 +172,20 @@ class TeamPageState extends State<TeamPage> {
                           color: primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
-                          Icons.groups_outlined,
+                        child: const Icon(
+                          Icons.track_changes_rounded,
                           color: primaryColor,
                           size: 22,
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isEdit ? 'Edit Team' : 'Create Team',
+                            isEdit
+                                ? 'Edit Process (Core & Support)'
+                                : 'Create Process (Core & Support)',
                             style: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w700,
                               fontSize: 17,
@@ -165,7 +193,9 @@ class TeamPageState extends State<TeamPage> {
                             ),
                           ),
                           Text(
-                            isEdit ? ' Update Team' : 'Add a new Team',
+                            isEdit
+                                ? 'Update Process (Core & Support)'
+                                : 'Add a new Process (Core & Support)',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
                               color: kMuted,
@@ -175,29 +205,31 @@ class TeamPageState extends State<TeamPage> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Divider(color: kBorder, height: 1),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
+
                   dialogField(
-                    label: 'Team',
-                    controller: teamController,
+                    label: 'Internal Context',
+                    controller: internalContextController,
+                    maxLines: 4,
                     validator:
                         (v) =>
                             (v == null || v.trim().isEmpty)
                                 ? 'Please fill out this field'
                                 : null,
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: kBorder),
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                            side: const BorderSide(color: kBorder),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadiusGeometry.circular(8),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           child: Text(
@@ -289,8 +321,8 @@ class TeamPageState extends State<TeamPage> {
                                           const SizedBox(height: 8),
                                           Text(
                                             isEdit
-                                                ? 'Are you sure you want to update this team?'
-                                                : 'Are you sure you want to save this team?',
+                                                ? 'Are you sure you want to update this record?'
+                                                : 'Are you sure you want to save this record?',
                                             style: GoogleFonts.plusJakartaSans(
                                               fontSize: 13,
                                               color: kMuted,
@@ -377,20 +409,17 @@ class TeamPageState extends State<TeamPage> {
                             );
 
                             if (confirmed == true) {
-                              final team = Team(
+                              final kra = SwotAnalysisOpportunitiesThreats(
                                 int.tryParse(id ?? '0') ?? 0,
-                                teamController.text,
-                                isActive,
-                                isDeleted,
-                                rowVersion: '',
+                                internalContextController.text,
+                                isDeleted: false,
                               );
-                              await _teamService.createTeam(team);
-                              setState(() {
-                                fetchTeam();
-                              });
+                              await _swotStrenghtWeakness
+                                  .createOrUpdateSwotOpportunitiesThreats(kra);
+                              fetchSwotOpportunities();
                               MotionToast.success(
-                                description: const Text("Saved successfully!"),
                                 toastAlignment: Alignment.topCenter,
+                                description: const Text('Saved successfully'),
                               ).show(context);
                               Navigator.pop(context);
                             }
@@ -412,7 +441,6 @@ class TeamPageState extends State<TeamPage> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 600;
-
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -420,15 +448,15 @@ class TeamPageState extends State<TeamPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Team Information",
+              "Opportunities & Threats Information",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Row(
               children: [
                 SizedBox(
-                  height: 36,
-                  width: 250,
+                  height: 30,
+                  width: 300,
                   child: TextField(
                     focusNode: isSearchfocus,
                     controller: searchController,
@@ -440,6 +468,7 @@ class TeamPageState extends State<TeamPage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
+                      labelStyle: TextStyle(color: grey, fontSize: 14),
                       labelText: 'Search...',
                       prefixIcon: Icon(
                         Icons.search,
@@ -451,12 +480,11 @@ class TeamPageState extends State<TeamPage> {
                       ),
                       filled: true,
                       fillColor: secondaryColor,
-                      contentPadding: const EdgeInsets.symmetric(
+                      contentPadding: EdgeInsets.symmetric(
                         vertical: 5,
                         horizontal: 5,
                       ),
                     ),
-                    onChanged: filterSearchResults,
                   ),
                 ),
                 const Spacer(),
@@ -481,6 +509,7 @@ class TeamPageState extends State<TeamPage> {
                   ),
               ],
             ),
+
             const SizedBox(height: 26),
             Expanded(
               child: Container(
@@ -519,15 +548,16 @@ class TeamPageState extends State<TeamPage> {
                               ),
                             ),
                             Expanded(
-                              flex: 3,
+                              flex: 6,
                               child: Text(
-                                "Team",
+                                "Internal Context",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
                                 ),
                               ),
                             ),
+                            SizedBox(width: 25),
                             Expanded(
                               flex: 2,
                               child: Text(
@@ -541,6 +571,7 @@ class TeamPageState extends State<TeamPage> {
                           ],
                         ),
                       ),
+
                     const SizedBox(height: 5),
 
                     Expanded(
@@ -554,12 +585,11 @@ class TeamPageState extends State<TeamPage> {
                               : ListView.builder(
                                 itemCount: filteredList.length,
                                 itemBuilder: (context, index) {
+                                  final process = filteredList[index];
                                   int itemNumber =
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
                                       1;
-                                  final team = filteredList[index];
-
                                   if (!isMobile) {
                                     return Container(
                                       padding: const EdgeInsets.symmetric(
@@ -581,45 +611,42 @@ class TeamPageState extends State<TeamPage> {
                                               style: TextStyle(fontSize: 12),
                                             ),
                                           ),
-
                                           Expanded(
-                                            flex: 3,
+                                            flex: 6,
                                             child: Text(
-                                              team.name,
+                                              process.externalContext ?? '',
                                               style: TextStyle(fontSize: 12),
                                             ),
                                           ),
-
+                                          SizedBox(width: 25),
                                           Expanded(
                                             flex: 2,
                                             child: Row(
                                               children: [
-                                                Tooltip(
-                                                  message: 'Edit',
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      size: 16,
-                                                      Icons.edit_outlined,
-                                                    ),
-                                                    onPressed: () {
-                                                      showFormDialog(
-                                                        id: team.id.toString(),
-                                                        name: team.name,
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-
                                                 IconButton(
                                                   icon: const Icon(
+                                                    size: 16,
+                                                    Icons.edit_outlined,
+                                                  ),
+                                                  onPressed: () {
+                                                    showFormDialog(
+                                                      id: process.id.toString(),
+                                                      internalContext:
+                                                          process
+                                                              .externalContext,
+                                                    );
+                                                  },
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    size: 16,
                                                     CupertinoIcons
                                                         .delete_simple,
-                                                    size: 16,
                                                     color: Colors.redAccent,
                                                   ),
                                                   onPressed:
                                                       () => showDeleteDialog(
-                                                        team.id.toString(),
+                                                        process.id.toString(),
                                                       ),
                                                 ),
                                               ],
@@ -657,26 +684,25 @@ class TeamPageState extends State<TeamPage> {
                                             ),
                                             const Spacer(),
                                             PopupMenuButton<String>(
-                                              color:
-                                                  Theme.of(context).cardColor,
                                               icon: const Icon(Icons.more_vert),
-                                              onSelected: (value) async {
+                                              onSelected: (value) {
                                                 if (value == 'edit') {
                                                   showFormDialog(
-                                                    id: team.id.toString(),
-                                                    name: team.name,
+                                                    id: process.id.toString(),
+                                                    internalContext:
+                                                        process.externalContext,
                                                   );
                                                 }
 
                                                 if (value == 'delete') {
                                                   showDeleteDialog(
-                                                    team.id.toString(),
+                                                    process.id.toString(),
                                                   );
                                                 }
                                               },
                                               itemBuilder:
                                                   (_) => [
-                                                    PopupMenuItem(
+                                                    const PopupMenuItem(
                                                       value: 'edit',
                                                       child: Row(
                                                         children: [
@@ -689,7 +715,6 @@ class TeamPageState extends State<TeamPage> {
                                                         ],
                                                       ),
                                                     ),
-
                                                     PopupMenuItem(
                                                       value: 'delete',
                                                       child: Row(
@@ -710,20 +735,20 @@ class TeamPageState extends State<TeamPage> {
                                           ],
                                         ),
                                         const SizedBox(height: 8),
+
                                         Text(
-                                          "Name: ${team.name}",
+                                          "Internal Context: ${process.externalContext}",
                                           style: TextStyle(fontSize: 12),
                                         ),
-                                        const SizedBox(height: 4),
                                       ],
                                     ),
                                   );
                                 },
                               ),
                     ),
+
                     Container(
                       padding: const EdgeInsets.all(10),
-                      color: Theme.of(context).cardColor,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -737,7 +762,8 @@ class TeamPageState extends State<TeamPage> {
                             totalItems: _totalCount,
                             itemsPerPage: _pageSize,
                             isLoading: _isLoading,
-                            onPageChanged: (page) => fetchTeam(page: page),
+                            onPageChanged:
+                                (page) => fetchSwotOpportunities(page: page),
                           ),
                           const SizedBox(width: 60),
                         ],
@@ -758,50 +784,6 @@ class TeamPageState extends State<TeamPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
-    );
-  }
-
-  void showDeleteDialog(String id) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Team? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _teamService.deleteTeam(id);
-                  await fetchTeam();
-                  MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('Team deleted successfully'),
-                  ).show(context);
-                } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete Team'));
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
     );
   }
 }

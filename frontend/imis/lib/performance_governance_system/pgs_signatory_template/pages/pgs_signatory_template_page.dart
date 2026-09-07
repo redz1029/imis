@@ -1,69 +1,52 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pgs_signatory_template_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/http_util.dart';
-<<<<<<< HEAD
-import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/widgets/pagination_controls.dart';
-=======
 import 'package:imis/widgets/common/icon_button_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/common/section_label_widget.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
->>>>>>> master
 import 'package:motion_toast/motion_toast.dart';
 import '../../../common_services/common_service.dart';
-import '../../../widgets/dotted_button.dart';
 import '../models/pgs_signatory_template.dart';
 
 class PgsSignatoryTemplatePage extends StatefulWidget {
   const PgsSignatoryTemplatePage({super.key});
-
   @override
   PgsSignatoryTemplatePageState createState() =>
       PgsSignatoryTemplatePageState();
 }
 
-class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
+class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _signatroyTemplateService = PgsSignatoryTemplateService(Dio());
-  late FilterSearchResultUtil<PgsSignatoryTemplate> signatoryTemplateUtil;
+  final _signatoryService = PgsSignatoryTemplateService(Dio());
   final _commonService = CommonService(Dio());
-  List<PgsSignatoryTemplate> signatoryTemplateList = [];
-  TextEditingController searchController = TextEditingController();
-  final FocusNode isSearchfocus = FocusNode();
-  List<PgsSignatoryTemplate> filteredListSignatoryTemplate = [];
-  List<Map<String, dynamic>> selectedSignatory = [];
-  List<Office> officeList = [];
-  List<Map<String, dynamic>> signatoryList = [];
-  int? selectOffice;
-  String? selectTeamText;
-  List<User> userList = [];
-  String? selectedUserId;
-  TextEditingController signatoryLabelController = TextEditingController();
-  TextEditingController signatoryStatusController = TextEditingController();
-  final _paginationUtils = PaginationUtil(Dio());
+  final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
+  final _dio = Dio();
+
+  late AnimationController _fadeCtrl;
+
+  List<PgsSignatoryTemplate> _templateList = [];
+  List<PgsSignatoryTemplate> _filteredTemplateList = [];
+  List<Map<String, dynamic>> _selectedSignatories = [];
+  List<Office> _officeList = [];
+  List<User> _userList = [];
+
+  int? _selectOffice;
   int _currentPage = 1;
   final int _pageSize = 48;
   int _totalCount = 0;
   bool _isLoading = false;
 
-<<<<<<< HEAD
-  final dio = Dio();
-
-  Future<void> fetchSignatoryTemplate({
-    int page = 1,
-    String? searchQuery,
-  }) async {
-=======
   @override
   void initState() {
     super.initState();
@@ -95,77 +78,60 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
   }
 
   Future<void> _fetchTemplates({int page = 1, String? searchQuery}) async {
->>>>>>> master
     if (_isLoading) return;
-
     setState(() => _isLoading = true);
-
     try {
-      final pageList = await _signatroyTemplateService.getSignatoryTemplate(
+      final result = await _signatoryService.getSignatoryTemplate(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
       );
-
       if (mounted) {
         setState(() {
-          _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
-          signatoryTemplateList = pageList.items;
-          filteredListSignatoryTemplate = List.from(signatoryTemplateList);
+          _currentPage = result.page;
+          _totalCount = result.totalCount;
+          _templateList = result.items;
+          _filteredTemplateList = List.from(_templateList);
         });
+        _fadeCtrl.forward(from: 0);
       }
     } catch (e) {
       debugPrint(e.toString());
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    isSearchfocus.addListener(() {
-      setState(() {});
-    });
+  void _resetForm() {
+    _selectOffice = null;
+    _selectedSignatories = [];
+  }
 
-    fetchSignatoryTemplate();
-    signatoryTemplateUtil = FilterSearchResultUtil<PgsSignatoryTemplate>(
-      paginationUtils: _paginationUtils,
-      endpoint: ApiEndpoint().signatoryTemplate,
-      pageSize: _pageSize,
-      fromJson: (json) => PgsSignatoryTemplate.fromJson(json),
-    );
-    if (userList.isNotEmpty) {
-      selectedUserId = userList[0].id;
+  Map<String, List<Map<String, dynamic>>> _groupByOffice(
+    List<PgsSignatoryTemplate> list,
+    List<Office> offices,
+    List<User> users,
+  ) {
+    final grouped = <String, List<Map<String, dynamic>>>{};
+    for (final item in list) {
+      if (item.officeId == null) continue;
+      final office = offices.firstWhere(
+        (o) => o.id == item.officeId,
+        orElse:
+            () => Office(
+              id: -1,
+              name: 'Unknown Office',
+              officeTypeId: -1,
+              isActive: false,
+            ),
+      );
+      final user = users.firstWhere(
+        (u) => u.id == item.defaultSignatoryId.toString(),
+        orElse: () => User(id: '', fullName: 'Unknown User', position: ''),
+      );
+      final entry = item.toJson()..['signatoryName'] = user.fullName;
+      grouped.putIfAbsent(office.name, () => []).add(entry);
     }
-<<<<<<< HEAD
-
-    () async {
-      final users = await _commonService.fetchUsers();
-      final offices = await _commonService.fetchOffices();
-      if (!mounted) return;
-
-      setState(() {
-        userList = users;
-        officeList = offices;
-      });
-    }();
-  }
-
-  @override
-  void dispose() {
-    isSearchfocus.dispose();
-    super.dispose();
-  }
-
-  void resetFormFields() {
-    selectOffice = null;
-    selectedUserId = null;
-    selectedSignatory = [];
-=======
     return grouped;
   }
 
@@ -511,93 +477,34 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
         setOuter(() => _selectedSignatories.add(value));
       }
     });
->>>>>>> master
   }
 
   void showFormDialog({
     String? id,
     bool isDeleted = false,
-    String? defaultSignatoryId,
     int? officeId,
     List<Map<String, dynamic>>? signatories,
   }) {
-    selectOffice = officeId;
-    selectedUserId = defaultSignatoryId;
-
+    _selectOffice = officeId;
     if (signatories != null && signatories.isNotEmpty) {
-      selectedSignatory =
-          signatories.map((s) {
-            return {
-              'id': s['id'],
-              'userId': s['defaultSignatoryId']?.toString(),
-              'name': s['signatoryName'],
-              'label': s['signatoryLabel'],
-              'status': s['status'] ?? '',
-              'level': s['orderLevel'] ?? 1,
-            };
-          }).toList();
+      _selectedSignatories =
+          signatories
+              .map(
+                (s) => {
+                  'id': s['id'],
+                  'userId': s['defaultSignatoryId']?.toString(),
+                  'name': s['signatoryName'],
+                  'label': s['signatoryLabel'],
+                  'status': s['status'] ?? '',
+                  'level': s['orderLevel'] ?? 1,
+                },
+              )
+              .toList();
     }
 
     showDialog(
       context: context,
       barrierDismissible: false,
-<<<<<<< HEAD
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: mainBgColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 20,
-                ),
-                decoration: BoxDecoration(
-                  color: primaryLightColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  id == null
-                      ? 'Create Signatory Template'
-                      : 'Edit Signatory Template',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              content: SizedBox(
-                child: SizedBox(
-                  width: 400,
-                  height: 500,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Stack(
-                            children: [
-                              DropdownSearch<Office?>(
-                                popupProps: PopupProps.menu(
-                                  showSearchBox: true,
-                                  searchFieldProps: TextFieldProps(
-                                    decoration: InputDecoration(
-                                      hintText: 'Search offices...',
-                                      fillColor: mainBgColor,
-                                      filled: true,
-                                      prefixIcon: Icon(Icons.search),
-                                      border: OutlineInputBorder(
-=======
       builder:
           (context) => StatefulBuilder(
             builder: (ctx, setDialog) {
@@ -696,41 +603,22 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                       height: 32,
                                       decoration: BoxDecoration(
                                         color: kPrimaryLight,
->>>>>>> master
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: primaryColor,
-                                        ),
+                                      child: const Icon(
+                                        Icons.business_rounded,
+                                        size: 16,
+                                        color: primaryColor,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      office?.name ?? '',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ),
-                                  itemBuilder:
-                                      (context, office, isSelected) => ListTile(
-                                        tileColor: mainBgColor,
-                                        title: Text(office?.name ?? ''),
-                                      ),
                                 ),
-<<<<<<< HEAD
-                                items: officeList,
-                                itemAsString: (office) => office?.name ?? '',
-                                selectedItem: officeList.firstWhere(
-                                  (office) => office.id == selectOffice,
-                                  orElse:
-                                      () => Office(
-                                        id: 0,
-                                        name: 'Unknown',
-                                        officeTypeId: 0,
-                                        parentOfficeId: 0,
-                                        isActive: true,
-                                        isDeleted: false,
-                                      ),
-                                ),
-                                onChanged:
-                                    (value) => setState(
-                                      () => selectOffice = value?.id,
-=======
                                 items: _officeList,
                                 itemAsString: (o) => o?.name ?? '',
                                 selectedItem: _officeList
@@ -766,126 +654,119 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                       vertical: 4,
->>>>>>> master
                                     ),
-                                validator: (value) {
-                                  if (value == null) {
-                                    return 'Please select an office';
-                                  }
-                                  return null;
-                                },
-                                dropdownDecoratorProps: DropDownDecoratorProps(
-                                  dropdownSearchDecoration: InputDecoration(
-                                    labelText: 'Select Office',
-                                    fillColor: mainBgColor,
-                                    filled: true,
-                                    floatingLabelBehavior:
-                                        FloatingLabelBehavior.never,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                    decoration: BoxDecoration(
+                                      color: kPrimaryLight,
+                                      borderRadius: BorderRadius.circular(20),
                                     ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
+                                    child: Text(
+                                      '${_selectedSignatories.length} added',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 11,
                                         color: primaryColor,
+                                        fontWeight: FontWeight.w600,
                                       ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+
+                              if (_selectedSignatories.isEmpty)
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 28,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: kBackground,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: kBorder),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Icon(
+                                        Icons.group_add_rounded,
+                                        size: 32,
+                                        color: kMuted,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'No signatories added yet',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          color: kMuted,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: _selectedSignatories.length,
+                                  separatorBuilder:
+                                      (_, __) => const SizedBox(height: 8),
+                                  itemBuilder: (ctx, i) {
+                                    final sig = _selectedSignatories[i];
+                                    return _SignatoryCard(
+                                      signatory: sig,
+                                      onEdit:
+                                          () => _showSignatoryDialog(
+                                            context: ctx,
+                                            setOuter: setDialog,
+                                            index: i,
+                                            existing: sig,
+                                          ),
+                                      onDelete:
+                                          () => setDialog(
+                                            () => _selectedSignatories.removeAt(
+                                              i,
+                                            ),
+                                          ),
+                                    );
+                                  },
+                                ),
+
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed:
+                                      () => _showSignatoryDialog(
+                                        context: ctx,
+                                        setOuter: setDialog,
+                                      ),
+                                  icon: const Icon(
+                                    Icons.add_rounded,
+                                    size: 18,
+                                    color: primaryColor,
+                                  ),
+                                  label: Text(
+                                    'Add Signatory',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: primaryColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(
+                                      color: primaryColor,
+                                      width: 1.5,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 13,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-
-                        gap32px,
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text("List of Signatories"),
-                        ),
-
-                        if (selectedSignatory.isNotEmpty)
-                          Column(
-                            children: [
-                              gap16px,
-                              ListView.separated(
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemCount: selectedSignatory.length,
-                                separatorBuilder:
-                                    (context, index) => SizedBox(height: 8),
-                                itemBuilder: (context, index) {
-                                  final signatory = selectedSignatory[index];
-                                  return ListTile(
-                                    title: Text(
-                                      "${signatory['label']} : ",
-                                      style: TextStyle(fontSize: 14),
-                                    ),
-                                    subtitle: Text(
-                                      signatory['name'],
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.edit,
-                                            color: const Color.fromARGB(
-                                              255,
-                                              109,
-                                              109,
-                                              109,
-                                            ),
-                                          ),
-
-                                          onPressed: () {
-                                            showSignatoryDialog(
-                                              context: context,
-                                              setDialogState: setDialogState,
-                                              index: index,
-                                              signatory: signatory,
-                                            );
-                                          },
-                                        ),
-                                        // Delete Button
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.delete,
-                                            color: const Color.fromARGB(
-                                              255,
-                                              109,
-                                              109,
-                                              109,
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            setDialogState(() {
-                                              selectedSignatory.removeAt(index);
-                                            });
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-<<<<<<< HEAD
-                        gap16px,
-                        Align(
-                          alignment: Alignment.center,
-                          child: DottedButton(
-                            prefixIcon: Icon(Icons.add),
-                            text: "Add signatory",
-                            onPressed: () {
-                              showSignatoryDialog(
-                                context: context,
-                                setDialogState: setDialogState,
-                              );
-                            },
-=======
                         ),
                       ),
 
@@ -895,32 +776,140 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                           color: kBackground,
                           borderRadius: const BorderRadius.vertical(
                             bottom: Radius.circular(20),
->>>>>>> master
                           ),
+                          border: const Border(top: BorderSide(color: kBorder)),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: kBorder),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                if (_selectOffice == null) {
+                                  _toastError(ctx, 'Please select an office.');
+                                  return;
+                                }
+                                if (id == null &&
+                                    _templateList.any(
+                                      (t) => t.officeId == _selectOffice,
+                                    )) {
+                                  _toastWarning(
+                                    ctx,
+                                    'This office already has a template.',
+                                  );
+                                  return;
+                                }
+                                final levels =
+                                    _selectedSignatories
+                                        .map((e) => e['level'] as int)
+                                        .toList();
+                                final unique = <int>{};
+                                for (final l in levels) {
+                                  if (!unique.add(l)) {
+                                    _toastError(
+                                      ctx,
+                                      'Duplicate order levels found.',
+                                    );
+                                    return;
+                                  }
+                                }
+                                final ok = await _confirm(
+                                  ctx,
+                                  title:
+                                      id == null
+                                          ? 'Confirm Save'
+                                          : 'Confirm Update',
+                                  body:
+                                      id == null
+                                          ? 'Save this template?'
+                                          : 'Update this template?',
+                                  confirmLabel: id == null ? 'Save' : 'Update',
+                                );
+                                if (ok == true) {
+                                  final items =
+                                      _selectedSignatories
+                                          .map(
+                                            (s) => PgsSignatoryTemplate(
+                                              s['id'] ?? 0,
+                                              isDeleted,
+                                              s['level'],
+                                              s['userId'],
+                                              true,
+                                              status: s['status'] ?? '',
+                                              signatoryLabel: s['label'] ?? '',
+                                              officeId: _selectOffice ?? 0,
+                                            ),
+                                          )
+                                          .toList();
+                                  await _addOrUpdate(items);
+                                  if (ctx.mounted) {
+                                    Navigator.pop(ctx);
+                                    _resetForm();
+                                  }
+                                }
+                              },
+                              icon: Icon(
+                                id == null
+                                    ? Icons.save_rounded
+                                    : Icons.update_rounded,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                              label: Text(
+                                id == null
+                                    ? 'Save Template'
+                                    : 'Update Template',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
+              );
+            },
+          ),
+    );
+  }
 
-<<<<<<< HEAD
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-=======
   void showDeleteDialog(String id) {
     showDialog(
       barrierDismissible: false,
@@ -950,57 +939,15 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     description: Text(
                       'Failed to delete template',
                       style: GoogleFonts.plusJakartaSans(),
->>>>>>> master
                     ),
-                  ),
+                  ).show(context);
+                }
+              }
+            },
+          ),
+    );
+  }
 
-<<<<<<< HEAD
-                  onPressed: () async {
-                    if (selectOffice == null) {
-                      MotionToast.error(
-                        title: Text("Error Saving"),
-                        description: Text(
-                          "Please fill out all required fields",
-                        ),
-                        toastAlignment: Alignment.center,
-                      ).show(context);
-                      return;
-                    }
-                    if (selectOffice != null && id == null) {
-                      final officeExists = signatoryTemplateList.any(
-                        (item) => item.officeId == selectOffice,
-                      );
-
-                      if (officeExists) {
-                        MotionToast.warning(
-                          title: Text("Warning"),
-                          description: Text(
-                            "The selected office already has a record.",
-                          ),
-                          toastAlignment: Alignment.center,
-                        ).show(context);
-                        return;
-                      }
-                    }
-                    List<int> levels =
-                        selectedSignatory
-                            .map((e) => e['level'] as int)
-                            .toList();
-                    Set<int> uniqueLevels = <int>{};
-
-                    for (var level in levels) {
-                      if (!uniqueLevels.add(level)) {
-                        MotionToast.error(
-                          title: Text("Error Saving"),
-                          description: Text(
-                            "Check Order Level. There are duplicates.",
-                          ),
-                          toastAlignment: Alignment.center,
-                        ).show(context);
-                        return;
-                      }
-                    }
-=======
   @override
   Widget build(BuildContext context) {
     final isNarrow = MediaQuery.of(context).size.width < 600;
@@ -1081,123 +1028,169 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
       child: Container(height: 1, color: kBorder),
     ),
   );
->>>>>>> master
 
-                    // Confirmation dialog
-                    bool? confirmAction = await showDialog<bool>(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text(
-                            id == null ? "Confirm Save" : "Confirm Update",
-                          ),
-                          content: Text(
-                            id == null
-                                ? "Are you sure you want to save this record?"
-                                : "Are you sure you want to update this record?",
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(
-                                "No",
-                                style: TextStyle(color: primaryColor),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: Text(
-                                "Yes",
-                                style: TextStyle(color: primaryColor),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-
-                    if (confirmAction == true) {
-                      List<PgsSignatoryTemplate> signatories = [];
-
-                      if (selectedSignatory.isNotEmpty) {
-                        for (var signatory in selectedSignatory) {
-                          signatories.add(
-                            PgsSignatoryTemplate(
-                              signatory['id'] ?? 0,
-                              isDeleted,
-                              signatory['level'],
-                              signatory['userId'],
-                              true,
-                              status: signatory['status'] ?? '',
-                              signatoryLabel: signatory['label'] ?? '',
-                              officeId: selectOffice ?? 0,
-                            ),
-                          );
-                        }
-                      }
-
-<<<<<<< HEAD
-                      await addOrUpdateSignatory(signatories);
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        resetFormFields();
-                      }
-                    }
-                  },
-
-                  child: Text(
-                    id == null ? 'Save' : 'Update',
-                    style: TextStyle(color: Colors.white),
+  Widget _buildToolbar(bool isNarrow, int officeCount) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      color: kSurface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: kBorder),
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 38,
+            child: TextField(
+              focusNode: _searchFocus,
+              controller: _searchController,
+              style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
+              decoration: InputDecoration(
+                hintText: 'Search by office or signatory…',
+                hintStyle: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  color: kMuted,
+                ),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  size: 18,
+                  color: _searchFocus.hasFocus ? primaryColor : kMuted,
+                ),
+                filled: true,
+                fillColor: kBackground,
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: kBorder),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: kBorder),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: primaryColor, width: 1.5),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (!isNarrow) ...[
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: kPrimaryLight,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.folder_special_rounded,
+                  size: 14,
+                  color: primaryColor,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '$officeCount Services',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: primaryColor,
                   ),
                 ),
               ],
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton.icon(
+            onPressed: () {
+              _resetForm();
+              showFormDialog();
+            },
+            icon: const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+            label: Text(
+              'Add Template',
+              style: GoogleFonts.plusJakartaSans(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
 
-  Future<void> addOrUpdateSignatory(
-    List<PgsSignatoryTemplate> signatories,
-  ) async {
-    var url = ApiEndpoint().signatoryTemplate;
-    try {
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: signatories.map((s) => s.toJson()).toList(),
+  Widget _buildPagination() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      color: kSurface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: kBorder),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        PaginationInfo(
+          currentPage: _currentPage,
+          totalItems: _totalCount,
+          itemsPerPage: _pageSize,
+        ),
+        PaginationControls(
+          currentPage: _currentPage,
+          totalItems: _totalCount,
+          itemsPerPage: _pageSize,
+          isLoading: _isLoading,
+          onPageChanged: (p) => _fetchTemplates(page: p),
+        ),
+        const SizedBox(width: 60),
+      ],
+    ),
+  );
+
+  Widget _list(Map<String, List<Map<String, dynamic>>> grouped) =>
+      ListView.separated(
+        itemCount: grouped.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        itemBuilder: (ctx, i) {
+          final entry = grouped.entries.elementAt(i);
+          final office = entry.key;
+          final sigs = entry.value;
+          final officeId = sigs.isNotEmpty ? sigs.first['officeId'] : null;
+          return _OfficeCard(
+            officeName: office,
+            signatories: sigs,
+            onEdit: () {
+              if (officeId != null) {
+                showFormDialog(
+                  id: sigs.first['id']?.toString(),
+                  officeId: officeId,
+                  signatories: sigs,
+                );
+              }
+            },
+            onDelete: () {
+              final tid = sigs.first['id']?.toString();
+              if (tid != null) showDeleteDialog(tid);
+            },
+          );
+        },
       );
 
-      if (response.statusCode == 200) {
-        await fetchSignatoryTemplate();
-        setState(() {
-          fetchSignatoryTemplate();
-        });
-      }
-    } catch (e) {
-      debugPrint("Error adding/updating pgs: $e");
-    }
-  }
-
-  void showSignatoryDialog({
-    required BuildContext context,
-    required Function setDialogState,
-    int? index,
-    Map<String, dynamic>? signatory,
-    String? defaultSignatoryId,
-  }) {
-    final signatoryLabelController = TextEditingController(
-      text: signatory?['label'] ?? '',
-    );
-    final signatoryStatusController = TextEditingController(
-      text: signatory?['status'] ?? '',
-    );
-
-    int? currentId = signatory?['id'];
-    int currentLevel = signatory?['level'] ?? 1;
-    String? selectedUserId = signatory?['userId'] ?? defaultSignatoryId;
-=======
   Widget _empty() => Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1324,278 +1317,167 @@ class _OfficeCard extends StatelessWidget {
                 icon: CupertinoIcons.delete_simple,
                 tooltip: 'Delete',
                 color: kDanger,
->>>>>>> master
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: mainBgColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
+                onTap: onDelete,
               ),
-              title: Text(
-                index != null ? 'Edit Signatory' : 'Enter Signatory Details',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              const SizedBox(width: 4),
+              const Icon(Icons.expand_more_rounded, color: kMuted, size: 20),
+            ],
+          ),
+          children: [
+            Container(
+              margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              decoration: BoxDecoration(
+                color: kBackground,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: kBorder),
               ),
-              content: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 500,
-                      child: DropdownSearch<User?>(
-                        popupProps: PopupProps.menu(
-                          showSearchBox: true,
-                          searchFieldProps: TextFieldProps(
-                            decoration: InputDecoration(
-                              labelText: 'Signatory Name',
-                              hintText: 'Search user name…',
-                              filled: true,
-                              fillColor: mainBgColor,
-                              floatingLabelStyle: TextStyle(
-                                color: primaryColor, // focused color
-                                fontWeight: FontWeight.w600,
-                              ),
-                              labelStyle: TextStyle(
-                                color: Colors.grey.shade600,
-                              ),
-                              prefixIcon: const Icon(Icons.search),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                            ),
-                          ),
-                          itemBuilder:
-                              (context, user, isSelected) => ListTile(
-                                tileColor: mainBgColor,
-                                title: Text(user?.fullName ?? ''),
-                              ),
-                        ),
-                        items: userList,
-                        itemAsString: (u) => u?.fullName ?? '',
-                        selectedItem: userList.cast<User?>().firstWhere(
-                          (u) => u?.id == selectedUserId,
-                          orElse: () => null,
-                        ),
-                        onChanged:
-                            (value) =>
-                                setState(() => selectedUserId = value?.id),
-                        validator:
-                            (value) =>
-                                value == null ? 'Please select a user' : null,
-
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                            labelText: 'Select User',
-                            filled: true,
-                            fillColor: mainBgColor,
-                            floatingLabelBehavior: FloatingLabelBehavior.auto,
-                            floatingLabelStyle: TextStyle(color: primaryColor),
-                            labelStyle: TextStyle(color: Colors.grey.shade600),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: primaryColor),
-                            ),
-                          ),
-                        ),
-                      ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: signatories.length,
+                separatorBuilder:
+                    (_, __) => const Divider(height: 1, color: kBorder),
+                itemBuilder: (ctx, i) {
+                  final s = signatories[i];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-
-                    SizedBox(height: 16),
-                    // Signatory Label
-                    TextFormField(
-                      controller: signatoryLabelController,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please enter some text";
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'Signatory Label',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
-                        ),
-
-                        floatingLabelStyle: const TextStyle(
-                          color: primaryColor,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    Row(
+                    child: Row(
                       children: [
-                        // Signatory Status
-                        Expanded(
-                          child: TextFormField(
-                            controller: signatoryStatusController,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return "Please enter some text";
-                              }
-                              return null;
-                            },
-                            decoration: InputDecoration(
-                              labelText: 'Signatory Status',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
-                              ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                              floatingLabelStyle: const TextStyle(
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: kPrimaryLight,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${s['orderLevel'] ?? (i + 1)}',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
                                 color: primaryColor,
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(width: 16),
-
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              width: 120,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.remove),
-                                    onPressed: () {
-                                      setState(() {
-                                        if (currentLevel > 1) currentLevel--;
-                                      });
-                                    },
-                                  ),
-                                  Text(
-                                    '$currentLevel',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.add),
-                                    onPressed: () {
-                                      setState(() {
-                                        currentLevel++;
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            Positioned(
-                              left: 8,
-                              top: -10,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                ),
-                                color: mainBgColor,
-
-                                child: const Text(
-                                  'Order level',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: primaryColor,
-                                  ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                s['signatoryLabel'] ?? 'No Label',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: kMuted,
                                 ),
                               ),
-                            ),
-                          ],
+                              Text(
+                                s['signatoryName'] ?? 'No Name',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: kText,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        if ((s['status'] as String?)?.isNotEmpty == true)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: kSuccessLight,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              s['status'],
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: kSuccess,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
-                  ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SignatoryCard extends StatelessWidget {
+  final Map<String, dynamic> signatory;
+  final VoidCallback onEdit, onDelete;
+  const _SignatoryCard({
+    required this.signatory,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    decoration: BoxDecoration(
+      color: kBackground,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: kBorder),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: kPrimaryLight,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              '${signatory['level'] ?? 1}',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                signatory['label'] ?? '',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  color: kMuted,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
+              Text(
+                signatory['name'] ?? '',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: kText,
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      final selectedUser = userList.firstWhere(
-                        (user) => user.id == selectedUserId,
-                        orElse: () => throw Exception('User not found'),
-                      );
-
-                      final result = {
-                        'id': currentId,
-                        'userId': selectedUserId,
-                        'name': selectedUser.fullName,
-                        'label': signatoryLabelController.text,
-                        'status': signatoryStatusController.text,
-                        'level': currentLevel,
-                      };
-
-                      if (index != null) {
-                        setDialogState(() {
-                          selectedSignatory[index] = result;
-                        });
-                        Navigator.pop(context);
-                      } else {
-                        Navigator.pop(context, result);
-                      }
-                    }
-                  },
-                  child: Text(
-                    index != null ? 'Save Changes' : 'Create',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-<<<<<<< HEAD
-              ],
-            );
-          },
-        );
-      },
-    ).then((value) {
-      if (value != null && index == null) {
-        setDialogState(() {
-          selectedSignatory.add(value);
-        });
-      }
-    });
-  }
-
-  Map<String, List<Map<String, dynamic>>> groupByOfficeName(
-    List<PgsSignatoryTemplate> list,
-    List<Office> offices,
-    List<User> users,
-  ) {
-    Map<String, List<Map<String, dynamic>>> grouped = {};
-=======
               ),
             ],
           ),
@@ -1613,53 +1495,15 @@ class _OfficeCard extends StatelessWidget {
           icon: CupertinoIcons.delete_simple,
           tooltip: 'Remove',
           color: kDanger,
->>>>>>> master
 
-    for (var item in list) {
-      int? officeId = item.officeId;
-      if (officeId == null) continue;
+          onTap: onDelete,
+          size: 15,
+        ),
+      ],
+    ),
+  );
+}
 
-<<<<<<< HEAD
-      var office = offices.firstWhere(
-        (o) => o.id == officeId,
-        orElse:
-            () => Office(
-              id: -1,
-              name: 'Unknown Office',
-              officeTypeId: -1,
-              isActive: false,
-            ),
-      );
-
-      String? signatoryId = item.defaultSignatoryId.toString();
-      var user = users.firstWhere(
-        (u) => u.id == signatoryId,
-        orElse: () => User(id: '', fullName: 'Unknown User', position: ''),
-      );
-
-      var itemWithName = item.toJson();
-      itemWithName['signatoryName'] = user.fullName;
-
-      if (!grouped.containsKey(office.name)) {
-        grouped[office.name] = [];
-      }
-
-      grouped[office.name]!.add(itemWithName);
-    }
-
-    return grouped;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
-
-    final groupedData = groupByOfficeName(
-      filteredListSignatoryTemplate,
-      officeList,
-      userList,
-    );
-=======
 class _ConfirmDialog extends StatelessWidget {
   final String title, body, confirmLabel;
   final bool danger;
@@ -1669,282 +1513,109 @@ class _ConfirmDialog extends StatelessWidget {
     required this.confirmLabel,
     this.danger = false,
   });
->>>>>>> master
 
-    return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: Text('Signatory Template Information'),
-        backgroundColor: mainBgColor,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(
-                  height: 30,
-                  width: 300,
-                  child: TextField(
-                    focusNode: isSearchfocus,
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: lightGrey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Signatory',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: isSearchfocus.hasFocus ? primaryColor : grey,
-                        size: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      filled: true,
-                      fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 5,
-                      ),
-                    ),
-                    // onChanged: filterSearchResults,
-                  ),
-                ),
-
-                if (!isMinimized)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    onPressed: () {
-                      resetFormFields();
-                      showFormDialog();
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, color: Colors.white),
-                        SizedBox(width: 5),
-                        Text('Add New', style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            gap16px,
-            Expanded(
-              child: ListView(
-                children:
-                    groupedData.entries.map((entry) {
-                      final officeName = entry.key;
-                      final signatories = entry.value;
-                      final officeId =
-                          signatories.isNotEmpty
-                              ? signatories.first['officeId']
-                              : null;
-
-                      return Card(
-                        color: secondaryColor,
-                        elevation: 0,
-                        margin: const EdgeInsets.symmetric(
-                          vertical: 4,
-                          horizontal: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Theme(
-                          data: Theme.of(
-                            context,
-                          ).copyWith(dividerColor: Colors.transparent),
-                          child: ExpansionTile(
-                            collapsedBackgroundColor: secondaryColor,
-                            backgroundColor: secondaryBgButton,
-                            tilePadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                            ),
-                            childrenPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                            ),
-                            title: Text(officeName),
-                            trailing: const Icon(
-                              Icons.expand_more,
-                              color: Colors.black,
-                            ),
-                            children: [
-                              ...signatories.map((signatory) {
-                                return ListTile(
-                                  title: Text(
-                                    "${signatory['signatoryLabel'] ?? 'No Label'}:",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        signatory['signatoryName'] ?? 'No Name',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 16,
-                                  right: 16,
-                                  bottom: 8,
-                                ),
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.edit),
-                                        onPressed: () {
-                                          if (officeId != null) {
-                                            final officeSignatories =
-                                                signatories;
-                                            final templateId =
-                                                signatories.first['id']
-                                                    ?.toString();
-                                            showFormDialog(
-                                              id: templateId,
-                                              officeId: officeId,
-                                              signatories: officeSignatories,
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.delete,
-                                          color: primaryColor,
-                                        ),
-                                        onPressed: () {
-                                          final templateId =
-                                              signatories.first['id']
-                                                  ?.toString();
-                                          if (templateId != null) {
-                                            showDeleteDialog(templateId);
-                                          }
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-            ),
-
-            Container(
-              padding: EdgeInsets.all(10),
-              color: secondaryColor,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PaginationInfo(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                  ),
-                  PaginationControls(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                    isLoading: _isLoading,
-                    onPageChanged: (page) => fetchSignatoryTemplate(page: page),
-                  ),
-                  Container(width: 60),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-<<<<<<< HEAD
-      floatingActionButton:
-          isMinimized
-              ? FloatingActionButton(
-                backgroundColor: primaryColor,
-                onPressed: () => showFormDialog(),
-                child: Icon(Icons.add, color: Colors.white),
-              )
-              : null,
-    );
-  }
-
-  void showDeleteDialog(String id) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Signatory Template? This action cannot be undone.",
+  @override
+  Widget build(BuildContext context) => Dialog(
+    backgroundColor: Colors.transparent,
+    child: Container(
+      width: 380,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: danger ? kDangerLight : kPrimaryLight,
+              borderRadius: BorderRadius.circular(14),
             ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _signatroyTemplateService.deleteSignatory(id);
-                  await fetchSignatoryTemplate();
-                  MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text(
-                      'Signatory template deleted successfully',
+            child: Icon(
+              danger
+                  ? Icons.delete_outline_rounded
+                  : Icons.help_outline_rounded,
+              color: danger ? kDanger : primaryColor,
+              size: 26,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: kText,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            body,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: kMuted,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: kBorder),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete Signatory template'),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: kMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-=======
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: danger ? kDanger : primaryColor,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    confirmLabel,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     ),
   );
->>>>>>> master
 }
