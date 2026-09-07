@@ -163,7 +163,6 @@ namespace IMIS.Infrastructure.Auths
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
                 new ImpactStrategicGoalScoreCardPeriodPermission(),
-                new SWOTAnalysisServiceHeadPermission(),
                 new SWOTAnalysisServiceHeadPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsHead, IdentityRole>(_roleManager, 
