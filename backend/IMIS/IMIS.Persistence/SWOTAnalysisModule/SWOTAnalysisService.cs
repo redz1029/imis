@@ -78,7 +78,7 @@ namespace IMIS.Persistence.SWOTAnalysisModule
             }
             else if (role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase))
             {
-                return null;
+                pagedEntities = await _repository.GetPaginatedByServiceHeadUserIdAsync(userId, officeId, page,  pageSize, cancellationToken);
             }
             else
             {             

@@ -12,5 +12,6 @@ namespace IMIS.Application.SWOTAnalysisModule
         Task<List<SWOTAnalysisDto>?> FilterByYearAsync(int year, int noOfResults, CancellationToken cancellationToken);
         Task<List<SWOTAnalysisDto>?> FilterByYearByUserAsync(string userId, int year, int noOfResults, CancellationToken cancellationToken);
         Task<SWOTAnalysis?> GetByIdWithChildrenAsync(int id, CancellationToken cancellationToken);
+        Task<EntityPageList<SWOTAnalysis, long>> GetPaginatedByServiceHeadUserIdAsync(string userId, int? officeId, int page, int pageSize, CancellationToken cancellationToken);
     }
 }

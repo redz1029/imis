@@ -96,5 +96,21 @@ namespace IMIS.Persistence.SWOTAnalysisModule
 
             return await EntityPageList<SWOTAnalysis, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
         }
+
+        public async Task<EntityPageList<SWOTAnalysis, long>> GetPaginatedByServiceHeadUserIdAsync(string userId, int? officeId, int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var query = _entities
+                .Include(x => x.Department)
+                .Include(x => x.ServiceHeadUser)
+                .AsNoTracking()
+                .Where(x => x.ServiceHeadUserId == userId);
+
+            if (officeId.HasValue)
+            {
+                query = query.Where(x => x.Department != null && x.Department.Id == officeId.Value);
+            }
+
+            return await EntityPageList<SWOTAnalysis, long> .CreateAsync(query, page, pageSize,  cancellationToken).ConfigureAwait(false);
+        }
     }
 }
