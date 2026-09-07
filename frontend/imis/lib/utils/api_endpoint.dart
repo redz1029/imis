@@ -93,6 +93,9 @@ class ApiEndpoint {
   late String sWOTAnalysisStrengthWeakness;
   late String sWOTAnalysisOpportunitiesThreats;
   late String evaluatorOffices;
+  late String oprReport;
+  late String sWOTAnalysisServiceHead;
+  late String serviceHeadOffices;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -189,6 +192,9 @@ class ApiEndpoint {
     sWOTAnalysisOpportunitiesThreats =
         '$baseUrl/SWOTAnalysisOpportunitiesThreats';
     evaluatorOffices = '$baseUrl/evaluatorOffices';
+    oprReport = '$baseUrl/report-opr-list';
+    sWOTAnalysisServiceHead = '$baseUrl/sWOTAnalysisServiceHead';
+    serviceHeadOffices = '$baseUrl/serviceHeadOffices';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
