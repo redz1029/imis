@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
+import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart';
 import 'package:imis/audit/audit_programme/pages/audit_programme_page.dart';
 import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
@@ -375,138 +376,147 @@ class SidebarState extends State<Sidebar> {
                         Flexible(
                           child: SingleChildScrollView(
                             child: Column(
-                              children: roles.asMap().entries.map((entry) {
-                                final index = entry.key;
-                                final role = entry.value;
-                                final roleInfo = getRoleInfo(role);
+                              children:
+                                  roles.asMap().entries.map((entry) {
+                                    final index = entry.key;
+                                    final role = entry.value;
+                                    final roleInfo = getRoleInfo(role);
 
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                  ),
-                                  child: MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    onEnter: (_) {
-                                      setDialogState(
-                                        () => _hoveredIndex = index,
-                                      );
-                                    },
-                                    onExit: (_) {
-                                      setDialogState(
-                                        () => _hoveredIndex = null,
-                                      );
-                                    },
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        Navigator.of(context).pop();
-                                        setDialogState(
-                                          () => isSwitchingRole = true,
-                                        );
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      child: MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        onEnter: (_) {
+                                          setDialogState(
+                                            () => _hoveredIndex = index,
+                                          );
+                                        },
+                                        onExit: (_) {
+                                          setDialogState(
+                                            () => _hoveredIndex = null,
+                                          );
+                                        },
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            Navigator.of(context).pop();
+                                            setDialogState(
+                                              () => isSwitchingRole = true,
+                                            );
 
-                                        final prefs =
-                                            await SharedPreferences.getInstance();
-                                        await prefs.setString(
-                                          'selectedRole',
-                                          role,
-                                        );
+                                            final prefs =
+                                                await SharedPreferences.getInstance();
+                                            await prefs.setString(
+                                              'selectedRole',
+                                              role,
+                                            );
 
-                                        final roleIndex = roles.indexOf(role);
-                                        final selectedRoleId =
-                                            roleIds[roleIndex];
+                                            final roleIndex = roles.indexOf(
+                                              role,
+                                            );
+                                            final selectedRoleId =
+                                                roleIds[roleIndex];
 
-                                        await loadUserPermissionss(
-                                          userId: userId,
-                                          roleId: selectedRoleId,
-                                        );
+                                            await loadUserPermissionss(
+                                              userId: userId,
+                                              roleId: selectedRoleId,
+                                            );
 
-                                        await Future.delayed(
-                                          const Duration(milliseconds: 500),
-                                          () {
-                                            setState(() {
-                                              selectedRole = role;
-                                              isSwitchingRole = false;
-                                              selectedSubPage =
-                                                  _firstPermittedSubPage(0);
-                                              selectedPage = 0;
-                                              selectedScreen = HomePage();
-                                            });
+                                            await Future.delayed(
+                                              const Duration(milliseconds: 500),
+                                              () {
+                                                setState(() {
+                                                  selectedRole = role;
+                                                  isSwitchingRole = false;
+                                                  selectedSubPage =
+                                                      _firstPermittedSubPage(0);
+                                                  selectedPage = 0;
+                                                  selectedScreen = HomePage();
+                                                });
+                                              },
+                                            );
+
+                                            if (homePageKey.currentState !=
+                                                null) {
+                                              await homePageKey.currentState!
+                                                  .refreshUserRoles();
+                                            }
                                           },
-                                        );
-
-                                        if (homePageKey.currentState != null) {
-                                          await homePageKey.currentState!
-                                              .refreshUserRoles();
-                                        }
-                                      },
-                                      child: AnimatedContainer(
-                                        duration: const Duration(
-                                          milliseconds: 200,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: roleInfo.backgroundColor,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color: _hoveredIndex == index
-                                                ? roleInfo.iconColor
-                                                : roleInfo.borderColor,
-                                            width: _hoveredIndex == index
-                                                ? 2
-                                                : 1,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                          horizontal: 16,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            RoleIconBox(
-                                              roleInfo: roleInfo,
-                                              size: 48,
-                                              opacity: 0.08,
+                                          child: AnimatedContainer(
+                                            duration: const Duration(
+                                              milliseconds: 200,
                                             ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    role,
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 16,
-                                                      color: roleInfo.textColor,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    roleInfo.description,
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.black87,
-                                                    ),
-                                                  ),
-                                                ],
+                                            decoration: BoxDecoration(
+                                              color: roleInfo.backgroundColor,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color:
+                                                    _hoveredIndex == index
+                                                        ? roleInfo.iconColor
+                                                        : roleInfo.borderColor,
+                                                width:
+                                                    _hoveredIndex == index
+                                                        ? 2
+                                                        : 1,
                                               ),
                                             ),
-                                            Icon(
-                                              Icons.arrow_forward_ios,
-                                              size: 16,
-                                              color: _hoveredIndex == index
-                                                  ? roleInfo.iconColor
-                                                  : roleInfo.textColor,
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                              horizontal: 16,
                                             ),
-                                          ],
+                                            child: Row(
+                                              children: [
+                                                RoleIconBox(
+                                                  roleInfo: roleInfo,
+                                                  size: 48,
+                                                  opacity: 0.08,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        role,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 16,
+                                                          color:
+                                                              roleInfo
+                                                                  .textColor,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        roleInfo.description,
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.black87,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Icon(
+                                                  Icons.arrow_forward_ios,
+                                                  size: 16,
+                                                  color:
+                                                      _hoveredIndex == index
+                                                          ? roleInfo.iconColor
+                                                          : roleInfo.textColor,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
+                                    );
+                                  }).toList(),
                             ),
                           ),
                         ),
@@ -581,76 +591,81 @@ class SidebarState extends State<Sidebar> {
                     Divider(color: kBorder, height: 1),
                     const SizedBox(height: 4),
                     Flexible(
-                      child: _unreadAnnouncements.isEmpty
-                          ? Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 24),
-                              child: Text(
-                                'No new notifications.',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  color: kMuted,
+                      child:
+                          _unreadAnnouncements.isEmpty
+                              ? Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 24,
                                 ),
-                              ),
-                            )
-                          : ListView.separated(
-                              shrinkWrap: true,
-                              itemCount: _unreadAnnouncements.length,
-                              separatorBuilder: (_, __) =>
-                                  Divider(color: kBorder, height: 1),
-                              itemBuilder: (context, index) {
-                                final a = _unreadAnnouncements[index];
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 10,
+                                child: Text(
+                                  'No new notifications.',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    color: kMuted,
                                   ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        margin: const EdgeInsets.only(top: 5),
-                                        width: 8,
-                                        height: 8,
-                                        decoration: const BoxDecoration(
-                                          color: primaryColor,
-                                          shape: BoxShape.circle,
+                                ),
+                              )
+                              : ListView.separated(
+                                shrinkWrap: true,
+                                itemCount: _unreadAnnouncements.length,
+                                separatorBuilder:
+                                    (_, __) =>
+                                        Divider(color: kBorder, height: 1),
+                                itemBuilder: (context, index) {
+                                  final a = _unreadAnnouncements[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          margin: const EdgeInsets.only(top: 5),
+                                          width: 8,
+                                          height: 8,
+                                          decoration: const BoxDecoration(
+                                            color: primaryColor,
+                                            shape: BoxShape.circle,
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              a.title,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style:
-                                                  GoogleFonts.plusJakartaSans(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: kText,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              a.description,
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                a.title,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                a.description,
 
-                                              style:
-                                                  GoogleFonts.plusJakartaSans(
-                                                    fontSize: 12,
-                                                    color: kMuted,
-                                                  ),
-                                            ),
-                                          ],
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 12,
+                                                      color: kMuted,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
                     ),
                   ],
                 ),
@@ -785,142 +800,164 @@ class SidebarState extends State<Sidebar> {
                             Flexible(
                               child: SingleChildScrollView(
                                 child: Column(
-                                  children: roles.asMap().entries.map((entry) {
-                                    final index = entry.key;
-                                    final role = entry.value;
-                                    final roleInfo = getRoleInfo(role);
+                                  children:
+                                      roles.asMap().entries.map((entry) {
+                                        final index = entry.key;
+                                        final role = entry.value;
+                                        final roleInfo = getRoleInfo(role);
 
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
-                                      ),
-                                      child: MouseRegion(
-                                        cursor: SystemMouseCursors.click,
-                                        onEnter: (_) {
-                                          setDialogState(
-                                            () => _hoveredIndex = index,
-                                          );
-                                        },
-                                        onExit: (_) {
-                                          setDialogState(
-                                            () => _hoveredIndex = null,
-                                          );
-                                        },
-                                        child: GestureDetector(
-                                          onTap: () async {
-                                            Navigator.of(context).pop();
-                                            setDialogState(
-                                              () => isSwitchingRole = true,
-                                            );
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 6,
+                                          ),
+                                          child: MouseRegion(
+                                            cursor: SystemMouseCursors.click,
+                                            onEnter: (_) {
+                                              setDialogState(
+                                                () => _hoveredIndex = index,
+                                              );
+                                            },
+                                            onExit: (_) {
+                                              setDialogState(
+                                                () => _hoveredIndex = null,
+                                              );
+                                            },
+                                            child: GestureDetector(
+                                              onTap: () async {
+                                                Navigator.of(context).pop();
+                                                setDialogState(
+                                                  () => isSwitchingRole = true,
+                                                );
 
-                                            final prefs =
-                                                await SharedPreferences.getInstance();
-                                            await prefs.setString(
-                                              'selectedRole',
-                                              role,
-                                            );
+                                                final prefs =
+                                                    await SharedPreferences.getInstance();
+                                                await prefs.setString(
+                                                  'selectedRole',
+                                                  role,
+                                                );
 
-                                            final roleIndex = roles.indexOf(
-                                              role,
-                                            );
-                                            final selectedRoleId =
-                                                roleIds[roleIndex];
+                                                final roleIndex = roles.indexOf(
+                                                  role,
+                                                );
+                                                final selectedRoleId =
+                                                    roleIds[roleIndex];
 
-                                            await loadUserPermissionss(
-                                              userId: userId,
-                                              roleId: selectedRoleId,
-                                            );
+                                                await loadUserPermissionss(
+                                                  userId: userId,
+                                                  roleId: selectedRoleId,
+                                                );
 
-                                            await Future.delayed(
-                                              const Duration(milliseconds: 500),
-                                              () {
-                                                setState(() {
-                                                  selectedRole = role;
-                                                  isSwitchingRole = false;
-                                                  selectedScreen = HomePage();
-                                                  selectedSubPage =
-                                                      _firstPermittedSubPage(0);
-                                                  selectedPage = 0;
-                                                });
+                                                await Future.delayed(
+                                                  const Duration(
+                                                    milliseconds: 500,
+                                                  ),
+                                                  () {
+                                                    setState(() {
+                                                      selectedRole = role;
+                                                      isSwitchingRole = false;
+                                                      selectedScreen =
+                                                          HomePage();
+                                                      selectedSubPage =
+                                                          _firstPermittedSubPage(
+                                                            0,
+                                                          );
+                                                      selectedPage = 0;
+                                                    });
+                                                  },
+                                                );
+
+                                                if (homePageKey.currentState !=
+                                                    null) {
+                                                  await homePageKey
+                                                      .currentState!
+                                                      .refreshUserRoles();
+                                                }
                                               },
-                                            );
-
-                                            if (homePageKey.currentState !=
-                                                null) {
-                                              await homePageKey.currentState!
-                                                  .refreshUserRoles();
-                                            }
-                                          },
-                                          child: AnimatedContainer(
-                                            duration: const Duration(
-                                              milliseconds: 200,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: roleInfo.backgroundColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: _hoveredIndex == index
-                                                    ? roleInfo.iconColor
-                                                    : roleInfo.borderColor,
-                                                width: _hoveredIndex == index
-                                                    ? 2
-                                                    : 1,
-                                              ),
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 12,
-                                              horizontal: 16,
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                RoleIconBox(
-                                                  roleInfo: roleInfo,
-                                                  size: 48,
-                                                  opacity: 0.08,
+                                              child: AnimatedContainer(
+                                                duration: const Duration(
+                                                  milliseconds: 200,
                                                 ),
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        role,
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 16,
-                                                          color: roleInfo
-                                                              .textColor,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 2),
-                                                      Text(
-                                                        roleInfo.description,
-                                                        style: const TextStyle(
-                                                          fontSize: 12,
-                                                          color: Colors.black87,
-                                                        ),
-                                                      ),
-                                                    ],
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      roleInfo.backgroundColor,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                    color:
+                                                        _hoveredIndex == index
+                                                            ? roleInfo.iconColor
+                                                            : roleInfo
+                                                                .borderColor,
+                                                    width:
+                                                        _hoveredIndex == index
+                                                            ? 2
+                                                            : 1,
                                                   ),
                                                 ),
-                                                Icon(
-                                                  Icons.arrow_forward_ios,
-                                                  size: 16,
-                                                  color: _hoveredIndex == index
-                                                      ? roleInfo.iconColor
-                                                      : roleInfo.textColor,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 12,
+                                                      horizontal: 16,
+                                                    ),
+                                                child: Row(
+                                                  children: [
+                                                    RoleIconBox(
+                                                      roleInfo: roleInfo,
+                                                      size: 48,
+                                                      opacity: 0.08,
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(
+                                                            role,
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              fontSize: 16,
+                                                              color:
+                                                                  roleInfo
+                                                                      .textColor,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                            height: 2,
+                                                          ),
+                                                          Text(
+                                                            roleInfo
+                                                                .description,
+                                                            style: const TextStyle(
+                                                              fontSize: 12,
+                                                              color:
+                                                                  Colors
+                                                                      .black87,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    Icon(
+                                                      Icons.arrow_forward_ios,
+                                                      size: 16,
+                                                      color:
+                                                          _hoveredIndex == index
+                                                              ? roleInfo
+                                                                  .iconColor
+                                                              : roleInfo
+                                                                  .textColor,
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
+                                        );
+                                      }).toList(),
                                 ),
                               ),
                             ),
@@ -1015,9 +1052,10 @@ class SidebarState extends State<Sidebar> {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: grey,
-                        backgroundImage: image != null
-                            ? FileImage(image!) as ImageProvider
-                            : AssetImage('assets/iconprofile.png'),
+                        backgroundImage:
+                            image != null
+                                ? FileImage(image!) as ImageProvider
+                                : AssetImage('assets/iconprofile.png'),
                       ),
                       Positioned(
                         bottom: 0,
@@ -1134,9 +1172,10 @@ class SidebarState extends State<Sidebar> {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: grey,
-                        backgroundImage: image != null
-                            ? FileImage(image!) as ImageProvider
-                            : AssetImage('assets/iconprofile.png'),
+                        backgroundImage:
+                            image != null
+                                ? FileImage(image!) as ImageProvider
+                                : AssetImage('assets/iconprofile.png'),
                       ),
 
                       Positioned(
@@ -1318,6 +1357,8 @@ class SidebarState extends State<Sidebar> {
 
     if (selectedPage == 2) {
       if (selectedSubPage == 0) return const AuditProgrammePage();
+      if (selectedSubPage == 1) return const AuditPlanPage();
+      if (selectedSubPage == 3) return const AuditSchedulesPage();
     }
     return HomePage();
   }
@@ -1364,13 +1405,14 @@ class SidebarState extends State<Sidebar> {
                   sidebarIcon(Icons.fact_check_outlined, 2, label: 'ISO'),
                   const Spacer(),
                   PermissionWidget(
-                    child: (selectedRole == PermissionRoleString.roleAdmin)
-                        ? sidebarIcon(
-                            Icons.settings_outlined,
-                            3,
-                            label: 'Settings',
-                          )
-                        : SizedBox.shrink(),
+                    child:
+                        (selectedRole == PermissionRoleString.roleAdmin)
+                            ? sidebarIcon(
+                              Icons.settings_outlined,
+                              3,
+                              label: 'Settings',
+                            )
+                            : SizedBox.shrink(),
                   ),
                   const SizedBox(height: 18),
 
@@ -1397,12 +1439,13 @@ class SidebarState extends State<Sidebar> {
                     children: [
                       if (isMobile)
                         Builder(
-                          builder: (context) => IconButton(
-                            icon: const Icon(Icons.menu),
-                            onPressed: () {
-                              Scaffold.of(context).openDrawer();
-                            },
-                          ),
+                          builder:
+                              (context) => IconButton(
+                                icon: const Icon(Icons.menu),
+                                onPressed: () {
+                                  Scaffold.of(context).openDrawer();
+                                },
+                              ),
                         ),
 
                       Text(
@@ -1482,10 +1525,12 @@ class SidebarState extends State<Sidebar> {
                                                 .toLowerCase()
                                                 .split(' ')
                                                 .map(
-                                                  (word) => word.isNotEmpty
-                                                      ? word[0].toUpperCase() +
-                                                            word.substring(1)
-                                                      : '',
+                                                  (word) =>
+                                                      word.isNotEmpty
+                                                          ? word[0]
+                                                                  .toUpperCase() +
+                                                              word.substring(1)
+                                                          : '',
                                                 )
                                                 .join(' '),
                                             overflow: TextOverflow.ellipsis,
@@ -1547,116 +1592,117 @@ class SidebarState extends State<Sidebar> {
   void _logout(BuildContext context) async {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.white,
-        child: Container(
-          width: 380,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: kSurface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 32,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: kDangerLight,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.logout_outlined,
-                  color: primaryColor,
-                  size: 28,
-                ),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Logout',
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 17,
-                  color: kText,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Are you sure you want to logout?',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  color: kMuted,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: kBorder),
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        'Cancel',
-                        style: GoogleFonts.plusJakartaSans(
-                          color: kMuted,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.remove('selectedRole');
-                        await AuthUtil.logout(context);
-                        if (!context.mounted) return;
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                            builder: (context) => const LoginPage(),
-                          ),
-                          (route) => false,
-                        );
-                      },
-
-                      child: Text(
-                        'Logout',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
+      builder:
+          (context) => Dialog(
+            backgroundColor: Colors.white,
+            child: Container(
+              width: 380,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: kSurface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 32,
+                    offset: const Offset(0, 12),
                   ),
                 ],
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: kDangerLight,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.logout_outlined,
+                      color: primaryColor,
+                      size: 28,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Logout',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: kText,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Are you sure you want to logout?',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: kMuted,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: kBorder),
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: kMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.remove('selectedRole');
+                            await AuthUtil.logout(context);
+                            if (!context.mounted) return;
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                builder: (context) => const LoginPage(),
+                              ),
+                              (route) => false,
+                            );
+                          },
+
+                          child: Text(
+                            'Logout',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -1699,11 +1745,12 @@ class SidebarState extends State<Sidebar> {
               label,
               style: TextStyle(
                 fontSize: 10,
-                color: isActive
-                    ? primaryColor
-                    : Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                color:
+                    isActive
+                        ? primaryColor
+                        : Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -1743,13 +1790,14 @@ class SidebarState extends State<Sidebar> {
 
                 sidebarIcon(Icons.fact_check_outlined, 2, label: 'ISO'),
                 PermissionWidget(
-                  child: (selectedRole == PermissionRoleString.roleAdmin)
-                      ? sidebarIcon(
-                          Icons.settings_outlined,
-                          3,
-                          label: 'Settings',
-                        )
-                      : SizedBox.shrink(),
+                  child:
+                      (selectedRole == PermissionRoleString.roleAdmin)
+                          ? sidebarIcon(
+                            Icons.settings_outlined,
+                            3,
+                            label: 'Settings',
+                          )
+                          : SizedBox.shrink(),
                 ),
                 sidebarIcon(Icons.logout_outlined, 4, label: 'Logout'),
               ],
@@ -1772,152 +1820,165 @@ class SidebarState extends State<Sidebar> {
                     PermissionWidget(
                       child:
                           (selectedRole == PermissionRoleString.roleAdmin ||
-                              selectedRole ==
-                                  PermissionRoleString.roleStandardUser ||
-                              selectedRole == PermissionRoleString.mcc ||
-                              selectedRole == PermissionRoleString.osm ||
-                              selectedRole == PermissionRoleString.coreTeam ||
-                              selectedRole ==
-                                  PermissionRoleString.serviceHead ||
-                              selectedRole == PermissionRoleString.pgsAuditor ||
-                              selectedRole ==
-                                  PermissionRoleString.headAuditor ||
-                              selectedRole == PermissionRoleString.twg ||
-                              selectedRole == PermissionRoleString.msgc)
-                          ? sidebarSubText(
-                              selectedRole == PermissionRoleString.roleAdmin
-                                  ? 'Create/View Roadmaps'
-                                  : 'View Roadmaps',
-                              0,
-                            )
-                          : (selectedRole ==
-                                    PermissionRoleString.trainingOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.hrOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.evaluator ||
-                                selectedRole ==
-                                    PermissionRoleString.serviceOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.financeOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.safetyOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.facilityOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.linkagesOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.informationOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.researchOfficer)
-                          ? sidebarSubText('Create Roadmaps', 0)
-                          : const SizedBox.shrink(),
+                                  selectedRole ==
+                                      PermissionRoleString.roleStandardUser ||
+                                  selectedRole == PermissionRoleString.mcc ||
+                                  selectedRole == PermissionRoleString.osm ||
+                                  selectedRole ==
+                                      PermissionRoleString.coreTeam ||
+                                  selectedRole ==
+                                      PermissionRoleString.serviceHead ||
+                                  selectedRole ==
+                                      PermissionRoleString.pgsAuditor ||
+                                  selectedRole ==
+                                      PermissionRoleString.headAuditor ||
+                                  selectedRole == PermissionRoleString.twg ||
+                                  selectedRole == PermissionRoleString.msgc)
+                              ? sidebarSubText(
+                                selectedRole == PermissionRoleString.roleAdmin
+                                    ? 'Create/View Roadmaps'
+                                    : 'View Roadmaps',
+                                0,
+                              )
+                              : (selectedRole ==
+                                      PermissionRoleString.trainingOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.hrOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.evaluator ||
+                                  selectedRole ==
+                                      PermissionRoleString.serviceOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.financeOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.safetyOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.facilityOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.linkagesOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.informationOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.researchOfficer)
+                              ? sidebarSubText('Create Roadmaps', 0)
+                              : const SizedBox.shrink(),
                     ),
                     PermissionWidget(
                       child:
                           (selectedRole == PermissionRoleString.roleAdmin ||
-                              selectedRole ==
-                                  PermissionRoleString.roleStandardUser ||
-                              selectedRole ==
-                                  PermissionRoleString.serviceHead ||
-                              selectedRole == PermissionRoleString.mcc ||
-                              selectedRole == PermissionRoleString.coreTeam ||
-                              selectedRole == PermissionRoleString.osm ||
-                              selectedRole == PermissionRoleString.twg ||
-                              selectedRole == PermissionRoleString.msgc)
-                          ? sidebarSubText(
-                              selectedRole == PermissionRoleString.roleAdmin
-                                  ? 'Create/View Deliverables'
-                                  : selectedRole ==
+                                  selectedRole ==
+                                      PermissionRoleString.roleStandardUser ||
+                                  selectedRole ==
+                                      PermissionRoleString.serviceHead ||
+                                  selectedRole == PermissionRoleString.mcc ||
+                                  selectedRole ==
+                                      PermissionRoleString.coreTeam ||
+                                  selectedRole == PermissionRoleString.osm ||
+                                  selectedRole == PermissionRoleString.twg ||
+                                  selectedRole == PermissionRoleString.msgc)
+                              ? sidebarSubText(
+                                selectedRole == PermissionRoleString.roleAdmin
+                                    ? 'Create/View Deliverables'
+                                    : selectedRole ==
                                         PermissionRoleString.roleStandardUser
-                                  ? 'Create Deliverables'
-                                  : 'View Deliverables',
-                              1,
-                            )
-                          : SizedBox.shrink(),
+                                    ? 'Create Deliverables'
+                                    : 'View Deliverables',
+                                1,
+                              )
+                              : SizedBox.shrink(),
                     ),
                     PermissionWidget(
                       child:
                           (selectedRole == PermissionRoleString.roleAdmin ||
-                              selectedRole ==
-                                  PermissionRoleString.roleStandardUser ||
-                              selectedRole ==
-                                  PermissionRoleString.serviceHead ||
-                              selectedRole == PermissionRoleString.mcc ||
-                              selectedRole == PermissionRoleString.coreTeam ||
-                              selectedRole == PermissionRoleString.osm ||
-                              selectedRole == PermissionRoleString.twg)
-                          ? sidebarSubText(
-                              selectedRole == PermissionRoleString.roleAdmin
-                                  ? 'Create/View SWOT'
-                                  : selectedRole ==
+                                  selectedRole ==
+                                      PermissionRoleString.roleStandardUser ||
+                                  selectedRole ==
+                                      PermissionRoleString.serviceHead ||
+                                  selectedRole == PermissionRoleString.mcc ||
+                                  selectedRole ==
+                                      PermissionRoleString.coreTeam ||
+                                  selectedRole == PermissionRoleString.osm ||
+                                  selectedRole == PermissionRoleString.twg)
+                              ? sidebarSubText(
+                                selectedRole == PermissionRoleString.roleAdmin
+                                    ? 'Create/View SWOT'
+                                    : selectedRole ==
                                         PermissionRoleString.roleStandardUser
-                                  ? 'Create SWOT'
-                                  : 'View SWOT',
-                              2,
-                            )
-                          : SizedBox.shrink(),
+                                    ? 'Create SWOT'
+                                    : 'View SWOT',
+                                2,
+                              )
+                              : SizedBox.shrink(),
                     ),
                     PermissionWidget(
                       child:
                           [
-                            PermissionRoleString.roleAdmin,
-                            PermissionRoleString.serviceHead,
-                            PermissionRoleString.mcc,
-                            PermissionRoleString.osm,
-                            PermissionRoleString.pgsAuditor,
-                            PermissionRoleString.pgsHead,
-                            PermissionRoleString.coreTeam,
-                            PermissionRoleString.twg,
-                            PermissionRoleString.headAuditor,
-                            PermissionRoleString.msgc,
-                            PermissionRoleString.evaluator,
-                          ].contains(selectedRole)
-                          ? sidebarSubText('Deliverable Status Monitoring', 3)
-                          : SizedBox.shrink(),
+                                PermissionRoleString.roleAdmin,
+                                PermissionRoleString.serviceHead,
+                                PermissionRoleString.mcc,
+                                PermissionRoleString.osm,
+                                PermissionRoleString.pgsAuditor,
+                                PermissionRoleString.pgsHead,
+                                PermissionRoleString.coreTeam,
+                                PermissionRoleString.twg,
+                                PermissionRoleString.headAuditor,
+                                PermissionRoleString.msgc,
+                                PermissionRoleString.evaluator,
+                              ].contains(selectedRole)
+                              ? sidebarSubText(
+                                'Deliverable Status Monitoring',
+                                3,
+                              )
+                              : SizedBox.shrink(),
                     ),
 
                     PermissionWidget(
                       child:
                           (selectedRole == PermissionRoleString.roleAdmin ||
-                              selectedRole ==
-                                  PermissionRoleString.roleStandardUser ||
-                              selectedRole == PermissionRoleString.mcc ||
-                              selectedRole == PermissionRoleString.osm ||
-                              selectedRole == PermissionRoleString.coreTeam ||
-                              selectedRole ==
-                                  PermissionRoleString.serviceHead ||
-                              selectedRole == PermissionRoleString.pgsAuditor ||
-                              selectedRole ==
-                                  PermissionRoleString.headAuditor ||
-                              selectedRole == PermissionRoleString.twg ||
-                              selectedRole == PermissionRoleString.evaluator)
-                          ? sidebarSubText(
-                              selectedRole == PermissionRoleString.roleAdmin
-                                  ? 'Create/View Strategy Review Report'
-                                  : 'View Strategy Review Report',
-                              4,
-                            )
-                          : (selectedRole ==
-                                    PermissionRoleString.trainingOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.hrOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.serviceOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.financeOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.safetyOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.facilityOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.linkagesOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.informationOfficer ||
-                                selectedRole ==
-                                    PermissionRoleString.researchOfficer)
-                          ? sidebarSubText('Create Strategy Review Report', 4)
-                          : const SizedBox.shrink(),
+                                  selectedRole ==
+                                      PermissionRoleString.roleStandardUser ||
+                                  selectedRole == PermissionRoleString.mcc ||
+                                  selectedRole == PermissionRoleString.osm ||
+                                  selectedRole ==
+                                      PermissionRoleString.coreTeam ||
+                                  selectedRole ==
+                                      PermissionRoleString.serviceHead ||
+                                  selectedRole ==
+                                      PermissionRoleString.pgsAuditor ||
+                                  selectedRole ==
+                                      PermissionRoleString.headAuditor ||
+                                  selectedRole == PermissionRoleString.twg ||
+                                  selectedRole ==
+                                      PermissionRoleString.evaluator)
+                              ? sidebarSubText(
+                                selectedRole == PermissionRoleString.roleAdmin
+                                    ? 'Create/View Strategy Review Report'
+                                    : 'View Strategy Review Report',
+                                4,
+                              )
+                              : (selectedRole ==
+                                      PermissionRoleString.trainingOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.hrOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.serviceOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.financeOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.safetyOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.facilityOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.linkagesOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.informationOfficer ||
+                                  selectedRole ==
+                                      PermissionRoleString.researchOfficer)
+                              ? sidebarSubText(
+                                'Create Strategy Review Report',
+                                4,
+                              )
+                              : const SizedBox.shrink(),
                     ),
 
                     ExpandableSidebarItem(
@@ -1964,49 +2025,52 @@ class SidebarState extends State<Sidebar> {
                     PermissionWidget(
                       child:
                           (selectedRole == PermissionRoleString.roleAdmin ||
-                              selectedRole == PermissionRoleString.mcc ||
-                              selectedRole == PermissionRoleString.osm ||
-                              selectedRole == PermissionRoleString.coreTeam ||
-                              selectedRole ==
-                                  PermissionRoleString.serviceHead ||
-                              selectedRole == PermissionRoleString.pgsAuditor ||
-                              selectedRole ==
-                                  PermissionRoleString.headAuditor ||
-                              selectedRole == PermissionRoleString.twg ||
-                              selectedRole == PermissionRoleString.evaluator)
-                          ? sidebarSubText(
-                              selectedRole == PermissionRoleString.roleAdmin
-                                  ? 'Create/View Operation Review Protocol'
-                                  : "View Operation Review Protocol",
-                              7,
-                            )
-                          : SizedBox.shrink(),
+                                  selectedRole == PermissionRoleString.mcc ||
+                                  selectedRole == PermissionRoleString.osm ||
+                                  selectedRole ==
+                                      PermissionRoleString.coreTeam ||
+                                  selectedRole ==
+                                      PermissionRoleString.serviceHead ||
+                                  selectedRole ==
+                                      PermissionRoleString.pgsAuditor ||
+                                  selectedRole ==
+                                      PermissionRoleString.headAuditor ||
+                                  selectedRole == PermissionRoleString.twg ||
+                                  selectedRole ==
+                                      PermissionRoleString.evaluator)
+                              ? sidebarSubText(
+                                selectedRole == PermissionRoleString.roleAdmin
+                                    ? 'Create/View Operation Review Protocol'
+                                    : "View Operation Review Protocol",
+                                7,
+                              )
+                              : SizedBox.shrink(),
                     ),
                     PermissionWidget(
                       child:
                           [
-                            PermissionRoleString.pgsAuditor,
-                            PermissionRoleString.roleAdmin,
-                            PermissionRoleString.twg,
-                            PermissionRoleString.osm,
-                            PermissionRoleString.headAuditor,
-                            PermissionRoleString.roleStandardUser,
-                            PermissionRoleString.headAuditor,
-                            PermissionRoleString.serviceHead,
-                            PermissionRoleString.coreTeam,
-                          ].contains(selectedRole)
-                          ? sidebarSubText("Performance Validation Tool", 8)
-                          : SizedBox.shrink(),
+                                PermissionRoleString.pgsAuditor,
+                                PermissionRoleString.roleAdmin,
+                                PermissionRoleString.twg,
+                                PermissionRoleString.osm,
+                                PermissionRoleString.headAuditor,
+                                PermissionRoleString.roleStandardUser,
+                                PermissionRoleString.headAuditor,
+                                PermissionRoleString.serviceHead,
+                                PermissionRoleString.coreTeam,
+                              ].contains(selectedRole)
+                              ? sidebarSubText("Performance Validation Tool", 8)
+                              : SizedBox.shrink(),
                     ),
                     PermissionWidget(
                       child:
                           [
-                            PermissionRoleString.headAuditor,
-                            PermissionRoleString.roleAdmin,
-                            PermissionRoleString.twg,
-                          ].contains(selectedRole)
-                          ? sidebarSubText("PGS Auditor Report", 9)
-                          : SizedBox.shrink(),
+                                PermissionRoleString.headAuditor,
+                                PermissionRoleString.roleAdmin,
+                                PermissionRoleString.twg,
+                              ].contains(selectedRole)
+                              ? sidebarSubText("PGS Auditor Report", 9)
+                              : SizedBox.shrink(),
                     ),
 
                     ExpandableSidebarItem(
@@ -2102,6 +2166,8 @@ class SidebarState extends State<Sidebar> {
                   ],
                   if (selectedPage == 2) ...[
                     sidebarSubText("Audit Programme", 0),
+                    sidebarSubText("Audit Plan", 1),
+                    sidebarSubText("Audit Schedule", 2),
                   ],
                 ],
               ),
@@ -2128,11 +2194,12 @@ class SidebarState extends State<Sidebar> {
           text,
           style: TextStyle(
             fontSize: 13,
-            color: isActive
-                ? primaryColor
-                : Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+            color:
+                isActive
+                    ? primaryColor
+                    : Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
             fontWeight: isActive ? FontWeight.bold : FontWeight.w400,
           ),
         ),
@@ -2208,27 +2275,28 @@ class _ExpandableSidebarItemState extends State<ExpandableSidebarItem> {
           Padding(
             padding: const EdgeInsets.only(left: 20),
             child: Column(
-              children: widget.items.map((item) {
-                bool isActive = widget.selectedSubPage == item["index"];
-                return InkWell(
-                  onTap: () => widget.onTap(item["index"]),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      /// Tree line
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Text(
-                            item["title"],
-                            style: isActive ? activeStyle : normalStyle,
+              children:
+                  widget.items.map((item) {
+                    bool isActive = widget.selectedSubPage == item["index"];
+                    return InkWell(
+                      onTap: () => widget.onTap(item["index"]),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          /// Tree line
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: Text(
+                                item["title"],
+                                style: isActive ? activeStyle : normalStyle,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
             ),
           ),
       ],
