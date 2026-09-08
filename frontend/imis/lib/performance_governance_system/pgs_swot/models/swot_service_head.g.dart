@@ -23,16 +23,16 @@ SwotServiceHead _$SwotServiceHeadFromJson(Map<String, dynamic> json) =>
         json['postingDate'],
         const DateTimeConverter().fromJson,
       ),
-      swotAnalysisSWDeliverables:
-          (json['swotAnalysisSWDeliverables'] as List<dynamic>?)
+      swotAnalysisSWDeliverablesServiceHead:
+          (json['swotAnalysisSWDeliverablesServiceHead'] as List<dynamic>?)
               ?.map(
                 (e) => SwotSwDeliverableServiceHead.fromJson(
                   e as Map<String, dynamic>,
                 ),
               )
               .toList(),
-      swotAnalysisOTDeliverables:
-          (json['swotAnalysisOTDeliverables'] as List<dynamic>?)
+      swotAnalysisOTDeliverablesServiceHead:
+          (json['swotAnalysisOTDeliverablesServiceHead'] as List<dynamic>?)
               ?.map(
                 (e) => SwotOtDeliverableServiceHead.fromJson(
                   e as Map<String, dynamic>,
@@ -57,8 +57,10 @@ Map<String, dynamic> _$SwotServiceHeadToJson(SwotServiceHead instance) =>
         instance.postingDate,
         const DateTimeConverter().toJson,
       ),
-      'swotAnalysisSWDeliverables': instance.swotAnalysisSWDeliverables,
-      'swotAnalysisOTDeliverables': instance.swotAnalysisOTDeliverables,
+      'swotAnalysisSWDeliverablesServiceHead':
+          instance.swotAnalysisSWDeliverablesServiceHead,
+      'swotAnalysisOTDeliverablesServiceHead':
+          instance.swotAnalysisOTDeliverablesServiceHead,
     };
 
 Value? _$JsonConverterFromJson<Json, Value>(
