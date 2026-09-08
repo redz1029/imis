@@ -245,6 +245,16 @@ Future<void> openSwotReport(
   context: context,
 );
 
+Future<void> openSwotServiceHeadReport(
+  String swotId,
+  String swotName, {
+  BuildContext? context,
+}) => _openPdfPreview(
+  webEndpoint: '${ApiEndpoint().sWOTAnalysisServiceHead}/report-pdf/$swotId',
+  id: swotId,
+  name: swotName,
+  context: context,
+);
 Future<void> viewAuditorSummaryNarrativeReport(
   String pgsPeriodId,
   String officeId, {
