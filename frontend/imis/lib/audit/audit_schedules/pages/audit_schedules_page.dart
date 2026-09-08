@@ -286,24 +286,25 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(_scheduleId == 0 ? 'Confirm Save' : 'Confirm Update'),
-        content: Text(
-          _scheduleId == 0
-              ? 'Save this Audit Schedule?'
-              : 'Update this Audit Schedule?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('No', style: TextStyle(color: primaryThemeColor)),
+      builder:
+          (context) => AlertDialog(
+            title: Text(_scheduleId == 0 ? 'Confirm Save' : 'Confirm Update'),
+            content: Text(
+              _scheduleId == 0
+                  ? 'Save this Audit Schedule?'
+                  : 'Update this Audit Schedule?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('No', style: TextStyle(color: primaryThemeColor)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text('Yes', style: TextStyle(color: primaryThemeColor)),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Yes', style: TextStyle(color: primaryThemeColor)),
-          ),
-        ],
-      ),
     );
     if (confirm != true) return;
 
@@ -382,62 +383,65 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               : 'Edit Audit Schedule',
         ),
         backgroundColor: mainBgColor,
-        leading: (_resolvedAuditPlanId != null && widget.auditPlanId == null)
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                tooltip: 'Back to list',
-                onPressed: () => setState(() {
-                  _resolvedAuditPlanId = null;
-                  _errorMessage = null;
-                  _auditableOffices.clear();
-                }),
-              )
-            : null,
+        leading:
+            (_resolvedAuditPlanId != null && widget.auditPlanId == null)
+                ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: 'Back to list',
+                  onPressed:
+                      () => setState(() {
+                        _resolvedAuditPlanId = null;
+                        _errorMessage = null;
+                        _auditableOffices.clear();
+                      }),
+                )
+                : null,
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: primaryThemeColor),
-            )
-          : _errorMessage != null
-          ? Center(
-              child: Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
-              ),
-            )
-          : _resolvedAuditPlanId == null
-          ? _buildAuditPlanPicker()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildAuditeeAndTeamCard(),
-                  const SizedBox(height: 16),
-                  _buildDetailsCard(),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    height: 48,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryThemeColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: primaryThemeColor),
+              )
+              : _errorMessage != null
+              ? Center(
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              )
+              : _resolvedAuditPlanId == null
+              ? _buildAuditPlanPicker()
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildAuditeeAndTeamCard(),
+                    const SizedBox(height: 16),
+                    _buildDetailsCard(),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryThemeColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                         ),
-                      ),
-                      onPressed: _save,
-                      child: const Text(
-                        'SAVE AUDIT SCHEDULE',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                        onPressed: _save,
+                        child: const Text(
+                          'SAVE AUDIT SCHEDULE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
     );
   }
 
@@ -455,9 +459,10 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         final start = DateTime.tryParse(
           (json['startDate'] ?? json['StartDate'] ?? '').toString(),
         );
-        final label = start != null
-            ? DateFormat('MMMM d, yyyy').format(start)
-            : 'Audit Plan #$id';
+        final label =
+            start != null
+                ? DateFormat('MMMM d, yyyy').format(start)
+                : 'Audit Plan #$id';
 
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
@@ -541,18 +546,22 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             },
             displayStringForOption: (o) => o.name,
             onSelected: _addOffice,
-            fieldViewBuilder:
-                (context, textController, focusNode, onFieldSubmitted) {
-                  return TextFormField(
-                    controller: textController,
-                    focusNode: focusNode,
-                    style: const TextStyle(fontSize: 12),
-                    decoration: _decoration('ADD OFFICE / WARD').copyWith(
-                      hintText: 'Search and select an office',
-                      hintStyle: const TextStyle(fontSize: 11),
-                    ),
-                  );
-                },
+            fieldViewBuilder: (
+              context,
+              textController,
+              focusNode,
+              onFieldSubmitted,
+            ) {
+              return TextFormField(
+                controller: textController,
+                focusNode: focusNode,
+                style: const TextStyle(fontSize: 12),
+                decoration: _decoration('ADD OFFICE / WARD').copyWith(
+                  hintText: 'Search and select an office',
+                  hintStyle: const TextStyle(fontSize: 11),
+                ),
+              );
+            },
             optionsViewBuilder: (context, onSelected, options) {
               return Align(
                 alignment: Alignment.topLeft,
@@ -600,22 +609,25 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             Wrap(
               spacing: 6,
               runSpacing: 6,
-              children: _auditableOffices.map((o) {
-                return Chip(
-                  label: Text(
-                    _officeName(o.officeId),
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  backgroundColor: primaryThemeColor.withValues(alpha: 0.08),
-                  labelStyle: const TextStyle(color: primaryThemeColor),
-                  deleteIcon: const Icon(
-                    Icons.close,
-                    size: 16,
-                    color: Colors.redAccent,
-                  ),
-                  onDeleted: () => _removeOffice(o),
-                );
-              }).toList(),
+              children:
+                  _auditableOffices.map((o) {
+                    return Chip(
+                      label: Text(
+                        _officeName(o.officeId),
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      backgroundColor: primaryThemeColor.withValues(
+                        alpha: 0.08,
+                      ),
+                      labelStyle: const TextStyle(color: primaryThemeColor),
+                      deleteIcon: const Icon(
+                        Icons.close,
+                        size: 16,
+                        color: Colors.redAccent,
+                      ),
+                      onDeleted: () => _removeOffice(o),
+                    );
+                  }).toList(),
             ),
         ],
       ),
@@ -651,37 +663,40 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
           ),
           const Divider(height: 20),
           DropdownButtonFormField<int>(
-            initialValue: _teams.any((t) => t.id == _selectedTeamId)
-                ? _selectedTeamId
-                : null,
+            initialValue:
+                _teams.any((t) => t.id == _selectedTeamId)
+                    ? _selectedTeamId
+                    : null,
             isExpanded: true,
             hint: const Text('Select Team', style: TextStyle(fontSize: 12)),
             decoration: _decoration('TEAM'),
-            items: _teams.isEmpty
-                ? [
-                    const DropdownMenuItem<int>(
-                      value: null,
-                      child: Text(
-                        'No options available',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ]
-                : _teams
-                      .map(
-                        (t) => DropdownMenuItem<int>(
-                          value: t.id,
-                          child: Text(
-                            t.name,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12),
-                          ),
+            items:
+                _teams.isEmpty
+                    ? [
+                      const DropdownMenuItem<int>(
+                        value: null,
+                        child: Text(
+                          'No options available',
+                          style: TextStyle(fontSize: 12),
                         ),
-                      )
-                      .toList(),
-            onChanged: _teams.isEmpty
-                ? null
-                : (val) => setState(() => _selectedTeamId = val),
+                      ),
+                    ]
+                    : _teams
+                        .map(
+                          (t) => DropdownMenuItem<int>(
+                            value: t.id,
+                            child: Text(
+                              t.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        )
+                        .toList(),
+            onChanged:
+                _teams.isEmpty
+                    ? null
+                    : (val) => setState(() => _selectedTeamId = val),
           ),
           const SizedBox(height: 10),
           if (_selectedTeamId == null)
@@ -697,17 +712,18 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
           else
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: roster
-                  .map(
-                    (a) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        '•  ${_auditorName(a)}',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  )
-                  .toList(),
+              children:
+                  roster
+                      .map(
+                        (a) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            '•  ${_auditorName(a)}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      )
+                      .toList(),
             ),
         ],
       ),

@@ -11,7 +11,7 @@ import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart';
 import 'package:imis/audit/audit_programme/pages/audit_programme_page.dart';
-import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
+import 'package:imis/audit/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
@@ -1317,7 +1317,7 @@ class SidebarState extends State<Sidebar> {
 
     if (selectedPage == 3) {
       if (selectedSubPage == 0) return const AnnouncementPage();
-      if (selectedSubPage == 1) return const AuditSchedulesPage();
+
       if (selectedSubPage == 2) return const AuditorPage();
       if (selectedSubPage == 3) return const AuditorOfficesPage();
       if (selectedSubPage == 4) return const AuditorTeamPage();
@@ -1358,7 +1358,7 @@ class SidebarState extends State<Sidebar> {
     if (selectedPage == 2) {
       if (selectedSubPage == 0) return const AuditProgrammePage();
       if (selectedSubPage == 1) return const AuditPlanPage();
-      if (selectedSubPage == 3) return const AuditSchedulesPage();
+      if (selectedSubPage == 3) return const AuditSchedulePage();
     }
     return HomePage();
   }
