@@ -1358,7 +1358,7 @@ class SidebarState extends State<Sidebar> {
     if (selectedPage == 2) {
       if (selectedSubPage == 0) return const AuditProgrammePage();
       if (selectedSubPage == 1) return const AuditPlanPage();
-      if (selectedSubPage == 3) return const AuditSchedulePage();
+      if (selectedSubPage == 2) return const AuditSchedulePage();
     }
     return HomePage();
   }
