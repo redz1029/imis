@@ -62,30 +62,22 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         if (officeIds == null || !officeIds.Any())
             return new DashboardAuditStatusDto();
   
-        var deliverablesQuery =
-            from d in ReadOnlyDbContext
-                .Set<PgsDeliverable>()
+        var deliverablesQuery = from d in ReadOnlyDbContext.Set<PgsDeliverable>()
                 .AsNoTracking()
 
-            join p in ReadOnlyDbContext
-                .Set<PerfomanceGovernanceSystem>()
+            join p in ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
                 .AsNoTracking()
                 on d.PerfomanceGovernanceSystemId equals p.Id
 
-            join office in ReadOnlyDbContext
-                .Set<Office>()
+            join office in ReadOnlyDbContext.Set<Office>()
                 .AsNoTracking()
                 on p.OfficeId equals office.Id
 
             where
                 !d.IsDeleted
                 && !p.IsDeleted
-
                 && (parentOfficeId.HasValue? office.ParentOfficeId == parentOfficeId.Value : officeIds.Contains(office.Id))
-
-                && (!pgsPeriodId.HasValue || p.PgsPeriod.Id == pgsPeriodId.Value)
-
-            select d.Id;
+                && (!pgsPeriodId.HasValue || p.PgsPeriod.Id == pgsPeriodId.Value) select d.Id;
 
         var deliverableIds = await deliverablesQuery
             .Distinct()
@@ -109,6 +101,105 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         var accomplishments = await ReadOnlyDbContext
             .Set<PgsDeliverableAccomplishment>()
             .AsNoTracking()
+            .Where(a => deliverableIds.Contains(a.PgsDeliverableId) && !a.IsDeleted)
+            .Select(a => new
+            {
+                a.PgsDeliverableId,
+                Status = (int?)a.Status,
+                a.PercentAccomplished,
+                IsAudited = a.AuditorRemarks != null && a.AuditorRemarks.Length > 0
+            })
+            .ToListAsync(cancellationToken);
+     
+        var latestAccomplishments = accomplishments
+            .GroupBy(a => a.PgsDeliverableId)
+            .Select(g => g.OrderByDescending(a => a.PercentAccomplished).First())
+            .ToList();
+    
+        var auditedDeliverableIds = accomplishments
+            .Where(a => a.IsAudited)
+            .Select(a => a.PgsDeliverableId)
+            .Distinct()
+            .ToHashSet();
+
+        var total = deliverableIds.Count;
+
+        var notStarted = latestAccomplishments.Count(x => (x.Status ?? 0) == 0);
+
+        var inProgress = latestAccomplishments.Count(x => (x.Status ?? 0) == 1);
+
+        var completed = latestAccomplishments.Count(x => (x.Status ?? 0) == 2);
+
+        var audited = auditedDeliverableIds.Count;
+
+        return new DashboardAuditStatusDto
+        {
+            TotalDeliverables = total,
+
+            CountNotStarted = notStarted,
+
+            CountInProgress = inProgress,
+
+            CountCompleted = completed,
+
+            CountAudited = audited,
+
+            PercentNotStarted = total > 0 ? Math.Round((decimal)notStarted / total * 100, 2) : 0,
+
+            PercentInProgress = total > 0 ? Math.Round((decimal)inProgress / total * 100, 2) : 0,
+
+            PercentCompleted = total > 0 ? Math.Round((decimal)completed / total * 100, 2) : 0
+        };
+    }
+
+
+    public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusStandardUserAsync(List<int> officeIds, int? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        if (officeIds == null || !officeIds.Any())
+            return new DashboardAuditStatusDto();
+
+        var deliverablesQuery = from d in ReadOnlyDbContext
+                .Set<PgsDeliverable>()
+                .AsNoTracking()
+
+            join p in ReadOnlyDbContext
+                .Set<PerfomanceGovernanceSystem>()
+                .AsNoTracking()
+                on d.PerfomanceGovernanceSystemId equals p.Id
+
+            where
+                !d.IsDeleted
+                && !p.IsDeleted
+                && officeIds.Contains(p.OfficeId)
+                && (
+                    !pgsPeriodId.HasValue ||
+                    p.PgsPeriod.Id == pgsPeriodId.Value
+                )
+
+            select d.Id;
+
+        var deliverableIds = await deliverablesQuery
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (!deliverableIds.Any())
+        {
+            return new DashboardAuditStatusDto
+            {
+                TotalDeliverables = 0,
+                CountNotStarted = 0,
+                CountInProgress = 0,
+                CountCompleted = 0,
+                CountAudited = 0,
+                PercentNotStarted = 0,
+                PercentInProgress = 0,
+                PercentCompleted = 0
+            };
+        }
+
+        var accomplishments = await ReadOnlyDbContext
+            .Set<PgsDeliverableAccomplishment>()
+            .AsNoTracking()
             .Where(a =>
                 deliverableIds.Contains(a.PgsDeliverableId) &&
                 !a.IsDeleted)
@@ -122,7 +213,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     a.AuditorRemarks.Length > 0
             })
             .ToListAsync(cancellationToken);
-     
+
         var latestAccomplishments = accomplishments
             .GroupBy(a => a.PgsDeliverableId)
             .Select(g => g
@@ -130,7 +221,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 .First())
             .ToList();
 
-    
         var auditedDeliverableIds = accomplishments
             .Where(a => a.IsAudited)
             .Select(a => a.PgsDeliverableId)
@@ -139,14 +229,11 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 
         var total = deliverableIds.Count;
 
-        var notStarted = latestAccomplishments.Count(
-            x => (x.Status ?? 0) == 0);
+        var notStarted = latestAccomplishments.Count(x => (x.Status ?? 0) == 0);
 
-        var inProgress = latestAccomplishments.Count(
-            x => (x.Status ?? 0) == 1);
+        var inProgress = latestAccomplishments.Count(x => (x.Status ?? 0) == 1);
 
-        var completed = latestAccomplishments.Count(
-            x => (x.Status ?? 0) == 2);
+        var completed = latestAccomplishments.Count(x => (x.Status ?? 0) == 2);
 
         var audited = auditedDeliverableIds.Count;
 
@@ -163,28 +250,13 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             CountAudited = audited,
 
             PercentNotStarted =
-                total > 0
-                    ? Math.Round(
-                        (decimal)notStarted / total * 100,
-                        2)
-                    : 0,
+                total > 0  ? Math.Round((decimal)notStarted / total * 100, 2) : 0,
 
-            PercentInProgress =
-                total > 0
-                    ? Math.Round(
-                        (decimal)inProgress / total * 100,
-                        2)
-                    : 0,
+            PercentInProgress = total > 0 ? Math.Round((decimal)inProgress / total * 100, 2) : 0,
 
-            PercentCompleted =
-                total > 0
-                    ? Math.Round(
-                        (decimal)completed / total * 100,
-                        2)
-                    : 0
+            PercentCompleted = total > 0 ? Math.Round((decimal)completed / total * 100, 2) : 0
         };
     }
-    
     public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(List<int> officeIds, int? pgsPeriodId, int? parentOfficeId, CancellationToken cancellationToken)
     {
         if (officeIds == null || !officeIds.Any())
@@ -210,6 +282,48 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             select office.Id;
 
         var totalOffice = await query.Distinct().CountAsync(cancellationToken);
+
+        return new TotalDashboardOfficeDto
+        {
+            TotalNoOffice = totalOffice
+        };
+    }
+
+    public async Task<TotalDashboardOfficeDto> GetTotalOfficeStandardUserAsync(List<int> officeIds,
+    int? pgsPeriodId,
+    CancellationToken cancellationToken)
+    {
+        if (officeIds == null || !officeIds.Any())
+        {
+            return new TotalDashboardOfficeDto
+            {
+                TotalNoOffice = 0
+            };
+        }
+
+        var query =
+            from office in ReadOnlyDbContext
+                .Set<Office>()
+                .AsNoTracking()
+
+            join pgs in ReadOnlyDbContext
+                .Set<PerfomanceGovernanceSystem>()
+                .AsNoTracking()
+                on office.Id equals pgs.OfficeId
+
+            where
+                !pgs.IsDeleted
+                && officeIds.Contains(office.Id)
+                && (
+                    !pgsPeriodId.HasValue ||
+                    pgs.PgsPeriod.Id == pgsPeriodId.Value
+                )
+
+            select office.Id;
+
+        var totalOffice = await query
+            .Distinct()
+            .CountAsync(cancellationToken);
 
         return new TotalDashboardOfficeDto
         {

@@ -49,7 +49,7 @@ namespace IMIS.Persistence.PgsModule
             return await _repository.GetPgsByServiceOfficePeriodAsync(periodId, officeId, parentOfficeId, cancellationToken);
         }
         
-        public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(string roleId, int? pgsPeriodId, int? parentOfficeId, CancellationToken cancellationToken)
+        public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
 
@@ -99,7 +99,7 @@ namespace IMIS.Persistence.PgsModule
             if (officeIds == null || !officeIds.Any())
                 return new DashboardAuditStatusDto();
 
-            return await _repository.GetDashboardAuditStatusAsync(officeIds, pgsPeriodId, parentOfficeId, cancellationToken);
+            return await _repository.GetDashboardAuditStatusStandardUserAsync(officeIds, pgsPeriodId, cancellationToken);
         }
         // ====== Get Total Audit Status Deliverable StandardUser ========    
         public async Task<DashboardAuditStatusDto> GetDashboardAuditStatusAsyncStandardUser(string roleId, int? pgsPeriodId, int? parentOfficeId, CancellationToken cancellationToken)
@@ -131,7 +131,7 @@ namespace IMIS.Persistence.PgsModule
             return await _repository.GetDashboardAuditStatusAsync(officeIds, pgsPeriodId, parentOfficeId, cancellationToken);
         }
         
-        public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(string roleId, int? pgsPeriodId, int? parentOfficeId, CancellationToken cancellationToken)
+        public async Task<TotalDashboardOfficeDto> GetTotalOfficeAsync(string roleId, int? pgsPeriodId, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
 
@@ -177,7 +177,7 @@ namespace IMIS.Persistence.PgsModule
             if (!officeIds.Any())
                 return new TotalDashboardOfficeDto();
 
-            return await _repository.GetTotalOfficeAsync(officeIds, pgsPeriodId, parentOfficeId, cancellationToken);
+            return await _repository.GetTotalOfficeStandardUserAsync(officeIds, pgsPeriodId, cancellationToken);
         }
 
         // ====== Get Total Office StandardUser ========

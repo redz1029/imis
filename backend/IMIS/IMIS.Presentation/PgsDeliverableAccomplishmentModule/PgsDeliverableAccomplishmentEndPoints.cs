@@ -291,9 +291,9 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
     
-            app.MapGet("/dashboard/total-offices-count", async (string roleId, int ? pgsPeriodId, int? parentOfficeId, IPerfomanceGovernanceSystemService service, CancellationToken token) =>
+            app.MapGet("/dashboard/total-offices-count", async (string roleId, int ? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken token) =>
             {
-                return Results.Ok(await service.GetTotalOfficeAsync(roleId, pgsPeriodId, parentOfficeId, token));
+                return Results.Ok(await service.GetTotalOfficeAsync(roleId, pgsPeriodId, token));
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
@@ -305,9 +305,9 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
    
-            app.MapGet("/dashboard/audit-status-count", async (string roleId, int? pgsPeriodId, int? parentOfficeId, IPerfomanceGovernanceSystemService service, CancellationToken token) =>
+            app.MapGet("/dashboard/audit-status-count", async (string roleId, int? pgsPeriodId, IPerfomanceGovernanceSystemService service, CancellationToken token) =>
             {
-                return Results.Ok(await service.GetDashboardAuditStatusAsync(roleId, pgsPeriodId, parentOfficeId, token));
+                return Results.Ok(await service.GetDashboardAuditStatusAsync(roleId, pgsPeriodId, token));
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
