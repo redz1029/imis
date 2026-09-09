@@ -253,7 +253,7 @@ namespace IMIS.Persistence.PgsModule
         }
         
         //======= Operation Review Protocol / Performance Validation Tool ===========
-        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetAuditorPgsDeliverableAsync(string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetAuditorPgsDeliverableAsync(string roleId, long? parentofficeid, long? officeId, long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
@@ -277,7 +277,7 @@ namespace IMIS.Persistence.PgsModule
                 role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
             {
-                systems = await _repository.GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(officeId, pgsPeriodId, cancellationToken);
+                systems = await _repository.GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(parentofficeid, officeId, pgsPeriodId, cancellationToken);
             }
             else if (role.Name.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase))
             {
@@ -285,7 +285,7 @@ namespace IMIS.Persistence.PgsModule
             }
             else if (role.Name.Equals(new PgsEvaluatorRole().Name, StringComparison.OrdinalIgnoreCase))
             {
-                systems = await _repository.GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(currentUser.Id, officeId, pgsPeriodId, cancellationToken);
+                systems = await _repository.GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(currentUser.Id, parentofficeid, officeId, pgsPeriodId, cancellationToken);
             }
             else
             {

@@ -88,9 +88,9 @@ namespace IMIS.Presentation.PerformanceValidationToolModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_performanceValidationTool), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceValidationToolPermission.Edit));
 
-            app.MapGet("/pgsAuditor/{roleId}", async (string roleId, long? officeId, long? pgsPeriodId, int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            app.MapGet("/pgsAuditor/{roleId}", async (string roleId, long? parentOfficeId, long? officeId, long? pgsPeriodId, int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
-                var result = await service.GetAuditorPgsDeliverableAsync(roleId, officeId, pgsPeriodId, page, pageSize, cancellationToken).ConfigureAwait(false);
+                var result = await service.GetAuditorPgsDeliverableAsync(roleId, parentOfficeId, officeId, pgsPeriodId, page, pageSize, cancellationToken).ConfigureAwait(false);
 
                 return Results.Ok(result);
             })

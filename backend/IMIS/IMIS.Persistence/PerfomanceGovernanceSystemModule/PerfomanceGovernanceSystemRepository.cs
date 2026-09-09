@@ -678,20 +678,75 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         return groupedResult;
     }
 
-    // GET ALL AUDITOR PGS DELIVERABLES    
-    public async Task<List<PerfomanceGovernanceSystem>> GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+    // GET ALL AUDITOR PGS DELIVERABLES      
+    public async Task<List<PerfomanceGovernanceSystem>> GetAllOperationReviewProtocolAuditorPgsDeliverableAsync(long? parentofficeid, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
     {
-        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+        List<long>? officeIds = null;
+
+        if (parentofficeid.HasValue)
+        {
+            var parentOfficeIds = await GetDescendantOfficeIdsAsync(
+                [(int)parentofficeid.Value],
+                cancellationToken);
+
+            if (!parentOfficeIds.Any())
+                return [];
+
+            officeIds = parentOfficeIds
+                .Select(x => (long)x)
+                .Distinct()
+                .ToList();
+        }
+
+        if (officeId.HasValue)
+        {
+            var selectedOfficeIds = await GetDescendantOfficeIdsAsync(
+                [(int)officeId.Value],
+                cancellationToken);
+
+            if (!selectedOfficeIds.Any())
+                return [];
+
+            var selectedOfficeIdsLong = selectedOfficeIds
+                .Select(x => (long)x)
+                .ToList();
+
+            if (officeIds != null)
+            {
+                officeIds = officeIds
+                    .Intersect(selectedOfficeIdsLong)
+                    .ToList();
+
+                if (!officeIds.Any())
+                    return [];
+            }
+            else
+            {
+                officeIds = selectedOfficeIdsLong;
+            }
+        }
+
+        var query = ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
             .AsNoTracking()
             .Include(x => x.Office)
             .Include(x => x.PgsPeriod)
             .Include(x => x.PgsReadinessRating)
             .Include(x => x.PgsDeliverables)
             .Include(x => x.PgsSignatories)
-            .Where(x => !x.IsDeleted && (!officeId.HasValue || x.OfficeId == officeId.Value) && (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value))
-            .ToListAsync(cancellationToken);
-    }
+            .Where(x =>
+                !x.IsDeleted &&
+                (!pgsPeriodId.HasValue ||
+                 x.PgsPeriod.Id == pgsPeriodId.Value));
 
+        if (officeIds != null)
+        {
+            query = query.Where(x => officeIds.Contains(x.OfficeId));
+        }
+
+        return await query
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
     // GET BY AUDITOR   
     private async Task<List<int>> GetDescendantOfficeIdsAsync(List<int> rootOfficeIds, CancellationToken cancellationToken)
     {
@@ -725,12 +780,15 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     }
 
     // GET BY EVALUATOR
-    public async Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(string userId, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
+    public async Task<List<PerfomanceGovernanceSystem>> GetOperationReviewProtocolAuditorPgsDeliverableByUserAsync(string userId, long? parentofficeid, long? officeId, long? pgsPeriodId, CancellationToken cancellationToken)
     {
         var assignedOfficeIds = await ReadOnlyDbContext.Set<EvaluatorOffices>()
             .AsNoTracking()
-            .Where(x => x.UserId == userId && !x.IsDeleted && x.OfficeId.HasValue)
-            .Select(x => x.OfficeId!.Value) 
+            .Where(x =>
+                x.UserId == userId &&
+                !x.IsDeleted &&
+                x.OfficeId.HasValue)
+            .Select(x => x.OfficeId!.Value)
             .ToListAsync(cancellationToken);
 
         if (!assignedOfficeIds.Any())
@@ -741,19 +799,40 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         if (!allowedOfficeIds.Any())
             return [];
 
-        var finalOfficeIds = allowedOfficeIds;
+        List<int> finalOfficeIds = allowedOfficeIds;
 
-     
-        if (officeId.HasValue)
+        if (parentofficeid.HasValue)
         {
-            var requestedDescendantIds = await GetDescendantOfficeIdsAsync([(int)officeId.Value], cancellationToken);
-            finalOfficeIds = allowedOfficeIds.Intersect(requestedDescendantIds).ToList();
+            var parentOfficeIds = await GetDescendantOfficeIdsAsync([(int)parentofficeid.Value], cancellationToken);
+
+            if (!parentOfficeIds.Any())
+                return [];
+
+            finalOfficeIds = finalOfficeIds
+                .Intersect(parentOfficeIds)
+                .ToList();
 
             if (!finalOfficeIds.Any())
                 return [];
         }
 
-        var officeIdsLong = finalOfficeIds.Select(x => (long)x).ToList();
+        if (officeId.HasValue)
+        {
+            var selectedOfficeIds = await GetDescendantOfficeIdsAsync([(int)officeId.Value], cancellationToken);
+
+            if (!selectedOfficeIds.Any())
+                return [];
+
+            finalOfficeIds = finalOfficeIds.Intersect(selectedOfficeIds).ToList();
+
+            if (!finalOfficeIds.Any())
+                return [];
+        }
+
+        var officeIdsLong = finalOfficeIds
+            .Distinct()
+            .Select(x => (long)x)
+            .ToList();
 
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
             .AsNoTracking()
@@ -765,8 +844,12 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             .Where(x =>
                 !x.IsDeleted &&
                 officeIdsLong.Contains(x.OfficeId) &&
-                (!pgsPeriodId.HasValue || x.PgsPeriod.Id == pgsPeriodId.Value))
-            .ToListAsync(cancellationToken);
+                (
+                    !pgsPeriodId.HasValue ||
+                    x.PgsPeriod.Id == pgsPeriodId.Value
+                ))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 
     // GET BY USER AUDITOR
