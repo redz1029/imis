@@ -7,17 +7,17 @@ part of 'audit_plan.dart';
 // **************************************************************************
 
 AuditPlan _$AuditPlanFromJson(Map<String, dynamic> json) => AuditPlan(
-  id: (json['id'] as num).toInt(),
-  isDeleted: json['isDeleted'] as bool,
+  id: (json['id'] as num?)?.toInt() ?? 0,
+  isDeleted: json['isDeleted'] as bool? ?? false,
   rowVersion: json['rowVersion'] as String?,
-  auditProgrammeId: (json['auditProgrammeId'] as num).toInt(),
-  planStatus: json['planStatus'] as String,
+  auditProgrammeId: (json['auditProgrammeId'] as num?)?.toInt() ?? 0,
+  planStatus: json['planStatus'] as String? ?? 'Draft',
   startDate: const DateTimeConverter().fromJson(json['startDate'] as String),
   endDate: const DateTimeConverter().fromJson(json['endDate'] as String),
   entries:
-      (json['entries'] as List<dynamic>)
-          .map((e) => AuditPlanEntry.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      json['entries'] == null
+          ? []
+          : AuditPlan._entriesFromJson(json['entries']),
 );
 
 Map<String, dynamic> _$AuditPlanToJson(AuditPlan instance) => <String, dynamic>{
@@ -28,5 +28,5 @@ Map<String, dynamic> _$AuditPlanToJson(AuditPlan instance) => <String, dynamic>{
   'planStatus': instance.planStatus,
   'startDate': const DateTimeConverter().toJson(instance.startDate),
   'endDate': const DateTimeConverter().toJson(instance.endDate),
-  'entries': instance.entries,
+  'entries': instance.entries.map((e) => e.toJson()).toList(),
 };

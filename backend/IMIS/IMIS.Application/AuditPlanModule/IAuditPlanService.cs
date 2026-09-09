@@ -1,6 +1,7 @@
 using Base.Abstractions;
 using Base.Pagination;
 using Base.Primitives;
+using IMIS.Application.AuditProgrammeModule;
 using IMIS.Domain;
 using System.Collections.Generic;
 using System.Threading;
@@ -29,5 +30,8 @@ namespace IMIS.Application.AuditPlanModule
         // --- Generic Save for parent + child collections ---
         Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
             where TEntity : Entity<TId>;
+        Task<AuditPlanDto?> GetByProgrammeIdAsync(int programmeId, CancellationToken cancellationToken);
+
+        Task<ReportAuditPlanDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
     }
 }

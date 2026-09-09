@@ -6,16 +6,17 @@ part 'iso_standard_audit_plan.g.dart';
 @JsonSerializable(explicitToJson: true)
 class IsoStandardAuditPlan {
   final int id;
-  final int? isoStandardId;
-  final IsoStandard? isoStandard;
-  final int? auditPlanEntryId;
+final int? isoStandardId;
+final IsoStandard? isoStandard;
+@JsonKey(defaultValue: 0)
+final int auditPlanEntryId;
 
-  IsoStandardAuditPlan({
-    this.id = 0,
-    this.isoStandardId,
-    this.isoStandard,
-    this.auditPlanEntryId,
-  });
+IsoStandardAuditPlan({
+  this.id = 0,
+  this.isoStandardId,
+  this.isoStandard,
+  this.auditPlanEntryId = 0,
+});
 
   factory IsoStandardAuditPlan.fromJson(Map<String, dynamic> json) =>
       _$IsoStandardAuditPlanFromJson(json);

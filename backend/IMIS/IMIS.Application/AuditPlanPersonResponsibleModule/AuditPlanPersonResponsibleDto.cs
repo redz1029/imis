@@ -7,7 +7,10 @@ namespace IMIS.Application.AuditPlanPersonResponsibleModule
     public class AuditPlanPersonResponsibleDto : BaseDto<AuditPlanPersonResponsible, int>
     {
         public string Name { get; set; } = string.Empty;
-        public int AuditPlanEntryId { get; set; }
+
+        // Made nullable so System.Text.Json doesn't crash on null incoming values
+        public int? AuditPlanEntryId { get; set; }
+
         public AuditPlanEntry? AuditPlanEntry { get; set; }
 
         public AuditPlanPersonResponsibleDto() { }
@@ -29,7 +32,8 @@ namespace IMIS.Application.AuditPlanPersonResponsibleModule
             {
                 Id = Id,
                 Name = Name,
-                AuditPlanEntryId = AuditPlanEntryId,
+                // Fallbacks to 0 if null so the domain entity receives a valid integer
+                AuditPlanEntryId = AuditPlanEntryId ?? 0,
 
                 AuditPlanEntry = null
             };

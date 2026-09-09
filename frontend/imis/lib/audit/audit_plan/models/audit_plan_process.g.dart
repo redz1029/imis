@@ -8,14 +8,14 @@ part of 'audit_plan_process.dart';
 
 AuditPlanProcess _$AuditPlanProcessFromJson(Map<String, dynamic> json) =>
     AuditPlanProcess(
-      id: (json['id'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt() ?? 0,
       officeId: (json['officeId'] as num?)?.toInt(),
       office:
           json['office'] == null
               ? null
               : Office.fromJson(json['office'] as Map<String, dynamic>),
       processName: json['processName'] as String?,
-      auditPlanEntryId: (json['auditPlanEntryId'] as num).toInt(),
+      auditPlanEntryId: (json['auditPlanEntryId'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$AuditPlanProcessToJson(AuditPlanProcess instance) =>

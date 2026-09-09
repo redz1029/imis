@@ -19,6 +19,7 @@ AuditPlanEntry _$AuditPlanEntryFromJson(
           : AuditPlan.fromJson(json['auditPlan'] as Map<String, dynamic>),
   dayNumber: (json['dayNumber'] as num).toInt(),
   time: const DateTimeConverter().fromJson(json['time'] as String),
+  standardText: json['standardText'] as String?,
   isoAuditProcesses:
       (json['isoAuditProcesses'] as List<dynamic>?)
           ?.map((e) => IsoAuditProcess.fromJson(e as Map<String, dynamic>))
@@ -53,6 +54,7 @@ Map<String, dynamic> _$AuditPlanEntryToJson(AuditPlanEntry instance) =>
       'auditPlan': instance.auditPlan?.toJson(),
       'dayNumber': instance.dayNumber,
       'time': const DateTimeConverter().toJson(instance.time),
+      'standardText': instance.standardText,
       'isoAuditProcesses':
           instance.isoAuditProcesses?.map((e) => e.toJson()).toList(),
       'responsiblePersons':
@@ -77,46 +79,3 @@ Map<String, dynamic> _$IsoAuditProcessToJson(IsoAuditProcess instance) =>
       'name': instance.name,
       'isActive': instance.isActive,
     };
-
-AuditPlanPersonResponsible _$AuditPlanPersonResponsibleFromJson(
-  Map<String, dynamic> json,
-) => AuditPlanPersonResponsible(
-  id: (json['id'] as num?)?.toInt() ?? 0,
-  auditPlanEntryId: (json['auditPlanEntryId'] as num?)?.toInt(),
-  personResponsibleId: json['personResponsibleId'] as String?,
-);
-
-Map<String, dynamic> _$AuditPlanPersonResponsibleToJson(
-  AuditPlanPersonResponsible instance,
-) => <String, dynamic>{
-  'id': instance.id,
-  'auditPlanEntryId': instance.auditPlanEntryId,
-  'personResponsibleId': instance.personResponsibleId,
-};
-
-IsoAuditor _$IsoAuditorFromJson(Map<String, dynamic> json) => IsoAuditor(
-  id: (json['id'] as num?)?.toInt() ?? 0,
-  teamId: (json['teamId'] as num?)?.toInt(),
-  auditorId: json['auditorId'] as String?,
-);
-
-Map<String, dynamic> _$IsoAuditorToJson(IsoAuditor instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'teamId': instance.teamId,
-      'auditorId': instance.auditorId,
-    };
-
-IsoStandardAuditPlan _$IsoStandardAuditPlanFromJson(
-  Map<String, dynamic> json,
-) => IsoStandardAuditPlan(
-  id: (json['id'] as num?)?.toInt() ?? 0,
-  isoStandardId: (json['isoStandardId'] as num?)?.toInt(),
-);
-
-Map<String, dynamic> _$IsoStandardAuditPlanToJson(
-  IsoStandardAuditPlan instance,
-) => <String, dynamic>{
-  'id': instance.id,
-  'isoStandardId': instance.isoStandardId,
-};

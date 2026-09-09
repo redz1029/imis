@@ -1,6 +1,7 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditPlanModule;
+using IMIS.Application.AuditProgrammeModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -137,6 +138,22 @@ namespace IMIS.Application.AuditPlanModule
             }
         }
 
+        public async Task<AuditPlanDto?> GetByProgrammeIdAsync(int programmeId, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var id = await dbContext.Set<AuditPlan>()
+                .Where(a => a.AuditProgrammeId == programmeId && !a.IsDeleted)
+                .Select(a => a.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (id == 0) return null;
+
+            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken);
+            return entity != null ? new AuditPlanDto(entity) : null;
+        }
+
+
         private void SyncEntryGrandchildCollections(DbContext dbContext, AuditPlanEntry existingEntry, AuditPlanEntry incomingEntry)
         {
             existingEntry.IsoAuditProcesses ??= new List<IsoAuditProcess>();
@@ -208,7 +225,7 @@ namespace IMIS.Application.AuditPlanModule
 
         public async Task<AuditPlanDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var entity = await _repository.GetByIdAsync(id, cancellationToken);
+            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken);
             return entity != null ? new AuditPlanDto(entity) : null;
         }
 
@@ -239,5 +256,224 @@ namespace IMIS.Application.AuditPlanModule
             if (result.TotalCount == 0) return null;
             return DtoPageList<AuditPlanDto, AuditPlan, int>.Create(result.Items, page, pageSize, result.TotalCount);
         }
+
+        public async Task<ReportAuditPlanDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
+
+            if (entity == null)
+            {
+                return null;
+            }
+
+            // 1. Initialize root primitive properties & DTO shell
+            var dto = new ReportAuditPlanDto
+            {
+                Id = entity.Id,
+                StartDate = entity.StartDate,
+                EndDate = entity.EndDate,
+                PlanStatus = entity.PlanStatus ?? "Draft",
+                BatchFormattedDates = FormatBatchDateRange(entity.StartDate, entity.EndDate),
+                IsDeleted = entity.IsDeleted,
+                RowVersion = entity.RowVersion,
+
+                // Parent AuditProgramme Fallback Mapping
+                AuditPlanObjective = entity.AuditProgramme?.AuditPlanObjective ?? string.Empty,
+                ScopeOfAudit = entity.AuditProgramme?.ScopeOfAudit ?? string.Empty,
+
+                // Signature Block Resolutions
+                PreparedByName = ResolvePreparerName(entity.Preparer),
+                PreparedByDate = entity.CreatedDate.ToString("MMMM dd, yyyy"),
+
+                FlatEntries = new List<ReportScheduleEntryDto>()
+            };
+
+            // 2. Signature Block: Approval Resolution
+            var latestApproval = entity.Approvals?
+                .Where(a => string.Equals(a.Action, "Approved", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(a => a.Timestamp)
+                .FirstOrDefault();
+
+            if (latestApproval != null)
+            {
+                dto.ApprovedByName = ResolveUserName(latestApproval.Approver);
+                dto.ApprovedByDate = latestApproval.Timestamp.ToString("MMMM dd, yyyy");
+            }
+
+            // 3. Entries Flattening & Formatting Block
+            if (entity.Entries != null && entity.Entries.Any())
+            {
+                int maxDay = entity.Entries.Max(e => e.DayNumber);
+
+                foreach (var entry in entity.Entries.OrderBy(e => e.DayNumber).ThenBy(e => e.Time))
+                {
+                    // A. Auditable Units Configuration Resolution (Office Names & Departments)
+                    string officeNamesCombined = "N/A";
+                    if (entry.AuditPlanProcesses != null && entry.AuditPlanProcesses.Any())
+                    {
+                        var officeNames = entry.AuditPlanProcesses
+                            .Select(app =>
+                            {
+                                if (app.Office != null)
+                                {
+                                    var currentOffice = app.Office;
+                                    var parent = currentOffice.ParentOffice;
+                                    string? departmentName = null;
+                                    string? serviceName = null;
+
+                                    while (parent != null)
+                                    {
+                                        if (parent.OfficeTypeId == 2)
+                                        {
+                                            departmentName = parent.Name;
+                                            break;
+                                        }
+
+                                        if (parent.OfficeTypeId == 1)
+                                        {
+                                            serviceName = parent.Name;
+                                        }
+
+                                        parent = parent.ParentOffice;
+                                    }
+
+                                    if (!string.IsNullOrEmpty(departmentName))
+                                    {
+                                        return $"{departmentName} - {currentOffice.Name}";
+                                    }
+
+                                    if (!string.IsNullOrEmpty(serviceName) && currentOffice.Name != serviceName)
+                                    {
+                                        return $"{serviceName} - {currentOffice.Name}";
+                                    }
+
+                                    return currentOffice.Name;
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(app.ProcessName))
+                                {
+                                    return app.ProcessName!.Trim();
+                                }
+
+                                return app.OfficeId != null ? $"Office {app.OfficeId}" : $"Process {app.Id}";
+                            })
+                            .Where(name => !string.IsNullOrEmpty(name))
+                            .ToList();
+
+                        if (officeNames.Any())
+                        {
+                            officeNamesCombined = string.Join(Environment.NewLine, officeNames);
+                        }
+                    }
+                    else if (entry.IsoAuditProcesses != null && entry.IsoAuditProcesses.Any())
+                    {
+                        var processNames = entry.IsoAuditProcesses
+                            .Select(p => p.Name)
+                            .Where(name => !string.IsNullOrEmpty(name))
+                            .ToList();
+
+                        if (processNames.Any())
+                        {
+                            officeNamesCombined = string.Join(Environment.NewLine, processNames);
+                        }
+                    }
+
+                    // B. Standards Compliance Clause Array Mapping
+                    string standardChaptersCombined = "N/A";
+                    if (entry.IsoStandardAuditPlans != null && entry.IsoStandardAuditPlans.Any())
+                    {
+                        var clauses = entry.IsoStandardAuditPlans
+                            .Where(isap => isap.IsoStandard != null && !string.IsNullOrEmpty(isap.IsoStandard.ClauseRef))
+                            .Select(isap => isap.IsoStandard!.ClauseRef)
+                            .OrderBy(clause => clause)
+                            .ToList();
+
+                        if (clauses.Any())
+                        {
+                            standardChaptersCombined = string.Join(", ", clauses);
+                        }
+                    }
+
+                    // C. Responsible Persons & Auditor Team Resolution
+                    string auditorsLinesCombined = "Unassigned";
+                    if (entry.ResponsiblePersons != null && entry.ResponsiblePersons.Any())
+                    {
+                        var names = entry.ResponsiblePersons
+                            .Select(r => r.Name)
+                            .Where(n => !string.IsNullOrWhiteSpace(n))
+                            .ToList();
+
+                        if (names.Any())
+                        {
+                            auditorsLinesCombined = string.Join(Environment.NewLine, names);
+                        }
+                    }
+                    else if (entry.IsoAuditors != null && entry.IsoAuditors.Any())
+                    {
+                        var firstAuditorNode = entry.IsoAuditors.FirstOrDefault();
+                        if (firstAuditorNode != null)
+                        {
+                            auditorsLinesCombined = firstAuditorNode.Team != null
+                                ? firstAuditorNode.Team.Name
+                                : $"Team {firstAuditorNode.TeamId ?? 1}";
+                        }
+                    }
+
+                    // D. Calculate Proposed Entry Date based on DayNumber offset from StartDate
+                    DateTime calculatedEntryDate = entity.StartDate.AddDays(entry.DayNumber - 1);
+
+                    var scheduleEntry = new ReportScheduleEntryDto
+                    {
+                        Id = entry.Id,
+                        DayNumber = entry.DayNumber,
+                        Time = entry.Time,
+                        TotalDaysInBatch = maxDay,
+                        FormattedOfficeNames = officeNamesCombined.Trim(),
+                        FormattedStandardChapters = standardChaptersCombined.Trim(),
+                        FormattedProposedSchedule = calculatedEntryDate.ToString("MMMM dd, yyyy"),
+                        FormattedAuditorTeamAndMembers = auditorsLinesCombined
+                    };
+
+                    dto.FlatEntries.Add(scheduleEntry);
+                }
+            }
+
+            return dto;
+        }
+
+        #region Mapping Helpers
+
+        private static string ResolvePreparerName(IsoAuditor? preparer)
+        {
+            return ResolveAuditorName(preparer?.IsoAuditors);
+        }
+
+        private static string ResolveAuditorName(Auditor? auditor)
+        {
+            return ResolveUserName(auditor?.User);
+        }
+
+        private static string ResolveUserName(User? user)
+        {
+            if (user == null) return string.Empty;
+
+            var parts = new[] { user.Prefix, user.FirstName, user.MiddleName, user.LastName, user.Suffix }
+                .Where(p => !string.IsNullOrWhiteSpace(p));
+
+            return string.Join(" ", parts);
+        }
+
+        private static string FormatBatchDateRange(DateTime start, DateTime end)
+        {
+            if (start.Month == end.Month && start.Year == end.Year)
+            {
+                if (start.Day == end.Day) return $"{start:MMMM dd, yyyy}";
+                return $"{start:MMMM d} – {end:d, yyyy}";
+            }
+            return $"{start:MMMM dd, yyyy} - {end:MMMM dd, yyyy}";
+        }
+
+        #endregion
     }
 }
+    

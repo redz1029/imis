@@ -5,19 +5,22 @@ part 'iso_auditor.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class IsoAuditor {
-  final int id;
-  final int teamId;
-  final Team? team;
-  final int? auditorId;
-  final int? auditPlanEntryId;
+  @JsonKey(defaultValue: 0)
+final int id;
+@JsonKey(defaultValue: 0)
+final int teamId;
+final Team? team;
+final int? auditorId;
+@JsonKey(defaultValue: 0)
+final int auditPlanEntryId;
 
-  IsoAuditor({
-    required this.id,
-    required this.teamId,
-    this.team,
-    this.auditorId,
-    this.auditPlanEntryId,
-  });
+IsoAuditor({
+  this.id = 0,
+  this.teamId = 0,
+  this.team,
+  this.auditorId,
+  this.auditPlanEntryId = 0,
+});
 
   factory IsoAuditor.fromJson(Map<String, dynamic> json) =>
       _$IsoAuditorFromJson(json);

@@ -16,23 +16,21 @@ namespace IMIS.Application.AuditPlanEntryModule
 {
     public class AuditPlanEntryDto : BaseDto<AuditPlanEntry, int>
     {
+        // FIX: Removed 'required' and made nullable so incoming null/0 on CREATE passes deserialization.
         [JsonPropertyName("auditPlanId")]
-        public required int AuditPlanId { get; set; }
+        public int? AuditPlanId { get; set; }
 
-        // FIX: The crucial attribute to prevent the serializer from entering an infinite loop.
-        // This completely hides the parent back-reference path from the JSON serializer engine and Swagger.
         [JsonIgnore]
         [JsonPropertyName("auditPlan")]
         public AuditPlanDto? AuditPlan { get; set; }
 
+        // FIX: Removed 'required' keyword for flexible model binding
         [JsonPropertyName("dayNumber")]
-        public required int DayNumber { get; set; }
+        public int DayNumber { get; set; }
 
         [JsonPropertyName("time")]
-        public required DateTime Time { get; set; }
+        public DateTime Time { get; set; }
 
-        // STABILIZATION: Ensured non-nullable lists initialized to empty instances to secure 
-        // frontend payload rendering from missing reference null crashes.
         [JsonPropertyName("isoAuditProcesses")]
         public List<IsoAuditProcessDto> IsoAuditProcesses { get; set; } = new();
 
@@ -58,8 +56,6 @@ namespace IMIS.Application.AuditPlanEntryModule
             this.DayNumber = entity.DayNumber;
             this.Time = entity.Time;
 
-            // FIX: Never initialize the full parent AuditPlanDto graph node inside a child constructor.
-            // Leaving this null breaks the infinite recursion execution ring.
             this.AuditPlan = null;
 
             this.IsoAuditProcesses = entity.IsoAuditProcesses != null
@@ -90,8 +86,8 @@ namespace IMIS.Application.AuditPlanEntryModule
             return new AuditPlanEntry
             {
                 Id = this.Id,
-                AuditPlanId = this.AuditPlanId,
-                AuditPlan = null, // Safely broken reference path
+                AuditPlanId = this.AuditPlanId ?? 0, // Fallback to 0 for EF Core foreign key resolution
+                AuditPlan = null,
 
                 DayNumber = this.DayNumber,
                 Time = this.Time,

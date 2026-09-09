@@ -211,9 +211,6 @@ namespace IMIS.Presentation.AuditProgrammeModule
             })
             .WithTags(_AuditProgramme);
 
-            // =========================================================================
-            // GET BY ID (Calls GetByIdAsync -> GetByIdWithDetailsAsync in Repository)
-            // =========================================================================
             app.MapGet("/{id:int}", async (
                 int id,
                 IAuditProgrammeService service,

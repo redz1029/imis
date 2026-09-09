@@ -158,5 +158,7 @@ using (var scope = app.Services.CreateScope())
     await seeder.SeedAsync();
 }
 
+app.MapGet("/ping", () => "pong");
+
 ServiceResolver.Init(app.Services);
 app.Run();

@@ -1,6 +1,9 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AuditPlanModule;
+using IMIS.Application.AuditProgrammeModule;
+using IMIS.Domain;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +46,18 @@ namespace IMIS.Presentation.AuditPlanModule
             })
             .WithTags(_AuditPlan);//.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
+            // GET BY PROGRAMME ID
+            app.MapGet("/programme/{programmeId:int}", async (
+                int programmeId,
+                IAuditPlanService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetByProgrammeIdAsync(programmeId, cancellationToken);
+                return result != null ? Results.Ok(result) : Results.NotFound();
+            })
+            .WithTags(_AuditPlan)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlan), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
             // GET ALL
             app.MapGet("/", async (
                 IAuditPlanService service,
@@ -108,6 +123,30 @@ namespace IMIS.Presentation.AuditPlanModule
             .WithTags(_AuditPlan)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlan), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            app.MapGet("/PdF/{id:int}", async (
+                HttpResponse response,
+                int id,
+                IAuditPlanService service,
+                CancellationToken cancellationToken) =>
+            {
+                var AuditData = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                if (AuditData == null)
+                    return Results.NotFound(new { message = $"Audit Plan with ID {id} was not found." });
+
+                var file = await ReportUtil.GeneratePdfReport<ReportAuditPlanDto>(
+                    "AuditPlan",
+                    new List<ReportAuditPlanDto> { AuditData },
+                    "AuditData",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                return Results.File(file, "application/pdf", $"AuditPlan_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+            .WithTags(_AuditPlan)
+            .RequireCors("_allowedOrigins")
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlan), true);
 
             // DELETE (SOFT DELETE)
             app.MapDelete("/{id:int}", async (

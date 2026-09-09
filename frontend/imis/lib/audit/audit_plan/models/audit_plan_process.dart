@@ -5,11 +5,13 @@ part 'audit_plan_process.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class AuditPlanProcess {
-  final int id;
-  final int? officeId;
-  final Office? office;
-  final String? processName;
-  final int auditPlanEntryId;
+  @JsonKey(defaultValue: 0)
+final int id;
+final int? officeId;
+final Office? office;
+final String? processName;
+@JsonKey(defaultValue: 0)
+final int auditPlanEntryId;
 
   AuditPlanProcess({
     required this.id,

@@ -4,12 +4,20 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'audit_plan.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class AuditPlan {
+  @JsonKey(defaultValue: 0)
   final int id;
+
+  @JsonKey(defaultValue: false)
   final bool isDeleted;
+
   final String? rowVersion;
+
+  @JsonKey(defaultValue: 0)
   final int auditProgrammeId;
+
+  @JsonKey(defaultValue: 'Draft')
   final String planStatus;
 
   @DateTimeConverter()
@@ -18,21 +26,34 @@ class AuditPlan {
   @DateTimeConverter()
   final DateTime endDate;
 
+  @JsonKey(fromJson: _entriesFromJson, defaultValue: [])
   final List<AuditPlanEntry> entries;
 
   const AuditPlan({
-    required this.id,
-    required this.isDeleted,
+    this.id = 0,
+    this.isDeleted = false,
     this.rowVersion,
-    required this.auditProgrammeId,
-    required this.planStatus,
+    this.auditProgrammeId = 0,
+    this.planStatus = 'Draft',
     required this.startDate,
     required this.endDate,
-    required this.entries,
+    this.entries = const [],
   });
 
   factory AuditPlan.fromJson(Map<String, dynamic> json) =>
       _$AuditPlanFromJson(json);
 
   Map<String, dynamic> toJson() => _$AuditPlanToJson(this);
+
+  static List<AuditPlanEntry> _entriesFromJson(Object? json) {
+    if (json is List) {
+      return json.map((e) {
+        if (e is AuditPlanEntry) return e;
+        if (e is Map<String, dynamic>) return AuditPlanEntry.fromJson(e);
+        if (e is Map) return AuditPlanEntry.fromJson(Map<String, dynamic>.from(e));
+        return AuditPlanEntry.fromJson(const {});
+      }).toList();
+    }
+    return [];
+  }
 }

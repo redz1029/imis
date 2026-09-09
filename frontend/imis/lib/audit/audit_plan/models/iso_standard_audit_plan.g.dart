@@ -15,7 +15,7 @@ IsoStandardAuditPlan _$IsoStandardAuditPlanFromJson(
       json['isoStandard'] == null
           ? null
           : IsoStandard.fromJson(json['isoStandard'] as Map<String, dynamic>),
-  auditPlanEntryId: (json['auditPlanEntryId'] as num?)?.toInt(),
+  auditPlanEntryId: (json['auditPlanEntryId'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$IsoStandardAuditPlanToJson(
