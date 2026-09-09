@@ -21,7 +21,19 @@ namespace IMIS.Persistence.EvaluatorOfficesModule
             _userManager = userManager;
             _roleManager = roleManager;
         }
-       
+        public async Task<List<EvaluatorOfficesDto>?> GetByOfficeIdAsync(int officeId, CancellationToken cancellationToken)
+        {
+            var evaluatorOffices = await _repository.GetByOfficeIdAsync(officeId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (evaluatorOffices == null || !evaluatorOffices.Any())
+                return [];
+
+            return evaluatorOffices
+                .Select(e => new EvaluatorOfficesDto(e))
+                .ToList();
+        }
+
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var evaluatorOfficesDto = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);

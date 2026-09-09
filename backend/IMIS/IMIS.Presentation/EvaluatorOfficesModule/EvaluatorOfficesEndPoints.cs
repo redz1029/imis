@@ -71,6 +71,15 @@ namespace IMIS.Presentation.EvaluatorOfficesModule
                               : Results.NotFound(new { message = "Evaluator Office Template not found." });
             })
             .WithTags(_evaluatorOffices);
+
+            app.MapGet("/office/{officeId:int}", async (int officeId, IEvaluatorOfficesService service, CancellationToken cancellationToken) =>
+            {
+                var evaluatorOfficesDto = await service.GetByOfficeIdAsync(officeId, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(evaluatorOfficesDto);
+            })
+           .WithTags(_evaluatorOffices);
+
+
         }
     }
 }

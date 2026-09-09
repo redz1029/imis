@@ -11,5 +11,6 @@ namespace IMIS.Application.EvaluatorOfficesModule
         Task<List<EvaluatorOfficesDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<List<EvaluatorOfficesDto>?> GetAllServicesAsync(CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<List<EvaluatorOfficesDto>> GetByOfficeIdAsync(int officeId, CancellationToken cancellationToken);
     }
 }
