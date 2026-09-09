@@ -11,13 +11,27 @@ namespace IMIS.Persistence.EvaluatorOfficesModule
         public EvaluatorOfficesRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
-        public async Task<List<EvaluatorOffices>?> GetByOfficeIdAsync(int officeId, CancellationToken cancellationToken)
+        
+        public async Task<List<EvaluatorOffices>> GetByOfficeIdAsync(int officeId, CancellationToken cancellationToken)
         {
+            var office = await ReadOnlyDbContext.Set<Office>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    o => o.Id == officeId,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            if (office == null)
+                return [];
+
+            var targetOfficeId = office.ParentOfficeId ?? office.Id;
+
             return await _entities
                 .AsNoTracking()
                 .Include(e => e.Office)
                 .Include(e => e.User)
-                .Where(e => e.OfficeId == officeId)
+                .Where(e =>
+                    e.OfficeId == targetOfficeId)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
