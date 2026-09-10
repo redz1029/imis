@@ -8,5 +8,6 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
     {
         Task<List<PgsDeliverableAccomplishment>> GetByDeliverableIdAsync(long deliverableId, CancellationToken cancellationToken);
         Task<EntityPageList<PgsDeliverableAccomplishment, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        Task<int> GetAttachmentCountByDeliverableIdAsync(long deliverableId, CancellationToken cancellationToken);
     }
 }

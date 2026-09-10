@@ -88,12 +88,7 @@ namespace IMIS.Persistence.PGSModules
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return await currentUserService!.GetCurrentUserAsync();
         }
-
-
-
-       
-
-
+     
         public async Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
@@ -127,42 +122,23 @@ namespace IMIS.Persistence.PGSModules
                 filter.PgsPeriodId = (int)currentPeriodId;
             }
 
-            var hasFullAccess =
-                role.Name!.Equals(
-                    new AdministratorRole().Name,
-                    StringComparison.OrdinalIgnoreCase) ||
+            var hasFullAccess = role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(
-                    new PgsServiceHead().Name,
-                    StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(
-                    new PgsAuditorHead().Name,
-                    StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(
-                    new PgsManagerRole().Name,
-                    StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(
-                    new PgsHead().Name,
-                    StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(
-                    new MCC().Name,
-                    StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(
-                    new OSM().Name,
-                    StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(
-                    new TWG().Name,
-                    StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new TWG().Name, StringComparison.OrdinalIgnoreCase) ||
 
-                role.Name.Equals(
-                    new MSGC().Name,
-                    StringComparison.OrdinalIgnoreCase);
+                role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase);
 
             List<int>? officeIds = null;
 

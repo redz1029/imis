@@ -24,6 +24,11 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
             _deliverablerepository = deliverablerepository ?? throw new ArgumentNullException(nameof(deliverablerepository));
         }
 
+        public async Task<int> GetAttachmentCountByDeliverableIdAsync(long deliverableId, CancellationToken cancellationToken)
+        {
+            return await _repository.GetAttachmentCountByDeliverableIdAsync(deliverableId, cancellationToken).ConfigureAwait(false);
+        }
+
         public async Task<bool> UpdateAccomplishmentsAsync(List<ORPPgsDeliverableAccomplishmentDto> request, CancellationToken cancellationToken)
         {
             foreach (var item in request)

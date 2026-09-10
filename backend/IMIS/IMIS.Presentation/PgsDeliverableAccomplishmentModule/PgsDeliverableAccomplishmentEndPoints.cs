@@ -317,6 +317,20 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);
+
+            app.MapGet("/{deliverableId:long}/attachment-count", async (long deliverableId, IPgsDeliverableAcomplishmentService service, CancellationToken cancellationToken) =>
+            {
+                var count = await service.GetAttachmentCountByDeliverableIdAsync(deliverableId, cancellationToken);
+
+                return Results.Ok(new
+                {
+                    PgsDeliverableId = deliverableId,
+                    AttachmentCount = count
+                });
+            })
+            .WithTags(_pgsDeliverableAccomplishmentTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
         }
     }
 }

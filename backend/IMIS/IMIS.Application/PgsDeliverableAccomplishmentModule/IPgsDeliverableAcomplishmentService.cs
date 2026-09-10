@@ -13,5 +13,6 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
         Task UpdateAttachmentPathAsync(long id, string attachmentPath, CancellationToken cancellationToken);
         public Task<DtoPageList<PgsDeliverableAccomplishmentDto, PgsDeliverableAccomplishment, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<bool> UpdateAccomplishmentsAsync(List<ORPPgsDeliverableAccomplishmentDto> request, CancellationToken cancellationToken);
+        Task<int> GetAttachmentCountByDeliverableIdAsync(long deliverableId, CancellationToken cancellationToken);
     }
 }
