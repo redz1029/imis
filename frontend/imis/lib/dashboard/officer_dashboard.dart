@@ -3,16 +3,12 @@ import 'dart:math' as math;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
-import 'package:imis/team/models/team.dart';
-import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
-import 'package:imis/user/services/home_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/http_util.dart';
@@ -36,6 +32,12 @@ class OfficerDashboardState extends State<OfficerDashboard> {
 
   List<PgsPeriod> statsPeriodList = [];
   PgsPeriod? selectedStatsPeriod;
+
+  // --- Service filter (new) ---
+  List<Office> serviceList = [];
+  Office? selectedService;
+  bool isLoadingServices = false;
+
   bool isLoadingStatistics = false;
   // int statTotalDeliverables = 0;
   int statTotalOffices = 0;
@@ -52,32 +54,18 @@ class OfficerDashboardState extends State<OfficerDashboard> {
   double percentNotStarted = 0;
   int totalDeliverables = 0;
 
-  List<User> userList = [];
-  List<User> filteredListUser = [];
-  int totalUsers = 0;
   List<String> office = [];
   String firstName = "firstName";
   final dio = Dio();
-  List<Office> officeList = [];
-  List<Office> filteredListOffice = [];
-  int totalOffices = 0;
+
   final _commonService = CommonService(Dio());
-  List<Team> teamList = [];
-  List<Team> filteredListTeam = [];
-  int totalTeam = 0;
-
-  List<Auditor> auditorList = [];
-  List<Auditor> filteredListAuditor = [];
-  int totalAuditor = 0;
-
-  final int maxDeliverables = 100;
 
   @override
   void initState() {
     super.initState();
     loadUserNames();
-    _fetchAllData();
     _loadStatisticsPeriods();
+    _loadServices();
   }
 
   @override
@@ -85,42 +73,18 @@ class OfficerDashboardState extends State<OfficerDashboard> {
     super.dispose();
   }
 
-  Future<void> _fetchAllData() async {
-    final service = HomeService();
+  Future<void> _loadServices() async {
+    setState(() => isLoadingServices = true);
     try {
-      final data = await service.fetchAll(
-        usersEndpoint: ApiEndpoint().users,
-        officeEndpoint: ApiEndpoint().office,
-        teamEndpoint: ApiEndpoint().team,
-        auditorEndpoint: ApiEndpoint().auditor,
-        deliverablesEndpoint: ApiEndpoint().deliverables,
-        kraEndpoint: ApiEndpoint().keyresult,
-      );
-
-      if (mounted) {
-        setState(() {
-          userList = data.users;
-          filteredListUser = List.from(data.users);
-          totalUsers = data.users.length;
-
-          officeList = data.offices;
-          filteredListOffice = List.from(data.offices);
-          totalOffices = data.offices.length;
-
-          teamList = data.teams;
-          filteredListTeam = List.from(data.teams);
-          totalTeam = data.teams.length;
-
-          auditorList = data.auditors;
-          filteredListAuditor = List.from(data.auditors);
-          totalAuditor = data.auditors.length;
-
-          deliverablesList = data.deliverables;
-          filteredDeliverables = List.from(data.deliverables);
-        });
-      }
+      final services = await _commonService.fetchService();
+      if (!mounted) return;
+      setState(() {
+        serviceList = services;
+        isLoadingServices = false;
+      });
     } catch (e) {
-      if (mounted) {}
+      debugPrint('fetchService error: $e');
+      if (mounted) setState(() => isLoadingServices = false);
     }
   }
 
@@ -146,7 +110,10 @@ class OfficerDashboardState extends State<OfficerDashboard> {
       });
 
       if (selectedStatsPeriod != null) {
-        await _fetchStatistics(selectedStatsPeriod!.id);
+        await _fetchStatistics(
+          selectedStatsPeriod!.id,
+          parentOfficeId: selectedService?.id,
+        );
       }
     } catch (e) {
       debugPrint(e.toString());
@@ -169,18 +136,20 @@ class OfficerDashboardState extends State<OfficerDashboard> {
     return '';
   }
 
-  Future<void> _fetchStatistics(int pgsPeriodId) async {
+  Future<void> _fetchStatistics(int pgsPeriodId, {int? parentOfficeId}) async {
     setState(() => isLoadingStatistics = true);
     try {
       final roleIdParam = await _getRoleId();
+      final officeParam =
+          parentOfficeId != null ? '&parentOfficeId=$parentOfficeId' : '';
       final results = await Future.wait([
         AuthenticatedRequest.get(
           dio,
-          '${ApiEndpoint().dashboardTotalOffices}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
+          '${ApiEndpoint.baseUrl}/dashboard/total-offices-count-deliverables-standarduser?roleId=$roleIdParam&pgsPeriodId=$pgsPeriodId$officeParam',
         ),
         AuthenticatedRequest.get(
           dio,
-          '${ApiEndpoint().dashboardAuditStatus}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
+          '${ApiEndpoint.baseUrl}/dashboard/audit-status-count-deliverables-standarduser?roleId=$roleIdParam&pgsPeriodId=$pgsPeriodId$officeParam',
         ),
       ]);
 
@@ -205,6 +174,7 @@ class OfficerDashboardState extends State<OfficerDashboard> {
         percentNotStarted =
             (auditData['percentNotStarted'] as num?)?.toDouble() ?? 0;
 
+        // these were never assigned before — root cause ng blangkong chart
         statTotalAudited = countAudited;
         statNotStarted = countNotStarted;
         statOngoing = countInProgress;
@@ -252,7 +222,6 @@ class OfficerDashboardState extends State<OfficerDashboard> {
         children: [
           _buildWelcome(),
           const SizedBox(height: 16),
-
           _buildStatisticsSection(),
           const SizedBox(height: 16),
           _buildInfoCards(),
@@ -967,33 +936,6 @@ class OfficerDashboardState extends State<OfficerDashboard> {
               ),
             )
           else ...[
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //   children: [
-            //     Column(
-            //       crossAxisAlignment: CrossAxisAlignment.start,
-            //       children: [
-            //         Text(
-            //           "Audit Statistics",
-            //           style: GoogleFonts.plusJakartaSans(
-            //             fontSize: 18,
-            //             fontWeight: FontWeight.w700,
-            //             color: Colors.black87,
-            //           ),
-            //         ),
-            //         const SizedBox(height: 2),
-            //         Text(
-            //           "Overview of Audit Statistics for the Selected Period",
-            //           style: GoogleFonts.plusJakartaSans(
-            //             fontSize: 12,
-            //             color: Colors.grey.shade500,
-            //           ),
-            //         ),
-            //       ],
-            //     ),
-            //     _buildPeriodDropdownPill(),
-            //   ],
-            // ),
             LayoutBuilder(
               builder: (context, constraints) {
                 final isNarrow = constraints.maxWidth < 480;
@@ -1021,16 +963,23 @@ class OfficerDashboardState extends State<OfficerDashboard> {
                   ],
                 );
 
+                final controls = Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _buildServiceDropdownPill(),
+                    _buildPeriodDropdownPill(),
+                  ],
+                );
+
                 if (isNarrow) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       titleBlock,
                       const SizedBox(height: 10),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: _buildPeriodDropdownPill(),
-                      ),
+                      Align(alignment: Alignment.centerLeft, child: controls),
                     ],
                   );
                 }
@@ -1040,7 +989,7 @@ class OfficerDashboardState extends State<OfficerDashboard> {
                   children: [
                     Expanded(child: titleBlock),
                     const SizedBox(width: 12),
-                    _buildPeriodDropdownPill(),
+                    controls,
                   ],
                 );
               },
@@ -1216,7 +1165,71 @@ class OfficerDashboardState extends State<OfficerDashboard> {
             onChanged: (period) {
               if (period == null) return;
               setState(() => selectedStatsPeriod = period);
-              _fetchStatistics(period.id);
+              _fetchStatistics(period.id, parentOfficeId: selectedService?.id);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// "Select Service" filter pill — same pattern as StandardUserDashboard.
+  /// Filters the audit statistics by parentOfficeId; null means "All Services".
+  Widget _buildServiceDropdownPill() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 220),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: primaryColor.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<Office?>(
+            value: selectedService,
+            isExpanded: true,
+            isDense: true,
+            icon: Icon(Icons.expand_more, size: 18, color: primaryColor),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: primaryColor,
+            ),
+            hint: Text(
+              isLoadingServices ? "Loading services..." : "Select Service",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                color: primaryColor,
+              ),
+            ),
+            items: [
+              DropdownMenuItem<Office?>(
+                value: null,
+                child: Text(
+                  "All Services",
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+              ...serviceList.map((service) {
+                return DropdownMenuItem<Office?>(
+                  value: service,
+                  child: Text(
+                    service.name,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                );
+              }),
+            ],
+            onChanged: (service) {
+              setState(() => selectedService = service);
+              if (selectedStatsPeriod == null) return;
+              _fetchStatistics(
+                selectedStatsPeriod!.id,
+                parentOfficeId: service?.id,
+              );
             },
           ),
         ),

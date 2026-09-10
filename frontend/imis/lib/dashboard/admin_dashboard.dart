@@ -36,8 +36,12 @@ class AdminDashboardState extends State<AdminDashboard> {
 
   List<PgsPeriod> statsPeriodList = [];
   PgsPeriod? selectedStatsPeriod;
+
+  List<Office> serviceList = [];
+  Office? selectedService;
+  bool isLoadingServices = false;
+
   bool isLoadingStatistics = false;
-  // int statTotalDeliverables = 0;
   int statTotalOffices = 0;
   int statTotalAudited = 0;
   int statOngoing = 0;
@@ -78,6 +82,7 @@ class AdminDashboardState extends State<AdminDashboard> {
     loadUserNames();
     _fetchAllData();
     _loadStatisticsPeriods();
+    _loadServices();
   }
 
   @override
@@ -124,6 +129,21 @@ class AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
+  Future<void> _loadServices() async {
+    setState(() => isLoadingServices = true);
+    try {
+      final services = await _commonService.fetchService();
+      if (!mounted) return;
+      setState(() {
+        serviceList = services;
+        isLoadingServices = false;
+      });
+    } catch (e) {
+      debugPrint('fetchService error: $e');
+      if (mounted) setState(() => isLoadingServices = false);
+    }
+  }
+
   Future<void> _loadStatisticsPeriods() async {
     try {
       final periods = await _commonService.fetchPgsPeriod();
@@ -146,7 +166,10 @@ class AdminDashboardState extends State<AdminDashboard> {
       });
 
       if (selectedStatsPeriod != null) {
-        await _fetchStatistics(selectedStatsPeriod!.id);
+        await _fetchStatistics(
+          selectedStatsPeriod!.id,
+          parentOfficeId: selectedService?.id,
+        );
       }
     } catch (e) {
       debugPrint(e.toString());
@@ -169,27 +192,31 @@ class AdminDashboardState extends State<AdminDashboard> {
     return '';
   }
 
-  Future<void> _fetchStatistics(int pgsPeriodId) async {
+  Future<void> _fetchStatistics(int pgsPeriodId, {int? parentOfficeId}) async {
     setState(() => isLoadingStatistics = true);
     try {
       final roleIdParam = await _getRoleId();
+      final officeParam =
+          parentOfficeId != null ? '&parentOfficeId=$parentOfficeId' : '';
       final results = await Future.wait([
         AuthenticatedRequest.get(
           dio,
-          '${ApiEndpoint().dashboardTotalOffices}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
+          '${ApiEndpoint.baseUrl}/dashboard/total-offices-count-deliverables-standarduser?roleId=$roleIdParam&pgsPeriodId=$pgsPeriodId$officeParam',
         ),
         AuthenticatedRequest.get(
           dio,
-          '${ApiEndpoint().dashboardAuditStatus}?roleid=$roleIdParam&pgsPeriodId=$pgsPeriodId',
+          '${ApiEndpoint.baseUrl}/dashboard/audit-status-count-deliverables-standarduser?roleId=$roleIdParam&pgsPeriodId=$pgsPeriodId$officeParam',
         ),
       ]);
 
       if (!mounted) return;
 
+      final officesData = results[0].data;
       final auditData = results[1].data;
 
       setState(() {
-        statTotalOffices = results[0].data['totalNoOffice'] ?? 0;
+        statTotalOffices =
+            officesData['totalNoOffice'] ?? officesData['totalOffices'] ?? 0;
         isLoadingStatistics = false;
 
         countAudited = auditData['countAudited'] ?? 0;
@@ -205,7 +232,6 @@ class AdminDashboardState extends State<AdminDashboard> {
         percentNotStarted =
             (auditData['percentNotStarted'] as num?)?.toDouble() ?? 0;
 
-        // these were never assigned before — root cause ng blangkong chart
         statTotalAudited = countAudited;
         statNotStarted = countNotStarted;
         statOngoing = countInProgress;
@@ -1118,33 +1144,6 @@ class AdminDashboardState extends State<AdminDashboard> {
               ),
             )
           else ...[
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //   children: [
-            //     Column(
-            //       crossAxisAlignment: CrossAxisAlignment.start,
-            //       children: [
-            //         Text(
-            //           "Audit Statistics",
-            //           style: GoogleFonts.plusJakartaSans(
-            //             fontSize: 18,
-            //             fontWeight: FontWeight.w700,
-            //             color: Colors.black87,
-            //           ),
-            //         ),
-            //         const SizedBox(height: 2),
-            //         Text(
-            //           "Overview of Audit Statistics for the Selected Period",
-            //           style: GoogleFonts.plusJakartaSans(
-            //             fontSize: 12,
-            //             color: Colors.grey.shade500,
-            //           ),
-            //         ),
-            //       ],
-            //     ),
-            //     _buildPeriodDropdownPill(),
-            //   ],
-            // ),
             LayoutBuilder(
               builder: (context, constraints) {
                 final isNarrow = constraints.maxWidth < 480;
@@ -1172,16 +1171,23 @@ class AdminDashboardState extends State<AdminDashboard> {
                   ],
                 );
 
+                final controls = Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _buildServiceDropdownPill(),
+                    _buildPeriodDropdownPill(),
+                  ],
+                );
+
                 if (isNarrow) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       titleBlock,
                       const SizedBox(height: 10),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: _buildPeriodDropdownPill(),
-                      ),
+                      Align(alignment: Alignment.centerLeft, child: controls),
                     ],
                   );
                 }
@@ -1191,7 +1197,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                   children: [
                     Expanded(child: titleBlock),
                     const SizedBox(width: 12),
-                    _buildPeriodDropdownPill(),
+                    controls,
                   ],
                 );
               },
@@ -1367,7 +1373,71 @@ class AdminDashboardState extends State<AdminDashboard> {
             onChanged: (period) {
               if (period == null) return;
               setState(() => selectedStatsPeriod = period);
-              _fetchStatistics(period.id);
+              _fetchStatistics(period.id, parentOfficeId: selectedService?.id);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// "Select Service" filter pill. Filters the audit statistics by
+  /// parentOfficeId; null value means "All Services".
+  Widget _buildServiceDropdownPill() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 220),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: primaryColor.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<Office?>(
+            value: selectedService,
+            isExpanded: true,
+            isDense: true,
+            icon: Icon(Icons.expand_more, size: 18, color: primaryColor),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: primaryColor,
+            ),
+            hint: Text(
+              isLoadingServices ? "Loading services..." : "Select Service",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                color: primaryColor,
+              ),
+            ),
+            items: [
+              DropdownMenuItem<Office?>(
+                value: null,
+                child: Text(
+                  "All Services",
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+              ...serviceList.map((service) {
+                return DropdownMenuItem<Office?>(
+                  value: service,
+                  child: Text(
+                    service.name,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                );
+              }),
+            ],
+            onChanged: (service) {
+              setState(() => selectedService = service);
+              if (selectedStatsPeriod == null) return;
+              _fetchStatistics(
+                selectedStatsPeriod!.id,
+                parentOfficeId: service?.id,
+              );
             },
           ),
         ),
@@ -1485,7 +1555,11 @@ class AdminDashboardState extends State<AdminDashboard> {
         .fold<int>(0, (prev, e) => e > prev ? e : prev)
         .clamp(1, 999999);
 
-    final total = statNotStarted + statOngoing + countCompleted;
+    // Use the API's own totalDeliverables instead of re-summing the
+    // status buckets — the buckets don't always cover 100% of records
+    // (e.g. countAudited excluded), which made this box show a smaller,
+    // inconsistent number vs. the "Total Deliverables" card above.
+    final total = totalDeliverables;
     final double notStartedPct = percentNotStarted;
     final double inProgressPct = percentInProgress;
     final double completedPct = percentCompleted;

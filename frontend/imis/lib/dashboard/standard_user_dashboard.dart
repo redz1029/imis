@@ -166,8 +166,6 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
     }
   }
 
-  /// Populates the "Select Service" dropdown using CommonService.fetchService(),
-  /// which returns the list of Office records tagged as services.
   Future<void> _loadServices() async {
     setState(() => isLoadingServices = true);
     try {
@@ -285,14 +283,6 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
     }
   }
 
-  /// Org-wide statistics for the standard user's visibility scope.
-  /// Uses:
-  ///   /dashboard/audit-status-count-deliverables-standarduser?roleId=xxx&pgsPeriodId=xxx&parentOfficeId=xxx
-  ///   /dashboard/total-offices-count-deliverables-standarduser?roleId=xxx&pgsPeriodId=xxx&parentOfficeId=xxx
-  /// These return the larger, org-wide figures, so results now feed the
-  /// "Overall Statistics" panel (stat*/count* fields). parentOfficeId is
-  /// optional — pass the selected service's office id to scope the numbers
-  /// to that service, or omit it to show all services.
   Future<void> _fetchMyStatistics(
     int pgsPeriodId, {
     int? parentOfficeId,
