@@ -1,9 +1,9 @@
 import 'package:imis/audit/audit_schedules/models/auditable_offices.dart';
+import 'package:imis/auditor_team/models/auditor_team.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'audit_schedule_details.dart';
-import 'package:imis/auditor_team/models/auditor_team.dart';
 
 part 'audit_schedules.g.dart';
 
@@ -11,7 +11,7 @@ part 'audit_schedules.g.dart';
 class AuditSchedules {
   int id;
   String purpose;
-  String auditTitle;
+  String activity;
 
   @DateTimeConverter()
   DateTime startDate;
@@ -37,7 +37,7 @@ class AuditSchedules {
   AuditSchedules({
     required this.id,
     required this.purpose,
-    required this.auditTitle,
+    required this.activity,
     required this.startDate,
     required this.endDate,
     required this.isActive,

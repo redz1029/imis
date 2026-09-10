@@ -11,7 +11,7 @@ AuditSchedules _$AuditSchedulesFromJson(
 ) => AuditSchedules(
   id: (json['id'] as num).toInt(),
   purpose: json['purpose'] as String,
-  auditTitle: json['auditTitle'] as String,
+  activity: json['activity'] as String,
   startDate: const DateTimeConverter().fromJson(json['startDate'] as String),
   endDate: const DateTimeConverter().fromJson(json['endDate'] as String),
   isActive: json['isActive'] as bool,
@@ -43,7 +43,7 @@ Map<String, dynamic> _$AuditSchedulesToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'purpose': instance.purpose,
-  'auditTitle': instance.auditTitle,
+  'activity': instance.activity,
   'startDate': const DateTimeConverter().toJson(instance.startDate),
   'endDate': const DateTimeConverter().toJson(instance.endDate),
   'isActive': instance.isActive,

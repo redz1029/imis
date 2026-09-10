@@ -780,7 +780,7 @@ class ImpactStrategicGoalScorecardPeriodPagetate
                               value: isActive,
                               onChanged:
                                   (val) => setStateDialog(() => isActive = val),
-                              activeColor: primaryColor,
+                              activeThumbColor: primaryColor,
                             ),
                           ],
                         ),

@@ -75,17 +75,17 @@ namespace ImisTest
             int noOfHoursPerAudit = 2;
 
             var auditScheduleFaker = new Faker<AuditScheduleDto>()
-                .RuleFor(a => a.AuditTitle, f => f.Lorem.Text())
+                .RuleFor(a => a.Activity, f => f.Lorem.Text())
                 .RuleFor(a => a.IsActive, true);
                 //.RuleFor(a => a.Offices, auditableOffices);
 
             var auditSchedule = auditScheduleFaker.Generate();
-            string auditTitle = auditSchedule.AuditTitle;
+            string activity = auditSchedule.Activity;
             await _auditScheduleService.SaveOrUpdateAsync(auditSchedule, CancellationToken.None).ConfigureAwait(false);
 
-            var savedAuditSchedule = await _context.AuditSchedules.FirstOrDefaultAsync(a => a.AuditTitle == auditTitle).ConfigureAwait(false);
+            var savedAuditSchedule = await _context.AuditSchedules.FirstOrDefaultAsync(a => a.Activity == activity).ConfigureAwait(false);
             Assert.NotNull(savedAuditSchedule);
-            Assert.That(savedAuditSchedule.AuditTitle, Is.EqualTo(auditTitle));
+            Assert.That(savedAuditSchedule.Activity, Is.EqualTo(activity));
         }
 
         private async Task<(List<OfficeDto>, int)> GenerateAndGetOffices(int noOfAuditorsAssignedInAnOffice, 

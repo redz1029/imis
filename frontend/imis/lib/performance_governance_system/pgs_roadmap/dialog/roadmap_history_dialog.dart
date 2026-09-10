@@ -85,7 +85,7 @@ class _RoadmapHistoryDialogState extends State<RoadmapHistoryDialog> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: primaryColor.withOpacity(.15),
+              color: primaryColor.withValues(alpha: .15),
               blurRadius: 40,
               offset: const Offset(0, 8),
             ),

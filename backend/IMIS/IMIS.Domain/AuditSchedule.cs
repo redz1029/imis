@@ -8,7 +8,8 @@ namespace IMIS.Domain
     {
         public required string Purpose { get; set; }
         public required AuditorTeams? AuditorTeams { get; set; }
-        public required string AuditTitle { get; set; }
+        public required string Activity { get; set; }
+
         public required bool IsActive { get; set; }
 
         // Fix: dates now sourced from the parent AuditPlan

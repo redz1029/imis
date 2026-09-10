@@ -345,7 +345,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                               onChanged:
                                   (val) =>
                                       setStateDialog(() => isOfficeHead = val),
-                              activeColor: primaryColor,
+                              activeThumbColor: primaryColor,
                             ),
                           ],
                         ),

@@ -1,25 +1,47 @@
-// lib/audit/audit_schedules/pages/audit_schedule_page.dart
-
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:imis/auditor/models/auditor.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
-import 'package:imis/audit/audit_schedules/models/auditable_offices.dart';
-import 'package:imis/auditor_team/models/auditor_team.dart';
-import 'package:imis/audit/audit_schedules/services/audit_schedule_service.dart';
+
+import 'package:imis/audit/audit_plan/models/audit_plan.dart';
+import 'package:imis/audit/audit_plan/models/audit_plan_entry.dart';
+import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
-import 'package:imis/office/models/office.dart';
-import 'package:imis/team/models/team.dart';
+import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart'
+    show IsoStandardDto, AuditorTeamDto;
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/constant/constant.dart';
 
+/// Fixed boilerplate shown in the ACTIVITY column for every entry — the
+/// backend has no per-entry "activity" text field. Typed only, never
+/// fetched from anywhere.
+const String _kFixedActivityText =
+    'Opening Activity\n'
+    'Introduction of Auditors\n'
+    'Audit Proper\n'
+    '-Interview\n'
+    '-Observation\n'
+    '-Documented Information Review\n\n'
+    'Closing Meeting\n'
+    '-Audit findings';
+
+const String _kFixedPurposeText = 'Internal Quality Audit';
+
+/// One office/department's worth of entries, grouped out of a single Audit
+/// Plan's entries by their auditPlanProcesses[0].processName.
+class _OfficeGroup {
+  final String officeName;
+  final List<AuditPlanEntry> entries;
+
+  _OfficeGroup({required this.officeName, required this.entries});
+}
+
 class AuditSchedulePage extends StatefulWidget {
   final int? auditPlanId;
+
+  // Kept for backward compatibility with existing navigation call sites.
+  // No longer used now that this page is a read-only viewer.
   final int? auditScheduleId;
 
   const AuditSchedulePage({super.key, this.auditPlanId, this.auditScheduleId});
@@ -30,68 +52,53 @@ class AuditSchedulePage extends StatefulWidget {
 
 class _AuditSchedulePageState extends State<AuditSchedulePage> {
   static const Color primaryThemeColor = Color(0xFF883942);
+  static const Color headerFillColor = Color(0xFFF3E9EA);
 
-  final AuditSchedulesService _auditScheduleService = AuditSchedulesService(
-    Dio(),
-  );
+  final AuditPlanService _auditPlanService = AuditPlanService(Dio());
   final AuditProgrammeService _programmeService = AuditProgrammeService(Dio());
 
   bool _isLoading = true;
   String? _errorMessage;
 
+  // Step 0 state.
   int? _resolvedAuditPlanId;
-  final List<dynamic> _allAuditPlans = [];
+  List<AuditPlan> _allAuditPlans = [];
 
-  int _scheduleId = 0;
-  dynamic _rowVersion;
+  // Step 1/2 state.
+  AuditPlan? _plan;
+  List<_OfficeGroup> _officeGroups = [];
+  _OfficeGroup? _selectedOffice;
 
-  final TextEditingController _purposeController = TextEditingController(
-    text: 'Internal Quality Audit',
-  );
-  final TextEditingController _auditTitleController = TextEditingController();
-
-  DateTime _startDate = DateTime.now();
-  DateTime _endDate = DateTime.now();
-
-  final TextEditingController _officeSearchController = TextEditingController();
-  final FocusNode _officeSearchFocusNode = FocusNode();
-  final List<AuditableOffices> _auditableOffices = [];
-
-  int? _selectedTeamId;
-
-  List<Office> _offices = [];
-  List<Team> _teams = [];
-  List<AuditorTeam> _auditorTeams = [];
-  Map<String, String> _userNameById = {};
+  // Master data needed to resolve names/clauses that come back null on the
+  // nested objects (isoAuditors[].team, isoStandardAuditPlans[].isoStandard).
+  List<IsoStandardDto> _standards = [];
+  List<AuditorTeamDto> _auditorRoster = [];
 
   @override
   void initState() {
     super.initState();
     _resolvedAuditPlanId = widget.auditPlanId;
     if (_resolvedAuditPlanId != null) {
-      _load();
+      _loadAuditPlanList(selectAfterLoadId: _resolvedAuditPlanId);
     } else {
       _loadAuditPlanList();
     }
   }
 
-  @override
-  void dispose() {
-    _purposeController.dispose();
-    _auditTitleController.dispose();
-    _officeSearchController.dispose();
-    _officeSearchFocusNode.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadAuditPlanList() async {
+  Future<void> _loadAuditPlanList({int? selectAfterLoadId}) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
     try {
-      // ASSUMPTION: list-all endpoint. Add to AuditPlanService if missing.
-      // _allAuditPlans = await _auditPlanService.getAllAuditPlans();
+      _allAuditPlans = await _auditPlanService.getAllAuditPlans();
+      if (selectAfterLoadId != null) {
+        final match = _allAuditPlans.where((p) => p.id == selectAfterLoadId);
+        if (match.isNotEmpty) {
+          await _loadPlanDetail(match.first);
+          return;
+        }
+      }
     } catch (e) {
       _errorMessage = 'Failed to load Audit Plans: $e';
     } finally {
@@ -99,277 +106,234 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     }
   }
 
-  Future<void> _load() async {
+  Future<void> _loadPlanDetail(AuditPlan planSummary) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _selectedOffice = null;
+      _plan = planSummary;
+      _resolvedAuditPlanId = planSummary.id;
     });
 
     try {
       await Future.wait([
-        _fetchMasterOffices(),
-        _fetchMasterTeams(),
-        _fetchMasterAuditorTeams(),
+        _fetchMasterIsoStandards(),
+        _fetchMasterAuditorRoster(),
       ]);
 
-      // Best-effort: pre-fill the Audit Date range from the parent Audit Plan.
-      // try {
-      //   // ASSUMPTION: getAuditPlanById exists on AuditPlanService (add if missing).
-      //   // final plan = await _auditPlanService.getAuditPlanById(_resolvedAuditPlanId!);
-      //   if (plan != null) {
-      //     final planJson = plan.toJson();
-      //     final start = DateTime.tryParse((planJson['startDate'] ?? planJson['StartDate'] ?? '').toString());
-      //     final end = DateTime.tryParse((planJson['endDate'] ?? planJson['EndDate'] ?? '').toString());
-      //     if (start != null) _startDate = start;
-      //     if (end != null) _endDate = end;
-      //   }
-      // } catch (e) {
-      //   debugPrint('Could not pre-fill dates from Audit Plan: $e');
-      // }
-
-      if (widget.auditScheduleId != null) {
-        final existing = await _auditScheduleService.getAuditScheduleById(
-          widget.auditScheduleId!,
-        );
-        if (existing != null) {
-          _scheduleId = existing.id;
-          _rowVersion = existing.rowVersion;
-          _purposeController.text = existing.purpose;
-          _auditTitleController.text = existing.auditTitle;
-          _startDate = existing.startDate;
-          _endDate = existing.endDate;
-
-          // AuditSchedules carries `auditorTeams` (a nested AuditorTeam
-          // object), not a bare id — the dropdown selects by team, so read
-          // teamId off that nested object.
-          _selectedTeamId = existing.auditorTeams?.teamId;
-
-          _auditableOffices.addAll(existing.auditableOffices);
-        }
+      // Fetch through the parent Audit Programme — the proven path that
+      // already returns fully-populated entries (confirmed via the JSON
+      // response reviewed in chat).
+      final programme = await _programmeService.getAuditProgrammeById(
+        planSummary.auditProgrammeId,
+      );
+      if (programme == null) {
+        throw Exception('Parent Audit Programme not found');
       }
+
+      final jsonMap = programme.toJson();
+      final plansJson =
+          (jsonMap['auditPlan'] as List? ??
+          jsonMap['AuditPlans'] as List? ??
+          []);
+      final match = plansJson.cast<Map<String, dynamic>>().where(
+        (p) => (p['id'] ?? p['Id']) == planSummary.id,
+      );
+      if (match.isEmpty) {
+        throw Exception('Audit Plan not found within its Programme');
+      }
+
+      final entriesJson =
+          (match.first['entries'] as List? ??
+          match.first['Entries'] as List? ??
+          []);
+      final entries = entriesJson
+          .map((e) => AuditPlanEntry.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      _officeGroups = _buildOfficeGroups(entries);
     } catch (e) {
-      _errorMessage = 'Error loading Audit Schedule: $e';
+      _errorMessage = 'Error loading Audit Plan schedule: $e';
+      if (mounted) {
+        MotionToast.error(
+          toastAlignment: Alignment.topCenter,
+          description: Text('Failed to load schedule: $e'),
+        ).show(context);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _fetchMasterOffices() async {
+  Future<void> _fetchMasterIsoStandards() async {
     try {
-      final offices = await _programmeService.getOffices();
+      final standards = await _programmeService.getIsoStandards();
       final seen = <int>{};
-      _offices = offices.where((o) => seen.add(o.id)).toList();
+      _standards = standards
+          .map((s) => IsoStandardDto.fromJson(s.toJson()))
+          .where((s) => seen.add(s.id))
+          .toList();
     } catch (e) {
-      debugPrint('Failed to load offices: $e');
+      debugPrint('Failed to load ISO standards: $e');
     }
   }
 
-  Future<void> _fetchMasterTeams() async {
-    try {
-      final teams = await _programmeService.getTeams();
-      final seen = <int>{};
-      _teams = teams.where((t) => seen.add(t.id)).toList();
-    } catch (e) {
-      debugPrint('Failed to load teams: $e');
-    }
-  }
-
-  Future<void> _fetchMasterAuditorTeams() async {
+  /// Mirrors audit_plan_page.dart's _fetchMasterAuditorTeams exactly —
+  /// flattens AuditorTeam + User into {teamId, auditorName, isActive}
+  /// records, since isoAuditors[].team comes back null from the API.
+  Future<void> _fetchMasterAuditorRoster() async {
     try {
       final commonService = CommonService(Dio());
-
       final teams = await commonService.fetchAuditorTeam();
       final List<User> users = await commonService.fetchUsers();
+      final Map<String, String> nameByUserId = {
+        for (final u in users) u.id: u.fullName,
+      };
 
-      _userNameById = {for (final u in users) u.id: u.fullName};
-      _auditorTeams = teams;
-    } catch (e) {
-      debugPrint('Failed to load auditor teams: $e');
-    }
-  }
-
-  /// Office display name, resolved from the master list by id — the real
-  /// AuditableOffices model carries only officeId, no name.
-  String _officeName(int officeId) {
-    final match = _offices.where((o) => o.id == officeId);
-    return match.isNotEmpty ? match.first.name : 'Office #$officeId';
-  }
-
-  /// Auditor display name, resolved via userId — the real Auditor model
-  /// carries only userId, no name field of its own.
-  String _auditorName(Auditor a) =>
-      (a.userId != null ? _userNameById[a.userId] : null) ?? 'Unnamed Auditor';
-
-  /// Active, non-deleted auditors for the currently selected team, read
-  /// straight from the loaded AuditorTeam list.
-  List<Auditor> get _selectedTeamRoster {
-    if (_selectedTeamId == null) return const [];
-    final match = _auditorTeams.where(
-      (t) => t.teamId == _selectedTeamId && t.isActive,
-    );
-    if (match.isEmpty) return const [];
-    final roster =
-        match.first.auditors.where((a) => !a.isDeleted && a.isActive).toList()
-          ..sort((a, b) => _auditorName(a).compareTo(_auditorName(b)));
-    return roster;
-  }
-
-  /// The full AuditorTeam object for the currently selected team — used
-  /// directly at save time.
-  AuditorTeam? get _selectedAuditorTeam {
-    if (_selectedTeamId == null) return null;
-    final match = _auditorTeams.where(
-      (t) => t.teamId == _selectedTeamId && t.isActive,
-    );
-    return match.isNotEmpty ? match.first : null;
-  }
-
-  void _addOffice(Office office) {
-    if (_auditableOffices.any((o) => o.officeId == office.id)) return;
-    setState(() {
-      _auditableOffices.add(
-        AuditableOffices(
-          id: 0,
-          auditScheduleId: _scheduleId,
-          officeId: office.id,
-          isDeleted: false,
-        ),
-      );
-      _officeSearchController.clear();
-    });
-  }
-
-  // Free-text office entry is not supported: AuditableOfficesDto requires
-  // a real OfficeId with no free-text fallback field, so only offices
-  // selected from the autocomplete list can be added.
-
-  void _removeOffice(AuditableOffices item) {
-    setState(() => _auditableOffices.remove(item));
-  }
-
-  Future<void> _pickStartDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _startDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) {
-      setState(() {
-        _startDate = picked;
-        if (_endDate.isBefore(_startDate)) _endDate = _startDate;
-      });
-    }
-  }
-
-  Future<void> _pickEndDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _endDate,
-      firstDate: _startDate,
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) setState(() => _endDate = picked);
-  }
-
-  Future<void> _save() async {
-    if (_resolvedAuditPlanId == null) return;
-
-    if (_purposeController.text.trim().isEmpty ||
-        _auditTitleController.text.trim().isEmpty) {
-      MotionToast.error(
-        toastAlignment: Alignment.topCenter,
-        description: const Text('Purpose and Audit Title are required.'),
-      ).show(context);
-      return;
-    }
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(_scheduleId == 0 ? 'Confirm Save' : 'Confirm Update'),
-            content: Text(
-              _scheduleId == 0
-                  ? 'Save this Audit Schedule?'
-                  : 'Update this Audit Schedule?',
+      final List<AuditorTeamDto> flattened = [];
+      for (final team in teams) {
+        for (final auditor in team.auditors) {
+          if (auditor.isDeleted) continue;
+          flattened.add(
+            AuditorTeamDto(
+              teamId: team.teamId,
+              auditorId: auditor.id,
+              auditorName:
+                  (auditor.userId != null
+                      ? nameByUserId[auditor.userId]
+                      : null) ??
+                  'Unnamed Auditor',
+              isActive: team.isActive && auditor.isActive,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text('No', style: TextStyle(color: primaryThemeColor)),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text('Yes', style: TextStyle(color: primaryThemeColor)),
-              ),
-            ],
-          ),
-    );
-    if (confirm != true) return;
-
-    final schedule = AuditSchedules(
-      id: _scheduleId,
-      purpose: _purposeController.text.trim(),
-      auditTitle: _auditTitleController.text.trim(),
-      isActive: true,
-      isDeleted: false,
-      startDate: _startDate,
-      endDate: _endDate,
-      auditPlanId: _resolvedAuditPlanId!,
-      auditorTeams: _selectedAuditorTeam,
-      offices: null,
-      auditableOffices: List.of(_auditableOffices),
-      auditSchduleDetails: const [],
-      rowVersion: _rowVersion,
-    );
-
-    try {
-      await _auditScheduleService.addAuditSchedule(schedule);
-      if (!mounted) return;
-      MotionToast.success(
-        toastAlignment: Alignment.topCenter,
-        description: const Text('Audit Schedule saved'),
-      ).show(context);
-    } catch (e) {
-      if (!mounted) return;
-      String message = 'Failed to save: $e';
-      if (e is DioException && e.response?.data is Map) {
-        final errors =
-            (e.response!.data as Map)['errors'] ??
-            (e.response!.data as Map)['Errors'];
-        if (errors is List && errors.isNotEmpty) message = errors.join('\n');
+          );
+        }
       }
-      MotionToast.error(
-        toastAlignment: Alignment.topCenter,
-        description: Text(message),
-      ).show(context);
+      _auditorRoster = flattened;
+    } catch (e) {
+      debugPrint('Failed to load auditor roster: $e');
     }
   }
 
-  InputDecoration _decoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(
-        color: primaryThemeColor,
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-      ),
-      isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(color: primaryThemeColor, width: 1.5),
-      ),
-    );
+  /// Groups entries by office (auditPlanProcesses[0].processName), in
+  /// chronological (day, then time) order — matching how a printed audit
+  /// schedule is naturally read, not alphabetically.
+  List<_OfficeGroup> _buildOfficeGroups(List<AuditPlanEntry> entries) {
+    final Map<String, _OfficeGroup> map = {};
+    final List<String> orderedKeys = [];
+
+    for (final e in entries) {
+      final processes = e.auditPlanProcesses;
+      String officeName = 'Unspecified Office';
+      if (processes != null && processes.isNotEmpty) {
+        final name = processes.first.processName?.trim();
+        if (name != null && name.isNotEmpty) {
+          officeName = name;
+        }
+      }
+
+      final key = officeName.toLowerCase();
+      final existing = map[key];
+      if (existing != null) {
+        existing.entries.add(e);
+      } else {
+        map[key] = _OfficeGroup(officeName: officeName, entries: [e]);
+        orderedKeys.add(key);
+      }
+    }
+
+    final list = orderedKeys.map((k) => map[k]!).toList()
+      ..sort((a, b) {
+        final af = a.entries.first;
+        final bf = b.entries.first;
+        final dayCompare = af.dayNumber.compareTo(bf.dayNumber);
+        if (dayCompare != 0) return dayCompare;
+        return af.time.compareTo(bf.time);
+      });
+    return list;
+  }
+
+  /// CRITERIA column: resolves isoStandardAuditPlans[].isoStandardId
+  /// against the master ISO Standard list's clauseRef, joined and sorted —
+  /// exactly mirroring the backend's own ReportGetByIdAsync logic.
+  String _clauseRefsForEntry(AuditPlanEntry entry) {
+    final ids = (entry.isoStandardAuditPlans ?? const [])
+        .map((s) => s.isoStandardId)
+        .whereType<int>()
+        .toSet();
+    if (ids.isEmpty) return '—';
+
+    final clauseById = {for (final s in _standards) s.id: s.clause};
+    final clauses =
+        ids
+            .map((id) => clauseById[id])
+            .whereType<String>()
+            .where((c) => c.isNotEmpty)
+            .toList()
+          ..sort();
+    return clauses.isEmpty ? '—' : clauses.join(', ');
+  }
+
+  /// PERSON RESPONSIBLE names for one entry — resolved EXCLUSIVELY from
+  /// entry.isoAuditors[].teamId against the flattened team roster. Uses
+  /// only the FIRST isoAuditors[0] team, matching how the backend's own
+  /// ReportGetByIdAsync resolves "Team Only" for this column.
+  List<String> _responsibleNamesForEntry(AuditPlanEntry entry) {
+    final auditors = entry.isoAuditors ?? const [];
+    if (auditors.isEmpty) return const [];
+
+    final teamId = auditors.first.teamId;
+
+    final roster =
+        _auditorRoster.where((a) => a.teamId == teamId && a.isActive).toList()
+          ..sort((a, b) => a.auditorName.compareTo(b.auditorName));
+
+    if (roster.isNotEmpty) {
+      return roster.map((a) => a.auditorName).toList();
+    }
+    return ['Team $teamId'];
+  }
+
+  /// AUDIT TEAM header block: every distinct team assigned anywhere in this
+  /// office's entries, grouped and NUMBERED by teamId (e.g. "1", "2") —
+  /// matching the printed form's layout, instead of one flat deduplicated
+  /// name list with no team indicator.
+  List<MapEntry<int, List<String>>> _teamBreakdownForGroup(
+    _OfficeGroup group,
+  ) {
+    final Map<int, Set<String>> byTeam = {};
+
+    for (final e in group.entries) {
+      for (final auditor in (e.isoAuditors ?? const [])) {
+        final teamId = auditor.teamId;
+        if (teamId == null) continue;
+
+        final roster = _auditorRoster
+            .where((a) => a.teamId == teamId && a.isActive)
+            .map((a) => a.auditorName);
+
+        byTeam
+            .putIfAbsent(teamId, () => <String>{})
+            .addAll(roster.isNotEmpty ? roster : {'Team $teamId'});
+      }
+    }
+
+    final result = byTeam.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return result
+        .map((e) => MapEntry(e.key, e.value.toList()..sort()))
+        .toList();
+  }
+
+  /// AUDIT DATE: plan.startDate offset by the group's day number — matches
+  /// the backend's own FormattedProposedSchedule calculation exactly.
+  DateTime _proposedDateForGroup(_OfficeGroup group) {
+    final first = group.entries.first;
+    final start = _plan!.startDate;
+    return DateTime(
+      start.year,
+      start.month,
+      start.day,
+    ).add(Duration(days: first.dayNumber - 1));
   }
 
   @override
@@ -377,72 +341,50 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
-        title: Text(
-          widget.auditScheduleId == null
-              ? 'Create Audit Schedule'
-              : 'Edit Audit Schedule',
-        ),
+        title: const Text('Audit Schedule'),
         backgroundColor: mainBgColor,
-        leading:
-            (_resolvedAuditPlanId != null && widget.auditPlanId == null)
-                ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  tooltip: 'Back to list',
-                  onPressed:
-                      () => setState(() {
-                        _resolvedAuditPlanId = null;
-                        _errorMessage = null;
-                        _auditableOffices.clear();
-                      }),
-                )
-                : null,
+        leading: _buildBackButton(),
       ),
-      body:
-          _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: primaryThemeColor),
-              )
-              : _errorMessage != null
-              ? Center(
-                child: Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              )
-              : _resolvedAuditPlanId == null
-              ? _buildAuditPlanPicker()
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildAuditeeAndTeamCard(),
-                    const SizedBox(height: 16),
-                    _buildDetailsCard(),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryThemeColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                        onPressed: _save,
-                        child: const Text(
-                          'SAVE AUDIT SCHEDULE',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: primaryThemeColor),
+            )
+          : _errorMessage != null
+          ? Center(
+              child: Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
               ),
+            )
+          : _resolvedAuditPlanId == null
+          ? _buildAuditPlanPicker()
+          : _selectedOffice == null
+          ? _buildOfficeList()
+          : _buildOfficeDetail(_selectedOffice!),
     );
+  }
+
+  Widget? _buildBackButton() {
+    if (_selectedOffice != null) {
+      return IconButton(
+        icon: const Icon(Icons.arrow_back),
+        tooltip: 'Back to offices',
+        onPressed: () => setState(() => _selectedOffice = null),
+      );
+    }
+    if (_resolvedAuditPlanId != null && widget.auditPlanId == null) {
+      return IconButton(
+        icon: const Icon(Icons.arrow_back),
+        tooltip: 'Back to Audit Plans',
+        onPressed: () => setState(() {
+          _resolvedAuditPlanId = null;
+          _plan = null;
+          _officeGroups = [];
+          _errorMessage = null;
+        }),
+      );
+    }
+    return null;
   }
 
   Widget _buildAuditPlanPicker() {
@@ -454,16 +396,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       itemCount: _allAuditPlans.length,
       itemBuilder: (context, i) {
         final p = _allAuditPlans[i];
-        final json = p.toJson();
-        final id = (json['id'] ?? json['Id']) as int;
-        final start = DateTime.tryParse(
-          (json['startDate'] ?? json['StartDate'] ?? '').toString(),
-        );
-        final label =
-            start != null
-                ? DateFormat('MMMM d, yyyy').format(start)
-                : 'Audit Plan #$id';
-
+        final dateRange =
+            '${DateFormat('MMM d, yyyy').format(p.startDate)} – ${DateFormat('MMM d, yyyy').format(p.endDate)}';
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
@@ -482,336 +416,265 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               borderRadius: BorderRadius.circular(8),
             ),
             title: Text(
-              'Audit Plan — $label',
+              'Audit Plan #${p.id}',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            trailing: const Icon(Icons.chevron_right, color: primaryThemeColor),
-            onTap: () {
-              setState(() => _resolvedAuditPlanId = id);
-              _load();
-            },
+            subtitle: Text(
+              '${p.planStatus} • $dateRange',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: primaryThemeColor,
+            ),
+            onTap: () => _loadPlanDetail(p),
           ),
         );
       },
     );
   }
 
-  Widget _buildAuditeeAndTeamCard() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _buildOfficeList() {
+    if (_officeGroups.isEmpty) {
+      return const Center(
+        child: Text('This Audit Plan has no scheduled offices yet.'),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: _officeGroups.length,
+      itemBuilder: (context, i) {
+        final group = _officeGroups[i];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(color: Colors.grey.shade400),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              foregroundColor: Colors.black87,
+            ),
+            onPressed: () => setState(() => _selectedOffice = group),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  group.officeName.toUpperCase(),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const Icon(Icons.chevron_right, color: primaryThemeColor),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOfficeDetail(_OfficeGroup group) {
+    final teamBreakdown = _teamBreakdownForGroup(group);
+    final proposedDate = _proposedDateForGroup(group);
+    final sortedEntries = List<AuditPlanEntry>.from(group.entries)
+      ..sort((a, b) => a.time.compareTo(b.time));
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'AUDIT SCHEDULE',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: primaryThemeColor,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade400),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Table(
+              border: TableBorder(
+                horizontalInside: BorderSide(color: Colors.grey.shade400),
+                verticalInside: BorderSide(color: Colors.grey.shade400),
+              ),
+              columnWidths: const {0: FixedColumnWidth(140)},
+              children: [
+                _headerRow('Auditee:', group.officeName),
+                _auditTeamHeaderRow(teamBreakdown),
+                _headerRow('Purpose:', _kFixedPurposeText),
+                _headerRow(
+                  'Audit date:',
+                  DateFormat('MMMM d, yyyy').format(proposedDate),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade400),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Table(
+              border: TableBorder(
+                horizontalInside: BorderSide(color: Colors.grey.shade400),
+                verticalInside: BorderSide(color: Colors.grey.shade400),
+              ),
+              columnWidths: const {
+                0: FixedColumnWidth(90),
+                1: FlexColumnWidth(3),
+                2: FlexColumnWidth(2),
+                3: FlexColumnWidth(2),
+              },
+              children: [
+                const TableRow(
+                  decoration: BoxDecoration(color: headerFillColor),
+                  children: [
+                    _TableHeaderCell('TIME'),
+                    _TableHeaderCell('ACTIVITY'),
+                    _TableHeaderCell('CRITERIA'),
+                    _TableHeaderCell('PERSON RESPONSIBLE'),
+                  ],
+                ),
+                for (final entry in sortedEntries)
+                  TableRow(
+                    children: [
+                      _TableCell(DateFormat('h:mm a').format(entry.time)),
+                      const _TableCell(_kFixedActivityText),
+                      _TableCell(_clauseRefsForEntry(entry)),
+                      _TableCell(_joinedResponsibleNames(entry)),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _joinedResponsibleNames(AuditPlanEntry entry) {
+    final names = _responsibleNamesForEntry(entry);
+    return names.isEmpty ? '—' : names.join('\n');
+  }
+
+  TableRow _headerRow(String label, String value) {
+    return TableRow(
       children: [
-        Expanded(child: _buildAuditeeBox()),
-        const SizedBox(width: 16),
-        Expanded(child: _buildAuditTeamBox()),
+        Container(
+          padding: const EdgeInsets.all(10),
+          color: headerFillColor,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: primaryThemeColor,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: Text(value, style: const TextStyle(fontSize: 12)),
+        ),
       ],
     );
   }
 
-  Widget _buildAuditeeBox() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'AUDITEE',
+  /// "Audit Team:" row — one numbered block per distinct team (e.g. "1",
+  /// "2"), each followed by that team's member names, matching the printed
+  /// form's numbered-team layout instead of one flat name list.
+  TableRow _auditTeamHeaderRow(List<MapEntry<int, List<String>>> teamBreakdown) {
+    return TableRow(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          color: headerFillColor,
+          child: const Text(
+            'Audit Team:',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 13,
+              fontSize: 12,
               color: primaryThemeColor,
-              letterSpacing: 0.5,
             ),
           ),
-          const Divider(height: 20),
-          RawAutocomplete<Office>(
-            textEditingController: _officeSearchController,
-            focusNode: _officeSearchFocusNode,
-            optionsBuilder: (value) {
-              if (value.text.trim().isEmpty) return _offices;
-              final query = value.text.trim().toLowerCase();
-              return _offices.where(
-                (o) => o.name.toLowerCase().contains(query),
-              );
-            },
-            displayStringForOption: (o) => o.name,
-            onSelected: _addOffice,
-            fieldViewBuilder: (
-              context,
-              textController,
-              focusNode,
-              onFieldSubmitted,
-            ) {
-              return TextFormField(
-                controller: textController,
-                focusNode: focusNode,
-                style: const TextStyle(fontSize: 12),
-                decoration: _decoration('ADD OFFICE / WARD').copyWith(
-                  hintText: 'Search and select an office',
-                  hintStyle: const TextStyle(fontSize: 11),
-                ),
-              );
-            },
-            optionsViewBuilder: (context, onSelected, options) {
-              return Align(
-                alignment: Alignment.topLeft,
-                child: Material(
-                  elevation: 4,
-                  borderRadius: BorderRadius.circular(6),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxHeight: 200,
-                      minWidth: 240,
-                    ),
-                    child: ListView.builder(
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      itemCount: options.length,
-                      itemBuilder: (context, i) {
-                        final option = options.elementAt(i);
-                        return InkWell(
-                          onTap: () => onSelected(option),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
+        ),
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: teamBreakdown.isEmpty
+              ? const Text('—', style: TextStyle(fontSize: 12))
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final team in teamBreakdown)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${team.key}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            child: Text(
-                              option.name,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                            for (final name in team.value)
+                              Text(
+                                name,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          if (_auditableOffices.isEmpty)
-            Text(
-              'No offices added yet',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            )
-          else
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children:
-                  _auditableOffices.map((o) {
-                    return Chip(
-                      label: Text(
-                        _officeName(o.officeId),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      backgroundColor: primaryThemeColor.withValues(
-                        alpha: 0.08,
-                      ),
-                      labelStyle: const TextStyle(color: primaryThemeColor),
-                      deleteIcon: const Icon(
-                        Icons.close,
-                        size: 16,
-                        color: Colors.redAccent,
-                      ),
-                      onDeleted: () => _removeOffice(o),
-                    );
-                  }).toList(),
-            ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+class _TableHeaderCell extends StatelessWidget {
+  final String text;
+  const _TableHeaderCell(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
+          color: Color(0xFF883942),
+          letterSpacing: 0.3,
+        ),
       ),
     );
   }
+}
 
-  Widget _buildAuditTeamBox() {
-    final roster = _selectedTeamRoster;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'AUDIT TEAM',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              color: primaryThemeColor,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const Divider(height: 20),
-          DropdownButtonFormField<int>(
-            initialValue:
-                _teams.any((t) => t.id == _selectedTeamId)
-                    ? _selectedTeamId
-                    : null,
-            isExpanded: true,
-            hint: const Text('Select Team', style: TextStyle(fontSize: 12)),
-            decoration: _decoration('TEAM'),
-            items:
-                _teams.isEmpty
-                    ? [
-                      const DropdownMenuItem<int>(
-                        value: null,
-                        child: Text(
-                          'No options available',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ]
-                    : _teams
-                        .map(
-                          (t) => DropdownMenuItem<int>(
-                            value: t.id,
-                            child: Text(
-                              t.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        )
-                        .toList(),
-            onChanged:
-                _teams.isEmpty
-                    ? null
-                    : (val) => setState(() => _selectedTeamId = val),
-          ),
-          const SizedBox(height: 10),
-          if (_selectedTeamId == null)
-            Text(
-              'Select a team to view its members',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            )
-          else if (roster.isEmpty)
-            Text(
-              'No active members found for this team',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children:
-                  roster
-                      .map(
-                        (a) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            '•  ${_auditorName(a)}',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      )
-                      .toList(),
-            ),
-        ],
-      ),
-    );
-  }
+class _TableCell extends StatelessWidget {
+  final String text;
+  const _TableCell(this.text);
 
-  Widget _buildDetailsCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextFormField(
-            controller: _purposeController,
-            style: const TextStyle(fontSize: 13),
-            decoration: _decoration('PURPOSE'),
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _auditTitleController,
-            style: const TextStyle(fontSize: 13),
-            decoration: _decoration(
-              'AUDIT TITLE',
-            ).copyWith(hintText: 'e.g. Medicine Ward ISO Internal Audit'),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: _pickStartDate,
-                  child: InputDecorator(
-                    decoration: _decoration('AUDIT DATE (START)'),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          DateFormat('MMMM d, yyyy').format(_startDate),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        const Icon(
-                          Icons.calendar_today,
-                          size: 14,
-                          color: primaryThemeColor,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: InkWell(
-                  onTap: _pickEndDate,
-                  child: InputDecorator(
-                    decoration: _decoration('AUDIT DATE (END)'),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          DateFormat('MMMM d, yyyy').format(_endDate),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        const Icon(
-                          Icons.calendar_today,
-                          size: 14,
-                          color: primaryThemeColor,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Text(text, style: const TextStyle(fontSize: 12)),
     );
   }
 }

@@ -451,7 +451,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
                               onChanged:
                                   (val) =>
                                       setStateDialog(() => activeState = val),
-                              activeColor: primaryColor,
+                              activeThumbColor: primaryColor,
                             ),
                           ],
                         ),

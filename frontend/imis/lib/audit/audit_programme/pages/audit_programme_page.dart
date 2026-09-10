@@ -1452,7 +1452,7 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                               MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          backgroundColor: primaryThemeColor.withOpacity(0.08),
+                          backgroundColor: primaryThemeColor.withValues(alpha: .08),
                           labelStyle: const TextStyle(color: primaryThemeColor),
                         );
                       }).toList(),

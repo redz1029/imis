@@ -9,7 +9,7 @@ namespace IMIS.Application.AuditScheduleModule
     {
         public required string Purpose { get; set; }
         public required AuditorTeams? AuditorTeams { get; set; }
-        public required string AuditTitle { get; set; }
+        public required string Activity { get; set; }
         public required bool IsActive { get; set; }
 
         public DateTime StartDate { get; set; }
@@ -25,7 +25,7 @@ namespace IMIS.Application.AuditScheduleModule
             this.Id = entity.Id;
             this.Purpose = entity.Purpose;
             this.AuditorTeams = entity.AuditorTeams;
-            this.AuditTitle = entity.AuditTitle;
+            this.Activity = entity.Activity;
             this.IsActive = entity.IsActive;
             this.StartDate = entity.StartDate;
             this.EndDate = entity.EndDate;
@@ -40,7 +40,7 @@ namespace IMIS.Application.AuditScheduleModule
                 Id = this.Id,
                 Purpose = this.Purpose,
                 AuditorTeams = this.AuditorTeams,
-                AuditTitle = this.AuditTitle,
+                Activity = this.Activity,
                 IsActive = this.IsActive,
                 StartDate = this.StartDate,
                 EndDate = this.EndDate,

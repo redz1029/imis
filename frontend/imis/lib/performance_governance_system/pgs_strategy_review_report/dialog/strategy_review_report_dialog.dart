@@ -521,7 +521,7 @@ class StrategyReviewReportDialogState
         _sectionLabel('Quarter'),
         const SizedBox(height: 8),
         DropdownButtonFormField<StrategyReviewPeriod>(
-          value: _selectedPeriod,
+          initialValue: _selectedPeriod,
           isExpanded: true,
           style: const TextStyle(fontSize: 13, color: Colors.black87),
           decoration: InputDecoration(

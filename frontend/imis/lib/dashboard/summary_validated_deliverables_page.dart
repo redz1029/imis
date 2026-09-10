@@ -872,7 +872,7 @@ class SummaryValidatedDeliverablesPageState
         label: 'Departments Contributing Deliverables',
         value: '$_totalOffices',
         color: const Color(0xFF1976D2),
-        bg: const Color(0xFF1976D2).withOpacity(0.08),
+        bg: const Color(0xFF1976D2).withValues(alpha: .08),
         icon: Icons.apartment_outlined,
       ),
       _StatData(
@@ -928,7 +928,7 @@ class SummaryValidatedDeliverablesPageState
                 top: Radius.circular(14),
               ),
               border: Border(
-                bottom: BorderSide(color: _border.withOpacity(0.5)),
+                bottom: BorderSide(color: _border.withValues(alpha: .5)),
               ),
             ),
             child: Row(
@@ -1180,7 +1180,7 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: data.bg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: data.color.withOpacity(0.12)),
+        border: Border.all(color: data.color.withValues(alpha: .12)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -1219,7 +1219,7 @@ class _StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: data.color.withOpacity(0.10),
+              color: data.color.withValues(alpha: .10),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(data.icon, size: 18, color: data.color),
@@ -1250,7 +1250,7 @@ class _MetaBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: .2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1341,7 +1341,7 @@ class _DepartmentRow extends StatelessWidget {
                     value: pct,
                     backgroundColor: const Color(0xFFE8E8E8),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      progressColor.withOpacity(0.75),
+                      progressColor.withValues(alpha: .75),
                     ),
                   ),
                 ),
@@ -1355,7 +1355,7 @@ class _DepartmentRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: progressBg,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: progressColor.withOpacity(0.2)),
+                  border: Border.all(color: progressColor.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   '${office.auditProgress} audited',
@@ -1370,7 +1370,7 @@ class _DepartmentRow extends StatelessWidget {
           ),
         ),
         if (!isLast)
-          Divider(height: 12, color: Color(0xFFF0F0F0).withOpacity(0.7)),
+          Divider(height: 12, color: Color(0xFFF0F0F0).withValues(alpha: 0.7)),
       ],
     );
   }

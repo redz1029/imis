@@ -458,7 +458,7 @@ class _PerformanceValidationDialogState
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: .1),
                     blurRadius: 32,
                     offset: const Offset(0, 12),
                   ),
@@ -1388,7 +1388,7 @@ class _PerformanceValidationDialogState
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: primaryColor.withOpacity(.15),
+              color: primaryColor.withValues(alpha: .15),
               blurRadius: 40,
               offset: const Offset(0, 8),
             ),
@@ -1431,7 +1431,7 @@ class _PerformanceValidationDialogState
                         Text(
                           'Cotabato Regional and Medical Center',
                           style: GoogleFonts.plusJakartaSans(
-                            color: Colors.white.withOpacity(.75),
+                            color: Colors.white.withValues(alpha: .75),
                             fontSize: isMobile ? 10 : 11,
                           ),
                         ),
@@ -1518,7 +1518,7 @@ class _ValidatorGrid extends StatelessWidget {
             width: 22,
             height: 22,
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(.12),
+              color: primaryColor.withValues(alpha: .12),
               borderRadius: BorderRadius.circular(4),
             ),
             alignment: Alignment.center,

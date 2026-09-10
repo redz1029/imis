@@ -48,7 +48,7 @@ namespace IMIS.Application.AuditScheduleModule
                 {
                     // Update main properties on the tracked existing entity
                     existing.Purpose = entity.Purpose;
-                    existing.AuditTitle = entity.AuditTitle;
+                    existing.Activity = entity.Activity;
                     existing.IsActive = entity.IsActive;
                     existing.AuditorTeams = entity.AuditorTeams;
 
@@ -87,7 +87,7 @@ namespace IMIS.Application.AuditScheduleModule
             if (string.IsNullOrWhiteSpace(dto.Purpose))
                 errors.Add("Purpose is required.");
 
-            if (string.IsNullOrWhiteSpace(dto.AuditTitle))
+            if (string.IsNullOrWhiteSpace(dto.Activity))
                 errors.Add("Audit Title is required.");
 
             return await Task.FromResult(errors);

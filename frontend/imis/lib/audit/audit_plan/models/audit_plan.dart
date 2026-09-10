@@ -43,6 +43,8 @@ class AuditPlan {
   factory AuditPlan.fromJson(Map<String, dynamic> json) =>
       _$AuditPlanFromJson(json);
 
+  get preparer => null;
+
   Map<String, dynamic> toJson() => _$AuditPlanToJson(this);
 
   static List<AuditPlanEntry> _entriesFromJson(Object? json) {
