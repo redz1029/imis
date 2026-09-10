@@ -20,6 +20,7 @@ class PerformanceValidationServices {
     required String roleId,
     String? officeId,
     String? periodId,
+    String? parentOfficeId,
   }) async {
     final paginationUtil = PaginationUtil(dio);
 
@@ -31,6 +32,7 @@ class PerformanceValidationServices {
       additionalParams: {
         if (officeId != null) 'officeId': officeId,
         if (periodId != null) 'pgsPeriodId': periodId,
+        if (parentOfficeId != null) 'parentOfficeId': parentOfficeId,
       },
       fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
     );

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -44,6 +45,7 @@ class OperationReviewProtocolPageState
   List<Office> officeList = [];
   List<OfficeEvaluators> serviceList = [];
   String? _selectedServiceId;
+  String? _selectedOfficeId;
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
@@ -61,6 +63,15 @@ class OperationReviewProtocolPageState
   );
   final _pgsService = PerformanceGovernanceSystemService(Dio());
   bool _mobileFiltersExpanded = false;
+  bool _officeListLoading = false;
+  String? _getOfficeOrServiceId() {
+    if (_selectedOfficeId != null && _selectedOfficeId!.isNotEmpty) {
+      return _selectedOfficeId;
+    } else if (_selectedServiceId != null && _selectedServiceId!.isNotEmpty) {
+      return _selectedServiceId;
+    }
+    return null;
+  }
 
   @override
   void initState() {
@@ -106,6 +117,52 @@ class OperationReviewProtocolPageState
     }
   }
 
+  Future<void> _loadOfficesForService(String serviceId) async {
+    setState(() {
+      _officeListLoading = true;
+      officeList = [];
+      _selectedOfficeId = null;
+    });
+    try {
+      final offices = await _commonService.fetchOfficesByEvaluatorRole(
+        int.tryParse(serviceId) ?? 0,
+      );
+      if (!mounted) return;
+      setState(() => officeList = offices);
+    } finally {
+      if (mounted) setState(() => _officeListLoading = false);
+    }
+  }
+
+  // Future<void> fetchFilter({int? page, int pageSize = 15}) async {
+  //   if (_isLoading) return;
+
+  //   setState(() => _isLoading = true);
+
+  //   try {
+  //     final targetPage = page ?? _currentPage;
+  //     final roleIdParam = await _getRoleId();
+
+  //     final result = await _operationReviewProtocolService
+  //         .getOperationReviewProtocolList(
+  //           roleId: roleIdParam,
+  //           page: targetPage,
+  //           pageSize: pageSize,
+  //           officeId: _selectedOfficeId,
+  //           periodId: _selectedPeriodId,
+  //           parentofficeid: _selectedOfficeId,
+  //         );
+
+  //     setState(() {
+  //       operationReviewprotocolList = result.items;
+  //       filteredList = result.items;
+  //       _currentPage = result.page;
+  //       _totalCount = result.totalCount;
+  //     });
+  //   } finally {
+  //     setState(() => _isLoading = false);
+  //   }
+  // }
   Future<void> fetchFilter({int? page, int pageSize = 15}) async {
     if (_isLoading) return;
 
@@ -120,8 +177,9 @@ class OperationReviewProtocolPageState
             roleId: roleIdParam,
             page: targetPage,
             pageSize: pageSize,
-            officeId: _selectedServiceId,
+            officeId: _selectedOfficeId,
             periodId: _selectedPeriodId,
+            parentofficeid: _selectedServiceId,
           );
 
       setState(() {
@@ -392,16 +450,17 @@ class OperationReviewProtocolPageState
               runSpacing: 10,
               children: [
                 buildDropdown(child: _serviceDropdown()),
-                // buildDropdown(
-                //   child: PermissionWidget(
-                //     permission: AppPermissions.viewOffice,
-                //     child: _officeDropdown(),
-                //   ),
-                // ),
+                buildDropdown(
+                  child: PermissionWidget(
+                    permission: AppPermissions.viewOffice,
+                    child: _officeDropdown(),
+                  ),
+                ),
                 buildDropdown(child: _periodDropdown()),
               ],
             ),
             const Spacer(),
+            _viewGuide(),
             if (_hasActiveFilters)
               TextButton.icon(
                 onPressed: _resetFilters,
@@ -537,6 +596,40 @@ class OperationReviewProtocolPageState
     );
   }
 
+  // Widget _serviceDropdown() {
+  //   return ConstrainedBox(
+  //     constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+  //     child: SizedBox(
+  //       height: 38,
+  //       child: SearchableDropdown(
+  //         items: ["All Service", ...serviceList.map((s) => s.officeName)],
+  //         selectedItem:
+  //             _selectedServiceId == null
+  //                 ? null
+  //                 : (serviceList
+  //                     .where((s) => s.officeId.toString() == _selectedServiceId)
+  //                     .firstOrNull
+  //                     ?.officeName),
+  //         hintText: "All Service",
+  //         searchHint: "Search services...",
+  //         prefixIcon: Icons.apartment_outlined,
+  //         onChanged: (value) {
+  //           final newId =
+  //               value == "All Service"
+  //                   ? null
+  //                   : serviceList
+  //                       .firstWhere((s) => s.officeName == value)
+  //                       .officeId
+  //                       .toString();
+  //           setState(() {
+  //             _selectedServiceId = newId;
+  //           });
+  //           fetchFilter();
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
   Widget _serviceDropdown() {
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
@@ -546,17 +639,20 @@ class OperationReviewProtocolPageState
           items: ["All Service", ...serviceList.map((s) => s.officeName)],
           selectedItem:
               _selectedServiceId == null
-                  ? null
+                  ? "Select Service"
                   : (serviceList
-                      .where((s) => s.officeId.toString() == _selectedServiceId)
-                      .firstOrNull
-                      ?.officeName),
-          hintText: "All Service",
+                          .where(
+                            (s) => s.officeId.toString() == _selectedServiceId,
+                          )
+                          .firstOrNull
+                          ?.officeName ??
+                      "Select Service"),
+          hintText: "Service",
           searchHint: "Search services...",
           prefixIcon: Icons.apartment_outlined,
           onChanged: (value) {
             final newId =
-                value == "All Service"
+                value == "Select Service"
                     ? null
                     : serviceList
                         .firstWhere((s) => s.officeName == value)
@@ -564,9 +660,92 @@ class OperationReviewProtocolPageState
                         .toString();
             setState(() {
               _selectedServiceId = newId;
+              _selectedOfficeId = null;
+              officeList = [];
             });
+            if (newId != null) {
+              _loadOfficesForService(newId);
+            }
             fetchFilter();
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _officeDropdown() {
+    final serviceSelected = _selectedServiceId != null;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: Opacity(
+          opacity: serviceSelected ? 1 : 0.5,
+          child: IgnorePointer(
+            ignoring: !serviceSelected || _officeListLoading,
+            child: SearchableDropdown(
+              items: ["All Offices", ...officeList.map((o) => o.name)],
+              selectedItem:
+                  _selectedOfficeId == null
+                      ? "All Offices"
+                      : (officeList
+                              .where(
+                                (o) => o.id.toString() == _selectedOfficeId,
+                              )
+                              .firstOrNull
+                              ?.name ??
+                          "All Offices"),
+              hintText: serviceSelected ? "Office" : "Select Service first",
+              searchHint: "Search offices...",
+              prefixIcon: Icons.business_outlined,
+              onChanged: (value) {
+                setState(() {
+                  _selectedOfficeId =
+                      value == "All Offices"
+                          ? null
+                          : officeList
+                              .firstWhere((o) => o.name == value)
+                              .id
+                              .toString();
+                });
+                fetchFilter();
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _viewGuide() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: TextButton.icon(
+        onPressed: () async {
+          final byteData = await rootBundle.load('assets/opsreviewguide.pdf');
+          final bytes = byteData.buffer.asUint8List();
+          if (kIsWeb) {
+            final blob = html.Blob([bytes], 'application/pdf');
+            final url = html.Url.createObjectUrlFromBlob(blob);
+            html.window.open(url, '_blank');
+            Future.delayed(const Duration(seconds: 15), () {
+              html.Url.revokeObjectUrl(url);
+            });
+          } else {
+            final tempDir = await getTemporaryDirectory();
+            final file = File('${tempDir.path}/opsreviewguide.pdf');
+            await file.writeAsBytes(bytes);
+            await OpenFile.open(file.path);
+          }
+        },
+        icon: const Icon(
+          Icons.menu_book_outlined,
+          size: 16,
+          color: primaryColor,
+        ),
+        label: Text(
+          'View Guide',
+          style: TextStyle(color: primaryColor, fontWeight: FontWeight.w600),
         ),
       ),
     );
