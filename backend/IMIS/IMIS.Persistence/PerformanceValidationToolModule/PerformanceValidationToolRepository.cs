@@ -82,7 +82,7 @@ namespace IMIS.Persistence.PerformanceValidationToolModule
                 .Include(x => x.Objectives)
                 .Include(x => x.Conclusion)               
                 .Include(x => x.Validators)
-                    .ThenInclude(x => x.Auditor)
+                    .ThenInclude(x => x.Evaluator)
                     .ThenInclude(x => x.User)
                  .Include(x => x.DeliverableFindings)
                     .ThenInclude(x => x.PgsDeliverable)

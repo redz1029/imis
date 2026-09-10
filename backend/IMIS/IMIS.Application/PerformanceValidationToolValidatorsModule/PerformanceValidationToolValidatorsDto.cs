@@ -7,7 +7,7 @@ namespace IMIS.Application.PerformanceValidationToolValidatorsModule
     public class PerformanceValidationToolValidatorsDto : BaseDto<PerformanceValidationToolValidators, long>
     {
         public long PerformanceValidationToolId { get; set; }
-        public int AuditorId { get; set; }
+        public int EvaluatorId { get; set; }
         public string? AuditorName { get; set; }
         public DateTime PostingDate { get; set; }     
         public PerformanceValidationToolValidatorsDto()
@@ -18,14 +18,14 @@ namespace IMIS.Application.PerformanceValidationToolValidatorsModule
         {
             this.Id = performanceValidationToolValidators.Id;
             this.PerformanceValidationToolId = performanceValidationToolValidators.PerformanceValidationToolId;
-            this.AuditorId = performanceValidationToolValidators.AuditorId;
+            this.EvaluatorId = performanceValidationToolValidators.EvaluatorId;
             this.PostingDate = performanceValidationToolValidators.PostingDate;
         }
         public override PerformanceValidationToolValidators ToEntity()
         {
             return new PerformanceValidationToolValidators() {
                 Id = Id, PerformanceValidationToolId = PerformanceValidationToolId,
-                AuditorId = AuditorId,
+                EvaluatorId = EvaluatorId,
                 PostingDate = PostingDate
             };
         }

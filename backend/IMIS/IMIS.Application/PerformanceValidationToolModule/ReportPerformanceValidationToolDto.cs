@@ -117,13 +117,13 @@ namespace IMIS.Application.PerformanceValidationToolModule
             {
                 Id = x.Id,
                 PerformanceValidationToolId = x.PerformanceValidationToolId,
-                AuditorId = x.AuditorId,
+                EvaluatorId = x.EvaluatorId,
                 AuditorName = string.Join(" ", new[]
                 {
-                    x.Auditor?.User?.FirstName,
-                    x.Auditor?.User?.MiddleName,
-                    x.Auditor?.User?.LastName,
-                    x.Auditor?.User?.Suffix
+                    x.Evaluator?.User?.FirstName,
+                    x.Evaluator?.User?.MiddleName,
+                    x.Evaluator?.User?.LastName,
+                    x.Evaluator?.User?.Suffix
                 }.Where(s => !string.IsNullOrWhiteSpace(s))),
                 PostingDate = x.PostingDate,
                 IsDeleted = x.IsDeleted,
