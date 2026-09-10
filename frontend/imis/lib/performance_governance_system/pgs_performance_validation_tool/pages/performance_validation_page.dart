@@ -10,6 +10,7 @@ import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
+import 'package:imis/office/models/office_evaluators.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -41,7 +42,7 @@ class PerformanceValidationPage extends StatefulWidget {
 
 class PerformanceValidationPageState extends State<PerformanceValidationPage> {
   List<Office> officeList = [];
-  List<Office> serviceList = [];
+  List<OfficeEvaluators> serviceList = [];
   String? _selectedOfficeId;
   String? _selectedServiceId;
   int _currentPage = 1;
@@ -58,6 +59,7 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
   final _commonService = CommonService(Dio());
   final _performanceValidation = PerformanceValidationServices(Dio());
   bool _mobileFiltersExpanded = false;
+  bool _officeListLoading = false;
 
   @override
   void initState() {
@@ -122,6 +124,7 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
             pageSize: pageSize,
             officeId: _selectedOfficeId,
             periodId: _selectedPeriodId,
+            parentOfficeId: _selectedServiceId,
           );
 
       setState(() {
@@ -132,6 +135,23 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
       });
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadOfficesForService(String serviceId) async {
+    setState(() {
+      _officeListLoading = true;
+      officeList = [];
+      _selectedOfficeId = null;
+    });
+    try {
+      final offices = await _commonService.fetchOfficesByEvaluatorRole(
+        int.tryParse(serviceId) ?? 0,
+      );
+      if (!mounted) return;
+      setState(() => officeList = offices);
+    } finally {
+      if (mounted) setState(() => _officeListLoading = false);
     }
   }
 
@@ -157,7 +177,7 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
     final offices = await _deliverableStatusMonitoring.fetchOffices(
       roleId: roleId,
     );
-    final services = await _commonService.fetchService();
+    final services = await _commonService.fetchServiceEvalutors();
     final periods = await _commonService.fetchPgsPeriod();
 
     if (!mounted) return;
@@ -298,6 +318,93 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
     );
   }
 
+  Widget _serviceDropdown() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: ["All Service", ...serviceList.map((s) => s.officeName)],
+          selectedItem:
+              _selectedServiceId == null
+                  ? "Select Service"
+                  : (serviceList
+                          .where(
+                            (s) => s.officeId.toString() == _selectedServiceId,
+                          )
+                          .firstOrNull
+                          ?.officeName ??
+                      "Select Service"),
+          hintText: "Service",
+          searchHint: "Search services...",
+          prefixIcon: Icons.apartment_outlined,
+          onChanged: (value) {
+            final newId =
+                value == "Select Service"
+                    ? null
+                    : serviceList
+                        .firstWhere((s) => s.officeName == value)
+                        .officeId
+                        .toString();
+            setState(() {
+              _selectedServiceId = newId;
+              _selectedOfficeId = null;
+              officeList = [];
+            });
+            if (newId != null) {
+              _loadOfficesForService(newId);
+            }
+            fetchFilter();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _officeDropdown() {
+    final servicesSelected = _selectedServiceId != null;
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: Opacity(
+          opacity: servicesSelected ? 1 : 0.5,
+          child: IgnorePointer(
+            ignoring: !servicesSelected || _officeListLoading,
+            child: SearchableDropdown(
+              items: ["All Offices", ...officeList.map((o) => o.name)],
+              selectedItem:
+                  _selectedOfficeId == null
+                      ? "All Offices"
+                      : (officeList
+                              .where(
+                                (o) => o.id.toString() == _selectedOfficeId,
+                              )
+                              .firstOrNull
+                              ?.name ??
+                          "All Offices"),
+              hintText: servicesSelected ? 'Office' : 'Select Service first',
+              searchHint: "Search Offices...",
+              prefixIcon: Icons.business_outlined,
+              onChanged: (value) {
+                setState(() {
+                  _selectedOfficeId =
+                      value == "All Offices"
+                          ? null
+                          : officeList
+                              .firstWhere((o) => o.name == value)
+                              .id
+                              .toString();
+                });
+                fetchFilter();
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPageHeader(bool isMobile) {
     final width = MediaQuery.of(context).size.width;
     final isSmall = width < 900;
@@ -398,7 +505,7 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
               spacing: 10,
               runSpacing: 10,
               children: [
-                // buildDropdown(child: _serviceDropdown()),
+                buildDropdown(child: _serviceDropdown()),
                 buildDropdown(
                   child: PermissionWidget(
                     permission: AppPermissions.viewOffice,
@@ -521,13 +628,13 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          height: 38,
-                          child: PermissionWidget(
-                            permission: AppPermissions.viewOffice,
-                            child: _officeDropdown(),
-                          ),
-                        ),
+                        // SizedBox(
+                        //   height: 38,
+                        //   child: PermissionWidget(
+                        //     permission: AppPermissions.viewOffice,
+                        //     child: _officeDropdown(),
+                        //   ),
+                        // ),
                         SizedBox(
                           height: 38,
                           child: PermissionWidget(
@@ -544,40 +651,40 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
     );
   }
 
-  Widget _officeDropdown() {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
-      child: SizedBox(
-        height: 38,
-        child: SearchableDropdown(
-          items: ["All Offices", ...officeList.map((o) => o.name)],
-          selectedItem:
-              _selectedOfficeId == null
-                  ? "All Offices"
-                  : (officeList
-                          .where((o) => o.id.toString() == _selectedOfficeId)
-                          .firstOrNull
-                          ?.name ??
-                      "All Offices"),
-          hintText: "Office",
-          searchHint: "Search offices...",
-          prefixIcon: Icons.apartment_outlined,
-          onChanged: (value) {
-            setState(() {
-              _selectedOfficeId =
-                  value == "All Offices"
-                      ? null
-                      : officeList
-                          .firstWhere((o) => o.name == value)
-                          .id
-                          .toString();
-            });
-            fetchFilter();
-          },
-        ),
-      ),
-    );
-  }
+  // Widget _officeDropdown() {
+  //   return ConstrainedBox(
+  //     constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+  //     child: SizedBox(
+  //       height: 38,
+  //       child: SearchableDropdown(
+  //         items: ["All Offices", ...officeList.map((o) => o.name)],
+  //         selectedItem:
+  //             _selectedOfficeId == null
+  //                 ? "All Offices"
+  //                 : (officeList
+  //                         .where((o) => o.id.toString() == _selectedOfficeId)
+  //                         .firstOrNull
+  //                         ?.name ??
+  //                     "All Offices"),
+  //         hintText: "Office",
+  //         searchHint: "Search offices...",
+  //         prefixIcon: Icons.apartment_outlined,
+  //         onChanged: (value) {
+  //           setState(() {
+  //             _selectedOfficeId =
+  //                 value == "All Offices"
+  //                     ? null
+  //                     : officeList
+  //                         .firstWhere((o) => o.name == value)
+  //                         .id
+  //                         .toString();
+  //           });
+  //           fetchFilter();
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _periodDropdown() {
     final converter = LongDateOnlyConverter();
