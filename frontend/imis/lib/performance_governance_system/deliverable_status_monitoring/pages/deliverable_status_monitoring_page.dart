@@ -1,4 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -89,6 +90,8 @@ class _DeliverableStatusMonitoringPageState
   final int pageSize = 15;
   int _totalCount = 0;
   String userId = "";
+
+  final Map<int, int> _attachmentCountCache = {};
 
   @override
   void initState() {
@@ -299,6 +302,64 @@ class _DeliverableStatusMonitoringPageState
     } catch (_) {
       return false;
     }
+  }
+
+  Future<int> _getAttachmentCount(int deliverableId) async {
+    if (_attachmentCountCache.containsKey(deliverableId)) {
+      return _attachmentCountCache[deliverableId]!;
+    }
+    final url = '${ApiEndpoint.baseUrl}/$deliverableId/attachment-count';
+    int count = 0;
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+      if (response.statusCode == 200) {
+        count = response.data['attachmentCount'] ?? 0;
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch attachment count: $e');
+    }
+    _attachmentCountCache[deliverableId] = count;
+    return count;
+  }
+
+  Widget _badgedButton({required Widget button, required int deliverableId}) {
+    return FutureBuilder<int>(
+      future: _getAttachmentCount(deliverableId),
+      builder: (context, snapshot) {
+        final count = snapshot.data ?? 0;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            button,
+            if (count > 0)
+              Positioned(
+                top: -6,
+                right: -6,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(
+                    minWidth: 18,
+                    minHeight: 18,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$count',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _checkDeliverablesAvailability(Function setDialogState) async {
@@ -1190,19 +1251,22 @@ class _DeliverableStatusMonitoringPageState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _actionButton(
-          icon: Icons.bar_chart_outlined,
-          label: 'Accomplishment',
-          color: primaryColor,
-          onTap: () async {
-            await loadAccomplishments(deliverableId, monthlyPeriods);
-            showAccomplishmentFormDialog(
-              context,
-              deliverable,
-              userId,
-              monthlyPeriods,
-            );
-          },
+        _badgedButton(
+          deliverableId: deliverableId,
+          button: _actionButton(
+            icon: Icons.bar_chart_outlined,
+            label: 'Accomplishment',
+            color: primaryColor,
+            onTap: () async {
+              await loadAccomplishments(deliverableId, monthlyPeriods);
+              showAccomplishmentFormDialog(
+                context,
+                deliverable,
+                userId,
+                monthlyPeriods,
+              );
+            },
+          ),
         ),
         const SizedBox(height: 6),
         FutureBuilder<bool>(
@@ -1252,20 +1316,23 @@ class _DeliverableStatusMonitoringPageState
       children: [
         SizedBox(
           width: double.infinity,
-          child: _actionButton(
-            icon: Icons.bar_chart_outlined,
-            label: 'View Accomplishment',
-            color: primaryColor,
-            fullWidth: true,
-            onTap: () async {
-              await loadAccomplishments(deliverableId, monthlyPeriods);
-              showAccomplishmentFormDialog(
-                context,
-                deliverable,
-                userId,
-                monthlyPeriods,
-              );
-            },
+          child: _badgedButton(
+            deliverableId: deliverableId,
+            button: _actionButton(
+              icon: Icons.bar_chart_outlined,
+              label: 'View Accomplishment',
+              color: primaryColor,
+              fullWidth: true,
+              onTap: () async {
+                await loadAccomplishments(deliverableId, monthlyPeriods);
+                showAccomplishmentFormDialog(
+                  context,
+                  deliverable,
+                  userId,
+                  monthlyPeriods,
+                );
+              },
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -2181,7 +2248,7 @@ Future<bool?> showAccomplishmentFormDialog(
                                         flex: 3,
                                         child: Center(
                                           child: Text(
-                                            "Remarks (Auditor)",
+                                            "Remarks (Evaluator)",
                                             style: TextStyle(
                                               color: grey,
                                               fontSize: 12,

@@ -64,14 +64,6 @@ class OperationReviewProtocolPageState
   final _pgsService = PerformanceGovernanceSystemService(Dio());
   bool _mobileFiltersExpanded = false;
   bool _officeListLoading = false;
-  String? _getOfficeOrServiceId() {
-    if (_selectedOfficeId != null && _selectedOfficeId!.isNotEmpty) {
-      return _selectedOfficeId;
-    } else if (_selectedServiceId != null && _selectedServiceId!.isNotEmpty) {
-      return _selectedServiceId;
-    }
-    return null;
-  }
 
   @override
   void initState() {
