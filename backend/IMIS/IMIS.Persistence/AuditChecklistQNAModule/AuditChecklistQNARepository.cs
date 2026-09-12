@@ -41,6 +41,15 @@ namespace IMIS.Persistence.AuditChecklistQNAModule
                 .ConfigureAwait(false);
         }
 
+        public async Task<IEnumerable<AuditChecklistQNA>> GetByIsoStandardIdAsync(long isoStandardId, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .AsNoTracking()
+                .Where(x => x.IsoStandardId == isoStandardId)
+                .Include(x => x.IsoStandard)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
         /// <summary>
         /// Overriding the base GetById to ensure we have a clean implementation 
         /// if specific includes are needed later.

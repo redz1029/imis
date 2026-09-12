@@ -244,51 +244,55 @@ namespace IMIS.Persistence.AuditProgrammeModule
                 .FirstOrDefaultAsync(ap => ap.Id == id && !ap.IsDeleted, cancellationToken);
         }
 
+        public async Task<AuditProgramme?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
+        {
+            return await GetByIdAsync(id, cancellationToken);
+        }
         /// <summary>
         /// Safely fetches the complete execution graph using a Split Query to prevent Cartesian explosion.
         /// Use this specifically when editing the entire tree or viewing deep details.
         /// </summary>
-        public async Task<AuditProgramme?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
-        {
-            return await GetDbContext().Set<AuditProgramme>()
-                .AsSplitQuery() // Prevent Cartesian explosion on multi-level includes
-                .Include(ap => ap.Objectives)
-                .Include(ap => ap.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.AuditPlanProcesses)
-                            .ThenInclude(app => app.Office)
-                                .ThenInclude(o => o.OfficeType) // Load the office type (Service, Department, etc.)
-                .Include(ap => ap.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.AuditPlanProcesses)
-                            .ThenInclude(app => app.Office)
-                                .ThenInclude(o => o.ParentOffice) // Load parent office
-                                    .ThenInclude(po => po.OfficeType) // Load parent office type
-                .Include(ap => ap.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoAuditProcesses)
-                .Include(ap => ap.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoStandardAuditPlans)
-                            .ThenInclude(isap => isap.IsoStandard)
-                .Include(ap => ap.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoAuditors)
-                            .ThenInclude(ia => ia.Team)
-                // NEW: same roster continuation as GetByIdAsync above.
-                .Include(ap => ap.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoAuditors)
-                            .ThenInclude(ia => ia.Team!)
-                                .ThenInclude(t => t.AuditorTeams.Where(at => !at.IsDeleted && at.IsActive))
-                                    .ThenInclude(at => at.Auditor)
-                .Include(ap => ap.AuditPlans)
-                    .ThenInclude(p => p.Entries)
-                        .ThenInclude(e => e.IsoAuditors)
-                            // Explicitly type-cast the lambda parameter to break the naming conflict loop
-                            .ThenInclude((IsoAuditor ia) => ia.IsoAuditors)
-                .FirstOrDefaultAsync(ap => ap.Id == id, cancellationToken);
-        }
+        //public async Task<AuditProgramme?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
+        //{
+        //    return await GetDbContext().Set<AuditProgramme>()
+        //        .AsSplitQuery() // Prevent Cartesian explosion on multi-level includes
+        //        .Include(ap => ap.Objectives)
+        //        .Include(ap => ap.AuditPlans)
+        //            .ThenInclude(p => p.Entries)
+        //                .ThenInclude(e => e.AuditPlanProcesses)
+        //                    .ThenInclude(app => app.Office)
+        //                        .ThenInclude(o => o.OfficeType) // Load the office type (Service, Department, etc.)
+        //        .Include(ap => ap.AuditPlans)
+        //            .ThenInclude(p => p.Entries)
+        //                .ThenInclude(e => e.AuditPlanProcesses)
+        //                    .ThenInclude(app => app.Office)
+        //                        .ThenInclude(o => o.ParentOffice) // Load parent office
+        //                            .ThenInclude(po => po.OfficeType) // Load parent office type
+        //        .Include(ap => ap.AuditPlans)
+        //            .ThenInclude(p => p.Entries)
+        //                .ThenInclude(e => e.IsoAuditProcesses)
+        //        .Include(ap => ap.AuditPlans)
+        //            .ThenInclude(p => p.Entries)
+        //                .ThenInclude(e => e.IsoStandardAuditPlans)
+        //                    .ThenInclude(isap => isap.IsoStandard)
+        //        .Include(ap => ap.AuditPlans)
+        //            .ThenInclude(p => p.Entries)
+        //                .ThenInclude(e => e.IsoAuditors)
+        //                    .ThenInclude(ia => ia.Team)
+        //        // NEW: same roster continuation as GetByIdAsync above.
+        //        .Include(ap => ap.AuditPlans)
+        //            .ThenInclude(p => p.Entries)
+        //                .ThenInclude(e => e.IsoAuditors)
+        //                    .ThenInclude(ia => ia.Team!)
+        //                        .ThenInclude(t => t.AuditorTeams.Where(at => !at.IsDeleted && at.IsActive))
+        //                            .ThenInclude(at => at.Auditor)
+        //        .Include(ap => ap.AuditPlans)
+        //            .ThenInclude(p => p.Entries)
+        //                .ThenInclude(e => e.IsoAuditors)
+        //                    // Explicitly type-cast the lambda parameter to break the naming conflict loop
+        //                    .ThenInclude((IsoAuditor ia) => ia.IsoAuditors)
+        //        .FirstOrDefaultAsync(ap => ap.Id == id, cancellationToken);
+        //}
 
         public async Task<AuditProgramme?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
@@ -305,7 +309,7 @@ namespace IMIS.Persistence.AuditProgrammeModule
         {
             return await _entities
                 .AsNoTracking()
-                .AsSplitQuery() // Prevents performance hit from joining multiple child collections
+                .AsSplitQuery()
                 .Where(x => !x.IsDeleted)
                 .Include(ap => ap.Objectives.Where(o => !o.IsDeleted))
                 .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
@@ -330,7 +334,6 @@ namespace IMIS.Persistence.AuditProgrammeModule
                     .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
                         .ThenInclude(e => e.IsoAuditors.Where(ia => !ia.IsDeleted))
                             .ThenInclude(ia => ia.Team)
-                // NEW: same roster continuation as above, for the list view.
                 .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
                     .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
                         .ThenInclude(e => e.IsoAuditors.Where(ia => !ia.IsDeleted))

@@ -1,16 +1,21 @@
-﻿ using Base.Primitives;
+﻿using Base.Primitives;
 
 namespace IMIS.Domain
 {
     public class AuditChecklist : Entity<int>
     {
-        public required string AuditScope { get; set; }
-        public required int conforming { get; set; }
-        public required string FindingAndRemarks { get; set; }
-        public required string ItemsAndQuestions { get; set; }
-        public required string Auditees { get; set; }
-        public required AuditChecklistQNA? QnA { get; set; }
+        // The two things a human actually fills in on the paper form.
+        public bool? Conforming { get; set; }
+        public string? FindingAndRemarks { get; set; }
+
+        // Office/Process and Auditors (Team) are fetched through here —
+        // never duplicated on this entity.
+        public required int AuditPlanEntryId { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; }
+
+        // Criteria/Clause and Items/Questions come from the library entry
+        // linked here, not duplicated either.
+        public required int AuditChecklistQNAId { get; set; }
         public AuditChecklistQNA? AuditChecklistQNA { get; set; }
-        public Auditor? Auditor { get; set; }
     }
 }

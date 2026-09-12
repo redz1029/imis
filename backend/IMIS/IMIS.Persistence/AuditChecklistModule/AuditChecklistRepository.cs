@@ -12,25 +12,34 @@ namespace IMIS.Persistence.AuditChecklistModule
 {
     public class AuditChecklistRepository : BaseRepository<AuditChecklist, int, ImisDbContext, User>, IAuditChecklistRepository
     {
-        public AuditChecklistRepository(ImisDbContext dbContext) : base(dbContext) { }
+        private readonly ImisDbContext _localDbContext;
+
+        public AuditChecklistRepository(ImisDbContext dbContext) : base(dbContext)
+        {
+            _localDbContext = dbContext;
+        }
+
+        private IQueryable<AuditChecklist> WithDetails(IQueryable<AuditChecklist> query) => query
+            .Include(x => x.AuditChecklistQNA)
+                .ThenInclude(q => q!.IsoStandard)
+            .Include(x => x.AuditPlanEntry)
+                .ThenInclude(e => e!.AuditPlanProcesses)
+                    .ThenInclude(p => p.Office)
+            .Include(x => x.AuditPlanEntry)
+                .ThenInclude(e => e!.IsoAuditors)
+                    .ThenInclude(a => a.Team);
 
         public async Task<AuditChecklist?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
-            return await ReadOnlyDbContext.Set<AuditChecklist>()
-                .Include(x => x.Auditor)
-                .Include(x => x.AuditChecklistQNA) // Navigation property from your new domain
-                .Include(x => x.QnA)               // Required navigation property from your new domain
+            return await WithDetails(ReadOnlyDbContext.Set<AuditChecklist>().AsQueryable())
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<AuditChecklist>> GetByQnAIdAsync(int qnaId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<AuditChecklist>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken)
         {
-            return await _entities
-                .AsNoTracking()
-                // Filtering by the QNA relationship as per your new domain structure
-                .Where(x => x.AuditChecklistQNA != null && x.AuditChecklistQNA.Id == qnaId)
-                .Include(x => x.Auditor)
+            return await WithDetails(_entities.AsNoTracking())
+                .Where(x => x.AuditPlanEntryId == auditPlanEntryId && !x.IsDeleted)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -38,9 +47,7 @@ namespace IMIS.Persistence.AuditChecklistModule
         public async Task<EntityPageList<AuditChecklist, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             return await EntityPageList<AuditChecklist, int>.CreateAsync(
-                _entities.AsNoTracking()
-                    .Include(x => x.AuditChecklistQNA)
-                    .Include(x => x.Auditor),
+                WithDetails(_entities.AsNoTracking()),
                 page,
                 pageSize,
                 cancellationToken)
@@ -49,7 +56,6 @@ namespace IMIS.Persistence.AuditChecklistModule
 
         public async Task<AuditChecklist?> GetByIdForDeleteAsync(int id, CancellationToken cancellationToken)
         {
-            // Fecthing with tracking enabled so the context can handle the Soft Delete update
             return await _entities
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
                 .ConfigureAwait(false);
@@ -57,12 +63,15 @@ namespace IMIS.Persistence.AuditChecklistModule
 
         public async Task<IEnumerable<AuditChecklist>> GetAll(CancellationToken cancellationToken)
         {
-            return await _entities
-                .AsNoTracking()
-                .Include(x => x.Auditor)
-                .Include(x => x.AuditChecklistQNA)
+            return await WithDetails(_entities.AsNoTracking())
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        // Guarantees instance reference to save changes
+        public async Task SaveOrUpdateAsync(CancellationToken cancellationToken)
+        {
+            await _localDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }
