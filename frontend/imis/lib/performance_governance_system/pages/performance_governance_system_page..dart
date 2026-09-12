@@ -152,29 +152,17 @@ class _PerformanceGovernanceSystemPageState
     _applyDefaultActivePeriod();
   }
 
-  // void _applyDefaultActivePeriod() {
-  //   final activePeriod = filteredListPeriod.firstWhere(
-  //     (p) => p['isActive'] == true,
-  //     orElse: () => {},
-  //   );
+  String? _formatSignedDate(dynamic rawDate) {
+    if (rawDate == null) return null;
+    try {
+      final date =
+          rawDate is DateTime ? rawDate : DateTime.parse(rawDate.toString());
+      return const LongDateOnlyConverter().toJson(date);
+    } catch (_) {
+      return null;
+    }
+  }
 
-  //   if (activePeriod.isNotEmpty) {
-  //     final start = _dateConverter.toJson(
-  //       DateTime.parse(activePeriod['startDate']),
-  //     );
-  //     final end = _dateConverter.toJson(
-  //       DateTime.parse(activePeriod['endDate']),
-  //     );
-  //     setState(() {
-  //       _selectedPeriodId = activePeriod['id'];
-  //       selectedPeriodText = "$start - $end";
-  //       selectedStartPeriod = activePeriod['startDate'];
-  //       selectedEndDate = activePeriod['endDate'];
-  //     });
-  //   }
-
-  //   fetchPgsFilter();
-  // }
   void _applyDefaultActivePeriod() {
     final activePeriod = filteredListPeriod.firstWhere(
       (p) => p['isActive'] == true,
@@ -1136,7 +1124,40 @@ class _PerformanceGovernanceSystemPageState
                                                     color: Color(0xFF1A1D23),
                                                   ),
                                                 ),
-                                                const SizedBox(height: 3),
+                                                if (isDone) ...[
+                                                  Builder(
+                                                    builder: (_) {
+                                                      final signedDate = _formatSignedDate(
+                                                        signatoryJson['dateSigned'] ??
+                                                            signatoryJson['signedDate'] ??
+                                                            signatoryJson['postingDate'],
+                                                      );
+                                                      if (signedDate == null) {
+                                                        return const SizedBox.shrink();
+                                                      }
+                                                      return Padding(
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              top: 2,
+                                                            ),
+                                                        child: Text(
+                                                          'Signed on $signedDate',
+                                                          style: TextStyle(
+                                                            fontSize: 10,
+                                                            color:
+                                                                Colors
+                                                                    .grey
+                                                                    .shade600,
+                                                            fontStyle:
+                                                                FontStyle
+                                                                    .italic,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ],
+                                                gap8px,
                                                 Container(
                                                   padding:
                                                       const EdgeInsets.symmetric(
@@ -1940,69 +1961,6 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  // Widget _startDateDropdown() {
-  //   return SearchableDropdown(
-  //     items: [
-  //       "All Start Date",
-  //       ...filteredListPeriod.map(
-  //         (p) => _dateConverter.toJson(DateTime.parse(p['startDate'])),
-  //       ),
-  //     ],
-  //     selectedItem: selectedStartDateText,
-  //     prefixIcon: Icons.calendar_today_outlFined,
-  //     hintText: "All Start Date",
-  //     searchHint: "Search start date...",
-  //     onChanged: (value) {
-  //       setState(() {
-  //         if (value == "All Start Date") {
-  //           selectedStartPeriod = null;
-  //           selectedStartDateText = "All Start Date";
-  //         } else {
-  //           final selected = filteredListPeriod.firstWhere(
-  //             (p) =>
-  //                 _dateConverter.toJson(DateTime.parse(p['startDate'])) ==
-  //                 value,
-  //           );
-  //           selectedStartPeriod = selected['startDate'];
-  //           selectedStartDateText = value;
-  //         }
-  //         fetchPgsFilter();
-  //       });
-  //     },
-  //   );
-  // }
-
-  // Widget _endDateDropdown() {
-  //   return SearchableDropdown(
-  //     items: [
-  //       "All End Date",
-  //       ...filteredListPeriod.map(
-  //         (p) => _dateConverter.toJson(DateTime.parse(p['endDate'])),
-  //       ),
-  //     ],
-  //     selectedItem: selectedEndDateText,
-  //     hintText: "All End Date",
-  //     searchHint: "Search end date...",
-  //     prefixIcon: Icons.calendar_today_outlined,
-  //     onChanged: (value) {
-  //       setState(() {
-  //         if (value == "All End Date") {
-  //           selectedEndDate = null;
-  //           selectedEndDateText = "All End Date";
-  //         } else {
-  //           final selected = filteredListPeriod.firstWhere(
-  //             (p) =>
-  //                 _dateConverter.toJson(DateTime.parse(p['endDate'])) == value,
-  //           );
-  //           selectedEndDate = selected['endDate'];
-  //           selectedEndDateText = value;
-  //         }
-  //         fetchPgsFilter();
-  //       });
-  //     },
-  //   );
-  // }
-
   Widget _buildDesktopHeader() {
     return Column(
       children: [
@@ -2014,8 +1972,8 @@ class _PerformanceGovernanceSystemPageState
           ),
           child: Row(
             children: const [
-              Expanded(
-                flex: 1,
+              SizedBox(
+                width: 60,
                 child: Text(
                   "#",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
@@ -2035,6 +1993,7 @@ class _PerformanceGovernanceSystemPageState
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
+              SizedBox(width: 24),
               Expanded(
                 flex: 2,
                 child: Text(
@@ -2054,6 +2013,21 @@ class _PerformanceGovernanceSystemPageState
         ),
       ],
     );
+  }
+
+  IconData _statusTabIcon(String label) {
+    switch (label) {
+      case 'Draft':
+        return Icons.edit_note_rounded;
+      case 'For Approval':
+        return Icons.pending_actions_rounded;
+      case 'Approved':
+        return Icons.check_circle_rounded;
+      case 'Disapproved':
+        return Icons.cancel_rounded;
+      default:
+        return Icons.list_alt_rounded; // 'All'
+    }
   }
 
   Widget _buildStatusTabs() {
@@ -2110,6 +2084,15 @@ class _PerformanceGovernanceSystemPageState
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Icon(
+                        _statusTabIcon(label),
+                        size: 14,
+                        color:
+                            isSelected
+                                ? primaryColor
+                                : (color ?? Colors.grey.shade600),
+                      ),
+                      const SizedBox(width: 5),
                       Text(
                         label,
                         style: TextStyle(
@@ -2229,12 +2212,9 @@ class _PerformanceGovernanceSystemPageState
             ),
             child: Row(
               children: [
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    "$itemNumber",
-                    style: const TextStyle(fontSize: 12),
-                  ),
+                SizedBox(
+                  width: 60,
+                  child: Text("$itemNumber", style: TextStyle(fontSize: 12)),
                 ),
                 Expanded(
                   flex: 3,
@@ -2247,6 +2227,7 @@ class _PerformanceGovernanceSystemPageState
                     style: const TextStyle(fontSize: 12),
                   ),
                 ),
+                const SizedBox(width: 24),
                 Expanded(
                   flex: 2,
                   child: MouseRegion(
@@ -3591,63 +3572,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
           builder:
               (innerContext) => InkWell(
                 onTap: () async {
-                  // if (!_hasUnsavedChanges()) {
-                  //   final prefs = await SharedPreferences.getInstance();
-                  //   await prefs.remove('selectedOfficeId');
-                  //   await prefs.remove('selectedOfficeName');
-                  //   Navigator.pop(innerContext);
-                  //   return;
-                  // }
-
-                  // final result = await showDialog<String>(
-                  //   context: innerContext,
-                  //   builder:
-                  //       (_) => AlertDialog(
-                  //         title: const Text("Unsaved Changes"),
-                  //         content: const Text(
-                  //           "You have unsaved changes. Would you like to save as draft before leaving?",
-                  //         ),
-                  //         actions: [
-                  //           TextButton(
-                  //             onPressed:
-                  //                 () => Navigator.pop(innerContext, 'discard'),
-                  //             child: const Text(
-                  //               "Discard",
-                  //               style: TextStyle(color: primaryTextColor),
-                  //             ),
-                  //           ),
-                  //           ElevatedButton(
-                  //             style: ElevatedButton.styleFrom(
-                  //               backgroundColor: primaryColor,
-                  //               padding: const EdgeInsets.symmetric(
-                  //                 vertical: 10,
-                  //                 horizontal: 16,
-                  //               ),
-                  //               shape: RoundedRectangleBorder(
-                  //                 borderRadius: BorderRadius.circular(4),
-                  //               ),
-                  //             ),
-                  //             onPressed:
-                  //                 () => Navigator.pop(innerContext, 'draft'),
-                  //             child: const Text(
-                  //               "Save as Draft",
-                  //               style: TextStyle(color: Colors.white),
-                  //             ),
-                  //           ),
-                  //         ],
-                  //       ),
-                  // );
-
-                  // if (result == 'draft') {
-                  //   await _submitAction(ActionType.draft, skipConfirm: true);
-                  //   return;
-                  // } else if (result == 'discard') {
-                  //   final prefs = await SharedPreferences.getInstance();
-                  //   await prefs.remove('selectedOfficeId');
-                  //   await prefs.remove('selectedOfficeName');
-                  //   Navigator.pop(innerContext);
-                  // }
-
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.remove('selectedOfficeId');
                   await prefs.remove('selectedOfficeName');
@@ -6836,7 +6760,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                                         flex: 3,
                                         child: Center(
                                           child: Text(
-                                            "Remarks (Auditor)",
+                                            "Remarks (Evaluator)",
                                             style: TextStyle(color: grey),
                                           ),
                                         ),
