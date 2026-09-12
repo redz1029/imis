@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,8 +10,12 @@ import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/pgs_swot/models/swot.dart';
 import 'package:imis/performance_governance_system/pgs_swot/models/swot_ot_deliverable.dart';
+import 'package:imis/performance_governance_system/pgs_swot/models/swot_ot_deliverable_service_head.dart';
+import 'package:imis/performance_governance_system/pgs_swot/models/swot_service_head.dart';
 import 'package:imis/performance_governance_system/pgs_swot/models/swot_sw_deliverable.dart';
+import 'package:imis/performance_governance_system/pgs_swot/models/swot_sw_deliverable_service_head.dart';
 import 'package:imis/performance_governance_system/pgs_swot/services/swot_service.dart';
+import 'package:imis/performance_governance_system/pgs_swot/services/swot_service_head_service.dart';
 import 'package:imis/performance_governance_system/pgs_swot/swot_analysis_strength_weakness/services/swot_analysis_strength_weakness_service.dart';
 import 'package:imis/performance_governance_system/pgs_swot/swot_opportunies_threats/services/swot_analysis_opportunities_threats_service.dart';
 import 'package:imis/user/models/user.dart';
@@ -24,6 +30,8 @@ import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../widgets/common/search_underline_dropdown.dart';
+
+enum SwotViewMode { departmentHeads, serviceHead }
 
 class SwotContextEntry {
   final int id;
@@ -85,28 +93,52 @@ class SwotAnalysisPage extends StatefulWidget {
 
 class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
   final List<SwotAnalysis> _items = [];
+
   int _currentPage = 1;
   final int _pageSize = 15;
+
   int totalCount = 0;
   bool _isLoading = false;
+
   List<Swot> swotList = [];
   List<Swot> filteredList = [];
+
   String? _userId;
 
   List<Office> officeList = [];
   String? _selectedOfficeId;
+
   bool _mobileFiltersExpanded = false;
+
+  SwotViewMode _viewMode = SwotViewMode.departmentHeads;
 
   final _swotService = SwotService(Dio());
   final _commonService = CommonService(Dio());
+  final _swotServiceHeadService = SwotServiceHeadService(Dio());
+  bool get _isServiceHeadView => _viewMode == SwotViewMode.serviceHead;
 
-  void _openDialog({SwotAnalysis? existing}) {
+  String get _viewTitle {
+    return _isServiceHeadView ? 'Service Head SWOT' : 'Department Head SWOT';
+  }
+
+  String get _editPermission =>
+      _isServiceHeadView
+          ? AppPermissions.editSWOTAnalysisServiceHead
+          : AppPermissions.editSWOTAnalysis;
+
+  String get _deletePermission =>
+      _isServiceHeadView
+          ? AppPermissions.deleteSWOTAnalysisServiceHead
+          : AppPermissions.deleteSWOTAnalysis;
+
+  void _openDialog({SwotAnalysis? existing, bool? isServiceHead}) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder:
           (_) => SwotAnalysisDialog(
             existing: existing,
+            isServiceHead: isServiceHead ?? _isServiceHeadView,
             onSave: (swot) {
               setState(() {
                 if (existing != null) {
@@ -138,12 +170,30 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
     final offices = await _commonService.fetchOffices();
 
     if (!mounted) return;
+
     setState(() {
       _userId = user?.id;
       officeList = offices;
     });
 
     await fetchSwot();
+  }
+
+  Future<String> _getRoleId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
+    final roles = await AuthUtil.fetchRoles();
+
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (_) {}
+      }
+      return currentRole.id;
+    }
+    return '';
   }
 
   Future<void> fetchSwot({int page = 1, String? searchQuery}) async {
@@ -157,48 +207,112 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
     });
 
     try {
-      final pageList = await _swotService.getSwot(
-        page: page,
-        pageSize: _pageSize,
-        searchQuery: searchQuery,
-        userId: _userId!,
-        officeId:
-            _selectedOfficeId != null ? int.tryParse(_selectedOfficeId!) : null,
-      );
+      final roleId = await _getRoleId();
 
+      final pageList =
+          _isServiceHeadView
+              ? await _swotServiceHeadService.getSwotServiceHead(
+                page: page,
+                pageSize: _pageSize,
+                searchQuery: searchQuery,
+                roleId: roleId,
+                userId: _userId!,
+              )
+              : await _swotService.getSwot(
+                page: page,
+                pageSize: _pageSize,
+                searchQuery: searchQuery,
+                roleId: roleId,
+                userId: _userId!,
+                officeId: _selectedOfficeId,
+              );
+      if (!mounted) return;
+      setState(() {
+        _currentPage = pageList.page;
+        totalCount = pageList.totalCount;
+        swotList = pageList.items;
+        filteredList = List.from(swotList);
+      });
+    } on DioException catch (e) {
+      debugPrint('Dio error: $e');
+    } catch (e) {
+      debugPrint('Unexpected error: $e');
+    } finally {
       if (mounted) {
         setState(() {
-          _currentPage = pageList.page;
-          totalCount = pageList.totalCount;
-          swotList = pageList.items;
-          filteredList = List.from(swotList);
+          _isLoading = false;
         });
       }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   bool get _hasActiveFilters => _selectedOfficeId != null;
 
   void _resetFilters() {
-    setState(() => _selectedOfficeId = null);
-    fetchSwot();
+    setState(() {
+      _selectedOfficeId = null;
+    });
+
+    fetchSwot(page: 1);
+  }
+
+  void _changeViewMode(SwotViewMode mode) {
+    if (_viewMode == mode) return;
+
+    setState(() {
+      _viewMode = mode;
+      _currentPage = 1;
+    });
+
+    fetchSwot(page: 1);
   }
 
   Future<void> _onEditTap(Swot swot) async {
     if (swot.id == null) return;
 
     try {
-      final full = await _swotService.getSwotById(swot.id.toString());
-      if (!mounted) return;
+      late SwotAnalysis existing;
 
-      _openDialog(
-        existing: SwotAnalysis(
+      if (_isServiceHeadView) {
+        final full = await _swotServiceHeadService.getSwotById(
+          swot.id.toString(),
+        );
+        existing = SwotAnalysis(
+          id: full.id,
+          departmentId: full.departmentId.toString(),
+          department: full.departmentName ?? '',
+          objectiveStatement: full.objectiveStatement ?? '',
+          preparedBy: full.departmentChairUserFullName ?? '',
+          validatedBy: full.serviceHeadUserFullName ?? '',
+          serviceHeadUserId: full.serviceHeadUserId,
+          internal:
+              (full.swotAnalysisSWDeliverablesServiceHead ?? [])
+                  .map(
+                    (d) => SwotContextEntry(
+                      d.internalContext ?? '',
+                      id: d.id ?? 0,
+                      contextId: d.internalContextId,
+                      left: d.strength ?? '',
+                      right: d.weaknesses ?? '',
+                    ),
+                  )
+                  .toList(),
+          external:
+              (full.swotAnalysisOTDeliverablesServiceHead ?? [])
+                  .map(
+                    (d) => SwotContextEntry(
+                      d.externalContext ?? '',
+                      id: d.id ?? 0,
+                      contextId: d.externalContextId,
+                      left: d.opportunities ?? '',
+                      right: d.threats ?? '',
+                    ),
+                  )
+                  .toList(),
+        );
+      } else {
+        final full = await _swotService.getSwotById(swot.id.toString());
+        existing = SwotAnalysis(
           id: full.id,
           departmentId: full.departmentId.toString(),
           department: full.departmentName ?? '',
@@ -232,11 +346,16 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                     ),
                   )
                   .toList(),
-        ),
-      );
+        );
+      }
+
+      if (!mounted) return;
+      _openDialog(existing: existing);
     } catch (e) {
       debugPrint('Failed to fetch SWOT by ID: $e');
+
       if (!mounted) return;
+
       MotionToast.error(
         title: const Text('Load Failed'),
         description: const Text('Unable to load SWOT record for editing.'),
@@ -257,8 +376,11 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(isMobile),
+
           _buildFilterBar(isMobile),
+
           gap4px,
+
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -282,7 +404,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                   children: [
                     if (!isMobile)
                       Container(
-                        padding: EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
                           border: Border(
                             bottom: BorderSide(color: Colors.grey.shade300),
@@ -290,7 +412,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                         ),
                         child: Row(
                           children: [
-                            Expanded(
+                            const Expanded(
                               flex: 1,
                               child: Text(
                                 "#",
@@ -300,7 +422,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                                 ),
                               ),
                             ),
-                            Expanded(
+                            const Expanded(
                               flex: 3,
                               child: Text(
                                 "Office",
@@ -310,7 +432,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                                 ),
                               ),
                             ),
-                            Expanded(
+                            const Expanded(
                               flex: 2,
                               child: Text(
                                 "Actions",
@@ -323,287 +445,10 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                           ],
                         ),
                       ),
+
                     const SizedBox(height: 5),
-                    Expanded(
-                      child:
-                          _isLoading
-                              ? Center(
-                                child: CircularProgressIndicator(
-                                  color: primaryColor,
-                                ),
-                              )
-                              : filteredList.isEmpty
-                              ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.rocket_launch,
-                                      size: 50,
-                                      color: Colors.grey.shade400,
-                                    ),
-                                    const SizedBox(height: 10),
-                                    const Text(
-                                      "No swot available",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                              : ListView.separated(
-                                itemCount: filteredList.length,
-                                separatorBuilder:
-                                    (_, __) => Divider(
-                                      height: 1,
-                                      color: Colors.grey.withValues(alpha: .2),
-                                    ),
-                                itemBuilder: (context, index) {
-                                  final swot = filteredList[index];
-
-                                  final itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
-
-                                  if (!isMobile) {
-                                    return Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 4,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              "$itemNumber",
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Text(
-                                              swot.departmentName ?? '',
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 2,
-                                            child: Row(
-                                              children: [
-                                                PermissionWidget(
-                                                  permission:
-                                                      AppPermissions
-                                                          .editSWOTAnalysis,
-                                                  child: Tooltip(
-                                                    message: 'Edit',
-                                                    child: IconButton(
-                                                      icon: const Icon(
-                                                        Icons.edit_outlined,
-                                                        size: 16,
-                                                      ),
-                                                      onPressed:
-                                                          () =>
-                                                              _onEditTap(swot),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Tooltip(
-                                                  message: 'Print Preview',
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      Icons
-                                                          .description_outlined,
-                                                      size: 16,
-                                                      color: Colors.blueAccent,
-                                                    ),
-                                                    onPressed: () {
-                                                      openSwotReport(
-                                                        swot.id.toString(),
-                                                        swot.departmentName ??
-                                                            '',
-                                                        context: context,
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                                PermissionWidget(
-                                                  permission:
-                                                      AppPermissions
-                                                          .deleteSWOTAnalysis,
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      CupertinoIcons
-                                                          .delete_simple,
-                                                      size: 16,
-                                                      color: Colors.redAccent,
-                                                    ),
-                                                    onPressed:
-                                                        () => showDeleteDialog(
-                                                          swot.id.toString(),
-                                                        ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }
-
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey.shade200,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Text(
-                                              "$itemNumber",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                            const Spacer(),
-                                            PopupMenuButton<String>(
-                                              color:
-                                                  Theme.of(context).cardColor,
-                                              icon: const Icon(Icons.more_vert),
-                                              onSelected: (value) async {
-                                                if (value == 'edit') {
-                                                  await _onEditTap(swot);
-                                                }
-                                                if (value == 'preview') {
-                                                  openSwotReport(
-                                                    swot.id.toString(),
-                                                    swot.departmentName ?? '',
-                                                    context: context,
-                                                  );
-                                                }
-                                                if (value == 'delete') {
-                                                  showDeleteDialog(
-                                                    swot.id.toString(),
-                                                  );
-                                                }
-                                              },
-                                              itemBuilder:
-                                                  (_) => [
-                                                    PopupMenuItem(
-                                                      value: 'edit',
-                                                      child: PermissionWidget(
-                                                        permission:
-                                                            AppPermissions
-                                                                .editSWOTAnalysis,
-                                                        child: const Row(
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .edit_outlined,
-                                                              size: 16,
-                                                            ),
-                                                            SizedBox(width: 8),
-                                                            Text('Edit'),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    const PopupMenuItem(
-                                                      value: 'preview',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            Icons
-                                                                .description_outlined,
-                                                            size: 16,
-                                                            color:
-                                                                Colors
-                                                                    .blueAccent,
-                                                          ),
-                                                          SizedBox(width: 8),
-                                                          Text('Print preview'),
-                                                        ],
-                                                      ),
-                                                    ),
-
-                                                    PopupMenuItem(
-                                                      value: 'delete',
-                                                      child: PermissionWidget(
-                                                        permission:
-                                                            AppPermissions
-                                                                .deleteSWOTAnalysis,
-                                                        child: const Row(
-                                                          children: [
-                                                            Icon(
-                                                              CupertinoIcons
-                                                                  .delete_simple,
-
-                                                              size: 16,
-                                                            ),
-                                                            SizedBox(width: 8),
-                                                            Text('Delete'),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          swot.departmentName ?? '',
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      color: Theme.of(context).cardColor,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          PaginationInfo(
-                            currentPage: _currentPage,
-                            totalItems: totalCount,
-                            itemsPerPage: _pageSize,
-                          ),
-                          PaginationControls(
-                            currentPage: _currentPage,
-                            totalItems: totalCount,
-                            itemsPerPage: _pageSize,
-                            isLoading: _isLoading,
-                            onPageChanged: (page) => fetchSwot(page: page),
-                          ),
-                          const SizedBox(width: 60),
-                        ],
-                      ),
-                    ),
+                    Expanded(child: _buildList(isMobile)),
+                    _buildPagination(),
                   ],
                 ),
               ),
@@ -613,15 +458,291 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
       ),
       floatingActionButton:
           isMobile
-              ? PermissionWidget(
-                permission: AppPermissions.addSWOTAnalysis,
-                child: FloatingActionButton(
-                  backgroundColor: primaryColor,
-                  onPressed: () => _openDialog(),
-                  child: Icon(Icons.add, color: Colors.white),
-                ),
+              ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PermissionWidget(
+                    permission: AppPermissions.addSWOTAnalysis,
+                    child: FloatingActionButton.small(
+                      heroTag: 'addDeptHead',
+                      backgroundColor: primaryColor,
+                      onPressed: () => _openDialog(isServiceHead: false),
+                      child: const Icon(Icons.add, color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  PermissionWidget(
+                    permission: AppPermissions.addSWOTAnalysis,
+                    child: FloatingActionButton(
+                      heroTag: 'addServiceHead',
+                      backgroundColor: primaryColor,
+                      onPressed: () => _openDialog(isServiceHead: true),
+                      child: const Icon(Icons.add_task, color: Colors.white),
+                    ),
+                  ),
+                ],
               )
               : null,
+    );
+  }
+
+  Widget _buildList(bool isMobile) {
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator(color: primaryColor));
+    }
+
+    if (filteredList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _isServiceHeadView
+                  ? Icons.person_search_outlined
+                  : Icons.groups_outlined,
+              size: 50,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              _isServiceHeadView
+                  ? 'No Service Head SWOT available'
+                  : 'No Department Head SWOT available',
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: filteredList.length,
+      separatorBuilder:
+          (_, __) =>
+              Divider(height: 1, color: Colors.grey.withValues(alpha: .2)),
+      itemBuilder: (context, index) {
+        final swot = filteredList[index];
+
+        final itemNumber = ((_currentPage - 1) * _pageSize) + index + 1;
+
+        if (!isMobile) {
+          return _buildDesktopRow(swot, itemNumber);
+        }
+
+        return _buildMobileRow(swot, itemNumber);
+      },
+    );
+  }
+
+  Widget _buildDesktopRow(Swot swot, int itemNumber) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: Text("$itemNumber", style: const TextStyle(fontSize: 12)),
+          ),
+
+          Expanded(
+            flex: 3,
+            child: Text(
+              swot.departmentName ?? '',
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+
+          Expanded(
+            flex: 2,
+            child: Row(
+              children: [
+                PermissionWidget(
+                  permission: _editPermission,
+                  child: Tooltip(
+                    message: 'Edit',
+                    child: IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 16),
+                      onPressed: () => _onEditTap(swot),
+                    ),
+                  ),
+                ),
+
+                Tooltip(
+                  message: 'Print Preview',
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.description_outlined,
+                      size: 16,
+                      color: Colors.blueAccent,
+                    ),
+                    onPressed: () {
+                      if (_isServiceHeadView) {
+                        openSwotServiceHeadReport(
+                          swot.id.toString(),
+                          swot.departmentName ?? '',
+                          context: context,
+                        );
+                      } else {
+                        openSwotReport(
+                          swot.id.toString(),
+                          swot.departmentName ?? '',
+                          context: context,
+                        );
+                      }
+                    },
+                  ),
+                ),
+
+                PermissionWidget(
+                  permission: _deletePermission,
+                  child: IconButton(
+                    icon: const Icon(
+                      CupertinoIcons.delete_simple,
+                      size: 16,
+                      color: Colors.redAccent,
+                    ),
+                    onPressed: () => showDeleteDialog(swot.id.toString()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileRow(Swot swot, int itemNumber) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                "$itemNumber",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+
+              const Spacer(),
+
+              PopupMenuButton<String>(
+                color: Theme.of(context).cardColor,
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) async {
+                  if (value == 'edit') {
+                    await _onEditTap(swot);
+                  }
+
+                  if (value == 'preview') {
+                    if (_isServiceHeadView) {
+                      openSwotServiceHeadReport(
+                        swot.id.toString(),
+                        swot.departmentName ?? '',
+                        context: context,
+                      );
+                    } else {
+                      openSwotReport(
+                        swot.id.toString(),
+                        swot.departmentName ?? '',
+                        context: context,
+                      );
+                    }
+                  }
+
+                  if (value == 'delete') {
+                    showDeleteDialog(swot.id.toString());
+                  }
+                },
+                itemBuilder:
+                    (_) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: PermissionWidget(
+                          permission: _editPermission,
+                          child: const Row(
+                            children: [
+                              Icon(Icons.edit_outlined, size: 16),
+                              SizedBox(width: 8),
+                              Text('Edit'),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const PopupMenuItem(
+                        value: 'preview',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.description_outlined,
+                              size: 16,
+                              color: Colors.blueAccent,
+                            ),
+                            SizedBox(width: 8),
+                            Text('Print preview'),
+                          ],
+                        ),
+                      ),
+
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: PermissionWidget(
+                          permission: _deletePermission,
+                          child: const Row(
+                            children: [
+                              Icon(CupertinoIcons.delete_simple, size: 16),
+                              SizedBox(width: 8),
+                              Text('Delete'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(swot.departmentName ?? '', style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPagination() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      color: Theme.of(context).cardColor,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          PaginationInfo(
+            currentPage: _currentPage,
+            totalItems: totalCount,
+            itemsPerPage: _pageSize,
+          ),
+
+          PaginationControls(
+            currentPage: _currentPage,
+            totalItems: totalCount,
+            itemsPerPage: _pageSize,
+            isLoading: _isLoading,
+            onPageChanged: (page) => fetchSwot(page: page),
+          ),
+
+          const SizedBox(width: 60),
+        ],
+      ),
     );
   }
 
@@ -635,9 +756,12 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
             itemName: 'SWOT',
             onDelete: () async {
               Navigator.pop(ctx);
+
               try {
                 await _swotService.deleteSwot(id);
-                await fetchSwot();
+
+                await fetchSwot(page: 1);
+
                 if (mounted) {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
@@ -648,13 +772,15 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                   ).show(context);
                 }
               } catch (_) {
+                if (!mounted) return;
+
                 MotionToast.error(
                   toastAlignment: Alignment.topCenter,
                   description: Text(
                     'Failed to delete SWOT',
                     style: GoogleFonts.plusJakartaSans(),
                   ),
-                );
+                ).show(context);
               }
             },
           ),
@@ -674,21 +800,29 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
               color: primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.rocket_launch, color: primaryColor),
+            child: Icon(
+              _isServiceHeadView
+                  ? Icons.manage_accounts_outlined
+                  : Icons.groups_outlined,
+              color: primaryColor,
+            ),
           ),
+
           const SizedBox(width: 12),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'SWOT Analysis',
+                  _viewTitle,
                   style: TextStyle(
                     fontSize: isMobile ? 14 : 16,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF1A1D23),
                   ),
                 ),
+
                 Text(
                   '${filteredList.length} record${filteredList.length != 1 ? 's' : ''} found',
                   style: TextStyle(
@@ -699,27 +833,61 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
               ],
             ),
           ),
+
           if (!isMobile)
-            PermissionWidget(
-              permission: AppPermissions.addSWOTAnalysis,
-              child: ElevatedButton.icon(
-                onPressed: () => _openDialog(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                PermissionWidget(
+                  permission: AppPermissions.addSWOTAnalysis,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openDialog(isServiceHead: false),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(fontSize: 13, color: Colors.white),
+                    ),
                   ),
                 ),
-                icon: const Icon(Icons.add, color: Colors.white, size: 16),
-                label: const Text(
-                  'Add New',
-                  style: TextStyle(color: Colors.white, fontSize: 13),
+
+                const SizedBox(width: 8),
+
+                PermissionWidget(
+                  permission: AppPermissions.addSWOTAnalysisServiceHead,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openDialog(isServiceHead: true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.add_task,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    label: const Text(
+                      'Create SWOT',
+                      style: TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
         ],
       ),
@@ -732,6 +900,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
       child: Column(
         children: [
           const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
@@ -742,33 +911,47 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
   }
 
   Widget _buildDesktopFilters() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Center(child: _buildSwotViewToggle()),
+        ),
+        gap4px,
+        Row(
           children: [
-            buildDropdown(
-              child: PermissionWidget(
-                permission: AppPermissions.viewOffice,
-                child: _officeDropdown(),
-              ),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                buildDropdown(
+                  child: PermissionWidget(
+                    permission: AppPermissions.viewOffice,
+                    child: _officeDropdown(),
+                  ),
+                ),
+              ],
             ),
+            const Spacer(),
+            if (_hasActiveFilters)
+              TextButton.icon(
+                onPressed: _resetFilters,
+                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+                label: Text(
+                  'Clear filters',
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                ),
+              ),
           ],
         ),
-        const Spacer(),
-        if (_hasActiveFilters)
-          TextButton.icon(
-            onPressed: _resetFilters,
-            icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
-            label: Text(
-              'Clear filters',
-              style: TextStyle(fontSize: 12, color: Colors.red.shade400),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            ),
-          ),
       ],
     );
   }
@@ -792,7 +975,9 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.tune, size: 16, color: primaryColor),
+
                     const SizedBox(width: 6),
+
                     Text(
                       'Filters',
                       style: TextStyle(
@@ -801,7 +986,9 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                         color: primaryColor,
                       ),
                     ),
+
                     const SizedBox(width: 4),
+
                     AnimatedRotation(
                       turns: _mobileFiltersExpanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
@@ -815,7 +1002,9 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                 ),
               ),
             ),
+
             const Spacer(),
+
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 150),
               child:
@@ -848,6 +1037,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
             ),
           ],
         ),
+
         AnimatedSize(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
@@ -864,6 +1054,13 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: _buildSwotViewToggle(),
+                        ),
+
+                        const SizedBox(height: 10),
+
                         SizedBox(
                           height: 38,
                           child: PermissionWidget(
@@ -877,6 +1074,77 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                   : const SizedBox.shrink(),
         ),
       ],
+    );
+  }
+
+  Widget _buildSwotViewToggle() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildToggleItem(
+              label: 'Department Heads',
+              icon: Icons.groups_outlined,
+              mode: SwotViewMode.departmentHeads,
+            ),
+          ),
+          Expanded(
+            child: _buildToggleItem(
+              label: 'Service Head',
+              icon: Icons.manage_accounts_outlined,
+              mode: SwotViewMode.serviceHead,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleItem({
+    required String label,
+    required IconData icon,
+    required SwotViewMode mode,
+  }) {
+    final selected = _viewMode == mode;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => _changeViewMode(mode),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? primaryColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: selected ? Colors.white : Colors.grey.shade600,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: selected ? Colors.white : Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -908,7 +1176,8 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                           .id
                           .toString();
             });
-            fetchSwot();
+
+            fetchSwot(page: 1);
           },
         ),
       ),
@@ -919,8 +1188,14 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
 class SwotAnalysisDialog extends StatefulWidget {
   final SwotAnalysis? existing;
   final void Function(SwotAnalysis swot) onSave;
+  final bool isServiceHead;
 
-  const SwotAnalysisDialog({super.key, this.existing, required this.onSave});
+  const SwotAnalysisDialog({
+    super.key,
+    this.existing,
+    this.isServiceHead = false,
+    required this.onSave,
+  });
 
   @override
   State<SwotAnalysisDialog> createState() => _SwotAnalysisDialogState();
@@ -934,7 +1209,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
   final _oppThreatsService = SwotAnalysisOpportunitiesThreatsService(Dio());
 
   final _swotService = SwotService(Dio());
-
+  final _swotServiceHead = SwotServiceHeadService(Dio());
   final _commonService = CommonService(Dio());
 
   late TextEditingController _deptCtrl;
@@ -959,6 +1234,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
   List<User> _users = [];
   bool _usersLoading = true;
+
   String? _selectedQmrUserId;
   String? _selectedServiceHeadUserId;
 
@@ -977,6 +1253,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
     _preparedByCtrl = TextEditingController(text: existing?.preparedBy ?? '');
 
     _selectedQmrUserId = existing?.qmrUserId;
+
     _selectedServiceHeadUserId = existing?.serviceHeadUserId;
 
     if (existing != null) {
@@ -1012,7 +1289,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
   Future<void> _loadCurrentUser() async {
     final UserRegistration? user = await AuthUtil.fetchLoggedUser();
+
     if (!mounted) return;
+
     setState(() {
       _departmentChairUserId = user?.id;
 
@@ -1025,26 +1304,86 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
   Future<void> _loadUsers() async {
     try {
       final users = await _commonService.fetchUsers();
+
       if (!mounted) return;
+
       setState(() {
         _users = users;
         _usersLoading = false;
       });
     } catch (e) {
       debugPrint('Failed to load users: $e');
+
       if (!mounted) return;
-      setState(() => _usersLoading = false);
+
+      setState(() {
+        _usersLoading = false;
+      });
     }
   }
 
   String _userFullName(String? id) {
     if (id == null) return '';
+
     final match = _users.where((u) => u.id == id);
-    return match.isEmpty ? '' : (match.first.fullName);
+
+    return match.isEmpty ? '' : match.first.fullName;
+  }
+
+  Future<void> _loadServiceHeadOfficeList() async {
+    final currentUser = await AuthUtil.fetchLoggedUser();
+    final currentUserId = currentUser?.id;
+
+    final list = await _commonService.fetchServiceHeadOffice();
+
+    final matched = list.where((o) => o.userId == currentUserId).toList();
+
+    final headIds = matched.map((o) => o.officeId.toString()).toList();
+    final headNames = matched.map((o) => o.officeName ?? '').toList();
+
+    String? selectedId;
+
+    if (_isOfficeLocked) {
+      final savedOfficeId = widget.existing?.departmentId;
+      if (savedOfficeId != null && headIds.contains(savedOfficeId)) {
+        selectedId = savedOfficeId;
+      }
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      final prefOfficeId = prefs.getString('selectedOfficeId');
+      if (prefOfficeId != null && headIds.contains(prefOfficeId)) {
+        selectedId = prefOfficeId;
+      } else if (headIds.length == 1) {
+        selectedId = headIds.first;
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _headOfficeIds = headIds;
+      _headOfficeNames = headNames;
+      _selectedOfficeId = selectedId;
+      _officeLoading = false;
+
+      if (_isOfficeLocked) {
+        _deptCtrl.text = widget.existing?.department ?? '';
+      } else if (selectedId != null) {
+        final index = headIds.indexOf(selectedId);
+        if (index >= 0) {
+          _deptCtrl.text = headNames[index];
+        }
+      }
+    });
   }
 
   Future<void> _loadSelectedOffice() async {
     try {
+      if (widget.isServiceHead) {
+        await _loadServiceHeadOfficeList();
+        return;
+      }
+
       final officeIds = await AuthUtil.fetchOfficeIds();
       final officeNames = await AuthUtil.fetchOfficeNames();
 
@@ -1053,11 +1392,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
           officeIds.isEmpty ||
           officeNames.isEmpty) {
         if (!mounted) return;
-
-        setState(() {
-          _officeLoading = false;
-        });
-
+        setState(() => _officeLoading = false);
         return;
       }
 
@@ -1066,7 +1401,6 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
       for (int i = 0; i < officeIds.length; i++) {
         final isHead = await AuthUtil.getIsOfficeHead(officeIds[i]);
-
         if (isHead == true) {
           headIds.add(officeIds[i]);
           headNames.add(officeNames[i]);
@@ -1077,20 +1411,19 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
       if (_isOfficeLocked) {
         final savedOfficeId = widget.existing?.departmentId;
-
         if (savedOfficeId != null && headIds.contains(savedOfficeId)) {
           selectedId = savedOfficeId;
         }
       } else {
         final prefs = await SharedPreferences.getInstance();
         final prefOfficeId = prefs.getString('selectedOfficeId');
-
         if (prefOfficeId != null && headIds.contains(prefOfficeId)) {
           selectedId = prefOfficeId;
         }
       }
 
       if (!mounted) return;
+
       setState(() {
         _headOfficeIds = headIds;
         _headOfficeNames = headNames;
@@ -1107,11 +1440,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
         }
       });
     } catch (e) {
+      debugPrint('Failed to load office: $e');
       if (!mounted) return;
-
-      setState(() {
-        _officeLoading = false;
-      });
+      setState(() => _officeLoading = false);
     }
   }
 
@@ -1175,6 +1506,38 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
       return;
     }
 
+    if (!widget.isServiceHead &&
+        (_selectedQmrUserId == null || _selectedQmrUserId!.isEmpty)) {
+      MotionToast.error(
+        title: const Text('QMR Required'),
+        description: const Text(
+          'Please select the Quality Management Representative.',
+        ),
+        toastDuration: const Duration(seconds: 4),
+        toastAlignment: Alignment.topCenter,
+      ).show(context);
+
+      return;
+    }
+
+    if (_selectedServiceHeadUserId == null ||
+        _selectedServiceHeadUserId!.isEmpty) {
+      MotionToast.error(
+        title: Text(
+          widget.isServiceHead ? 'MCC Required' : 'Service Head Required',
+        ),
+        description: Text(
+          widget.isServiceHead
+              ? 'Please select the MCC approver.'
+              : 'Please select the Service Head.',
+        ),
+        toastDuration: const Duration(seconds: 4),
+        toastAlignment: Alignment.topCenter,
+      ).show(context);
+
+      return;
+    }
+
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder:
@@ -1210,7 +1573,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                       size: 28,
                     ),
                   ),
+
                   const SizedBox(height: 16),
+
                   Text(
                     'Confirm Save',
                     style: GoogleFonts.plusJakartaSans(
@@ -1219,7 +1584,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                       color: primaryTextColor,
                     ),
                   ),
+
                   const SizedBox(height: 8),
+
                   Text(
                     'Are you sure you want to save this SWOT Analysis?',
                     style: GoogleFonts.plusJakartaSans(
@@ -1229,7 +1596,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                     ),
                     textAlign: TextAlign.center,
                   ),
+
                   const SizedBox(height: 24),
+
                   Row(
                     children: [
                       Expanded(
@@ -1251,7 +1620,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                           ),
                         ),
                       ),
+
                       const SizedBox(width: 10),
+
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () => Navigator.pop(ctx, true),
@@ -1290,22 +1661,38 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
     try {
       final int swotId = widget.existing?.id ?? 0;
 
-      final swot = Swot(
-        id: swotId,
-        departmentId: int.tryParse(_selectedOfficeId!),
-        isDeleted: false,
-        rowVersion: '',
-        objectiveStatement: _objectiveCtrl.text.trim(),
-        departmentChairUserId: _departmentChairUserId,
-        qmrUserId: _selectedQmrUserId,
-        serviceHeadUserId: _selectedServiceHeadUserId,
-        postingDate: DateTime.now(),
-        swotAnalysisSWDeliverables: _buildInternalDeliverables(),
-        swotAnalysisOTDeliverables: _buildExternalDeliverables(),
-      );
-
-      await _swotService.createSwot(swot);
-
+      if (widget.isServiceHead) {
+        final swotHead = SwotServiceHead(
+          id: swotId,
+          departmentId: int.tryParse(_selectedOfficeId!),
+          isDeleted: false,
+          rowVersion: '',
+          objectiveStatement: _objectiveCtrl.text.trim(),
+          departmentChairUserId: _departmentChairUserId,
+          serviceHeadUserId: _selectedServiceHeadUserId,
+          postingDate: DateTime.now(),
+          swotAnalysisSWDeliverablesServiceHead:
+              _buildInternalDeliverablesServiceHead(),
+          swotAnalysisOTDeliverablesServiceHead:
+              _buildExternalDeliverablesServiceHead(),
+        );
+        await _swotServiceHead.createSwotServiceHead(swotHead);
+      } else {
+        final swot = Swot(
+          id: swotId,
+          departmentId: int.tryParse(_selectedOfficeId!),
+          isDeleted: false,
+          rowVersion: '',
+          objectiveStatement: _objectiveCtrl.text.trim(),
+          departmentChairUserId: _departmentChairUserId,
+          qmrUserId: _selectedQmrUserId,
+          serviceHeadUserId: _selectedServiceHeadUserId,
+          postingDate: DateTime.now(),
+          swotAnalysisSWDeliverables: _buildInternalDeliverables(),
+          swotAnalysisOTDeliverables: _buildExternalDeliverables(),
+        );
+        await _swotService.createSwot(swot);
+      }
       if (!mounted) return;
 
       final localSwot = SwotAnalysis(
@@ -1342,6 +1729,36 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
         toastAlignment: Alignment.topCenter,
       ).show(context);
     }
+  }
+
+  List<SwotSwDeliverableServiceHead> _buildInternalDeliverablesServiceHead() {
+    return _internal
+        .map(
+          (entry) => SwotSwDeliverableServiceHead(
+            id: entry.id,
+            internalContextId: entry.contextId,
+            internalContext: entry.label,
+            isDeleted: false,
+            strength: entry.leftCtrl.text.trim(),
+            weaknesses: entry.rightCtrl.text.trim(),
+          ),
+        )
+        .toList();
+  }
+
+  List<SwotOtDeliverableServiceHead> _buildExternalDeliverablesServiceHead() {
+    return _external
+        .map(
+          (entry) => SwotOtDeliverableServiceHead(
+            id: entry.id,
+            externalContextId: entry.contextId,
+            externalContext: entry.label,
+            isDeleted: false,
+            opportunities: entry.leftCtrl.text.trim(),
+            threats: entry.rightCtrl.text.trim(),
+          ),
+        )
+        .toList();
   }
 
   List<SwotSwDeliverable> _buildInternalDeliverables() {
@@ -1390,6 +1807,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+
     final isSmall = size.width < 700;
 
     return Dialog(
@@ -1408,8 +1826,11 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildDialogHeader(),
+
             Expanded(child: _buildDialogBody(isSmall)),
+
             const Divider(height: 1),
+
             _buildDialogActions(),
           ],
         ),
@@ -1436,6 +1857,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
               ),
             ),
           ),
+
           IconButton(
             icon: const Icon(Icons.close, size: 18, color: Colors.white70),
             onPressed: () => Navigator.pop(context),
@@ -1458,13 +1880,16 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(_loadError!),
+
             const SizedBox(height: 8),
+
             TextButton(
               onPressed: () {
                 setState(() {
                   _loadingLabels = true;
                   _loadError = null;
                 });
+
                 _loadLabels();
               },
               child: const Text('Retry'),
@@ -1474,46 +1899,62 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
       );
     }
 
-    return Form(
-      key: _formKey,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildDepartmentSectionUnitDropdown(),
-            const SizedBox(height: 10),
-            _labeledField(
-              'Objective Statement',
-              _objectiveCtrl,
-              maxLines: 2,
-              required: true,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildDepartmentSectionUnitDropdown(),
+                const SizedBox(height: 10),
+                _labeledField(
+                  'Objective Statement',
+                  _objectiveCtrl,
+                  maxLines: 2,
+                  required: true,
+                ),
+                const SizedBox(height: 16),
+                _SwotContextTable(
+                  title: 'Internal Context',
+                  leftHeader: 'Strengths',
+                  rightHeader: 'Weaknesses',
+                  entries: _internal,
+                  isSmall: isSmall,
+                ),
+                const SizedBox(height: 20),
+                _SwotContextTable(
+                  title: 'External Context',
+                  leftHeader: 'Opportunities',
+                  rightHeader: 'Threats',
+                  entries: _external,
+                  isSmall: isSmall,
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            _SwotContextTable(
-              title: 'Internal Context',
-              leftHeader: 'Strengths',
-              rightHeader: 'Weaknesses',
-              entries: _internal,
-              isSmall: isSmall,
-            ),
-            const SizedBox(height: 20),
-            _SwotContextTable(
-              title: 'External Context',
-              leftHeader: 'Opportunities',
-              rightHeader: 'Threats',
-              entries: _external,
-              isSmall: isSmall,
-            ),
-            const SizedBox(height: 20),
-            _buildSignatureBlock(isSmall),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          _buildSignatureBlock(isSmall),
+        ],
       ),
     );
   }
 
   Widget _buildDialogActions() {
+    final isEditing = widget.existing != null;
+
+    final String permission =
+        widget.isServiceHead
+            ? (isEditing
+                ? AppPermissions.editSWOTAnalysisServiceHead
+                : AppPermissions.addSWOTAnalysisServiceHead)
+            : (isEditing
+                ? AppPermissions.editSWOTAnalysis
+                : AppPermissions.addSWOTAnalysis);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
@@ -1524,9 +1965,11 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
             style: TextButton.styleFrom(foregroundColor: primaryColor),
             child: const Text('Cancel'),
           ),
+
           const SizedBox(width: 8),
+
           PermissionWidget(
-            permission: AppPermissions.addSWOTAnalysis,
+            permission: permission,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
@@ -1543,7 +1986,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                   (_loadingLabels || _loadError != null || _officeLoading)
                       ? null
                       : _saveSwot,
-              child: const Text('Save'),
+              child: Text(isEditing ? 'Update' : 'Save'),
             ),
           ),
         ],
@@ -1553,12 +1996,6 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
   Widget _buildDepartmentSectionUnitDropdown() {
     if (_isOfficeLocked) {
-      // Read-only display straight from the fetched backend record.
-      // Deliberately NOT using DropdownButtonFormField here — the
-      // viewer/editor may not be head of this office, so it may not
-      // even exist in _headOfficeIds/_headOfficeNames, which would
-      // make the dropdown fall back to its hint text instead of
-      // showing the actual saved department.
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1570,7 +2007,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
               color: Colors.black87,
             ),
           ),
+
           const SizedBox(height: 4),
+
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -1593,6 +2032,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+
                 Icon(Icons.lock_outline, size: 16, color: Colors.grey.shade500),
               ],
             ),
@@ -1600,6 +2040,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
         ],
       );
     }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1611,7 +2052,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
             color: Colors.black87,
           ),
         ),
+
         const SizedBox(height: 4),
+
         DropdownButtonFormField<String>(
           dropdownColor: mainBgColor,
           value: _selectedOfficeId,
@@ -1658,18 +2101,26 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
               _headOfficeIds.isEmpty
                   ? null
                   : (value) async {
-                    if (value == null) return;
+                    if (value == null) {
+                      return;
+                    }
 
                     final index = _headOfficeIds.indexOf(value);
-                    if (index == -1) return;
+
+                    if (index == -1) {
+                      return;
+                    }
 
                     setState(() {
                       _selectedOfficeId = value;
+
                       _deptCtrl.text = _headOfficeNames[index];
                     });
 
                     final prefs = await SharedPreferences.getInstance();
+
                     await prefs.setString('selectedOfficeId', value);
+
                     await prefs.setString(
                       'selectedOfficeName',
                       _headOfficeNames[index],
@@ -1679,6 +2130,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
             if (value == null || value.isEmpty) {
               return 'Required';
             }
+
             return null;
           },
         ),
@@ -1703,7 +2155,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
             color: Colors.black87,
           ),
         ),
+
         const SizedBox(height: 4),
+
         TextFormField(
           controller: ctrl,
           maxLines: maxLines,
@@ -1732,6 +2186,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Required';
                     }
+
                     return null;
                   }
                   : null,
@@ -1742,22 +2197,28 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
   Widget _buildSignatureBlock(bool isSmall) {
     final sig = [
-      _signatureField('Prepared by:', 'Department Chair', _preparedByCtrl),
-      _userDropdownField(
-        label: 'Reviewed and Verified by:',
-        role: 'Quality Management Representative',
-        selectedUserId: _selectedQmrUserId,
-        onChanged: (value) => setState(() => _selectedQmrUserId = value),
+      _signatureField(
+        'Prepared by:',
+        widget.isServiceHead ? 'Service Head' : 'Department Chair',
+        _preparedByCtrl,
       ),
+
+      if (!widget.isServiceHead)
+        _userDropdownField(
+          label: 'Reviewed and Verified by:',
+          role: 'Quality Management Representative',
+          selectedUserId: _selectedQmrUserId,
+          onChanged: (value) => setState(() => _selectedQmrUserId = value),
+        ),
+
       _userDropdownField(
-        label: 'Validated by:',
-        role: 'Service Head',
+        label: widget.isServiceHead ? 'Approved by:' : 'Validated by:',
+        role: widget.isServiceHead ? 'MCC' : 'Service Head',
         selectedUserId: _selectedServiceHeadUserId,
         onChanged:
             (value) => setState(() => _selectedServiceHeadUserId = value),
       ),
     ];
-
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1824,7 +2285,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
             ),
           ),
         ),
+
         const SizedBox(height: 4),
+
         Text(
           label,
           style: const TextStyle(
@@ -1833,6 +2296,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
             fontStyle: FontStyle.italic,
           ),
         ),
+
         Text(
           role,
           style: const TextStyle(
@@ -1845,6 +2309,11 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
     );
   }
 
+  // FIX: dropdown key is now stable (hindi na dependent sa selectedUserId),
+  // and the `validator` was removed — validation for these two fields is
+  // handled manually in `_saveSwot()` gamit yung _selectedQmrUserId /
+  // _selectedServiceHeadUserId state directly, kasi yung Form-based
+  // validator ay stale/out-of-sync tuwing nagbabago yung value.
   Widget _userDropdownField({
     required String label,
     required String role,
@@ -1864,12 +2333,14 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
               ),
             )
             : SearchUnderlineDropdown<String>(
+              key: ValueKey('user_dropdown_$label'),
               items: _users.map((u) => u.id).toList(),
               itemLabel: (id) {
                 final match = _users.firstWhere(
                   (u) => u.id == id,
                   orElse: () => _users.first,
                 );
+
                 return match.fullName;
               },
               selectedValue:
@@ -1878,13 +2349,11 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                       : null,
               hintText: 'Select Name',
               onChanged: onChanged,
-              validator:
-                  (value) =>
-                      (value == null || value.isEmpty) ? 'Required' : null,
               maxPopupHeight: 300,
             ),
 
         const SizedBox(height: 4),
+
         Text(
           label,
           style: const TextStyle(
@@ -1893,6 +2362,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
             fontStyle: FontStyle.italic,
           ),
         ),
+
         Text(
           role,
           style: const TextStyle(
@@ -1948,6 +2418,7 @@ class _SwotContextTable extends StatelessWidget {
               ),
             ),
           ),
+
           if (entries.isEmpty)
             Padding(
               padding: const EdgeInsets.all(16),
@@ -1967,10 +2438,14 @@ class _SwotContextTable extends StatelessWidget {
                 ],
               ),
             ),
+
             Divider(height: 1, color: Colors.grey.shade300),
+
             ...entries.asMap().entries.map((entryData) {
               final index = entryData.key;
+
               final entry = entryData.value;
+
               final isEven = index % 2 == 0;
 
               return Container(
@@ -2005,7 +2480,9 @@ class _SwotContextTable extends StatelessWidget {
                           ),
                         ),
                       ),
+
                       Expanded(flex: 3, child: _cell(entry.leftCtrl)),
+
                       Expanded(flex: 3, child: _cell(entry.rightCtrl)),
                     ],
                   ),
@@ -2032,7 +2509,9 @@ class _SwotContextTable extends StatelessWidget {
                         color: primaryColor,
                       ),
                     ),
+
                     const SizedBox(height: 8),
+
                     Text(
                       leftHeader,
                       style: const TextStyle(
@@ -2041,9 +2520,13 @@ class _SwotContextTable extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+
                     const SizedBox(height: 3),
+
                     _cell(entry.leftCtrl, bordered: true),
+
                     const SizedBox(height: 8),
+
                     Text(
                       rightHeader,
                       style: const TextStyle(
@@ -2052,7 +2535,9 @@ class _SwotContextTable extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+
                     const SizedBox(height: 3),
+
                     _cell(entry.rightCtrl, bordered: true),
                   ],
                 ),

@@ -14,7 +14,8 @@ class SwotService {
     int pageSize = 15,
     String? searchQuery,
     required String userId,
-    int? officeId,
+    required String roleId,
+    String? officeId,
   }) async {
     final paginationUtil = PaginationUtil(dio);
 
@@ -25,6 +26,7 @@ class SwotService {
       searchQuery: searchQuery,
       additionalParams: {
         'userId': userId,
+        'roleId': roleId,
         if (officeId != null) 'officeId': officeId,
       },
       fromJson: (json) => Swot.fromJson(json),

@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:imis/auditor/models/auditor.dart';
-import 'package:imis/auditor_team/models/auditor_team_member.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/office/models/office_evaluators.dart';
+import 'package:imis/performance_governance_system/pgs_evaluator_offices/models/evaluator_offices.dart';
 import 'package:imis/performance_governance_system/pgs_servicehead_office/models/service_head_office.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
@@ -214,10 +214,10 @@ class CommonService {
     return RoadmapKpiSequence.fromJson(response.data);
   }
 
-  Future<AuditorTeamDetail> fetchAuditorTeamByTeamId(int teamId) =>
-      _fetchSingle(
-        '${ApiEndpoint().auditorteam}/teamid/$teamId',
-        (e) => AuditorTeamDetail.fromJson(e),
+  Future<List<EvaluatorOffices>> fetchEvaluatorOfficeByOfficeId(int officeId) =>
+      _fetchList(
+        '${ApiEndpoint().evaluatorOffices}/office/$officeId',
+        (e) => EvaluatorOffices.fromJson(e),
         'Failed to fetch auditor team members',
       );
 

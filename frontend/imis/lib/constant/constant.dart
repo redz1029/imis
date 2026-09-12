@@ -25,6 +25,7 @@ const Color kBackground = Color(0xFFFAFAFA);
 const kDanger = Color(0xFFEF4444);
 const kSuccess = Color(0xFF10B981);
 const kSuccessLight = Color(0xFFECFDF5);
+const Color kPersonalAccentColor = Color(0xFF6366F1);
 
 const kLabel = Color(0xFF374151);
 const kHint = Color(0xFF9CA3AF);
