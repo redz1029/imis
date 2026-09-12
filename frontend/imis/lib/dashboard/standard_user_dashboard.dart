@@ -506,10 +506,6 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
             ),
             const SizedBox(width: 6),
             SizedBox(
-              // Fixed (not loose-Flexible) width so the Row consumes the exact
-              // total space with no leftover gap on the trailing edge — Flexible
-              // only takes its child's intrinsic width, which left unused slack
-              // when DynamicSideColumn1 was narrower than the allotted flex share.
               width: math.min(290.0, width * 0.32).clamp(180.0, 290.0),
               child: DynamicSideColumn1(
                 focusedDay: _focusedDay,

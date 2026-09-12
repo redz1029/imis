@@ -66,6 +66,14 @@ class HomePageState extends State<HomePage> {
       "Safety Officer",
       "HR Officer",
       "Finance Officer",
+      "Service Head",
+      "TWG",
+      "Evaluator",
+      "Auditor",
+      "OSM",
+      "PGS Core Team",
+      "PGS Auditor Head",
+      'Multi-Sector Governance Council Officer',
     ];
 
     if (_userRoles!.any((role) => officerRoles.contains(role))) {

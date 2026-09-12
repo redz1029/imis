@@ -146,10 +146,10 @@ class _LoginPageState extends State<LoginPage> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xFFFCE4EC),
-                Color(0xFFF8BBD0),
-                Color(0xFFEF9A9A),
-                Color(0xFFF48FB1),
+                Color.fromARGB(255, 245, 222, 229),
+                Color.fromARGB(255, 233, 153, 181),
+                Color.fromARGB(255, 240, 134, 134),
+                Color.fromARGB(255, 187, 54, 98),
               ],
               stops: [0.0, 0.35, 0.65, 1.0],
             ),
@@ -258,7 +258,12 @@ class _WelcomePanel extends StatelessWidget {
             'A centralized system for tracking, managing,\nand ensuring compliance with PGS.',
             style: TextStyle(
               fontSize: 13.5,
-              color: const Color(0xFF8B3A52).withValues(alpha: 0.75),
+              color: const Color.fromARGB(
+                255,
+                134,
+                45,
+                72,
+              ).withValues(alpha: 0.75),
               height: 1.65,
               letterSpacing: 0.2,
             ),

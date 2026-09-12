@@ -281,7 +281,6 @@ class AdminDashboardState extends State<AdminDashboard> {
           const SizedBox(height: 16),
           _buildStatsRow(),
           const SizedBox(height: 16),
-
           _buildStatisticsSection(),
           const SizedBox(height: 16),
           _buildInfoCards(),
