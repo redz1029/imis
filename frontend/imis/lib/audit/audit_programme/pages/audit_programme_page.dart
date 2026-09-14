@@ -27,10 +27,6 @@ class AuditPlanEntryRow {
   // "Standard Chapter" — multi-select: a list of ISO standard IDs.
   List<int> selectedIsoStandardIds;
 
-  // Time-of-day for this row, e.g. "9:00 AM" — the date component comes
-  // from the day group's date, not from here.
-  TimeOfDay time;
-
   int? selectedTeamId;
 
   final TextEditingController officeTextController;
@@ -42,11 +38,9 @@ class AuditPlanEntryRow {
     this.selectedOfficeId,
     String? officeText,
     List<int>? selectedIsoStandardIds,
-    TimeOfDay? time,
     this.selectedTeamId,
   }) : officeText = officeText ?? '',
        selectedIsoStandardIds = selectedIsoStandardIds ?? <int>[],
-       time = time ?? const TimeOfDay(hour: 9, minute: 0),
        officeTextController = TextEditingController(text: officeText ?? ''),
        officeFocusNode = FocusNode();
 
@@ -95,49 +89,30 @@ class AuditPlanEntryRow {
           (item['teamId'] ?? item['TeamId'] ?? item['team']?['id']) as int?;
     }
 
-    TimeOfDay time = const TimeOfDay(hour: 9, minute: 0);
-    final rawTime = json['time'] ?? json['Time'];
-    if (rawTime != null) {
-      final parsed = DateTime.tryParse(rawTime.toString());
-      if (parsed != null) {
-        time = TimeOfDay(
-          hour: parsed.toLocal().hour,
-          minute: parsed.toLocal().minute,
-        );
-      }
-    }
-
     return AuditPlanEntryRow(
       id: (json['id'] ?? json['Id']) as int?,
       dayNumber: (json['dayNumber'] ?? json['DayNumber'] ?? 1) as int,
       selectedOfficeId: officeId,
       officeText: officeName,
       selectedIsoStandardIds: standardIds,
-      time: time,
       selectedTeamId: teamId,
     );
   }
 
-  /// [dayDate] is the day group's date — combined with this row's [time] to
-  /// produce the full timestamp the backend expects.
+  /// [dayDate] is the day group's date — sent as-is (no time-of-day
+  /// component) as the backend's 'time' field for this entry.
   Map<String, dynamic> toBackendDtoJson(
     int auditPlanId, {
     required DateTime dayDate,
   }) {
     final trimmedOfficeText = officeText.trim();
-    final combined = DateTime(
-      dayDate.year,
-      dayDate.month,
-      dayDate.day,
-      time.hour,
-      time.minute,
-    );
+    final dateOnly = DateTime(dayDate.year, dayDate.month, dayDate.day);
 
     return {
       'id': id ?? 0,
       'auditPlanId': auditPlanId,
       'dayNumber': dayNumber,
-      'time': combined.toIso8601String(),
+      'time': dateOnly.toIso8601String(),
       'auditPlanProcesses': trimmedOfficeText.isNotEmpty
           ? [
               {
@@ -422,7 +397,8 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               _entries.add(row);
 
               // Derive this day's banner date from the first entry seen for
-              // that day (its 'time' field carries the full date+time).
+              // that day (its 'time' field carries the date, even though
+              // there is no time-of-day component anymore).
               if (!_dayDates.containsKey(row.dayNumber)) {
                 final rawTime = entryJson['time'] ?? entryJson['Time'];
                 final parsed = rawTime != null
@@ -1005,16 +981,6 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
     );
   }
 
-  Future<void> _pickTime(AuditPlanEntryRow entry) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: entry.time,
-    );
-    if (picked != null) {
-      setState(() => entry.time = picked);
-    }
-  }
-
   Future<void> _selectStandards(
     BuildContext context,
     AuditPlanEntryRow entry,
@@ -1394,27 +1360,6 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
         builder: (context, constraints) {
           bool isWide = constraints.maxWidth > 800;
 
-          Widget timePicker = InkWell(
-            onTap: () => _pickTime(entry),
-            child: InputDecorator(
-              decoration: _dropdownDecoration('TIME'),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    entry.time.format(context),
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  const Icon(
-                    Icons.access_time,
-                    size: 14,
-                    color: primaryThemeColor,
-                  ),
-                ],
-              ),
-            ),
-          );
-
           Widget officeCombo = _buildOfficeCombo(entry);
 
           Widget standardMultiSelect = InkWell(
@@ -1508,8 +1453,6 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(flex: 2, child: timePicker),
-                const SizedBox(width: 8),
                 Expanded(flex: 3, child: officeCombo),
                 const SizedBox(width: 8),
                 Expanded(flex: 3, child: standardMultiSelect),
@@ -1527,8 +1470,6 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [removeButton],
                 ),
-                timePicker,
-                const SizedBox(height: 8),
                 officeCombo,
                 const SizedBox(height: 8),
                 standardMultiSelect,

@@ -151,6 +151,7 @@ class AuditPlanService {
       rethrow;
     }
   }
+  
 
   /// Fetch a single Audit Plan by its own id — GET /auditPlan/{id}. Assumed
   /// to exist as the counterpart to the confirmed PUT /auditPlan/{id:int}
@@ -174,5 +175,6 @@ class AuditPlanService {
     } catch (e) {
       rethrow;
     }
+    
   }
 }
