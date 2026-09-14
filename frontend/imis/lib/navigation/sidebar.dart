@@ -10,6 +10,7 @@ import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/audit/audit_approvals/pages/audit_plan_approval_page.dart';
+import 'package:imis/audit/audit_checklist/pages/audit_checklist_page.dart';
 import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart';
 import 'package:imis/audit/audit_programme/pages/audit_programme_page.dart';
 import 'package:imis/audit/audit_schedules/pages/audit_schedules_page.dart';
@@ -1324,6 +1325,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 0) return const AuditProgrammePage();
       if (selectedSubPage == 1) return const AuditPlanPage();
       if (selectedSubPage == 2) return const AuditSchedulePage();
+      if (selectedSubPage == 3) return AuditChecklistPage();
     }
 
     if (selectedPage == 3) {
@@ -1586,7 +1588,7 @@ class SidebarState extends State<Sidebar> {
           _NavChild('Audit Programme', 0),
           _NavChild('Audit Plan', 1),
           _NavChild('Audit Schedule', 2),
-          // _NavChild('ISO Announcements', 3),
+          _NavChild('Audit Checklist', 3),
         ],
       ),
       _NavGroup(
