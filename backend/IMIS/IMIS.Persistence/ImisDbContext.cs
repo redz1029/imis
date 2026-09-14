@@ -3,6 +3,7 @@ using Base.Auths;
 using Base.Utilities;
 using IMIS.Domain;
 using IMIS.Persistence.SeedConfigurations;
+using IMIS.Persistence.StrategicChangeAgendaModule;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -75,6 +76,7 @@ namespace IMIS.Persistence
         public DbSet<EvaluatorOffices> EvaluatorOffices { get; set; }
         public DbSet<ServiceHeadOffices> ServiceHeadOffices { get; set; }
         public DbSet<SWOTAnalysisServiceHead> SWOTAnalysisServiceHead { get; set; }
+        public DbSet<StrategicChangeAgenda> StrategicChangeAgenda { get; set; }
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }

@@ -40,6 +40,7 @@ using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.ServiceHeadOfficesModule;
 using IMIS.Application.StandardVersionModule;
+using IMIS.Application.StrategicChangeAgendaModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Application.StrategyReviewPeriodModule;
 using IMIS.Application.SWOTAnalysisModule;
@@ -91,6 +92,7 @@ using IMIS.Persistence.PgsSignatoryTemplateModule;
 using IMIS.Persistence.PgsSummaryNarrativeModule;
 using IMIS.Persistence.ServiceHeadOfficesModule;
 using IMIS.Persistence.StandardVersionModule;
+using IMIS.Persistence.StrategicChangeAgendaModule;
 using IMIS.Persistence.StrategyReviewModule;
 using IMIS.Persistence.StrategyReviewPeriodModule;
 using IMIS.Persistence.SWOTAnalysisModule;
@@ -257,6 +259,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<ISWOTAnalysisServiceHeadRepository, SWOTAnalysisServiceHeadRepository>();
             services.AddScoped<ISWOTAnalysisServiceHeadService, SWOTAnalysisServiceHeadService>();
+
+            services.AddScoped<IStrategicChangeAgendaRepository, StrategicChangeAgendaRepository>();
+            services.AddScoped<IStrategicChangeAgendaService, StrategicChangeAgendaService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();
