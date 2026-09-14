@@ -2,21 +2,24 @@ import 'package:flutter/material.dart';
 import '../models/audit_checklist.dart';
 import '../services/audit_checklist_service.dart';
 
-class AuditChecklistScreen extends StatefulWidget {
+class AuditChecklistPage extends StatefulWidget {
   final int auditPlanEntryId;
   final AuditChecklistService service;
 
-  const AuditChecklistScreen({
+  // Note: no longer `required` / `const` — auditPlanEntryId defaults to 0
+  // and service falls back to an unconfigured instance (empty baseUrl) if
+  // not supplied. Both are placeholders, not real wiring.
+  AuditChecklistPage({
     super.key,
-    required this.auditPlanEntryId,
-    required this.service,
-  });
+    this.auditPlanEntryId = 0,
+    AuditChecklistService? service,
+  }) : service = service ?? AuditChecklistService(baseUrl: '');
 
   @override
-  State<AuditChecklistScreen> createState() => _AuditChecklistScreenState();
+  State<AuditChecklistPage> createState() => _AuditChecklistPageState();
 }
 
-class _AuditChecklistScreenState extends State<AuditChecklistScreen> {
+class _AuditChecklistPageState extends State<AuditChecklistPage> {
   late Future<List<AuditChecklist>> _future;
   List<AuditChecklist> _rows = [];
   final Map<int, TextEditingController> _remarksControllers = {};
