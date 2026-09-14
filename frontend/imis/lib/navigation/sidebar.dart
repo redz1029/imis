@@ -1617,7 +1617,7 @@ class SidebarState extends State<Sidebar> {
           _NavChild('SWOT — Opportunities & Threats', 20),
           _NavChild('Evaluator Offices', 21),
           _NavChild('Service Head Office', 22),
-          _NavChild('Audit Plan Approval;', 23),
+          _NavChild('Audit Plan Approval', 23),
         ],
       ),
     ];
