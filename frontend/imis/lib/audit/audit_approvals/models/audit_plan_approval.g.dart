@@ -10,7 +10,7 @@ AuditPlanApproval _$AuditPlanApprovalFromJson(Map<String, dynamic> json) =>
     AuditPlanApproval(
       id: (json['id'] as num?)?.toInt(),
       auditPlanId: (json['auditPlanId'] as num).toInt(),
-      approverId: (json['aproverId'] as num).toInt(),
+      approverId: json['aproverId'] as String,
       action: json['action'] as String?,
       timestamp:
           json['timestamp'] == null

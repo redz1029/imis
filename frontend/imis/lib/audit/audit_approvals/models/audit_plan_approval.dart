@@ -9,12 +9,8 @@ class AuditPlanApproval {
   @JsonKey(name: 'auditPlanId')
   int auditPlanId;
 
-  // Backend DTO (AuditPlanApprovalDto) intentionally serializes this as
-  // "aproverId" (typo) via [JsonPropertyName("aproverId")] — do not "fix"
-  // this to "approverId" without updating the backend DTO first, or
-  // deserialization will silently fail and approverId will come back 0.
   @JsonKey(name: 'aproverId')
-  int approverId;
+  String approverId;
 
   String? action;
 
@@ -40,5 +36,9 @@ class AuditPlanApproval {
   factory AuditPlanApproval.fromJson(Map<String, dynamic> json) =>
       _$AuditPlanApprovalFromJson(json);
 
-  Map<String, dynamic> toJson() => _$AuditPlanApprovalToJson(this);
+  Map<String, dynamic> toJson() {
+    final json = _$AuditPlanApprovalToJson(this);
+    json['id'] = id ?? 0;
+    return json;
+  }
 }

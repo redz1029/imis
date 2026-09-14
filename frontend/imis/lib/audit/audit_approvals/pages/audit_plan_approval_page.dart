@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/audit/audit_approvals/models/audit_plan_approval.dart';
 import 'package:imis/audit/audit_approvals/services/audit_plan_approval_service.dart';
+import 'package:imis/common_services/common_service.dart';
+import 'package:imis/user/models/user.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -27,6 +29,7 @@ class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
   final AuditPlanApprovalService _approvalService = AuditPlanApprovalService(
     Dio(),
   );
+  final CommonService _commonService = CommonService(Dio());
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -36,14 +39,30 @@ class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
 
   List<AuditPlanApproval> _approvals = [];
 
+  // Users are fetched once here and passed down to the editor dialog so
+  // every "Add/Edit" open doesn't re-hit the network.
+  List<User> _allUsers = [];
+
   @override
   void initState() {
     super.initState();
     _resolvedAuditPlanId = widget.auditPlanId;
+    _loadUsers();
     if (_resolvedAuditPlanId != null) {
       _loadApprovals();
     } else {
       _loadAuditPlanList();
+    }
+  }
+
+  Future<void> _loadUsers() async {
+    try {
+      _allUsers = await _commonService.fetchUsers();
+      if (mounted) setState(() {});
+    } catch (e) {
+      // Non-fatal for the list screen — only the editor dialog needs this,
+      // and it will show its own error if the list is empty.
+      debugPrintUsersError(e);
     }
   }
 
@@ -82,7 +101,10 @@ class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
   Future<void> _openEditor({AuditPlanApproval? existing}) async {
     final result = await showDialog<AuditPlanApproval>(
       context: context,
-      builder: (context) => _ApprovalEditorDialog(existing: existing),
+      builder: (context) => _ApprovalEditorDialog(
+        existing: existing,
+        allUsers: _allUsers,
+      ),
     );
     if (result == null) return;
 
@@ -110,29 +132,22 @@ class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
   Future<void> _confirmDelete(AuditPlanApproval approval) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Delete Approval'),
-            content: Text(
-              'Remove the approval record from Approver #${approval.approverId}?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(color: primaryThemeColor),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Approval'),
+        content: Text(
+          'Remove the approval record from ${_approverLabel(approval.approverId)}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: primaryThemeColor)),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
     if (confirm != true) return;
     if (approval.id == null) return;
@@ -161,6 +176,16 @@ class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
     }
   }
 
+  /// Resolves a stored approverId (User.id GUID) to a display name, falling
+  /// back to the raw id if the user list hasn't loaded yet or the id is
+  /// stale/unknown.
+  String _approverLabel(String approverId) {
+    for (final u in _allUsers) {
+      if (u.id == approverId) return u.fullName;
+    }
+    return 'Approver ($approverId)';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,47 +193,43 @@ class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
       appBar: AppBar(
         title: const Text('Audit Plan Approvals'),
         backgroundColor: mainBgColor,
-        leading:
-            (_resolvedAuditPlanId != null && widget.auditPlanId == null)
-                ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  tooltip: 'Back to Audit Plans',
-                  onPressed:
-                      () => setState(() {
-                        _resolvedAuditPlanId = null;
-                        _approvals = [];
-                        _errorMessage = null;
-                      }),
-                )
-                : null,
+        leading: (_resolvedAuditPlanId != null && widget.auditPlanId == null)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Back to Audit Plans',
+                onPressed: () => setState(() {
+                  _resolvedAuditPlanId = null;
+                  _approvals = [];
+                  _errorMessage = null;
+                }),
+              )
+            : null,
       ),
-      floatingActionButton:
-          _resolvedAuditPlanId == null
-              ? null
-              : FloatingActionButton.extended(
-                backgroundColor: primaryThemeColor,
-                onPressed: () => _openEditor(),
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text(
-                  'Add Approver',
-                  style: TextStyle(color: Colors.white),
-                ),
+      floatingActionButton: _resolvedAuditPlanId == null
+          ? null
+          : FloatingActionButton.extended(
+              backgroundColor: primaryThemeColor,
+              onPressed: () => _openEditor(),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                'Add Approver',
+                style: TextStyle(color: Colors.white),
               ),
-      body:
-          _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: primaryThemeColor),
-              )
-              : _errorMessage != null
-              ? Center(
-                child: Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              )
-              : _resolvedAuditPlanId == null
-              ? _buildAuditPlanPicker()
-              : _buildApprovalsList(),
+            ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: primaryThemeColor),
+            )
+          : _errorMessage != null
+          ? Center(
+              child: Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
+              ),
+            )
+          : _resolvedAuditPlanId == null
+          ? _buildAuditPlanPicker()
+          : _buildApprovalsList(),
     );
   }
 
@@ -248,7 +269,10 @@ class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
               '${p.planStatus} • $dateRange',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
-            trailing: const Icon(Icons.chevron_right, color: primaryThemeColor),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: primaryThemeColor,
+            ),
             onTap: () {
               setState(() => _resolvedAuditPlanId = p.id);
               _loadApprovals();
@@ -287,11 +311,14 @@ class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          'Approver #${approval.approverId}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                        Expanded(
+                          child: Text(
+                            _approverLabel(approval.approverId),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -375,13 +402,21 @@ class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
   }
 }
 
+void debugPrintUsersError(Object e) {
+  // Kept separate/tiny so it's obvious this is non-fatal telemetry, not
+  // swallowed error handling.
+  // ignore: avoid_print
+  print('Failed to load users for approver dropdown: $e');
+}
+
 /// Add/Edit dialog. Returns the built [AuditPlanApproval] on save, or null
 /// on cancel. The caller is responsible for setting auditPlanId before
 /// persisting.
 class _ApprovalEditorDialog extends StatefulWidget {
   final AuditPlanApproval? existing;
+  final List<User> allUsers;
 
-  const _ApprovalEditorDialog({this.existing});
+  const _ApprovalEditorDialog({this.existing, required this.allUsers});
 
   @override
   State<_ApprovalEditorDialog> createState() => _ApprovalEditorDialogState();
@@ -391,7 +426,7 @@ class _ApprovalEditorDialogState extends State<_ApprovalEditorDialog> {
   static const Color primaryThemeColor = Color(0xFF883942);
 
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _approverIdController;
+  String? _selectedApproverId;
   late final TextEditingController _commentsController;
   late String _selectedAction;
   late DateTime _timestamp;
@@ -400,20 +435,24 @@ class _ApprovalEditorDialogState extends State<_ApprovalEditorDialog> {
   void initState() {
     super.initState();
     final e = widget.existing;
-    _approverIdController = TextEditingController(
-      text: e != null ? e.approverId.toString() : '',
-    );
+
+    // Only pre-select if that user id still exists in the fetched list —
+    // otherwise leave it null so the validator catches a stale/deleted
+    // approver instead of silently keeping an invalid selection.
+    if (e != null &&
+        widget.allUsers.any((u) => u.id == e.approverId)) {
+      _selectedApproverId = e.approverId;
+    }
+
     _commentsController = TextEditingController(text: e?.comments ?? '');
-    _selectedAction =
-        e?.action != null && _kApprovalActions.contains(e!.action)
-            ? e.action!
-            : _kApprovalActions.first;
+    _selectedAction = e?.action != null && _kApprovalActions.contains(e!.action)
+        ? e.action!
+        : _kApprovalActions.first;
     _timestamp = e?.timestamp ?? DateTime.now();
   }
 
   @override
   void dispose() {
-    _approverIdController.dispose();
     _commentsController.dispose();
     super.dispose();
   }
@@ -459,24 +498,26 @@ class _ApprovalEditorDialogState extends State<_ApprovalEditorDialog> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
 
-    final approverId = int.parse(_approverIdController.text.trim());
-
     final result = AuditPlanApproval(
       id: widget.existing?.id,
       auditPlanId: widget.existing?.auditPlanId ?? 0,
-      approverId: approverId,
+      approverId: _selectedApproverId!,
       action: _selectedAction,
       timestamp: _timestamp,
-      comments:
-          _commentsController.text.trim().isEmpty
-              ? null
-              : _commentsController.text.trim(),
+      comments: _commentsController.text.trim().isEmpty
+          ? null
+          : _commentsController.text.trim(),
       isDeleted: widget.existing?.isDeleted ?? false,
       rowVersion: widget.existing?.rowVersion,
     );
 
     Navigator.pop(context, result);
   }
+
+  String _userLabel(User u) =>
+      u.position != null && u.position!.trim().isNotEmpty
+          ? '${u.fullName} — ${u.position}'
+          : u.fullName;
 
   @override
   Widget build(BuildContext context) {
@@ -492,26 +533,36 @@ class _ApprovalEditorDialogState extends State<_ApprovalEditorDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
-                controller: _approverIdController,
-                keyboardType: TextInputType.number,
+              if (widget.allUsers.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'No users available — check your connection and reopen this dialog.',
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedApproverId,
+                isExpanded: true,
                 decoration: const InputDecoration(
-                  labelText: 'Approver ID',
-                  helperText:
-                      'Numeric ID of the approver record (not linked to '
-                      'the user list yet — enter the correct ID directly).',
-                  helperMaxLines: 3,
+                  labelText: 'Approver',
                   isDense: true,
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  final trimmed = value?.trim() ?? '';
-                  if (trimmed.isEmpty) return 'Approver ID is required';
-                  if (int.tryParse(trimmed) == null) {
-                    return 'Must be a whole number';
-                  }
-                  return null;
-                },
+                items: widget.allUsers
+                    .map(
+                      (u) => DropdownMenuItem<String>(
+                        value: u.id,
+                        child: Text(
+                          _userLabel(u),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (val) => setState(() => _selectedApproverId = val),
+                validator: (val) =>
+                    val == null ? 'Please select an approver' : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
@@ -521,15 +572,11 @@ class _ApprovalEditorDialogState extends State<_ApprovalEditorDialog> {
                   isDense: true,
                   border: OutlineInputBorder(),
                 ),
-                items:
-                    _kApprovalActions
-                        .map(
-                          (a) => DropdownMenuItem<String>(
-                            value: a,
-                            child: Text(a),
-                          ),
-                        )
-                        .toList(),
+                items: _kApprovalActions
+                    .map(
+                      (a) => DropdownMenuItem<String>(value: a, child: Text(a)),
+                    )
+                    .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedAction = val);
                 },

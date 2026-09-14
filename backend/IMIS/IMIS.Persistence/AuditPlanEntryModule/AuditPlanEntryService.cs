@@ -21,7 +21,6 @@ namespace IMIS.Persistence.AuditPlanEntryModule
         {
             List<string> errors = new();
 
-            // 🔥 Example validations (you can expand this later)
 
             // 1. Duplicate auditors
             if (dto.IsoAuditors != null && dto.IsoAuditors.Any())
@@ -226,7 +225,6 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
                 if (newItems.Any())
                 {
-                    // 🔥 Force every item to explicitly share the exact same generated parent ID
                     newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
                     await _repository.AddIsoAuditProcessesAsync(newItems, cancellationToken);
                 }
@@ -242,7 +240,6 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
                 if (newItems.Any())
                 {
-                    // 🔥 Force every item to explicitly share the exact same generated parent ID
                     newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
                     await _repository.AddResponsiblePersonsAsync(newItems, cancellationToken);
                 }
@@ -258,7 +255,6 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
                 if (newItems.Any())
                 {
-                    // 🔥 Force every item to explicitly share the exact same generated parent ID
                     newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
                     await _repository.AddIsoAuditorsAsync(newItems, cancellationToken);
                 }
@@ -274,7 +270,6 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
                 if (newItems.Any())
                 {
-                    // 🔥 Force every item to explicitly share the exact same generated parent ID
                     newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
                     await _repository.AddIsoStandardAuditPlansAsync(newItems, cancellationToken);
                 }
@@ -290,7 +285,6 @@ namespace IMIS.Persistence.AuditPlanEntryModule
 
                 if (newItems.Any())
                 {
-                    // 🔥 Force every item to explicitly share the exact same generated parent ID
                     newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
                     await _repository.AddAuditPlanProcessesAsync(newItems, cancellationToken);
                 }
