@@ -782,7 +782,7 @@ class AccomplishmentPgsAuditorDialogState
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 6),
                         child: DropdownButtonFormField<PgsStatus>(
-                          value: status,
+                          initialValue: status,
                           isExpanded: true,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),

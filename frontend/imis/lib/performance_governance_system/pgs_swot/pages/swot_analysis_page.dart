@@ -2022,7 +2022,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
         DropdownButtonFormField<String>(
           dropdownColor: mainBgColor,
-          value: _selectedOfficeId,
+          initialValue: _selectedOfficeId,
           isExpanded: true,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 12,

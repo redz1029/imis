@@ -30,6 +30,7 @@ import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_p
 import 'package:imis/performance_governance_system/pgs_reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/performance_governance_system/pgs_servicehead_office/pages/service_head_office_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
+import 'package:imis/performance_governance_system/pgs_strategic_change_agenda/pages/stra_agenda.dart';
 import 'package:imis/performance_governance_system/process_core_support/pages/process_core_support_page.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/pages/performance_validation_page.dart';
 import 'package:imis/performance_governance_system/performance_validation_tool_period/pages/performance_validation_tool_period_page.dart';
@@ -40,7 +41,6 @@ import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/pages/impact_strategy_goal_scorecard_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/pages/score_card_report_page.dart';
-// import 'package:imis/strategic_change_agenda/pages/strategic_change_agenda_page.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/pages/strategy_review_report_page.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/strategy_review_period/pages/strategy_review_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_swot/pages/swot_analysis_page.dart';
@@ -53,7 +53,6 @@ import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
 import 'package:imis/utils/permission_role_string.dart';
-import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constant/constant.dart';
 import '../constant/role_info.dart';
@@ -64,17 +63,42 @@ import '../utils/auth_util.dart';
 import '../utils/permission_service.dart';
 import '../widgets/common/circle_text_widget.dart';
 
+class _NavChild {
+  final String title;
+  final int? index;
+  final List<String>? allowedRoles;
+  final List<_NavChild> children;
+  final String Function(String? role)? titleFor;
+  const _NavChild(
+    this.title,
+    this.index, {
+    this.allowedRoles,
+    this.children = const [],
+    this.titleFor,
+  });
+
+  String resolveTitle(String? role) => titleFor?.call(role) ?? title;
+}
+
+class _NavGroup {
+  final IconData icon;
+  final String label;
+  final int pageIndex;
+  final List<_NavChild> children;
+  final List<String>? allowedRoles;
+  const _NavGroup({
+    required this.icon,
+    required this.label,
+    required this.pageIndex,
+    this.children = const [],
+    this.allowedRoles,
+  });
+}
+
 class Sidebar extends StatefulWidget {
-  // final bool isDarkMode;
-  // final Function(bool) onThemeToggle;
   final int? initialScreenIndex;
 
-  const Sidebar({
-    super.key,
-    // required this.isDarkMode,
-    // required this.onThemeToggle,
-    this.initialScreenIndex,
-  });
+  const Sidebar({super.key, this.initialScreenIndex});
 
   @override
   State<Sidebar> createState() => SidebarState();
@@ -104,11 +128,31 @@ class SidebarState extends State<Sidebar> {
   int selectedPage = 0;
   int selectedSubPage = 0;
 
+  bool _isCollapsed = false;
+
+  final Set<String> _expandedKeys = {'g0'};
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  static const double _kExpandedWidth = 268;
+  static const double _kCollapsedWidth = 76;
+
+  static const double _kActiveHighlightAlpha = 0.35;
+
   @override
   void initState() {
     super.initState();
     _initializeDashboard();
     _checkLoginStatus();
+    _searchController.addListener(() {
+      setState(() => _searchQuery = _searchController.text.trim());
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _checkLoginStatus() async {
@@ -128,25 +172,12 @@ class SidebarState extends State<Sidebar> {
 
   int _firstPermittedSubPage(int page) {
     if (page == 0) return 0;
-    if (page == 2) {
-      // SWOT: only certain roles see index 0
-      final allowedSwot = [
-        PermissionRoleString.roleAdmin,
-        PermissionRoleString.roleStandardUser,
-        PermissionRoleString.serviceHead,
-        PermissionRoleString.coreTeam,
-        PermissionRoleString.osm,
-        PermissionRoleString.twg,
-      ];
-      return allowedSwot.contains(selectedRole) ? 0 : 0;
-    }
+    if (page == 2) return 0; // ISO
     if (page == 4) return 0; // Settings always starts at 0
 
     if (page == 1) {
-      // PGS — check each subpage in order and return the first one visible
       final role = selectedRole;
 
-      // SubPage 0: Roadmaps
       final canSeeRoadmaps = [
         PermissionRoleString.roleAdmin,
         PermissionRoleString.roleStandardUser,
@@ -170,7 +201,6 @@ class SidebarState extends State<Sidebar> {
       ].contains(role);
       if (canSeeRoadmaps) return 0;
 
-      // SubPage 1: Deliverables
       final canSeeDeliverables = [
         PermissionRoleString.roleAdmin,
         PermissionRoleString.roleStandardUser,
@@ -193,7 +223,6 @@ class SidebarState extends State<Sidebar> {
       ].contains(role);
       if (canseeSwot) return 2;
 
-      // SubPage 2: Deliverable Status Monitoring
       final canSeeMonitoring = [
         PermissionRoleString.roleAdmin,
         PermissionRoleString.serviceHead,
@@ -208,7 +237,6 @@ class SidebarState extends State<Sidebar> {
       ].contains(role);
       if (canSeeMonitoring) return 3;
 
-      // SubPage 3/4: Scorecard
       final canSeeScorecard = [
         PermissionRoleString.roleAdmin,
         PermissionRoleString.trainingOfficer,
@@ -231,7 +259,6 @@ class SidebarState extends State<Sidebar> {
       ].contains(role);
       if (canSeeScorecard) return 4;
 
-      // SubPage 5: PGS Auditor Report
       final canSeeAuditorReport = [
         PermissionRoleString.headAuditor,
         PermissionRoleString.roleAdmin,
@@ -239,7 +266,6 @@ class SidebarState extends State<Sidebar> {
       ].contains(role);
       if (canSeeAuditorReport) return 5;
 
-      // SubPage 5: Operation Review Protocol
       final canSeeOperationReviewProtocol = [
         PermissionRoleString.pgsAuditor,
         PermissionRoleString.roleAdmin,
@@ -289,13 +315,6 @@ class SidebarState extends State<Sidebar> {
 
       setState(() {
         selectedRole = savedRole;
-        // if (widget.initialScreenIndex != null) {
-        //   _selectedIndex = widget.initialScreenIndex!;
-        //   // selectedScreen = NavigationScreenFactory.getScreenByIndex(
-        //   //   _selectedIndex,
-        //   //   selectedRole!,
-        //   // );
-        // }
       });
     } else {
       await prefs.remove('selectedRole');
@@ -314,13 +333,6 @@ class SidebarState extends State<Sidebar> {
         }
 
         setState(() => selectedRole = singleRole);
-
-        // if (_selectedIndex != -1 && mounted) {
-        //   selectedScreen = NavigationScreenFactory.getScreenByIndex(
-        //     _selectedIndex,
-        //     selectedRole!,
-        //   );
-        // }
 
         if (homePageKey.currentState != null) {
           await homePageKey.currentState!.refreshUserRoles();
@@ -651,7 +663,6 @@ class SidebarState extends State<Sidebar> {
                                               const SizedBox(height: 2),
                                               Text(
                                                 a.description,
-
                                                 style:
                                                     GoogleFonts.plusJakartaSans(
                                                       fontSize: 12,
@@ -741,9 +752,7 @@ class SidebarState extends State<Sidebar> {
         _showRoleSwitchDialog(context);
       } else if (value == "change_password") {
         if (!context.mounted) return;
-        showChangePasswordDialog(
-          context,
-        ); // ← replaces Navigator.pushReplacement
+        showChangePasswordDialog(context);
       } else if (value == "logout") {
         if (!context.mounted) return;
         _logout(context);
@@ -1019,7 +1028,6 @@ class SidebarState extends State<Sidebar> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
               ),
-
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
@@ -1043,7 +1051,6 @@ class SidebarState extends State<Sidebar> {
                   ),
                 ],
               ),
-
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1177,7 +1184,6 @@ class SidebarState extends State<Sidebar> {
                                 ? FileImage(image!) as ImageProvider
                                 : AssetImage('assets/iconprofile.png'),
                       ),
-
                       Positioned(
                         bottom: 0,
                         right: 0,
@@ -1274,7 +1280,6 @@ class SidebarState extends State<Sidebar> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-
                   onPressed: () {},
                   child: Text('Save', style: TextStyle(color: secondaryColor)),
                 ),
@@ -1303,21 +1308,25 @@ class SidebarState extends State<Sidebar> {
         return const ImpactStrategyGoalScorecardPage();
       }
       if (selectedSubPage == 6) return const ScoreCardReportPage();
-
       if (selectedSubPage == 7) return const OperationReviewProtocolPage();
       if (selectedSubPage == 8) return const PerformanceValidationPage();
-
       if (selectedSubPage == 9) return const ViewSummaryNarrativeReportPage();
       if (selectedSubPage == 10) {
         return const SummaryValidatedDeliverablesPage();
       }
       if (selectedSubPage == 11) return SummaryOfficesDeliverables();
       if (selectedSubPage == 12) return MonthlyOprReportPage();
+      if (selectedSubPage == 13) return StrategicPositionPage();
+    }
+
+    if (selectedPage == 2) {
+      if (selectedSubPage == 0) return const AuditProgrammePage();
+      if (selectedSubPage == 1) return const AuditPlanPage();
+      if (selectedSubPage == 2) return const AuditSchedulePage();
     }
 
     if (selectedPage == 3) {
       if (selectedSubPage == 0) return const AnnouncementPage();
-
       if (selectedSubPage == 2) return const AuditorPage();
       if (selectedSubPage == 3) return const AuditorOfficesPage();
       if (selectedSubPage == 4) return const AuditorTeamPage();
@@ -1354,13 +1363,308 @@ class SidebarState extends State<Sidebar> {
         return const ServiceHeadOfficePage();
       }
     }
-
-    if (selectedPage == 2) {
-      if (selectedSubPage == 0) return const AuditProgrammePage();
-      if (selectedSubPage == 1) return const AuditPlanPage();
-      if (selectedSubPage == 2) return const AuditSchedulePage();
-    }
     return HomePage();
+  }
+
+  List<_NavGroup> _buildNavGroups() {
+    const pgsRoles = [
+      PermissionRoleString.roleAdmin,
+      PermissionRoleString.roleStandardUser,
+      PermissionRoleString.mcc,
+      PermissionRoleString.osm,
+      PermissionRoleString.coreTeam,
+      PermissionRoleString.serviceHead,
+      PermissionRoleString.trainingOfficer,
+      PermissionRoleString.hrOfficer,
+      PermissionRoleString.serviceOfficer,
+      PermissionRoleString.financeOfficer,
+      PermissionRoleString.safetyOfficer,
+      PermissionRoleString.facilityOfficer,
+      PermissionRoleString.linkagesOfficer,
+      PermissionRoleString.informationOfficer,
+      PermissionRoleString.researchOfficer,
+      PermissionRoleString.pgsAuditor,
+      PermissionRoleString.headAuditor,
+      PermissionRoleString.twg,
+      PermissionRoleString.msgc,
+      PermissionRoleString.evaluator,
+    ];
+
+    const officerRoles = [
+      PermissionRoleString.trainingOfficer,
+      PermissionRoleString.hrOfficer,
+      PermissionRoleString.serviceOfficer,
+      PermissionRoleString.financeOfficer,
+      PermissionRoleString.safetyOfficer,
+      PermissionRoleString.facilityOfficer,
+      PermissionRoleString.linkagesOfficer,
+      PermissionRoleString.informationOfficer,
+      PermissionRoleString.researchOfficer,
+    ];
+
+    return [
+      _NavGroup(
+        icon: Icons.dashboard_outlined,
+        label: 'Dashboard',
+        pageIndex: 0,
+        children: const [
+          _NavChild('Overview', 0),
+          _NavChild('Calendar of Activities', 1),
+          _NavChild('Strategy Map', 2),
+          _NavChild('Strategic Change Agenda', 3),
+        ],
+      ),
+      _NavGroup(
+        icon: Icons.timeline_outlined,
+        label: 'PGS',
+        pageIndex: 1,
+        children: [
+          _NavChild(
+            'Roadmaps',
+            0,
+            allowedRoles: pgsRoles,
+            titleFor: (role) {
+              if (role == PermissionRoleString.roleAdmin) {
+                return 'Create/View Roadmaps';
+              }
+              if (officerRoles.contains(role)) return 'Create Roadmaps';
+              return 'View Roadmaps';
+            },
+          ),
+          _NavChild(
+            'Deliverables',
+            1,
+            allowedRoles: [
+              PermissionRoleString.roleAdmin,
+              PermissionRoleString.roleStandardUser,
+              PermissionRoleString.serviceHead,
+              PermissionRoleString.mcc,
+              PermissionRoleString.coreTeam,
+              PermissionRoleString.osm,
+              PermissionRoleString.twg,
+            ],
+            titleFor: (role) {
+              if (role == PermissionRoleString.roleAdmin) {
+                return 'Create/View Deliverables';
+              }
+              if (role == PermissionRoleString.roleStandardUser) {
+                return 'Create Deliverables';
+              }
+              return 'View Deliverables';
+            },
+          ),
+          _NavChild(
+            'SWOT',
+            2,
+            allowedRoles: [
+              PermissionRoleString.roleAdmin,
+              PermissionRoleString.roleStandardUser,
+              PermissionRoleString.serviceHead,
+              PermissionRoleString.mcc,
+              PermissionRoleString.coreTeam,
+              PermissionRoleString.osm,
+              PermissionRoleString.twg,
+            ],
+            titleFor: (role) {
+              if (role == PermissionRoleString.roleAdmin ||
+                  role == PermissionRoleString.serviceHead) {
+                return 'Create/View SWOT';
+              }
+              if (role == PermissionRoleString.roleStandardUser) {
+                return 'Create SWOT';
+              }
+              return 'View SWOT';
+            },
+          ),
+          _NavChild(
+            'Deliverable Status Monitoring',
+            3,
+            allowedRoles: [
+              PermissionRoleString.roleAdmin,
+              PermissionRoleString.serviceHead,
+              PermissionRoleString.mcc,
+              PermissionRoleString.osm,
+              PermissionRoleString.pgsAuditor,
+              PermissionRoleString.pgsHead,
+              PermissionRoleString.coreTeam,
+              PermissionRoleString.twg,
+              PermissionRoleString.headAuditor,
+              PermissionRoleString.msgc,
+              PermissionRoleString.evaluator,
+            ],
+          ),
+          _NavChild(
+            'Strategy Review Report',
+            4,
+            allowedRoles: pgsRoles,
+            titleFor: (role) {
+              if (role == PermissionRoleString.roleAdmin) {
+                return 'Create/View Strategy Review Report';
+              }
+              if (officerRoles.contains(role)) {
+                return 'Create Strategy Review Report';
+              }
+              return 'View Strategy Review Report';
+            },
+          ),
+          // ---- nested sub-group: Scorecard ----
+          const _NavChild(
+            'Scorecard',
+            null,
+            children: [
+              _NavChild('Impact and Strategic Goal', 5),
+              _NavChild('Core & Support Processes', 6),
+            ],
+          ),
+          _NavChild(
+            'Operation Review Protocol',
+            7,
+            allowedRoles: [
+              PermissionRoleString.roleAdmin,
+              PermissionRoleString.mcc,
+              PermissionRoleString.osm,
+              PermissionRoleString.coreTeam,
+              PermissionRoleString.serviceHead,
+              PermissionRoleString.pgsAuditor,
+              PermissionRoleString.headAuditor,
+              PermissionRoleString.twg,
+              PermissionRoleString.evaluator,
+            ],
+            titleFor: (role) {
+              if (role == PermissionRoleString.roleAdmin) {
+                return 'Create/View Operation Review Protocol';
+              }
+              return 'View Operation Review Protocol';
+            },
+          ),
+          _NavChild(
+            'Performance Validation Tool',
+            8,
+            allowedRoles: [
+              PermissionRoleString.pgsAuditor,
+              PermissionRoleString.roleAdmin,
+              PermissionRoleString.twg,
+              PermissionRoleString.osm,
+              PermissionRoleString.headAuditor,
+              PermissionRoleString.roleStandardUser,
+              PermissionRoleString.serviceHead,
+              PermissionRoleString.coreTeam,
+              PermissionRoleString.evaluator,
+            ],
+          ),
+          _NavChild(
+            'PGS Auditor Report',
+            9,
+            allowedRoles: [
+              PermissionRoleString.headAuditor,
+              PermissionRoleString.roleAdmin,
+              PermissionRoleString.twg,
+            ],
+          ),
+          const _NavChild(
+            'PGS Reports',
+            null,
+            children: [
+              _NavChild('Summary Validated Deliverables', 10),
+              _NavChild('Summary of Offices with Deliverables', 11),
+              _NavChild('Summary of Offices — Monthly ORP', 12),
+            ],
+          ),
+          const _NavChild('Strategic Change Agenda', 13),
+        ],
+      ),
+
+      _NavGroup(
+        icon: Icons.fact_check_outlined,
+        label: 'ISO',
+        pageIndex: 2,
+        children: const [
+          _NavChild('Audit Programme', 0),
+          _NavChild('Audit Plan', 1),
+          _NavChild('Audit Schedule', 2),
+          // _NavChild('ISO Announcements', 3),
+        ],
+      ),
+      _NavGroup(
+        icon: Icons.settings_outlined,
+        label: 'Settings',
+        pageIndex: 3,
+        allowedRoles: [PermissionRoleString.roleAdmin],
+        children: const [
+          _NavChild('Announcement', 0),
+          _NavChild('Auditor', 2),
+          _NavChild('Auditor Offices', 3),
+          _NavChild('Auditor Team', 4),
+          _NavChild('Process Core & Support', 5),
+          _NavChild('KRA Roadmap Period', 6),
+          _NavChild('Office', 7),
+          _NavChild('PGS Signatory', 8),
+          _NavChild('PGS Period', 9),
+          _NavChild('Role', 10),
+          _NavChild('Team', 11),
+          _NavChild('User', 12),
+          _NavChild('User Office', 13),
+          _NavChild('User Role', 14),
+          _NavChild('Strategy Review Period', 15),
+          _NavChild('Performance Validation Tool Period', 16),
+          _NavChild('Performance Validation Tool Signatory', 17),
+          _NavChild('Impact & Strategic Goal Period', 18),
+          _NavChild('SWOT — Strength & Weakness', 19),
+          _NavChild('SWOT — Opportunities & Threats', 20),
+          _NavChild('Evaluator Offices', 21),
+          _NavChild('Service Head Office', 22),
+        ],
+      ),
+    ];
+  }
+
+  bool _roleAllowed(List<String>? allowedRoles) {
+    if (allowedRoles == null) return true;
+    return allowedRoles.contains(selectedRole);
+  }
+
+  List<_NavChild> _filterChildren(List<_NavChild> children) {
+    final out = <_NavChild>[];
+    for (final c in children) {
+      if (!_roleAllowed(c.allowedRoles)) continue;
+      if (c.children.isNotEmpty) {
+        final filtered = _filterChildren(c.children);
+        if (filtered.isEmpty) continue;
+        out.add(
+          _NavChild(
+            c.title,
+            c.index,
+            allowedRoles: c.allowedRoles,
+            children: filtered,
+            titleFor: c.titleFor,
+          ),
+        );
+      } else {
+        out.add(c);
+      }
+    }
+    return out;
+  }
+
+  bool _containsActive(List<_NavChild> children, int pageIndex) {
+    for (final c in children) {
+      if (c.children.isNotEmpty) {
+        if (_containsActive(c.children, pageIndex)) return true;
+      } else if (selectedPage == pageIndex && selectedSubPage == c.index) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void _collectLeaves(List<_NavChild> children, List<_NavChild> out) {
+    for (final c in children) {
+      if (c.children.isNotEmpty) {
+        _collectLeaves(c.children, out);
+      } else {
+        out.add(c);
+      }
+    }
   }
 
   @override
@@ -1370,65 +1674,24 @@ class SidebarState extends State<Sidebar> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: isMobile ? Drawer(child: mainSidebar()) : null,
+      drawer:
+          isMobile
+              ? Drawer(child: _buildSidebarPanel(forceExpanded: true))
+              : null,
       body: Row(
         children: [
           if (!isMobile)
-            Container(
-              width: 70,
-              color: Colors.white,
-              child: Column(
-                children: [
-                  const SizedBox(height: 30),
-                  // IconButton(
-                  //   icon: Icon(
-                  //     widget.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                  //     color: Colors.grey[700],
-                  //   ),
-                  //   onPressed: () {
-                  //     widget.onThemeToggle(!widget.isDarkMode);
-                  //   },
-                  // ),
-                  const SizedBox(height: 40),
-                  sidebarIcon(Icons.dashboard_outlined, 0, label: 'Dashboard'),
-                  const SizedBox(height: 18),
-                  Tooltip(
-                    message: 'Performance Governance System (PGS)',
-                    child: sidebarIcon(
-                      Icons.timeline_outlined,
-                      1,
-                      label: 'PGS',
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-
-                  sidebarIcon(Icons.fact_check_outlined, 2, label: 'ISO'),
-                  const Spacer(),
-                  PermissionWidget(
-                    child:
-                        (selectedRole == PermissionRoleString.roleAdmin)
-                            ? sidebarIcon(
-                              Icons.settings_outlined,
-                              3,
-                              label: 'Settings',
-                            )
-                            : SizedBox.shrink(),
-                  ),
-                  const SizedBox(height: 18),
-
-                  sidebarIcon(Icons.logout_outlined, 4, label: 'Logout'),
-                  const SizedBox(height: 18),
-                ],
-              ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              width: _isCollapsed ? _kCollapsedWidth : _kExpandedWidth,
+              child: _buildSidebarPanel(),
             ),
-
           VerticalDivider(
             width: 1,
             thickness: 0.8,
             color: Colors.grey.shade200,
           ),
-          if (!isMobile) SizedBox(width: 200, child: mainSidebar()),
-
           Expanded(
             child: Column(
               children: [
@@ -1447,7 +1710,6 @@ class SidebarState extends State<Sidebar> {
                                 },
                               ),
                         ),
-
                       Text(
                         "CPeMS",
                         style: TextStyle(
@@ -1456,7 +1718,6 @@ class SidebarState extends State<Sidebar> {
                           color: primaryColor,
                         ),
                       ),
-
                       const Spacer(),
                       Stack(
                         clipBehavior: Clip.none,
@@ -1501,9 +1762,7 @@ class SidebarState extends State<Sidebar> {
                       const SizedBox(width: 24),
                       LayoutBuilder(
                         builder: (context, constraints) {
-                          double maxWidth =
-                              constraints.maxWidth *
-                              0.4; // max width for text+avatar
+                          double maxWidth = constraints.maxWidth * 0.4;
                           return MouseRegion(
                             cursor: SystemMouseCursors.click,
                             child: GestureDetector(
@@ -1553,7 +1812,7 @@ class SidebarState extends State<Sidebar> {
                                       text:
                                           "${firstName.isNotEmpty ? firstName[0] : "A"}${lastName.isNotEmpty ? lastName[0] : "B"}",
                                       color: primaryColor,
-                                      size: 45, // avatar stays readable
+                                      size: 45,
                                     ),
                                   ],
                                 ),
@@ -1565,26 +1824,11 @@ class SidebarState extends State<Sidebar> {
                     ],
                   ),
                 ),
-
                 Expanded(child: getCurrentPage()),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget sidebarHeader(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10, top: 10),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1,
-        ),
       ),
     );
   }
@@ -1667,7 +1911,6 @@ class SidebarState extends State<Sidebar> {
                         ),
                       ),
                       const SizedBox(width: 10),
-
                       Expanded(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
@@ -1690,7 +1933,6 @@ class SidebarState extends State<Sidebar> {
                               (route) => false,
                             );
                           },
-
                           child: Text(
                             'Logout',
                             style: TextStyle(color: Colors.white),
@@ -1706,501 +1948,564 @@ class SidebarState extends State<Sidebar> {
     );
   }
 
-  Widget sidebarIcon(IconData icon, int index, {double? size, String? label}) {
-    bool isActive = selectedPage == index;
+  Widget _buildSidebarPanel({bool forceExpanded = false}) {
+    final collapsed = forceExpanded ? false : _isCollapsed;
+    final groups = _buildNavGroups().where((g) => _roleAllowed(g.allowedRoles));
 
-    return InkWell(
-      onTap: () {
-        if (index == 4) {
-          _logout(context);
-          return;
+    List<MapEntry<_NavGroup, _NavChild>> searchResults = [];
+    if (_searchQuery.isNotEmpty) {
+      for (final g in groups) {
+        final leaves = <_NavChild>[];
+        _collectLeaves(_filterChildren(g.children), leaves);
+        for (final c in leaves) {
+          final resolvedTitle = c.resolveTitle(selectedRole);
+          if (resolvedTitle.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          )) {
+            searchResults.add(MapEntry(g, c));
+          }
         }
-
-        setState(() {
-          selectedPage = index;
-          // selectedSubPage = 0;
-          selectedSubPage = _firstPermittedSubPage(index);
-        });
-      },
-      borderRadius: BorderRadius.circular(30),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isActive ? primaryColor : Colors.transparent,
-            ),
-            child: Icon(
-              icon,
-              size: size ?? 24,
-              color: isActive ? Colors.white : Colors.grey[700],
-            ),
-          ),
-
-          if (label != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color:
-                    isActive
-                        ? primaryColor
-                        : Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget mainSidebar() {
-    bool isMobile = MediaQuery.of(context).size.width < 900;
+      }
+    }
 
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.all(20),
+      color: primaryColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Image.asset(
-              'assets/CRMC.png',
-              width: 80,
-              fit: BoxFit.contain,
-            ),
-          ),
-          SizedBox(height: 16),
-          if (isMobile) ...[
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.start,
-              children: [
-                sidebarIcon(Icons.dashboard_outlined, 0, label: 'Dashboard'),
-                Tooltip(
-                  message: 'Performance Governance System',
-                  child: sidebarIcon(Icons.timeline_outlined, 1, label: 'PGS'),
-                ),
-
-                sidebarIcon(Icons.fact_check_outlined, 2, label: 'ISO'),
-                PermissionWidget(
-                  child:
-                      (selectedRole == PermissionRoleString.roleAdmin)
-                          ? sidebarIcon(
-                            Icons.settings_outlined,
-                            3,
-                            label: 'Settings',
-                          )
-                          : SizedBox.shrink(),
-                ),
-                sidebarIcon(Icons.logout_outlined, 4, label: 'Logout'),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 12, 12),
+            child: SizedBox(
+              height: 50,
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  if (selectedPage == 0) ...[
-                    sidebarSubText("Overview", 0),
-                    sidebarSubText("Calendar of Activities", 1),
-                    sidebarSubText("Strategy Map", 2),
-                    sidebarSubText("Strategic Change Agenda", 3),
-                  ],
-                  //PGS
-                  if (selectedPage == 1) ...[
-                    PermissionWidget(
-                      child:
-                          (selectedRole == PermissionRoleString.roleAdmin ||
-                                  selectedRole ==
-                                      PermissionRoleString.roleStandardUser ||
-                                  selectedRole == PermissionRoleString.mcc ||
-                                  selectedRole == PermissionRoleString.osm ||
-                                  selectedRole ==
-                                      PermissionRoleString.coreTeam ||
-                                  selectedRole ==
-                                      PermissionRoleString.serviceHead ||
-                                  selectedRole ==
-                                      PermissionRoleString.pgsAuditor ||
-                                  selectedRole ==
-                                      PermissionRoleString.headAuditor ||
-                                  selectedRole == PermissionRoleString.twg ||
-                                  selectedRole == PermissionRoleString.msgc)
-                              ? sidebarSubText(
-                                selectedRole == PermissionRoleString.roleAdmin
-                                    ? 'Create/View Roadmaps'
-                                    : 'View Roadmaps',
-                                0,
-                              )
-                              : (selectedRole ==
-                                      PermissionRoleString.trainingOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.hrOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.evaluator ||
-                                  selectedRole ==
-                                      PermissionRoleString.serviceOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.financeOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.safetyOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.facilityOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.linkagesOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.informationOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.researchOfficer)
-                              ? sidebarSubText('Create Roadmaps', 0)
-                              : const SizedBox.shrink(),
+                  if (!collapsed)
+                    Align(
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        'assets/CRMC.png',
+                        width: 100,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                    PermissionWidget(
-                      child:
-                          (selectedRole == PermissionRoleString.roleAdmin ||
-                                  selectedRole ==
-                                      PermissionRoleString.roleStandardUser ||
-                                  selectedRole ==
-                                      PermissionRoleString.serviceHead ||
-                                  selectedRole == PermissionRoleString.mcc ||
-                                  selectedRole ==
-                                      PermissionRoleString.coreTeam ||
-                                  selectedRole == PermissionRoleString.osm ||
-                                  selectedRole == PermissionRoleString.twg ||
-                                  selectedRole == PermissionRoleString.msgc)
-                              ? sidebarSubText(
-                                selectedRole == PermissionRoleString.roleAdmin
-                                    ? 'Create/View Deliverables'
-                                    : selectedRole ==
-                                        PermissionRoleString.roleStandardUser
-                                    ? 'Create Deliverables'
-                                    : 'View Deliverables',
-                                1,
-                              )
-                              : SizedBox.shrink(),
+                  if (!forceExpanded)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        tooltip: collapsed ? 'Expand' : 'Collapse',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: Icon(
+                          collapsed
+                              ? Icons.keyboard_double_arrow_right
+                              : Icons.keyboard_double_arrow_left,
+                          size: 20,
+                          color: Colors.white70,
+                        ),
+                        onPressed:
+                            () => setState(() => _isCollapsed = !_isCollapsed),
+                      ),
                     ),
-                    PermissionWidget(
-                      child:
-                          (selectedRole == PermissionRoleString.roleAdmin ||
-                                  selectedRole ==
-                                      PermissionRoleString.roleStandardUser ||
-                                  selectedRole ==
-                                      PermissionRoleString.serviceHead ||
-                                  selectedRole == PermissionRoleString.mcc ||
-                                  selectedRole ==
-                                      PermissionRoleString.coreTeam ||
-                                  selectedRole == PermissionRoleString.osm ||
-                                  selectedRole == PermissionRoleString.twg)
-                              ? sidebarSubText(
-                                selectedRole == PermissionRoleString.roleAdmin
-                                    ? 'Create/View SWOT'
-                                    : selectedRole ==
-                                        PermissionRoleString.roleStandardUser
-                                    ? 'Create SWOT'
-                                    : 'View SWOT',
-                                2,
-                              )
-                              : SizedBox.shrink(),
-                    ),
-                    PermissionWidget(
-                      child:
-                          [
-                                PermissionRoleString.roleAdmin,
-                                PermissionRoleString.serviceHead,
-                                PermissionRoleString.mcc,
-                                PermissionRoleString.osm,
-                                PermissionRoleString.pgsAuditor,
-                                PermissionRoleString.pgsHead,
-                                PermissionRoleString.coreTeam,
-                                PermissionRoleString.twg,
-                                PermissionRoleString.headAuditor,
-                                PermissionRoleString.msgc,
-                                PermissionRoleString.evaluator,
-                              ].contains(selectedRole)
-                              ? sidebarSubText(
-                                'Deliverable Status Monitoring',
-                                3,
-                              )
-                              : SizedBox.shrink(),
-                    ),
-
-                    PermissionWidget(
-                      child:
-                          (selectedRole == PermissionRoleString.roleAdmin ||
-                                  selectedRole ==
-                                      PermissionRoleString.roleStandardUser ||
-                                  selectedRole == PermissionRoleString.mcc ||
-                                  selectedRole == PermissionRoleString.osm ||
-                                  selectedRole ==
-                                      PermissionRoleString.coreTeam ||
-                                  selectedRole ==
-                                      PermissionRoleString.serviceHead ||
-                                  selectedRole ==
-                                      PermissionRoleString.pgsAuditor ||
-                                  selectedRole ==
-                                      PermissionRoleString.headAuditor ||
-                                  selectedRole == PermissionRoleString.twg ||
-                                  selectedRole ==
-                                      PermissionRoleString.evaluator)
-                              ? sidebarSubText(
-                                selectedRole == PermissionRoleString.roleAdmin
-                                    ? 'Create/View Strategy Review Report'
-                                    : 'View Strategy Review Report',
-                                4,
-                              )
-                              : (selectedRole ==
-                                      PermissionRoleString.trainingOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.hrOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.serviceOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.financeOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.safetyOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.facilityOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.linkagesOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.informationOfficer ||
-                                  selectedRole ==
-                                      PermissionRoleString.researchOfficer)
-                              ? sidebarSubText(
-                                'Create Strategy Review Report',
-                                4,
-                              )
-                              : const SizedBox.shrink(),
-                    ),
-
-                    ExpandableSidebarItem(
-                      title: "Scorecard",
-                      items: [
-                        {"title": "Impact and Strategic Goal", "index": 5},
-                        {"title": "Core & Support Processes", "index": 6},
-                      ],
-                      selectedSubPage: selectedSubPage,
-                      onTap: (index) {
-                        setState(() {
-                          selectedSubPage = index;
-                        });
-                      },
-                    ),
-                    // sidebarSubText('Strategic Change Agenda', 12),
-                    // PermissionWidget(
-                    //   child:
-                    //       [
-                    //             PermissionRoleString.roleAdmin,
-                    //             PermissionRoleString.trainingOfficer,
-                    //             PermissionRoleString.hrOfficer,
-                    //             PermissionRoleString.serviceOfficer,
-                    //             PermissionRoleString.financeOfficer,
-                    //             PermissionRoleString.safetyOfficer,
-                    //             PermissionRoleString.facilityOfficer,
-                    //             PermissionRoleString.linkagesOfficer,
-                    //             PermissionRoleString.informationOfficer,
-                    //             PermissionRoleString.researchOfficer,
-                    //             PermissionRoleString.coreTeam,
-                    //             PermissionRoleString.serviceHead,
-                    //             PermissionRoleString.headAuditor,
-                    //             PermissionRoleString.mcc,
-                    //             PermissionRoleString.osm,
-                    //             PermissionRoleString.pgsAuditor,
-                    //             PermissionRoleString.twg,
-                    //           ].contains(selectedRole)
-                    //           ? sidebarSubText(
-                    //             "Core & Support Processes Scorecard ",
-                    //             5,
-                    //           )
-                    //           : SizedBox.shrink(),
-                    // ),
-                    PermissionWidget(
-                      child:
-                          (selectedRole == PermissionRoleString.roleAdmin ||
-                                  selectedRole == PermissionRoleString.mcc ||
-                                  selectedRole == PermissionRoleString.osm ||
-                                  selectedRole ==
-                                      PermissionRoleString.coreTeam ||
-                                  selectedRole ==
-                                      PermissionRoleString.serviceHead ||
-                                  selectedRole ==
-                                      PermissionRoleString.pgsAuditor ||
-                                  selectedRole ==
-                                      PermissionRoleString.headAuditor ||
-                                  selectedRole == PermissionRoleString.twg ||
-                                  selectedRole ==
-                                      PermissionRoleString.evaluator)
-                              ? sidebarSubText(
-                                selectedRole == PermissionRoleString.roleAdmin
-                                    ? 'Create/View Operation Review Protocol'
-                                    : "View Operation Review Protocol",
-                                7,
-                              )
-                              : SizedBox.shrink(),
-                    ),
-                    PermissionWidget(
-                      child:
-                          [
-                                PermissionRoleString.pgsAuditor,
-                                PermissionRoleString.roleAdmin,
-                                PermissionRoleString.twg,
-                                PermissionRoleString.osm,
-                                PermissionRoleString.headAuditor,
-                                PermissionRoleString.roleStandardUser,
-                                PermissionRoleString.headAuditor,
-                                PermissionRoleString.serviceHead,
-                                PermissionRoleString.coreTeam,
-                              ].contains(selectedRole)
-                              ? sidebarSubText("Performance Validation Tool", 8)
-                              : SizedBox.shrink(),
-                    ),
-                    PermissionWidget(
-                      child:
-                          [
-                                PermissionRoleString.headAuditor,
-                                PermissionRoleString.roleAdmin,
-                                PermissionRoleString.twg,
-                              ].contains(selectedRole)
-                              ? sidebarSubText("PGS Auditor Report", 9)
-                              : SizedBox.shrink(),
-                    ),
-
-                    ExpandableSidebarItem(
-                      title: "PGS Reports",
-                      items: [
-                        {
-                          "title": "Summary Validated Deliverables",
-                          "index": 10,
-                        },
-                        {
-                          "title": "Summary of Offices with Deliverables",
-                          "index": 11,
-                        },
-                        {
-                          "title":
-                              "Summary of Offices with Monthly Operation Review Protocol",
-                          "index": 12,
-                        },
-                      ],
-                      selectedSubPage: selectedSubPage,
-                      onTap: (index) {
-                        setState(() {
-                          selectedSubPage = index;
-                        });
-                      },
-                    ),
-                  ],
-
-                  if (selectedPage == 3) ...[
-                    sidebarSubText("Announcement", 0),
-                    sidebarSubText("Audit Schedules", 1),
-                    sidebarSubText("Auditor", 2),
-                    sidebarSubText("Auditor Offices", 3),
-                    sidebarSubText("Auditor Team", 4),
-                    // sidebarSubText("Process Core & Support", 5),
-                    // sidebarSubText("KRA Roadmap Period", 6),
-                    sidebarSubText("Office", 7),
-                    // sidebarSubText("PGS Signatory", 8),
-                    // sidebarSubText("Pgs Period", 9),
-                    sidebarSubText("Role", 10),
-                    sidebarSubText("Team", 11),
-                    sidebarSubText("User", 12),
-                    sidebarSubText("User Office", 13),
-                    sidebarSubText("User Role", 14),
-                    // sidebarSubText("Strategy Review Period", 15),
-                    // sidebarSubText("Performance Validation Tool Period", 16),
-                    // sidebarSubText("Performance Validation Tool Signatory", 17),
-                    // sidebarSubText("Impact and Strategic Goal Period", 18),
-                    ExpandableSidebarItem(
-                      title: "PGS",
-                      items: [
-                        {"title": "Process Core & Support", "index": 5},
-                        {"title": "KRA Roadmap Period", "index": 6},
-                        {"title": "PGS Signatory", "index": 8},
-                        {"title": "PGS Period", "index": 9},
-                        {"title": "Strategy Review Period", "index": 15},
-                        {"title": "Evaluator Offices", "index": 21},
-                        {"title": "Service Head Office", "index": 22},
-                        {
-                          "title": "Performance Validation Tool Period",
-                          "index": 16,
-                        },
-                        {
-                          "title": "Performance Validation Tool Signatory",
-                          "index": 17,
-                        },
-                        {
-                          "title": "Impact and Strategic Goal Period",
-                          "index": 18,
-                        },
-                      ],
-                      selectedSubPage: selectedSubPage,
-                      onTap: (index) {
-                        setState(() {
-                          selectedSubPage = index;
-                        });
-                      },
-                    ),
-                    ExpandableSidebarItem(
-                      title: "SWOT",
-                      items: [
-                        {"title": "Strength & Weakness", "index": 19},
-                        {"title": "Opportunities & Threats", "index": 20},
-                      ],
-                      selectedSubPage: selectedSubPage,
-                      onTap: (index) {
-                        setState(() {
-                          selectedSubPage = index;
-                        });
-                      },
-                    ),
-                    // sidebarSubText("Evaluator Offices", 21),
-                  ],
-                  if (selectedPage == 2) ...[
-                    sidebarSubText("Audit Programme", 0),
-                    sidebarSubText("Audit Plan", 1),
-                    sidebarSubText("Audit Schedule", 2),
-                  ],
                 ],
               ),
             ),
           ),
+
+          if (!collapsed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: TextField(
+                controller: _searchController,
+                style: const TextStyle(fontSize: 13, color: Colors.white),
+                cursorColor: Colors.white,
+                decoration: InputDecoration(
+                  isDense: true,
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.12),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9),
+                    borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      width: 1.2,
+                    ),
+                  ),
+                  hintText: 'Search',
+                  hintStyle: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 13,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 18,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                  suffixIcon:
+                      _searchQuery.isEmpty
+                          ? null
+                          : IconButton(
+                            icon: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                            onPressed: () => _searchController.clear(),
+                          ),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              tooltip: 'Search',
+              icon: const Icon(Icons.search, size: 20, color: Colors.white70),
+              onPressed: () => setState(() => _isCollapsed = false),
+            ),
+
+          const SizedBox(height: 4),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 20),
+              child:
+                  searchResults.isNotEmpty ||
+                          (_searchQuery.isNotEmpty && !collapsed)
+                      ? _buildSearchResults(searchResults)
+                      : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final g in groups)
+                            _navGroupTile(g, collapsed: collapsed),
+                          const SizedBox(height: 12),
+                          const Divider(
+                            indent: 16,
+                            endIndent: 16,
+                            height: 1,
+                            color: Colors.white24,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+            ),
+          ),
+          _logoutTile(collapsed: collapsed),
         ],
       ),
     );
   }
 
-  Widget sidebarSubText(String text, int index) {
-    bool isActive = selectedSubPage == index;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedSubPage = index;
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-
+  Widget _buildSearchResults(List<MapEntry<_NavGroup, _NavChild>> results) {
+    if (results.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Text(
-          text,
+          'No matches for "$_searchQuery"',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 12.5,
+            color: Colors.white.withValues(alpha: 0.6),
+          ),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children:
+          results.map((entry) {
+            final g = entry.key;
+            final c = entry.value;
+            final resolvedTitle = c.resolveTitle(selectedRole);
+            final active =
+                selectedPage == g.pageIndex && selectedSubPage == c.index;
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              decoration: BoxDecoration(
+                color:
+                    active
+                        ? Colors.white.withValues(alpha: _kActiveHighlightAlpha)
+                        : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () {
+                  setState(() {
+                    selectedPage = g.pageIndex;
+                    selectedSubPage = c.index!;
+                    _expandedKeys.add('g${g.pageIndex}');
+                    _searchController.clear();
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 9,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        child: Icon(g.icon, size: 14, color: Colors.white),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              resolvedTitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              g.label,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.white.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _navGroupTile(_NavGroup g, {required bool collapsed}) {
+    final isActive = selectedPage == g.pageIndex;
+    final key = 'g${g.pageIndex}';
+    final expanded = _expandedKeys.contains(key);
+    final visibleChildren = _filterChildren(g.children);
+    final hasActiveChild = _containsActive(visibleChildren, g.pageIndex);
+    final leafActive = isActive && visibleChildren.isEmpty;
+
+    if (collapsed) {
+      return Tooltip(
+        message: g.label,
+        waitDuration: const Duration(milliseconds: 300),
+        child: InkWell(
+          onTap:
+              () => setState(() {
+                selectedPage = g.pageIndex;
+                selectedSubPage = _firstPermittedSubPage(g.pageIndex);
+              }),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 14),
+            padding: const EdgeInsets.all(11),
+            decoration: BoxDecoration(
+              color:
+                  isActive
+                      ? Colors.white.withValues(alpha: _kActiveHighlightAlpha)
+                      : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(g.icon, size: 21, color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+          decoration: BoxDecoration(
             color:
-                isActive
-                    ? primaryColor
-                    : Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w400,
+                leafActive
+                    ? Colors.white.withValues(alpha: _kActiveHighlightAlpha)
+                    : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () {
+              setState(() {
+                selectedPage = g.pageIndex;
+                selectedSubPage = _firstPermittedSubPage(g.pageIndex);
+                if (visibleChildren.isNotEmpty) {
+                  expanded ? _expandedKeys.remove(key) : _expandedKeys.add(key);
+                }
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+              child: Row(
+                children: [
+                  Icon(
+                    g.icon,
+                    size: 19,
+                    color: Colors.white.withValues(
+                      alpha: (leafActive || hasActiveChild) ? 1 : 0.75,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      g.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight:
+                            (leafActive || hasActiveChild)
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                        color: Colors.white.withValues(
+                          alpha: (leafActive || hasActiveChild) ? 1 : 0.85,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (visibleChildren.isNotEmpty)
+                    Icon(
+                      expanded ? Icons.remove : Icons.add,
+                      size: 18,
+                      color: Colors.white.withValues(
+                        alpha: hasActiveChild ? 1 : 0.6,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        AnimatedCrossFade(
+          firstChild: const SizedBox(width: double.infinity, height: 0),
+          secondChild: _childrenBlock(visibleChildren, g.pageIndex, key),
+          crossFadeState:
+              expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 180),
+          sizeCurve: Curves.easeInOut,
+        ),
+      ],
+    );
+  }
+
+  Widget _childrenBlock(
+    List<_NavChild> children,
+    int pageIndex,
+    String parentKey, {
+    double leftMargin = 26,
+  }) {
+    if (children.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.only(left: leftMargin, right: 10, bottom: 6, top: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(children.length, (i) {
+          final c = children[i];
+          final resolvedTitle = c.resolveTitle(selectedRole);
+          final isFirst = i == 0;
+          final isLast = i == children.length - 1;
+          final hasSubChildren = c.children.isNotEmpty;
+          final key = '$parentKey/${c.title}';
+
+          Widget header;
+          Widget? subBlock;
+
+          if (hasSubChildren) {
+            final expanded = _expandedKeys.contains(key);
+            final hasActiveDescendant = _containsActive(c.children, pageIndex);
+
+            header = InkWell(
+              onTap:
+                  () => setState(() {
+                    expanded
+                        ? _expandedKeys.remove(key)
+                        : _expandedKeys.add(key);
+                  }),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8.5,
+                  horizontal: 4,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        resolvedTitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.3,
+                          fontWeight:
+                              hasActiveDescendant
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                          color: Colors.white.withValues(
+                            alpha: hasActiveDescendant ? 1 : 0.75,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: Icon(
+                        expanded ? Icons.remove : Icons.add,
+                        size: 16,
+                        color: Colors.white.withValues(
+                          alpha: hasActiveDescendant ? 1 : 0.6,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+
+            subBlock = AnimatedCrossFade(
+              firstChild: const SizedBox(width: double.infinity, height: 0),
+              secondChild: _childrenBlock(
+                c.children,
+                pageIndex,
+                key,
+                leftMargin: 18,
+              ),
+              crossFadeState:
+                  expanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 160),
+              sizeCurve: Curves.easeInOut,
+            );
+          } else {
+            final active =
+                selectedPage == pageIndex && selectedSubPage == c.index;
+            header = InkWell(
+              onTap:
+                  () => setState(() {
+                    selectedPage = pageIndex;
+                    selectedSubPage = c.index!;
+                  }),
+              borderRadius: BorderRadius.circular(8),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8.5,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      active
+                          ? Colors.white.withValues(
+                            alpha: _kActiveHighlightAlpha,
+                          )
+                          : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  resolvedTitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    height: 1.3,
+                    color: Colors.white.withValues(alpha: active ? 1 : 0.7),
+                    fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                  ),
+                ),
+              ),
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      child: CustomPaint(
+                        painter: _RootConnectorPainter(
+                          isFirst: isFirst,
+                          isLast: isLast,
+                          color: Colors.white38,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: header),
+                  ],
+                ),
+              ),
+              if (subBlock != null) subBlock,
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _logoutTile({required bool collapsed}) {
+    if (collapsed) {
+      return Tooltip(
+        message: 'Logout',
+        child: InkWell(
+          onTap: () => _logout(context),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 14),
+            padding: const EdgeInsets.all(11),
+            child: const Icon(
+              Icons.logout_outlined,
+              size: 21,
+              color: Colors.white70,
+            ),
+          ),
+        ),
+      );
+    }
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+      child: InkWell(
+        onTap: () => _logout(context),
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              Icon(
+                Icons.logout_outlined,
+                size: 19,
+                color: Colors.white.withValues(alpha: 0.75),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -2208,98 +2513,47 @@ class SidebarState extends State<Sidebar> {
   }
 }
 
-class ExpandableSidebarItem extends StatefulWidget {
-  final String title;
-  final List<Map<String, dynamic>> items;
-  final int selectedSubPage;
-  final Function(int) onTap;
+class _RootConnectorPainter extends CustomPainter {
+  final bool isFirst;
+  final bool isLast;
+  final Color color;
 
-  const ExpandableSidebarItem({
-    super.key,
-    required this.title,
-    required this.items,
-    required this.selectedSubPage,
-    required this.onTap,
+  _RootConnectorPainter({
+    required this.isFirst,
+    required this.isLast,
+    required this.color,
   });
 
   @override
-  State<ExpandableSidebarItem> createState() => _ExpandableSidebarItemState();
-}
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = color
+          ..strokeWidth = 1.4
+          ..style = PaintingStyle.stroke;
 
-class _ExpandableSidebarItemState extends State<ExpandableSidebarItem> {
-  bool expanded = false;
+    final double midY = size.height / 2;
+    const double curve = 8.0;
+
+    if (!isFirst) {
+      canvas.drawLine(const Offset(0, 0), Offset(0, midY - curve), paint);
+    }
+    if (!isLast) {
+      canvas.drawLine(Offset(0, midY), Offset(0, size.height), paint);
+    }
+
+    final path =
+        Path()
+          ..moveTo(0, midY - curve)
+          ..quadraticBezierTo(0, midY, curve, midY)
+          ..lineTo(size.width, midY);
+    canvas.drawPath(path, paint);
+  }
 
   @override
-  Widget build(BuildContext context) {
-    final TextStyle normalStyle = TextStyle(
-      fontSize: 13,
-      color: Theme.of(
-        context,
-      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-      fontWeight: FontWeight.w400,
-    );
-    final TextStyle activeStyle = TextStyle(
-      fontSize: 13,
-      color: primaryColor,
-      fontWeight: FontWeight.bold,
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: () {
-            setState(() {
-              expanded = !expanded;
-            });
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                Icon(
-                  expanded
-                      ? Icons.keyboard_arrow_down
-                      : Icons.keyboard_arrow_right,
-                  size: 18,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                ),
-                const SizedBox(width: 4),
-                Text(widget.title, style: normalStyle),
-              ],
-            ),
-          ),
-        ),
-
-        if (expanded)
-          Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: Column(
-              children:
-                  widget.items.map((item) {
-                    bool isActive = widget.selectedSubPage == item["index"];
-                    return InkWell(
-                      onTap: () => widget.onTap(item["index"]),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          /// Tree line
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 6),
-                              child: Text(
-                                item["title"],
-                                style: isActive ? activeStyle : normalStyle,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-            ),
-          ),
-      ],
-    );
+  bool shouldRepaint(covariant _RootConnectorPainter oldDelegate) {
+    return oldDelegate.isFirst != isFirst ||
+        oldDelegate.isLast != isLast ||
+        oldDelegate.color != color;
   }
 }
