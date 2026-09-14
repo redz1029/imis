@@ -185,9 +185,8 @@ List<TeamSummary> groupRecords(List<PendingAuditRecord> records) {
     return TeamSummary(
       teamId: t['teamId'] as int,
       teamName: t['teamName'] as String,
-      offices: officesMap.values
-          .map((r) => OfficeSummary.fromRecord(r))
-          .toList(),
+      offices:
+          officesMap.values.map((r) => OfficeSummary.fromRecord(r)).toList(),
       auditorNames: (t['auditorNames'] as Set<String>).toList(),
     );
   }).toList();
@@ -288,20 +287,22 @@ class SummaryValidatedDeliverablesPageState
       if (mounted) {
         setState(() {
           allPgsPeriod = periods;
-          filteredListPeriod = periods
-              .map<Map<String, dynamic>>(
-                (p) => <String, dynamic>{
-                  'id': p.id,
-                  'isActive': p.isActive,
-                  'startDate': p.startDate,
-                  'endDate': p.endDate,
-                },
-              )
-              .toList();
+          filteredListPeriod =
+              periods
+                  .map<Map<String, dynamic>>(
+                    (p) => <String, dynamic>{
+                      'id': p.id,
+                      'isActive': p.isActive,
+                      'startDate': p.startDate,
+                      'endDate': p.endDate,
+                    },
+                  )
+                  .toList();
 
-          final activePeriod = filteredListPeriod
-              .where((p) => p['isActive'] == true)
-              .firstOrNull;
+          final activePeriod =
+              filteredListPeriod
+                  .where((p) => p['isActive'] == true)
+                  .firstOrNull;
           if (activePeriod != null) {
             _selectedPeriodId = activePeriod['id'] as int?;
           }
@@ -473,30 +474,31 @@ class SummaryValidatedDeliverablesPageState
               ),
             ),
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: primaryColor),
-                  )
-                : _teams.isEmpty && _error == null
-                ? _buildEmpty()
-                : RefreshIndicator(
-                    color: primaryColor,
-                    onRefresh: _load,
-                    child: ListView(
-                      padding: EdgeInsets.fromLTRB(
-                        isMobile ? 12 : 20,
-                        16,
-                        isMobile ? 12 : 20,
-                        24,
-                      ),
-                      children: [
-                        _buildStatsRow(isMobile),
-                        const SizedBox(height: 24),
+            child:
+                _isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(color: primaryColor),
+                    )
+                    : _teams.isEmpty && _error == null
+                    ? _buildEmpty()
+                    : RefreshIndicator(
+                      color: primaryColor,
+                      onRefresh: _load,
+                      child: ListView(
+                        padding: EdgeInsets.fromLTRB(
+                          isMobile ? 12 : 20,
+                          16,
+                          isMobile ? 12 : 20,
+                          24,
+                        ),
+                        children: [
+                          _buildStatsRow(isMobile),
+                          const SizedBox(height: 24),
 
-                        ..._teams.map((t) => _buildTeamCard(t, isMobile)),
-                      ],
+                          ..._teams.map((t) => _buildTeamCard(t, isMobile)),
+                        ],
+                      ),
                     ),
-                  ),
           ),
         ],
       ),
@@ -563,16 +565,17 @@ class SummaryValidatedDeliverablesPageState
               IconButton(
                 tooltip: 'Refresh',
                 onPressed: _isLoading ? null : _load,
-                icon: _isLoading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: primaryColor,
-                        ),
-                      )
-                    : const Icon(Icons.refresh, color: primaryColor),
+                icon:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: primaryColor,
+                          ),
+                        )
+                        : const Icon(Icons.refresh, color: primaryColor),
               ),
             ],
           ),
@@ -722,13 +725,14 @@ class SummaryValidatedDeliverablesPageState
         height: 38,
         child: SearchableDropdown(
           items: ["All Services", ...serviceList.map((o) => o.name)],
-          selectedItem: _selectedServiceId == null
-              ? "All Services"
-              : (serviceList
-                        .where((o) => o.id == _selectedServiceId)
-                        .firstOrNull
-                        ?.name ??
-                    "All Services"),
+          selectedItem:
+              _selectedServiceId == null
+                  ? "All Services"
+                  : (serviceList
+                          .where((o) => o.id == _selectedServiceId)
+                          .firstOrNull
+                          ?.name ??
+                      "All Services"),
           hintText: "Service",
           searchHint: "Search services...",
           prefixIcon: Icons.miscellaneous_services,
@@ -758,13 +762,14 @@ class SummaryValidatedDeliverablesPageState
       return "$start - $end";
     }
 
-    final selectedLabel = _selectedPeriodId == null
-        ? "All Periods"
-        : filteredListPeriod
-                  .where((p) => p['id'] == _selectedPeriodId)
-                  .map(labelFor)
-                  .firstOrNull ??
-              "All Periods";
+    final selectedLabel =
+        _selectedPeriodId == null
+            ? "All Periods"
+            : filteredListPeriod
+                    .where((p) => p['id'] == _selectedPeriodId)
+                    .map(labelFor)
+                    .firstOrNull ??
+                "All Periods";
 
     return SearchableDropdown(
       items: ["All Periods", ...filteredListPeriod.map(labelFor)],
@@ -794,13 +799,14 @@ class SummaryValidatedDeliverablesPageState
   Widget _teamDropdown() {
     final teamItems = ["All Teams", ..._allTeams.map((t) => t.name)];
 
-    final selectedTeamName = _selectedTeamId == null
-        ? "All Teams"
-        : _allTeams
-                  .where((t) => t.id == _selectedTeamId)
-                  .map((t) => t.name)
-                  .firstOrNull ??
-              "All Teams";
+    final selectedTeamName =
+        _selectedTeamId == null
+            ? "All Teams"
+            : _allTeams
+                    .where((t) => t.id == _selectedTeamId)
+                    .map((t) => t.name)
+                    .firstOrNull ??
+                "All Teams";
 
     return SearchableDropdown(
       items: teamItems,
@@ -828,9 +834,8 @@ class SummaryValidatedDeliverablesPageState
   Widget _monthDropdown() {
     return SearchableDropdown(
       items: _monthNamesFull,
-      selectedItem: _selectedMonth == null
-          ? null
-          : _monthNamesFull[_selectedMonth! - 1],
+      selectedItem:
+          _selectedMonth == null ? null : _monthNamesFull[_selectedMonth! - 1],
       hintText: "Select Month",
       searchHint: "Search month...",
       prefixIcon: Icons.calendar_month_outlined,
@@ -918,7 +923,7 @@ class SummaryValidatedDeliverablesPageState
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1014,12 +1019,14 @@ class SummaryValidatedDeliverablesPageState
                     _MetaBadge(
                       label: '${team.auditedDeptCount} audited',
                       color: team.auditedDeptCount > 0 ? _green : _textMuted,
-                      bg: team.auditedDeptCount > 0
-                          ? _greenBg
-                          : const Color(0xFFF5F5F5),
-                      icon: team.auditedDeptCount > 0
-                          ? Icons.check_circle_outlined
-                          : null,
+                      bg:
+                          team.auditedDeptCount > 0
+                              ? _greenBg
+                              : const Color(0xFFF5F5F5),
+                      icon:
+                          team.auditedDeptCount > 0
+                              ? Icons.check_circle_outlined
+                              : null,
                     ),
                   ],
                 ),
@@ -1292,9 +1299,10 @@ class _DepartmentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = maxDeliverables == 0
-        ? 0.0
-        : (office.totalAuditCount / maxDeliverables).clamp(0.0, 1.0);
+    final pct =
+        maxDeliverables == 0
+            ? 0.0
+            : (office.totalAuditCount / maxDeliverables).clamp(0.0, 1.0);
 
     return Column(
       children: [
@@ -1355,7 +1363,9 @@ class _DepartmentRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: progressBg,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: progressColor.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: progressColor.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Text(
                   '${office.auditProgress} audited',
