@@ -6,266 +6,156 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/constant/permissions.dart';
-import 'package:imis/office/models/office.dart';
+// NOTE: I inferred this import path from the folder convention used by your
+// other models (pgs_strategic_change_agenda/models/...). Please confirm/fix
+// it if the actual service file lives somewhere else.
+import 'package:imis/performance_governance_system/pgs_strategic_change_agenda/models/strategic_change_agenda.dart';
+import 'package:imis/performance_governance_system/pgs_strategic_change_agenda/services/strategy_change_agenda_service.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/widgets/common/button_filter.dart';
-import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
-import 'package:imis/widgets/common/search_underline_dropdown.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
-import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// ---------------------------------------------------------------------
-/// MODELS
+/// LOCAL UI HELPER MODELS
+/// Wrap StrategicChangeAgendaItem / Deliverable with TextEditingControllers
+/// so the table can be edited, while still being able to rebuild the real
+/// StrategicChangeAgendaItem / StrategicChangeAgendaDeliverable payload
+/// (with id / rowVersion preserved) when saving.
 /// ---------------------------------------------------------------------
 
-class PagedResult<T> {
-  final int page;
-  final int totalCount;
-  final List<T> items;
+class StrategicChangeAgendaValueEntry {
+  final int id;
+  final String? rowVersion;
+  int year;
+  final TextEditingController controller;
 
-  PagedResult({
-    required this.page,
-    required this.totalCount,
-    required this.items,
+  StrategicChangeAgendaValueEntry({
+    this.id = 0,
+    this.rowVersion,
+    required this.year,
+    String description = '',
+  }) : controller = TextEditingController(text: description);
+
+  void dispose() => controller.dispose();
+}
+
+class _RemovedItem {
+  final int id;
+  final String? rowVersion;
+  final int year;
+  final String description;
+
+  _RemovedItem({
+    required this.id,
+    this.rowVersion,
+    required this.year,
+    required this.description,
   });
 }
 
-class StrategicPositionArea {
-  final int id;
-  final int? strategicPositionId;
-  bool isDeleted;
-  String area;
-  String year2020;
-  String year2025;
-  String year2030;
-
-  StrategicPositionArea({
-    this.id = 0,
-    this.strategicPositionId,
-    this.isDeleted = false,
-    this.area = '',
-    this.year2020 = '',
-    this.year2025 = '',
-    this.year2030 = '',
-  });
-
-  factory StrategicPositionArea.fromJson(Map<String, dynamic> json) {
-    return StrategicPositionArea(
-      id: json['id'] ?? 0,
-      strategicPositionId: json['strategicPositionId'],
-      isDeleted: json['isDeleted'] ?? false,
-      area: json['area'] ?? '',
-      year2020: json['year2020'] ?? '',
-      year2025: json['year2025'] ?? '',
-      year2030: json['year2030'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'strategicPositionId': strategicPositionId,
-    'isDeleted': isDeleted,
-    'area': area,
-    'year2020': year2020,
-    'year2025': year2025,
-    'year2030': year2030,
-  };
-}
-
-class StrategicPosition {
-  final int id;
-  int? departmentId;
-  String? departmentName;
-  bool isDeleted;
-  String rowVersion;
-  String fromStatement;
-  String toStatement;
-  DateTime? postingDate;
-  List<StrategicPositionArea> areas;
-
-  StrategicPosition({
-    this.id = 0,
-    this.departmentId,
-    this.departmentName,
-    this.isDeleted = false,
-    this.rowVersion = '',
-    this.fromStatement = '',
-    this.toStatement = '',
-    this.postingDate,
-    List<StrategicPositionArea>? areas,
-  }) : areas = areas ?? [];
-
-  factory StrategicPosition.fromJson(Map<String, dynamic> json) {
-    return StrategicPosition(
-      id: json['id'] ?? 0,
-      departmentId: json['departmentId'],
-      departmentName: json['departmentName'],
-      isDeleted: json['isDeleted'] ?? false,
-      rowVersion: json['rowVersion'] ?? '',
-      fromStatement: json['fromStatement'] ?? '',
-      toStatement: json['toStatement'] ?? '',
-      postingDate:
-          json['postingDate'] != null
-              ? DateTime.tryParse(json['postingDate'])
-              : null,
-      areas:
-          (json['areas'] as List<dynamic>? ?? [])
-              .map((e) => StrategicPositionArea.fromJson(e))
-              .toList(),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'departmentId': departmentId,
-    'isDeleted': isDeleted,
-    'rowVersion': rowVersion,
-    'fromStatement': fromStatement,
-    'toStatement': toStatement,
-    'postingDate': postingDate?.toIso8601String(),
-    'areas': areas.map((e) => e.toJson()).toList(),
-  };
-}
-
-/// ---------------------------------------------------------------------
-/// SERVICE (dummy — adjust endpoints/response shape to match backend)
-/// ---------------------------------------------------------------------
-
-class StrategicPositionService {
-  final Dio dio;
-  StrategicPositionService(this.dio);
-
-  Future<PagedResult<StrategicPosition>> getStrategicPositions({
-    int page = 1,
-    int pageSize = 15,
-    String? searchQuery,
-    String? roleId,
-    String? officeId,
-    required String userId,
-  }) async {
-    final response = await dio.get(
-      '/api/StrategicPosition',
-      queryParameters: {
-        'page': page,
-        'pageSize': pageSize,
-        if (searchQuery != null) 'search': searchQuery,
-        if (roleId != null) 'roleId': roleId,
-        if (officeId != null) 'officeId': officeId,
-        'userId': userId,
-      },
-    );
-
-    final data = response.data;
-
-    return PagedResult<StrategicPosition>(
-      page: data['page'] ?? 1,
-      totalCount: data['totalCount'] ?? 0,
-      items:
-          (data['items'] as List<dynamic>? ?? [])
-              .map((e) => StrategicPosition.fromJson(e))
-              .toList(),
-    );
-  }
-
-  Future<StrategicPosition> getStrategicPositionById(String id) async {
-    final response = await dio.get('/api/StrategicPosition/$id');
-    return StrategicPosition.fromJson(response.data);
-  }
-
-  Future<void> createStrategicPosition(StrategicPosition sp) async {
-    if (sp.id == 0) {
-      await dio.post('/api/StrategicPosition', data: sp.toJson());
-    } else {
-      await dio.put('/api/StrategicPosition/${sp.id}', data: sp.toJson());
-    }
-  }
-
-  Future<void> deleteStrategicPosition(String id) async {
-    await dio.delete('/api/StrategicPosition/$id');
-  }
-}
-
-/// ---------------------------------------------------------------------
-/// ENTRY HELPER (per-area controllers, mirrors SwotContextEntry pattern)
-/// ---------------------------------------------------------------------
-
-class StrategicAreaEntry {
-  final int id;
+class StrategicChangeAgendaAreaEntry {
+  int id;
   final TextEditingController areaCtrl;
-  final TextEditingController y2020Ctrl;
-  final TextEditingController y2025Ctrl;
-  final TextEditingController y2030Ctrl;
+  List<StrategicChangeAgendaValueEntry> valueEntries;
+  final List<_RemovedItem> _removedItems = [];
 
-  StrategicAreaEntry({
+  StrategicChangeAgendaAreaEntry({
     this.id = 0,
     String area = '',
-    String y2020 = '',
-    String y2025 = '',
-    String y2030 = '',
+    List<StrategicChangeAgendaValueEntry>? valueEntries,
   }) : areaCtrl = TextEditingController(text: area),
-       y2020Ctrl = TextEditingController(text: y2020),
-       y2025Ctrl = TextEditingController(text: y2025),
-       y2030Ctrl = TextEditingController(text: y2030);
+       valueEntries = valueEntries ?? [];
+
+  void addValueColumn(int year) =>
+      valueEntries.add(StrategicChangeAgendaValueEntry(year: year));
+
+  /// Removes a year column from this row. If the underlying item already
+  /// existed on the server (id != 0), it's kept around as a soft-deleted
+  /// item so the backend can be told about it via isDeleted:true on save,
+  /// instead of just silently disappearing from the payload.
+  void removeValueColumn(int index) {
+    if (index < 0 || index >= valueEntries.length) return;
+
+    final removed = valueEntries.removeAt(index);
+
+    if (removed.id != 0) {
+      _removedItems.add(
+        _RemovedItem(
+          id: removed.id,
+          rowVersion: removed.rowVersion,
+          year: removed.year,
+          description: removed.controller.text,
+        ),
+      );
+    }
+
+    removed.dispose();
+  }
+
+  void updateColumnYear(int index, int newYear) {
+    if (index < 0 || index >= valueEntries.length) return;
+    valueEntries[index].year = newYear;
+  }
+
+  List<StrategicChangeAgendaItem> buildItems() {
+    final area = areaCtrl.text.trim();
+
+    return [
+      ...valueEntries.map(
+        (v) => StrategicChangeAgendaItem(
+          id: v.id,
+          isDeleted: false,
+          rowVersion: v.rowVersion,
+          area: area,
+          year: v.year,
+          description: v.controller.text.trim(),
+        ),
+      ),
+      ..._removedItems.map(
+        (r) => StrategicChangeAgendaItem(
+          id: r.id,
+          isDeleted: true,
+          rowVersion: r.rowVersion,
+          area: area,
+          year: r.year,
+          description: r.description,
+        ),
+      ),
+    ];
+  }
 
   void dispose() {
     areaCtrl.dispose();
-    y2020Ctrl.dispose();
-    y2025Ctrl.dispose();
-    y2030Ctrl.dispose();
+    for (final v in valueEntries) {
+      v.dispose();
+    }
   }
 }
 
-/// ---------------------------------------------------------------------
-/// LIST PAGE
-/// ---------------------------------------------------------------------
-
-class StrategicPositionPage extends StatefulWidget {
-  const StrategicPositionPage({super.key});
+class StrategicChangeAgendaPage extends StatefulWidget {
+  const StrategicChangeAgendaPage({super.key});
 
   @override
-  State<StrategicPositionPage> createState() => _StrategicPositionPageState();
+  State<StrategicChangeAgendaPage> createState() =>
+      _StrategicChangeAgendaPageState();
 }
 
-class _StrategicPositionPageState extends State<StrategicPositionPage> {
+class _StrategicChangeAgendaPageState extends State<StrategicChangeAgendaPage> {
   int _currentPage = 1;
   final int _pageSize = 15;
   int totalCount = 0;
   bool _isLoading = false;
 
-  List<StrategicPosition> _list = [];
+  List<StrategicChangeAgenda> _list = [];
 
-  String? _userId;
-
-  List<Office> officeList = [];
-  String? _selectedOfficeId;
-
-  bool _mobileFiltersExpanded = false;
-
-  final _service = StrategicPositionService(Dio());
-  final _commonService = CommonService(Dio());
+  final _service = StrategyChangeAgendaService(Dio());
 
   @override
   void initState() {
     super.initState();
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    final user = await AuthUtil.fetchLoggedUser();
-    final offices = await _commonService.fetchOffices();
-
-    if (!mounted) return;
-
-    setState(() {
-      _userId = user?.id;
-      officeList = offices;
-    });
-
-    await _fetch();
+    _fetch();
   }
 
   Future<String> _getRoleId() async {
@@ -286,7 +176,7 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
   }
 
   Future<void> _fetch({int page = 1, String? searchQuery}) async {
-    if (_isLoading || _userId == null) return;
+    if (_isLoading) return;
 
     setState(() {
       _isLoading = true;
@@ -294,15 +184,12 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
     });
 
     try {
-      final roleId = await _getRoleId();
+      // final roleId = await _getRoleId();
 
-      final pageList = await _service.getStrategicPositions(
+      final pageList = await _service.getStrategyChangeAgenda(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        roleId: roleId,
-        officeId: _selectedOfficeId,
-        userId: _userId!,
       );
 
       if (!mounted) return;
@@ -321,32 +208,25 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
     }
   }
 
-  bool get _hasActiveFilters => _selectedOfficeId != null;
-
-  void _resetFilters() {
-    setState(() => _selectedOfficeId = null);
-    _fetch(page: 1);
-  }
-
-  void _openDialog({StrategicPosition? existing}) {
+  void _openDialog({StrategicChangeAgenda? existing}) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder:
-          (_) => StrategicPositionDialog(
+          (_) => StrategicChangeAgendaDialog(
             existing: existing,
             onSave: (_) => _fetch(page: _currentPage),
           ),
     );
   }
 
-  Future<void> _onEditTap(StrategicPosition sp) async {
+  Future<void> _onEditTap(StrategicChangeAgenda item) async {
     try {
-      final full = await _service.getStrategicPositionById(sp.id.toString());
+      final full = await _service.getStrategicChangebyId(item.id);
       if (!mounted) return;
       _openDialog(existing: full);
     } catch (e) {
-      debugPrint('Failed to fetch Strategic Position by ID: $e');
+      debugPrint('Failed to fetch Strategic Change Agenda by ID: $e');
       if (!mounted) return;
       MotionToast.error(
         title: const Text('Load Failed'),
@@ -363,18 +243,18 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
       context: context,
       builder:
           (ctx) => DeleteDialog(
-            title: 'Strategic Position',
-            itemName: 'Strategic Position',
+            title: 'Strategic Change Agenda',
+            itemName: 'Strategic Change Agenda',
             onDelete: () async {
               Navigator.pop(ctx);
               try {
-                await _service.deleteStrategicPosition(id);
+                await _service.deleteStrategicChangeAgenda(id);
                 await _fetch(page: 1);
                 if (mounted) {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
                     description: Text(
-                      'Strategic Position deleted successfully',
+                      'Strategic Change Agenda deleted successfully',
                       style: GoogleFonts.plusJakartaSans(),
                     ),
                   ).show(context);
@@ -384,7 +264,7 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
                 MotionToast.error(
                   toastAlignment: Alignment.topCenter,
                   description: Text(
-                    'Failed to delete Strategic Position',
+                    'Failed to delete Strategic Change Agenda',
                     style: GoogleFonts.plusJakartaSans(),
                   ),
                 ).show(context);
@@ -405,7 +285,6 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(isMobile),
-          _buildFilterBar(isMobile),
           gap4px,
           Expanded(
             child: Padding(
@@ -449,9 +328,9 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
                               ),
                             ),
                             Expanded(
-                              flex: 3,
+                              flex: 4,
                               child: Text(
-                                "Department",
+                                "From",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
@@ -461,7 +340,7 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
                             Expanded(
                               flex: 4,
                               child: Text(
-                                "From",
+                                "To",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
@@ -519,7 +398,7 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'No Strategic Position available',
+              'No Strategic Change Agenda available',
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
@@ -533,16 +412,16 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
           (_, __) =>
               Divider(height: 1, color: Colors.grey.withValues(alpha: .2)),
       itemBuilder: (context, index) {
-        final sp = _list[index];
+        final item = _list[index];
         final itemNumber = ((_currentPage - 1) * _pageSize) + index + 1;
         return isMobile
-            ? _buildMobileRow(sp, itemNumber)
-            : _buildDesktopRow(sp, itemNumber);
+            ? _buildMobileRow(item, itemNumber)
+            : _buildDesktopRow(item, itemNumber);
       },
     );
   }
 
-  Widget _buildDesktopRow(StrategicPosition sp, int itemNumber) {
+  Widget _buildDesktopRow(StrategicChangeAgenda item, int itemNumber) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -552,16 +431,18 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
             child: Text("$itemNumber", style: const TextStyle(fontSize: 12)),
           ),
           Expanded(
-            flex: 3,
+            flex: 4,
             child: Text(
-              sp.departmentName ?? '',
+              item.from ?? '',
               style: const TextStyle(fontSize: 12),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           Expanded(
             flex: 4,
             child: Text(
-              sp.fromStatement,
+              item.to ?? '',
               style: const TextStyle(fontSize: 12),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -575,7 +456,7 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
                   message: 'Edit',
                   child: IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 16),
-                    onPressed: () => _onEditTap(sp),
+                    onPressed: () => _onEditTap(item),
                   ),
                 ),
                 IconButton(
@@ -584,7 +465,7 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
                     size: 16,
                     color: Colors.redAccent,
                   ),
-                  onPressed: () => _showDeleteDialog(sp.id.toString()),
+                  onPressed: () => _showDeleteDialog(item.id.toString()),
                 ),
               ],
             ),
@@ -594,7 +475,7 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
     );
   }
 
-  Widget _buildMobileRow(StrategicPosition sp, int itemNumber) {
+  Widget _buildMobileRow(StrategicChangeAgenda item, int itemNumber) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       margin: const EdgeInsets.only(bottom: 12),
@@ -618,8 +499,10 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
                 color: Theme.of(context).cardColor,
                 icon: const Icon(Icons.more_vert),
                 onSelected: (value) async {
-                  if (value == 'edit') await _onEditTap(sp);
-                  if (value == 'delete') _showDeleteDialog(sp.id.toString());
+                  if (value == 'edit') await _onEditTap(item);
+                  if (value == 'delete') {
+                    _showDeleteDialog(item.id.toString());
+                  }
                 },
                 itemBuilder:
                     (_) => [
@@ -649,12 +532,14 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            sp.departmentName ?? '',
+            'From: ${item.from ?? ''}',
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Text(
-            sp.fromStatement,
+            'To: ${item.to ?? ''}',
             style: const TextStyle(fontSize: 12),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -710,7 +595,7 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Strategic Position',
+                  'Strategic Change Agenda',
                   style: TextStyle(
                     fontSize: isMobile ? 14 : 16,
                     fontWeight: FontWeight.bold,
@@ -750,206 +635,45 @@ class _StrategicPositionPageState extends State<StrategicPositionPage> {
       ),
     );
   }
-
-  Widget _buildFilterBar(bool isMobile) {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-            child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDesktopFilters() {
-    return Row(
-      children: [
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [buildDropdown(child: _officeDropdown())],
-        ),
-        const Spacer(),
-        if (_hasActiveFilters)
-          TextButton.icon(
-            onPressed: _resetFilters,
-            icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
-            label: Text(
-              'Clear filters',
-              style: TextStyle(fontSize: 12, color: Colors.red.shade400),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildMobileFilters() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap:
-                  () => setState(
-                    () => _mobileFiltersExpanded = !_mobileFiltersExpanded,
-                  ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.tune, size: 16, color: primaryColor),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Filters',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: primaryColor,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    AnimatedRotation(
-                      turns: _mobileFiltersExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 16,
-                        color: primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const Spacer(),
-            if (_hasActiveFilters)
-              TextButton.icon(
-                onPressed: _resetFilters,
-                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
-                label: Text(
-                  'Clear filters',
-                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-          ],
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          child:
-              _mobileFiltersExpanded
-                  ? Container(
-                    margin: const EdgeInsets.only(top: 8),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: SizedBox(
-                      height: 38,
-                      child: PermissionWidget(
-                        permission: AppPermissions.viewOffice,
-                        child: _officeDropdown(),
-                      ),
-                    ),
-                  )
-                  : const SizedBox.shrink(),
-        ),
-      ],
-    );
-  }
-
-  Widget _officeDropdown() {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
-      child: SizedBox(
-        height: 38,
-        child: SearchableDropdown(
-          items: ["All Offices", ...officeList.map((o) => o.name)],
-          selectedItem:
-              _selectedOfficeId == null
-                  ? "All Offices"
-                  : (officeList
-                          .where((o) => o.id.toString() == _selectedOfficeId)
-                          .firstOrNull
-                          ?.name ??
-                      "All Offices"),
-          hintText: "Office",
-          searchHint: "Search offices...",
-          prefixIcon: Icons.apartment_outlined,
-          onChanged: (value) {
-            setState(() {
-              _selectedOfficeId =
-                  value == "All Offices"
-                      ? null
-                      : officeList
-                          .firstWhere((o) => o.name == value)
-                          .id
-                          .toString();
-            });
-            _fetch(page: 1);
-          },
-        ),
-      ),
-    );
-  }
 }
 
 /// ---------------------------------------------------------------------
-/// DIALOG (add / edit)
+/// CREATE / EDIT DIALOG
 /// ---------------------------------------------------------------------
 
-class StrategicPositionDialog extends StatefulWidget {
-  final StrategicPosition? existing;
-  final void Function(StrategicPosition sp) onSave;
+class StrategicChangeAgendaDialog extends StatefulWidget {
+  final StrategicChangeAgenda? existing;
+  final void Function(StrategicChangeAgenda item) onSave;
 
-  const StrategicPositionDialog({
+  const StrategicChangeAgendaDialog({
     super.key,
     this.existing,
     required this.onSave,
   });
 
   @override
-  State<StrategicPositionDialog> createState() =>
-      _StrategicPositionDialogState();
+  State<StrategicChangeAgendaDialog> createState() =>
+      _StrategicChangeAgendaDialogState();
 }
 
-class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
+class _StrategicChangeAgendaDialogState
+    extends State<StrategicChangeAgendaDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _service = StrategicPositionService(Dio());
+  final _service = StrategyChangeAgendaService(Dio());
   final _commonService = CommonService(Dio());
 
   late TextEditingController _fromCtrl;
   late TextEditingController _toCtrl;
 
-  List<StrategicAreaEntry> _areas = [];
+  List<StrategicChangeAgendaAreaEntry> _areas = [];
+  bool _areasLoading = true;
+  bool _isSaving = false;
 
-  bool _officeLoading = true;
-  List<String> _headOfficeIds = [];
-  List<String> _headOfficeNames = [];
-  String? _selectedOfficeId;
-
-  bool get _isOfficeLocked => widget.existing != null;
+  List<int> _selectedYears = [];
+  final List<int> _availableYears = List.generate(
+    16,
+    (i) => 2015 + i,
+  ); // 2015-2030
 
   @override
   void initState() {
@@ -957,275 +681,134 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
 
     final existing = widget.existing;
 
-    _fromCtrl = TextEditingController(text: existing?.fromStatement ?? '');
-    _toCtrl = TextEditingController(text: existing?.toStatement ?? '');
+    _fromCtrl = TextEditingController(text: existing?.from ?? '');
+    _toCtrl = TextEditingController(text: existing?.to ?? '');
 
-    _areas =
-        existing != null
-            ? existing.areas
-                .map(
-                  (a) => StrategicAreaEntry(
-                    id: a.id,
-                    area: a.area,
-                    y2020: a.year2020,
-                    y2025: a.year2025,
-                    y2030: a.year2030,
-                  ),
-                )
-                .toList()
-            : [
-              StrategicAreaEntry(area: 'Service'),
-              StrategicAreaEntry(area: 'Training'),
-              StrategicAreaEntry(area: 'Research'),
-            ];
-
-    _loadOffices();
+    _loadDeliverables();
   }
 
-  Future<void> _loadOffices() async {
+  Future<void> _loadDeliverables() async {
+    final existing = widget.existing;
+
+    if (existing != null &&
+        existing.strategicChangeAgendaDeliverable.isNotEmpty) {
+      final years =
+          existing.strategicChangeAgendaDeliverable.first.items
+              .map((i) => i.year)
+              .toList();
+
+      setState(() {
+        _selectedYears = years;
+        _areas =
+            existing.strategicChangeAgendaDeliverable.map((d) {
+              final byYear = {for (final item in d.items) item.year: item};
+              return StrategicChangeAgendaAreaEntry(
+                id: d.id,
+                area: d.area ?? '',
+                valueEntries:
+                    years.map((y) {
+                      final item = byYear[y];
+                      return StrategicChangeAgendaValueEntry(
+                        id: item?.id ?? 0,
+                        rowVersion: item?.rowVersion,
+                        year: y,
+                        description: item?.description ?? '',
+                      );
+                    }).toList(),
+              );
+            }).toList();
+        _areasLoading = false;
+      });
+      return;
+    }
+
     try {
-      final officeIds = await AuthUtil.fetchOfficeIds();
-      final officeNames = await AuthUtil.fetchOfficeNames();
-
-      if (officeIds == null || officeNames == null || officeIds.isEmpty) {
-        if (!mounted) return;
-        setState(() => _officeLoading = false);
-        return;
-      }
-
-      final headIds = <String>[];
-      final headNames = <String>[];
-
-      for (int i = 0; i < officeIds.length; i++) {
-        final isHead = await AuthUtil.getIsOfficeHead(officeIds[i]);
-        if (isHead == true) {
-          headIds.add(officeIds[i]);
-          headNames.add(officeNames[i]);
-        }
-      }
-
-      String? selectedId;
-
-      if (_isOfficeLocked) {
-        final savedOfficeId = widget.existing?.departmentId?.toString();
-        if (savedOfficeId != null && headIds.contains(savedOfficeId)) {
-          selectedId = savedOfficeId;
-        }
-      } else {
-        final prefs = await SharedPreferences.getInstance();
-        final prefOfficeId = prefs.getString('selectedOfficeId');
-        if (prefOfficeId != null && headIds.contains(prefOfficeId)) {
-          selectedId = prefOfficeId;
-        } else if (headIds.length == 1) {
-          selectedId = headIds.first;
-        }
-      }
-
+      final kraList = await _commonService.fetchKra();
       if (!mounted) return;
 
       setState(() {
-        _headOfficeIds = headIds;
-        _headOfficeNames = headNames;
-        _selectedOfficeId = selectedId;
-        _officeLoading = false;
+        _areas =
+            kraList
+                .map((kra) => StrategicChangeAgendaAreaEntry(area: kra.name))
+                .toList();
+        _areasLoading = false;
       });
     } catch (e) {
-      debugPrint('Failed to load office: $e');
+      debugPrint('Failed to load KRA list: $e');
       if (!mounted) return;
-      setState(() => _officeLoading = false);
+      setState(() => _areasLoading = false);
     }
   }
 
-  void _addAreaRow() {
-    setState(() => _areas.add(StrategicAreaEntry()));
-  }
+  void _addYearColumn() {
+    final nextYear = _availableYears.firstWhere(
+      (y) => !_selectedYears.contains(y),
+      orElse: () => _availableYears.last,
+    );
 
-  void _removeAreaRow(StrategicAreaEntry entry) {
     setState(() {
-      _areas.remove(entry);
-      entry.dispose();
+      _selectedYears.add(nextYear);
+      for (final entry in _areas) {
+        entry.addValueColumn(nextYear);
+      }
     });
   }
 
-  Future<void> _saveSp() async {
+  void _removeYearColumn(int colIndex) {
+    setState(() {
+      _selectedYears.removeAt(colIndex);
+      for (final entry in _areas) {
+        entry.removeValueColumn(colIndex);
+      }
+    });
+  }
+
+  Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    if (_selectedOfficeId == null || _selectedOfficeId!.isEmpty) {
-      MotionToast.error(
-        title: const Text('Department Required'),
-        description: const Text('Please select a Department/Section/Unit.'),
-        toastDuration: const Duration(seconds: 4),
-        toastAlignment: Alignment.topCenter,
-      ).show(context);
-      return;
-    }
+    setState(() => _isSaving = true);
 
-    if (_areas.isEmpty) {
-      MotionToast.error(
-        title: const Text('Area Required'),
-        description: const Text('Please add at least one area.'),
-        toastDuration: const Duration(seconds: 4),
-        toastAlignment: Alignment.topCenter,
-      ).show(context);
-      return;
-    }
-
-    final bool? confirm = await showDialog<bool>(
-      context: context,
-      builder:
-          (ctx) => Dialog(
-            backgroundColor: Colors.transparent,
-            child: Container(
-              width: 380,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: mainBgColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 32,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.save_outlined,
-                      color: primaryColor,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Confirm Save',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 17,
-                      color: primaryTextColor,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Are you sure you want to save this Strategic Position?',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: kBorder),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: GoogleFonts.plusJakartaSans(
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          icon: const Icon(
-                            Icons.save_outlined,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                          label: Text(
-                            'Save',
-                            style: GoogleFonts.plusJakartaSans(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+    final agenda = StrategicChangeAgenda(
+      id: widget.existing?.id ?? 0,
+      isDeleted: false,
+      rowVersion: widget.existing?.rowVersion,
+      from: _fromCtrl.text.trim(),
+      to: _toCtrl.text.trim(),
+      strategicChangeAgendaDeliverable:
+          _areas.map((entry) {
+            return StrategicChangeAgendaDeliverable(
+              id: entry.id,
+              area: entry.areaCtrl.text.trim(),
+              items: entry.buildItems(),
+            );
+          }).toList(),
     );
 
-    if (confirm != true) return;
-
     try {
-      final sp = StrategicPosition(
-        id: widget.existing?.id ?? 0,
-        departmentId: int.tryParse(_selectedOfficeId!),
-        isDeleted: false,
-        rowVersion: '',
-        fromStatement: _fromCtrl.text.trim(),
-        toStatement: _toCtrl.text.trim(),
-        postingDate: DateTime.now(),
-        areas:
-            _areas
-                .map(
-                  (e) => StrategicPositionArea(
-                    id: e.id,
-                    area: e.areaCtrl.text.trim(),
-                    year2020: e.y2020Ctrl.text.trim(),
-                    year2025: e.y2025Ctrl.text.trim(),
-                    year2030: e.y2030Ctrl.text.trim(),
-                  ),
-                )
-                .toList(),
-      );
-
-      await _service.createStrategicPosition(sp);
-
+      await _service.createStrategyChange(agenda);
       if (!mounted) return;
 
-      widget.onSave(sp);
+      widget.onSave(agenda);
       Navigator.pop(context);
 
       MotionToast.success(
-        title: const Text('Success'),
-        description: const Text('Strategic Position saved successfully.'),
-        toastDuration: const Duration(seconds: 3),
         toastAlignment: Alignment.topCenter,
+        description: Text(
+          'Strategic Change Agenda saved successfully',
+          style: GoogleFonts.plusJakartaSans(),
+        ),
       ).show(context);
     } catch (e) {
       if (!mounted) return;
       MotionToast.error(
-        title: const Text('Save Failed'),
-        description: Text('Unable to save Strategic Position.\n$e'),
-        toastDuration: const Duration(seconds: 5),
         toastAlignment: Alignment.topCenter,
+        description: Text(
+          'Failed to save Strategic Change Agenda',
+          style: GoogleFonts.plusJakartaSans(),
+        ),
       ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -1244,6 +827,10 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
     final size = MediaQuery.of(context).size;
     final isSmall = size.width < 700;
 
+    // Wider dialog: use up to 95% of the screen width, capped at 1500px on
+    // very large monitors so it doesn't get absurdly wide.
+    final dialogMaxWidth = size.width < 1500 ? size.width * 0.95 : 1500.0;
+
     return Dialog(
       backgroundColor: mainBgColor,
       insetPadding: EdgeInsets.symmetric(
@@ -1253,7 +840,7 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 1100,
+          maxWidth: dialogMaxWidth,
           maxHeight: size.height * 0.92,
         ),
         child: Column(
@@ -1280,7 +867,7 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
         children: [
           const Expanded(
             child: Text(
-              'STRATEGIC POSITION',
+              'STRATEGIC CHANGE AGENDA',
               style: TextStyle(
                 fontSize: 15,
                 color: Colors.white,
@@ -1298,7 +885,7 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
   }
 
   Widget _buildDialogBody(bool isSmall) {
-    if (_officeLoading) {
+    if (_areasLoading) {
       return const Center(
         child: CircularProgressIndicator(color: primaryColor),
       );
@@ -1322,7 +909,7 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
                     ),
                     const SizedBox(height: 12),
                     _labeledField(
-                      'TO (target by 2030)',
+                      'TO (target state)',
                       _toCtrl,
                       maxLines: 3,
                       required: true,
@@ -1343,7 +930,7 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _labeledField(
-                        'TO (target by 2030)',
+                        'TO (target state)',
                         _toCtrl,
                         maxLines: 3,
                         required: true,
@@ -1352,22 +939,21 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
                   ],
                 ),
             const SizedBox(height: 20),
-            _StrategicAreaTable(
+            _StrategicChangeAgendaTable(
               entries: _areas,
               isSmall: isSmall,
-              onRemove: _removeAreaRow,
-            ),
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: _addAreaRow,
-                icon: const Icon(Icons.add, size: 16, color: primaryColor),
-                label: const Text(
-                  'Add Area',
-                  style: TextStyle(color: primaryColor),
-                ),
-              ),
+              selectedYears: _selectedYears,
+              availableYears: _availableYears,
+              onAddColumn: _addYearColumn,
+              onRemoveColumn: _removeYearColumn,
+              onYearChanged: (colIndex, newYear) {
+                setState(() {
+                  _selectedYears[colIndex] = newYear;
+                  for (final entry in _areas) {
+                    entry.updateColumnYear(colIndex, newYear);
+                  }
+                });
+              },
             ),
           ],
         ),
@@ -1384,7 +970,7 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: _isSaving ? null : () => Navigator.pop(context),
             style: TextButton.styleFrom(foregroundColor: primaryColor),
             child: const Text('Cancel'),
           ),
@@ -1398,8 +984,18 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
-            onPressed: _officeLoading ? null : _saveSp,
-            child: Text(isEditing ? 'Update' : 'Save'),
+            onPressed: (_areasLoading || _isSaving) ? null : _save,
+            child:
+                _isSaving
+                    ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                    : Text(isEditing ? 'Update' : 'Save'),
           ),
         ],
       ),
@@ -1449,8 +1045,9 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
           validator:
               required
                   ? (value) {
-                    if (value == null || value.trim().isEmpty)
+                    if (value == null || value.trim().isEmpty) {
                       return 'Required';
+                    }
                     return null;
                   }
                   : null,
@@ -1461,18 +1058,33 @@ class _StrategicPositionDialogState extends State<StrategicPositionDialog> {
 }
 
 /// ---------------------------------------------------------------------
-/// AREA TABLE (Area | 2020 | 2025 | 2030) — dynamic, add/remove rows
+/// AREA / YEAR TABLE
+/// Area column and each year column now use a FIXED width instead of a
+/// flex ratio, so adding more year columns no longer squeezes the Area
+/// column (or the other year columns) smaller — the table just scrolls
+/// horizontally once it no longer fits.
 /// ---------------------------------------------------------------------
 
-class _StrategicAreaTable extends StatelessWidget {
-  final List<StrategicAreaEntry> entries;
+class _StrategicChangeAgendaTable extends StatelessWidget {
+  final List<StrategicChangeAgendaAreaEntry> entries;
   final bool isSmall;
-  final void Function(StrategicAreaEntry entry) onRemove;
+  final List<int> selectedYears;
+  final List<int> availableYears;
+  final VoidCallback onAddColumn;
+  final void Function(int colIndex) onRemoveColumn;
+  final void Function(int colIndex, int newYear) onYearChanged;
 
-  const _StrategicAreaTable({
+  static const double _areaColumnWidth = 240;
+  static const double _yearColumnWidth = 190;
+
+  const _StrategicChangeAgendaTable({
     required this.entries,
     required this.isSmall,
-    required this.onRemove,
+    required this.selectedYears,
+    required this.availableYears,
+    required this.onAddColumn,
+    required this.onRemoveColumn,
+    required this.onYearChanged,
   });
 
   @override
@@ -1488,169 +1100,221 @@ class _StrategicAreaTable extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: const BoxDecoration(
               color: primaryColor,
               borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
             ),
-            child: const Text(
-              'Area Milestones',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Area Milestones',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: onAddColumn,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                  label: const Text(
+                    'Add Column',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+              ],
             ),
           ),
           if (entries.isEmpty)
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                'No areas added yet.',
+                'No areas found. Make sure Key Result Areas are set up.',
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
             )
-          else if (!isSmall) ...[
-            Container(
-              color: Colors.grey.shade100,
-              child: Row(
-                children: [
-                  Expanded(flex: 2, child: _headerCell('Area')),
-                  Expanded(flex: 3, child: _headerCell('2020')),
-                  Expanded(flex: 3, child: _headerCell('2025')),
-                  Expanded(flex: 3, child: _headerCell('2030')),
-                  const SizedBox(width: 40),
-                ],
-              ),
-            ),
-            Divider(height: 1, color: Colors.grey.shade300),
-            ...entries.asMap().entries.map((entryData) {
-              final index = entryData.key;
-              final entry = entryData.value;
-              final isEven = index % 2 == 0;
+          else if (!isSmall)
+            _buildDesktopTable()
+          else
+            _buildMobileCards(),
+        ],
+      ),
+    );
+  }
 
-              return Container(
-                decoration: BoxDecoration(
-                  color:
-                      isEven
-                          ? Colors.white
-                          : primaryColor.withValues(alpha: 0.05),
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade200),
-                  ),
-                ),
-                child: IntrinsicHeight(
+  Widget _buildDesktopTable() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final naturalWidth =
+            _areaColumnWidth + (selectedYears.length * _yearColumnWidth);
+        final tableWidth =
+            naturalWidth > constraints.maxWidth
+                ? naturalWidth
+                : constraints.maxWidth;
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: tableWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  color: Colors.grey.shade100,
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        flex: 2,
-                        child: _cell(entry.areaCtrl, showBorder: true),
-                      ),
-                      Expanded(
-                        flex: 3,
-                        child: _cell(entry.y2020Ctrl, showBorder: true),
-                      ),
-                      Expanded(
-                        flex: 3,
-                        child: _cell(entry.y2025Ctrl, showBorder: true),
-                      ),
-                      Expanded(
-                        flex: 3,
-                        child: _cell(entry.y2030Ctrl, showBorder: true),
-                      ),
                       SizedBox(
-                        width: 40,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            size: 16,
-                            color: Colors.redAccent,
+                        width: _areaColumnWidth,
+                        child: _headerCell('Area'),
+                      ),
+                      ...selectedYears.asMap().entries.map(
+                        (yearEntry) => SizedBox(
+                          width: _yearColumnWidth,
+                          child: _yearHeaderCell(
+                            yearEntry.key,
+                            yearEntry.value,
                           ),
-                          onPressed: () => onRemove(entry),
                         ),
                       ),
                     ],
                   ),
                 ),
-              );
-            }),
-          ] else
-            ...entries.map(
-              (entry) => Container(
-                margin: const EdgeInsets.all(8),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Area',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w500,
+                if (selectedYears.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      'No year columns yet — tap "Add Column" above to add one.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                Divider(height: 1, color: Colors.grey.shade300),
+                ...entries.asMap().entries.map((entryData) {
+                  final index = entryData.key;
+                  final entry = entryData.value;
+                  final isEven = index % 2 == 0;
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      color:
+                          isEven
+                              ? Colors.white
+                              : primaryColor.withValues(alpha: 0.05),
+                      border: Border(
+                        bottom: BorderSide(color: Colors.grey.shade200),
+                      ),
+                    ),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(
+                            width: _areaColumnWidth,
+                            child: _areaCell(entry.areaCtrl.text),
+                          ),
+                          ...List.generate(
+                            selectedYears.length,
+                            (colIndex) => SizedBox(
+                              width: _yearColumnWidth,
+                              child: _cell(
+                                entry.valueEntries[colIndex].controller,
+                                showBorder: true,
+                              ),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMobileCards() {
+    return Column(
+      children: [
+        if (selectedYears.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Text(
+              'No year columns yet — tap "Add Column" above to add one.',
+              style: TextStyle(
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+        ...entries.map((entry) {
+          return Container(
+            margin: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Area',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                _areaCell(entry.areaCtrl.text, bordered: true),
+                const SizedBox(height: 8),
+                ...List.generate(selectedYears.length, (colIndex) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _yearHeaderCell(
+                          colIndex,
+                          selectedYears[colIndex],
+                          compact: true,
                         ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            size: 16,
-                            color: Colors.redAccent,
-                          ),
-                          onPressed: () => onRemove(entry),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                        const SizedBox(height: 3),
+                        _cell(
+                          entry.valueEntries[colIndex].controller,
+                          bordered: true,
                         ),
                       ],
                     ),
-                    _cell(entry.areaCtrl, bordered: true),
-                    const SizedBox(height: 8),
-                    Text(
-                      '2020',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    _cell(entry.y2020Ctrl, bordered: true),
-                    const SizedBox(height: 8),
-                    Text(
-                      '2025',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    _cell(entry.y2025Ctrl, bordered: true),
-                    const SizedBox(height: 8),
-                    Text(
-                      '2030',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    _cell(entry.y2030Ctrl, bordered: true),
-                  ],
-                ),
-              ),
+                  );
+                }),
+              ],
             ),
-        ],
-      ),
+          );
+        }),
+      ],
     );
   }
 
@@ -1666,6 +1330,71 @@ class _StrategicAreaTable extends StatelessWidget {
           fontWeight: FontWeight.w700,
           fontSize: 11,
           color: Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  Widget _yearHeaderCell(int colIndex, int year, {bool compact = false}) {
+    final content = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DropdownButton<int>(
+          value: year,
+          isDense: true,
+          underline: const SizedBox(),
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+            color: Colors.black87,
+          ),
+          items:
+              availableYears
+                  .map((y) => DropdownMenuItem(value: y, child: Text('$y')))
+                  .toList(),
+          onChanged: (newYear) {
+            if (newYear == null) return;
+            onYearChanged(colIndex, newYear);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.close, size: 14, color: Colors.redAccent),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          tooltip: 'Remove column',
+          onPressed: () => onRemoveColumn(colIndex),
+        ),
+      ],
+    );
+
+    if (compact) return content;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+      decoration: BoxDecoration(
+        border: Border(right: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: content,
+    );
+  }
+
+  Widget _areaCell(String text, {bool bordered = false}) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 46),
+      alignment: Alignment.centerLeft,
+      decoration: BoxDecoration(
+        border:
+            bordered
+                ? Border.all(color: Colors.grey.shade300)
+                : Border(right: BorderSide(color: Colors.grey.shade300)),
+        borderRadius: bordered ? BorderRadius.circular(4) : null,
+      ),
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 10),
+      child: Text(
+        text,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

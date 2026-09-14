@@ -98,6 +98,7 @@ class ApiEndpoint {
   late String serviceHeadOffices;
   late String auditProgramme;
   late String isoStandard;
+  late String strategicChangeAgenda;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -199,6 +200,7 @@ class ApiEndpoint {
     serviceHeadOffices = '$baseUrl/serviceHeadOffices';
     auditProgramme = '$baseUrl/auditProgramme';
     isoStandard = '$baseUrl/isoStandard';
+    strategicChangeAgenda = '$baseUrl/strategicChangeAgenda';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {

@@ -18,7 +18,7 @@ import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
 import 'package:imis/dashboard/summary_offices_deliverables.dart';
 import 'package:imis/dashboard/monthly_opr_report_page.dart';
-import 'package:imis/dashboard/strategic_change_agenda.dart';
+import 'package:imis/dashboard/strategic_change_template_agenda.dart';
 import 'package:imis/dashboard/strategy_roadmap_page.dart';
 import 'package:imis/dashboard/summary_validated_deliverables_page.dart';
 import 'package:imis/performance_governance_system/pgs_evaluator_offices/pages/evaluator_offices_page.dart';
@@ -1297,7 +1297,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 0) return HomePage();
       if (selectedSubPage == 1) return OsmCalendarActvityPage();
       if (selectedSubPage == 2) return StrategyRoadmapPage();
-      if (selectedSubPage == 3) return const StrategicChangeAgenda();
+      if (selectedSubPage == 3) return const StrategicChangeTemplateAgenda();
     }
     if (selectedPage == 1) {
       if (selectedSubPage == 0) return const RoadmapPage();
@@ -1317,7 +1317,7 @@ class SidebarState extends State<Sidebar> {
       }
       if (selectedSubPage == 11) return SummaryOfficesDeliverables();
       if (selectedSubPage == 12) return MonthlyOprReportPage();
-      if (selectedSubPage == 13) return StrategicPositionPage();
+      if (selectedSubPage == 13) return StrategicChangeAgendaPage();
     }
 
     if (selectedPage == 2) {
