@@ -1,17 +1,3 @@
-// lib/audit/audit_plan/pages/approvals.dart
-//
-// Add / edit / delete AuditPlanApproval records for a chosen Audit Plan.
-//
-// KNOWN LIMITATION (intentional — see audit_plan_approval.dart header):
-// AproverId is an int on the backend, but every "person" id used elsewhere
-// in this app (User.id, used for auditor rosters) is a String GUID from
-// ASP.NET Identity. Those are two different id spaces, so this page does
-// NOT wire the approver picker to the User/Identity list — that would
-// either crash on int.parse of a GUID or silently save the wrong id.
-// Until the correct int-keyed "Approver" source is confirmed, the approver
-// is entered as a plain numeric ID with a short explanatory hint. Swap
-// _approverIdController for a real dropdown once that entity is known.
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/audit/audit_approvals/models/audit_plan_approval.dart';
@@ -23,24 +9,18 @@ import 'package:imis/audit/audit_plan/models/audit_plan.dart';
 import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/constant/constant.dart';
 
-
-/// Fixed set of workflow actions. Adjust this list if the backend's
-/// `Action` string is meant to carry different values — it's stored as
-/// free text on the DTO, so nothing on the wire enforces this set.
 const List<String> _kApprovalActions = ['Pending', 'Approved', 'Rejected'];
 
-class ApprovalsPage extends StatefulWidget {
-  // Optional — when known (e.g. navigating in from a specific Audit Plan's
-  // detail view), pass it directly and the picker is skipped.
+class AuditPlanApprovalPage extends StatefulWidget {
   final int? auditPlanId;
 
-  const ApprovalsPage({super.key, this.auditPlanId});
+  const AuditPlanApprovalPage({super.key, this.auditPlanId});
 
   @override
-  State<ApprovalsPage> createState() => _ApprovalsPageState();
+  State<AuditPlanApprovalPage> createState() => _ApprovalsPageState();
 }
 
-class _ApprovalsPageState extends State<ApprovalsPage> {
+class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
   static const Color primaryThemeColor = Color(0xFF883942);
 
   final AuditPlanService _auditPlanService = AuditPlanService(Dio());
@@ -51,7 +31,6 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  // Picker state — used only when widget.auditPlanId is null.
   int? _resolvedAuditPlanId;
   List<AuditPlan> _allAuditPlans = [];
 
@@ -131,22 +110,29 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   Future<void> _confirmDelete(AuditPlanApproval approval) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Approval'),
-        content: Text(
-          'Remove the approval record from Approver #${approval.approverId}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: primaryThemeColor)),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Approval'),
+            content: Text(
+              'Remove the approval record from Approver #${approval.approverId}?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: primaryThemeColor),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
     if (confirm != true) return;
     if (approval.id == null) return;
@@ -182,43 +168,47 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
       appBar: AppBar(
         title: const Text('Audit Plan Approvals'),
         backgroundColor: mainBgColor,
-        leading: (_resolvedAuditPlanId != null && widget.auditPlanId == null)
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                tooltip: 'Back to Audit Plans',
-                onPressed: () => setState(() {
-                  _resolvedAuditPlanId = null;
-                  _approvals = [];
-                  _errorMessage = null;
-                }),
-              )
-            : null,
+        leading:
+            (_resolvedAuditPlanId != null && widget.auditPlanId == null)
+                ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: 'Back to Audit Plans',
+                  onPressed:
+                      () => setState(() {
+                        _resolvedAuditPlanId = null;
+                        _approvals = [];
+                        _errorMessage = null;
+                      }),
+                )
+                : null,
       ),
-      floatingActionButton: _resolvedAuditPlanId == null
-          ? null
-          : FloatingActionButton.extended(
-              backgroundColor: primaryThemeColor,
-              onPressed: () => _openEditor(),
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'Add Approver',
-                style: TextStyle(color: Colors.white),
+      floatingActionButton:
+          _resolvedAuditPlanId == null
+              ? null
+              : FloatingActionButton.extended(
+                backgroundColor: primaryThemeColor,
+                onPressed: () => _openEditor(),
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: const Text(
+                  'Add Approver',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
-            ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: primaryThemeColor),
-            )
-          : _errorMessage != null
-          ? Center(
-              child: Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
-              ),
-            )
-          : _resolvedAuditPlanId == null
-          ? _buildAuditPlanPicker()
-          : _buildApprovalsList(),
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: primaryThemeColor),
+              )
+              : _errorMessage != null
+              ? Center(
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              )
+              : _resolvedAuditPlanId == null
+              ? _buildAuditPlanPicker()
+              : _buildApprovalsList(),
     );
   }
 
@@ -258,10 +248,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
               '${p.planStatus} • $dateRange',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
-            trailing: const Icon(
-              Icons.chevron_right,
-              color: primaryThemeColor,
-            ),
+            trailing: const Icon(Icons.chevron_right, color: primaryThemeColor),
             onTap: () {
               setState(() => _resolvedAuditPlanId = p.id);
               _loadApprovals();
@@ -417,9 +404,10 @@ class _ApprovalEditorDialogState extends State<_ApprovalEditorDialog> {
       text: e != null ? e.approverId.toString() : '',
     );
     _commentsController = TextEditingController(text: e?.comments ?? '');
-    _selectedAction = e?.action != null && _kApprovalActions.contains(e!.action)
-        ? e.action!
-        : _kApprovalActions.first;
+    _selectedAction =
+        e?.action != null && _kApprovalActions.contains(e!.action)
+            ? e.action!
+            : _kApprovalActions.first;
     _timestamp = e?.timestamp ?? DateTime.now();
   }
 
@@ -479,9 +467,10 @@ class _ApprovalEditorDialogState extends State<_ApprovalEditorDialog> {
       approverId: approverId,
       action: _selectedAction,
       timestamp: _timestamp,
-      comments: _commentsController.text.trim().isEmpty
-          ? null
-          : _commentsController.text.trim(),
+      comments:
+          _commentsController.text.trim().isEmpty
+              ? null
+              : _commentsController.text.trim(),
       isDeleted: widget.existing?.isDeleted ?? false,
       rowVersion: widget.existing?.rowVersion,
     );
@@ -532,11 +521,15 @@ class _ApprovalEditorDialogState extends State<_ApprovalEditorDialog> {
                   isDense: true,
                   border: OutlineInputBorder(),
                 ),
-                items: _kApprovalActions
-                    .map(
-                      (a) => DropdownMenuItem<String>(value: a, child: Text(a)),
-                    )
-                    .toList(),
+                items:
+                    _kApprovalActions
+                        .map(
+                          (a) => DropdownMenuItem<String>(
+                            value: a,
+                            child: Text(a),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedAction = val);
                 },
@@ -586,9 +579,7 @@ class _ApprovalEditorDialogState extends State<_ApprovalEditorDialog> {
         ),
         ElevatedButton(
           onPressed: _save,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryThemeColor,
-          ),
+          style: ElevatedButton.styleFrom(backgroundColor: primaryThemeColor),
           child: Text(
             isEdit ? 'Save' : 'Add',
             style: const TextStyle(color: Colors.white),

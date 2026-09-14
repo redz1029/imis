@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
+import 'package:imis/audit/audit_approvals/pages/audit_plan_approval_page.dart';
 import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart';
 import 'package:imis/audit/audit_programme/pages/audit_programme_page.dart';
 import 'package:imis/audit/audit_schedules/pages/audit_schedules_page.dart';
@@ -1362,6 +1363,9 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 22) {
         return const ServiceHeadOfficePage();
       }
+      if (selectedSubPage == 23) {
+        return const AuditPlanApprovalPage();
+      }
     }
     return HomePage();
   }
@@ -1613,6 +1617,7 @@ class SidebarState extends State<Sidebar> {
           _NavChild('SWOT — Opportunities & Threats', 20),
           _NavChild('Evaluator Offices', 21),
           _NavChild('Service Head Office', 22),
+          _NavChild('Audit Plan Approval;', 23),
         ],
       ),
     ];
