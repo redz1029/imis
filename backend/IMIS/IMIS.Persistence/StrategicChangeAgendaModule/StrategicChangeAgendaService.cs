@@ -41,6 +41,11 @@ namespace IMIS.Persistence.StrategicChangeAgendaModule
             var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
             return entity != null ? new StrategicChangeAgendaDto(entity) : null;
         }
+        public async Task<ReportStrategicChangeAgendaDto?> ReportGetByIdAsync(long id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
+            return entity != null ? new ReportStrategicChangeAgendaDto(entity) : null;
+        }
 
         public async Task<StrategicChangeAgendaDto> SaveOrUpdateAsync(StrategicChangeAgendaDto dto,  CancellationToken cancellationToken)
         {

@@ -1,6 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.StrategicChangeAgendaModule;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -39,6 +40,40 @@ namespace IMIS.Presentation.StrategicChangeAgendaModule
            .WithTags(_strategicChangeAgenda)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategicChangeAgenda), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategicChangeAgendaPermission.View));
+           
+           
+            app.MapGet("report-pdf/{id:long}", async (long id, IStrategicChangeAgendaService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+            var operationReviewProtocolReport = await service.ReportGetByIdAsync(id, cancellationToken);
+
+            if (operationReviewProtocolReport == null)
+                return Results.NotFound();
+
+            var file = await ReportUtil.GeneratePdfReport<ReportStrategicChangeAgendaDto>("StrategicChangeAgenda",
+                new List<ReportStrategicChangeAgendaDto>
+                {
+                    operationReviewProtocolReport
+                },
+                "StrategicChangeAgenda", cancellationToken).ConfigureAwait(false);
+
+                // FORCE INLINE PDF VIEW IN BROWSER
+                var fileName = $"StrategicChangeAgenda_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"StrategicChangeAgenda_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                //var result = await service.ReportGetByIdAsync(id, pgsId, month, year, cancellationToken).ConfigureAwait(false);
+                //return result != null ? Results.Ok(result) : Results.NotFound();
+
+                //var result = await service.ReportGetByIdAsync(id, cancellationToken);
+
+                //if (result == null)
+                //    return Results.NotFound();
+                //return Results.Ok(result);
+            })
+           .WithTags(_strategicChangeAgenda)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategicChangeAgenda), true);
 
             app.MapPut("/update", async ([FromBody] StrategicChangeAgendaDto dto, IStrategicChangeAgendaService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
