@@ -134,8 +134,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       final jsonMap = programme.toJson();
       final plansJson =
           (jsonMap['auditPlan'] as List? ??
-          jsonMap['AuditPlans'] as List? ??
-          []);
+              jsonMap['AuditPlans'] as List? ??
+              []);
       final match = plansJson.cast<Map<String, dynamic>>().where(
         (p) => (p['id'] ?? p['Id']) == planSummary.id,
       );
@@ -145,11 +145,12 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
 
       final entriesJson =
           (match.first['entries'] as List? ??
-          match.first['Entries'] as List? ??
-          []);
-      final entries = entriesJson
-          .map((e) => AuditPlanEntry.fromJson(e as Map<String, dynamic>))
-          .toList();
+              match.first['Entries'] as List? ??
+              []);
+      final entries =
+          entriesJson
+              .map((e) => AuditPlanEntry.fromJson(e as Map<String, dynamic>))
+              .toList();
 
       _officeGroups = _buildOfficeGroups(entries);
     } catch (e) {
@@ -169,10 +170,11 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     try {
       final standards = await _programmeService.getIsoStandards();
       final seen = <int>{};
-      _standards = standards
-          .map((s) => IsoStandardDto.fromJson(s.toJson()))
-          .where((s) => seen.add(s.id))
-          .toList();
+      _standards =
+          standards
+              .map((s) => IsoStandardDto.fromJson(s.toJson()))
+              .where((s) => seen.add(s.id))
+              .toList();
     } catch (e) {
       debugPrint('Failed to load ISO standards: $e');
     }
@@ -241,14 +243,14 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       }
     }
 
-    final list = orderedKeys.map((k) => map[k]!).toList()
-      ..sort((a, b) {
-        final af = a.entries.first;
-        final bf = b.entries.first;
-        final dayCompare = af.dayNumber.compareTo(bf.dayNumber);
-        if (dayCompare != 0) return dayCompare;
-        return af.time.compareTo(bf.time);
-      });
+    final list =
+        orderedKeys.map((k) => map[k]!).toList()..sort((a, b) {
+          final af = a.entries.first;
+          final bf = b.entries.first;
+          final dayCompare = af.dayNumber.compareTo(bf.dayNumber);
+          if (dayCompare != 0) return dayCompare;
+          return af.time.compareTo(bf.time);
+        });
     return list;
   }
 
@@ -256,10 +258,11 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   /// against the master ISO Standard list's clauseRef, joined and sorted —
   /// exactly mirroring the backend's own ReportGetByIdAsync logic.
   String _clauseRefsForEntry(AuditPlanEntry entry) {
-    final ids = (entry.isoStandardAuditPlans ?? const [])
-        .map((s) => s.isoStandardId)
-        .whereType<int>()
-        .toSet();
+    final ids =
+        (entry.isoStandardAuditPlans ?? const [])
+            .map((s) => s.isoStandardId)
+            .whereType<int>()
+            .toSet();
     if (ids.isEmpty) return '—';
 
     final clauseById = {for (final s in _standards) s.id: s.clause};
@@ -297,9 +300,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   /// office's entries, grouped and NUMBERED by teamId (e.g. "1", "2") —
   /// matching the printed form's layout, instead of one flat deduplicated
   /// name list with no team indicator.
-  List<MapEntry<int, List<String>>> _teamBreakdownForGroup(
-    _OfficeGroup group,
-  ) {
+  List<MapEntry<int, List<String>>> _teamBreakdownForGroup(_OfficeGroup group) {
     final Map<int, Set<String>> byTeam = {};
 
     for (final e in group.entries) {
@@ -317,8 +318,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       }
     }
 
-    final result = byTeam.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final result =
+        byTeam.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
     return result
         .map((e) => MapEntry(e.key, e.value.toList()..sort()))
         .toList();
@@ -345,22 +346,23 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         backgroundColor: mainBgColor,
         leading: _buildBackButton(),
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: primaryThemeColor),
-            )
-          : _errorMessage != null
-          ? Center(
-              child: Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
-              ),
-            )
-          : _resolvedAuditPlanId == null
-          ? _buildAuditPlanPicker()
-          : _selectedOffice == null
-          ? _buildOfficeList()
-          : _buildOfficeDetail(_selectedOffice!),
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: primaryThemeColor),
+              )
+              : _errorMessage != null
+              ? Center(
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              )
+              : _resolvedAuditPlanId == null
+              ? _buildAuditPlanPicker()
+              : _selectedOffice == null
+              ? _buildOfficeList()
+              : _buildOfficeDetail(_selectedOffice!),
     );
   }
 
@@ -376,12 +378,13 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       return IconButton(
         icon: const Icon(Icons.arrow_back),
         tooltip: 'Back to Audit Plans',
-        onPressed: () => setState(() {
-          _resolvedAuditPlanId = null;
-          _plan = null;
-          _officeGroups = [];
-          _errorMessage = null;
-        }),
+        onPressed:
+            () => setState(() {
+              _resolvedAuditPlanId = null;
+              _plan = null;
+              _officeGroups = [];
+              _errorMessage = null;
+            }),
       );
     }
     return null;
@@ -423,10 +426,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               '${p.planStatus} • $dateRange',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
-            trailing: const Icon(
-              Icons.chevron_right,
-              color: primaryThemeColor,
-            ),
+            trailing: const Icon(Icons.chevron_right, color: primaryThemeColor),
             onTap: () => _loadPlanDetail(p),
           ),
         );
@@ -593,7 +593,9 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   /// "Audit Team:" row — one numbered block per distinct team (e.g. "1",
   /// "2"), each followed by that team's member names, matching the printed
   /// form's numbered-team layout instead of one flat name list.
-  TableRow _auditTeamHeaderRow(List<MapEntry<int, List<String>>> teamBreakdown) {
+  TableRow _auditTeamHeaderRow(
+    List<MapEntry<int, List<String>>> teamBreakdown,
+  ) {
     return TableRow(
       children: [
         Container(
@@ -610,34 +612,35 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         ),
         Padding(
           padding: const EdgeInsets.all(10),
-          child: teamBreakdown.isEmpty
-              ? const Text('—', style: TextStyle(fontSize: 12))
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final team in teamBreakdown)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${team.key}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            for (final name in team.value)
+          child:
+              teamBreakdown.isEmpty
+                  ? const Text('—', style: TextStyle(fontSize: 12))
+                  : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final team in teamBreakdown)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                name,
-                                style: const TextStyle(fontSize: 12),
+                                '${team.key}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                          ],
+                              for (final name in team.value)
+                                Text(
+                                  name,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
         ),
       ],
     );
