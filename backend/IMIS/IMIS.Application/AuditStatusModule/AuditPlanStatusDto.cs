@@ -4,17 +4,17 @@ using IMIS.Domain;
 
 namespace IMIS.Application.AuditStatusModule
 {
-    public class AuditStatusDto : BaseDto<AuditStatus, int>
+    public class AuditPlanStatusDto : BaseDto<AuditPlanStatus, int>
     {
         public required string Code { get; set; }
         public required string Name { get; set; }
         public int SortOrder { get; set; }
         public required bool IsActive { get; set; }
 
-        public AuditStatusDto() { }
+        public AuditPlanStatusDto() { }
 
         [SetsRequiredMembers]
-        public AuditStatusDto(AuditStatus auditStatus)
+        public AuditPlanStatusDto(AuditPlanStatus auditStatus)
         {
             Id = auditStatus.Id;
             Code = auditStatus.Code;
@@ -26,9 +26,9 @@ namespace IMIS.Application.AuditStatusModule
             RowVersion = auditStatus.RowVersion;
         }
 
-        public override AuditStatus ToEntity()
+        public override AuditPlanStatus ToEntity()
         {
-            return new AuditStatus
+            return new AuditPlanStatus
             {
                 Id = Id,
                 Code = Code,

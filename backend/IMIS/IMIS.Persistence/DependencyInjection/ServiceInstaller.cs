@@ -9,24 +9,27 @@ using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditPlanApprovalModule;
 using IMIS.Application.AuditPlanEntryModule;
 using IMIS.Application.AuditPlanModule;
-using IMIS.Application.AuditReportModule;
 using IMIS.Application.AuditPlanPersonResponsibleModule;
 using IMIS.Application.AuditPlanProcessModule;
-using IMIS.Application.AuditPlanStatusModule;
 using IMIS.Application.AuditProgrammeModule;
+using IMIS.Application.AuditProgrammeStatusHistoryModule;
+using IMIS.Application.AuditReportModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.AuditScopeModule;
+using IMIS.Application.AuditStatusModule;
 using IMIS.Application.AuditSummaryFindingsModule;
 using IMIS.Application.BreakThroughScoringModule;
-using IMIS.Application.ImprovementTypeModule;
-using IMIS.Application.IsoAuditorModule;
-using IMIS.Application.IsoAuditProcessModule;
-using IMIS.Application.IsoStandardAuditPlanModule;
 using IMIS.Application.CalendarActivityModule;
 using IMIS.Application.EvaluatorOfficesModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardPeriodModule;
+using IMIS.Application.ImprovementTypeModule;
+using IMIS.Application.IsoAuditorModule;
+using IMIS.Application.IsoAuditProcessModule;
+using IMIS.Application.IsoStandardAuditPlanModule;
 using IMIS.Application.IsoStandardModule;
+using IMIS.Application.KraRoadmapAccomplishmentModule;
+using IMIS.Application.KraRoadmapCoreSupportProcessModule;
 using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadmapHistoryModule;
 using IMIS.Application.KraRoadmapKpiAccomplishmentModule;
@@ -73,23 +76,24 @@ using IMIS.Persistence.AuditorTeamsModule;
 using IMIS.Persistence.AuditPlanApprovalModule;
 using IMIS.Persistence.AuditPlanEntryModule;
 using IMIS.Persistence.AuditPlanModule;
-using IMIS.Persistence.AuditReportModule;
 using IMIS.Persistence.AuditPlanPersonResponsibleModule;
 using IMIS.Persistence.AuditPlanProcessModule;
-using IMIS.Persistence.AuditPlanStatusModule;
 using IMIS.Persistence.AuditProgrammeModule;
+using IMIS.Persistence.AuditProgrammeStatusHistoryModule;
+using IMIS.Persistence.AuditReportModule;
 using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.AuditScopeModule;
+using IMIS.Persistence.AuditStatusModule;
 using IMIS.Persistence.AuditSummaryFindingsModule;
 using IMIS.Persistence.BreakThroughScoringModule;
-using IMIS.Persistence.ImprovementTypeModule;
-using IMIS.Persistence.IsoAuditorModule;
-using IMIS.Persistence.IsoAuditProcessModule;
-using IMIS.Persistence.IsoStandardAuditPlanModule;
 using IMIS.Persistence.CalendarActivityModule;
 using IMIS.Persistence.EvaluatorOfficesModule;
 using IMIS.Persistence.ImpactStrategicGoalScoreCardModule;
 using IMIS.Persistence.ImpactStrategicGoalScoreCardPeriodModule;
+using IMIS.Persistence.ImprovementTypeModule;
+using IMIS.Persistence.IsoAuditorModule;
+using IMIS.Persistence.IsoAuditProcessModule;
+using IMIS.Persistence.IsoStandardAuditPlanModule;
 using IMIS.Persistence.IsoStandardModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.KraRoadMapAccomplishmentModule;
@@ -131,8 +135,6 @@ using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.Extensions.DependencyInjection;
-using IMIS.Application.KraRoadmapAccomplishmentModule;
-using IMIS.Application.KraRoadmapCoreSupportProcessModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -327,6 +329,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IAuditProgrammeService, AuditProgrammeService>();
             services.AddScoped<IAuditProgrammeRepository, AuditProgrammeRepository>();
+
+            services.AddScoped<IAuditProgrammeStatusHistoryService, AuditProgrammeStatusHistoryService>();
+            services.AddScoped<IAuditProgrammeStatusHistoryRepository, AuditProgrammeStatusHistoryRepository>();
 
             //checklist module registrations
 

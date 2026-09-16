@@ -17,16 +17,18 @@ namespace IMIS.Persistence.AuditPlanModule
         public override async Task<AuditPlan?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             return await GetDbContext().Set<AuditPlan>()
+                .Include(x => x.AuditStatus)
                 .Include(x => x.Preparer)
                 .Include(x => x.Entries)
                 .Include(x => x.Approvals)
-                .Include(x => x.AuditSchedules) // Fix: load schedules so date sync has something to write to
+                .Include(x => x.AuditSchedules)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
         public async Task<AuditPlan?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
             return await GetDbContext().Set<AuditPlan>()
+                .Include(x => x.AuditStatus)
                 .Include(x => x.Preparer)
                 .Include(x => x.Entries)
                     .ThenInclude(e => e.IsoAuditors)
@@ -38,14 +40,19 @@ namespace IMIS.Persistence.AuditPlanModule
                     .ThenInclude(e => e.IsoStandardAuditPlans)
                 .Include(x => x.Entries)
                     .ThenInclude(e => e.AuditPlanProcesses)
+                        .ThenInclude(app => app.Office)
+                            .ThenInclude(o => o!.ParentOffice)
                 .Include(x => x.Approvals)
-                .Include(x => x.AuditSchedules) // Fix: needed for the add/update/remove sync in the service layer
+                    .Include(x => x.Approvals)
+    .ThenInclude(a => a.Approver)
+                .Include(x => x.AuditSchedules)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
         public async Task<AuditPlan?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await GetDbContext().Set<AuditPlan>()
+                .Include(x => x.AuditStatus)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
@@ -53,17 +60,20 @@ namespace IMIS.Persistence.AuditPlanModule
         {
             return await _entities
                 .AsNoTracking()
+                .Include(x => x.AuditStatus)
                 .Include(x => x.Preparer)
                 .Include(x => x.Entries)
                 .Include(x => x.Approvals)
-                .Include(x => x.AuditSchedules) // Fix: list screens can now show schedule counts/dates
+                .Include(x => x.AuditSchedules)
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<EntityPageList<AuditPlan, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             return await EntityPageList<AuditPlan, int>
-                .CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken)
+                .CreateAsync(
+                    _entities.AsNoTracking().Include(x => x.AuditStatus),
+                    page, pageSize, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -100,15 +110,13 @@ namespace IMIS.Persistence.AuditPlanModule
         public void RemoveAuditPlanEntries(List<AuditPlanEntry> entries)
         {
             if (entries == null || !entries.Any()) return;
-            var context = GetDbContext();
-            context.Set<AuditPlanEntry>().RemoveRange(entries);
+            GetDbContext().Set<AuditPlanEntry>().RemoveRange(entries);
         }
 
         public void RemoveAuditPlanApprovals(List<AuditPlanApproval> approvals)
         {
             if (approvals == null || !approvals.Any()) return;
-            var context = GetDbContext();
-            context.Set<AuditPlanApproval>().RemoveRange(approvals);
+            GetDbContext().Set<AuditPlanApproval>().RemoveRange(approvals);
         }
     }
 }

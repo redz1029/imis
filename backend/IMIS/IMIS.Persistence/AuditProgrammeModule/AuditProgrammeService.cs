@@ -42,8 +42,26 @@ namespace IMIS.Application.AuditProgrammeModule
 
             if (entity.Id == 0)
             {
-                // BRAND NEW AUDIT PROGRAMME
+                // BRAND NEW AUDIT PROGRAMME — always starts as Draft, stated
+                // explicitly here regardless of the domain's own default, so
+                // it can't drift silently if that default ever changes.
+                entity.AuditStatusId = AuditStatusSeedIds.Draft;
+                entity.CreatedDate = DateTime.UtcNow;
+
                 dbContext.Add(entity);
+                await dbContext.SaveChangesAsync(cancellationToken);
+
+                // FIX: ToEntity() builds a separate object graph, so the caller's
+                // dto never saw the generated id — the POST endpoint echoes this
+                // same dto back, so without this the client always got id=0.
+                pDto.Id = entity.Id;
+
+                dbContext.Set<AuditProgrammeStatusHistory>().Add(new AuditProgrammeStatusHistory
+                {
+                    Id = 0,
+                    AuditProgrammeId = entity.Id,
+                    AuditStatusId = entity.AuditStatusId
+                });
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
             else
@@ -52,8 +70,16 @@ namespace IMIS.Application.AuditProgrammeModule
                 var existing = await _repository.GetByIdWithDetailsAsync(entity.Id, cancellationToken);
                 if (existing == null) throw new KeyNotFoundException("Audit Programme not found.");
 
+                // FIX: preserve status — SetValues would otherwise overwrite the
+                // real status with the DTO's default (Draft), silently reverting
+                // an Approved/Disapproved programme back to Draft on every edit.
+                // Status only ever changes through SubmitAsync/DecideAsync.
+                var preservedStatusId = existing.AuditStatusId;
+
                 // Update root primitive fields (including Sections IV to IX)
                 dbContext.Entry(existing).CurrentValues.SetValues(entity);
+                existing.AuditStatusId = preservedStatusId;
+                existing.LastModifiedDate = DateTime.UtcNow;
 
                 // --- Sync Objectives Collection ---
                 if (existing.Objectives?.Any() == true)
@@ -63,14 +89,14 @@ namespace IMIS.Application.AuditProgrammeModule
                 existing.Objectives = entity.Objectives;
 
                 // --- Sync Audit Plans & Deep Sub-Collections Safely ---
-                UpdateAuditPlans(dbContext, existing, entity);
+                await UpdateAuditPlansAsync(dbContext, existing, entity, cancellationToken);
 
                 // Save changes via pipeline commit
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
         }
 
-        private void UpdateAuditPlans(DbContext dbContext, AuditProgramme existing, AuditProgramme incoming)
+        private async Task UpdateAuditPlansAsync(DbContext dbContext, AuditProgramme existing, AuditProgramme incoming, CancellationToken cancellationToken)
         {
             existing.AuditPlans ??= new List<AuditPlan>();
             incoming.AuditPlans ??= new List<AuditPlan>();
@@ -81,7 +107,7 @@ namespace IMIS.Application.AuditProgrammeModule
             foreach (var plan in plansToRemove)
             {
                 existing.AuditPlans.Remove(plan);
-                dbContext.Set<AuditPlan>().Remove(plan);
+                await RemovePlanWithChildrenAsync(dbContext, plan, cancellationToken);
             }
 
             foreach (var incomingPlan in incoming.AuditPlans)
@@ -96,12 +122,12 @@ namespace IMIS.Application.AuditProgrammeModule
                 else
                 {
                     dbContext.Entry(existingPlan).CurrentValues.SetValues(incomingPlan);
-                    SyncAuditPlanEntries(dbContext, existingPlan, incomingPlan);
+                    await SyncAuditPlanEntriesAsync(dbContext, existingPlan, incomingPlan, cancellationToken);
                 }
             }
         }
 
-        private void SyncAuditPlanEntries(DbContext dbContext, AuditPlan existingPlan, AuditPlan incomingPlan)
+        private async Task SyncAuditPlanEntriesAsync(DbContext dbContext, AuditPlan existingPlan, AuditPlan incomingPlan, CancellationToken cancellationToken)
         {
             existingPlan.Entries ??= new List<AuditPlanEntry>();
             incomingPlan.Entries ??= new List<AuditPlanEntry>();
@@ -112,7 +138,7 @@ namespace IMIS.Application.AuditProgrammeModule
             foreach (var entry in entriesToRemove)
             {
                 existingPlan.Entries.Remove(entry);
-                dbContext.Set<AuditPlanEntry>().Remove(entry);
+                await RemoveEntryWithChildrenAsync(dbContext, entry, cancellationToken);
             }
 
             foreach (var incomingEntry in incomingPlan.Entries)
@@ -130,6 +156,42 @@ namespace IMIS.Application.AuditProgrammeModule
                     SyncEntryGrandchildCollections(dbContext, existingEntry, incomingEntry);
                 }
             }
+        }
+
+        // The loaded navigation collections can be stale or filtered (e.g.
+        // `!IsDeleted`), so trusting them left orphan rows behind that then
+        // blocked this entry's own delete with an FK violation. Query every
+        // dependent table directly by AuditPlanEntryId so nothing survives.
+        private static async Task RemoveEntryWithChildrenAsync(DbContext dbContext, AuditPlanEntry entry, CancellationToken cancellationToken)
+        {
+            dbContext.Set<IsoStandardAuditPlan>().RemoveRange(
+                await dbContext.Set<IsoStandardAuditPlan>().Where(x => x.AuditPlanEntryId == entry.Id).ToListAsync(cancellationToken));
+            dbContext.Set<AuditPlanProcess>().RemoveRange(
+                await dbContext.Set<AuditPlanProcess>().Where(x => x.AuditPlanEntryId == entry.Id).ToListAsync(cancellationToken));
+            dbContext.Set<AuditPlanPersonResponsible>().RemoveRange(
+                await dbContext.Set<AuditPlanPersonResponsible>().Where(x => x.AuditPlanEntryId == entry.Id).ToListAsync(cancellationToken));
+            dbContext.Set<IsoAuditor>().RemoveRange(
+                await dbContext.Set<IsoAuditor>().Where(x => x.AuditPlanEntryId == entry.Id).ToListAsync(cancellationToken));
+            dbContext.Set<IsoAuditProcess>().RemoveRange(
+                await dbContext.Set<IsoAuditProcess>().Where(x => x.AuditPlanEntryId == entry.Id).ToListAsync(cancellationToken));
+
+            dbContext.Set<AuditPlanEntry>().Remove(entry);
+        }
+
+        // Same reasoning one level up: re-query every entry/approval/schedule
+        // that still points at this plan instead of trusting what was loaded.
+        private static async Task RemovePlanWithChildrenAsync(DbContext dbContext, AuditPlan plan, CancellationToken cancellationToken)
+        {
+            var entries = await dbContext.Set<AuditPlanEntry>().Where(x => x.AuditPlanId == plan.Id).ToListAsync(cancellationToken);
+            foreach (var entry in entries)
+                await RemoveEntryWithChildrenAsync(dbContext, entry, cancellationToken);
+
+            dbContext.Set<AuditPlanApproval>().RemoveRange(
+                await dbContext.Set<AuditPlanApproval>().Where(x => x.AuditPlanId == plan.Id).ToListAsync(cancellationToken));
+            dbContext.Set<AuditSchedule>().RemoveRange(
+                await dbContext.Set<AuditSchedule>().Where(x => x.AuditPlanId == plan.Id).ToListAsync(cancellationToken));
+
+            dbContext.Set<AuditPlan>().Remove(plan);
         }
 
         private void SyncEntryGrandchildCollections(DbContext dbContext, AuditPlanEntry existingEntry, AuditPlanEntry incomingEntry)
@@ -236,11 +298,99 @@ namespace IMIS.Application.AuditProgrammeModule
             return await Task.FromResult(errors);
         }
 
+        public async Task<(bool Success, string? Error)> SubmitAsync(int id, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var entity = await dbContext.Set<AuditProgramme>()
+                .Include(x => x.AuditStatus)
+                .Include(x => x.Objectives)
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
+
+            if (entity?.AuditStatus == null)
+                return (false, "Audit programme not found.");
+
+            var currentCode = entity.AuditStatus.Code;
+            if (currentCode != AuditStatusCodes.Draft && currentCode != AuditStatusCodes.Disapproved)
+                return (false, $"Cannot submit from status '{currentCode}'.");
+
+            var dto = new AuditProgrammeDto(entity);
+            var errors = await GetConflictValidationsAsync(dto, cancellationToken);
+            if (errors.Any())
+                return (false, string.Join(" ", errors));
+
+            var pending = await dbContext.Set<AuditPlanStatus>()
+                .FirstOrDefaultAsync(s => s.Code == AuditStatusCodes.Pending, cancellationToken);
+            if (pending == null)
+                return (false, "Pending status is not configured.");
+
+            entity.AuditStatusId = pending.Id;
+            entity.LastModifiedDate = DateTime.UtcNow;
+
+            dbContext.Set<AuditProgrammeStatusHistory>().Add(new AuditProgrammeStatusHistory
+            {
+                Id = 0,
+                AuditProgrammeId = entity.Id,
+                AuditStatusId = pending.Id
+            });
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return (true, null);
+        }
+
+        public async Task<(bool Success, string? Error)> DecideAsync(int id, string approverId, bool approve, string? comments, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var entity = await dbContext.Set<AuditProgramme>()
+                .Include(x => x.AuditStatus)
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
+
+            if (entity?.AuditStatus == null)
+                return (false, "Audit programme not found.");
+
+            if (entity.AuditStatus.Code != AuditStatusCodes.Pending)
+                return (false, $"Cannot decide on a programme in status '{entity.AuditStatus.Code}'.");
+
+            var targetCode = approve ? AuditStatusCodes.Approved : AuditStatusCodes.Disapproved;
+            var targetStatus = await dbContext.Set<AuditPlanStatus>()
+                .FirstOrDefaultAsync(s => s.Code == targetCode, cancellationToken);
+            if (targetStatus == null)
+                return (false, $"Status '{targetCode}' is not configured.");
+
+            entity.AuditStatusId = targetStatus.Id;
+            entity.LastModifiedDate = DateTime.UtcNow;
+
+            dbContext.Set<AuditProgrammeStatusHistory>().Add(new AuditProgrammeStatusHistory
+            {
+                Id = 0,
+                AuditProgrammeId = entity.Id,
+                AuditStatusId = targetStatus.Id,
+                Remarks = comments
+            });
+
+            // Shared AuditPlanApproval table — AuditProgrammeId set,
+            // AuditPlanId left null since this decision belongs to a
+            // Programme, not a Plan.
+            dbContext.Set<AuditPlanApproval>().Add(new AuditPlanApproval
+            {
+                Id = 0,
+                AuditProgrammeId = entity.Id,
+                ApproverId = approverId,
+                Action = approve ? "Approve" : "Reject",
+                Timestamp = DateTime.UtcNow,
+                Comments = comments
+            });
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return (true, null);
+        }
+
         public async Task<DtoPageList<AuditProgrammeDto, AuditProgramme, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
+            // An empty page is a valid answer, not an error — DtoPageList.Create
+            // already handles an empty Items collection correctly.
             var result = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
-            if (result == null || result.TotalCount == 0) return null!;
-
             return DtoPageList<AuditProgrammeDto, AuditProgramme, int>.Create(result.Items, page, pageSize, result.TotalCount);
         }
 
@@ -259,7 +409,6 @@ namespace IMIS.Application.AuditProgrammeModule
                 return null;
             }
 
-            // Initialize root primitive structures (including Sections IV to IX mapping)
             var dto = new ReportAuditProgrammeDto
             {
                 Id = entity.Id,
@@ -272,7 +421,6 @@ namespace IMIS.Application.AuditProgrammeModule
                 AuditPlanObjective = entity.AuditPlanObjective ?? string.Empty,
                 ScopeOfAudit = entity.ScopeOfAudit ?? string.Empty,
 
-                // Sections IV to IX mapping
                 AuditCriteria = entity.AuditCriteria ?? string.Empty,
                 AuditMethodology = entity.AuditMethodology ?? string.Empty,
                 SelectionAndEvaluationOfAuditors = entity.SelectionAndEvaluationOfAuditors ?? string.Empty,
@@ -284,7 +432,6 @@ namespace IMIS.Application.AuditProgrammeModule
                 RowVersion = entity.RowVersion
             };
 
-            // 1. Objectives Linear Projection Block
             dto.Objectives = entity.Objectives?
                 .OrderBy(o => o.SortOrder)
                 .Select(o => new ReportObjectiveItemDto
@@ -294,7 +441,6 @@ namespace IMIS.Application.AuditProgrammeModule
                 })
                 .ToList() ?? new List<ReportObjectiveItemDto>();
 
-            // 2. Audit Plans Flattened Inner Join Layout Mapping
             if (entity.AuditPlans != null)
             {
                 int batchCounter = 1;
@@ -307,7 +453,7 @@ namespace IMIS.Application.AuditProgrammeModule
                         Id = plan.Id,
                         StartDate = plan.StartDate,
                         EndDate = plan.EndDate,
-                        PlanStatus = plan.PlanStatus ?? "Draft",
+                        PlanStatus = plan.AuditStatus?.Name ?? "Draft",
                         BatchIndexString = batchCounter.ToString(),
                         BatchFormattedDates = FormatBatchDateRange(plan.StartDate, plan.EndDate),
                         Entries = new List<ReportScheduleEntryDto>()
@@ -319,17 +465,6 @@ namespace IMIS.Application.AuditProgrammeModule
 
                         foreach (var entry in plan.Entries.OrderBy(e => e.DayNumber).ThenBy(e => e.Time))
                         {
-                            // A. Auditable Units Configuration Resolution (Office Names & Departments)
-                            //
-                            // FIX: previously this filtered out (`.Where(app => app.Office != null)`)
-                            // any AuditPlanProcess without a matched Office row *before* selecting a
-                            // display name — meaning free-text entries (ProcessName set, OfficeId
-                            // null) were silently dropped from the list entirely. If an entry only
-                            // had free-text processes, the resulting list was empty and the report
-                            // fell back to "N/A" for that row, even though ProcessName had real data.
-                            // Now every process is included: matched offices resolve their
-                            // department/service hierarchy as before, and free-text processes fall
-                            // back to "ProcessName (ID: x)" instead of being dropped.
                             string officeNamesCombined = "N/A";
                             if (entry.AuditPlanProcesses != null && entry.AuditPlanProcesses.Any())
                             {
@@ -400,7 +535,6 @@ namespace IMIS.Application.AuditProgrammeModule
                                 }
                             }
 
-                            // B. Standards Compliance Clause Array Mapping
                             string standardChaptersCombined = "N/A";
                             if (entry.IsoStandardAuditPlans != null && entry.IsoStandardAuditPlans.Any())
                             {
@@ -416,7 +550,6 @@ namespace IMIS.Application.AuditProgrammeModule
                                 }
                             }
 
-                            // C. Team Only Resolution Block (No Individual Auditors)
                             string auditorsLinesCombined = string.Empty;
                             if (entry.IsoAuditors != null && entry.IsoAuditors.Any())
                             {
@@ -485,6 +618,9 @@ namespace IMIS.Application.AuditProgrammeModule
         {
             var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
             if (entity == null) return false;
+
+            if (entity.AuditStatusId != AuditStatusSeedIds.Draft)
+                throw new InvalidOperationException("Only draft audit programmes can be deleted.");
 
             entity.IsDeleted = true;
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken);

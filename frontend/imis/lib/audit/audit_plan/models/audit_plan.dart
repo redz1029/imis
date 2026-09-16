@@ -17,8 +17,15 @@ class AuditPlan {
   @JsonKey(defaultValue: 0)
   final int auditProgrammeId;
 
+  // The backend no longer sends 'planStatus' — real status comes from
+  // auditStatusId/statusCode/statusName, kept in sync via the approval flow.
   @JsonKey(defaultValue: 'Draft')
   final String planStatus;
+
+  @JsonKey(defaultValue: 1)
+  final int auditStatusId;
+  final String? statusCode;
+  final String? statusName;
 
   @DateTimeConverter()
   final DateTime startDate;
@@ -35,6 +42,9 @@ class AuditPlan {
     this.rowVersion,
     this.auditProgrammeId = 0,
     this.planStatus = 'Draft',
+    this.auditStatusId = 1,
+    this.statusCode,
+    this.statusName,
     required this.startDate,
     required this.endDate,
     this.entries = const [],
@@ -46,6 +56,9 @@ class AuditPlan {
   get preparer => null;
 
   Map<String, dynamic> toJson() => _$AuditPlanToJson(this);
+
+  /// Falls back to "Draft" while a record has no resolved status name.
+  String get effectiveStatusName => statusName ?? 'Draft';
 
   static List<AuditPlanEntry> _entriesFromJson(Object? json) {
     if (json is List) {

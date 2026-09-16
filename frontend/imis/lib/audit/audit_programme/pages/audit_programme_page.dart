@@ -273,6 +273,10 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
   final List<AuditPlanEntryRow> _entries = [];
 
+  // The existing AuditPlan's own id when editing — must be preserved on save,
+  // otherwise the backend treats every save as a brand new plan.
+  int? _existingAuditPlanId;
+
   // One date per day number, e.g. {1: May 20 2025, 2: May 21 2025} — this is
   // what renders in each "DAY N — <date>" banner.
   final Map<int, DateTime> _dayDates = {};
@@ -390,6 +394,8 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               [];
 
           for (var plan in auditPlans) {
+            _existingAuditPlanId ??= (plan['id'] ?? plan['Id']) as int?;
+
             final entriesList =
                 plan['entries'] as List? ?? plan['Entries'] as List? ?? [];
             for (var entryJson in entriesList) {
@@ -559,40 +565,267 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
-      body: SafeArea(
-        child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: primaryThemeColor),
-              )
-            : _errorMessage != null
-            ? Center(
-                child: Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.red),
+  bool _isSaving = false;
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: const BoxDecoration(
+        color: primaryThemeColor,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              widget.programmeId == null
+                  ? 'CREATE AUDIT PROGRAMME'
+                  : 'EDIT AUDIT PROGRAMME',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.close, color: Colors.white),
+            splashRadius: 20,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    final isEdit = widget.programmeId != null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: _isSaving ? null : () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: primaryThemeColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // A new programme is always created as Draft; only an existing
+          // (edited) one can be Submitted for approval.
+          if (isEdit)
+            OutlinedButton(
+              onPressed: _isSaving
+                  ? null
+                  : () => _submitProgramme(isDraft: true),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: primaryThemeColor),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: const Text(
+                'SAVE AS DRAFT',
+                style: TextStyle(
+                  color: primaryThemeColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          if (isEdit) const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: _isSaving
+                ? null
+                : () => _submitProgramme(isDraft: !isEdit),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryThemeColor,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            child: Text(
+              isEdit ? 'SUBMIT' : 'SAVE AS DRAFT',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitProgramme({required bool isDraft}) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(isDraft ? 'Confirm Save as Draft' : 'Confirm Submit'),
+          content: Text(
+            isDraft
+                ? 'Are you sure you want to save this as draft?'
+                : 'Are you sure you want to submit this for approval?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('No', style: TextStyle(color: primaryThemeColor)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('Yes', style: TextStyle(color: primaryThemeColor)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    // The plan's StartDate/EndDate span every day that currently has entries.
+    final allDates = _dayDates.values.toList()..sort();
+    final startDate = allDates.isNotEmpty ? allDates.first : DateTime.now();
+    final endDate = allDates.isNotEmpty
+        ? allDates.last
+        : DateTime.now().add(const Duration(days: 30));
+
+    final payload = {
+      'id': widget.programmeId ?? 0,
+      'year': DateTime.now().year,
+      'for': _forController.text,
+      'from': _fromController.text,
+      'purpose': _purposeController.text,
+      'scopeAndFreqAudit': _scopeController.text,
+      'internalAuditSched': _internalAuditSchedController.text,
+      'auditPlanObjective': _auditPlanObjectiveController.text,
+      'scopeOfAudit': _scopeOfAuditController.text,
+      'objectives': _objectivesController.text
+          .split('\n')
+          .map((line) => line.trim())
+          .where((line) => line.isNotEmpty)
+          .toList()
+          .asMap()
+          .entries
+          .map((e) => {'id': 0, 'sortOrder': e.key, 'description': e.value})
+          .toList(),
+      'auditCriteria': _criteriaController.text,
+      'auditMethodology': _methodologyController.text,
+      'selectionAndEvaluationOfAuditors': _auditorSelectionController.text,
+      'reporting': _reportingController.text,
+      'verificationOfPreviousNonconformities': _verificationController.text,
+      'auditLimitations': _limitationsController.text,
+      'auditPlan': [
+        {
+          'id': _existingAuditPlanId ?? 0,
+          // Backend copies this straight onto the FK column via SetValues —
+          // omitting it defaults to 0 and breaks the AuditPlans->AuditProgramme FK.
+          'auditProgrammeId': widget.programmeId ?? 0,
+          'startDate': startDate.toIso8601String(),
+          'endDate': endDate.toIso8601String(),
+          'planStatus': 'Draft',
+          'entries': _entries
+              .map(
+                (e) => e.toBackendDtoJson(
+                  _existingAuditPlanId ?? 0,
+                  dayDate: _dayDates[e.dayNumber] ?? DateTime.now(),
                 ),
               )
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      widget.programmeId == null
-                          ? 'Create Audit Programme'
-                          : 'Edit Audit Programme',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+              .toList(),
+        },
+      ],
+    };
 
-                    _buildCard(
+    setState(() => _isSaving = true);
+    try {
+      final programme = AuditProgramme.fromJson(payload);
+      await _service.addOrUpdateAuditProgramme(programme);
+
+      // Status only ever moves via the dedicated submit endpoint — the
+      // regular save above never carries a status change.
+      if (!isDraft && widget.programmeId != null) {
+        await _service.submitAuditProgramme(widget.programmeId!);
+      }
+
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: Text(
+          isDraft ? 'Saved as draft' : 'Submitted for approval',
+        ),
+      ).show(context);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed to save: $e'),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 960,
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF4F6F8),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: primaryThemeColor,
+                        ),
+                      )
+                    : _errorMessage != null
+                    ? Center(
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildCard(
                       title: 'PROGRAMME HEADER',
                       child: Column(
                         children: [
@@ -717,159 +950,17 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryThemeColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          elevation: 2,
-                        ),
-                        onPressed: () async {
-                          bool? confirmAction = await showDialog<bool>(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Text(
-                                  widget.programmeId == null
-                                      ? "Confirm Save"
-                                      : "Confirm Update",
-                                ),
-                                content: Text(
-                                  widget.programmeId == null
-                                      ? "Are you sure you want to save this record?"
-                                      : "Are you sure you want to update this record?",
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: Text(
-                                      "No",
-                                      style: TextStyle(
-                                        color: primaryThemeColor,
-                                      ),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: Text(
-                                      "Yes",
-                                      style: TextStyle(
-                                        color: primaryThemeColor,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-
-                          if (confirmAction != true) return;
-
-                          // Overall plan StartDate/EndDate span every day
-                          // that currently has entries.
-                          final allDates = _dayDates.values.toList()..sort();
-                          final startDate = allDates.isNotEmpty
-                              ? allDates.first
-                              : DateTime.now();
-                          final endDate = allDates.isNotEmpty
-                              ? allDates.last
-                              : DateTime.now().add(const Duration(days: 30));
-
-                          final payload = {
-                            'id': widget.programmeId ?? 0,
-                            'year': DateTime.now().year,
-                            'for': _forController.text,
-                            'from': _fromController.text,
-                            'purpose': _purposeController.text,
-                            'scopeAndFreqAudit': _scopeController.text,
-                            'internalAuditSched':
-                                _internalAuditSchedController.text,
-                            'auditPlanObjective':
-                                _auditPlanObjectiveController.text,
-                            'scopeOfAudit': _scopeOfAuditController.text,
-                            'objectives': _objectivesController.text
-                                .split('\n')
-                                .map((line) => line.trim())
-                                .where((line) => line.isNotEmpty)
-                                .toList()
-                                .asMap()
-                                .entries
-                                .map(
-                                  (e) => {
-                                    'id': 0,
-                                    'sortOrder': e.key,
-                                    'description': e.value,
-                                  },
-                                )
-                                .toList(),
-                            'auditCriteria': _criteriaController.text,
-                            'auditMethodology': _methodologyController.text,
-                            'selectionAndEvaluationOfAuditors':
-                                _auditorSelectionController.text,
-                            'reporting': _reportingController.text,
-                            'verificationOfPreviousNonconformities':
-                                _verificationController.text,
-                            'auditLimitations': _limitationsController.text,
-                            'auditPlan': [
-                              {
-                                'id': 0,
-                                'startDate': startDate.toIso8601String(),
-                                'endDate': endDate.toIso8601String(),
-                                'planStatus': 'Draft',
-                                'entries': _entries
-                                    .map(
-                                      (e) => e.toBackendDtoJson(
-                                        0,
-                                        dayDate:
-                                            _dayDates[e.dayNumber] ??
-                                            DateTime.now(),
-                                      ),
-                                    )
-                                    .toList(),
-                              },
-                            ],
-                          };
-
-                          try {
-                            final programme = AuditProgramme.fromJson(payload);
-                            await _service.addOrUpdateAuditProgramme(programme);
-
-                            if (!mounted) return;
-                            MotionToast.success(
-                              toastAlignment: Alignment.topCenter,
-                              description: const Text('Saved successfully'),
-                            ).show(context);
-                          } catch (e) {
-                            if (!mounted) return;
-                            MotionToast.error(
-                              toastAlignment: Alignment.topCenter,
-                              description: Text('Failed to save: $e'),
-                            ).show(context);
-                          }
-                        },
-                        child: const Text(
-                          'SAVE AUDIT PROGRAMME',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
                   ],
                 ),
               ),
+            ),
+            _buildFooter(),
+          ],
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildCard({required String title, required Widget child}) {
     return Container(

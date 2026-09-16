@@ -93,7 +93,7 @@ namespace IMIS.Persistence
         public DbSet<AuditPlanApproval> AuditPlanApprovals { get; set; }
         public DbSet<IsoAuditor> IsoAuditors { get; set; }
         public DbSet<IsoStandardAuditPlan> IsoStandardAuditPlans { get; set; }
-        public DbSet<AuditPlanStatus> AuditPlanStatus { get; set; }
+        public DbSet<AuditPlanStatus> AuditStatus { get; set; }
 
         //Audit Report entities
 
@@ -257,6 +257,7 @@ namespace IMIS.Persistence
                 builder.ApplyConfiguration(new KraRoadMapRoleConfiguration());
                 builder.ApplyConfiguration(new KraRoadMapPeriodConfiguration());
             builder.ApplyConfiguration(new AuditChecklistQNAConfiguration());
+            builder.ApplyConfiguration(new AuditPlanStatusConfiguration());
 
             // ISO Standard configurations
             builder.ApplyConfiguration(new StandardVersionConfiguration());

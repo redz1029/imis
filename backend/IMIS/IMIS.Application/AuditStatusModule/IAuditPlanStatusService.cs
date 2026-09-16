@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace IMIS.Application.AuditStatusModule
 {
-    public interface IAuditStatusService : IService
+    public interface IAuditPlanStatusService : IService
     {
-        Task<List<AuditStatusDto>> GetAllAsync(CancellationToken cancellationToken);
+        Task<List<AuditPlanStatusDto>> GetAllAsync(CancellationToken cancellationToken);
 
-        Task<DtoPageList<AuditStatusDto, AuditStatus, int>> GetPaginatedAsync(
+        Task<DtoPageList<AuditPlanStatusDto, AuditPlanStatus, int>> GetPaginatedAsync(
             int page,
             int pageSize,
             CancellationToken cancellationToken);

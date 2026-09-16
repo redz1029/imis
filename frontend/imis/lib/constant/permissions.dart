@@ -158,4 +158,6 @@ class AppPermissions {
   static const String addAnnouncement = 'Add Announcement';
   static const String viewAnnouncement = 'View Announcement';
   static const String editAnnouncement = 'Edit Announcement';
+
+
 }

@@ -9,11 +9,16 @@ namespace IMIS.Application.AuditPlanApprovalModule
     {
 
         [JsonPropertyName("auditPlanId")]
-        public int AuditPlanId { get; set; }
+        public int? AuditPlanId { get; set; }
 
-        // This force maps the backend parameter contract to bind successfully
+        [JsonPropertyName("auditProgrammeId")]
+        public int? AuditProgrammeId { get; set; }
+
         [JsonPropertyName("aproverId")]
-        public required string AproverId { get; set; }
+        public required string ApproverId { get; set; }
+
+        [JsonPropertyName("approverName")]
+        public string? ApproverName { get; set; }
 
         [JsonPropertyName("action")]
         public string? Action { get; set; }
@@ -31,7 +36,9 @@ namespace IMIS.Application.AuditPlanApprovalModule
         {
             Id = approval.Id;
             AuditPlanId = approval.AuditPlanId;
-            AproverId = approval.ApproverId;
+            AuditProgrammeId = approval.AuditProgrammeId;
+            ApproverId = approval.ApproverId;
+            ApproverName = approval.Approver?.UserName;
             Action = approval.Action;
             Timestamp = approval.Timestamp;
             Comments = approval.Comments;
@@ -45,7 +52,8 @@ namespace IMIS.Application.AuditPlanApprovalModule
             {
                 Id = Id,
                 AuditPlanId = AuditPlanId,
-                ApproverId = AproverId,
+                AuditProgrammeId = AuditProgrammeId,
+                ApproverId = ApproverId,
                 Action = Action,
                 Timestamp = Timestamp,
                 Comments = Comments,

@@ -2,6 +2,7 @@ using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditPlanApprovalModule;
 using IMIS.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.AuditPlanApprovalModule
 {
@@ -75,6 +76,39 @@ namespace IMIS.Persistence.AuditPlanApprovalModule
 
             // Persist changes to the database
             await _auditPlanApprovalRepository.SaveOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
+
+            // The approver's decision is authoritative — mirror it onto the plan
+            // and its parent programme so their status reflects the outcome.
+            await SyncStatusFromApprovalAsync(entity, cancellationToken);
+        }
+
+        private async Task SyncStatusFromApprovalAsync(AuditPlanApproval approval, CancellationToken cancellationToken)
+        {
+            int? targetStatusId = approval.Action switch
+            {
+                "Approved" => AuditStatusSeedIds.Approved,
+                "Rejected" => AuditStatusSeedIds.Disapproved,
+                _ => null,
+            };
+            if (targetStatusId == null) return;
+
+            var dbContext = _auditPlanApprovalRepository.GetDbContext();
+
+            var plan = await dbContext.Set<AuditPlan>()
+                .FirstOrDefaultAsync(p => p.Id == approval.AuditPlanId && !p.IsDeleted, cancellationToken);
+            if (plan == null) return;
+
+            plan.AuditStatusId = targetStatusId.Value;
+            plan.LastModifiedDate = DateTime.UtcNow;
+
+            var programme = await dbContext.Set<AuditProgramme>()
+                .FirstOrDefaultAsync(p => p.Id == plan.AuditProgrammeId && !p.IsDeleted, cancellationToken);
+            if (programme != null)
+            {
+                programme.AuditStatusId = targetStatusId.Value;
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

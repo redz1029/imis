@@ -15,6 +15,13 @@ class AuditProgramme {
   @JsonKey(defaultValue: '')
   String rowVersion;
 
+  // Status is server-authoritative — only the approval flow changes it.
+  @JsonKey(defaultValue: 1)
+  int auditStatusId;
+
+  String? statusCode;
+  String? statusName;
+
   @JsonKey(defaultValue: 0)
   int year;
 
@@ -67,6 +74,9 @@ class AuditProgramme {
     this.id = 0,
     this.isDeleted = false,
     this.rowVersion = "",
+    this.auditStatusId = 1,
+    this.statusCode,
+    this.statusName,
     this.year = 0,
     this.forUser = "",
     this.fromUser = "",
@@ -91,4 +101,7 @@ class AuditProgramme {
   get forField => null;
 
   Map<String, dynamic> toJson() => _$AuditProgrammeToJson(this);
+
+  /// Falls back to "Draft" while a record has no resolved status name.
+  String get effectiveStatusName => statusName ?? 'Draft';
 }

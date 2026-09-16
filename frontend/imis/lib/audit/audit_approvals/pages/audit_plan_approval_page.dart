@@ -266,7 +266,7 @@ class _ApprovalsPageState extends State<AuditPlanApprovalPage> {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              '${p.planStatus} • $dateRange',
+              '${p.effectiveStatusName} • $dateRange',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
             trailing: const Icon(

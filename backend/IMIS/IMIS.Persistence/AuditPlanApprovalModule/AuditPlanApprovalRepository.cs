@@ -55,7 +55,7 @@ namespace IMIS.Persistence.AuditPlanApprovalModule
         {
             return await _entities
                 .AsNoTracking()
-                // Matching the DTO property 'AproverId' / Entity 'ApproverId' logic
+                // Matching the DTO property 'ApproverId' / Entity 'ApproverId' logic
                 .Where(x => x.ApproverId == approverId)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);

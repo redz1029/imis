@@ -4,10 +4,13 @@ namespace IMIS.Domain
 {
     public class AuditPlanApproval : Entity<int>
     {
-        public required int AuditPlanId { get; set; }
+        public int? AuditPlanId { get; set; }
         public AuditPlan? AuditPlan { get; set; }
+        public int? AuditProgrammeId { get; set; }
+        public AuditProgramme? AuditProgramme { get; set; }
 
         public required string ApproverId { get; set; }
+
         public User? Approver { get; set; }
 
         public required string Action { get; set; }

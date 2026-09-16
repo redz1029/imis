@@ -78,7 +78,7 @@ namespace IMIS.Application.AuditProgrammeModule
                         Id = plan.Id,
                         StartDate = plan.StartDate,
                         EndDate = plan.EndDate,
-                        PlanStatus = plan.PlanStatus ?? "Draft",
+                        PlanStatus = plan.AuditStatus?.Name ?? "Draft",   // was: plan.PlanStatus ?? "Draft"
                         BatchIndexString = batchCounter.ToString(),
                         BatchFormattedDates = FormatBatchDateRange(plan.StartDate, plan.EndDate),
                         Entries = new List<ReportScheduleEntryDto>()

@@ -1,5 +1,5 @@
-import 'dart:typed_data';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
@@ -102,11 +102,36 @@ class AuditProgrammeService {
       final response = await AuthenticatedRequest.get(dio, url);
       if (response.statusCode == 200 && response.data != null) {
         final List list = response.data;
-        return list
-            .map((e) => AuditProgramme.fromJson(e as Map<String, dynamic>))
-            .toList();
+        final programmes = <AuditProgramme>[];
+        final parseErrors = <String>[];
+
+        for (final item in list) {
+          try {
+            programmes.add(
+              AuditProgramme.fromJson(item as Map<String, dynamic>),
+            );
+          } catch (e) {
+            parseErrors.add(e.toString());
+          }
+        }
+
+        if (parseErrors.isNotEmpty) {
+          debugPrint(
+            'Skipped ${parseErrors.length} audit programme(s) that failed '
+            'to parse: ${parseErrors.join(' | ')}',
+          );
+          // Every item failed — surface the real reason instead of a
+          // silently empty list.
+          if (programmes.isEmpty) {
+            throw Exception(parseErrors.first);
+          }
+        }
+
+        return programmes;
       }
-      return [];
+      throw Exception(
+        'Failed to load audit programmes (status ${response.statusCode}).',
+      );
     } catch (e) {
       rethrow;
     }
@@ -190,6 +215,51 @@ class AuditProgrammeService {
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// Extracts the {error} message a (bool Success, string? Error) tuple
+  /// endpoint returns on failure, matching this codebase's shared convention.
+  String _extractErrorMessage(Response response, String fallback) {
+    final data = response.data;
+    if (data is Map && data['error'] != null) return data['error'].toString();
+    return fallback;
+  }
+
+  /// Moves a Draft/Disapproved programme to Pending via
+  /// `PUT /auditProgramme/{id}/submit`.
+  Future<void> submitAuditProgramme(int id) async {
+    final url = '${ApiEndpoint().auditProgramme}/$id/submit';
+    final response = await AuthenticatedRequest.put(dio, url);
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to submit audit programme.'),
+      );
+    }
+  }
+
+  /// Approves or rejects a Pending programme via
+  /// `PUT /auditProgramme/{id}/decide`.
+  Future<void> decideAuditProgramme(
+    int id, {
+    required String approverId,
+    required bool approve,
+    String? comments,
+  }) async {
+    final url = '${ApiEndpoint().auditProgramme}/$id/decide';
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: {
+        'approverId': approverId,
+        'approve': approve,
+        'comments': comments,
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to decide on audit programme.'),
+      );
     }
   }
 

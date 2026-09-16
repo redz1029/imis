@@ -12,7 +12,16 @@ namespace IMIS.Application.AuditPlanModule
     {
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+
+        // Replaces the old plain-string PlanStatus. AuditPlan now carries
+        // status via AuditStatusId/AuditStatus (FK to the shared AuditStatus
+        // lookup table), same pattern as AuditPlanDto. PlanStatus is kept as
+        // a display-friendly derived string so FastReport templates that
+        // already bind to "PlanStatus" don't need to change.
+        public int AuditStatusId { get; set; }
+        public string? StatusCode { get; set; }
         public string PlanStatus { get; set; } = string.Empty;
+
         public string BatchFormattedDates { get; set; } = string.Empty;
 
         // Pulled from the parent AuditProgramme — AuditPlan itself has no
@@ -45,7 +54,11 @@ namespace IMIS.Application.AuditPlanModule
             Id = entity.Id;
             StartDate = entity.StartDate;
             EndDate = entity.EndDate;
-            PlanStatus = entity.PlanStatus ?? "Draft";
+
+            AuditStatusId = entity.AuditStatusId;
+            StatusCode = entity.AuditStatus?.Code;
+            PlanStatus = entity.AuditStatus?.Name ?? "Draft";
+
             BatchFormattedDates = FormatDateRange(entity.StartDate, entity.EndDate);
 
             IsDeleted = entity.IsDeleted;
@@ -153,7 +166,10 @@ namespace IMIS.Application.AuditPlanModule
                 Id = Id,
                 StartDate = StartDate,
                 EndDate = EndDate,
-                PlanStatus = PlanStatus,
+                // AuditStatusId / AuditStatus intentionally NOT mapped here —
+                // same rule as AuditPlanDto.ToEntity(): status transitions must
+                // go through a dedicated ChangeStatusAsync, never a general save,
+                // so a report DTO round-trip can't silently revert the status.
                 IsDeleted = IsDeleted,
                 RowVersion = RowVersion
             };

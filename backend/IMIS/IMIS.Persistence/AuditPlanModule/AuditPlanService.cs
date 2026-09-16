@@ -21,6 +21,21 @@ namespace IMIS.Application.AuditPlanModule
             _repository = repository;
         }
 
+        // ------------------------------------------------------------------ //
+        //  Transition table — mirrors AuditProgrammeService exactly.          //
+        // ------------------------------------------------------------------ //
+        private static readonly Dictionary<string, string[]> _allowedTransitions = new()
+        {
+            [AuditStatusCodes.Draft] = new[] { AuditStatusCodes.Pending },
+            [AuditStatusCodes.Pending] = new[] { AuditStatusCodes.Approved, AuditStatusCodes.Disapproved },
+            [AuditStatusCodes.Disapproved] = new[] { AuditStatusCodes.Draft },
+            [AuditStatusCodes.Approved] = Array.Empty<string>(),
+        };
+
+        // ------------------------------------------------------------------ //
+        //  Save / Update                                                       //
+        // ------------------------------------------------------------------ //
+
         public async Task<bool> SaveAuditPlanAsync(AuditPlanDto dto, CancellationToken cancellationToken)
         {
             if (dto == null) return false;
@@ -39,9 +54,12 @@ namespace IMIS.Application.AuditPlanModule
 
             if (entity.Id == 0)
             {
-                // 1. BRAND NEW AUDIT PLAN
-                // Fix: push StartDate/EndDate onto any schedules that came in on the same payload
-                // before EF assigns identities, so the insert already carries correct dates.
+                // BRAND NEW — always Draft, stated explicitly so it can't drift.
+                entity.AuditStatusId = AuditStatusSeedIds.Draft;
+                entity.CreatedDate = DateTime.UtcNow;
+
+                // Push StartDate/EndDate onto any schedules in the same payload
+                // before EF assigns identities, so the insert carries correct dates.
                 entity.SyncScheduleDates();
 
                 dbContext.Add(entity);
@@ -49,18 +67,26 @@ namespace IMIS.Application.AuditPlanModule
             }
             else
             {
-                // 2. EXISTING AUDIT PLAN UPDATE
+                // EXISTING UPDATE
                 var existing = await _repository.GetByIdWithDetailsAsync(entity.Id, cancellationToken);
                 if (existing == null) throw new KeyNotFoundException("Audit Plan not found.");
 
-                dbContext.Entry(existing).CurrentValues.SetValues(entity);
+                // FIX: preserve status — SetValues would otherwise overwrite the
+                // real status with the DTO's default, silently reverting a
+                // Pending/Approved plan back to Draft on every ordinary edit.
+                var preservedStatusId = existing.AuditStatusId;
 
-                // --- Sync Approvals Collection ---
+                dbContext.Entry(existing).CurrentValues.SetValues(entity);
+                existing.AuditStatusId = preservedStatusId;
+                existing.LastModifiedDate = DateTime.UtcNow;
+
+                // --- Sync Approvals ---
                 existing.Approvals ??= new List<AuditPlanApproval>();
                 entity.Approvals ??= new List<AuditPlanApproval>();
 
                 var approvalsToRemove = existing.Approvals
-                    .Where(ea => !entity.Approvals.Any(ia => ia.Id == ea.Id && ea.Id != 0)).ToList();
+                    .Where(ea => !entity.Approvals.Any(ia => ia.Id == ea.Id && ea.Id != 0))
+                    .ToList();
                 foreach (var approval in approvalsToRemove)
                 {
                     existing.Approvals.Remove(approval);
@@ -68,21 +94,21 @@ namespace IMIS.Application.AuditPlanModule
                 }
                 foreach (var incomingApproval in entity.Approvals)
                 {
-                    var existingApproval = existing.Approvals.FirstOrDefault(ea => ea.Id == incomingApproval.Id && ea.Id != 0);
+                    var existingApproval = existing.Approvals
+                        .FirstOrDefault(ea => ea.Id == incomingApproval.Id && ea.Id != 0);
                     if (existingApproval == null)
                         existing.Approvals.Add(incomingApproval);
                     else
                         dbContext.Entry(existingApproval).CurrentValues.SetValues(incomingApproval);
                 }
 
-                // --- Sync AuditSchedules Collection ---
-                // Fix: same add/update/remove pattern as Approvals, so schedules linked to this
-                // plan on the incoming payload are kept in sync with the DB.
+                // --- Sync AuditSchedules ---
                 existing.AuditSchedules ??= new List<AuditSchedule>();
                 entity.AuditSchedules ??= new List<AuditSchedule>();
 
                 var schedulesToRemove = existing.AuditSchedules
-                    .Where(es => !entity.AuditSchedules.Any(is_ => is_.Id == es.Id && es.Id != 0)).ToList();
+                    .Where(es => !entity.AuditSchedules.Any(is_ => is_.Id == es.Id && es.Id != 0))
+                    .ToList();
                 foreach (var schedule in schedulesToRemove)
                 {
                     existing.AuditSchedules.Remove(schedule);
@@ -90,7 +116,8 @@ namespace IMIS.Application.AuditPlanModule
                 }
                 foreach (var incomingSchedule in entity.AuditSchedules)
                 {
-                    var existingSchedule = existing.AuditSchedules.FirstOrDefault(es => es.Id == incomingSchedule.Id && es.Id != 0);
+                    var existingSchedule = existing.AuditSchedules
+                        .FirstOrDefault(es => es.Id == incomingSchedule.Id && es.Id != 0);
                     if (existingSchedule == null)
                     {
                         incomingSchedule.AuditPlanId = existing.Id;
@@ -107,17 +134,17 @@ namespace IMIS.Application.AuditPlanModule
                 entity.Entries ??= new List<AuditPlanEntry>();
 
                 var entriesToRemove = existing.Entries
-                    .Where(ee => !entity.Entries.Any(ie => ie.Id == ee.Id && ee.Id != 0)).ToList();
+                    .Where(ee => !entity.Entries.Any(ie => ie.Id == ee.Id && ee.Id != 0))
+                    .ToList();
                 foreach (var entry in entriesToRemove)
                 {
                     existing.Entries.Remove(entry);
                     dbContext.Set<AuditPlanEntry>().Remove(entry);
                 }
-
                 foreach (var incomingEntry in entity.Entries)
                 {
-                    var existingEntry = existing.Entries.FirstOrDefault(ee => ee.Id == incomingEntry.Id && ee.Id != 0);
-
+                    var existingEntry = existing.Entries
+                        .FirstOrDefault(ee => ee.Id == incomingEntry.Id && ee.Id != 0);
                     if (existingEntry == null)
                     {
                         incomingEntry.AuditPlanId = existing.Id;
@@ -130,12 +157,85 @@ namespace IMIS.Application.AuditPlanModule
                     }
                 }
 
-                // Fix: push the (possibly just-updated) StartDate/EndDate onto every linked
-                // schedule right before the terminal save, so plan and schedule dates never drift.
+                // Push updated StartDate/EndDate onto every linked schedule
+                // right before the terminal save so plan and schedule dates never drift.
                 existing.SyncScheduleDates();
 
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
+        }
+
+        // ------------------------------------------------------------------ //
+        //  Status transition                                                   //
+        // ------------------------------------------------------------------ //
+
+        public async Task<(bool Success, string? Error)> ChangeStatusAsync(
+            int id,
+            string newStatusCode,
+            string? remarks,
+            CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var entity = await dbContext.Set<AuditPlan>()
+                .Include(x => x.AuditStatus)
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
+
+            if (entity?.AuditStatus == null)
+                return (false, "Audit plan not found.");
+
+            var currentCode = entity.AuditStatus.Code;
+
+            if (!_allowedTransitions.TryGetValue(currentCode, out var allowed)
+                || !allowed.Contains(newStatusCode))
+                return (false, $"Cannot move from {currentCode} to {newStatusCode}.");
+
+            var newStatus = await dbContext.Set<AuditPlanStatus>()
+                .FirstOrDefaultAsync(s => s.Code == newStatusCode, cancellationToken);
+            if (newStatus == null)
+                return (false, $"Status '{newStatusCode}' does not exist.");
+
+            // FIX: Draft-only delete guard lives in SoftDeleteAsync.
+            // Status guard lives here. The two are separate so neither needs
+            // to know about the other's concerns.
+            entity.AuditStatusId = newStatus.Id;
+            entity.LastModifiedDate = DateTime.UtcNow;
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return (true, null);
+        }
+
+        // ------------------------------------------------------------------ //
+        //  Soft delete — Draft-only guard                                      //
+        // ------------------------------------------------------------------ //
+
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (entity == null) return false;
+
+            if (entity.AuditStatusId != AuditStatusSeedIds.Draft)
+                throw new InvalidOperationException("Only draft audit plans can be deleted.");
+
+            entity.IsDeleted = true;
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
+            return true;
+        }
+
+        // ------------------------------------------------------------------ //
+        //  Retrieval                                                           //
+        // ------------------------------------------------------------------ //
+
+        public async Task<List<AuditPlanDto>?> GetAllAsync(CancellationToken cancellationToken)
+        {
+            var entities = await _repository.GetAllAsync(cancellationToken);
+            return entities?.Select(e => new AuditPlanDto(e)).ToList();
+        }
+
+        public async Task<AuditPlanDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken);
+            return entity != null ? new AuditPlanDto(entity) : null;
         }
 
         public async Task<AuditPlanDto?> GetByProgrammeIdAsync(int programmeId, CancellationToken cancellationToken)
@@ -153,142 +253,66 @@ namespace IMIS.Application.AuditPlanModule
             return entity != null ? new AuditPlanDto(entity) : null;
         }
 
-
-        private void SyncEntryGrandchildCollections(DbContext dbContext, AuditPlanEntry existingEntry, AuditPlanEntry incomingEntry)
+        // FIX: was returning null! on empty page — same anti-pattern as
+        // AuditProgrammeService. Empty page is a valid answer, not null.
+        public async Task<DtoPageList<AuditPlanDto, AuditPlan, int>> GetPaginatedAsync(
+            int page, int pageSize, CancellationToken cancellationToken)
         {
-            existingEntry.IsoAuditProcesses ??= new List<IsoAuditProcess>();
-            incomingEntry.IsoAuditProcesses ??= new List<IsoAuditProcess>();
-
-            existingEntry.ResponsiblePersons ??= new List<AuditPlanPersonResponsible>();
-            incomingEntry.ResponsiblePersons ??= new List<AuditPlanPersonResponsible>();
-
-            existingEntry.IsoAuditors ??= new List<IsoAuditor>();
-            incomingEntry.IsoAuditors ??= new List<IsoAuditor>();
-
-            existingEntry.IsoStandardAuditPlans ??= new List<IsoStandardAuditPlan>();
-            incomingEntry.IsoStandardAuditPlans ??= new List<IsoStandardAuditPlan>();
-
-            existingEntry.AuditPlanProcesses ??= new List<AuditPlanProcess>();
-            incomingEntry.AuditPlanProcesses ??= new List<AuditPlanProcess>();
-
-            var processesToRemove = existingEntry.IsoAuditProcesses.Where(ep => !incomingEntry.IsoAuditProcesses.Any(ip => ip.Id == ep.Id && ep.Id != 0)).ToList();
-            foreach (var p in processesToRemove) { existingEntry.IsoAuditProcesses.Remove(p); dbContext.Set<IsoAuditProcess>().Remove(p); }
-            foreach (var incomingP in incomingEntry.IsoAuditProcesses)
-            {
-                var existingP = existingEntry.IsoAuditProcesses.FirstOrDefault(ep => ep.Id == incomingP.Id && ep.Id != 0);
-                if (existingP == null) { incomingP.AuditPlanEntryId = existingEntry.Id; existingEntry.IsoAuditProcesses.Add(incomingP); }
-                else dbContext.Entry(existingP).CurrentValues.SetValues(incomingP);
-            }
-
-            var personsToRemove = existingEntry.ResponsiblePersons.Where(er => !incomingEntry.ResponsiblePersons.Any(ir => ir.Id == er.Id && er.Id != 0)).ToList();
-            foreach (var p in personsToRemove) { existingEntry.ResponsiblePersons.Remove(p); dbContext.Set<AuditPlanPersonResponsible>().Remove(p); }
-            foreach (var incomingRp in incomingEntry.ResponsiblePersons)
-            {
-                var existingRp = existingEntry.ResponsiblePersons.FirstOrDefault(er => er.Id == incomingRp.Id && er.Id != 0);
-                if (existingRp == null) { incomingRp.AuditPlanEntryId = existingEntry.Id; existingEntry.ResponsiblePersons.Add(incomingRp); }
-                else dbContext.Entry(existingRp).CurrentValues.SetValues(incomingRp);
-            }
-
-            var auditorsToRemove = existingEntry.IsoAuditors.Where(ea => !incomingEntry.IsoAuditors.Any(ia => ia.Id == ea.Id && ea.Id != 0)).ToList();
-            foreach (var a in auditorsToRemove) { existingEntry.IsoAuditors.Remove(a); dbContext.Set<IsoAuditor>().Remove(a); }
-            foreach (var incomingA in incomingEntry.IsoAuditors)
-            {
-                var existingA = existingEntry.IsoAuditors.FirstOrDefault(ea => ea.Id == incomingA.Id && ea.Id != 0);
-                if (existingA == null) { incomingA.AuditPlanEntryId = existingEntry.Id; existingEntry.IsoAuditors.Add(incomingA); }
-                else dbContext.Entry(existingA).CurrentValues.SetValues(incomingA);
-            }
-
-            var standardsToRemove = existingEntry.IsoStandardAuditPlans.Where(es => !incomingEntry.IsoStandardAuditPlans.Any(isPlan => isPlan.Id == es.Id && es.Id != 0)).ToList();
-            foreach (var s in standardsToRemove) { existingEntry.IsoStandardAuditPlans.Remove(s); dbContext.Set<IsoStandardAuditPlan>().Remove(s); }
-            foreach (var incomingS in incomingEntry.IsoStandardAuditPlans)
-            {
-                var existingS = existingEntry.IsoStandardAuditPlans.FirstOrDefault(es => es.Id == incomingS.Id && es.Id != 0);
-                if (existingS == null) { incomingS.AuditPlanEntryId = existingEntry.Id; existingEntry.IsoStandardAuditPlans.Add(incomingS); }
-                else dbContext.Entry(existingS).CurrentValues.SetValues(incomingS);
-            }
-
-            var appToRemove = existingEntry.AuditPlanProcesses.Where(eap => !incomingEntry.AuditPlanProcesses.Any(iap => iap.Id == eap.Id && iap.Id != 0)).ToList();
-            foreach (var ap in appToRemove) { existingEntry.AuditPlanProcesses.Remove(ap); dbContext.Set<AuditPlanProcess>().Remove(ap); }
-            foreach (var incomingAp in incomingEntry.AuditPlanProcesses)
-            {
-                var existingAp = existingEntry.AuditPlanProcesses.FirstOrDefault(eap => eap.Id == incomingAp.Id && eap.Id != 0);
-                if (existingAp == null) { incomingAp.AuditPlanEntryId = existingEntry.Id; existingEntry.AuditPlanProcesses.Add(incomingAp); }
-                else dbContext.Entry(existingAp).CurrentValues.SetValues(incomingAp);
-            }
+            var result = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
+            return DtoPageList<AuditPlanDto, AuditPlan, int>.Create(result.Items, page, pageSize, result.TotalCount);
         }
 
-        public async Task<List<AuditPlanDto>?> GetAllAsync(CancellationToken cancellationToken)
-        {
-            var entities = await _repository.GetAllAsync(cancellationToken);
-            return entities?.Select(e => new AuditPlanDto(e)).ToList();
-        }
-
-        public async Task<AuditPlanDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken);
-            return entity != null ? new AuditPlanDto(entity) : null;
-        }
+        // ------------------------------------------------------------------ //
+        //  Validation                                                          //
+        // ------------------------------------------------------------------ //
 
         public async Task<List<string>> GetConflictValidationsAsync(AuditPlanDto dto, CancellationToken cancellationToken)
         {
             var errors = new List<string>();
+
             if (dto.StartDate > dto.EndDate)
                 errors.Add("Start date cannot be greater than end date.");
-            if (string.IsNullOrWhiteSpace(dto.PlanStatus))
-                errors.Add("PlanStatus is required.");
+
+            // REMOVED: string PlanStatus null-check — field no longer exists.
+            // Status is enforced by the FK default and transition guard instead.
+
             if (dto.Entries == null || !dto.Entries.Any())
                 errors.Add("At least one Audit Plan Entry is required.");
+
             return errors;
         }
 
-        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
-            if (entity == null) return false;
-            entity.IsDeleted = true;
-            await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
-            return true;
-        }
-
-        public async Task<DtoPageList<AuditPlanDto, AuditPlan, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
-        {
-            var result = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
-            if (result.TotalCount == 0) return null;
-            return DtoPageList<AuditPlanDto, AuditPlan, int>.Create(result.Items, page, pageSize, result.TotalCount);
-        }
+        // ------------------------------------------------------------------ //
+        //  Report                                                              //
+        // ------------------------------------------------------------------ //
 
         public async Task<ReportAuditPlanDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
+            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken)
+                                          .ConfigureAwait(false);
+            if (entity == null) return null;
 
-            if (entity == null)
-            {
-                return null;
-            }
-
-            // 1. Initialize root primitive properties & DTO shell
             var dto = new ReportAuditPlanDto
             {
                 Id = entity.Id,
                 StartDate = entity.StartDate,
                 EndDate = entity.EndDate,
-                PlanStatus = entity.PlanStatus ?? "Draft",
+                // FIXED: was entity.PlanStatus ?? "Draft" — field removed.
+                // Use the real status name from the navigation property instead.
+                PlanStatus = entity.AuditStatus?.Name ?? "Draft",
                 BatchFormattedDates = FormatBatchDateRange(entity.StartDate, entity.EndDate),
                 IsDeleted = entity.IsDeleted,
                 RowVersion = entity.RowVersion,
 
-                // Parent AuditProgramme Fallback Mapping
                 AuditPlanObjective = entity.AuditProgramme?.AuditPlanObjective ?? string.Empty,
                 ScopeOfAudit = entity.AuditProgramme?.ScopeOfAudit ?? string.Empty,
 
-                // Signature Block Resolutions
                 PreparedByName = ResolvePreparerName(entity.Preparer),
                 PreparedByDate = entity.CreatedDate.ToString("MMMM dd, yyyy"),
 
                 FlatEntries = new List<ReportScheduleEntryDto>()
             };
 
-            // 2. Signature Block: Approval Resolution
             var latestApproval = entity.Approvals?
                 .Where(a => string.Equals(a.Action, "Approved", StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(a => a.Timestamp)
@@ -300,14 +324,12 @@ namespace IMIS.Application.AuditPlanModule
                 dto.ApprovedByDate = latestApproval.Timestamp.ToString("MMMM dd, yyyy");
             }
 
-            // 3. Entries Flattening & Formatting Block
             if (entity.Entries != null && entity.Entries.Any())
             {
                 int maxDay = entity.Entries.Max(e => e.DayNumber);
 
                 foreach (var entry in entity.Entries.OrderBy(e => e.DayNumber).ThenBy(e => e.Time))
                 {
-                    // A. Auditable Units Configuration Resolution (Office Names & Departments)
                     string officeNamesCombined = "N/A";
                     if (entry.AuditPlanProcesses != null && entry.AuditPlanProcesses.Any())
                     {
@@ -323,37 +345,21 @@ namespace IMIS.Application.AuditPlanModule
 
                                     while (parent != null)
                                     {
-                                        if (parent.OfficeTypeId == 2)
-                                        {
-                                            departmentName = parent.Name;
-                                            break;
-                                        }
-
-                                        if (parent.OfficeTypeId == 1)
-                                        {
-                                            serviceName = parent.Name;
-                                        }
-
+                                        if (parent.OfficeTypeId == 2) { departmentName = parent.Name; break; }
+                                        if (parent.OfficeTypeId == 1) serviceName = parent.Name;
                                         parent = parent.ParentOffice;
                                     }
 
                                     if (!string.IsNullOrEmpty(departmentName))
-                                    {
                                         return $"{departmentName} - {currentOffice.Name}";
-                                    }
-
                                     if (!string.IsNullOrEmpty(serviceName) && currentOffice.Name != serviceName)
-                                    {
                                         return $"{serviceName} - {currentOffice.Name}";
-                                    }
 
                                     return currentOffice.Name;
                                 }
 
                                 if (!string.IsNullOrWhiteSpace(app.ProcessName))
-                                {
                                     return app.ProcessName!.Trim();
-                                }
 
                                 return app.OfficeId != null ? $"Office {app.OfficeId}" : $"Process {app.Id}";
                             })
@@ -361,9 +367,7 @@ namespace IMIS.Application.AuditPlanModule
                             .ToList();
 
                         if (officeNames.Any())
-                        {
                             officeNamesCombined = string.Join(Environment.NewLine, officeNames);
-                        }
                     }
                     else if (entry.IsoAuditProcesses != null && entry.IsoAuditProcesses.Any())
                     {
@@ -373,12 +377,9 @@ namespace IMIS.Application.AuditPlanModule
                             .ToList();
 
                         if (processNames.Any())
-                        {
                             officeNamesCombined = string.Join(Environment.NewLine, processNames);
-                        }
                     }
 
-                    // B. Standards Compliance Clause Array Mapping
                     string standardChaptersCombined = "N/A";
                     if (entry.IsoStandardAuditPlans != null && entry.IsoStandardAuditPlans.Any())
                     {
@@ -389,12 +390,9 @@ namespace IMIS.Application.AuditPlanModule
                             .ToList();
 
                         if (clauses.Any())
-                        {
                             standardChaptersCombined = string.Join(", ", clauses);
-                        }
                     }
 
-                    // C. Responsible Persons & Auditor Team Resolution
                     string auditorsLinesCombined = "Unassigned";
                     if (entry.ResponsiblePersons != null && entry.ResponsiblePersons.Any())
                     {
@@ -404,9 +402,7 @@ namespace IMIS.Application.AuditPlanModule
                             .ToList();
 
                         if (names.Any())
-                        {
                             auditorsLinesCombined = string.Join(Environment.NewLine, names);
-                        }
                     }
                     else if (entry.IsoAuditors != null && entry.IsoAuditors.Any())
                     {
@@ -419,10 +415,9 @@ namespace IMIS.Application.AuditPlanModule
                         }
                     }
 
-                    // D. Calculate Proposed Entry Date based on DayNumber offset from StartDate
                     DateTime calculatedEntryDate = entity.StartDate.AddDays(entry.DayNumber - 1);
 
-                    var scheduleEntry = new ReportScheduleEntryDto
+                    dto.FlatEntries.Add(new ReportScheduleEntryDto
                     {
                         Id = entry.Id,
                         DayNumber = entry.DayNumber,
@@ -432,34 +427,112 @@ namespace IMIS.Application.AuditPlanModule
                         FormattedStandardChapters = standardChaptersCombined.Trim(),
                         FormattedProposedSchedule = calculatedEntryDate.ToString("MMMM dd, yyyy"),
                         FormattedAuditorTeamAndMembers = auditorsLinesCombined
-                    };
-
-                    dto.FlatEntries.Add(scheduleEntry);
+                    });
                 }
             }
 
             return dto;
         }
 
-        #region Mapping Helpers
+        // ------------------------------------------------------------------ //
+        //  Private helpers                                                     //
+        // ------------------------------------------------------------------ //
 
-        private static string ResolvePreparerName(IsoAuditor? preparer)
+        private void SyncEntryGrandchildCollections(DbContext dbContext, AuditPlanEntry existingEntry, AuditPlanEntry incomingEntry)
         {
-            return ResolveAuditorName(preparer?.IsoAuditors);
+            existingEntry.IsoAuditProcesses ??= new List<IsoAuditProcess>();
+            incomingEntry.IsoAuditProcesses ??= new List<IsoAuditProcess>();
+            existingEntry.ResponsiblePersons ??= new List<AuditPlanPersonResponsible>();
+            incomingEntry.ResponsiblePersons ??= new List<AuditPlanPersonResponsible>();
+            existingEntry.IsoAuditors ??= new List<IsoAuditor>();
+            incomingEntry.IsoAuditors ??= new List<IsoAuditor>();
+            existingEntry.IsoStandardAuditPlans ??= new List<IsoStandardAuditPlan>();
+            incomingEntry.IsoStandardAuditPlans ??= new List<IsoStandardAuditPlan>();
+            existingEntry.AuditPlanProcesses ??= new List<AuditPlanProcess>();
+            incomingEntry.AuditPlanProcesses ??= new List<AuditPlanProcess>();
+
+            SyncCollection(dbContext, existingEntry.IsoAuditProcesses, incomingEntry.IsoAuditProcesses,
+                p => { p.AuditPlanEntryId = existingEntry.Id; });
+
+            SyncCollection(dbContext, existingEntry.ResponsiblePersons, incomingEntry.ResponsiblePersons,
+                p => { p.AuditPlanEntryId = existingEntry.Id; });
+
+            SyncCollection(dbContext, existingEntry.IsoAuditors, incomingEntry.IsoAuditors,
+                a => { a.AuditPlanEntryId = existingEntry.Id; });
+
+            // IsoStandardAuditPlan doesn't derive from Entity<int>, so it can't use the
+            // generic SyncCollection<T> helper — synced by hand instead.
+            var standardsToRemove = existingEntry.IsoStandardAuditPlans
+                .Where(es => !incomingEntry.IsoStandardAuditPlans.Any(isPlan => isPlan.Id == es.Id && es.Id != 0))
+                .ToList();
+            foreach (var s in standardsToRemove)
+            {
+                existingEntry.IsoStandardAuditPlans.Remove(s);
+                dbContext.Set<IsoStandardAuditPlan>().Remove(s);
+            }
+            foreach (var incomingS in incomingEntry.IsoStandardAuditPlans)
+            {
+                var existingS = existingEntry.IsoStandardAuditPlans
+                    .FirstOrDefault(es => es.Id == incomingS.Id && es.Id != 0);
+                if (existingS == null)
+                {
+                    incomingS.AuditPlanEntryId = existingEntry.Id;
+                    existingEntry.IsoStandardAuditPlans.Add(incomingS);
+                }
+                else
+                {
+                    dbContext.Entry(existingS).CurrentValues.SetValues(incomingS);
+                }
+            }
+
+            SyncCollection(dbContext, existingEntry.AuditPlanProcesses, incomingEntry.AuditPlanProcesses,
+                ap => { ap.AuditPlanEntryId = existingEntry.Id; });
         }
 
-        private static string ResolveAuditorName(Auditor? auditor)
+        // Generic add/update/remove sync — extracted to remove the five
+        // copy-pasted blocks that were in the original SyncEntryGrandchildCollections.
+        private static void SyncCollection<T>(
+            DbContext dbContext,
+            ICollection<T> existing,
+            ICollection<T> incoming,
+            Action<T> setParentId) where T : Entity<int>
         {
-            return ResolveUserName(auditor?.User);
+            var toRemove = existing
+                .Where(e => !incoming.Any(i => i.Id == e.Id && e.Id != 0))
+                .ToList();
+
+            foreach (var item in toRemove)
+            {
+                existing.Remove(item);
+                dbContext.Set<T>().Remove(item);
+            }
+
+            foreach (var incomingItem in incoming)
+            {
+                var existingItem = existing.FirstOrDefault(e => e.Id == incomingItem.Id && e.Id != 0);
+                if (existingItem == null)
+                {
+                    setParentId(incomingItem);
+                    existing.Add(incomingItem);
+                }
+                else
+                {
+                    dbContext.Entry(existingItem).CurrentValues.SetValues(incomingItem);
+                }
+            }
         }
+
+        private static string ResolvePreparerName(IsoAuditor? preparer) =>
+            ResolveAuditorName(preparer?.IsoAuditors);
+
+        private static string ResolveAuditorName(Auditor? auditor) =>
+            ResolveUserName(auditor?.User);
 
         private static string ResolveUserName(User? user)
         {
             if (user == null) return string.Empty;
-
             var parts = new[] { user.Prefix, user.FirstName, user.MiddleName, user.LastName, user.Suffix }
                 .Where(p => !string.IsNullOrWhiteSpace(p));
-
             return string.Join(" ", parts);
         }
 
@@ -472,8 +545,5 @@ namespace IMIS.Application.AuditPlanModule
             }
             return $"{start:MMMM dd, yyyy} - {end:MMMM dd, yyyy}";
         }
-
-        #endregion
     }
 }
-    

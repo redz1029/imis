@@ -1,4 +1,5 @@
 ﻿using Base.Primitives;
+using System;
 using System.Collections.Generic;
 
 namespace IMIS.Domain
@@ -17,39 +18,22 @@ namespace IMIS.Domain
         public required string AuditPlanObjective { get; set; }
         public required string ScopeOfAudit { get; set; }
 
-        // --- Added Sections IV to IX from Document ---
-
-        /// <summary>
-        /// IV. Audit Criteria
-        /// </summary>
         public required string AuditCriteria { get; set; }
-
-        /// <summary>
-        /// V. Audit Methodology
-        /// </summary>
         public required string AuditMethodology { get; set; }
-
-        /// <summary>
-        /// VI. Selection and Evaluation of Auditors
-        /// </summary>
         public required string SelectionAndEvaluationOfAuditors { get; set; }
-
-        /// <summary>
-        /// VII. Reporting
-        /// </summary>
         public required string Reporting { get; set; }
-
-        /// <summary>
-        /// VIII. Verification of Previous Nonconformities / Follow-Up Actions
-        /// </summary>
         public required string VerificationOfPreviousNonconformities { get; set; }
-
-        /// <summary>
-        /// IX. Audit Limitations
-        /// </summary>
         public required string AuditLimitations { get; set; }
 
-        // --- Navigation Properties ---
+        
+        public int AuditStatusId { get; set; } = AuditStatusSeedIds.Draft;
+        public AuditPlanStatus? AuditStatus { get; set; }
+
+        public ICollection<AuditProgrammeStatusHistory> StatusHistory { get; set; } = new List<AuditProgrammeStatusHistory>();
+
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime? LastModifiedDate { get; set; }
+        public ICollection<AuditPlanApproval> Approvals { get; set; } = new List<AuditPlanApproval>();
         public ICollection<AuditPlan> AuditPlans { get; set; } = new List<AuditPlan>();
     }
 }

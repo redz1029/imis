@@ -26,15 +26,20 @@ namespace IMIS.Application.AuditPlanModule
         public int? PreparerId { get; set; }
         public IsoAuditorDto? Preparer { get; set; }
 
-        public required string PlanStatus { get; set; }
+        // REMOVED: string PlanStatus — replaced with AuditStatusId FK pattern.
+        // Status transitions go through ChangeStatusAsync only, never through
+        // a general save. AuditStatusId is intentionally NOT mapped in ToEntity()
+        // for the same reason as AuditProgrammeDto — prevents silent status revert
+        // on every ordinary edit.
+        public int AuditStatusId { get; set; }
+        public string? StatusCode { get; set; }
+        public string? StatusName { get; set; }
 
         public DateTime CreatedDate { get; set; }
         public DateTime? LastModifiedDate { get; set; }
 
         public List<AuditPlanEntryDto> Entries { get; set; } = new();
         public List<AuditPlanApprovalDto> Approvals { get; set; } = new();
-
-        // Fix: schedules linked to this plan, kept in date-sync via AuditPlan.SyncScheduleDates()
         public List<AuditScheduleDto> AuditSchedules { get; set; } = new();
 
         public AuditPlanDto() { }
@@ -45,10 +50,11 @@ namespace IMIS.Application.AuditPlanModule
             this.Id = entity.Id;
             this.StartDate = entity.StartDate;
             this.EndDate = entity.EndDate;
-            this.PlanStatus = entity.PlanStatus;
+            this.AuditStatusId = entity.AuditStatusId;
+            this.StatusCode = entity.AuditStatus?.Code;
+            this.StatusName = entity.AuditStatus?.Name;
             this.CreatedDate = entity.CreatedDate;
             this.LastModifiedDate = entity.LastModifiedDate;
-
             this.AuditProgrammeId = entity.AuditProgrammeId;
 
             if (entity.Preparer != null)
@@ -84,17 +90,22 @@ namespace IMIS.Application.AuditPlanModule
                 Id = this.Id,
                 StartDate = this.StartDate,
                 EndDate = this.EndDate,
-                PlanStatus = this.PlanStatus,
                 CreatedDate = this.CreatedDate,
                 LastModifiedDate = this.LastModifiedDate,
-
                 AuditProgrammeId = this.AuditProgrammeId,
-
                 Preparer = this.Preparer?.ToEntity(),
 
-                Entries = this.Entries?.Select(x => x.ToEntity()).ToList() ?? new List<AuditPlanEntry>(),
-                Approvals = this.Approvals?.Select(x => x.ToEntity()).ToList() ?? new List<AuditPlanApproval>(),
-                AuditSchedules = this.AuditSchedules?.Select(x => x.ToEntity()).ToList() ?? new List<AuditSchedule>(),
+                // AuditStatusId intentionally NOT mapped here — same rule as
+                // AuditProgrammeDto. New entities keep the domain Draft default;
+                // SaveOrUpdateAsync explicitly preserves the existing value on
+                // updates. Only ChangeStatusAsync may move the status forward.
+
+                Entries = this.Entries?.Select(x => x.ToEntity()).ToList()
+                                 ?? new List<AuditPlanEntry>(),
+                Approvals = this.Approvals?.Select(x => x.ToEntity()).ToList()
+                                 ?? new List<AuditPlanApproval>(),
+                AuditSchedules = this.AuditSchedules?.Select(x => x.ToEntity()).ToList()
+                                 ?? new List<AuditSchedule>(),
 
                 RowVersion = this.RowVersion
             };

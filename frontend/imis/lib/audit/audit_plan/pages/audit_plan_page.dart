@@ -1028,14 +1028,30 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
   /// Shown when no programmeId was passed in (e.g. from the sidebar) — lets
   /// the user pick which Audit Programme to build a Plan for.
   Widget _buildProgrammePicker() {
-    if (_allProgrammes.isEmpty) {
-      return const Center(child: Text('No Audit Programmes found.'));
+    // Only an Approved programme may be fetched into an Audit Plan — Draft
+    // and Pending ones must clear the submit/approve workflow first.
+    final approvedProgrammes = _allProgrammes.where((p) {
+      final json = p.toJson();
+      final status = (json['statusName'] ?? json['StatusName'])?.toString();
+      return status == 'Approved';
+    }).toList();
+
+    if (approvedProgrammes.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'No Approved Audit Programmes found.\nSubmit a programme and have it approved before creating an Audit Plan.',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
     }
     return ListView.builder(
       padding: const EdgeInsets.all(24),
-      itemCount: _allProgrammes.length,
+      itemCount: approvedProgrammes.length,
       itemBuilder: (context, i) {
-        final p = _allProgrammes[i];
+        final p = approvedProgrammes[i];
         final json = p.toJson();
         final forText = (json['for'] ?? json['For'] ?? 'Untitled').toString();
         final year = (json['year'] ?? json['Year'] ?? '').toString();
@@ -1063,7 +1079,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              (json['purpose'] ?? json['Purpose'] ?? '').toString(),
+              'Approved • ${(json['purpose'] ?? json['Purpose'] ?? '').toString()}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
