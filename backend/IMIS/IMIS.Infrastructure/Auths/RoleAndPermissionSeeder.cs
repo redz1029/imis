@@ -16,6 +16,7 @@ using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PerformanceValidationToolModule;
 using IMIS.Application.PerformanceValidationToolPeriodModule;
 using IMIS.Application.PermissionSettings;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
@@ -32,7 +33,6 @@ using IMIS.Application.TeamModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
-using PerformanceValidationToolPermission = IMIS.Application.PerformanceValidationToolModule.PerformanceValidationToolPermission;
 
 namespace IMIS.Infrastructure.Auths
 {
