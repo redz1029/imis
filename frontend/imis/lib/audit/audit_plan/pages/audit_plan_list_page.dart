@@ -1,28 +1,26 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imis/audit/audit_programme/models/audit_programme.dart';
-import 'package:imis/audit/audit_programme/pages/audit_programme_page.dart';
-import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
-import 'package:imis/constant/constant.dart';
-import 'package:imis/utils/print_preview_util.dart';
-import 'package:imis/widgets/common/build_page_header.dart';
-import 'package:imis/widgets/common/pagination_controls.dart';
-import 'package:imis/widgets/dialog/delete_dialog.dart';
+import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 
-class AuditProgrammeListPage extends StatefulWidget {
-  const AuditProgrammeListPage({super.key});
+import 'package:imis/audit/audit_plan/models/audit_plan.dart';
+import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart';
+import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
+import 'package:imis/constant/constant.dart';
+import 'package:imis/widgets/common/build_page_header.dart';
+import 'package:imis/widgets/common/pagination_controls.dart';
+
+class AuditPlanListPage extends StatefulWidget {
+  const AuditPlanListPage({super.key});
 
   @override
-  State<AuditProgrammeListPage> createState() =>
-      _AuditProgrammeListPageState();
+  State<AuditPlanListPage> createState() => _AuditPlanListPageState();
 }
 
-class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
+class _AuditPlanListPageState extends State<AuditPlanListPage> {
   static const List<String> _statusTabs = [
     'All',
     'Draft',
@@ -31,9 +29,9 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
     'Disapproved',
   ];
 
-  final _service = AuditProgrammeService(Dio());
+  final _service = AuditPlanService(Dio());
 
-  List<AuditProgramme> _allProgrammes = [];
+  List<AuditPlan> _allPlans = [];
   String _selectedTab = 'All';
   int _currentPage = 1;
   final int _pageSize = 15;
@@ -42,20 +40,20 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
   @override
   void initState() {
     super.initState();
-    _fetchProgrammes();
+    _fetchPlans();
   }
 
-  Future<void> _fetchProgrammes() async {
+  Future<void> _fetchPlans() async {
     setState(() => _isLoading = true);
     try {
-      final data = await _service.getAllAuditProgrammes();
-      if (mounted) setState(() => _allProgrammes = data);
+      final data = await _service.getAllAuditPlans();
+      if (mounted) setState(() => _allPlans = data);
     } catch (e) {
       debugPrint(e.toString());
       if (mounted) {
         MotionToast.error(
           description: Text(
-            'Failed to load audit programmes: '
+            'Failed to load audit plans: '
             '${e.toString().replaceFirst('Exception: ', '')}',
           ),
         ).show(context);
@@ -66,18 +64,16 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
   }
 
   int _countFor(String tab) {
-    if (tab == 'All') return _allProgrammes.length;
-    return _allProgrammes.where((p) => p.effectiveStatusName == tab).length;
+    if (tab == 'All') return _allPlans.length;
+    return _allPlans.where((p) => p.planStatus == tab).length;
   }
 
-  List<AuditProgramme> get _filtered {
-    if (_selectedTab == 'All') return _allProgrammes;
-    return _allProgrammes
-        .where((p) => p.effectiveStatusName == _selectedTab)
-        .toList();
+  List<AuditPlan> get _filtered {
+    if (_selectedTab == 'All') return _allPlans;
+    return _allPlans.where((p) => p.planStatus == _selectedTab).toList();
   }
 
-  List<AuditProgramme> get _paged {
+  List<AuditPlan> get _paged {
     final filtered = _filtered;
     final start = (_currentPage - 1) * _pageSize;
     if (start >= filtered.length) return [];
@@ -92,49 +88,21 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
     });
   }
 
-  Future<void> _openForm({int? programmeId}) async {
+  /// Mirrors AuditProgrammeListPage._openForm exactly — a modal dialog, not
+  /// a pushed route, so the ISO section's navigation style stays consistent.
+  /// AuditPlanPage requires a programmeId to reload its parent Programme's
+  /// context; AuditPlan already carries that via auditProgrammeId. Passing
+  /// null (no plan) opens AuditPlanPage's own Approved-only Programme picker.
+  Future<void> _openForm({AuditPlan? plan}) async {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AuditProgrammePage(programmeId: programmeId),
-    );
-    _fetchProgrammes();
-  }
-
-  void _showDeleteDialog(AuditProgramme programme) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (ctx) => DeleteDialog(
-        title: 'Audit Programme',
-        itemName: programme.forUser.isNotEmpty
-            ? programme.forUser
-            : 'this audit programme',
-        onDelete: () async {
-          Navigator.pop(ctx);
-          try {
-            await _service.deleteAuditProgramme(programme.id);
-            await _fetchProgrammes();
-            if (mounted) {
-              MotionToast.success(
-                description: Text(
-                  'Deleted successfully',
-                  style: GoogleFonts.plusJakartaSans(),
-                ),
-              ).show(context);
-            }
-          } catch (e) {
-            if (mounted) {
-              MotionToast.error(
-                description: Text(
-                  e.toString().replaceFirst('Exception: ', ''),
-                ),
-              ).show(context);
-            }
-          }
-        },
+      builder: (_) => AuditPlanPage(
+        programmeId: plan?.auditProgrammeId,
+        auditPlanId: plan?.id,
       ),
     );
+    _fetchPlans();
   }
 
   Widget _buildStatusChip(String status) {
@@ -230,10 +198,10 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
           children: [
             buildPageHeader(
               isMobile: isMobile,
-              title: 'Audit Programme',
-              totalCount: _allProgrammes.length,
-              itemLabel: 'programme',
-              icon: Icons.fact_check_outlined,
+              title: 'Audit Plan',
+              totalCount: _allPlans.length,
+              itemLabel: 'plan',
+              icon: Icons.event_note_outlined,
               actionButton: ElevatedButton.icon(
                 onPressed: () => _openForm(),
                 style: ElevatedButton.styleFrom(
@@ -298,7 +266,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                             const Expanded(
                               flex: 2,
                               child: Text(
-                                'For',
+                                'Plan',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: kMuted,
@@ -308,7 +276,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                             const Expanded(
                               flex: 3,
                               child: Text(
-                                'Purpose',
+                                'Date Range',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: kMuted,
@@ -326,7 +294,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                               ),
                             ),
                             const SizedBox(
-                              width: 120,
+                              width: 60,
                               child: Text(
                                 'Actions',
                                 style: TextStyle(
@@ -349,7 +317,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                           : paged.isEmpty
                           ? Center(
                               child: Text(
-                                'No audit programmes found',
+                                'No audit plans found',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: kMuted,
                                 ),
@@ -362,11 +330,12 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                 color: Colors.grey.withValues(alpha: 0.2),
                               ),
                               itemBuilder: (context, index) {
-                                final programme = paged[index];
+                                final plan = paged[index];
                                 final rowNumber =
                                     (_currentPage - 1) * _pageSize + index + 1;
-                                final canDelete =
-                                    programme.effectiveStatusName == 'Draft';
+                                final dateRange =
+                                    '${DateFormat('MMM d, yyyy').format(plan.startDate)} – '
+                                    '${DateFormat('MMM d, yyyy').format(plan.endDate)}';
 
                                 if (!isMobile) {
                                   return Padding(
@@ -385,7 +354,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            programme.forUser,
+                                            'Audit Plan #${plan.id}',
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -393,23 +362,19 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                         ),
                                         Expanded(
                                           flex: 3,
-                                          child: Text(
-                                            programme.purpose,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
+                                          child: Text(dateRange),
                                         ),
                                         Expanded(
                                           flex: 2,
                                           child: Align(
                                             alignment: Alignment.centerLeft,
                                             child: _buildStatusChip(
-                                              programme.effectiveStatusName,
+                                              plan.planStatus,
                                             ),
                                           ),
                                         ),
                                         SizedBox(
-                                          width: 120,
+                                          width: 60,
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
@@ -418,36 +383,9 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                                   Icons.edit_outlined,
                                                   size: 16,
                                                 ),
-                                                onPressed: () => _openForm(
-                                                  programmeId: programme.id,
-                                                ),
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons
-                                                      .picture_as_pdf_outlined,
-                                                  size: 16,
-                                                ),
                                                 onPressed: () =>
-                                                    openAuditProgrammeReportPreview(
-                                                      programme.id,
-                                                      programme.forUser,
-                                                      context: context,
-                                                    ),
+                                                    _openForm(plan: plan),
                                               ),
-                                              if (canDelete)
-                                                IconButton(
-                                                  icon: const Icon(
-                                                    CupertinoIcons
-                                                        .delete_simple,
-                                                    size: 16,
-                                                    color: Colors.redAccent,
-                                                  ),
-                                                  onPressed: () =>
-                                                      _showDeleteDialog(
-                                                        programme,
-                                                      ),
-                                                ),
                                             ],
                                           ),
                                         ),
@@ -471,15 +409,21 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              programme.forUser,
+                                              'Audit Plan #${plan.id}',
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                            const SizedBox(height: 5),
-                                            _buildStatusChip(
-                                              programme.effectiveStatusName,
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              dateRange,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
                                             ),
+                                            const SizedBox(height: 5),
+                                            _buildStatusChip(plan.planStatus),
                                           ],
                                         ),
                                       ),
@@ -491,19 +435,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                         ),
                                         onSelected: (value) {
                                           if (value == 'edit') {
-                                            _openForm(
-                                              programmeId: programme.id,
-                                            );
-                                          }
-                                          if (value == 'pdf') {
-                                            openAuditProgrammeReportPreview(
-                                              programme.id,
-                                              programme.forUser,
-                                              context: context,
-                                            );
-                                          }
-                                          if (value == 'delete') {
-                                            _showDeleteDialog(programme);
+                                            _openForm(plan: plan);
                                           }
                                         },
                                         itemBuilder: (_) => [
@@ -520,36 +452,6 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                               ],
                                             ),
                                           ),
-                                          const PopupMenuItem(
-                                            value: 'pdf',
-                                            child: Row(
-                                              children: [
-                                                Icon(
-                                                  Icons
-                                                      .picture_as_pdf_outlined,
-                                                  size: 18,
-                                                ),
-                                                SizedBox(width: 8),
-                                                Text('View PDF'),
-                                              ],
-                                            ),
-                                          ),
-                                          if (canDelete)
-                                            const PopupMenuItem(
-                                              value: 'delete',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    CupertinoIcons
-                                                        .delete_simple,
-                                                    color: Colors.redAccent,
-                                                    size: 18,
-                                                  ),
-                                                  SizedBox(width: 8),
-                                                  Text('Delete'),
-                                                ],
-                                              ),
-                                            ),
                                         ],
                                       ),
                                     ],

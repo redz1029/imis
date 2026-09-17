@@ -79,4 +79,25 @@ class AuditChecklist {
       auditees: auditees,
     );
   }
+
+  /// Copy with the header's AUDITEE/S value replaced. Separate from
+  /// copyWithResponse since this is a header-level field, not a
+  /// per-row answer, but every row still carries it (flat-list shape).
+  AuditChecklist copyWithAuditees(String? auditees) {
+    return AuditChecklist(
+      id: id,
+      isDeleted: isDeleted,
+      rowVersion: rowVersion,
+      conforming: conforming,
+      findingAndRemarks: findingAndRemarks,
+      auditPlanEntryId: auditPlanEntryId,
+      auditChecklistQNAId: auditChecklistQNAId,
+      criteria: criteria,
+      itemsAndQuestions: itemsAndQuestions,
+      officeProcess: officeProcess,
+      auditScope: auditScope,
+      auditTeamName: auditTeamName,
+      auditees: auditees,
+    );
+  }
 }

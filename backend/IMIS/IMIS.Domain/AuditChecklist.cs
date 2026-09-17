@@ -17,5 +17,7 @@ namespace IMIS.Domain
         // linked here, not duplicated either.
         public required int AuditChecklistQNAId { get; set; }
         public AuditChecklistQNA? AuditChecklistQNA { get; set; }
+        public int? AuditeeId { get; set; }
+        public Auditee? Auditee { get; set; }
     }
 }

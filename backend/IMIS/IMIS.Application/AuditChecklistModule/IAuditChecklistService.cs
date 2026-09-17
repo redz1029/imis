@@ -12,13 +12,9 @@ namespace IMIS.Application.AuditChecklistModule
     {
         Task<AuditChecklistDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
 
-        /// <summary>
-        /// Returns this entry's checklist, generating one row per applicable
-        /// library question (matching the entry's selected ISO standards) the
-        /// first time it's requested. Subsequent calls just return the
-        /// existing rows.
-        /// </summary>
         Task<IEnumerable<AuditChecklistDto>> GetOrGenerateForAuditPlanEntryAsync(int auditPlanEntryId, CancellationToken cancellationToken);
+
+        Task<IEnumerable<AuditChecklistDto>> GetByAuditeeIdAsync(int auditeeId, CancellationToken cancellationToken);
 
         Task<bool> SaveChecklistAsync(AuditChecklistDto dto, CancellationToken cancellationToken);
 
@@ -29,6 +25,5 @@ namespace IMIS.Application.AuditChecklistModule
         Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
             where TEntity : Entity<TId>;
         Task<object?> GetByProcessIdAsync(int processId, CancellationToken cancellationToken);
-
     }
 }

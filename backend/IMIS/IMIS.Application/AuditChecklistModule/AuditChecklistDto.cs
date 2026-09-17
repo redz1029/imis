@@ -12,6 +12,7 @@ namespace IMIS.Application.AuditChecklistModule
 
         public required int AuditPlanEntryId { get; set; }
         public required int AuditChecklistQNAId { get; set; }
+        public int? AuditeeId { get; set; }
 
         // ---- Read-only display fields, fetched from the linked entities.
         // Populated only when the repository query included the relevant
@@ -20,6 +21,7 @@ namespace IMIS.Application.AuditChecklistModule
         public string? ItemsAndQuestions { get; set; }
         public string? OfficeProcess { get; set; }
         public string? AuditTeamName { get; set; }
+        public string? AuditeeName { get; set; }
 
         public AuditChecklistDto() { }
 
@@ -31,6 +33,7 @@ namespace IMIS.Application.AuditChecklistModule
             FindingAndRemarks = entity.FindingAndRemarks;
             AuditPlanEntryId = entity.AuditPlanEntryId;
             AuditChecklistQNAId = entity.AuditChecklistQNAId;
+            AuditeeId = entity.AuditeeId;
 
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
@@ -57,6 +60,11 @@ namespace IMIS.Application.AuditChecklistModule
                     AuditTeamName = auditors.FirstOrDefault(a => a.Team != null)?.Team?.Name;
                 }
             }
+
+            if (entity.Auditee != null)
+            {
+                AuditeeName = entity.Auditee.Name;
+            }
         }
 
         public override AuditChecklist ToEntity()
@@ -68,6 +76,7 @@ namespace IMIS.Application.AuditChecklistModule
                 FindingAndRemarks = FindingAndRemarks,
                 AuditPlanEntryId = AuditPlanEntryId,
                 AuditChecklistQNAId = AuditChecklistQNAId,
+                AuditeeId = AuditeeId,
                 IsDeleted = IsDeleted,
                 RowVersion = RowVersion
             };

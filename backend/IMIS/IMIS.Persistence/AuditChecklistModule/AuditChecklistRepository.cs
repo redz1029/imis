@@ -27,7 +27,8 @@ namespace IMIS.Persistence.AuditChecklistModule
                     .ThenInclude(p => p.Office)
             .Include(x => x.AuditPlanEntry)
                 .ThenInclude(e => e!.IsoAuditors)
-                    .ThenInclude(a => a.Team);
+                    .ThenInclude(a => a.Team)
+            .Include(x => x.Auditee);
 
         public async Task<AuditChecklist?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
@@ -40,6 +41,14 @@ namespace IMIS.Persistence.AuditChecklistModule
         {
             return await WithDetails(_entities.AsNoTracking())
                 .Where(x => x.AuditPlanEntryId == auditPlanEntryId && !x.IsDeleted)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<AuditChecklist>> GetByAuditeeIdAsync(int auditeeId, CancellationToken cancellationToken)
+        {
+            return await WithDetails(_entities.AsNoTracking())
+                .Where(x => x.AuditeeId == auditeeId && !x.IsDeleted)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }

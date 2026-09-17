@@ -103,6 +103,8 @@ namespace IMIS.Persistence
         public DbSet<AuditSummaryFIndings> AuditSummaryFIndings { get; set; }
         public DbSet<AuditNcarStatus> AuditNcarStatus { get; set; }
 
+        public DbSet<Auditee> Auditees { get; set; }
+
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
         {

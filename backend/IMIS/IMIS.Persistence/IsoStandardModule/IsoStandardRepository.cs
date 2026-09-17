@@ -46,7 +46,7 @@ namespace IMIS.Persistence.IsoStandardModule
                 .ConfigureAwait(false);
         }
 
-        
+
 
         public async Task<IsoStandard?> GetByIdWithVersionAsync(long id, CancellationToken cancellationToken)
         {
@@ -54,6 +54,15 @@ namespace IMIS.Persistence.IsoStandardModule
                 .Include(iso => iso.Version)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(iso => iso.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        public async Task<IEnumerable<IsoStandard>> GetAllForTreeAsync(int versionId, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .Where(iso => iso.VersionID == versionId && iso.isActive)
+                .AsNoTracking()
+                .OrderBy(iso => iso.ClauseRef)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
     }

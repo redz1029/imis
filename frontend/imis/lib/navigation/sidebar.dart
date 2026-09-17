@@ -10,11 +10,12 @@ import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/audit/audit_approvals/pages/audit_plan_approval_page.dart';
+import 'package:imis/audit/audit_plan/pages/audit_plan_list_page.dart';
 import 'package:imis/audit/audit_plan_status/pages/audit_plan_status_page.dart';
 import 'package:imis/audit/audit_checklist/pages/audit_checklist_page.dart';
-import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart';
 import 'package:imis/audit/audit_programme/pages/audit_programme_list_page.dart';
 import 'package:imis/audit/audit_schedules/pages/audit_schedules_page.dart';
+import 'package:imis/audit/iso_standard/page/iso_standard_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
@@ -1324,9 +1325,10 @@ class SidebarState extends State<Sidebar> {
 
     if (selectedPage == 2) {
       if (selectedSubPage == 0) return const AuditProgrammeListPage();
-      if (selectedSubPage == 1) return const AuditPlanPage();
+      if (selectedSubPage == 1) return const AuditPlanListPage();
       if (selectedSubPage == 2) return const AuditSchedulePage();
-      if (selectedSubPage == 3) return AuditChecklistPage();
+      if (selectedSubPage == 3) return AuditChecklistPage(auditPlanEntryId: 0);
+      if (selectedSubPage == 4) return const ClauseLibraryPage();
     }
 
     if (selectedPage == 3) {
@@ -1593,6 +1595,7 @@ class SidebarState extends State<Sidebar> {
           _NavChild('Audit Plan', 1),
           _NavChild('Audit Schedule', 2),
           _NavChild('Audit Checklist', 3),
+           _NavChild('Clause Library', 4),
         ],
       ),
       _NavGroup(

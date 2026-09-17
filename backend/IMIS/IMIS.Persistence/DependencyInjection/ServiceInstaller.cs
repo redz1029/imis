@@ -85,6 +85,7 @@ using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.AuditScopeModule;
 using IMIS.Persistence.AuditStatusModule;
 using IMIS.Persistence.AuditSummaryFindingsModule;
+using IMIS.Persistence.AuditeeModule;
 using IMIS.Persistence.BreakThroughScoringModule;
 using IMIS.Persistence.CalendarActivityModule;
 using IMIS.Persistence.EvaluatorOfficesModule;
@@ -135,6 +136,7 @@ using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using IMIS.Application.AuditeeModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -357,6 +359,10 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IAuditNcarStatusService, AuditNcarStatusService>();
             services.AddScoped<IAuditNcarStatusRepository, AuditNcarStatusRepository>();
 
+            //AuditeeModule
+
+            services.AddScoped<IAuditeeService, AuditeeService>();
+            services.AddScoped<IAuditeeRepository, AuditeeRepository>();
 
 
 

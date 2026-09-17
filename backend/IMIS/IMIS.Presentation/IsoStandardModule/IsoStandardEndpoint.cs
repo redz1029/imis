@@ -106,6 +106,12 @@ namespace IMIS.Presentation.IsoStandardModule
                 return Results.Ok(dto);
             })
             .WithTags(_tag);
+            app.MapGet("/tree/{versionId:int}", async (int versionId, IIsoStandardService service, CancellationToken cancellationToken) =>
+            {
+                var tree = await service.GetTreeAsync(versionId, cancellationToken);
+                return Results.Ok(tree);
+            })
+            .WithTags(_tag);
 
             app.MapDelete("/{id:long}", async (int id, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

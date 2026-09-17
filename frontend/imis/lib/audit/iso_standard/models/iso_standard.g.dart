@@ -9,22 +9,26 @@ part of 'iso_standard.dart';
 IsoStandard _$IsoStandardFromJson(Map<String, dynamic> json) => IsoStandard(
   id: (json['id'] as num).toInt(),
   versionID: (json['versionID'] as num).toInt(),
+  parentID: (json['parentID'] as num?)?.toInt(),
   clauseRef: json['clauseRef'] as String,
-  description: json['description'] as String,
-  rowVersion: json['rowVersion'] as String?,
-  version: StandardVersion.fromJson(json['version'] as Map<String, dynamic>),
-  isdelete: json['isdelete'] as bool? ?? false,
-  isActive: json['isActive'] as bool? ?? true,
+  description: json['description'] as String?,
+  particulars: json['particulars'] as String,
+  isActive: json['isActive'] as bool,
+  children:
+      (json['children'] as List<dynamic>?)
+          ?.map((e) => IsoStandard.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      [],
 );
 
 Map<String, dynamic> _$IsoStandardToJson(IsoStandard instance) =>
     <String, dynamic>{
       'id': instance.id,
       'versionID': instance.versionID,
+      'parentID': instance.parentID,
       'clauseRef': instance.clauseRef,
       'description': instance.description,
-      'rowVersion': instance.rowVersion,
-      'version': instance.version,
-      'isdelete': instance.isdelete,
+      'particulars': instance.particulars,
       'isActive': instance.isActive,
+      'children': instance.children.map((e) => e.toJson()).toList(),
     };

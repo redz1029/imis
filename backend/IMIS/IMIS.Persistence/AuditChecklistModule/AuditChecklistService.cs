@@ -153,5 +153,10 @@ namespace IMIS.Persistence.AuditChecklistModule
                 await SaveChecklistAsync(checklistDto, cancellationToken).ConfigureAwait(false);
             }
         }
+        public async Task<IEnumerable<AuditChecklistDto>> GetByAuditeeIdAsync(int auditeeId, CancellationToken cancellationToken)
+        {
+            var entities = await _repository.GetByAuditeeIdAsync(auditeeId, cancellationToken).ConfigureAwait(false);
+            return entities.Select(x => new AuditChecklistDto(x));
+        }
     }
 }

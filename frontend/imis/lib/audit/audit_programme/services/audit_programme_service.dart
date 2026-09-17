@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
-import 'package:imis/iso_standard/models/iso_standard.dart';
+import 'package:imis/audit/iso_standard/models/iso_standard.dart';
 
 import 'package:imis/audit/audit_programme/models/audit_programme.dart';
 import 'package:imis/utils/api_endpoint.dart';

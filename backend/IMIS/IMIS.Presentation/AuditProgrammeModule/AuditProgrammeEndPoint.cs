@@ -21,8 +21,10 @@ namespace IMIS.Presentation.AuditProgrammeModule
         {
         }
 
+
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
+
             // CREATE
             app.MapPost("/", async (
                 [FromBody] AuditProgrammeDto dto,
@@ -119,6 +121,45 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 return result ? Results.Ok(dto) : Results.BadRequest("Failed to update Audit Programme.");
             })
             .WithTags(_AuditProgramme);
+            // SUBMIT — Draft/Disapproved -> Pending
+            app.MapPut("/{id:int}/submit", async (
+                int id,
+                IAuditProgrammeService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                var (success, error) = await service.SubmitAsync(id, cancellationToken).ConfigureAwait(false);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditProgramme, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(new { message = "Submitted for approval." });
+            })
+            .WithTags(_AuditProgramme);
+
+            // DECIDE — Pending -> Approved/Disapproved
+            app.MapPut("/{id:int}/decide", async (
+                int id,
+                [FromBody] DecideAuditProgrammeRequest dto,
+                IAuditProgrammeService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                if (dto is null)
+                    return Results.BadRequest("Invalid request.");
+
+                var (success, error) = await service.DecideAsync(
+                    id, dto.ApproverId, dto.Approve, dto.Comments, cancellationToken
+                ).ConfigureAwait(false);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditProgramme, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(new { message = dto.Approve ? "Approved." : "Disapproved." });
+            })
+            .WithTags(_AuditProgramme);
 
             // PAGINATION
             app.MapGet("/page", async (
@@ -152,5 +193,6 @@ namespace IMIS.Presentation.AuditProgrammeModule
             })
             .WithTags(_AuditProgramme);
         }
+        public record DecideAuditProgrammeRequest(string ApproverId, bool Approve, string? Comments);
     }
 }

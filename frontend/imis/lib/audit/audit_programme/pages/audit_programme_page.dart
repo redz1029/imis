@@ -737,24 +737,23 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       'verificationOfPreviousNonconformities': _verificationController.text,
       'auditLimitations': _limitationsController.text,
       'auditPlan': [
-        {
-          'id': _existingAuditPlanId ?? 0,
-          // Backend copies this straight onto the FK column via SetValues —
-          // omitting it defaults to 0 and breaks the AuditPlans->AuditProgramme FK.
-          'auditProgrammeId': widget.programmeId ?? 0,
-          'startDate': startDate.toIso8601String(),
-          'endDate': endDate.toIso8601String(),
-          'planStatus': 'Draft',
-          'entries': _entries
-              .map(
-                (e) => e.toBackendDtoJson(
-                  _existingAuditPlanId ?? 0,
-                  dayDate: _dayDates[e.dayNumber] ?? DateTime.now(),
-                ),
-              )
-              .toList(),
-        },
-      ],
+  {
+    'id': _existingAuditPlanId ?? 0,
+    'auditProgrammeId': widget.programmeId ?? 0,
+    'startDate': startDate.toIso8601String(),
+    'endDate': endDate.toIso8601String(),
+    // AuditStatusId is never set by the client — AuditPlan defaults to
+    // Draft server-side and only changes via the submit/decide endpoints.
+    'entries': _entries
+        .map(
+          (e) => e.toBackendDtoJson(
+            _existingAuditPlanId ?? 0,
+            dayDate: _dayDates[e.dayNumber] ?? DateTime.now(),
+          ),
+        )
+        .toList(),
+  },
+],
     };
 
     setState(() => _isSaving = true);

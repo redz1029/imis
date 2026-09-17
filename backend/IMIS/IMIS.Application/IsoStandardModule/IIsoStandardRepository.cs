@@ -12,5 +12,6 @@ namespace IMIS.Application.IsoStandardModule
       
         Task<IsoStandard?> GetByIdWithVersionAsync(long id, CancellationToken cancellationToken);
         Task<IsoStandard?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<IsoStandard>> GetAllForTreeAsync(int versionId, CancellationToken cancellationToken);
     }
 }

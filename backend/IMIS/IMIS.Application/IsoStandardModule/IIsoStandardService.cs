@@ -13,6 +13,7 @@ namespace IMIS.Application.IsoStandardModule
         Task<List<IsoStandardDto>?> GetByVersionIdAsync(int versionId, CancellationToken cancellationToken);
         Task<List<IsoStandardDto>?> FilterByClauseRef(string clauseRef, int noOfResults, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<List<IsoStandardDto>> GetTreeAsync(int versionId, CancellationToken cancellationToken);
     }
 
 }

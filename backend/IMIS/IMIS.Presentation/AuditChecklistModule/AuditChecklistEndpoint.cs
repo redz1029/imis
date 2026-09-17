@@ -84,6 +84,14 @@ namespace IMIS.Presentation.AuditChecklistModule
                 return Results.Ok(new { Message = "Deleted Successfully" });
             })
             .WithTags(_auditChecklist);
+            // GET BY AUDITEE ID
+            app.MapGet("/auditee/{auditeeId:int}", async (int auditeeId, IAuditChecklistService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetByAuditeeIdAsync(auditeeId, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(result);
+            })
+            .WithTags(_auditChecklist)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
         }
     }
 }

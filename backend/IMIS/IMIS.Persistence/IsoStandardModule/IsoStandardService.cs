@@ -77,6 +77,30 @@ namespace IMIS.Persistence.IsoStandardModule
 
             await _repository.SaveOrUpdateAsync(IsoStandardDto, cancellationToken).ConfigureAwait(false);
         }
+        public async Task<List<IsoStandardDto>> GetTreeAsync(int versionId, CancellationToken cancellationToken)
+        {
+            var flat = (await _repository.GetAllForTreeAsync(versionId, cancellationToken).ConfigureAwait(false)).ToList();
+
+            // Build every node as a DTO first, keyed by Id, so children can be
+            // attached to their parent's Children list regardless of load order.
+            var byId = flat.ToDictionary(s => s.Id, s => new IsoStandardDto(s));
+
+            var roots = new List<IsoStandardDto>();
+            foreach (var standard in flat)
+            {
+                var node = byId[standard.Id];
+                if (standard.ParentID.HasValue && byId.TryGetValue(standard.ParentID.Value, out var parent))
+                {
+                    parent.Children.Add(node);
+                }
+                else
+                {
+                    roots.Add(node);
+                }
+            }
+
+            return roots;
+        }
 
 
 

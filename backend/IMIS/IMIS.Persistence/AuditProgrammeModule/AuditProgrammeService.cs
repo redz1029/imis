@@ -121,7 +121,15 @@ namespace IMIS.Application.AuditProgrammeModule
                 }
                 else
                 {
+                    // Preserve status — SetValues would otherwise overwrite the plan's
+                    // real AuditStatusId with incomingPlan's value (the client never
+                    // sends a plan status), silently reverting the plan's status on
+                    // every programme edit. Mirrors the same protection already applied
+                    // to AuditProgramme.AuditStatusId in SaveOrUpdateAsync above.
+                    var preservedPlanStatusId = existingPlan.AuditStatusId;
                     dbContext.Entry(existingPlan).CurrentValues.SetValues(incomingPlan);
+                    existingPlan.AuditStatusId = preservedPlanStatusId;
+
                     await SyncAuditPlanEntriesAsync(dbContext, existingPlan, incomingPlan, cancellationToken);
                 }
             }
