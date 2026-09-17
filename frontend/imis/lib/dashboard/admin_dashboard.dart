@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,6 +15,7 @@ import 'package:imis/user/services/home_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/http_util.dart';
+import 'package:imis/widgets/home/dashboard_widget.dart';
 import 'package:imis/widgets/home/dynamic_side_column.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -939,25 +939,25 @@ class AdminDashboardState extends State<AdminDashboard> {
 
   Widget _buildStatsRow() {
     final stats = [
-      _StatItem(
+      StatItem(
         label: "Total Users",
         count: totalUsers.toString(),
         icon: Icons.people_alt_outlined,
         color: primaryColor,
       ),
-      _StatItem(
+      StatItem(
         label: "Total Auditors",
         count: totalAuditor.toString(),
         icon: Icons.verified_user_outlined,
         color: primaryColor,
       ),
-      _StatItem(
+      StatItem(
         label: "Total Teams",
         count: totalTeam.toString(),
         icon: Icons.groups_2_outlined,
         color: primaryColor,
       ),
-      _StatItem(
+      StatItem(
         label: "Total Offices",
         count: totalOffices.toString(),
         icon: Icons.apartment_outlined,
@@ -1014,7 +1014,7 @@ class AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildStatCard(_StatItem item) {
+  Widget _buildStatCard(StatItem item) {
     return Container(
       height: 110,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
@@ -1255,19 +1255,19 @@ class AdminDashboardState extends State<AdminDashboard> {
 
   Widget _buildDeliverableStatCards() {
     final entries = [
-      _BarEntry(
+      BarEntry(
         "Total Deliverables",
         totalDeliverables,
         Icons.assignment_turned_in_outlined,
         primaryColor,
       ),
-      _BarEntry(
+      BarEntry(
         "Total Offices that Produced Deliverables",
         statTotalOffices,
         Icons.apartment_outlined,
         Colors.blue.shade400,
       ),
-      _BarEntry(
+      BarEntry(
         "Total Audited Deliverables",
         statTotalAudited,
         Icons.fact_check_outlined,
@@ -1280,7 +1280,7 @@ class AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _deliverableStatCard(_BarEntry entry) {
+  Widget _deliverableStatCard(BarEntry entry) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
@@ -1380,8 +1380,6 @@ class AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  /// "Select Service" filter pill. Filters the audit statistics by
-  /// parentOfficeId; null value means "All Services".
   Widget _buildServiceDropdownPill() {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 220),
@@ -1471,7 +1469,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                 width: 160,
                 height: 160,
                 child: CustomPaint(
-                  painter: _DonutPainter(
+                  painter: DonutPainter(
                     progress: value,
                     progressColor: primaryColor,
                     backgroundColor: Colors.grey.shade200,
@@ -1543,10 +1541,10 @@ class AdminDashboardState extends State<AdminDashboard> {
 
   Widget _buildDeliverableStatusChart() {
     final entries = [
-      _ChartBarEntry("Not Started", statNotStarted, Colors.redAccent),
-      _ChartBarEntry("On Going", statOngoing, Colors.orange.shade300),
-      _ChartBarEntry("Completed", countCompleted, Colors.green.shade400),
-      _ChartBarEntry("Audited", statTotalAudited, Colors.purple.shade200),
+      ChartBarEntry("Not Started", statNotStarted, Colors.redAccent),
+      ChartBarEntry("On Going", statOngoing, Colors.orange.shade300),
+      ChartBarEntry("Completed", countCompleted, Colors.green.shade400),
+      ChartBarEntry("Audited", statTotalAudited, Colors.purple.shade200),
     ];
 
     final maxValue = entries
@@ -1554,10 +1552,6 @@ class AdminDashboardState extends State<AdminDashboard> {
         .fold<int>(0, (prev, e) => e > prev ? e : prev)
         .clamp(1, 999999);
 
-    // Use the API's own totalDeliverables instead of re-summing the
-    // status buckets — the buckets don't always cover 100% of records
-    // (e.g. countAudited excluded), which made this box show a smaller,
-    // inconsistent number vs. the "Total Deliverables" card above.
     final total = totalDeliverables;
     final double notStartedPct = percentNotStarted;
     final double inProgressPct = percentInProgress;
@@ -1599,9 +1593,9 @@ class AdminDashboardState extends State<AdminDashboard> {
           ),
         );
         final percentCards = [
-          _summaryCard("Not Started (%)", notStartedPct, Colors.redAccent),
-          _summaryCard("On Going (%)", inProgressPct, Colors.orange.shade300),
-          _summaryCard("Completed (%)", completedPct, Colors.green.shade400),
+          summaryCard("Not Started (%)", notStartedPct, Colors.redAccent),
+          summaryCard("On Going (%)", inProgressPct, Colors.orange.shade300),
+          summaryCard("Completed (%)", completedPct, Colors.green.shade400),
         ];
 
         final percentRow =
@@ -1661,7 +1655,7 @@ class AdminDashboardState extends State<AdminDashboard> {
               const SizedBox(height: 20),
               SizedBox(
                 height: 240,
-                child: _GridChart(entries: entries, maxValue: maxValue),
+                child: GridChart(entries: entries, maxValue: maxValue),
               ),
             ],
           ),
@@ -1695,324 +1689,4 @@ class AdminDashboardState extends State<AdminDashboard> {
       },
     );
   }
-
-  Widget _summaryCard(String label, double value, Color accentColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      decoration: BoxDecoration(
-        color: kBackground,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        children: [
-          Text(
-            "${value.toStringAsFixed(0)}%",
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatItem {
-  final String label;
-  final String count;
-  final IconData icon;
-  final Color color;
-
-  const _StatItem({
-    required this.label,
-    required this.count,
-    required this.icon,
-    required this.color,
-  });
-}
-
-class _BarEntry {
-  final String label;
-  final int value;
-  final IconData icon;
-  final Color color;
-
-  _BarEntry(this.label, this.value, this.icon, this.color);
-}
-
-class _DonutPainter extends CustomPainter {
-  final double progress;
-  final Color progressColor;
-  final Color backgroundColor;
-  final double strokeWidth;
-
-  _DonutPainter({
-    required this.progress,
-    required this.progressColor,
-    required this.backgroundColor,
-    required this.strokeWidth,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - strokeWidth) / 2;
-
-    final bgPaint =
-        Paint()
-          ..color = backgroundColor
-          ..strokeWidth = strokeWidth
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round;
-
-    final fgPaint =
-        Paint()
-          ..color = progressColor
-          ..strokeWidth = strokeWidth
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round;
-
-    canvas.drawCircle(center, radius, bgPaint);
-
-    final sweepAngle = 2 * math.pi * progress;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi / 2,
-      sweepAngle,
-      false,
-      fgPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _DonutPainter oldDelegate) =>
-      oldDelegate.progress != progress;
-}
-
-class DonutSegment {
-  final String label;
-  final int value;
-  final Color color;
-
-  DonutSegment(this.label, this.value, this.color);
-}
-
-class MultiDonutPainter extends CustomPainter {
-  final List<DonutSegment> segments;
-  final int total;
-  final double strokeWidth;
-  final double animationProgress;
-
-  MultiDonutPainter({
-    required this.segments,
-    required this.total,
-    required this.strokeWidth,
-    required this.animationProgress,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - strokeWidth) / 2;
-    if (total <= 0) {
-      final emptyPaint =
-          Paint()
-            ..color = Colors.grey.shade200
-            ..strokeWidth = strokeWidth
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round;
-      canvas.drawCircle(center, radius, emptyPaint);
-      return;
-    }
-
-    double startAngle = -math.pi / 2;
-
-    for (final segment in segments) {
-      if (segment.value <= 0) continue;
-
-      final sweepAngle =
-          (segment.value / total) * 2 * math.pi * animationProgress;
-
-      final paint =
-          Paint()
-            ..color = segment.color
-            ..strokeWidth = strokeWidth
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round;
-
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweepAngle,
-        false,
-        paint,
-      );
-
-      startAngle += (segment.value / total) * 2 * math.pi;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant MultiDonutPainter oldDelegate) =>
-      oldDelegate.animationProgress != animationProgress ||
-      oldDelegate.segments != segments;
-}
-
-class _ChartBarEntry {
-  final String label;
-  final int value;
-  final Color color;
-
-  _ChartBarEntry(this.label, this.value, this.color);
-}
-
-class _GridChart extends StatelessWidget {
-  final List<_ChartBarEntry> entries;
-  final int maxValue;
-
-  const _GridChart({required this.entries, required this.maxValue});
-  List<int> get _gridSteps {
-    final step = (maxValue / 4).ceil();
-    final niceStep = step <= 0 ? 1 : step;
-    return List.generate(5, (i) => niceStep * i);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final steps = _gridSteps;
-    final chartMax = steps.last == 0 ? 1 : steps.last;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Y-axis numbers
-        SizedBox(
-          width: 36,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children:
-                steps.reversed
-                    .map(
-                      (s) => Text(
-                        s.toString(),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          color: Colors.grey.shade500,
-                        ),
-                      ),
-                    )
-                    .toList(),
-          ),
-        ),
-        const SizedBox(width: 8),
-        // Chart area with gridlines behind bars
-        Expanded(
-          child: Stack(
-            children: [
-              // background gridlines
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _GridBackgroundPainter(
-                    lineCount: steps.length,
-                    color: Colors.grey.shade300,
-                  ),
-                ),
-              ),
-              // bars on top
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children:
-                      entries.map((e) => _verticalBar(e, chartMax)).toList(),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _verticalBar(_ChartBarEntry entry, int maxValue) {
-    final ratio = maxValue > 0 ? entry.value / maxValue : 0.0;
-
-    return Expanded(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Text(
-            entry.value.toString(),
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 190,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
-                duration: const Duration(milliseconds: 900),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return FractionallySizedBox(
-                    heightFactor: value == 0 ? 0.01 : value,
-                    child: Container(
-                      width: 32,
-                      decoration: BoxDecoration(
-                        color: entry.color,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(6),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GridBackgroundPainter extends CustomPainter {
-  final int lineCount;
-  final Color color;
-
-  _GridBackgroundPainter({required this.lineCount, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = color.withValues(alpha: 0.5)
-          ..strokeWidth = 1;
-
-    for (int i = 0; i < lineCount; i++) {
-      final y = size.height * (i / (lineCount - 1));
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _GridBackgroundPainter oldDelegate) => false;
 }
