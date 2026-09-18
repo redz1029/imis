@@ -26,6 +26,7 @@ using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PgsPermissionSettings;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
+using IMIS.Application.StrategicChangeAgendaModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Application.SWOTAnalysisServiceHeadModule;
@@ -78,7 +79,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             // This will seed view only permissions for a role
             await PermissionSeeder.SeedViewOnlyPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
@@ -140,7 +142,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -175,7 +178,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsServiceHead, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
@@ -213,7 +217,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsHead, IdentityRole>(_roleManager, 
                 new PgsDeliverableAuditorPermission(),
@@ -243,7 +248,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<MCC, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
@@ -277,7 +283,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<OSM, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
@@ -310,7 +317,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorHead, IdentityRole>(_roleManager,              
                 new KeyResultAreaPermission(),
@@ -345,7 +353,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<ServiceOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -372,7 +381,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<ResearchOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -399,7 +409,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());                
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());                
 
             await PermissionSeeder.SeedPermissionForRole<TrainingOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -426,7 +437,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());                
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());                
 
             await PermissionSeeder.SeedPermissionForRole<LinkagesOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -454,7 +466,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<FacilitiesOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -480,7 +493,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<FinanceOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -507,7 +521,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<InformationOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -534,7 +549,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<HROfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -560,7 +576,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<SafetyOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
@@ -587,7 +604,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<TWG, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -622,7 +640,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<MSGC, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -657,7 +676,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsEvaluatorRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -693,7 +713,8 @@ namespace IMIS.Infrastructure.Auths
                 new PGSReportPermission(),
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
-                new StrategicChangeAgendaPermissionSetting());
+                new StrategicChangeAgendaPermissionSetting(),
+                new StrategicChangeAgendaPermission());
 
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
