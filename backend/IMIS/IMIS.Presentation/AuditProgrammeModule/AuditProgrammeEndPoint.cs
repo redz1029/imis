@@ -1,6 +1,4 @@
-﻿
-
-using Base.Auths.Permissions;
+﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AuditProgrammeModule;
 using IMIS.Infrastructure.Reports;
@@ -17,14 +15,20 @@ namespace IMIS.Presentation.AuditProgrammeModule
     {
         private const string _AuditProgramme = "AuditProgramme";
 
+        // NEW — must match the exact tag strings used by AuditPlanEndPoints.cs
+        // and AuditSchedulesEndPoints.cs's own .CacheOutput(...).Tag(...) calls.
+        // Confirm these two literal strings against those files; if either
+        // differs even by casing, the eviction silently misses and this bug
+        // persists for that one endpoint.
+        private const string _AuditPlan = "Audit Plan";
+        private const string _AuditSchedule = "Audit Schedule";
+
         public AuditProgrammeEndPoints() : base("/auditProgramme")
         {
         }
 
-
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-
             // CREATE
             app.MapPost("/", async (
                 [FromBody] AuditProgrammeDto dto,
@@ -41,7 +45,13 @@ namespace IMIS.Presentation.AuditProgrammeModule
 
                 var result = await service.SaveAuditProgrammeAsync(dto, cancellationToken).ConfigureAwait(false);
 
+                // A Programme save cascades into AuditPlan (and its own
+                // cascade into AuditSchedule) — every affected tag must be
+                // evicted, not just this endpoint's own, or those lists keep
+                // serving stale cached data until their TTL happens to expire.
                 await cache.EvictByTagAsync(_AuditProgramme, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken).ConfigureAwait(false);
 
                 return result ? Results.Ok(dto) : Results.BadRequest("Failed to save Audit Programme.");
             })
@@ -117,11 +127,14 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 var result = await service.SaveAuditProgrammeAsync(dto, cancellationToken).ConfigureAwait(false);
 
                 await cache.EvictByTagAsync(_AuditProgramme, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken).ConfigureAwait(false);
 
                 return result ? Results.Ok(dto) : Results.BadRequest("Failed to update Audit Programme.");
             })
             .WithTags(_AuditProgramme);
-            // SUBMIT — Draft/Disapproved -> Pending
+
+            // SUBMIT
             app.MapPut("/{id:int}/submit", async (
                 int id,
                 IAuditProgrammeService service,
@@ -134,6 +147,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                     return Results.BadRequest(new { error });
 
                 await cache.EvictByTagAsync(_AuditProgramme, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(new { message = "Submitted for approval." });
             })
             .WithTags(_AuditProgramme);
@@ -157,6 +172,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                     return Results.BadRequest(new { error });
 
                 await cache.EvictByTagAsync(_AuditProgramme, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(new { message = dto.Approve ? "Approved." : "Disapproved." });
             })
             .WithTags(_AuditProgramme);
@@ -186,6 +203,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 var result = await service.SoftDeleteAsync(id, cancellationToken).ConfigureAwait(false);
 
                 await cache.EvictByTagAsync(_AuditProgramme, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken).ConfigureAwait(false);
 
                 return result
                     ? Results.Ok(new { message = "Audit Programme deleted successfully." })

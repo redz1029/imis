@@ -63,14 +63,21 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
     }
   }
 
+  // FIX: AuditPlan.planStatus is a dead field the backend no longer
+  // populates (see the comment on AuditPlan itself). Tab counts must be
+  // driven by the real status, which is auditStatusId/statusName, exposed
+  // here via the effectiveStatusName getter (falls back to 'Draft' when
+  // statusName hasn't been resolved).
   int _countFor(String tab) {
     if (tab == 'All') return _allPlans.length;
-    return _allPlans.where((p) => p.planStatus == tab).length;
+    return _allPlans.where((p) => p.effectiveStatusName == tab).length;
   }
 
   List<AuditPlan> get _filtered {
     if (_selectedTab == 'All') return _allPlans;
-    return _allPlans.where((p) => p.planStatus == _selectedTab).toList();
+    return _allPlans
+        .where((p) => p.effectiveStatusName == _selectedTab)
+        .toList();
   }
 
   List<AuditPlan> get _paged {
@@ -368,8 +375,10 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
                                           flex: 2,
                                           child: Align(
                                             alignment: Alignment.centerLeft,
+                                            // FIX: was plan.planStatus (dead
+                                            // field) — now the real status.
                                             child: _buildStatusChip(
-                                              plan.planStatus,
+                                              plan.effectiveStatusName,
                                             ),
                                           ),
                                         ),
@@ -423,7 +432,11 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
                                               ),
                                             ),
                                             const SizedBox(height: 5),
-                                            _buildStatusChip(plan.planStatus),
+                                            // FIX: was plan.planStatus (dead
+                                            // field) — now the real status.
+                                            _buildStatusChip(
+                                              plan.effectiveStatusName,
+                                            ),
                                           ],
                                         ),
                                       ),

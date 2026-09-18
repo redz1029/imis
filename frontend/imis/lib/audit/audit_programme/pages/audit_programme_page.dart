@@ -2,9 +2,9 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/audit/audit_plan_status/models/audit_status_seed_ids.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
-
 import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/audit/audit_programme/models/audit_programme.dart';
 
@@ -276,6 +276,9 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   // The existing AuditPlan's own id when editing — must be preserved on save,
   // otherwise the backend treats every save as a brand new plan.
   int? _existingAuditPlanId;
+  int _existingAuditStatusId = AuditStatusSeedIds.draft;
+String _existingRowVersion = '';
+bool _existingIsDeleted = false;
 
   // One date per day number, e.g. {1: May 20 2025, 2: May 21 2025} — this is
   // what renders in each "DAY N — <date>" banner.
@@ -310,6 +313,8 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     _reportingController.dispose();
     _verificationController.dispose();
     _limitationsController.dispose();
+
+    
     for (final entry in _entries) {
       entry.dispose();
     }
@@ -336,6 +341,10 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
         if (programme != null) {
           final jsonMap = programme.toJson();
+
+            _existingAuditStatusId = programme.auditStatusId;
+  _existingRowVersion = programme.rowVersion;
+  _existingIsDeleted = programme.isDeleted;
 
           _forController.text = jsonMap['for'] ?? jsonMap['For'] ?? '';
           _fromController.text = jsonMap['from'] ?? jsonMap['From'] ?? '';
@@ -713,6 +722,9 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
     final payload = {
       'id': widget.programmeId ?? 0,
+      'auditStatusId': _existingAuditStatusId,
+      'rowVersion': _existingRowVersion,
+      'isDeleted': _existingIsDeleted,
       'year': DateTime.now().year,
       'for': _forController.text,
       'from': _fromController.text,
