@@ -10,21 +10,22 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.AspNetCore.OutputCaching;   
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Sprache;
 
 namespace IMIS.Presentation.UserModule
-{
+{  
+  
     public static class IdentityApiEndpoint
     {
         private static readonly EmailAddressAttribute EmailValidator = new();
         private const string IdentityGroup = "Users";
         private const string RoleGroup = "Roles";
         private const string UserRoleGroup = "User Roles";
-       
+
         public static IEndpointConventionBuilder MapCustomIdentityApi<TUser>(this IEndpointRouteBuilder endpoints)
         where TUser : User, new()
         {
@@ -32,22 +33,31 @@ namespace IMIS.Presentation.UserModule
             var authGroup = endpoints.MapGroup("").WithTags(IdentityGroup);
             authGroup.MapPost("/register", (UserRegistrationDto registration, IServiceProvider sp) => RegisterUser(registration, sp));
             authGroup.MapGet("/getUser", async (int page, int pageSize, IServiceProvider sp) => await GetRegisteredUsers(sp, page, pageSize))
-           .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles"));
+           .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag("roles"));
             authGroup.MapPut("/updateUser", async (UserRegistrationDto dto, IServiceProvider sp) => await UpdateUser(dto, sp));
             authGroup.MapPost("/login", LoginUser<TUser>);
             authGroup.MapPut("/changePassword", ChangePassword<TUser>);
             authGroup.MapPost("/refresh", RefreshToken<TUser>);
             authGroup.MapDelete("/revokeRefreshToken", RevokeRefreshToken<TUser>);
-            authGroup.MapGet("/users", (HttpContext httpContext, IServiceProvider sp) => GetUsers(httpContext, sp));
+            authGroup.MapGet("/users", (HttpContext httpContext, IServiceProvider sp) => GetUsers(httpContext, sp)).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
             authGroup.MapDelete("/deleteUser/{id}", async (string id, IServiceProvider sp) => await DeleteUser(id, sp));
             authGroup.MapGet("/users/filter", async (string? fullname, string? roleId, int page, int pageSize, IServiceProvider sp) =>
             {
                 return await GetUsersWithFilter(fullname, roleId, page, pageSize, sp);
-            });
+            }).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
             authGroup.MapGet("/users-report/pdf", async (string? fullname, string? roleId, int page, int pageSize, IServiceProvider sp, HttpResponse response, CancellationToken cancellationToken) =>
             {
                 return await GenerateUsersReport(fullname, roleId, page, pageSize, sp, response, cancellationToken);
             });
+
+            // Lockout Management Endpoints
+            authGroup.MapPut("/users/{userId}/lockout", async (string userId, UserLockoutDto dto, IServiceProvider sp) =>  await UpdateUserLockout(userId, dto, sp));
+
+            authGroup.MapPut("/users/{userId}/unlock", async (string userId, IServiceProvider sp) => await UnlockUser(userId, sp));
+
+            authGroup.MapGet("/users/{userId}/lockout-status", async (string userId, IServiceProvider sp) =>  await GetUserLockoutStatus(userId, sp));
+
+            authGroup.MapGet("/users/pending-approval", async (int page, int pageSize, IServiceProvider sp) => await GetPendingApprovalUsers(page, pageSize, sp));
 
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
@@ -67,7 +77,7 @@ namespace IMIS.Presentation.UserModule
                     .ToListAsync();
 
                 return Results.Ok(new
-                {                  
+                {
                     data = roles,
                     totalCount,
                     page,
@@ -75,7 +85,7 @@ namespace IMIS.Presentation.UserModule
                 });
             })
            .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
-            roleGroup.MapPost("/roles", CreateRole);          
+            roleGroup.MapPost("/roles", CreateRole);
             roleGroup.MapPut("/roles/{roleId}", EditRole);
             roleGroup.MapDelete("/roles/{roleId}", DeleteRole);
             roleGroup.MapGet("/roles/permissions", async
@@ -99,7 +109,7 @@ namespace IMIS.Presentation.UserModule
             }).WithTags(RoleGroup)
             .RequireAuthorization()
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup), true);
-           
+
             roleGroup.MapGet("/users/{userId}/permissions", async (string userId, string roleId, string? search, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ImisDbContext db) =>
             {
                 var user = await userManager.FindByIdAsync(userId);
@@ -189,7 +199,7 @@ namespace IMIS.Presentation.UserModule
                             var claim = new UserClaim<string>
                             {
                                 UserId = userId,
-                                RoleId = roleId,           
+                                RoleId = roleId,
                                 ClaimType = PermissionClaimType.Claim,
                                 ClaimValue = normalized
                             };
@@ -215,76 +225,76 @@ namespace IMIS.Presentation.UserModule
             .RequireAuthorization();
 
             roleGroup.MapPut("/roles/{roleId}/performance-validation-tool-permissions-standarduser-role", async (string roleId, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ImisDbContext db) =>
+            {
+                var role = await roleManager.FindByIdAsync(roleId);
+
+                if (role == null)
+                    return Results.NotFound(new { message = "Role not found." });
+
+                var permissions = new[]
                 {
-                    var role = await roleManager.FindByIdAsync(roleId);
-
-                    if (role == null)
-                        return Results.NotFound(new { message = "Role not found." });
-
-                    var permissions = new[]
-                    {
                         "ViewPerformanceValidationToolPeriod",
                         "ConfirmPerformanceValidationTool",
                         "EditPerformanceValidationTool",
                         "ViewPerformanceValidationTool"
                     };
 
-                    var userIds = await db.UserRoles.Where(x => x.RoleId == roleId).Select(x => x.UserId).ToListAsync();
+                var userIds = await db.UserRoles.Where(x => x.RoleId == roleId).Select(x => x.UserId).ToListAsync();
 
-                    int added = 0;
+                int added = 0;
 
-                    foreach (var userId in userIds)
+                foreach (var userId in userIds)
+                {
+                    var existingClaims = await db.Set<UserClaim<string>>().Where(x => x.UserId == userId && x.RoleId == roleId && x.ClaimType == PermissionClaimType.Claim)
+                        .Select(x => x.ClaimValue!)
+                        .ToListAsync();
+
+                    foreach (var permission in permissions)
                     {
-                        var existingClaims = await db.Set<UserClaim<string>>().Where(x => x.UserId == userId && x.RoleId == roleId &&  x.ClaimType == PermissionClaimType.Claim)
-                            .Select(x => x.ClaimValue!)
-                            .ToListAsync();
+                        if (existingClaims.Contains(permission))
+                            continue;
 
-                        foreach (var permission in permissions)
+                        db.Set<UserClaim<string>>().Add(new UserClaim<string>
                         {
-                            if (existingClaims.Contains(permission))
-                                continue;
+                            UserId = userId,
+                            RoleId = roleId,
+                            ClaimType = PermissionClaimType.Claim,
+                            ClaimValue = permission
+                        });
 
-                            db.Set<UserClaim<string>>().Add(new UserClaim<string>
-                            {
-                                UserId = userId,
-                                RoleId = roleId,
-                                ClaimType = PermissionClaimType.Claim,
-                                ClaimValue = permission
-                            });
-
-                            added++;
-                        }
+                        added++;
                     }
+                }
 
-                    await db.SaveChangesAsync();
+                await db.SaveChangesAsync();
 
-                    return Results.Ok(new
-                    {
-                        roleId,
-                        roleName = role.Name,
-                        usersUpdated = userIds.Count,
-                        claimsAdded = added,
-                        message = "Performance Validation Tool permissions granted successfully."
-                    });
-                })
+                return Results.Ok(new
+                {
+                    roleId,
+                    roleName = role.Name,
+                    usersUpdated = userIds.Count,
+                    claimsAdded = added,
+                    message = "Performance Validation Tool permissions granted successfully."
+                });
+            })
                 .RequireAuthorization();
 
-              roleGroup.MapPut("/roles/{roleId}/performance-validation-tool-permissions-auditor-role", async (string roleId, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ImisDbContext db) =>
-              {
-                  var role = await roleManager.FindByIdAsync(roleId);
+            roleGroup.MapPut("/roles/{roleId}/performance-validation-tool-permissions-auditor-role", async (string roleId, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ImisDbContext db) =>
+            {
+                var role = await roleManager.FindByIdAsync(roleId);
 
-                  if (role == null)
-                      return Results.NotFound(new { message = "Role not found." });
+                if (role == null)
+                    return Results.NotFound(new { message = "Role not found." });
 
-                  var permissions = new[]
-                  {
-                      
+                var permissions = new[]
+                {
+
                         "DraftPerformanceValidationTool",
                         "SubmitPerformanceValidationTool",
                         "ViewPerformanceValidationTool",
                         "EditPerformanceValidationTool",
                         "ViewAuditor",
-                        "ViewAuditorTeam",                       
+                        "ViewAuditorTeam",
                         "AddPerformanceValidationToolPeriod",
                         "ViewPerformanceValidationToolPeriod",
                         "EditPerformanceValidationToolPeriod",
@@ -292,53 +302,109 @@ namespace IMIS.Presentation.UserModule
 
                   };
 
-                  var userIds = await db.UserRoles.Where(x => x.RoleId == roleId).Select(x => x.UserId).ToListAsync();
+                var userIds = await db.UserRoles.Where(x => x.RoleId == roleId).Select(x => x.UserId).ToListAsync();
 
-                  int added = 0;
+                int added = 0;
 
-                  foreach (var userId in userIds)
-                  {
-                      var existingClaims = await db.Set<UserClaim<string>>()
-                          .Where(x => x.UserId == userId && x.RoleId == roleId && x.ClaimType == PermissionClaimType.Claim)
-                          .Select(x => x.ClaimValue!)
-                          .ToListAsync();
+                foreach (var userId in userIds)
+                {
+                    var existingClaims = await db.Set<UserClaim<string>>()
+                        .Where(x => x.UserId == userId && x.RoleId == roleId && x.ClaimType == PermissionClaimType.Claim)
+                        .Select(x => x.ClaimValue!)
+                        .ToListAsync();
 
-                      foreach (var permission in permissions)
-                      {
-                          if (existingClaims.Contains(permission))
-                              continue;
+                    foreach (var permission in permissions)
+                    {
+                        if (existingClaims.Contains(permission))
+                            continue;
 
-                          db.Set<UserClaim<string>>().Add(new UserClaim<string>
-                          {
-                              UserId = userId,
-                              RoleId = roleId,
-                              ClaimType = PermissionClaimType.Claim,
-                              ClaimValue = permission
-                          });
+                        db.Set<UserClaim<string>>().Add(new UserClaim<string>
+                        {
+                            UserId = userId,
+                            RoleId = roleId,
+                            ClaimType = PermissionClaimType.Claim,
+                            ClaimValue = permission
+                        });
 
-                          added++;
-                      }
-                  }
+                        added++;
+                    }
+                }
 
-                  await db.SaveChangesAsync();
+                await db.SaveChangesAsync();
 
-                  return Results.Ok(new
-                  {
-                      roleId,
-                      roleName = role.Name,
-                      usersUpdated = userIds.Count,
-                      claimsAdded = added,
-                      message = "Performance Validation Tool permissions granted successfully."
-                  });
-              })
-              .RequireAuthorization();
+                return Results.Ok(new
+                {
+                    roleId,
+                    roleName = role.Name,
+                    usersUpdated = userIds.Count,
+                    claimsAdded = added,
+                    message = "Performance Validation Tool permissions granted successfully."
+                });
+            })
+            .RequireAuthorization();
+
+
+            roleGroup.MapPut("/roles/{roleId}/performance-validation-tool-permissions-all-role", async (string roleId, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ImisDbContext db) =>
+            {
+                var role = await roleManager.FindByIdAsync(roleId);
+
+                if (role == null)
+                    return Results.NotFound(new { message = "Role not found." });
+
+                var permissions = new[]
+                {
+
+                        "ViewStrategicChangeAgenda",
+                        "ViewStrategicChangeAgendaSettings"                       
+                  };
+
+                var userIds = await db.UserRoles.Where(x => x.RoleId == roleId).Select(x => x.UserId).ToListAsync();
+
+                int added = 0;
+
+                foreach (var userId in userIds)
+                {
+                    var existingClaims = await db.Set<UserClaim<string>>()
+                        .Where(x => x.UserId == userId && x.RoleId == roleId && x.ClaimType == PermissionClaimType.Claim)
+                        .Select(x => x.ClaimValue!)
+                        .ToListAsync();
+
+                    foreach (var permission in permissions)
+                    {
+                        if (existingClaims.Contains(permission))
+                            continue;
+
+                        db.Set<UserClaim<string>>().Add(new UserClaim<string>
+                        {
+                            UserId = userId,
+                            RoleId = roleId,
+                            ClaimType = PermissionClaimType.Claim,
+                            ClaimValue = permission
+                        });
+
+                        added++;
+                    }
+                }
+
+                await db.SaveChangesAsync();
+
+                return Results.Ok(new
+                {
+                    roleId,
+                    roleName = role.Name,
+                    usersUpdated = userIds.Count,
+                    claimsAdded = added,
+                    message = "Performance Validation Tool permissions granted successfully."
+                });
+            })
+           .RequireAuthorization();
 
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
             userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
-            userRoleGroup.MapPost("/userRoles", AssignUserRoles);           
+            userRoleGroup.MapPost("/userRoles", AssignUserRoles);
             userRoleGroup.MapPut("/updateUserRole", UpdateUserRoles);
-            userRoleGroup.MapDelete("/deleteUserRole", DeleteUserRole);      
+            userRoleGroup.MapDelete("/deleteUserRole", DeleteUserRole);
 
             return authGroup;
         }
@@ -348,38 +414,38 @@ namespace IMIS.Presentation.UserModule
             var userManager = sp.GetRequiredService<UserManager<User>>();
 
             var users = userManager.Users.ToList();
-         
+
             var userList = users.Select(u => new
-            {               
+            {
                 u.Id,
                 FullName = $"{u.Prefix} {u.FirstName} {u.MiddleName} {u.LastName} {u.Suffix}".Trim(),
                 Position = u.Position,
-                
+
 
             });
 
             return Results.Ok(userList);
         }
-      
+
         private static async Task<IResult> GetUsersWithFilter(string? fullname, string? roleId, int page, int pageSize, IServiceProvider sp)
         {
             var dbContext = sp.GetRequiredService<ImisDbContext>();
 
             var query = from ur in dbContext.UserRoles
-            join u in dbContext.Users on ur.UserId equals u.Id
-            join r in dbContext.Roles on ur.RoleId equals r.Id
-            select new
-            {
-                UserId = u.Id,
-                u.UserName,
-                u.Email,
-                u.FirstName,
-                u.MiddleName,
-                u.LastName,
-                u.Position,
-                RoleName = r.Name,
-                RoleId = r.Id
-            };
+                        join u in dbContext.Users on ur.UserId equals u.Id
+                        join r in dbContext.Roles on ur.RoleId equals r.Id
+                        select new
+                        {
+                            UserId = u.Id,
+                            u.UserName,
+                            u.Email,
+                            u.FirstName,
+                            u.MiddleName,
+                            u.LastName,
+                            u.Position,
+                            RoleName = r.Name,
+                            RoleId = r.Id
+                        };
 
             if (!string.IsNullOrWhiteSpace(roleId))
             {
@@ -429,13 +495,7 @@ namespace IMIS.Presentation.UserModule
             });
         }
 
-        private static async Task<IResult> GenerateUsersReport(
-        string? fullname,
-        string? roleId,
-        int page,
-        int pageSize,
-        IServiceProvider sp,
-        HttpResponse response,
+        private static async Task<IResult> GenerateUsersReport(string? fullname, string? roleId, int page, int pageSize, IServiceProvider sp, HttpResponse response,
         CancellationToken cancellationToken)
         {
             var dbContext = sp.GetRequiredService<ImisDbContext>();
@@ -511,7 +571,7 @@ namespace IMIS.Presentation.UserModule
                 x.LastName,
                 x.Position,
                 x.RoleName,
-                RoleHeader = roleDisplayName 
+                RoleHeader = roleDisplayName
             }).ToList();
 
             var file = await ReportUtil.GeneratePdfReport("EmployeeListReport", reportData, "Users", cancellationToken).ConfigureAwait(false);
@@ -521,45 +581,59 @@ namespace IMIS.Presentation.UserModule
             response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
             return Results.File(file, "application/pdf");
         }
+   
+        private static readonly DateTimeOffset PendingApprovalLockoutEnd = DateTimeOffset.MaxValue;
+
         private static async Task<IResult> RegisterUser(UserRegistrationDto registration, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
-            var cache = sp.GetRequiredService<IOutputCacheStore>(); 
+            var cache = sp.GetRequiredService<IOutputCacheStore>();
 
             if (!EmailValidator.IsValid(registration.Email))
                 return Results.ValidationProblem(new Dictionary<string, string[]> { { "Email", new[] { "Invalid email format." } } });
+
             var user = new User
             {
                 UserName = registration.Username,
                 Email = registration.Email,
-                FirstName = registration.FirstName, 
+                FirstName = registration.FirstName,
                 MiddleName = registration.MiddleName,
                 LastName = registration.LastName,
                 Prefix = registration.Prefix,
                 Suffix = registration.Suffix,
-                Position = registration.Position
+                Position = registration.Position,              
+                LockoutEnabled = true,
+                LockoutEnd = PendingApprovalLockoutEnd
             };
-            var result = await userManager.CreateAsync(user, registration.Password);         
-            await cache.EvictByTagAsync(_userRegister,default);
+
+            var result = await userManager.CreateAsync(user, registration.Password);
+            await cache.EvictByTagAsync(_userRegister, default);
             if (!result.Succeeded)
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
             var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
             await outputCacheStore.EvictByTagAsync("roles", default);
+            await outputCacheStore.EvictByTagAsync(RoleGroup, default);
 
-            return Results.Ok("User registered successfully.");
+            return Results.Ok(new
+            {
+                userId = user.Id,
+                userName = user.UserName,
+                message = "Registration successful. Your account is pending admin approval and cannot log in yet."
+            });
         }
-       
+
+      
         private static async Task<IResult> GetRegisteredUsers(IServiceProvider sp, int page, int pageSize)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
             page = page <= 0 ? 1 : page;
             pageSize = pageSize <= 0 ? 10 : pageSize;
-            pageSize = pageSize > 100 ? 100 : pageSize; 
+            pageSize = pageSize > 100 ? 100 : pageSize;
 
             var query = userManager.Users;
 
-            var totalCount = await query.CountAsync();
+            var totalCount = await query.CountAsync();  
 
             var users = await query
                 .Skip((page - 1) * pageSize)
@@ -581,7 +655,7 @@ namespace IMIS.Presentation.UserModule
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
             return Results.Ok(new
-            {              
+            {
                 data = users,
                 totalCount,
                 totalPages,
@@ -608,7 +682,7 @@ namespace IMIS.Presentation.UserModule
                     { "Email", new[] { "Invalid email format." } }
                 });
             }
-            // Update properties
+
             user.UserName = registration.Username;
             user.Email = registration.Email;
             user.FirstName = registration.FirstName;
@@ -623,7 +697,7 @@ namespace IMIS.Presentation.UserModule
             {
                 return Results.ValidationProblem(updateResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
             }
-            
+
             if (!string.IsNullOrWhiteSpace(registration.Password))
             {
                 var token = await userManager.GeneratePasswordResetTokenAsync(user);
@@ -639,8 +713,9 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok("User updated successfully.");
         }
-        private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp)
-        where TUser : User
+
+     
+        private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp) where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var userManager = signInManager.UserManager;
@@ -648,9 +723,52 @@ namespace IMIS.Presentation.UserModule
             var dbContext = sp.GetRequiredService<ImisDbContext>();
 
             var user = await userManager.FindByNameAsync(login.Username);
-            if (user == null || !await userManager.CheckPasswordAsync(user, login.Password))
+            if (user == null)
             {
                 return Results.Json(new { message = "Invalid credentials." }, statusCode: StatusCodes.Status401Unauthorized);
+            }
+
+         
+            if (await userManager.IsLockedOutAsync(user))
+            {
+                var isPendingApproval = user.LockoutEnd == PendingApprovalLockoutEnd;
+
+                return Results.Json(new
+                {
+                    message = isPendingApproval
+                        ? "Your account is pending admin approval. Please wait for an administrator to approve your account before logging in."
+                        : $"This account is locked out until {user.LockoutEnd:yyyy-MM-dd hh:mm tt} (UTC). Please try again later or contact an administrator.",
+                    pendingApproval = isPendingApproval,
+                    lockoutEnabled = user.LockoutEnabled,
+                    lockoutEnd = user.LockoutEnd
+                }, statusCode: StatusCodes.Status423Locked);
+            }
+
+            var passwordValid = await userManager.CheckPasswordAsync(user, login.Password);
+            if (!passwordValid)
+            {
+              
+                if (userManager.SupportsUserLockout)
+                {
+                    await userManager.AccessFailedAsync(user);
+
+                    if (await userManager.IsLockedOutAsync(user))
+                    {
+                        return Results.Json(new
+                        {
+                            message = $"Too many failed login attempts. This account is now locked out until {user.LockoutEnd:yyyy-MM-dd hh:mm tt} (UTC).",
+                            lockoutEnabled = user.LockoutEnabled,
+                            lockoutEnd = user.LockoutEnd
+                        }, statusCode: StatusCodes.Status423Locked);
+                    }
+                }
+
+                return Results.Json(new { message = "Invalid credentials." }, statusCode: StatusCodes.Status401Unauthorized);
+            }
+
+            if (userManager.SupportsUserLockout && user.AccessFailedCount > 0)
+            {
+                await userManager.ResetAccessFailedCountAsync(user);
             }
 
             var roles = await userManager.GetRolesAsync(user);
@@ -669,8 +787,7 @@ namespace IMIS.Presentation.UserModule
                 }
             }
 
-            var offices = dbContext.UserOffices.Where(uo => uo.UserId == user.Id && uo.IsActive)
-                .Join(dbContext.Offices, uo => uo.OfficeId, o => o.Id,
+            var offices = dbContext.UserOffices.Where(uo => uo.UserId == user.Id && uo.IsActive).Join(dbContext.Offices, uo => uo.OfficeId, o => o.Id,
                 (uo, o) => new
                 {
                     o.Id,
@@ -717,26 +834,22 @@ namespace IMIS.Presentation.UserModule
                 refreshToken
             });
         }
-        private static async Task<IResult> ChangePassword<TUser>([FromBody] ChangePasswordRequest request,[FromServices] UserManager<TUser> userManager,
-        HttpContext httpContext) where TUser : User
-        {          
+        private static async Task<IResult> ChangePassword<TUser>([FromBody] ChangePasswordRequest request, [FromServices] UserManager<TUser> userManager, HttpContext httpContext) where TUser : User
+        {
             var username = request.Username;
             var user = await userManager.FindByNameAsync(username);
             if (user == null)
-            {              
+            {
                 return Results.NotFound("User not found.");
-            }            
+            }
             var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
             if (!result.Succeeded)
-            {               
+            {
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
-            }         
+            }
             return Results.Ok("Password changed successfully.");
-        }      
-        private static async Task<IResult> RefreshToken<TUser>(
-        [FromBody] UserRefreshDto refresh,
-        IServiceProvider sp)
-        where TUser : User
+        }
+        private static async Task<IResult> RefreshToken<TUser>([FromBody] UserRefreshDto refresh, IServiceProvider sp) where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var userManager = signInManager.UserManager;
@@ -747,6 +860,16 @@ namespace IMIS.Presentation.UserModule
             if (user == null)
             {
                 return Results.NotFound("User not found.");
+            }
+
+            if (await userManager.IsLockedOutAsync(user))
+            {
+                return Results.Json(new
+                {
+                    message = $"This account is locked out until {user.LockoutEnd:yyyy-MM-dd hh:mm tt} (UTC).",
+                    lockoutEnabled = user.LockoutEnabled,
+                    lockoutEnd = user.LockoutEnd
+                }, statusCode: StatusCodes.Status423Locked);
             }
 
             var providedHashedToken = TokenUtils.HashToken(refresh.RefreshToken);
@@ -775,7 +898,7 @@ namespace IMIS.Presentation.UserModule
                 roles,
                 userManager,
                 roleManager,
-                effectivePermissions 
+                effectivePermissions
             );
 
             var newRefreshToken = TokenUtils.GenerateRefreshToken();
@@ -795,16 +918,160 @@ namespace IMIS.Presentation.UserModule
         }
 
         // Revoke Refresh Token method
-        private static async Task<IResult> RevokeRefreshToken<TUser>([FromBody] UserRefreshDto refresh,IServiceProvider sp)where TUser : User
+        private static async Task<IResult> RevokeRefreshToken<TUser>([FromBody] UserRefreshDto refresh, IServiceProvider sp) where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var user = await signInManager.UserManager.FindByIdAsync(refresh.Id);
             if (user == null)
-            {              
+            {
                 return Results.NotFound("Token not found.");
             }
-            await signInManager.UserManager.RemoveAuthenticationTokenAsync(user, "IMIS_API", "refresh_token");          
+            await signInManager.UserManager.RemoveAuthenticationTokenAsync(user, "IMIS_API", "refresh_token");
             return Results.Ok("Refresh token revoked successfully.");
+        }
+     
+        private static async Task<IResult> UpdateUserLockout(string userId, UserLockoutDto dto, IServiceProvider sp)
+        {
+            var userManager = sp.GetRequiredService<UserManager<User>>();
+            var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
+
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null)
+                return Results.NotFound(new { message = "User not found." });
+
+            if (!userManager.SupportsUserLockout)
+                return Results.BadRequest(new { message = "Lockout is not supported by the current user store configuration." });
+
+            var setEnabledResult = await userManager.SetLockoutEnabledAsync(user, dto.LockoutEnabled);
+            if (!setEnabledResult.Succeeded)
+                return Results.ValidationProblem(setEnabledResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
+
+            var setEndResult = await userManager.SetLockoutEndDateAsync(user, dto.LockoutEnd);
+            if (!setEndResult.Succeeded)
+                return Results.ValidationProblem(setEndResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
+        
+            await outputCacheStore.EvictByTagAsync(RoleGroup, default);
+            await outputCacheStore.EvictByTagAsync("roles", default);
+
+            return Results.Ok(new
+            {
+                userId = user.Id,
+                userName = user.UserName,
+                lockoutEnabled = user.LockoutEnabled,
+                lockoutEnd = user.LockoutEnd,
+                message = "User lockout settings updated successfully."
+            });
+        }
+     
+        private static async Task<IResult> UnlockUser(string userId, IServiceProvider sp)
+        {
+            var userManager = sp.GetRequiredService<UserManager<User>>();
+            var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
+
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null)
+                return Results.NotFound(new { message = "User not found." });
+
+            var setEndResult = await userManager.SetLockoutEndDateAsync(user, null);
+            if (!setEndResult.Succeeded)
+                return Results.ValidationProblem(setEndResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
+
+            if (userManager.SupportsUserLockout)
+                await userManager.ResetAccessFailedCountAsync(user);
+           
+            await outputCacheStore.EvictByTagAsync(RoleGroup, default);
+            await outputCacheStore.EvictByTagAsync("roles", default);
+
+            return Results.Ok(new
+            {
+                userId = user.Id,
+                userName = user.UserName,
+                message = "User account unlocked successfully."
+            });
+        }
+       
+        private static async Task<IResult> GetPendingApprovalUsers(int page, int pageSize, IServiceProvider sp)
+        {
+            var userManager = sp.GetRequiredService<UserManager<User>>();
+
+            page = page <= 0 ? 1 : page;
+            pageSize = pageSize <= 0 ? 10 : pageSize;
+            pageSize = pageSize > 100 ? 100 : pageSize;
+
+            var now = DateTimeOffset.UtcNow;
+
+            var query = userManager.Users.Where(u =>
+                u.LockoutEnd == PendingApprovalLockoutEnd ||
+                (u.LockoutEnabled && u.LockoutEnd.HasValue && u.LockoutEnd.Value > now));
+
+            var totalCount = await query.CountAsync();
+
+            var users = await query
+              
+                .OrderByDescending(u => u.LockoutEnd == PendingApprovalLockoutEnd)
+                .ThenBy(u => u.LastName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.UserName,
+                    u.Email,
+                    u.FirstName,
+                    u.MiddleName,
+                    u.LastName,
+                    u.Position,
+                    u.LockoutEnabled,
+                    u.LockoutEnd
+                })
+                .ToListAsync();
+
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var data = users.Select(u => new
+            {
+                u.Id,
+                u.UserName,
+                u.Email,
+                u.FirstName,
+                u.MiddleName,
+                u.LastName,
+                u.Position,
+                u.LockoutEnabled,
+                u.LockoutEnd,
+                IsPendingApproval = u.LockoutEnd == PendingApprovalLockoutEnd
+            });
+
+            return Results.Ok(new
+            {
+                data,
+                totalCount,
+                totalPages,
+                page,
+                pageSize
+            });
+        }
+
+        // GET /users/{userId}/lockout-status
+        private static async Task<IResult> GetUserLockoutStatus(string userId, IServiceProvider sp)
+        {
+            var userManager = sp.GetRequiredService<UserManager<User>>();
+
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null)
+                return Results.NotFound(new { message = "User not found." });
+
+            var isLockedOut = await userManager.IsLockedOutAsync(user);
+
+            return Results.Ok(new
+            {
+                userId = user.Id,
+                userName = user.UserName,
+                lockoutEnabled = user.LockoutEnabled,
+                lockoutEnd = user.LockoutEnd,
+                accessFailedCount = user.AccessFailedCount,
+                isLockedOut
+            });
         }
 
         private static async Task<IResult> CreateRole([FromBody] string roleName, IServiceProvider sp)
@@ -838,7 +1105,7 @@ namespace IMIS.Presentation.UserModule
             if (user == null)
             {
                 return Results.NotFound(new
-                {                 
+                {
                     message = "User not found."
                 });
             }
@@ -847,7 +1114,7 @@ namespace IMIS.Presentation.UserModule
             if (result.Succeeded)
             {
                 return Results.Ok(new
-                {                  
+                {
                     message = "User deleted successfully."
                 });
             }
@@ -867,7 +1134,7 @@ namespace IMIS.Presentation.UserModule
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
             var roles = roleManager.Roles.ToList();
             return Results.Ok(roles);
-        }      
+        }
         private static async Task<IResult> EditRole(RoleManager<IdentityRole> roleManager, string roleId, [FromBody] string newRoleName,
         IServiceProvider sp)
         {
@@ -888,7 +1155,7 @@ namespace IMIS.Presentation.UserModule
             if (!result.Succeeded)
             {
                 return Results.BadRequest(result.Errors);
-            }        
+            }
             var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
             await outputCacheStore.EvictByTagAsync("roles", default);
             return Results.Ok($"Role updated successfully to '{newRoleName}'.");
@@ -996,7 +1263,7 @@ namespace IMIS.Presentation.UserModule
             await outputCacheStore.EvictByTagAsync("roles", default);
 
             return Results.Ok(response);
-        }      
+        }
 
         private static async Task<IResult> UpdateUserRoles([FromBody] UpdateUserRolesRequest request, IServiceProvider sp)
         {
@@ -1007,9 +1274,9 @@ namespace IMIS.Presentation.UserModule
             var user = await userManager.FindByIdAsync(request.UserId!);
             if (user == null)
                 return Results.NotFound("User not found.");
-           
+
             var currentRoles = await userManager.GetRolesAsync(user);
-         
+
             if (currentRoles.Any())
             {
                 var removeResult = await userManager.RemoveFromRolesAsync(user, currentRoles);
@@ -1017,7 +1284,7 @@ namespace IMIS.Presentation.UserModule
                     return Results.ValidationProblem(removeResult.Errors.ToDictionary(
                         e => e.Code, e => new[] { e.Description }));
             }
-         
+
             var newRoles = new List<string>();
             foreach (var roleDto in request.Roles!)
             {
@@ -1026,7 +1293,7 @@ namespace IMIS.Presentation.UserModule
                     return Results.NotFound($"Role with ID {roleDto.RoleId} not found.");
                 newRoles.Add(role.Name!);
             }
-           
+
             if (newRoles.Any())
             {
                 var addResult = await userManager.AddToRolesAsync(user, newRoles);
