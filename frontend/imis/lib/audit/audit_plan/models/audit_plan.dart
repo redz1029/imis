@@ -36,6 +36,8 @@ class AuditPlan {
   @JsonKey(fromJson: _entriesFromJson, defaultValue: [])
   final List<AuditPlanEntry> entries;
 
+
+
   const AuditPlan({
     this.id = 0,
     this.isDeleted = false,
@@ -59,6 +61,9 @@ class AuditPlan {
 
   /// Falls back to "Draft" while a record has no resolved status name.
   String get effectiveStatusName => statusName ?? 'Draft';
+
+  
+
 
   static List<AuditPlanEntry> _entriesFromJson(Object? json) {
     if (json is List) {

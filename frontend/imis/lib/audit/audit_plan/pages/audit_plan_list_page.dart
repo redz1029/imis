@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:imis/utils/print_preview_util.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -450,7 +451,14 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
                                           if (value == 'edit') {
                                             _openForm(plan: plan);
                                           }
-                                        },
+                                          if (value == 'pdf') {
+                                            openAuditPlanReportPreview(
+                                              plan.id,
+                                              plan.forUser,
+                                              context: context,
+                                            );
+                                          }
+                                         },
                                         itemBuilder: (_) => [
                                           const PopupMenuItem(
                                             value: 'edit',
@@ -465,7 +473,21 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
                                               ],
                                             ),
                                           ),
+                                          const PopupMenuItem(
+                                            value: 'pdf',
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.picture_as_pdf_outlined,
+                                                  size: 18,
+                                                ),
+                                                SizedBox(width: 8),
+                                                Text('PDF'),
+                                              ],
+                                            ),
+                                          ),
                                         ],
+                                        
                                       ),
                                     ],
                                   ),

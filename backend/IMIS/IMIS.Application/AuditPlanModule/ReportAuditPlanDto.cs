@@ -13,37 +13,20 @@ namespace IMIS.Application.AuditPlanModule
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        // Replaces the old plain-string PlanStatus. AuditPlan now carries
-        // status via AuditStatusId/AuditStatus (FK to the shared AuditStatus
-        // lookup table), same pattern as AuditPlanDto. PlanStatus is kept as
-        // a display-friendly derived string so FastReport templates that
-        // already bind to "PlanStatus" don't need to change.
         public int AuditStatusId { get; set; }
         public string? StatusCode { get; set; }
         public string PlanStatus { get; set; } = string.Empty;
 
         public string BatchFormattedDates { get; set; } = string.Empty;
 
-        // Pulled from the parent AuditProgramme — AuditPlan itself has no
-        // AuditPlanObjective/ScopeOfAudit fields (confirmed against the
-        // AuditPlan domain class). Requires AuditPlan.AuditProgramme to be
-        // included by whatever query builds this DTO, or these come back
-        // empty.
         public string AuditPlanObjective { get; set; } = string.Empty;
         public string ScopeOfAudit { get; set; } = string.Empty;
 
-        // Signature block — no equivalent existed on ReportAuditProgrammeDto
-        // at all; the Audit Programme report has no Prepared-by/Approved-by
-        // band. Added here since the printed Audit Plan document has one.
         public string PreparedByName { get; set; } = string.Empty;
         public string PreparedByDate { get; set; } = string.Empty;
         public string ApprovedByName { get; set; } = string.Empty;
         public string ApprovedByDate { get; set; } = string.Empty;
 
-        // FLAT list — every entry in this plan, in Day/Time order.
-        // FastReport's DataBand binds to AuditData.FlatEntries, same
-        // convention as ReportAuditProgrammeDto. Reuses the existing
-        // ReportScheduleEntryDto shape rather than duplicating it.
         public List<ReportScheduleEntryDto> FlatEntries { get; set; } = new();
 
         public ReportAuditPlanDto() { }
@@ -64,9 +47,9 @@ namespace IMIS.Application.AuditPlanModule
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
 
-            // ASSUMPTION: AuditPlanObjective/ScopeOfAudit come from the
-            // parent Programme. If AuditProgramme isn't loaded on this
-            // entity, both fall back to empty strings rather than throwing.
+            // NOTE: still empty unless the caller's query does
+            // .Include(x => x.AuditProgramme) before constructing this DTO —
+            // see fix notes, this class cannot load that itself.
             AuditPlanObjective = entity.AuditProgramme?.AuditPlanObjective ?? string.Empty;
             ScopeOfAudit = entity.AuditProgramme?.ScopeOfAudit ?? string.Empty;
 
@@ -109,6 +92,10 @@ namespace IMIS.Application.AuditPlanModule
                             }));
                     }
 
+                    // FIX: Standard is now a plain typed field (entry.StandardText),
+                    // matching the Flutter Plan page's free-text "STANDARD" column.
+                    // The old IsoStandardAuditPlans join is kept as a fallback only,
+                    // for any legacy entries that still carry that data instead.
                     string standardChaptersCombined = "N/A";
                     if (entry.IsoStandardAuditPlans != null && entry.IsoStandardAuditPlans.Any())
                     {
@@ -122,22 +109,35 @@ namespace IMIS.Application.AuditPlanModule
                             standardChaptersCombined = string.Join(", ", clauses);
                     }
 
-                    // Prefer named ResponsiblePersons (this is what carries
-                    // "Opening Meeting" attendee roles and any named-auditor
-                    // overrides); fall back to the assigned Team's display
-                    // name when no individual has been named for this entry.
-                    string auditorsLinesCombined = "Unassigned";
+                    // Team label ("Team 1", etc.) prefixed onto the responsible-names list —
+                    // this part IS fixable now, since IsoAuditors/Team exists on this entity.
+                    string? teamLabel = null;
+                    if (entry.IsoAuditors != null && entry.IsoAuditors.Any())
+                    {
+                        var firstAuditorLink = entry.IsoAuditors.FirstOrDefault(a => a.TeamId != null);
+                        if (firstAuditorLink != null)
+                        {
+                            teamLabel = firstAuditorLink.Team?.Name ?? $"Team {firstAuditorLink.TeamId}";
+                        }
+                    }
+
+                    string auditorsLinesCombined;
                     if (entry.ResponsiblePersons != null && entry.ResponsiblePersons.Any())
                     {
-                        auditorsLinesCombined = string.Join(Environment.NewLine, entry.ResponsiblePersons
+                        var names = entry.ResponsiblePersons
                             .Select(r => r.Name ?? string.Empty)
-                            .Where(n => !string.IsNullOrEmpty(n)));
+                            .Where(n => !string.IsNullOrEmpty(n));
+                        auditorsLinesCombined = teamLabel != null
+                            ? teamLabel + Environment.NewLine + string.Join(Environment.NewLine, names)
+                            : string.Join(Environment.NewLine, names);
                     }
-                    else if (entry.IsoAuditors != null && entry.IsoAuditors.Any())
+                    else if (teamLabel != null)
                     {
-                        string teamName = entry.IsoAuditors.FirstOrDefault(a => a.Team != null)?.Team?.Name
-                                       ?? $"Team {entry.IsoAuditors.FirstOrDefault(a => a.TeamId != null)?.TeamId ?? 1}";
-                        auditorsLinesCombined = teamName;
+                        auditorsLinesCombined = teamLabel;
+                    }
+                    else
+                    {
+                        auditorsLinesCombined = "Unassigned";
                     }
 
                     DateTime calculatedEntryDate = entity.StartDate.AddDays(entry.DayNumber - 1);
@@ -166,10 +166,6 @@ namespace IMIS.Application.AuditPlanModule
                 Id = Id,
                 StartDate = StartDate,
                 EndDate = EndDate,
-                // AuditStatusId / AuditStatus intentionally NOT mapped here —
-                // same rule as AuditPlanDto.ToEntity(): status transitions must
-                // go through a dedicated ChangeStatusAsync, never a general save,
-                // so a report DTO round-trip can't silently revert the status.
                 IsDeleted = IsDeleted,
                 RowVersion = RowVersion
             };
@@ -177,9 +173,6 @@ namespace IMIS.Application.AuditPlanModule
 
         private static string ResolvePreparerName(IsoAuditor? preparer)
         {
-            // NOTE: IsoAuditor.IsoAuditors is the (oddly named) Auditor?
-            // navigation on that entity — not a typo here, matching the
-            // actual domain class.
             return ResolveAuditorName(preparer?.IsoAuditors);
         }
 
