@@ -22,7 +22,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../common_services/common_service.dart';
 import '../../../office/models/office.dart';
 import '../../pgs_reports/models/pgs_summary_narrative.dart';
-import '../../pgs_reports/pages/manage_summary_narrative_report_page.dart';
 import '../../pgs_reports/services/summary_narrative_service.dart';
 import '../../../user/models/user_registration.dart';
 import '../../../utils/api_endpoint.dart';
@@ -342,7 +341,7 @@ class _DeliverableStatusMonitoringPageState
                     minHeight: 18,
                   ),
                   decoration: const BoxDecoration(
-                    color: Colors.red,
+                    color: blue,
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -480,7 +479,7 @@ class _DeliverableStatusMonitoringPageState
                   _buildPagination(),
                 ],
               ),
-      floatingActionButton: isMobile ? _buildMobileFAB() : null,
+      // floatingActionButton: isMobile ? _buildMobileFAB() : null,
     );
   }
 
@@ -555,7 +554,7 @@ class _DeliverableStatusMonitoringPageState
                   ],
                 ),
               ),
-              if (!isMobile) _buildHeaderActions(),
+              // if (!isMobile) _buildHeaderActions(),
             ],
           ),
           const SizedBox(height: 16),
@@ -564,59 +563,59 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  Widget _buildHeaderActions() {
-    return Row(
-      children: [
-        PermissionWidget(
-          allowedRoles: [
-            PermissionRoleString.pgsAuditor,
-            PermissionRoleString.roleAdmin,
-          ],
-          child: OutlinedButton.icon(
-            onPressed:
-                () => showDialog(
-                  context: context,
-                  barrierDismissible: true,
-                  builder: (_) => const ManageSummaryNarrativeDialog(),
-                ),
-            icon: const Icon(Icons.description_outlined, size: 16),
-            label: const Text('Manage Reports', style: TextStyle(fontSize: 13)),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF1A1D23),
-              side: BorderSide(color: Colors.grey.shade300),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        PermissionWidget(
-          allowedRoles: [
-            PermissionRoleString.pgsAuditor,
-            PermissionRoleString.roleAdmin,
-          ],
-          child: ElevatedButton.icon(
-            onPressed: showReportDialog,
-            icon: const Icon(Icons.add, size: 16, color: Colors.white),
-            label: const Text(
-              'Create Report',
-              style: TextStyle(color: Colors.white, fontSize: 13),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              elevation: 0,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildHeaderActions() {
+  //   return Row(
+  //     children: [
+  //       PermissionWidget(
+  //         allowedRoles: [
+  //           PermissionRoleString.pgsAuditor,
+  //           PermissionRoleString.roleAdmin,
+  //         ],
+  //         child: OutlinedButton.icon(
+  //           onPressed:
+  //               () => showDialog(
+  //                 context: context,
+  //                 barrierDismissible: true,
+  //                 builder: (_) => const ManageSummaryNarrativeDialog(),
+  //               ),
+  //           icon: const Icon(Icons.description_outlined, size: 16),
+  //           label: const Text('Manage Reports', style: TextStyle(fontSize: 13)),
+  //           style: OutlinedButton.styleFrom(
+  //             foregroundColor: const Color(0xFF1A1D23),
+  //             side: BorderSide(color: Colors.grey.shade300),
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(4),
+  //             ),
+  //             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+  //           ),
+  //         ),
+  //       ),
+  //       const SizedBox(width: 10),
+  //       PermissionWidget(
+  //         allowedRoles: [
+  //           PermissionRoleString.pgsAuditor,
+  //           PermissionRoleString.roleAdmin,
+  //         ],
+  //         child: ElevatedButton.icon(
+  //           onPressed: showReportDialog,
+  //           icon: const Icon(Icons.add, size: 16, color: Colors.white),
+  //           label: const Text(
+  //             'Create Report',
+  //             style: TextStyle(color: Colors.white, fontSize: 13),
+  //           ),
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: primaryColor,
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(4),
+  //             ),
+  //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+  //             elevation: 0,
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildFilterBar(bool isMobile) {
     return Container(
@@ -1431,57 +1430,57 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  Widget _buildMobileFAB() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PermissionWidget(
-          allowedRoles: [
-            PermissionRoleString.pgsAuditor,
-            PermissionRoleString.roleAdmin,
-          ],
-          child: FloatingActionButton.extended(
-            heroTag: "manage_audit",
-            backgroundColor: Colors.white,
-            elevation: 2,
-            onPressed:
-                () => showDialog(
-                  context: context,
-                  barrierDismissible: true,
-                  builder: (_) => const ManageSummaryNarrativeDialog(),
-                ),
-            icon: Icon(
-              Icons.description_outlined,
-              color: primaryColor,
-              size: 18,
-            ),
-            label: Text(
-              'Manage Reports',
-              style: TextStyle(color: primaryColor, fontSize: 13),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        PermissionWidget(
-          allowedRoles: [
-            PermissionRoleString.pgsAuditor,
-            PermissionRoleString.roleAdmin,
-          ],
-          child: FloatingActionButton.extended(
-            heroTag: "create_report",
-            backgroundColor: primaryColor,
-            elevation: 2,
-            onPressed: showReportDialog,
-            icon: const Icon(Icons.add, color: Colors.white, size: 18),
-            label: const Text(
-              'Create Report',
-              style: TextStyle(color: Colors.white, fontSize: 13),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildMobileFAB() {
+  //   return Column(
+  //     mainAxisSize: MainAxisSize.min,
+  //     children: [
+  //       PermissionWidget(
+  //         allowedRoles: [
+  //           PermissionRoleString.pgsAuditor,
+  //           PermissionRoleString.roleAdmin,
+  //         ],
+  //         child: FloatingActionButton.extended(
+  //           heroTag: "manage_audit",
+  //           backgroundColor: Colors.white,
+  //           elevation: 2,
+  //           onPressed:
+  //               () => showDialog(
+  //                 context: context,
+  //                 barrierDismissible: true,
+  //                 builder: (_) => const ManageSummaryNarrativeDialog(),
+  //               ),
+  //           icon: Icon(
+  //             Icons.description_outlined,
+  //             color: primaryColor,
+  //             size: 18,
+  //           ),
+  //           label: Text(
+  //             'Manage Reports',
+  //             style: TextStyle(color: primaryColor, fontSize: 13),
+  //           ),
+  //         ),
+  //       ),
+  //       const SizedBox(height: 10),
+  //       PermissionWidget(
+  //         allowedRoles: [
+  //           PermissionRoleString.pgsAuditor,
+  //           PermissionRoleString.roleAdmin,
+  //         ],
+  //         child: FloatingActionButton.extended(
+  //           heroTag: "create_report",
+  //           backgroundColor: primaryColor,
+  //           elevation: 2,
+  //           onPressed: showReportDialog,
+  //           icon: const Icon(Icons.add, color: Colors.white, size: 18),
+  //           label: const Text(
+  //             'Create Report',
+  //             style: TextStyle(color: Colors.white, fontSize: 13),
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   void showReportDialog() {
     showDialog(

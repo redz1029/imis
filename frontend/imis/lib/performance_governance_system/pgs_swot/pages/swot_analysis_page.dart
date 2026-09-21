@@ -573,7 +573,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                     icon: const Icon(
                       Icons.description_outlined,
                       size: 16,
-                      color: Colors.blueAccent,
+                      color: blue,
                     ),
                     onPressed: () {
                       if (_isServiceHeadView) {
@@ -685,7 +685,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                             Icon(
                               Icons.description_outlined,
                               size: 16,
-                              color: Colors.blueAccent,
+                              color: blue,
                             ),
                             SizedBox(width: 8),
                             Text('Print preview'),
@@ -2057,7 +2057,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
         DropdownButtonFormField<String>(
           dropdownColor: mainBgColor,
-          value: _selectedOfficeId,
+          initialValue: _selectedOfficeId,
           isExpanded: true,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 12,

@@ -22,6 +22,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
+import 'package:imis/utils/permission_role_string.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -64,49 +65,17 @@ class OperationReviewProtocolPageState
   final _pgsService = PerformanceGovernanceSystemService(Dio());
   bool _mobileFiltersExpanded = false;
   bool _officeListLoading = false;
+  String? _roleName;
+  bool get _canViewServiceOffice =>
+      _roleName != null && _roleName != PermissionRoleString.roleStandardUser;
+
+  int _fetchFilterRequestId = 0;
 
   @override
   void initState() {
     super.initState();
+    // fetchOperationReview();
     _initialize();
-  }
-
-  Future<void> fetchOperationReview({int page = 1, String? searchQuery}) async {
-    if (_isLoading) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final roleId = await _getRoleId();
-
-      if (roleId.isEmpty) {
-        debugPrint('Role ID is empty, aborting fetch.');
-        return;
-      }
-
-      final pageList = await _operationReviewProtocolService
-          .getOperationReviewProtocolList(
-            page: page,
-            pageSize: _pageSize,
-            searchQuery: searchQuery,
-            roleId: roleId,
-          );
-
-      if (mounted) {
-        setState(() {
-          _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
-          operationReviewprotocolList = pageList.items;
-          filteredList = List.from(operationReviewprotocolList);
-        });
-      }
-    } catch (e) {
-      debugPrint(e.toString());
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
   }
 
   Future<void> _loadOfficesForService(String serviceId) async {
@@ -126,38 +95,8 @@ class OperationReviewProtocolPageState
     }
   }
 
-  // Future<void> fetchFilter({int? page, int pageSize = 15}) async {
-  //   if (_isLoading) return;
-
-  //   setState(() => _isLoading = true);
-
-  //   try {
-  //     final targetPage = page ?? _currentPage;
-  //     final roleIdParam = await _getRoleId();
-
-  //     final result = await _operationReviewProtocolService
-  //         .getOperationReviewProtocolList(
-  //           roleId: roleIdParam,
-  //           page: targetPage,
-  //           pageSize: pageSize,
-  //           officeId: _selectedOfficeId,
-  //           periodId: _selectedPeriodId,
-  //           parentofficeid: _selectedOfficeId,
-  //         );
-
-  //     setState(() {
-  //       operationReviewprotocolList = result.items;
-  //       filteredList = result.items;
-  //       _currentPage = result.page;
-  //       _totalCount = result.totalCount;
-  //     });
-  //   } finally {
-  //     setState(() => _isLoading = false);
-  //   }
-  // }
   Future<void> fetchFilter({int? page, int pageSize = 15}) async {
-    if (_isLoading) return;
-
+    final requestId = ++_fetchFilterRequestId;
     setState(() => _isLoading = true);
 
     try {
@@ -174,6 +113,8 @@ class OperationReviewProtocolPageState
             parentofficeid: _selectedServiceId,
           );
 
+      if (!mounted || requestId != _fetchFilterRequestId) return;
+
       setState(() {
         operationReviewprotocolList = result.items;
         filteredList = result.items;
@@ -181,7 +122,9 @@ class OperationReviewProtocolPageState
         _totalCount = result.totalCount;
       });
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted && requestId == _fetchFilterRequestId) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -203,13 +146,38 @@ class OperationReviewProtocolPageState
 
   Future<void> _initialize() async {
     setState(() => _isLoading = true);
+    final prefs = await SharedPreferences.getInstance();
+    _roleName = prefs.getString('selectedRole');
+    final roleId = await _getRoleId();
 
-    final service = await _commonService.fetchServiceEvalutors();
-    final periods = await _commonService.fetchPgsPeriod();
+    List<Office> offices = [];
+    List<OfficeEvaluators> services = [];
+    List<PgsPeriod> periods = [];
+
+    try {
+      offices = await _deliverableStatusMonitoring.fetchOffices(roleId: roleId);
+    } catch (e) {
+      debugPrint('fetchOffices failed');
+    }
+
+    if (_canViewServiceOffice) {
+      try {
+        services = await _commonService.fetchServiceEvalutors();
+      } catch (e) {
+        debugPrint('fetchServiceEvalutors failed');
+      }
+    }
+
+    try {
+      periods = await _commonService.fetchPgsPeriod();
+    } catch (e) {
+      debugPrint('fetchPerformanceValidationToolPeriod failed');
+    }
 
     if (!mounted) return;
     setState(() {
-      serviceList = service;
+      officeList = offices;
+      serviceList = services;
       pgsPeriodList = periods;
       _isLoading = false;
     });
@@ -326,8 +294,7 @@ class OperationReviewProtocolPageState
                             totalItems: _totalCount,
                             itemsPerPage: _pageSize,
                             isLoading: _isLoading,
-                            onPageChanged:
-                                (page) => fetchOperationReview(page: page),
+                            onPageChanged: (page) => fetchFilter(page: page),
                           ),
                           const SizedBox(width: 60),
                         ],
@@ -413,7 +380,7 @@ class OperationReviewProtocolPageState
       _selectedPeriodId = null;
       filteredList = List.from(operationReviewprotocolList);
     });
-    fetchOperationReview();
+    fetchFilter();
   }
 
   Widget _buildFilterBar(bool isMobile) {
@@ -441,13 +408,15 @@ class OperationReviewProtocolPageState
               spacing: 10,
               runSpacing: 10,
               children: [
-                buildDropdown(child: _serviceDropdown()),
-                buildDropdown(
-                  child: PermissionWidget(
-                    permission: AppPermissions.viewOffice,
-                    child: _officeDropdown(),
+                if (_canViewServiceOffice) ...[
+                  buildDropdown(child: _serviceDropdown()),
+                  buildDropdown(
+                    child: PermissionWidget(
+                      permission: AppPermissions.viewOffice,
+                      child: _officeDropdown(),
+                    ),
                   ),
-                ),
+                ],
                 buildDropdown(child: _periodDropdown()),
               ],
             ),
@@ -565,13 +534,23 @@ class OperationReviewProtocolPageState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // SizedBox(
-                        //   height: 38,
-                        //   child: PermissionWidget(
-                        //     permission: AppPermissions.viewOffice,
-                        //     child: _officeDropdown(),
-                        //   ),
-                        // ),
+                        if (_roleName !=
+                            PermissionRoleString.roleStandardUser) ...[
+                          SizedBox(
+                            height: 38,
+                            child: PermissionWidget(
+                              permission: AppPermissions.viewOffice,
+                              child: _serviceDropdown(),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 38,
+                            child: PermissionWidget(
+                              permission: AppPermissions.viewOffice,
+                              child: _officeDropdown(),
+                            ),
+                          ),
+                        ],
                         SizedBox(
                           height: 38,
                           child: PermissionWidget(
@@ -588,40 +567,6 @@ class OperationReviewProtocolPageState
     );
   }
 
-  // Widget _serviceDropdown() {
-  //   return ConstrainedBox(
-  //     constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
-  //     child: SizedBox(
-  //       height: 38,
-  //       child: SearchableDropdown(
-  //         items: ["All Service", ...serviceList.map((s) => s.officeName)],
-  //         selectedItem:
-  //             _selectedServiceId == null
-  //                 ? null
-  //                 : (serviceList
-  //                     .where((s) => s.officeId.toString() == _selectedServiceId)
-  //                     .firstOrNull
-  //                     ?.officeName),
-  //         hintText: "All Service",
-  //         searchHint: "Search services...",
-  //         prefixIcon: Icons.apartment_outlined,
-  //         onChanged: (value) {
-  //           final newId =
-  //               value == "All Service"
-  //                   ? null
-  //                   : serviceList
-  //                       .firstWhere((s) => s.officeName == value)
-  //                       .officeId
-  //                       .toString();
-  //           setState(() {
-  //             _selectedServiceId = newId;
-  //           });
-  //           fetchFilter();
-  //         },
-  //       ),
-  //     ),
-  //   );
-  // }
   Widget _serviceDropdown() {
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),

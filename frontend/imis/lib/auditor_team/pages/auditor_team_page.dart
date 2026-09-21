@@ -778,7 +778,7 @@ class AuditorTeamPageState extends State<AuditorTeamPage>
                                       onChanged:
                                           (val) =>
                                               setDialog(() => isActive = val),
-                                      activeColor: primaryColor,
+                                      activeThumbColor: primaryColor,
                                     ),
                                   ],
                                 ),

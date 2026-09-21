@@ -3055,7 +3055,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                       Icons
                                                           .description_outlined,
                                                       size: 16,
-                                                      color: Colors.blueAccent,
+                                                      color: blue,
                                                     ),
                                                     onPressed: () {
                                                       openRoadmapInNewTab(
@@ -3238,9 +3238,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                             Icons
                                                                 .description_outlined,
                                                             size: 16,
-                                                            color:
-                                                                Colors
-                                                                    .blueAccent,
+                                                            color: blue,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Print preview'),

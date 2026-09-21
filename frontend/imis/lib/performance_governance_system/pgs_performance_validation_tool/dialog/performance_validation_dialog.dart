@@ -1,4 +1,5 @@
 // ignore_for_file: unused_local_variable
+// ignore_for_file: deprecated_member_use
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';

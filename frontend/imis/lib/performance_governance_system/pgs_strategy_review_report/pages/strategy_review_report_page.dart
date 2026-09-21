@@ -868,7 +868,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                       Icons
                                                           .description_outlined,
                                                       size: 16,
-                                                      color: Colors.blueAccent,
+                                                      color: blue,
                                                     ),
                                                   ),
                                                 ),
@@ -1023,9 +1023,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                                                               Icons
                                                                   .description_outlined,
                                                               size: 16,
-                                                              color:
-                                                                  Colors
-                                                                      .blueAccent,
+                                                              color: blue,
                                                             ),
                                                             SizedBox(width: 8),
                                                             Text(

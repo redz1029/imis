@@ -13,7 +13,7 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/office/models/office_evaluators.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
-import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/performance_governance_system/performance_validation_tool_period/models/performance_validation_tool_period.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/dialog/performance_validation_dialog.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/performance_validation_tool.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/services/performance_validation_services.dart';
@@ -21,6 +21,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
+import 'package:imis/utils/permission_role_string.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -52,7 +53,7 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
   List<PerformanceGovernanceSystem> operationReviewprotocolList = [];
   List<PerformanceGovernanceSystem> filteredList = [];
   String? _selectedPeriodId;
-  List<PgsPeriod> pgsPeriodList = [];
+  List<PerformanceValidationToolPeriod> performanceValidationPeriodList = [];
   final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
     Dio(),
   );
@@ -60,6 +61,10 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
   final _performanceValidation = PerformanceValidationServices(Dio());
   bool _mobileFiltersExpanded = false;
   bool _officeListLoading = false;
+  String? _roleName;
+  bool get _canViewServiceOffice =>
+      _roleName != null && _roleName != PermissionRoleString.roleStandardUser;
+  int _fetchFilterRequestId = 0;
 
   @override
   void initState() {
@@ -67,50 +72,8 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
     _initialize();
   }
 
-  Future<void> fetchPerformanceValidation({
-    int page = 1,
-    String? searchQuery,
-  }) async {
-    if (_isLoading) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final roleId = await _getRoleId();
-
-      if (roleId.isEmpty) {
-        debugPrint('Role ID is empty, aborting fetch.');
-        return;
-      }
-
-      final pageList = await _performanceValidation
-          .getPerformanceValidationPageList(
-            page: page,
-            pageSize: _pageSize,
-            searchQuery: searchQuery,
-            roleId: roleId,
-          );
-
-      if (mounted) {
-        setState(() {
-          _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
-          operationReviewprotocolList = pageList.items;
-          filteredList = List.from(operationReviewprotocolList);
-        });
-      }
-    } catch (e) {
-      debugPrint(e.toString());
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
   Future<void> fetchFilter({int? page, int pageSize = 15}) async {
-    if (_isLoading) return;
-
+    final requestId = ++_fetchFilterRequestId;
     setState(() => _isLoading = true);
 
     try {
@@ -127,6 +90,8 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
             parentOfficeId: _selectedServiceId,
           );
 
+      if (!mounted || requestId != _fetchFilterRequestId) return;
+
       setState(() {
         operationReviewprotocolList = result.items;
         filteredList = result.items;
@@ -134,7 +99,9 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
         _totalCount = result.totalCount;
       });
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted && requestId == _fetchFilterRequestId) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -173,18 +140,37 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
 
   Future<void> _initialize() async {
     setState(() => _isLoading = true);
+    final prefs = await SharedPreferences.getInstance();
+    _roleName = prefs.getString('selectedRole');
     final roleId = await _getRoleId();
-    final offices = await _deliverableStatusMonitoring.fetchOffices(
-      roleId: roleId,
-    );
-    final services = await _commonService.fetchServiceEvalutors();
-    final periods = await _commonService.fetchPgsPeriod();
+
+    List<Office> offices = [];
+    List<OfficeEvaluators> services = [];
+    List<PerformanceValidationToolPeriod> periods = [];
+
+    try {
+      offices = await _deliverableStatusMonitoring.fetchOffices(roleId: roleId);
+    } catch (e) {
+      debugPrint('fetchOffices failed');
+    }
+
+    try {
+      services = await _commonService.fetchServiceEvalutors();
+    } catch (e) {
+      debugPrint('fetchServiceEvalutors failed');
+    }
+
+    try {
+      periods = await _commonService.fetchPerformanceValidationToolPeriod();
+    } catch (e) {
+      debugPrint('fetchPerformanceValidationToolPeriod failed');
+    }
 
     if (!mounted) return;
     setState(() {
       officeList = offices;
       serviceList = services;
-      pgsPeriodList = periods;
+      performanceValidationPeriodList = periods;
       _isLoading = false;
     });
     _applyDefaultActivePeriod();
@@ -192,7 +178,7 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
 
   void _applyDefaultActivePeriod() {
     final activePeriod =
-        pgsPeriodList
+        performanceValidationPeriodList
             .where((p) => !p.isDeleted && p.isActive == true)
             .firstOrNull;
 
@@ -300,9 +286,7 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
                             totalItems: _totalCount,
                             itemsPerPage: _pageSize,
                             isLoading: _isLoading,
-                            onPageChanged:
-                                (page) =>
-                                    fetchPerformanceValidation(page: page),
+                            onPageChanged: (page) => fetchFilter(page: page),
                           ),
                           const SizedBox(width: 60),
                         ],
@@ -477,7 +461,7 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
       _selectedPeriodId = null;
       filteredList = List.from(operationReviewprotocolList);
     });
-    fetchPerformanceValidation();
+    fetchFilter();
   }
 
   Widget _buildFilterBar(bool isMobile) {
@@ -505,13 +489,15 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
               spacing: 10,
               runSpacing: 10,
               children: [
-                buildDropdown(child: _serviceDropdown()),
-                buildDropdown(
-                  child: PermissionWidget(
-                    permission: AppPermissions.viewOffice,
-                    child: _officeDropdown(),
+                if (_canViewServiceOffice) ...[
+                  buildDropdown(child: _serviceDropdown()),
+                  buildDropdown(
+                    child: PermissionWidget(
+                      permission: AppPermissions.viewOffice,
+                      child: _officeDropdown(),
+                    ),
                   ),
-                ),
+                ],
                 buildDropdown(child: _periodDropdown()),
               ],
             ),
@@ -628,13 +614,23 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // SizedBox(
-                        //   height: 38,
-                        //   child: PermissionWidget(
-                        //     permission: AppPermissions.viewOffice,
-                        //     child: _officeDropdown(),
-                        //   ),
-                        // ),
+                        if (_canViewServiceOffice) ...[
+                          SizedBox(
+                            height: 38,
+                            child: PermissionWidget(
+                              permission: AppPermissions.viewOffice,
+                              child: _serviceDropdown(),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 38,
+                            child: PermissionWidget(
+                              permission: AppPermissions.viewOffice,
+                              child: _officeDropdown(),
+                            ),
+                          ),
+                        ],
+
                         SizedBox(
                           height: 38,
                           child: PermissionWidget(
@@ -651,44 +647,10 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
     );
   }
 
-  // Widget _officeDropdown() {
-  //   return ConstrainedBox(
-  //     constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
-  //     child: SizedBox(
-  //       height: 38,
-  //       child: SearchableDropdown(
-  //         items: ["All Offices", ...officeList.map((o) => o.name)],
-  //         selectedItem:
-  //             _selectedOfficeId == null
-  //                 ? "All Offices"
-  //                 : (officeList
-  //                         .where((o) => o.id.toString() == _selectedOfficeId)
-  //                         .firstOrNull
-  //                         ?.name ??
-  //                     "All Offices"),
-  //         hintText: "Office",
-  //         searchHint: "Search offices...",
-  //         prefixIcon: Icons.apartment_outlined,
-  //         onChanged: (value) {
-  //           setState(() {
-  //             _selectedOfficeId =
-  //                 value == "All Offices"
-  //                     ? null
-  //                     : officeList
-  //                         .firstWhere((o) => o.name == value)
-  //                         .id
-  //                         .toString();
-  //           });
-  //           fetchFilter();
-  //         },
-  //       ),
-  //     ),
-  //   );
-  // }
-
   Widget _periodDropdown() {
     final converter = LongDateOnlyConverter();
-    final items = pgsPeriodList.where((p) => !p.isDeleted).toList();
+    final items =
+        performanceValidationPeriodList.where((p) => !p.isDeleted).toList();
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
       child: SizedBox(

@@ -992,15 +992,13 @@ class _PerformanceGovernanceSystemPageState
 
                                   final Color dotColor =
                                       isDone
-                                          ? Colors.green
+                                          ? kSuccess
                                           : isPending
                                           ? Colors.orange.shade600
                                           : Colors.grey.shade300;
 
                                   final Color lineColor =
-                                      isDone
-                                          ? Colors.green
-                                          : Colors.grey.shade200;
+                                      isDone ? kSuccess : Colors.grey.shade200;
 
                                   final String label =
                                       signatoryJson['label']?.toString() ??
@@ -1103,9 +1101,7 @@ class _PerformanceGovernanceSystemPageState
                                                     fontWeight: FontWeight.w600,
                                                     color:
                                                         isDone
-                                                            ? Colors
-                                                                .green
-                                                                .shade700
+                                                            ? kSuccess
                                                             : isPending
                                                             ? Colors
                                                                 .orange
@@ -1167,7 +1163,7 @@ class _PerformanceGovernanceSystemPageState
                                                   decoration: BoxDecoration(
                                                     color:
                                                         isDone
-                                                            ? Colors.green
+                                                            ? kSuccess
                                                                 .withValues(
                                                                   alpha: 0.1,
                                                                 )
@@ -1198,9 +1194,7 @@ class _PerformanceGovernanceSystemPageState
                                                           FontWeight.w600,
                                                       color:
                                                           isDone
-                                                              ? Colors
-                                                                  .green
-                                                                  .shade700
+                                                              ? kSuccess
                                                               : isPending
                                                               ? Colors
                                                                   .orange
@@ -1243,7 +1237,7 @@ class _PerformanceGovernanceSystemPageState
                                       ),
                                     )
                                     : const Icon(
-                                      Icons.delete_outline_rounded,
+                                      CupertinoIcons.delete_simple,
                                       size: 18,
                                       color: Colors.white,
                                     ),
@@ -1509,6 +1503,7 @@ class _PerformanceGovernanceSystemPageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildPageHeader(isMobile),
+
           _buildFilterBar(isMobile),
           gap4px,
           Expanded(
@@ -2039,7 +2034,7 @@ class _PerformanceGovernanceSystemPageState
         _statusCounts['For Approval'] ?? 0,
         Colors.orange.shade600,
       ),
-      ('Approved', _statusCounts['Approved'] ?? 0, Colors.green.shade600),
+      ('Approved', _statusCounts['Approved'] ?? 0, kSuccess),
       ('Disapproved', _statusCounts['Disapproved'] ?? 0, Colors.red.shade400),
     ];
     return Container(
@@ -2351,7 +2346,7 @@ class _PerformanceGovernanceSystemPageState
                           icon: const Icon(
                             Icons.description_outlined,
                             size: 16,
-                            color: Colors.blueAccent,
+                            color: blue,
                           ),
                           onSelected: (value) async {
                             if (value == 'AllCombinedView') {
@@ -2598,7 +2593,7 @@ class _PerformanceGovernanceSystemPageState
                                     Icon(
                                       Icons.description_outlined,
                                       size: 16,
-                                      color: Colors.blueAccent,
+                                      color: blue,
                                     ),
                                     SizedBox(width: 8),
                                     Text('Print preview'),
@@ -2639,36 +2634,61 @@ class _PerformanceGovernanceSystemPageState
                 ],
               ),
               gap8px,
+
               Row(
                 children: [
-                  Container(
-                    width: 16,
-                    height: 16,
-                    margin: EdgeInsets.only(right: 4),
-                    decoration: BoxDecoration(
-                      color: getStatusColor(status),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(child: getStatusIcon(status)),
-                  ),
-                  Text(
-                    status,
-                    style: TextStyle(
-                      color: getStatusColor(status),
-                      fontSize: 12,
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => _showSignatoryTimeline(context, pgs),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 16,
+                            height: 16,
+                            margin: const EdgeInsets.only(right: 4),
+                            decoration: BoxDecoration(
+                              color: getStatusColor(status),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(child: getStatusIcon(status)),
+                          ),
+                          Text(
+                            status,
+                            style: TextStyle(
+                              color: getStatusColor(status),
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.info_outline,
+                            size: 13,
+                            color: getStatusColor(status),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
+
               gap4px,
+
               Row(
                 children: [
                   Expanded(
-                    child: Text(officeName, style: TextStyle(fontSize: 12)),
+                    child: Text(
+                      officeName,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ),
                 ],
               ),
+
               gap4px,
+
               Row(
                 children: [
                   Expanded(
@@ -2851,7 +2871,7 @@ class _PgsFormDialog extends StatefulWidget {
   final Future<bool> Function(String, PerformanceGovernanceSystem) onSubmit;
   final int? Function() lastResponseStatusCode;
   final String userId;
-  final String? Function() lastResponseMessage; // add this
+  final String? Function() lastResponseMessage;
 
   const _PgsFormDialog({
     required this.officeName,
@@ -2865,7 +2885,7 @@ class _PgsFormDialog extends StatefulWidget {
     required this.lastResponseStatusCode,
     this.existingPgs,
     required this.userId,
-    required this.lastResponseMessage, // add this
+    required this.lastResponseMessage,
   });
 
   @override
@@ -2911,15 +2931,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
   final _roadMapService = RoadmapService(Dio());
   final _dateConverter = const LongDateOnlyConverter();
   final Map<int, List<dynamic>> _kraDescCache = {};
-  // Map<int, String> _initialDelivCtrl = {};
-  // Map<int, String> _initialKraCtrl = {};
-  // Map<int, int?> _initialSelectedKRA = {};
-  // Map<int, String> _initialByWhen = {};
-  // Map<int, bool> _initialIsDirect = {};
-  // int? _initialPeriodId;
-  // double _initialCompetence = 0.0;
-  // double _initialResource = 0.0;
-  // double _initialConfidence = 0.0;
+
   bool get _isMobile => MediaQuery.sizeOf(context).width < 640;
   List<PgsPeriod> get _activePeriods =>
       widget.periods.where((p) => !p.isDeleted).toList();
@@ -3596,52 +3608,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       ],
     ),
   );
-
-  // void _takeSnapshot() {
-  //   _initialPeriodId = _selectedPeriodId;
-  //   _initialCompetence = _competence;
-  //   _initialResource = _resource;
-  //   _initialConfidence = _confidence;
-
-  //   _initialDelivCtrl = {
-  //     for (final e in _delivCtrl.entries) e.key: e.value.text,
-  //   };
-  //   _initialKraCtrl = {for (final e in _kraCtrl.entries) e.key: e.value.text};
-  //   _initialSelectedKRA = Map.from(_selectedKRA);
-  //   _initialByWhen = {
-  //     for (int i = 0; i < _rows.length; i++) i: _rows[i].byWhen,
-  //   };
-  //   _initialIsDirect = {
-  //     for (int i = 0; i < _rows.length; i++) i: _rows[i].isDirect,
-  //   };
-  // }
-
-  // bool _hasUnsavedChanges() {
-  //   if (_selectedPeriodId != _initialPeriodId) return true;
-  //   if (_competence != _initialCompetence) return true;
-  //   if (_resource != _initialResource) return true;
-  //   if (_confidence != _initialConfidence) return true;
-
-  //   final snapshotRowCount = _initialByWhen.length;
-  //   for (int i = 0; i < snapshotRowCount; i++) {
-  //     if ((_delivCtrl[i]?.text ?? '') != (_initialDelivCtrl[i] ?? '')) {
-  //       return true;
-  //     }
-  //     if ((_kraCtrl[i]?.text ?? '') != (_initialKraCtrl[i] ?? '')) return true;
-  //     if (_selectedKRA[i] != _initialSelectedKRA[i]) return true;
-  //     if (_rows[i].byWhen != (_initialByWhen[i] ?? '')) return true;
-  //     if (_rows[i].isDirect != (_initialIsDirect[i] ?? true)) return true;
-  //   }
-
-  //   for (int i = snapshotRowCount; i < _rows.length; i++) {
-  //     final hasDeliverable = _delivCtrl[i]?.text.trim().isNotEmpty == true;
-  //     final hasKra = _selectedKRA[i] != null;
-  //     final hasByWhen = _rows[i].byWhen.isNotEmpty;
-  //     if (hasDeliverable || hasKra || hasByWhen) return true;
-  //   }
-
-  //   return false;
-  // }
 
   Widget _periodSelector(bool isMobile) {
     String formatPeriodRange(PgsPeriod p) {
@@ -4398,7 +4364,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                                 Icons.thumb_up,
                                 color:
                                     _selectedDisapproved[i] == false
-                                        ? Colors.green
+                                        ? kSuccess
                                         : grey,
                               ),
                               onPressed: () {
@@ -4600,433 +4566,6 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
       ),
     );
   }
-
-  //   Widget _buildKraCell(int i) {
-  //     _kraCtrl.putIfAbsent(i, () => TextEditingController());
-  //     _kraRoadmapCtrl.putIfAbsent(i, () => TextEditingController());
-  //     final hasEditPermission = _permissionService.hasPermission(
-  //       AppPermissions.editPerformanceGovernanceSystem,
-  //     );
-
-  //     final List<String> options = _kraDropdownOptions[i] ?? [];
-  //     final bool hasOptions = options.isNotEmpty;
-  //     final String savedKra = _kraCtrl[i]?.text ?? '';
-  //     if ((_selectedKRAText[i] == null || _selectedKRAText[i]!.isEmpty) &&
-  //         savedKra.isNotEmpty &&
-  //         !_changingKRA.contains(i)) {
-  //       final bool isRoadmapKra = options.contains(savedKra);
-  //       _selectedKRAText[i] = isRoadmapKra ? savedKra : 'Others';
-  //       _isRetrievedData.add(i);
-  //     }
-
-  //     final String currentSelection = _selectedKRAText[i] ?? '';
-  //     final bool hasSelection = currentSelection.isNotEmpty;
-  //     final bool isOthers = currentSelection == 'Others';
-  //     final bool isChanging = _changingKRA.contains(i);
-  //     final bool isLocked = _isRetrievedData.contains(i);
-
-  //     Future<void> onChangeKraTapped() async {
-  //       final confirm = await showDialog<bool>(
-  //         context: context,
-  //         builder:
-  //             (ctx) => Dialog(
-  //               backgroundColor: Colors.transparent,
-  //               child: Container(
-  //                 width: 380,
-  //                 padding: const EdgeInsets.all(24),
-  //                 decoration: BoxDecoration(
-  //                   color: kSurface,
-  //                   borderRadius: BorderRadius.circular(16),
-  //                   boxShadow: [
-  //                     BoxShadow(
-  //                       color: Colors.black.withValues(alpha: 0.12),
-  //                       blurRadius: 32,
-  //                       offset: const Offset(0, 12),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 child: Column(
-  //                   mainAxisSize: MainAxisSize.min,
-  //                   children: [
-  //                     Container(
-  //                       width: 56,
-  //                       height: 56,
-  //                       decoration: BoxDecoration(
-  //                         color: kPrimaryBg,
-  //                         borderRadius: BorderRadius.circular(16),
-  //                       ),
-  //                       child: const Icon(
-  //                         Icons.swap_horiz_rounded,
-  //                         color: primaryColor,
-  //                         size: 28,
-  //                       ),
-  //                     ),
-  //                     const SizedBox(height: 16),
-  //                     Text(
-  //                       'Change KRA?',
-  //                       style: GoogleFonts.plusJakartaSans(
-  //                         fontWeight: FontWeight.w700,
-  //                         fontSize: 17,
-  //                         color: kText,
-  //                       ),
-  //                     ),
-  //                     const SizedBox(height: 8),
-  //                     Text(
-  //                       'Changing the KRA will clear the current selection. Do you want to continue?',
-  //                       style: GoogleFonts.plusJakartaSans(
-  //                         fontSize: 13,
-  //                         color: kMuted,
-  //                         height: 1.5,
-  //                       ),
-  //                       textAlign: TextAlign.center,
-  //                     ),
-  //                     const SizedBox(height: 24),
-  //                     Row(
-  //                       children: [
-  //                         Expanded(
-  //                           child: OutlinedButton(
-  //                             onPressed: () => Navigator.pop(ctx, false),
-  //                             style: OutlinedButton.styleFrom(
-  //                               side: const BorderSide(color: kBorder),
-  //                               padding: const EdgeInsets.symmetric(vertical: 12),
-  //                               shape: RoundedRectangleBorder(
-  //                                 borderRadius: BorderRadius.circular(8),
-  //                               ),
-  //                             ),
-  //                             child: Text(
-  //                               'Cancel',
-  //                               style: GoogleFonts.plusJakartaSans(
-  //                                 color: kMuted,
-  //                                 fontWeight: FontWeight.w600,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                         ),
-  //                         const SizedBox(width: 10),
-  //                         Expanded(
-  //                           child: ElevatedButton(
-  //                             onPressed: () => Navigator.pop(ctx, true),
-  //                             style: ElevatedButton.styleFrom(
-  //                               backgroundColor: primaryColor,
-  //                               elevation: 0,
-  //                               padding: const EdgeInsets.symmetric(vertical: 12),
-  //                               shape: RoundedRectangleBorder(
-  //                                 borderRadius: BorderRadius.circular(8),
-  //                               ),
-  //                             ),
-  //                             child: Text(
-  //                               'Yes, Change',
-  //                               style: GoogleFonts.plusJakartaSans(
-  //                                 color: Colors.white,
-  //                                 fontWeight: FontWeight.w600,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                         ),
-  //                       ],
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ),
-  //             ),
-  //       );
-
-  //       if (confirm == true) {
-  //         final oldText = _kraCtrl[i]?.text ?? '';
-  //         setState(() {
-  //           if (oldText.isNotEmpty) _previousKRAText[i] = oldText;
-  //           _selectedKRAText[i] = '';
-  //           _kraCtrl[i]?.clear();
-  //           _rows[i].isDirect = true;
-  //           _isRetrievedData.remove(i);
-  //           _changingKRA.add(i);
-  //         });
-  //         final kraId = _selectedKRA[i];
-  //         if (kraId != null) {
-  //           await _loadKraDescriptionsForRow(i, kraId);
-  //         }
-  //       }
-  //     }
-
-  //     final changeKraButton = MouseRegion(
-  //       cursor: SystemMouseCursors.click,
-  //       child: GestureDetector(
-  //         onTap: onChangeKraTapped,
-  //         child: const Row(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             Icon(Icons.swap_horiz, color: Colors.blue, size: 15),
-  //             Text(
-  //               'Change KRA',
-  //               style: TextStyle(fontSize: 11, color: Colors.blue),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     );
-
-  // Widget buildPreviousSuggestion() {
-  //   final prev = _previousKRAText[i];
-  //   if (prev == null || prev.isEmpty) return const SizedBox.shrink();
-  //   return Padding(
-  //     padding: const EdgeInsets.only(top: 6),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         const Text(
-  //           'Previous KRA:',
-  //           style: TextStyle(fontSize: 10, color: Colors.grey),
-  //         ),
-  //         const SizedBox(height: 4),
-  //         Container(
-  //           width: double.infinity,
-  //           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-  //           decoration: BoxDecoration(
-  //             color: Colors.blue.shade50,
-  //             borderRadius: BorderRadius.circular(6),
-  //             border: Border.all(color: Colors.blue.shade200),
-  //           ),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               // Full text, no ellipsis — selectable para ma-copy
-  //               SelectableText(
-  //                 prev,
-  //                 style: TextStyle(
-  //                   fontSize: 11,
-  //                   color: Colors.blue.shade700,
-  //                   fontStyle: FontStyle.italic,
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 6),
-  //               Row(
-  //                 mainAxisAlignment: MainAxisAlignment.end,
-  //                 children: [
-  //                   // Restore button
-  //                   GestureDetector(
-  //                     onTap: () {
-  //                       setState(() {
-  //                         _kraCtrl[i]?.text = prev;
-  //                         _selectedKRAText[i] = 'Others';
-  //                         // _rows[i].isDirect = false;
-  //                         _changingKRA.remove(i);
-  //                         _previousKRAText.remove(i);
-  //                       });
-  //                     },
-  //                     child: Container(
-  //                       padding: const EdgeInsets.symmetric(
-  //                         horizontal: 10,
-  //                         vertical: 4,
-  //                       ),
-  //                       decoration: BoxDecoration(
-  //                         color: Colors.blue.shade100,
-  //                         borderRadius: BorderRadius.circular(4),
-  //                       ),
-  //                       child: Row(
-  //                         mainAxisSize: MainAxisSize.min,
-  //                         children: [
-  //                           Icon(
-  //                             Icons.restore,
-  //                             size: 12,
-  //                             color: Colors.blue.shade700,
-  //                           ),
-  //                           const SizedBox(width: 4),
-  //                           Text(
-  //                             'Use this',
-  //                             style: TextStyle(
-  //                               fontSize: 11,
-  //                               fontWeight: FontWeight.w600,
-  //                               color: Colors.blue.shade700,
-  //                             ),
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-  //                   ),
-  //                   const SizedBox(width: 6),
-  //                   // Dismiss button
-  //                   GestureDetector(
-  //                     onTap: () {
-  //                       setState(() => _previousKRAText.remove(i));
-  //                     },
-  //                     child: Icon(
-  //                       Icons.close,
-  //                       size: 14,
-  //                       color: Colors.grey.shade500,
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // if (!hasOptions && !hasSelection && !isChanging) {
-  //   return Padding(
-  //     padding: const EdgeInsets.all(6),
-  //     child: AbsorbPointer(
-  //       child: TextFormField(
-  //         readOnly: true,
-  //         style: const TextStyle(fontSize: 11),
-  //         decoration: const InputDecoration(
-  //           hintText: 'Select a process first…',
-  //           border: OutlineInputBorder(),
-  //           isDense: true,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // if (!hasSelection || isChanging) {
-  //   return Padding(
-  //     padding: const EdgeInsets.all(6),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         DropdownButtonFormField<String>(
-  //           key: ValueKey('kra_dropdown_$i'),
-  //           initialValue: null,
-  //           isExpanded: true,
-  //           hint: const Text(
-  //             '-- Select KRA --',
-  //             style: TextStyle(fontSize: 11),
-  //           ),
-  //           items:
-  //               options.map((opt) {
-  //                 final isOthersOpt = opt == 'Others';
-  //                 return DropdownMenuItem(
-  //                   value: opt,
-  //                   child: Row(
-  //                     children: [
-  //                       if (isOthersOpt)
-  //                         const Icon(
-  //                           Icons.edit,
-  //                           size: 14,
-  //                           color: Colors.blueAccent,
-  //                         ),
-  //                       if (isOthersOpt) const SizedBox(width: 6),
-  //                       Expanded(
-  //                         child: Text(
-  //                           opt,
-  //                           overflow: TextOverflow.ellipsis,
-  //                           style: TextStyle(
-  //                             fontSize: 11,
-  //                             color: isOthersOpt ? Colors.blueAccent : kText,
-  //                             fontStyle:
-  //                                 isOthersOpt
-  //                                     ? FontStyle.italic
-  //                                     : FontStyle.normal,
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 );
-  //               }).toList(),
-  //           onChanged:
-  //               !hasEditPermission
-  //                   ? null
-  //                   : (value) {
-  //                     if (value == null) return;
-  //                     setState(() {
-  //                       _selectedKRAText[i] = value;
-  //                       _changingKRA.remove(i);
-  //                       _isRetrievedData.remove(i);
-  //                       if (value == 'Others') {
-  //                         _rows[i].isDirect = false;
-  //                         _kraCtrl[i]?.clear();
-  //                       } else {
-  //                         _rows[i].isDirect = true;
-  //                         _kraCtrl[i]?.text = value;
-  //                         _previousKRAText.remove(i);
-  //                       }
-  //                     });
-  //                   },
-  //           decoration: const InputDecoration(
-  //             border: OutlineInputBorder(),
-  //             isDense: true,
-  //           ),
-  //         ),
-  //         buildPreviousSuggestion(),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // if (isOthers) {
-  //   return Padding(
-  //     padding: const EdgeInsets.all(6),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         TextFormField(
-  //           controller: _kraCtrl[i],
-  //           readOnly: !hasEditPermission || isLocked,
-  //           maxLines: null,
-  //           style: const TextStyle(fontSize: 12),
-  //           decoration: InputDecoration(
-  //             hintText: 'Type your KRA here…',
-  //             border: const OutlineInputBorder(),
-  //             enabledBorder: OutlineInputBorder(
-  //               borderSide: BorderSide(
-  //                 color: primaryColor.withValues(alpha: 0.5),
-  //               ),
-  //             ),
-  //             focusedBorder: const OutlineInputBorder(
-  //               borderSide: BorderSide(color: primaryColor, width: 1.5),
-  //             ),
-  //             prefixIcon: Icon(
-  //               isLocked ? Icons.lock_outline : Icons.edit,
-  //               size: 14,
-  //               color: primaryColor,
-  //             ),
-  //           ),
-  //           validator:
-  //               (value) =>
-  //                   (value == null || value.trim().isEmpty)
-  //                       ? 'Please type your KRA'
-  //                       : null,
-  //         ),
-  //         if (hasEditPermission) ...[
-  //           const SizedBox(height: 6),
-  //           changeKraButton,
-  //         ],
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // return Padding(
-  //   padding: const EdgeInsets.all(6),
-  //   child: Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       TextFormField(
-  //         controller: _kraCtrl[i],
-  //         readOnly: true,
-  //         maxLines: null,
-  //         style: const TextStyle(fontSize: 12),
-  //         decoration: const InputDecoration(
-  //           hintText: 'KRA description…',
-  //           border: OutlineInputBorder(),
-  //           isDense: true,
-  //           prefixIcon: Icon(
-  //             Icons.lock_outline,
-  //             size: 12,
-  //             color: primaryColor,
-  //           ),
-  //         ),
-  //       ),
-  //       if (hasEditPermission) ...[gap6px, changeKraButton],
-  //     ],
-  //   ),
-  // );
-  //   }
 
   Widget _buildDeliverablesCell(int i) {
     _delivCtrl.putIfAbsent(i, () => TextEditingController());
@@ -6077,13 +5616,13 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                         decoration: BoxDecoration(
                           color:
                               _selectedDisapproved[i] == false
-                                  ? Colors.green.withValues(alpha: 0.1)
+                                  ? kSuccess.withValues(alpha: 0.1)
                                   : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color:
                                 _selectedDisapproved[i] == false
-                                    ? Colors.green
+                                    ? kSuccess
                                     : Colors.grey.shade300,
                           ),
                         ),
@@ -6093,7 +5632,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                               Icons.thumb_up,
                               color:
                                   _selectedDisapproved[i] == false
-                                      ? Colors.green
+                                      ? kSuccess
                                       : Colors.grey,
                             ),
                             const SizedBox(height: 2),
@@ -6249,7 +5788,7 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: row.isDirect ? primaryColor : Colors.blueAccent,
+                      color: row.isDirect ? primaryColor : blue,
                     ),
                   ),
                 ),
@@ -6282,12 +5821,35 @@ class _PgsFormDialogState extends State<_PgsFormDialog>
             const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(child: _outlineBtn(Icons.bar_chart, 'Accomplishment')),
+                Expanded(
+                  child: _outlineBtn(
+                    Icons.bar_chart,
+                    'Accomplishment',
+                    onTap: () => _showAccomplishmentDialog(i),
+                  ),
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: _outlineBtn(
                     Icons.grade_outlined,
                     'Breakthrough Scoring',
+                    onTap: () async {
+                      final deliverableId = _deliverableIds[i] ?? 0;
+
+                      if (deliverableId == 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Please save your deliverables first before viewing breakthrough scoring',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+
+                      await loadBreakThrough(deliverableId);
+                      _showBreakthroughDialog(i);
+                    },
                   ),
                 ),
               ],
