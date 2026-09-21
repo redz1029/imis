@@ -40,7 +40,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     isActive = true
                 },
 
-                // 4.1 NOTES
+                // 4.1 NOTES//
               
                 // 4.2
                 new IsoStandard
