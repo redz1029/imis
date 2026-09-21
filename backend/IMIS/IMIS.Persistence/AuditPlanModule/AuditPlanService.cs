@@ -292,20 +292,99 @@ namespace IMIS.Application.AuditPlanModule
                                           .ConfigureAwait(false);
             if (entity == null) return null;
 
+            var dbContext = _repository.GetDbContext();
+
+            // Programme objective/scope — loaded directly so the report doesn't
+            // depend on the repository having included AuditProgramme.
+            var programmeText = await dbContext.Set<AuditPlan>()
+                .AsNoTracking()
+                .Where(p => p.Id == id)
+                .Select(p => new
+                {
+                    Objective = p.AuditProgramme!.AuditPlanObjective,
+                    Scope = p.AuditProgramme!.ScopeOfAudit
+                })
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            // Per-entry team, auditors and standards — loaded directly so the report
+            // doesn't depend on the repository's Includes.
+            var entriesWithAuditors = await dbContext.Set<AuditPlanEntry>()
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Where(e => e.AuditPlanId == id)
+                .Include(e => e.IsoAuditors).ThenInclude(a => a.Team)
+                .Include(e => e.IsoAuditors).ThenInclude(a => a.IsoAuditors).ThenInclude(au => au.User)
+                .Include(e => e.IsoStandardAuditPlans).ThenInclude(s => s.IsoStandard)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var auditorsByEntryId = entriesWithAuditors.ToDictionary(
+                e => e.Id,
+                e => e.IsoAuditors?.ToList() ?? new List<IsoAuditor>());
+
+            var standardsByEntryId = entriesWithAuditors.ToDictionary(
+                e => e.Id,
+                e => e.IsoStandardAuditPlans?.ToList() ?? new List<IsoStandardAuditPlan>());
+
+            // Team rosters. Plan entries generated from the Audit Programme carry
+            // only a TeamId (no per-entry auditors), so the team's members come
+            // from the AuditorTeams roster — the same source the Plan page's
+            // "Fetch from Team" button uses.
+            var rosterTeamIds = entriesWithAuditors
+                .SelectMany(e => e.IsoAuditors ?? new List<IsoAuditor>())
+                .Select(x => x.TeamId)
+                .Where(x => x != null)
+                .Distinct()
+                .ToList();
+
+            var rosterRows = rosterTeamIds.Count == 0
+                ? new List<AuditorTeams>()
+                : await dbContext.Set<AuditorTeams>()
+                    .AsNoTracking()
+                    .Where(t => rosterTeamIds.Contains(t.TeamId) && t.IsActive == true && t.IsDeleted != true)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+            var rosterAuditorIds = rosterRows
+                .Select(r => (int?)r.AuditorId)
+                .Where(x => x != null)
+                .Select(x => x!.Value)
+                .Distinct()
+                .ToList();
+
+            var rosterAuditors = rosterAuditorIds.Count == 0
+                ? new List<Auditor>()
+                : await dbContext.Set<Auditor>()
+                    .AsNoTracking()
+                    .Include(a => a.User)
+                    .Where(a => rosterAuditorIds.Contains(a.Id))
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+            var rosterAuditorById = rosterAuditors.ToDictionary(a => a.Id);
+
+            var rosterByTeamId = rosterRows
+                .Where(r => (int?)r.TeamId != null)
+                .GroupBy(r => ((int?)r.TeamId)!.Value)
+                .ToDictionary(g => g.Key, g => g.OrderBy(r => r.Id).ToList());
+
             var dto = new ReportAuditPlanDto
             {
                 Id = entity.Id,
                 StartDate = entity.StartDate,
                 EndDate = entity.EndDate,
-                // FIXED: was entity.PlanStatus ?? "Draft" — field removed.
-                // Use the real status name from the navigation property instead.
                 PlanStatus = entity.AuditStatus?.Name ?? "Draft",
                 BatchFormattedDates = FormatBatchDateRange(entity.StartDate, entity.EndDate),
                 IsDeleted = entity.IsDeleted,
                 RowVersion = entity.RowVersion,
 
-                AuditPlanObjective = entity.AuditProgramme?.AuditPlanObjective ?? string.Empty,
-                ScopeOfAudit = entity.AuditProgramme?.ScopeOfAudit ?? string.Empty,
+                AuditPlanObjective = programmeText?.Objective
+                                     ?? entity.AuditProgramme?.AuditPlanObjective
+                                     ?? string.Empty,
+                ScopeOfAudit = programmeText?.Scope
+                               ?? entity.AuditProgramme?.ScopeOfAudit
+                               ?? string.Empty,
 
                 PreparedByName = ResolvePreparerName(entity.Preparer),
                 PreparedByDate = entity.CreatedDate.ToString("MMMM dd, yyyy"),
@@ -330,6 +409,7 @@ namespace IMIS.Application.AuditPlanModule
 
                 foreach (var entry in entity.Entries.OrderBy(e => e.DayNumber).ThenBy(e => e.Time))
                 {
+                    // ---------------- Organizational unit and process ----------------
                     string officeNamesCombined = "N/A";
                     if (entry.AuditPlanProcesses != null && entry.AuditPlanProcesses.Any())
                     {
@@ -380,40 +460,95 @@ namespace IMIS.Application.AuditPlanModule
                             officeNamesCombined = string.Join(Environment.NewLine, processNames);
                     }
 
+                    // ---------------- Standard ----------------
                     string standardChaptersCombined = "N/A";
-                    if (entry.IsoStandardAuditPlans != null && entry.IsoStandardAuditPlans.Any())
+                    if (standardsByEntryId.TryGetValue(entry.Id, out var entryStandards) && entryStandards.Count > 0)
                     {
-                        var clauses = entry.IsoStandardAuditPlans
-                            .Where(isap => isap.IsoStandard != null && !string.IsNullOrEmpty(isap.IsoStandard.ClauseRef))
-                            .Select(isap => isap.IsoStandard!.ClauseRef)
-                            .OrderBy(clause => clause)
+                        var clauses = entryStandards
+                            .Select(s => s.IsoStandard != null ? s.IsoStandard.ClauseRef : s.IsoStandardId.ToString())
+                            .Where(c => !string.IsNullOrWhiteSpace(c))
+                            .Select(c => c!.Trim())
+                            .Distinct()
+                            .OrderBy(c => ClauseSortKey(c), StringComparer.Ordinal)
                             .ToList();
 
                         if (clauses.Any())
                             standardChaptersCombined = string.Join(", ", clauses);
                     }
 
-                    string auditorsLinesCombined = "Unassigned";
-                    if (entry.ResponsiblePersons != null && entry.ResponsiblePersons.Any())
-                    {
-                        var names = entry.ResponsiblePersons
-                            .Select(r => r.Name)
-                            .Where(n => !string.IsNullOrWhiteSpace(n))
-                            .ToList();
+                    // ---------------- Audit team / person responsible ----------------
+                    // Team label, then that team's member names; a blank line separates
+                    // teams. Members come from (1) auditors saved on the entry itself,
+                    // else (2) the team's active AuditorTeams roster — unless the entry
+                    // already has saved responsible persons, which are printed as-is.
+                    var auditorLines = new List<string>();
+                    var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                        if (names.Any())
-                            auditorsLinesCombined = string.Join(Environment.NewLine, names);
-                    }
-                    else if (entry.IsoAuditors != null && entry.IsoAuditors.Any())
+                    bool hasSavedPersons = entry.ResponsiblePersons != null
+                        && entry.ResponsiblePersons.Any(p => !string.IsNullOrWhiteSpace(p.Name));
+
+                    if (auditorsByEntryId.TryGetValue(entry.Id, out var entryAuditorRows) && entryAuditorRows.Count > 0)
                     {
-                        var firstAuditorNode = entry.IsoAuditors.FirstOrDefault();
-                        if (firstAuditorNode != null)
+                        bool firstGroup = true;
+                        foreach (var teamGroup in entryAuditorRows.GroupBy(a => a.TeamId).OrderBy(g => g.Key))
                         {
-                            auditorsLinesCombined = firstAuditorNode.Team != null
-                                ? firstAuditorNode.Team.Name
-                                : $"Team {firstAuditorNode.TeamId ?? 1}";
+                            if (!firstGroup) auditorLines.Add(string.Empty);
+                            firstGroup = false;
+
+                            if (teamGroup.Key != null)
+                            {
+                                var teamName = teamGroup.Select(a => a.Team?.Name)
+                                                        .FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
+                                auditorLines.Add(!string.IsNullOrWhiteSpace(teamName)
+                                    ? teamName!
+                                    : $"Team {teamGroup.Key}");
+                            }
+
+                            int linesBeforeMembers = auditorLines.Count;
+
+                            foreach (var member in teamGroup)
+                            {
+                                var memberName = FormatMemberName(member.IsoAuditors?.User);
+                                if (!string.IsNullOrWhiteSpace(memberName) && seenNames.Add(memberName))
+                                    auditorLines.Add(memberName);
+                            }
+
+                            bool teamHasOwnMembers = auditorLines.Count > linesBeforeMembers;
+
+                            if (!teamHasOwnMembers
+                                && !hasSavedPersons
+                                && teamGroup.Key != null
+                                && rosterByTeamId.TryGetValue(teamGroup.Key.Value, out var roster))
+                            {
+                                var rosterSeen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                                foreach (var row in roster)
+                                {
+                                    var rosterAuditorId = (int?)row.AuditorId;
+                                    if (rosterAuditorId == null
+                                        || !rosterAuditorById.TryGetValue(rosterAuditorId.Value, out var rosterAuditor))
+                                        continue;
+
+                                    var rosterName = FormatMemberName(rosterAuditor.User);
+                                    if (!string.IsNullOrWhiteSpace(rosterName) && rosterSeen.Add(rosterName))
+                                        auditorLines.Add(rosterName);
+                                }
+                            }
                         }
                     }
+
+                    if (entry.ResponsiblePersons != null)
+                    {
+                        foreach (var person in entry.ResponsiblePersons)
+                        {
+                            var personName = person.Name?.Trim();
+                            if (!string.IsNullOrWhiteSpace(personName) && seenNames.Add(personName))
+                                auditorLines.Add(personName);
+                        }
+                    }
+
+                    string auditorsLinesCombined = auditorLines.Any()
+                        ? string.Join(Environment.NewLine, auditorLines)
+                        : "Unassigned";
 
                     DateTime calculatedEntryDate = entity.StartDate.AddDays(entry.DayNumber - 1);
 
@@ -536,6 +671,35 @@ namespace IMIS.Application.AuditPlanModule
             return string.Join(" ", parts);
         }
 
+        // Team-member display name in the printed-form style: "Ms. C. M. Ferrer"
+        // (prefix, first and middle initials, last name, suffix). To print full
+        // names instead, change the two FormatMemberName(...) calls in
+        // ReportGetByIdAsync to ResolveUserName(...).
+        private static string FormatMemberName(User? user)
+        {
+            if (user == null) return string.Empty;
+
+            static string Initials(string? text)
+            {
+                if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+                var letters = text
+                    .Split(new[] { ' ', '.' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(w => char.ToUpperInvariant(w[0]) + ".");
+                return string.Join(" ", letters);
+            }
+
+            var parts = new[]
+            {
+                user.Prefix,
+                Initials(user.FirstName),
+                Initials(user.MiddleName),
+                user.LastName,
+                user.Suffix
+            }.Where(p => !string.IsNullOrWhiteSpace(p));
+
+            return string.Join(" ", parts);
+        }
+
         private static string FormatBatchDateRange(DateTime start, DateTime end)
         {
             if (start.Month == end.Month && start.Year == end.Year)
@@ -544,6 +708,19 @@ namespace IMIS.Application.AuditPlanModule
                 return $"{start:MMMM d} – {end:d, yyyy}";
             }
             return $"{start:MMMM dd, yyyy} - {end:MMMM dd, yyyy}";
+        }
+
+        // Sorts clause references numerically (4.1, 4.2 ... 9.1, 10.1) instead of
+        // as plain text, where "10.1" would come before "4.1".
+        private static string ClauseSortKey(string clause)
+        {
+            var parts = clause.Split('.');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (int.TryParse(parts[i], out var number))
+                    parts[i] = number.ToString("D6");
+            }
+            return string.Join(".", parts);
         }
     }
 }

@@ -28,7 +28,7 @@ namespace IMIS.Persistence.AuditReportModule
         }
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
-            where TEntity : Entity<TId>
+    where TEntity : Entity<TId>
         {
             if (dto is not AuditReportDto aDto)
                 throw new InvalidOperationException("Invalid DTO type.");
@@ -36,17 +36,21 @@ namespace IMIS.Persistence.AuditReportModule
             var entity = aDto.ToEntity();
             var dbContext = _repository.GetDbContext();
 
-            // 1️⃣ Save or update main AuditReport first
             if (entity.Id == 0)
             {
                 dbContext.Add(entity);
+
+                var addedEntry = dbContext.Entry(entity);
+                addedEntry.Property<int?>("AuditeeId").CurrentValue = aDto.AuditeeId;
+                addedEntry.Property<int?>("OfficeAuditedId").CurrentValue = aDto.OfficeAuditedId;
+                addedEntry.Property<long?>("AuditStandardISOId").CurrentValue = aDto.AuditStandardISOId;
+                addedEntry.Property<int?>("AuditPlanEntryId").CurrentValue = aDto.AuditPlanEntryId;
             }
             else
             {
                 var existing = await _repository.GetByIdWithDetailsAsync(entity.Id, cancellationToken).ConfigureAwait(false);
                 if (existing != null)
                 {
-                    // Remove old children collections via DB contexts to avoid FK tracking identity conflicts
                     if (existing.AuditComFindings?.Any() == true)
                         dbContext.Set<AuditComFindings>().RemoveRange(existing.AuditComFindings);
 
@@ -56,15 +60,17 @@ namespace IMIS.Persistence.AuditReportModule
                     if (existing.AuditSummaryFIndings?.Any() == true)
                         dbContext.Set<AuditSummaryFIndings>().RemoveRange(existing.AuditSummaryFIndings);
 
-                    // EF tracks structural values; we set scalar modifications safely here
                     dbContext.Entry(existing).CurrentValues.SetValues(entity);
+
+                    var existingEntry = dbContext.Entry(existing);
+                    existingEntry.Property<int?>("AuditeeId").CurrentValue = aDto.AuditeeId;
+                    existingEntry.Property<int?>("OfficeAuditedId").CurrentValue = aDto.OfficeAuditedId;
+                    existingEntry.Property<long?>("AuditStandardISOId").CurrentValue = aDto.AuditStandardISOId;
+                    existingEntry.Property<int?>("AuditPlanEntryId").CurrentValue = aDto.AuditPlanEntryId;
                 }
             }
 
-            // Save operations persist changes down cleanly
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-            // Sync generated Id back onto returning references
             aDto.Id = entity.Id;
         }
 

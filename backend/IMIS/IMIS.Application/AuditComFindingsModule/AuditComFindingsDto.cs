@@ -7,7 +7,8 @@ namespace IMIS.Application.AuditComFindingsModule
     public class AuditComFindingsDto : BaseDto<AuditComFindings, int>
     {
         public required string CommendableFindings { get; set; }
-        public required string Area { get; set; }
+        public required int Area { get; set; }
+        public int? AreasId { get; set; }
 
         public AuditComFindingsDto() { }
 
@@ -19,6 +20,11 @@ namespace IMIS.Application.AuditComFindingsModule
             Area = entity.Area;
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
+
+            if (entity.Areas != null)
+            {
+                AreasId = entity.Areas.Id;
+            }
         }
 
         public override AuditComFindings ToEntity()

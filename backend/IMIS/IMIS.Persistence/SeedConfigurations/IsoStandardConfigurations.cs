@@ -95,7 +95,7 @@ namespace IMIS.Persistence.SeedConfigurations
 
                 new IsoStandard
                 {
-                    Id = 10,
+                    Id = 7,
                     VersionID = 1,
                     ParentID = 9,
                     ClauseRef = "4.3.a",
@@ -106,7 +106,7 @@ namespace IMIS.Persistence.SeedConfigurations
 
                 new IsoStandard
                 {
-                    Id = 11,
+                    Id = 8,
                     VersionID = 1,
                     ParentID = 9,
                     ClauseRef = "4.3.b",
@@ -117,7 +117,7 @@ namespace IMIS.Persistence.SeedConfigurations
 
                 new IsoStandard
                 {
-                    Id = 12,
+                    Id = 9,
                     VersionID = 1,
                     ParentID = 9,
                     ClauseRef = "4.3.c",
@@ -129,7 +129,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // 4.4
                 new IsoStandard
                 {
-                    Id = 13,
+                    Id = 10,
                     VersionID = 1,
                     ParentID = 1,
                     ClauseRef = "4.4",
@@ -140,7 +140,7 @@ namespace IMIS.Persistence.SeedConfigurations
 
                 new IsoStandard
                 {
-                    Id = 14,
+                    Id = 11,
                     VersionID = 1,
                     ParentID = 13,
                     ClauseRef = "4.4.1",
@@ -151,7 +151,7 @@ namespace IMIS.Persistence.SeedConfigurations
 
                 new IsoStandard
                 {
-                    Id = 15,
+                    Id = 12,
                     VersionID = 1,
                     ParentID = 14,
                     ClauseRef = "4.4.1.a",
@@ -162,7 +162,7 @@ namespace IMIS.Persistence.SeedConfigurations
 
                 new IsoStandard
                 {
-                    Id = 16,
+                    Id = 13,
                     VersionID = 1,
                     ParentID = 14,
                     ClauseRef = "4.4.1.b",
@@ -174,7 +174,7 @@ namespace IMIS.Persistence.SeedConfigurations
 
                 new IsoStandard
                 {
-                    Id = 17,
+                    Id = 14,
                     VersionID = 1,
                     ParentID = 14,
                     ClauseRef = "4.4.1.c",
@@ -188,7 +188,7 @@ namespace IMIS.Persistence.SeedConfigurations
               //end
               new IsoStandard
               {
-                  Id = 18,
+                  Id = 15,
                   VersionID = 1,
                   ParentID = 14,
                   Particulars = "",
@@ -198,7 +198,7 @@ namespace IMIS.Persistence.SeedConfigurations
               },
               new IsoStandard
               {
-                  Id = 19,
+                  Id = 16,
                   VersionID = 1,
                   ParentID = 14,
                   Particulars = "",
@@ -208,7 +208,7 @@ namespace IMIS.Persistence.SeedConfigurations
               },
                 new IsoStandard
                 {
-                    Id = 20,
+                    Id = 17,
                     VersionID = 1,
                     ParentID = 14,
                     Particulars = "",
@@ -218,7 +218,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 },
                 new IsoStandard
                 {
-                    Id = 21,
+                    Id = 18,
                     VersionID = 1,
                     ParentID = 14,
                     Particulars = "",
@@ -228,7 +228,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 },
                 new IsoStandard
                 {
-                    Id = 22,
+                    Id = 19,
                     VersionID = 1,
                     ParentID = 14,
                     Particulars = "",
@@ -240,7 +240,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // 4.4.2 (child of 4.4)
                 new IsoStandard
                 {
-                    Id = 23,
+                    Id = 20,
                     VersionID = 1,
                     ParentID = 13,
                     Particulars = "To the extent necessary, the organization shall:",
@@ -252,7 +252,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // 4.4.2.a
                 new IsoStandard
                 {
-                    Id = 24,
+                    Id = 21,
                     VersionID = 1,
                     ParentID = 23,
                     Particulars = "",
@@ -264,7 +264,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // 4.4.2.b
                 new IsoStandard
                 {
-                    Id = 25,
+                    Id = 22,
                     VersionID = 1,
                     ParentID = 23,
                     Particulars = "",
@@ -279,7 +279,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // =========================
                 new IsoStandard
                 {
-                    Id = 26,
+                    Id = 23,
                     VersionID = 1,
                     ParentID = null,
                     ClauseRef = "5",
@@ -291,7 +291,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // 5.1
                 new IsoStandard
                 {
-                    Id = 27,
+                    Id = 24,
                     VersionID = 1,
                     ParentID = 26,
                     ClauseRef = "5.1",
@@ -303,7 +303,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // 5.1.1
                 new IsoStandard
                 {
-                    Id = 28,
+                    Id = 25,
                     VersionID = 1,
                     ParentID = 27,
                     ClauseRef = "5.1.1",
@@ -314,21 +314,21 @@ namespace IMIS.Persistence.SeedConfigurations
                 },
 
                 // 5.1.1 a–j
-                new IsoStandard { Id = 29, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.a", Particulars = "", Description = "taking accountability for the effectiveness of the quality management system;", isActive = true },
-                new IsoStandard { Id = 30, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.b", Particulars = "", Description = "ensuring that the quality policy and quality objectives are established and compatible with the organization;", isActive = true },
-                new IsoStandard { Id = 31, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.c", Particulars = "", Description = "ensuring integration of QMS requirements into business processes;", isActive = true },
-                new IsoStandard { Id = 32, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.d", Particulars = "", Description = "promoting the use of the process approach and risk-based thinking;", isActive = true },
-                new IsoStandard { Id = 33, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.e", Particulars = "", Description = "ensuring necessary resources are available;", isActive = true },
-                new IsoStandard { Id = 34, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.f", Particulars = "", Description = "communicating the importance of effective quality management;", isActive = true },
-                new IsoStandard { Id = 35, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.g", Particulars = "", Description = "ensuring QMS achieves intended results;", isActive = true },
-                new IsoStandard { Id = 36, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.h", Particulars = "", Description = "engaging and supporting persons to contribute to QMS effectiveness;", isActive = true },
-                new IsoStandard { Id = 37, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.i", Particulars = "", Description = "promoting improvement;", isActive = true },
-                new IsoStandard { Id = 38, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.j", Particulars = "", Description = "supporting other management roles to demonstrate leadership;", isActive = true },
+                new IsoStandard { Id = 26, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.a", Particulars = "", Description = "taking accountability for the effectiveness of the quality management system;", isActive = true },
+                new IsoStandard { Id = 27, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.b", Particulars = "", Description = "ensuring that the quality policy and quality objectives are established and compatible with the organization;", isActive = true },
+                new IsoStandard { Id = 28, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.c", Particulars = "", Description = "ensuring integration of QMS requirements into business processes;", isActive = true },
+                new IsoStandard { Id = 29, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.d", Particulars = "", Description = "promoting the use of the process approach and risk-based thinking;", isActive = true },
+                new IsoStandard { Id = 30, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.e", Particulars = "", Description = "ensuring necessary resources are available;", isActive = true },
+                new IsoStandard { Id = 31, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.f", Particulars = "", Description = "communicating the importance of effective quality management;", isActive = true },
+                new IsoStandard { Id = 32, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.g", Particulars = "", Description = "ensuring QMS achieves intended results;", isActive = true },
+                new IsoStandard { Id = 33, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.h", Particulars = "", Description = "engaging and supporting persons to contribute to QMS effectiveness;", isActive = true },
+                new IsoStandard { Id = 34, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.i", Particulars = "", Description = "promoting improvement;", isActive = true },
+                new IsoStandard { Id = 35, VersionID = 1, ParentID = 28, ClauseRef = "5.1.1.j", Particulars = "", Description = "supporting other management roles to demonstrate leadership;", isActive = true },
 
                 // 5.1.2
                 new IsoStandard
                 {
-                    Id = 39,
+                    Id = 36,
                     VersionID = 1,
                     ParentID = 27,
                     ClauseRef = "5.1.2",
@@ -337,14 +337,14 @@ namespace IMIS.Persistence.SeedConfigurations
                     isActive = true
                 },
 
-                new IsoStandard { Id = 40, VersionID = 1, ParentID = 39, ClauseRef = "5.1.2.a", Particulars = "", Description = "customer and statutory requirements are determined and met;", isActive = true },
-                new IsoStandard { Id = 41, VersionID = 1, ParentID = 39, ClauseRef = "5.1.2.b", Particulars = "", Description = "risks and opportunities affecting conformity are addressed;", isActive = true },
-                new IsoStandard { Id = 42, VersionID = 1, ParentID = 39, ClauseRef = "5.1.2.c", Particulars = "", Description = "focus on enhancing customer satisfaction is maintained.", isActive = true },
+                new IsoStandard { Id = 37, VersionID = 1, ParentID = 39, ClauseRef = "5.1.2.a", Particulars = "", Description = "customer and statutory requirements are determined and met;", isActive = true },
+                new IsoStandard { Id = 38, VersionID = 1, ParentID = 39, ClauseRef = "5.1.2.b", Particulars = "", Description = "risks and opportunities affecting conformity are addressed;", isActive = true },
+                new IsoStandard { Id = 39, VersionID = 1, ParentID = 39, ClauseRef = "5.1.2.c", Particulars = "", Description = "focus on enhancing customer satisfaction is maintained.", isActive = true },
 
                 // 5.2
                 new IsoStandard
                 {
-                    Id = 43,
+                    Id = 40,
                     VersionID = 1,
                     ParentID = 26,
                     ClauseRef = "5.2",
@@ -356,7 +356,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // 5.2.1
                 new IsoStandard
                 {
-                    Id = 44,
+                    Id = 41,
                     VersionID = 1,
                     ParentID = 43,
                     ClauseRef = "5.2.1",
@@ -365,15 +365,15 @@ namespace IMIS.Persistence.SeedConfigurations
                     isActive = true
                 },
 
-                new IsoStandard { Id = 45, VersionID = 1, ParentID = 44, ClauseRef = "5.2.1.a", Particulars = "", Description = "is appropriate to the purpose and context of the organization;", isActive = true },
-                new IsoStandard { Id = 46, VersionID = 1, ParentID = 44, ClauseRef = "5.2.1.b", Particulars = "", Description = "provides a framework for setting quality objectives;", isActive = true },
-                new IsoStandard { Id = 47, VersionID = 1, ParentID = 44, ClauseRef = "5.2.1.c", Particulars = "", Description = "includes a commitment to satisfy applicable requirements;", isActive = true },
-                new IsoStandard { Id = 48, VersionID = 1, ParentID = 44, ClauseRef = "5.2.1.d", Particulars = "", Description = "includes a commitment to continual improvement of the QMS.", isActive = true },
+                new IsoStandard { Id = 42, VersionID = 1, ParentID = 44, ClauseRef = "5.2.1.a", Particulars = "", Description = "is appropriate to the purpose and context of the organization;", isActive = true },
+                new IsoStandard { Id = 43, VersionID = 1, ParentID = 44, ClauseRef = "5.2.1.b", Particulars = "", Description = "provides a framework for setting quality objectives;", isActive = true },
+                new IsoStandard { Id = 44, VersionID = 1, ParentID = 44, ClauseRef = "5.2.1.c", Particulars = "", Description = "includes a commitment to satisfy applicable requirements;", isActive = true },
+                new IsoStandard { Id = 45, VersionID = 1, ParentID = 44, ClauseRef = "5.2.1.d", Particulars = "", Description = "includes a commitment to continual improvement of the QMS.", isActive = true },
 
                 // 5.2.2
                 new IsoStandard
                 {
-                    Id = 49,
+                    Id = 46,
                     VersionID = 1,
                     ParentID = 43,
                     ClauseRef = "5.2.2",
@@ -382,14 +382,14 @@ namespace IMIS.Persistence.SeedConfigurations
                     isActive = true
                 },
 
-                new IsoStandard { Id = 50, VersionID = 1, ParentID = 49, ClauseRef = "5.2.2.a", Particulars = "", Description = "be available and maintained as documented information;", isActive = true },
-                new IsoStandard { Id = 51, VersionID = 1, ParentID = 49, ClauseRef = "5.2.2.b", Particulars = "", Description = "be communicated and understood within the organization;", isActive = true },
-                new IsoStandard { Id = 52, VersionID = 1, ParentID = 49, ClauseRef = "5.2.2.c", Particulars = "", Description = "be available to relevant interested parties.", isActive = true },
+                new IsoStandard { Id = 47, VersionID = 1, ParentID = 49, ClauseRef = "5.2.2.a", Particulars = "", Description = "be available and maintained as documented information;", isActive = true },
+                new IsoStandard { Id = 48, VersionID = 1, ParentID = 49, ClauseRef = "5.2.2.b", Particulars = "", Description = "be communicated and understood within the organization;", isActive = true },
+                new IsoStandard { Id = 49, VersionID = 1, ParentID = 49, ClauseRef = "5.2.2.c", Particulars = "", Description = "be available to relevant interested parties.", isActive = true },
 
                 // 5.3
                 new IsoStandard
                 {
-                    Id = 53,
+                    Id = 50,
                     VersionID = 1,
                     ParentID = 26,
                     ClauseRef = "5.3",
@@ -399,17 +399,17 @@ namespace IMIS.Persistence.SeedConfigurations
                     isActive = true
                 },
 
-                new IsoStandard { Id = 54, VersionID = 1, ParentID = 53, ClauseRef = "5.3.a", Particulars = "", Description = "ensuring QMS conforms to requirements;", isActive = true },
-                new IsoStandard { Id = 55, VersionID = 1, ParentID = 53, ClauseRef = "5.3.b", Particulars = "", Description = "ensuring processes deliver intended outputs;", isActive = true },
-                new IsoStandard { Id = 56, VersionID = 1, ParentID = 53, ClauseRef = "5.3.c", Particulars = "", Description = "reporting on the performance of the quality management system and on opportunities for improvement (see 10.1), in particular to top management;", isActive = true },
-                new IsoStandard { Id = 57, VersionID = 1, ParentID = 53, ClauseRef = "5.3.d", Particulars = "", Description = "ensuring promotion of customer focus.", isActive = true },
+                new IsoStandard { Id = 51, VersionID = 1, ParentID = 53, ClauseRef = "5.3.a", Particulars = "", Description = "ensuring QMS conforms to requirements;", isActive = true },
+                new IsoStandard { Id = 52, VersionID = 1, ParentID = 53, ClauseRef = "5.3.b", Particulars = "", Description = "ensuring processes deliver intended outputs;", isActive = true },
+                new IsoStandard { Id = 53, VersionID = 1, ParentID = 53, ClauseRef = "5.3.c", Particulars = "", Description = "reporting on the performance of the quality management system and on opportunities for improvement (see 10.1), in particular to top management;", isActive = true },
+                new IsoStandard { Id = 54, VersionID = 1, ParentID = 53, ClauseRef = "5.3.d", Particulars = "", Description = "ensuring promotion of customer focus.", isActive = true },
 
                 // =========================
                 // CLAUSE 6 - ROOT
                 // =========================
                 new IsoStandard
                 {
-                    Id = 58,
+                    Id = 55,
                     VersionID = 1,
                     ParentID = null,
                     ClauseRef = "6",
@@ -421,7 +421,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // 6.1
                 new IsoStandard
                 {
-                    Id = 59,
+                    Id = 56,
                     VersionID = 1,
                     ParentID = 58,
                     ClauseRef = "6.1",
@@ -431,15 +431,15 @@ namespace IMIS.Persistence.SeedConfigurations
                     isActive = true
                 },
 
-                new IsoStandard { Id = 60, VersionID = 1, ParentID = 59, ClauseRef = "6.1.a", Particulars = "", Description = "give assurance that the QMS can achieve its intended results;", isActive = true },
-                new IsoStandard { Id = 61, VersionID = 1, ParentID = 59, ClauseRef = "6.1.b", Particulars = "", Description = "enhance desirable effects;", isActive = true },
-                new IsoStandard { Id = 62, VersionID = 1, ParentID = 59, ClauseRef = "6.1.c", Particulars = "", Description = "prevent or reduce undesired effects;", isActive = true },
-                new IsoStandard { Id = 63, VersionID = 1, ParentID = 59, ClauseRef = "6.1.d", Particulars = "", Description = "achieve improvement.", isActive = true },
+                new IsoStandard { Id = 57, VersionID = 1, ParentID = 59, ClauseRef = "6.1.a", Particulars = "", Description = "give assurance that the QMS can achieve its intended results;", isActive = true },
+                new IsoStandard { Id = 58, VersionID = 1, ParentID = 59, ClauseRef = "6.1.b", Particulars = "", Description = "enhance desirable effects;", isActive = true },
+                new IsoStandard { Id = 59, VersionID = 1, ParentID = 59, ClauseRef = "6.1.c", Particulars = "", Description = "prevent or reduce undesired effects;", isActive = true },
+                new IsoStandard { Id = 60, VersionID = 1, ParentID = 59, ClauseRef = "6.1.d", Particulars = "", Description = "achieve improvement.", isActive = true },
 
                 // 6.1.2
                 new IsoStandard
                 {
-                    Id = 64,
+                    Id = 61,
                     VersionID = 1,
                     ParentID = 59,
                     ClauseRef = "6.1.2",
@@ -448,14 +448,14 @@ namespace IMIS.Persistence.SeedConfigurations
                     isActive = true
                 },
 
-                new IsoStandard { Id = 65, VersionID = 1, ParentID = 64, ClauseRef = "6.1.2.a", Particulars = "", Description = "actions to address these risks and opportunities;", isActive = true },
-                new IsoStandard { Id = 66, VersionID = 1, ParentID = 64, ClauseRef = "6.1.2.b", Particulars = "how to:", Description = "", isActive = true },
-                new IsoStandard { Id = 67, VersionID = 1, ParentID = 66, ClauseRef = "6.1.2.b.1", Particulars = "", Description = "integrate and implement the actions into QMS processes (see 4.4);", isActive = true },
-                new IsoStandard { Id = 68, VersionID = 1, ParentID = 66, ClauseRef = "6.1.2.b.2", Particulars = "", Description = "evaluate the effectiveness of these actions.", isActive = true },
+                new IsoStandard { Id = 62, VersionID = 1, ParentID = 64, ClauseRef = "6.1.2.a", Particulars = "", Description = "actions to address these risks and opportunities;", isActive = true },
+                new IsoStandard { Id = 63, VersionID = 1, ParentID = 64, ClauseRef = "6.1.2.b", Particulars = "how to:", Description = "", isActive = true },
+                new IsoStandard { Id = 64, VersionID = 1, ParentID = 66, ClauseRef = "6.1.2.b.1", Particulars = "", Description = "integrate and implement the actions into QMS processes (see 4.4);", isActive = true },
+                new IsoStandard { Id = 65, VersionID = 1, ParentID = 66, ClauseRef = "6.1.2.b.2", Particulars = "", Description = "evaluate the effectiveness of these actions.", isActive = true },
 
                 new IsoStandard
                 {
-                    Id = 69,
+                    Id = 66,
                     VersionID = 1,
                     ParentID = 64,
                     ClauseRef = "6.1.2.NOTE 1",
@@ -466,7 +466,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 },
                 new IsoStandard
                 {
-                    Id = 70,
+                    Id = 67,
                     VersionID = 1,
                     ParentID = 64,
                     ClauseRef = "6.1.2.NOTE 2",
@@ -478,7 +478,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // 6.2
                 new IsoStandard
                 {
-                    Id = 71,
+                    Id = 68,
                     VersionID = 1,
                     ParentID = 58,
                     ClauseRef = "6.2",
@@ -490,7 +490,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 // 6.2.1
                 new IsoStandard
                 {
-                    Id = 72,
+                    Id = 69,
                     VersionID = 1,
                     ParentID = 71,
                     ClauseRef = "6.2.1",
@@ -500,18 +500,18 @@ namespace IMIS.Persistence.SeedConfigurations
                     isActive = true
                 },
 
-                new IsoStandard { Id = 73, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.a", Particulars = "", Description = "be consistent with the quality policy;", isActive = true },
-                new IsoStandard { Id = 74, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.b", Particulars = "", Description = "be measurable;", isActive = true },
-                new IsoStandard { Id = 75, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.c", Particulars = "", Description = "take into account applicable requirements;", isActive = true },
-                new IsoStandard { Id = 76, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.d", Particulars = "", Description = "be relevant to conformity and customer satisfaction;", isActive = true },
-                new IsoStandard { Id = 77, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.e", Particulars = "", Description = "be monitored;", isActive = true },
-                new IsoStandard { Id = 78, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.f", Particulars = "", Description = "be communicated;", isActive = true },
-                new IsoStandard { Id = 79, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.g", Particulars = "", Description = "be updated as appropriate.", isActive = true },
+                new IsoStandard { Id = 70, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.a", Particulars = "", Description = "be consistent with the quality policy;", isActive = true },
+                new IsoStandard { Id = 71, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.b", Particulars = "", Description = "be measurable;", isActive = true },
+                new IsoStandard { Id = 72, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.c", Particulars = "", Description = "take into account applicable requirements;", isActive = true },
+                new IsoStandard { Id = 73, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.d", Particulars = "", Description = "be relevant to conformity and customer satisfaction;", isActive = true },
+                new IsoStandard { Id = 74, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.e", Particulars = "", Description = "be monitored;", isActive = true },
+                new IsoStandard { Id = 75, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.f", Particulars = "", Description = "be communicated;", isActive = true },
+                new IsoStandard { Id = 76, VersionID = 1, ParentID = 72, ClauseRef = "6.2.1.g", Particulars = "", Description = "be updated as appropriate.", isActive = true },
 
                 // 6.2.2
                 new IsoStandard
                 {
-                    Id = 80,
+                    Id = 77,
                     VersionID = 1,
                     ParentID = 71,
                     ClauseRef = "6.2.2",
@@ -520,16 +520,16 @@ namespace IMIS.Persistence.SeedConfigurations
                     isActive = true
                 },
 
-                new IsoStandard { Id = 81, VersionID = 1, ParentID = 80, ClauseRef = "6.2.2.a", Particulars = "", Description = "what will be done;", isActive = true },
-                new IsoStandard { Id = 82, VersionID = 1, ParentID = 80, ClauseRef = "6.2.2.b", Particulars = "", Description = "what resources will be required;", isActive = true },
-                new IsoStandard { Id = 83, VersionID = 1, ParentID = 80, ClauseRef = "6.2.2.c", Particulars = "", Description = "who will be responsible;", isActive = true },
-                new IsoStandard { Id = 84, VersionID = 1, ParentID = 80, ClauseRef = "6.2.2.d", Particulars = "", Description = "when it will be completed;", isActive = true },
-                new IsoStandard { Id = 85, VersionID = 1, ParentID = 80, ClauseRef = "6.2.2.e", Particulars = "", Description = "how results will be evaluated.", isActive = true },
+                new IsoStandard { Id = 78, VersionID = 1, ParentID = 80, ClauseRef = "6.2.2.a", Particulars = "", Description = "what will be done;", isActive = true },
+                new IsoStandard { Id = 79, VersionID = 1, ParentID = 80, ClauseRef = "6.2.2.b", Particulars = "", Description = "what resources will be required;", isActive = true },
+                new IsoStandard { Id = 80, VersionID = 1, ParentID = 80, ClauseRef = "6.2.2.c", Particulars = "", Description = "who will be responsible;", isActive = true },
+                new IsoStandard { Id = 81, VersionID = 1, ParentID = 80, ClauseRef = "6.2.2.d", Particulars = "", Description = "when it will be completed;", isActive = true },
+                new IsoStandard { Id = 82, VersionID = 1, ParentID = 80, ClauseRef = "6.2.2.e", Particulars = "", Description = "how results will be evaluated.", isActive = true },
 
                 // 6.3
                 new IsoStandard
                 {
-                    Id = 86,
+                    Id = 83,
                     VersionID = 1,
                     ParentID = 58,
                     ClauseRef = "6.3",
@@ -538,207 +538,207 @@ namespace IMIS.Persistence.SeedConfigurations
                     isActive = true
                 },
 
-                new IsoStandard { Id = 87, VersionID = 1, ParentID = 86, ClauseRef = "6.3.a", Particulars = "", Description = "purpose of the change and potential consequences;", isActive = true },
-                new IsoStandard { Id = 88, VersionID = 1, ParentID = 86, ClauseRef = "6.3.b", Particulars = "", Description = "integrity of the QMS;", isActive = true },
-                new IsoStandard { Id = 89, VersionID = 1, ParentID = 86, ClauseRef = "6.3.c", Particulars = "", Description = "availability of resources;", isActive = true },
-                new IsoStandard { Id = 90, VersionID = 1, ParentID = 86, ClauseRef = "6.3.d", Particulars = "", Description = "allocation or reallocation of responsibilities and authorities.", isActive = true },
+                new IsoStandard { Id = 84, VersionID = 1, ParentID = 86, ClauseRef = "6.3.a", Particulars = "", Description = "purpose of the change and potential consequences;", isActive = true },
+                new IsoStandard { Id = 85, VersionID = 1, ParentID = 86, ClauseRef = "6.3.b", Particulars = "", Description = "integrity of the QMS;", isActive = true },
+                new IsoStandard { Id = 86, VersionID = 1, ParentID = 86, ClauseRef = "6.3.c", Particulars = "", Description = "availability of resources;", isActive = true },
+                new IsoStandard { Id = 87, VersionID = 1, ParentID = 86, ClauseRef = "6.3.d", Particulars = "", Description = "allocation or reallocation of responsibilities and authorities.", isActive = true },
 
                     // =========================
                     // 7 - ROOT
                     // =========================
-                    new IsoStandard { Id = 91, VersionID = 1, ParentID = null, ClauseRef = "7", Particulars = "", Description = "Support", isActive = true },
+                    new IsoStandard { Id = 88, VersionID = 1, ParentID = null, ClauseRef = "7", Particulars = "", Description = "Support", isActive = true },
 
                     // 7.1
-                    new IsoStandard { Id = 92, VersionID = 1, ParentID = 91, ClauseRef = "7.1", Particulars = "", Description = "Resources", isActive = true },
+                    new IsoStandard { Id = 90, VersionID = 1, ParentID = 91, ClauseRef = "7.1", Particulars = "", Description = "Resources", isActive = true },
 
                     // 7.1.1
-                    new IsoStandard { Id = 93, VersionID = 1, ParentID = 92, ClauseRef = "7.1.1", Particulars = "The organization shall determine and provide the resources needed for the establishment, implementation, maintenance and continual improvement of the quality management system. The organization shall consider:", Description = "General", isActive = true },
-                    new IsoStandard { Id = 94, VersionID = 1, ParentID = 93, ClauseRef = "7.1.1.a", Particulars = "", Description = "capabilities and constraints of existing internal resources;", isActive = true },
-                    new IsoStandard { Id = 95, VersionID = 1, ParentID = 93, ClauseRef = "7.1.1.b", Particulars = "", Description = "what needs to be obtained from external providers.", isActive = true },
+                    new IsoStandard { Id = 91, VersionID = 1, ParentID = 92, ClauseRef = "7.1.1", Particulars = "The organization shall determine and provide the resources needed for the establishment, implementation, maintenance and continual improvement of the quality management system. The organization shall consider:", Description = "General", isActive = true },
+                    new IsoStandard { Id = 92, VersionID = 1, ParentID = 93, ClauseRef = "7.1.1.a", Particulars = "", Description = "capabilities and constraints of existing internal resources;", isActive = true },
+                    new IsoStandard { Id = 93, VersionID = 1, ParentID = 93, ClauseRef = "7.1.1.b", Particulars = "", Description = "what needs to be obtained from external providers.", isActive = true },
 
                     // 7.1.2
-                    new IsoStandard { Id = 96, VersionID = 1, ParentID = 92, ClauseRef = "7.1.2", Particulars = "The organization shall determine and provide the persons necessary for the effective implementation of its quality management system and for the operation and control of its processes.", Description = "People", isActive = true },
+                    new IsoStandard { Id = 94, VersionID = 1, ParentID = 92, ClauseRef = "7.1.2", Particulars = "The organization shall determine and provide the persons necessary for the effective implementation of its quality management system and for the operation and control of its processes.", Description = "People", isActive = true },
 
                     // 7.1.3
-                    new IsoStandard { Id = 97, VersionID = 1, ParentID = 92, ClauseRef = "7.1.3", Description = "Infrastructure", Particulars = "The organization shall determine and provide the infrastructure needed for the operation of its processes and to achieve conformity of products and services. ", isActive = true },
-                    new IsoStandard { Id = 98, VersionID = 1, ParentID = 97, ClauseRef = "7.1.3.a", Particulars = "", Description = "buildings and associated utilities;", isActive = true },
-                    new IsoStandard { Id = 99, VersionID = 1, ParentID = 97, ClauseRef = "7.1.3.b", Particulars = "", Description = "equipment, including hardware and software;", isActive = true },
-                    new IsoStandard { Id = 100, VersionID = 1, ParentID = 97, ClauseRef = "7.1.3.c", Particulars = "", Description = "transportation resources;", isActive = true },
-                    new IsoStandard { Id = 101, VersionID = 1, ParentID = 97, ClauseRef = "7.1.3.d", Particulars = "", Description = "information and communication technology.", isActive = true },
+                    new IsoStandard { Id = 95, VersionID = 1, ParentID = 92, ClauseRef = "7.1.3", Description = "Infrastructure", Particulars = "The organization shall determine and provide the infrastructure needed for the operation of its processes and to achieve conformity of products and services. ", isActive = true },
+                    new IsoStandard { Id = 96, VersionID = 1, ParentID = 97, ClauseRef = "7.1.3.a", Particulars = "", Description = "buildings and associated utilities;", isActive = true },
+                    new IsoStandard { Id = 97, VersionID = 1, ParentID = 97, ClauseRef = "7.1.3.b", Particulars = "", Description = "equipment, including hardware and software;", isActive = true },
+                    new IsoStandard { Id = 98, VersionID = 1, ParentID = 97, ClauseRef = "7.1.3.c", Particulars = "", Description = "transportation resources;", isActive = true },
+                    new IsoStandard { Id = 99, VersionID = 1, ParentID = 97, ClauseRef = "7.1.3.d", Particulars = "", Description = "information and communication technology.", isActive = true },
 
                     // 7.1.4
-                    new IsoStandard { Id = 102, VersionID = 1, ParentID = 92, ClauseRef = "7.1.4", Particulars = "The organization shall determine, provide and maintain the environment necessary for the operation of its processes and to achieve conformity of products and services. " +
+                    new IsoStandard { Id = 100, VersionID = 1, ParentID = 92, ClauseRef = "7.1.4", Particulars = "The organization shall determine, provide and maintain the environment necessary for the operation of its processes and to achieve conformity of products and services. " +
                     "physical (e.g. temperature, heat, humidity, light, airflow, hygiene, noise). NOTE A suitable environment can be a combination of human and physical factors, such as:", Description = "Environment for the operation of processes", isActive = true },
-                    new IsoStandard { Id = 103, VersionID = 1, ParentID = 102, ClauseRef = "7.1.4.a", Particulars = "", Description = "social (e.g. non-discriminatory, calm, non-confrontational);", isActive = true },
-                    new IsoStandard { Id = 104, VersionID = 1, ParentID = 102, ClauseRef = "7.1.4.b", Particulars = "", Description = "psychological (e.g. stress-reducing, burnout prevention, emotionally protective);", isActive = true },
-                    new IsoStandard { Id = 105, VersionID = 1, ParentID = 102, ClauseRef = "7.1.4.c", Particulars = "", Description = "physical (e.g. temperature, heat, humidity, light, airflow, hygiene, noise).", isActive = true },
+                    new IsoStandard { Id = 101, VersionID = 1, ParentID = 102, ClauseRef = "7.1.4.a", Particulars = "", Description = "social (e.g. non-discriminatory, calm, non-confrontational);", isActive = true },
+                    new IsoStandard { Id = 102, VersionID = 1, ParentID = 102, ClauseRef = "7.1.4.b", Particulars = "", Description = "psychological (e.g. stress-reducing, burnout prevention, emotionally protective);", isActive = true },
+                    new IsoStandard { Id = 103, VersionID = 1, ParentID = 102, ClauseRef = "7.1.4.c", Particulars = "", Description = "physical (e.g. temperature, heat, humidity, light, airflow, hygiene, noise).", isActive = true },
 
                     // 7.1.5
-                    new IsoStandard { Id = 106, VersionID = 1, ParentID = 92, ClauseRef = "7.1.5", Particulars = "", Description = "Monitoring and measuring resources", isActive = true },
-                    new IsoStandard { Id = 107, VersionID = 1, ParentID = 106, ClauseRef = "7.1.5.1", Particulars = "The organization shall determine and provide the resources needed to ensure valid and reliable results when monitoring or measuring " +
+                    new IsoStandard { Id = 104, VersionID = 1, ParentID = 92, ClauseRef = "7.1.5", Particulars = "", Description = "Monitoring and measuring resources", isActive = true },
+                    new IsoStandard { Id = 105, VersionID = 1, ParentID = 106, ClauseRef = "7.1.5.1", Particulars = "The organization shall determine and provide the resources needed to ensure valid and reliable results when monitoring or measuring " +
                     "is used to verify the conformity of products and services to requirements. \" +\r\n            \"The organization shall retain appropriate documented information as evidence of fitness for purpose of the monitoring and measurement resources." +
                     "The organization shall retain appropriate documented information as evidence of fitness for purpose of the monitoring and measurement resources.\"", Description = "General", isActive = true },
-                    new IsoStandard { Id = 108, VersionID = 1, ParentID = 107, ClauseRef = "7.1.5.1.a", Particulars = "", Description = "are suitable for specific monitoring activities being undertaken;", isActive = true },
-                    new IsoStandard { Id = 109, VersionID = 1, ParentID = 107, ClauseRef = "7.1.5.1.b", Particulars = "", Description = "are maintained to ensure their continuing fitness for their purpose.", isActive = true },
+                    new IsoStandard { Id = 106, VersionID = 1, ParentID = 107, ClauseRef = "7.1.5.1.a", Particulars = "", Description = "are suitable for specific monitoring activities being undertaken;", isActive = true },
+                    new IsoStandard { Id = 107, VersionID = 1, ParentID = 107, ClauseRef = "7.1.5.1.b", Particulars = "", Description = "are maintained to ensure their continuing fitness for their purpose.", isActive = true },
 
-                    new IsoStandard { Id = 110, VersionID = 1, ParentID = 106, ClauseRef = "7.1.5.2", Particulars = "The organization shall determine if the validity of previous measurement results has been adversely " +
+                    new IsoStandard { Id = 108, VersionID = 1, ParentID = 106, ClauseRef = "7.1.5.2", Particulars = "The organization shall determine if the validity of previous measurement results has been adversely " +
                     "affected when measuring equipment is found to be unfit for its intended purpose, and shall take appropriate action as necessary. " +
                     "The organization shall determine if the validity of previous measurement results has been adversely affected when measuring equipment is found to be unfit for its intended purpose, and shall take appropriate action as necessary.", Description = "Measurement traceability", isActive = true },
-                    new IsoStandard { Id = 111, VersionID = 1, ParentID = 110, ClauseRef = "7.1.5.2.a", Particulars = "", Description = "calibrated or verified, or both, at specified intervals, or prior to use, against measurement standards traceable to international or national measurement standards; " +
+                    new IsoStandard { Id = 109, VersionID = 1, ParentID = 110, ClauseRef = "7.1.5.2.a", Particulars = "", Description = "calibrated or verified, or both, at specified intervals, or prior to use, against measurement standards traceable to international or national measurement standards; " +
                     "when no such standards exist, the basis used for calibration or verification shall be retained as documented information;", isActive = true },
-                    new IsoStandard { Id = 112, VersionID = 1, ParentID = 110, ClauseRef = "7.1.5.2.b", Particulars = "", Description = "identified to determine status;", isActive = true },
-                    new IsoStandard { Id = 113, VersionID = 1, ParentID = 110, ClauseRef = "7.1.5.2.c", Particulars = "", Description = "safeguarded from adjustments, damage or deterioration that would invalidate the calibration status and subsequent measurement results.", isActive = true },
+                    new IsoStandard { Id = 110, VersionID = 1, ParentID = 110, ClauseRef = "7.1.5.2.b", Particulars = "", Description = "identified to determine status;", isActive = true },
+                    new IsoStandard { Id = 111, VersionID = 1, ParentID = 110, ClauseRef = "7.1.5.2.c", Particulars = "", Description = "safeguarded from adjustments, damage or deterioration that would invalidate the calibration status and subsequent measurement results.", isActive = true },
 
                     // 7.1.6
-                    new IsoStandard { Id = 114, VersionID = 1, ParentID = 92, ClauseRef = "7.1.6", Particulars = "The organization shall determine the knowledge necessary for the operation of its processes and to achieve conformity of products and services. " +
+                    new IsoStandard { Id = 112, VersionID = 1, ParentID = 92, ClauseRef = "7.1.6", Particulars = "The organization shall determine the knowledge necessary for the operation of its processes and to achieve conformity of products and services. " +
                     "This knowledge shall be maintained and be made available to the extent necessary. " +
                     "When addressing changing needs and trends, the organization shall consider its current knowledge " +
                     "and determine how to acquire or access any necessary additional knowledge and required updates. Organizational knowledge can be based on:",
                         Description = "Organizational knowledge", isActive = true },
-                    new IsoStandard { Id = 115, VersionID = 1, ParentID = 114, ClauseRef = "7.1.6.Note 1", Particulars = "", Description = "Organizational knowledge is knowledge specific to the organization; it is generally gained by experience. It is information that is used and shared to achieve the organization’s objectives.", isActive = true },
-                    new IsoStandard { Id = 116, VersionID = 1, ParentID = 114, ClauseRef = "7.1.6.Note 2", Particulars = "", Description = "NOTE Applicable actions can include, for example, the provision of training to, the mentoring of, or the reassignment of currently employed persons; or the hiring or contracting of competent persons.", isActive = true },
-                    new IsoStandard { Id = 117, VersionID = 1, ParentID = 114, ClauseRef = "7.1.6.a", Particulars = "", Description = "internal sources (e.g. intellectual property; knowledge gained from experience; lessons learned from failures and successful projects; " +
+                    new IsoStandard { Id = 113, VersionID = 1, ParentID = 114, ClauseRef = "7.1.6.Note 1", Particulars = "", Description = "Organizational knowledge is knowledge specific to the organization; it is generally gained by experience. It is information that is used and shared to achieve the organization’s objectives.", isActive = true },
+                    new IsoStandard { Id = 114, VersionID = 1, ParentID = 114, ClauseRef = "7.1.6.Note 2", Particulars = "", Description = "NOTE Applicable actions can include, for example, the provision of training to, the mentoring of, or the reassignment of currently employed persons; or the hiring or contracting of competent persons.", isActive = true },
+                    new IsoStandard { Id = 115, VersionID = 1, ParentID = 114, ClauseRef = "7.1.6.a", Particulars = "", Description = "internal sources (e.g. intellectual property; knowledge gained from experience; lessons learned from failures and successful projects; " +
                     "capturing and sharing undocumented knowledge and experience; the results of improvements in processes, products and services);", isActive = true },
-                    new IsoStandard { Id = 118, VersionID = 1, ParentID = 114, ClauseRef = "7.1.6.b", Particulars = "", Description = "external sources (e.g. standards; academia; conferences; gathering knowledge from customers or external providers).", isActive = true },
+                    new IsoStandard { Id = 116, VersionID = 1, ParentID = 114, ClauseRef = "7.1.6.b", Particulars = "", Description = "external sources (e.g. standards; academia; conferences; gathering knowledge from customers or external providers).", isActive = true },
                     // 7.2
-                    new IsoStandard { Id = 119, VersionID = 1, ParentID = 91, ClauseRef = "7.2", Particulars = "", Description = "Competence", isActive = true },
-                    new IsoStandard { Id = 120, VersionID = 1, ParentID = 117, ClauseRef = "7.2.a", Particulars = "", Description = "determine the necessary competence of person(s) doing work under its control that affects the performance and effectiveness of the quality management system;", isActive = true },
-                    new IsoStandard { Id = 121, VersionID = 1, ParentID = 117, ClauseRef = "7.2.b", Particulars = "", Description = "ensure that these persons are competent on the basis of appropriate education, training, or experience;", isActive = true },
-                    new IsoStandard { Id = 122, VersionID = 1, ParentID = 117, ClauseRef = "7.2.c", Particulars = "", Description = "where applicable, take actions to acquire the necessary competence, and evaluate the effectiveness of the actions taken;", isActive = true },
+                    new IsoStandard { Id = 117, VersionID = 1, ParentID = 91, ClauseRef = "7.2", Particulars = "", Description = "Competence", isActive = true },
+                    new IsoStandard { Id = 118, VersionID = 1, ParentID = 117, ClauseRef = "7.2.a", Particulars = "", Description = "determine the necessary competence of person(s) doing work under its control that affects the performance and effectiveness of the quality management system;", isActive = true },
+                    new IsoStandard { Id = 119, VersionID = 1, ParentID = 117, ClauseRef = "7.2.b", Particulars = "", Description = "ensure that these persons are competent on the basis of appropriate education, training, or experience;", isActive = true },
+                    new IsoStandard { Id = 120, VersionID = 1, ParentID = 117, ClauseRef = "7.2.c", Particulars = "", Description = "where applicable, take actions to acquire the necessary competence, and evaluate the effectiveness of the actions taken;", isActive = true },
 
                     // 7.3
-                    new IsoStandard { Id = 123, VersionID = 1, ParentID = 91, ClauseRef = "7.3", Particulars = "The organization shall ensure that persons doing work under the organization’s control are aware of:", Description = "Awareness", isActive = true },
-                    new IsoStandard { Id = 124, VersionID = 1, ParentID = 121, ClauseRef = "7.3.a", Particulars = "", Description = "quality policy;", isActive = true },
-                    new IsoStandard { Id = 125, VersionID = 1, ParentID = 121, ClauseRef = "7.3.b", Particulars = "", Description = "relevant quality objectives;", isActive = true },
-                    new IsoStandard { Id = 126, VersionID = 1, ParentID = 121, ClauseRef = "7.3.c", Particulars = "", Description = "their contribution to the effectiveness of the quality management system, including the benefits of improved performance;", isActive = true },
-                    new IsoStandard { Id = 127, VersionID = 1, ParentID = 121, ClauseRef = "7.3.d", Particulars = "", Description = "the implications of not conforming with the quality management system requirements.", isActive = true },
+                    new IsoStandard { Id = 121, VersionID = 1, ParentID = 91, ClauseRef = "7.3", Particulars = "The organization shall ensure that persons doing work under the organization’s control are aware of:", Description = "Awareness", isActive = true },
+                    new IsoStandard { Id = 122, VersionID = 1, ParentID = 121, ClauseRef = "7.3.a", Particulars = "", Description = "quality policy;", isActive = true },
+                    new IsoStandard { Id = 123, VersionID = 1, ParentID = 121, ClauseRef = "7.3.b", Particulars = "", Description = "relevant quality objectives;", isActive = true },
+                    new IsoStandard { Id = 124, VersionID = 1, ParentID = 121, ClauseRef = "7.3.c", Particulars = "", Description = "their contribution to the effectiveness of the quality management system, including the benefits of improved performance;", isActive = true },
+                    new IsoStandard { Id = 125, VersionID = 1, ParentID = 121, ClauseRef = "7.3.d", Particulars = "", Description = "the implications of not conforming with the quality management system requirements.", isActive = true },
 
                     // 7.4
-                    new IsoStandard { Id = 128, VersionID = 1, ParentID = 91, ClauseRef = "7.4", Particulars = "The organization shall determine the internal and external communications relevant to the quality management system, including:", Description = "Communication", isActive = true },
-                    new IsoStandard { Id = 129, VersionID = 1, ParentID = 126, ClauseRef = "7.4.a", Particulars = "", Description = "what to communicate;", isActive = true },
-                    new IsoStandard { Id = 130, VersionID = 1, ParentID = 126, ClauseRef = "7.4.b", Particulars = "", Description = "when to communicate;", isActive = true },
-                    new IsoStandard { Id = 131, VersionID = 1, ParentID = 126, ClauseRef = "7.4.c", Particulars = "", Description = "with whom to communicate;", isActive = true },
-                    new IsoStandard { Id = 132, VersionID = 1, ParentID = 126, ClauseRef = "7.4.d", Particulars = "", Description = "how to communicate;", isActive = true },
-                    new IsoStandard { Id = 133, VersionID = 1, ParentID = 126, ClauseRef = "7.4.e", Particulars = "", Description = "who communicates.", isActive = true },
+                    new IsoStandard { Id = 126, VersionID = 1, ParentID = 91, ClauseRef = "7.4", Particulars = "The organization shall determine the internal and external communications relevant to the quality management system, including:", Description = "Communication", isActive = true },
+                    new IsoStandard { Id = 127, VersionID = 1, ParentID = 126, ClauseRef = "7.4.a", Particulars = "", Description = "what to communicate;", isActive = true },
+                    new IsoStandard { Id = 128, VersionID = 1, ParentID = 126, ClauseRef = "7.4.b", Particulars = "", Description = "when to communicate;", isActive = true },
+                    new IsoStandard { Id = 129, VersionID = 1, ParentID = 126, ClauseRef = "7.4.c", Particulars = "", Description = "with whom to communicate;", isActive = true },
+                    new IsoStandard { Id = 130, VersionID = 1, ParentID = 126, ClauseRef = "7.4.d", Particulars = "", Description = "how to communicate;", isActive = true },
+                    new IsoStandard { Id = 131, VersionID = 1, ParentID = 126, ClauseRef = "7.4.e", Particulars = "", Description = "who communicates.", isActive = true },
 
                     // 7.5
-                    new IsoStandard { Id = 134, VersionID = 1, ParentID = 91, ClauseRef = "7.5", Particulars = "", Description = "Documented information", isActive = true },
-                    new IsoStandard { Id = 135, VersionID = 1, ParentID = 132, ClauseRef = "7.5.1", Particulars = "The organization’s quality management system shall include:", Description = "General", isActive = true },
-                    new IsoStandard { Id = 136, VersionID = 1, ParentID = 133, ClauseRef = "7.5.1.a", Particulars = "", Description = "documented information required by this International Standard;", isActive = true },
-                    new IsoStandard { Id = 137, VersionID = 1, ParentID = 133, ClauseRef = "7.5.1.b", Particulars = "", Description = "documented information determined by the organization as being necessary for the effectiveness of the quality management system.", isActive = true },
+                    new IsoStandard { Id = 132, VersionID = 1, ParentID = 91, ClauseRef = "7.5", Particulars = "", Description = "Documented information", isActive = true },
+                    new IsoStandard { Id = 133, VersionID = 1, ParentID = 132, ClauseRef = "7.5.1", Particulars = "The organization’s quality management system shall include:", Description = "General", isActive = true },
+                    new IsoStandard { Id = 134, VersionID = 1, ParentID = 133, ClauseRef = "7.5.1.a", Particulars = "", Description = "documented information required by this International Standard;", isActive = true },
+                    new IsoStandard { Id = 135, VersionID = 1, ParentID = 133, ClauseRef = "7.5.1.b", Particulars = "", Description = "documented information determined by the organization as being necessary for the effectiveness of the quality management system.", isActive = true },
 
-                    new IsoStandard { Id = 138, VersionID = 1, ParentID = 132, ClauseRef = "7.5.2", Particulars = "When creating and updating documented information, the organization shall ensure appropriate:", Description = "Creating and updating", isActive = true },
-                    new IsoStandard { Id = 139, VersionID = 1, ParentID = 136, ClauseRef = "7.5.2.a", Particulars = "", Description = "identification and description (e.g. a title, date, author, or reference number);", isActive = true },
-                    new IsoStandard { Id = 140, VersionID = 1, ParentID = 136, ClauseRef = "7.5.2.b", Particulars = "", Description = "format (e.g. language, software version, graphics) and media (e.g. paper, electronic);", isActive = true },
-                    new IsoStandard { Id = 141, VersionID = 1, ParentID = 136, ClauseRef = "7.5.2.c", Particulars = "", Description = "review and approval for suitability and adequacy.", isActive = true },
+                    new IsoStandard { Id = 136, VersionID = 1, ParentID = 132, ClauseRef = "7.5.2", Particulars = "When creating and updating documented information, the organization shall ensure appropriate:", Description = "Creating and updating", isActive = true },
+                    new IsoStandard { Id = 137, VersionID = 1, ParentID = 136, ClauseRef = "7.5.2.a", Particulars = "", Description = "identification and description (e.g. a title, date, author, or reference number);", isActive = true },
+                    new IsoStandard { Id = 138, VersionID = 1, ParentID = 136, ClauseRef = "7.5.2.b", Particulars = "", Description = "format (e.g. language, software version, graphics) and media (e.g. paper, electronic);", isActive = true },
+                    new IsoStandard { Id = 139, VersionID = 1, ParentID = 136, ClauseRef = "7.5.2.c", Particulars = "", Description = "review and approval for suitability and adequacy.", isActive = true },
 
-                    new IsoStandard { Id = 142, VersionID = 1, ParentID = 132, ClauseRef = "7.5.3", Particulars = "", Description = "Control of documented information", isActive = true },
-                    new IsoStandard { Id = 143, VersionID = 1, ParentID = 140, ClauseRef = "7.5.3.1", Particulars = "", Description = "Documented information required by the quality management system and by this International Standard shall be controlled to ensure:", isActive = true },
-                    new IsoStandard { Id = 144, VersionID = 1, ParentID = 141, ClauseRef = "7.5.3.1.a", Particulars = "", Description = "it is available and suitable for use, where and when it is needed;", isActive = true },
-                    new IsoStandard { Id = 145, VersionID = 1, ParentID = 141, ClauseRef = "7.5.3.1.b", Particulars = "", Description = "it is adequately protected (e.g. from loss of confidentiality, improper use, or loss of integrity).", isActive = true },
+                    new IsoStandard { Id = 140, VersionID = 1, ParentID = 132, ClauseRef = "7.5.3", Particulars = "", Description = "Control of documented information", isActive = true },
+                    new IsoStandard { Id = 141, VersionID = 1, ParentID = 140, ClauseRef = "7.5.3.1", Particulars = "", Description = "Documented information required by the quality management system and by this International Standard shall be controlled to ensure:", isActive = true },
+                    new IsoStandard { Id = 142, VersionID = 1, ParentID = 141, ClauseRef = "7.5.3.1.a", Particulars = "", Description = "it is available and suitable for use, where and when it is needed;", isActive = true },
+                    new IsoStandard { Id = 143, VersionID = 1, ParentID = 141, ClauseRef = "7.5.3.1.b", Particulars = "", Description = "it is adequately protected (e.g. from loss of confidentiality, improper use, or loss of integrity).", isActive = true },
 
-                    new IsoStandard { Id = 146, VersionID = 1, ParentID = 140, ClauseRef = "7.5.3.2", Particulars = "Documented information of external origin determined by the organization to be necessary for the planning and operation of the quality management system shall be identified as appropriate, and be controlled." +
+                    new IsoStandard { Id = 144, VersionID = 1, ParentID = 140, ClauseRef = "7.5.3.2", Particulars = "Documented information of external origin determined by the organization to be necessary for the planning and operation of the quality management system shall be identified as appropriate, and be controlled." +
                     "Documented information retained as evidence of conformity shall be protected from unintended alterations. For the control of documented information, the organization shall address the following activities, as applicable:", Description = "", isActive = true },
-                    new IsoStandard { Id = 147, VersionID = 1, ParentID = 144, ClauseRef = "7.5.3.2.a", Particulars = "", Description = "distribution and access;", isActive = true },
-                    new IsoStandard { Id = 148, VersionID = 1, ParentID = 144, ClauseRef = "7.5.3.2.b", Particulars = "", Description = "storage and preservation, including preservation of legibility;", isActive = true },
-                    new IsoStandard { Id = 149, VersionID = 1, ParentID = 144, ClauseRef = "7.5.3.2.c", Particulars = "", Description = "control of changes (e.g. version control);", isActive = true },
-                    new IsoStandard { Id = 150, VersionID = 1, ParentID = 144, ClauseRef = "7.5.3.2.d", Particulars = "", Description = "retention and disposition.", isActive = true },
+                    new IsoStandard { Id = 145, VersionID = 1, ParentID = 144, ClauseRef = "7.5.3.2.a", Particulars = "", Description = "distribution and access;", isActive = true },
+                    new IsoStandard { Id = 146, VersionID = 1, ParentID = 144, ClauseRef = "7.5.3.2.b", Particulars = "", Description = "storage and preservation, including preservation of legibility;", isActive = true },
+                    new IsoStandard { Id = 147, VersionID = 1, ParentID = 144, ClauseRef = "7.5.3.2.c", Particulars = "", Description = "control of changes (e.g. version control);", isActive = true },
+                    new IsoStandard { Id = 148, VersionID = 1, ParentID = 144, ClauseRef = "7.5.3.2.d", Particulars = "", Description = "retention and disposition.", isActive = true },
 
                 // =========================
                 // 8 - ROOT
                 // =========================
-                new IsoStandard { Id = 151, VersionID = 1, ParentID = null, ClauseRef = "8", Particulars = "", Description = "Operation", isActive = true },
+                new IsoStandard { Id = 149, VersionID = 1, ParentID = null, ClauseRef = "8", Particulars = "", Description = "Operation", isActive = true },
 
                 // =========================
                 // 8.1 Operational planning and control
                 // =========================
-                new IsoStandard { Id = 152, VersionID = 1, ParentID = 149, ClauseRef = "8.1", Description = "Operational planning and control", Particulars = "The organization shall plan, implement and control the processes (see 4.4) needed to meet the requirements for the provision of products and services, " +
+                new IsoStandard { Id = 150, VersionID = 1, ParentID = 149, ClauseRef = "8.1", Description = "Operational planning and control", Particulars = "The organization shall plan, implement and control the processes (see 4.4) needed to meet the requirements for the provision of products and services, " +
                 "and to implement the actions determined in Clause 6, by:The output of this planning shall be suitable for the organization’s operations. The organization shall control planned changes and review the consequences of unintended changes, taking action to mitigate any adverse effects, as necessary. " +
                 "The organization shall ensure that outsourced processes are controlled (see 8.4).", isActive = true },
 
-                new IsoStandard { Id = 153, VersionID = 1, ParentID = 150, ClauseRef = "8.1.a", Particulars = "", Description = "determining the requirements for the products and services;", isActive = true },
+                new IsoStandard { Id = 151, VersionID = 1, ParentID = 150, ClauseRef = "8.1.a", Particulars = "", Description = "determining the requirements for the products and services;", isActive = true },
 
-                new IsoStandard { Id = 154, VersionID = 1, ParentID = 150, ClauseRef = "8.1.b", Particulars = "", Description = "establishing criteria for:", isActive = true },
+                new IsoStandard { Id = 152, VersionID = 1, ParentID = 150, ClauseRef = "8.1.b", Particulars = "", Description = "establishing criteria for:", isActive = true },
 
-                new IsoStandard { Id = 155, VersionID = 1, ParentID = 152, ClauseRef = "8.1.b.1", Particulars = "", Description = "the processes;", isActive = true },
+                new IsoStandard { Id = 153, VersionID = 1, ParentID = 152, ClauseRef = "8.1.b.1", Particulars = "", Description = "the processes;", isActive = true },
 
-                new IsoStandard { Id = 156, VersionID = 1, ParentID = 152, ClauseRef = "8.1.b.2", Particulars = "", Description = "the acceptance of products and services;", isActive = true },
+                new IsoStandard { Id = 154, VersionID = 1, ParentID = 152, ClauseRef = "8.1.b.2", Particulars = "", Description = "the acceptance of products and services;", isActive = true },
 
-                new IsoStandard { Id = 157, VersionID = 1, ParentID = 150, ClauseRef = "8.1.c", Particulars = "", Description = "determining the resources needed to achieve conformity to the product and service requirements;", isActive = true },
+                new IsoStandard { Id = 155, VersionID = 1, ParentID = 150, ClauseRef = "8.1.c", Particulars = "", Description = "determining the resources needed to achieve conformity to the product and service requirements;", isActive = true },
 
-                new IsoStandard { Id = 158, VersionID = 1, ParentID = 150, ClauseRef = "8.1.d", Particulars = "", Description = "implementing control of the processes in accordance with criteria;", isActive = true },
+                new IsoStandard { Id = 156, VersionID = 1, ParentID = 150, ClauseRef = "8.1.d", Particulars = "", Description = "implementing control of the processes in accordance with criteria;", isActive = true },
 
-                new IsoStandard { Id = 159, VersionID = 1, ParentID = 150, ClauseRef = "8.1.e", Particulars = "", Description = "determining, maintaining and retaining documented information to the extent necessary:", isActive = true },
+                new IsoStandard { Id = 157, VersionID = 1, ParentID = 150, ClauseRef = "8.1.e", Particulars = "", Description = "determining, maintaining and retaining documented information to the extent necessary:", isActive = true },
 
-                new IsoStandard { Id = 160, VersionID = 1, ParentID = 157, ClauseRef = "8.1.e.1", Particulars = "", Description = "to have confidence processes were carried out as planned;", isActive = true },
+                new IsoStandard { Id = 158, VersionID = 1, ParentID = 157, ClauseRef = "8.1.e.1", Particulars = "", Description = "to have confidence processes were carried out as planned;", isActive = true },
 
-                new IsoStandard { Id = 161, VersionID = 1, ParentID = 157, ClauseRef = "8.1.e.2", Particulars = "", Description = "to demonstrate the conformity of products and services to their requirements.", isActive = true },
+                new IsoStandard { Id = 159, VersionID = 1, ParentID = 157, ClauseRef = "8.1.e.2", Particulars = "", Description = "to demonstrate the conformity of products and services to their requirements.", isActive = true },
 
                 // =========================
                 // 8.2 Requirements for products and services
                 // =========================
-                new IsoStandard { Id = 162, VersionID = 1, ParentID = 149, ClauseRef = "8.2", Particulars = "", Description = "Requirements for products and services", isActive = true },
+                new IsoStandard { Id = 160, VersionID = 1, ParentID = 149, ClauseRef = "8.2", Particulars = "", Description = "Requirements for products and services", isActive = true },
 
                 // 8.2.1
-                new IsoStandard { Id = 163, VersionID = 1, ParentID = 157, ClauseRef = "8.1.e.2", Particulars = "", Description = "to demonstrate the conformity of products and services to their requirements.", isActive = true },
-                new IsoStandard { Id = 164, VersionID = 1, ParentID = 160, ClauseRef = "8.2.1", Description = "Customer communication", Particulars = "Communication with customers shall include:", isActive = true },
+                new IsoStandard { Id = 161, VersionID = 1, ParentID = 157, ClauseRef = "8.1.e.2", Particulars = "", Description = "to demonstrate the conformity of products and services to their requirements.", isActive = true },
+                new IsoStandard { Id = 162, VersionID = 1, ParentID = 160, ClauseRef = "8.2.1", Description = "Customer communication", Particulars = "Communication with customers shall include:", isActive = true },
 
-                new IsoStandard { Id = 165, VersionID = 1, ParentID = 161, ClauseRef = "8.2.1.a", Particulars = "", Description = "providing information relating to products and services;", isActive = true },
-                new IsoStandard { Id = 166, VersionID = 1, ParentID = 161, ClauseRef = "8.2.1.b", Particulars = "", Description = "handling enquiries, contracts or orders, including changes;;", isActive = true },
-                new IsoStandard { Id = 167, VersionID = 1, ParentID = 161, ClauseRef = "8.2.1.c", Particulars = "", Description = "obtaining customer feedback relating to products and services, including customer complaints;;", isActive = true },
-                new IsoStandard { Id = 168, VersionID = 1, ParentID = 161, ClauseRef = "8.2.1.d", Particulars = "", Description = "handling or controlling customer property;", isActive = true },
-                new IsoStandard { Id = 169, VersionID = 1, ParentID = 161, ClauseRef = "8.2.1.e", Particulars = "", Description = "establishing specific requirements for contingency actions, when relevant.", isActive = true },
+                new IsoStandard { Id = 163, VersionID = 1, ParentID = 161, ClauseRef = "8.2.1.a", Particulars = "", Description = "providing information relating to products and services;", isActive = true },
+                new IsoStandard { Id = 164, VersionID = 1, ParentID = 161, ClauseRef = "8.2.1.b", Particulars = "", Description = "handling enquiries, contracts or orders, including changes;;", isActive = true },
+                new IsoStandard { Id = 165, VersionID = 1, ParentID = 161, ClauseRef = "8.2.1.c", Particulars = "", Description = "obtaining customer feedback relating to products and services, including customer complaints;;", isActive = true },
+                new IsoStandard { Id = 166, VersionID = 1, ParentID = 161, ClauseRef = "8.2.1.d", Particulars = "", Description = "handling or controlling customer property;", isActive = true },
+                new IsoStandard { Id = 167, VersionID = 1, ParentID = 161, ClauseRef = "8.2.1.e", Particulars = "", Description = "establishing specific requirements for contingency actions, when relevant.", isActive = true },
 
                 // 8.2.2 (duplicate removed, only one kept)
-                new IsoStandard { Id = 170, VersionID = 1, ParentID = 160, ClauseRef = "8.2.2", Particulars = "When determining the requirements for the products and services to be offered to customers, the organization shall ensure that:", Description = "Determining the requirements for products and services", isActive = true },
+                new IsoStandard { Id = 168, VersionID = 1, ParentID = 160, ClauseRef = "8.2.2", Particulars = "When determining the requirements for the products and services to be offered to customers, the organization shall ensure that:", Description = "Determining the requirements for products and services", isActive = true },
 
-                new IsoStandard { Id = 171, VersionID = 1, ParentID = 167, ClauseRef = "8.2.2.a", Particulars = "", Description = "the requirements for the products and services are defined, including:", isActive = true },
+                new IsoStandard { Id = 169, VersionID = 1, ParentID = 167, ClauseRef = "8.2.2.a", Particulars = "", Description = "the requirements for the products and services are defined, including:", isActive = true },
 
-                new IsoStandard { Id = 172, VersionID = 1, ParentID = 168, ClauseRef = "8.2.2.a.1", Particulars = "", Description = "any applicable statutory and regulatory requirements;", isActive = true },
+                new IsoStandard { Id = 170, VersionID = 1, ParentID = 168, ClauseRef = "8.2.2.a.1", Particulars = "", Description = "any applicable statutory and regulatory requirements;", isActive = true },
 
-                new IsoStandard { Id = 173, VersionID = 1, ParentID = 168, ClauseRef = "8.2.2.a.2", Particulars = "", Description = "those considered necessary by the organization;", isActive = true },
+                new IsoStandard { Id = 171, VersionID = 1, ParentID = 168, ClauseRef = "8.2.2.a.2", Particulars = "", Description = "those considered necessary by the organization;", isActive = true },
 
-                new IsoStandard { Id = 174, VersionID = 1, ParentID = 167, ClauseRef = "8.2.2.b", Particulars = "", Description = "the organization can meet the claims for the products and services it offers.", isActive = true },
+                new IsoStandard { Id = 172, VersionID = 1, ParentID = 167, ClauseRef = "8.2.2.b", Particulars = "", Description = "the organization can meet the claims for the products and services it offers.", isActive = true },
 
                 // 8.2.3
-                new IsoStandard { Id = 175, VersionID = 1, ParentID = 160, ClauseRef = "8.2.3", Particulars = "Review of the requirements for products and services", Description = "", isActive = true },
+                new IsoStandard { Id = 173, VersionID = 1, ParentID = 160, ClauseRef = "8.2.3", Particulars = "Review of the requirements for products and services", Description = "", isActive = true },
 
-                new IsoStandard { Id = 176, VersionID = 1, ParentID = 172, ClauseRef = "8.2.3.1", Particulars = "The organization shall ensure that contract or order requirements differing from those previously defined are resolved." +
+                new IsoStandard { Id = 174, VersionID = 1, ParentID = 172, ClauseRef = "8.2.3.1", Particulars = "The organization shall ensure that contract or order requirements differing from those previously defined are resolved." +
                 " The customer’s requirements shall be confirmed by the organization before acceptance, " +
                 "when the customer does not provide a documented statement of their requirements.", Description = "Review before commitment to supply", isActive = true },
 
-                new IsoStandard { Id = 177, VersionID = 1, ParentID = 173, ClauseRef = "8.2.3.1.a", Particulars = "", Description = "requirements specified by the customer, including the requirements for delivery and postdelivery activities;", isActive = true },
-                new IsoStandard { Id = 178, VersionID = 1, ParentID = 173, ClauseRef = "8.2.3.1.b", Particulars = "", Description = "requirements not stated by the customer, but necessary for the specified or intended use, when known;", isActive = true },
-                new IsoStandard { Id = 179, VersionID = 1, ParentID = 173, ClauseRef = "8.2.3.1.c", Particulars = "", Description = "requirements specified by organization;", isActive = true },
-                new IsoStandard { Id = 180, VersionID = 1, ParentID = 173, ClauseRef = "8.2.3.1.d", Particulars = "", Description = "statutory and regulatory requirements applicable to the products and services;", isActive = true },
-                new IsoStandard { Id = 181, VersionID = 1, ParentID = 173, ClauseRef = "8.2.3.1.e", Particulars = "", Description = "contract or order requirements differing from those previously expressed.", isActive = true },
+                new IsoStandard { Id = 175, VersionID = 1, ParentID = 173, ClauseRef = "8.2.3.1.a", Particulars = "", Description = "requirements specified by the customer, including the requirements for delivery and postdelivery activities;", isActive = true },
+                new IsoStandard { Id = 176, VersionID = 1, ParentID = 173, ClauseRef = "8.2.3.1.b", Particulars = "", Description = "requirements not stated by the customer, but necessary for the specified or intended use, when known;", isActive = true },
+                new IsoStandard { Id = 177, VersionID = 1, ParentID = 173, ClauseRef = "8.2.3.1.c", Particulars = "", Description = "requirements specified by organization;", isActive = true },
+                new IsoStandard { Id = 178, VersionID = 1, ParentID = 173, ClauseRef = "8.2.3.1.d", Particulars = "", Description = "statutory and regulatory requirements applicable to the products and services;", isActive = true },
+                new IsoStandard { Id = 179, VersionID = 1, ParentID = 173, ClauseRef = "8.2.3.1.e", Particulars = "", Description = "contract or order requirements differing from those previously expressed.", isActive = true },
 
-                new IsoStandard { Id = 182, VersionID = 1, ParentID = 172, ClauseRef = "8.2.3.2", Particulars = "", Description = "The organization shall retain documented information, as applicable:", isActive = true },
+                new IsoStandard { Id = 180, VersionID = 1, ParentID = 172, ClauseRef = "8.2.3.2", Particulars = "", Description = "The organization shall retain documented information, as applicable:", isActive = true },
 
-                new IsoStandard { Id = 183, VersionID = 1, ParentID = 179, ClauseRef = "8.2.3.2.a", Particulars = "", Description = "on the results of the review;", isActive = true },
-                new IsoStandard { Id = 184, VersionID = 1, ParentID = 179, ClauseRef = "8.2.3.2.b", Particulars = "", Description = "on any new requirements for products and services.", isActive = true },
+                new IsoStandard { Id = 181, VersionID = 1, ParentID = 179, ClauseRef = "8.2.3.2.a", Particulars = "", Description = "on the results of the review;", isActive = true },
+                new IsoStandard { Id = 182, VersionID = 1, ParentID = 179, ClauseRef = "8.2.3.2.b", Particulars = "", Description = "on any new requirements for products and services.", isActive = true },
 
                 // 8.2.4
-                new IsoStandard { Id = 185, VersionID = 1, ParentID = 160, ClauseRef = "8.2.4", Particulars = "The organization shall ensure that relevant documented information is amended, and that relevant persons are made aware of the changed requirements, when the requirements for products and services are changed.", Description = "Changes to requirements for products and services", isActive = true },
+                new IsoStandard { Id = 183, VersionID = 1, ParentID = 160, ClauseRef = "8.2.4", Particulars = "The organization shall ensure that relevant documented information is amended, and that relevant persons are made aware of the changed requirements, when the requirements for products and services are changed.", Description = "Changes to requirements for products and services", isActive = true },
 
                 // =========================
                 // 8.3 Design and development
                 // =========================
-                new IsoStandard { Id = 186, VersionID = 1, ParentID = 149, ClauseRef = "8.3", Particulars = "", Description = "Design and development of products and services", isActive = true },
+                new IsoStandard { Id = 184, VersionID = 1, ParentID = 149, ClauseRef = "8.3", Particulars = "", Description = "Design and development of products and services", isActive = true },
 
-                new IsoStandard { Id = 187, VersionID = 1, ParentID = 183, ClauseRef = "8.3.1", Particulars = "The organization shall establish, implement and maintain a design and development process that is appropriate to ensure the subsequent provision of products and services.", Description = "General", isActive = true },
+                new IsoStandard { Id = 185, VersionID = 1, ParentID = 183, ClauseRef = "8.3.1", Particulars = "The organization shall establish, implement and maintain a design and development process that is appropriate to ensure the subsequent provision of products and services.", Description = "General", isActive = true },
 
-                new IsoStandard { Id = 188, VersionID = 1, ParentID = 183, ClauseRef = "8.3.2", Particulars = "In determining the stages and controls for design and development, the organization shall consider:", Description = "Design and development of products and services", isActive = true },
+                new IsoStandard { Id = 186, VersionID = 1, ParentID = 183, ClauseRef = "8.3.2", Particulars = "In determining the stages and controls for design and development, the organization shall consider:", Description = "Design and development of products and services", isActive = true },
 
-                new IsoStandard { Id = 189, VersionID = 1, ParentID = 185, ClauseRef = "8.3.2.a", Particulars = "", Description = "the nature, duration and complexity of the design and development activities;", isActive = true },
-                new IsoStandard { Id = 190, VersionID = 1, ParentID = 185, ClauseRef = "8.3.2.b", Particulars = "", Description = "the required process stages, including applicable design and development reviews;", isActive = true },
-                new IsoStandard { Id = 191, VersionID = 1, ParentID = 185, ClauseRef = "8.3.2.c", Particulars = "", Description = "the required design and development verification and validation activities;", isActive = true },
-                new IsoStandard { Id = 192, VersionID = 1, ParentID = 185, ClauseRef = "8.3.2.d", Particulars = "", Description = "the responsibilities and authorities involved in the design and development process;", isActive = true },
-                new IsoStandard { Id = 193, VersionID = 1, ParentID = 185, ClauseRef = "8.3.2.e", Particulars = "", Description = "the internal and external resource needs for the design and development of products and services;;", isActive = true },
-                new IsoStandard { Id = 194, VersionID = 1, Particulars = "", ClauseRef = "8.3.2.f", Description = "The need to control interfaces between persons involved in the design and development process;", isActive = true, ParentID = 188 },
-                new IsoStandard { Id = 195, VersionID = 1, Particulars = "", ClauseRef = "8.3.2.g", Description = "The need for involvement of customers and users in the design and development process;", isActive = true, ParentID = 188 },
-                new IsoStandard { Id = 196, VersionID = 1, Particulars = "", ClauseRef = "8.3.2.h", Description = "The requirements for subsequent provision of products and services;", isActive = true, ParentID = 188 },
-                new IsoStandard { Id = 197, VersionID = 1, Particulars = "", ClauseRef = "8.3.2.i", Description = "The level of control expected by customers and other interested parties;", isActive = true, ParentID = 188 },
+                new IsoStandard { Id = 187, VersionID = 1, ParentID = 185, ClauseRef = "8.3.2.a", Particulars = "", Description = "the nature, duration and complexity of the design and development activities;", isActive = true },
+                new IsoStandard { Id = 188, VersionID = 1, ParentID = 185, ClauseRef = "8.3.2.b", Particulars = "", Description = "the required process stages, including applicable design and development reviews;", isActive = true },
+                new IsoStandard { Id = 189, VersionID = 1, ParentID = 185, ClauseRef = "8.3.2.c", Particulars = "", Description = "the required design and development verification and validation activities;", isActive = true },
+                new IsoStandard { Id = 190, VersionID = 1, ParentID = 185, ClauseRef = "8.3.2.d", Particulars = "", Description = "the responsibilities and authorities involved in the design and development process;", isActive = true },
+                new IsoStandard { Id = 191, VersionID = 1, ParentID = 185, ClauseRef = "8.3.2.e", Particulars = "", Description = "the internal and external resource needs for the design and development of products and services;;", isActive = true },
+                new IsoStandard { Id = 192, VersionID = 1, Particulars = "", ClauseRef = "8.3.2.f", Description = "The need to control interfaces between persons involved in the design and development process;", isActive = true, ParentID = 188 },
+                new IsoStandard { Id = 193, VersionID = 1, Particulars = "", ClauseRef = "8.3.2.g", Description = "The need for involvement of customers and users in the design and development process;", isActive = true, ParentID = 188 },
+                new IsoStandard { Id = 194, VersionID = 1, Particulars = "", ClauseRef = "8.3.2.h", Description = "The requirements for subsequent provision of products and services;", isActive = true, ParentID = 188 },
+                new IsoStandard { Id = 195, VersionID = 1, Particulars = "", ClauseRef = "8.3.2.i", Description = "The level of control expected by customers and other interested parties;", isActive = true, ParentID = 188 },
                 new IsoStandard { Id = 198, VersionID = 1, Particulars = "", ClauseRef = "8.3.2.j", Description = "Documented information to demonstrate requirements are met;", isActive = true, ParentID = 188 },
 
 

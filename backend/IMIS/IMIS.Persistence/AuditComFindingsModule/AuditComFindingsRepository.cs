@@ -15,6 +15,7 @@ namespace IMIS.Persistence.AuditComFindingsModule
         public async Task<AuditComFindings?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<AuditComFindings>()
+                .Include(x => x.Areas)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
                 .ConfigureAwait(false);
         }

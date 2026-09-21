@@ -13,12 +13,16 @@ namespace IMIS.Domain
         public AuditPlanProcess? OfficeAudited { get; set; }
         public IsoStandard? AuditStandardISO { get; set; }
         public AuditPlan? DateofAudit { get; set; }
-        
+        public Auditee? Auditee { get; set; }
+        public int? AuditPlanEntryId { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; }
+
+
 
         public ICollection<AuditComFindings>? AuditComFindings { get; set; }
         public ICollection<AuditScope>? AuditScope { get; set; }
         public ICollection<AuditSummaryFIndings>? AuditSummaryFIndings { get; set; }
-
+        
 
     }
 }

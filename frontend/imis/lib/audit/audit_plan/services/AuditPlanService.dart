@@ -114,6 +114,28 @@ class AuditPlanService {
     }
   }
 
+    /// Delete an Audit Plan — DELETE /auditPlan/{id}.
+  Future<void> deleteAuditPlan(int id) async {
+    final url = '$_auditPlanBaseUrl/$id';
+    try {
+      final response = await AuthenticatedRequest.delete(_dio, url);
+      final code = response.statusCode;
+      if (code != 200 && code != 204) {
+        throw Exception('Failed to delete Audit Plan');
+      }
+    } on DioException catch (e) {
+      debugPrint('Error deleting audit plan $id: ${e.message}');
+      final data = e.response?.data;
+      if (data is String && data.isNotEmpty) {
+        throw Exception(data);
+      }
+      if (data is Map<String, dynamic> && data['message'] != null) {
+        throw Exception(data['message'].toString());
+      }
+      rethrow;
+    }
+  }
+
   /// Create a draft plan template pre-populated from Programme data
   AuditPlan createDraftFromProgramme({
     required int programmeId,
@@ -177,4 +199,5 @@ class AuditPlanService {
     }
     
   }
+
 }

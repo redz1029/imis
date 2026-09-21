@@ -25,14 +25,17 @@ namespace IMIS.Persistence.AuditComFindingsModule
         public async Task<bool> SaveComFindingsAsync(AuditComFindingsDto dto, CancellationToken cancellationToken)
         {
             var entity = dto.ToEntity();
+            var dbContext = _repository.GetDbContext();
 
             if (entity.Id == 0)
             {
                 _repository.Add(entity);
+                dbContext.Entry(entity).Property<int?>("AreasId").CurrentValue = dto.AreasId;
             }
             else
             {
                 await _repository.UpdateAsync(entity, entity.Id, cancellationToken).ConfigureAwait(false);
+                dbContext.Entry(entity).Property<int?>("AreasId").CurrentValue = dto.AreasId;
             }
 
             await _repository.SaveOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
