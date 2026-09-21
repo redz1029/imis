@@ -26,12 +26,12 @@ const kDanger = Color(0xFFEF4444);
 const kSuccess = Color(0xFF10B981);
 const kSuccessLight = Color(0xFFECFDF5);
 const Color kPersonalAccentColor = Color(0xFF6366F1);
-
+const Color activeMenu = Color(0x00b85c75);
 const kLabel = Color(0xFF374151);
 const kHint = Color(0xFF9CA3AF);
 const kSurface = Color(0xFFFFFFFF);
 const Color surface = Color(0xFFF5F6FA);
-
+const Color blue = Color(0xFF118ab2);
 const kCardShadow = Color(0x0A000000);
 const kPrimaryLight = Color(0xFFEBF2FF);
 const kDangerLight = Color(0xFFFEF2F2);
@@ -225,7 +225,7 @@ Color getStatusColor(String status) {
     case 'For Approval':
       return Colors.orange[800]!;
     case 'Approved':
-      return Colors.green[800]!;
+      return kSuccess;
     case 'Disapproved':
       return Colors.red[800]!;
     default:
@@ -259,7 +259,7 @@ Color statusColor(PgsStatus status) {
     case PgsStatus.onGoing:
       return Colors.orange;
     case PgsStatus.completed:
-      return Colors.green;
+      return kSuccess;
   }
 }
 
