@@ -10,15 +10,15 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OutputCaching;   
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Sprache;
 
 namespace IMIS.Presentation.UserModule
-{  
-  
+{
+
     public static class IdentityApiEndpoint
     {
         private static readonly EmailAddressAttribute EmailValidator = new();
@@ -32,8 +32,7 @@ namespace IMIS.Presentation.UserModule
             // User Endpoints
             var authGroup = endpoints.MapGroup("").WithTags(IdentityGroup);
             authGroup.MapPost("/register", (UserRegistrationDto registration, IServiceProvider sp) => RegisterUser(registration, sp));
-            authGroup.MapGet("/getUser", async (int page, int pageSize, IServiceProvider sp) => await GetRegisteredUsers(sp, page, pageSize))
-           .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag("roles"));
+            authGroup.MapGet("/getUser", async (int page, int pageSize, IServiceProvider sp) => await GetRegisteredUsers(sp, page, pageSize)).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag("roles"));
             authGroup.MapPut("/updateUser", async (UserRegistrationDto dto, IServiceProvider sp) => await UpdateUser(dto, sp));
             authGroup.MapPost("/login", LoginUser<TUser>);
             authGroup.MapPut("/changePassword", ChangePassword<TUser>);
@@ -51,13 +50,14 @@ namespace IMIS.Presentation.UserModule
             });
 
             // Lockout Management Endpoints
-            authGroup.MapPut("/users/{userId}/lockout", async (string userId, UserLockoutDto dto, IServiceProvider sp) =>  await UpdateUserLockout(userId, dto, sp));
+            authGroup.MapPut("/users/{userId}/lockout", async (string userId, UserLockoutDto dto, IServiceProvider sp) => await UpdateUserLockout(userId, dto, sp));
 
             authGroup.MapPut("/users/{userId}/unlock", async (string userId, IServiceProvider sp) => await UnlockUser(userId, sp));
 
-            authGroup.MapGet("/users/{userId}/lockout-status", async (string userId, IServiceProvider sp) =>  await GetUserLockoutStatus(userId, sp));
+            authGroup.MapGet("/users/{userId}/lockout-status", async (string userId, IServiceProvider sp) => await GetUserLockoutStatus(userId, sp));
 
-            authGroup.MapGet("/users/pending-approval", async (int page, int pageSize, IServiceProvider sp) => await GetPendingApprovalUsers(page, pageSize, sp));
+            authGroup.MapGet("/users/pending-approval", async (int page, int pageSize, IServiceProvider sp) => await GetPendingApprovalUsers(page, pageSize, sp))
+            .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup));
 
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
@@ -355,7 +355,7 @@ namespace IMIS.Presentation.UserModule
                 {
 
                         "ViewStrategicChangeAgenda",
-                        "ViewStrategicChangeAgendaSettings"                       
+                        "ViewStrategicChangeAgendaSettings"
                   };
 
                 var userIds = await db.UserRoles.Where(x => x.RoleId == roleId).Select(x => x.UserId).ToListAsync();
@@ -581,7 +581,7 @@ namespace IMIS.Presentation.UserModule
             response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
             return Results.File(file, "application/pdf");
         }
-   
+
         private static readonly DateTimeOffset PendingApprovalLockoutEnd = DateTimeOffset.MaxValue;
 
         private static async Task<IResult> RegisterUser(UserRegistrationDto registration, IServiceProvider sp)
@@ -601,7 +601,7 @@ namespace IMIS.Presentation.UserModule
                 LastName = registration.LastName,
                 Prefix = registration.Prefix,
                 Suffix = registration.Suffix,
-                Position = registration.Position,              
+                Position = registration.Position,
                 LockoutEnabled = true,
                 LockoutEnd = PendingApprovalLockoutEnd
             };
@@ -623,7 +623,6 @@ namespace IMIS.Presentation.UserModule
             });
         }
 
-      
         private static async Task<IResult> GetRegisteredUsers(IServiceProvider sp, int page, int pageSize)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
@@ -631,9 +630,14 @@ namespace IMIS.Presentation.UserModule
             pageSize = pageSize <= 0 ? 10 : pageSize;
             pageSize = pageSize > 100 ? 100 : pageSize;
 
-            var query = userManager.Users;
+            var now = DateTimeOffset.UtcNow;
 
-            var totalCount = await query.CountAsync();  
+            var query = userManager.Users
+                .OrderByDescending(u => u.LockoutEnd == PendingApprovalLockoutEnd)
+                .ThenByDescending(u => u.LockoutEnabled && u.LockoutEnd.HasValue && u.LockoutEnd.Value > now)
+                .ThenBy(u => u.LastName);
+
+            var totalCount = await query.CountAsync();
 
             var users = await query
                 .Skip((page - 1) * pageSize)
@@ -648,15 +652,46 @@ namespace IMIS.Presentation.UserModule
                     u.LastName,
                     u.Prefix,
                     u.Suffix,
-                    u.Position
+                    u.Position,
+                    u.LockoutEnabled,
+                    u.LockoutEnd,
+                    u.AccessFailedCount
                 })
                 .ToListAsync();
 
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
+            var data = users.Select(u =>
+            {
+                var isPendingApproval = u.LockoutEnd == PendingApprovalLockoutEnd;
+                var isLockedOut = u.LockoutEnabled && u.LockoutEnd.HasValue && u.LockoutEnd.Value > now;
+
+                var status = isPendingApproval ? "Pending Approval"
+                    : isLockedOut ? "Locked" : "Active";
+
+                return new
+                {
+                    u.Id,
+                    u.UserName,
+                    u.Email,
+                    u.FirstName,
+                    u.MiddleName,
+                    u.LastName,
+                    u.Prefix,
+                    u.Suffix,
+                    u.Position,
+                    u.LockoutEnabled,
+                    u.LockoutEnd,
+                    u.AccessFailedCount,
+                    IsLockedOut = isLockedOut,
+                    IsPendingApproval = isPendingApproval,
+                    Status = status
+                };
+            });
+
             return Results.Ok(new
             {
-                data = users,
+                data,
                 totalCount,
                 totalPages,
                 page,
@@ -714,7 +749,7 @@ namespace IMIS.Presentation.UserModule
             return Results.Ok("User updated successfully.");
         }
 
-     
+
         private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp) where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
@@ -728,7 +763,7 @@ namespace IMIS.Presentation.UserModule
                 return Results.Json(new { message = "Invalid credentials." }, statusCode: StatusCodes.Status401Unauthorized);
             }
 
-         
+
             if (await userManager.IsLockedOutAsync(user))
             {
                 var isPendingApproval = user.LockoutEnd == PendingApprovalLockoutEnd;
@@ -747,7 +782,7 @@ namespace IMIS.Presentation.UserModule
             var passwordValid = await userManager.CheckPasswordAsync(user, login.Password);
             if (!passwordValid)
             {
-              
+
                 if (userManager.SupportsUserLockout)
                 {
                     await userManager.AccessFailedAsync(user);
@@ -929,7 +964,7 @@ namespace IMIS.Presentation.UserModule
             await signInManager.UserManager.RemoveAuthenticationTokenAsync(user, "IMIS_API", "refresh_token");
             return Results.Ok("Refresh token revoked successfully.");
         }
-     
+
         private static async Task<IResult> UpdateUserLockout(string userId, UserLockoutDto dto, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
@@ -949,7 +984,7 @@ namespace IMIS.Presentation.UserModule
             var setEndResult = await userManager.SetLockoutEndDateAsync(user, dto.LockoutEnd);
             if (!setEndResult.Succeeded)
                 return Results.ValidationProblem(setEndResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
-        
+
             await outputCacheStore.EvictByTagAsync(RoleGroup, default);
             await outputCacheStore.EvictByTagAsync("roles", default);
 
@@ -962,7 +997,7 @@ namespace IMIS.Presentation.UserModule
                 message = "User lockout settings updated successfully."
             });
         }
-     
+
         private static async Task<IResult> UnlockUser(string userId, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
@@ -978,7 +1013,7 @@ namespace IMIS.Presentation.UserModule
 
             if (userManager.SupportsUserLockout)
                 await userManager.ResetAccessFailedCountAsync(user);
-           
+
             await outputCacheStore.EvictByTagAsync(RoleGroup, default);
             await outputCacheStore.EvictByTagAsync("roles", default);
 
@@ -989,7 +1024,7 @@ namespace IMIS.Presentation.UserModule
                 message = "User account unlocked successfully."
             });
         }
-       
+
         private static async Task<IResult> GetPendingApprovalUsers(int page, int pageSize, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
@@ -1007,7 +1042,7 @@ namespace IMIS.Presentation.UserModule
             var totalCount = await query.CountAsync();
 
             var users = await query
-              
+
                 .OrderByDescending(u => u.LockoutEnd == PendingApprovalLockoutEnd)
                 .ThenBy(u => u.LastName)
                 .Skip((page - 1) * pageSize)
@@ -1335,3 +1370,5 @@ namespace IMIS.Presentation.UserModule
         }
     }
 }
+
+

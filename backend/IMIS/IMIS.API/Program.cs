@@ -145,11 +145,11 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
+app.UseOutputCache();
 app.MapCustomIdentityApi<User>();
 app.MapCarter();
 app.MapPermissionEndpoints();
 
-app.UseOutputCache();
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<IRoleAndPermissionSeeder>();
