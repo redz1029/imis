@@ -1,8 +1,5 @@
 ﻿using Carter;
-using IMIS.Application.EvaluatorOfficesModule;
 using IMIS.Application.IndividualStrategicAlignmentTreePeriodModule;
-using IMIS.Application.PgsPeriodModule;
-using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
