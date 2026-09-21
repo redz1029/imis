@@ -327,3 +327,110 @@ class StatItem {
     required this.color,
   });
 }
+
+class NavChild {
+  final String title;
+  final int? index;
+  final List<String>? allowedRoles;
+  final List<NavChild> children;
+  final String Function(String? role)? titleFor;
+
+  final String? addPerm;
+  final String? viewPerm;
+  final String? permLabel;
+  final bool prefixTitle;
+
+  const NavChild(
+    this.title,
+    this.index, {
+    this.allowedRoles,
+    this.children = const [],
+    this.titleFor,
+    this.addPerm,
+    this.viewPerm,
+    this.permLabel,
+    this.prefixTitle = true,
+  });
+
+  bool get usesPermissions => addPerm != null || viewPerm != null;
+
+  bool isVisible(bool Function(String) hasPermission) {
+    if (!usesPermissions) return true;
+    return (addPerm != null && hasPermission(addPerm!)) ||
+        (viewPerm != null && hasPermission(viewPerm!));
+  }
+
+  String resolveTitle(String? role, bool Function(String) hasPermission) {
+    if (usesPermissions) {
+      final hasAdd = addPerm != null && hasPermission(addPerm!);
+      final hasView = viewPerm != null && hasPermission(viewPerm!);
+      if (!prefixTitle) return permLabel ?? title;
+      final label = permLabel ?? title;
+      if (hasAdd && hasView) return 'Create/View $label';
+      if (hasAdd) return 'Create $label';
+      if (hasView) return 'View $label';
+      return label;
+    }
+    return titleFor?.call(role) ?? title;
+  }
+}
+
+class NavGroup {
+  final IconData icon;
+  final String label;
+  final int pageIndex;
+  final List<NavChild> children;
+  final List<String>? allowedRoles;
+  const NavGroup({
+    required this.icon,
+    required this.label,
+    required this.pageIndex,
+    this.children = const [],
+    this.allowedRoles,
+  });
+}
+
+class RootConnectorPainter extends CustomPainter {
+  final bool isFirst;
+  final bool isLast;
+  final Color color;
+
+  RootConnectorPainter({
+    required this.isFirst,
+    required this.isLast,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = color
+          ..strokeWidth = 1.4
+          ..style = PaintingStyle.stroke;
+
+    final double midY = size.height / 2;
+    const double curve = 8.0;
+
+    if (!isFirst) {
+      canvas.drawLine(const Offset(0, 0), Offset(0, midY - curve), paint);
+    }
+    if (!isLast) {
+      canvas.drawLine(Offset(0, midY), Offset(0, size.height), paint);
+    }
+
+    final path =
+        Path()
+          ..moveTo(0, midY - curve)
+          ..quadraticBezierTo(0, midY, curve, midY)
+          ..lineTo(size.width, midY);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant RootConnectorPainter oldDelegate) {
+    return oldDelegate.isFirst != isFirst ||
+        oldDelegate.isLast != isLast ||
+        oldDelegate.color != color;
+  }
+}
