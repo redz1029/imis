@@ -128,6 +128,12 @@ class CommonService {
     (e) => PgsPeriod.fromJson(e),
     'Failed to fetch periods',
   );
+  Future<List<PerformanceValidationToolPeriod>>
+  fetchPerformanceValidationToolPeriod() => _fetchList(
+    ApiEndpoint().performanceValidationToolPeriod,
+    (e) => PerformanceValidationToolPeriod.fromJson(e),
+    'Failed to fetch periods',
+  );
 
   Future<List<KeyResultArea>> fetchKra() => _fetchList(
     ApiEndpoint().keyresult,
