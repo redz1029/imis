@@ -77,6 +77,7 @@ namespace IMIS.Persistence
         public DbSet<ServiceHeadOffices> ServiceHeadOffices { get; set; }
         public DbSet<SWOTAnalysisServiceHead> SWOTAnalysisServiceHead { get; set; }
         public DbSet<StrategicChangeAgenda> StrategicChangeAgenda { get; set; }
+        public DbSet<ISATPeriod> ISATPeriod { get; set; }
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }

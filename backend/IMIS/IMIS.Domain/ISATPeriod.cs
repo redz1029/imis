@@ -1,0 +1,12 @@
+﻿using Base.Primitives;
+
+namespace IMIS.Domain
+{
+    public class ISATPeriod : Entity<int>
+    {
+        public required DateOnly StartDate { get; set; }
+        public required DateOnly EndDate { get; set; }
+        public string? Remarks { get; set; }
+        public bool? IsActive { get; set; }
+    }
+}

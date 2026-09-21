@@ -8,6 +8,7 @@ using IMIS.Application.CalendarActivityModule;
 using IMIS.Application.EvaluatorOfficesModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardPeriodModule;
+using IMIS.Application.IndividualStrategicAlignmentTreePeriodModule;
 using IMIS.Application.IsoStandardModule;
 using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadmapCoreSupportProcessModule;
@@ -59,6 +60,7 @@ using IMIS.Persistence.CalendarActivityModule;
 using IMIS.Persistence.EvaluatorOfficesModule;
 using IMIS.Persistence.ImpactStrategicGoalScoreCardModule;
 using IMIS.Persistence.ImpactStrategicGoalScoreCardPeriodModule;
+using IMIS.Persistence.ISATPeriodModule;
 using IMIS.Persistence.IsoStandardModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.KraRoadMapAccomplishmentModule;
@@ -262,6 +264,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IStrategicChangeAgendaRepository, StrategicChangeAgendaRepository>();
             services.AddScoped<IStrategicChangeAgendaService, StrategicChangeAgendaService>();
+
+            services.AddScoped<IISATPeriodRepository, ISATPeriodRepository>();
+            services.AddScoped<IISATPeriodService, ISATPeriodService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();
