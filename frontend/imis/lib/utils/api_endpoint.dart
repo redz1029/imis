@@ -96,6 +96,7 @@ class ApiEndpoint {
   late String oprReport;
   late String sWOTAnalysisServiceHead;
   late String serviceHeadOffices;
+  late String strategicChangeAgenda;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -195,6 +196,7 @@ class ApiEndpoint {
     oprReport = '$baseUrl/report-opr-list';
     sWOTAnalysisServiceHead = '$baseUrl/sWOTAnalysisServiceHead';
     serviceHeadOffices = '$baseUrl/serviceHeadOffices';
+    strategicChangeAgenda = '$baseUrl/strategicChangeAgenda';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
