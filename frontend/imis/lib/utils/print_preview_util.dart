@@ -289,6 +289,19 @@ Future<void> openStrategyReviewReportPreview(
   name: strategyReviewReport,
   context: context,
 );
+
+Future<void> openStrategicChangeAgenda(
+  String strategicChangeAgendaId,
+  String strategyChangeAgenda, {
+  BuildContext? context,
+}) => _openPdfPreview(
+  webEndpoint:
+      "${ApiEndpoint().strategicChangeAgenda}/report-pdf/$strategicChangeAgendaId",
+  id: strategicChangeAgendaId,
+  name: strategyChangeAgenda,
+  context: context,
+);
+
 Future<void> openImpactGoalStrategyReportPreview(
   String impactGoalStrategyId,
   String impactGoalStrategyReviewReport, {
