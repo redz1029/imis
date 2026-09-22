@@ -362,24 +362,6 @@ class AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return "${months[date.month - 1]} ${date.day}, ${date.year}";
-  }
-
   Widget _welcomeCard() {
     return LayoutBuilder(
       builder: (context, constraints) {
