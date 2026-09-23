@@ -134,9 +134,6 @@ AppContext.SetSwitch("System.Drawing.EnableUnixSupport", true);
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-
 app.UseCors(allowedOrigins);
 
 if (app.Environment.IsProduction())
@@ -146,6 +143,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 app.UseOutputCache();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.MapCustomIdentityApi<User>();
 app.MapCarter();
 app.MapPermissionEndpoints();
