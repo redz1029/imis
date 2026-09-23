@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
-import 'package:imis/performance_governance_system/performance_validation_tool_signatory/models/pvt_signatory_template.dart';
-import 'package:imis/performance_governance_system/performance_validation_tool_signatory/services/pvt_signatory_template_service.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/performance_validation_tool_signatory/models/pvt_signatory_template.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/performance_validation_tool_signatory/services/pvt_signatory_template_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
@@ -15,7 +15,7 @@ import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/common/section_label_widget.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
-import '../../../common_services/common_service.dart';
+import '../../../../common_services/common_service.dart';
 
 class PerformanceValidationToolSignatoryPage extends StatefulWidget {
   const PerformanceValidationToolSignatoryPage({super.key});
