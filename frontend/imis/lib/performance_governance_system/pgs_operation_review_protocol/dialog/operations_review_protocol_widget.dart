@@ -1706,11 +1706,14 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
-        enabled: !_isLocked,
+        readOnly: _isLocked,
+
         onChanged: (_) {
           if (hasError) setState(() {});
         },
+
         style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
+
         decoration: InputDecoration(
           labelText: '$label *',
           labelStyle: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
@@ -1722,18 +1725,22 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
           alignLabelWithHint: (maxLines ?? 1) > 1,
           filled: true,
           fillColor: _isLocked ? Colors.grey.shade100 : Colors.grey.shade50,
+
           errorText:
               hasError && controller.text.trim().isEmpty
                   ? '$label is required'
                   : null,
+
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 16,
           ),
+
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
             borderSide: BorderSide(color: Colors.grey.shade300),
           ),
+
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
             borderSide: BorderSide(
@@ -1743,13 +1750,10 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                       : Colors.grey.shade300,
             ),
           ),
+
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
             borderSide: BorderSide(color: primaryColor, width: 2),
-          ),
-          disabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: Colors.grey.shade200),
           ),
         ),
       ),
