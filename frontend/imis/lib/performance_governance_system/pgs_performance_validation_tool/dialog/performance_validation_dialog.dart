@@ -16,7 +16,7 @@ import 'package:imis/performance_governance_system/pgs_performance_validation_to
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/pvt_deliverable_findings.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/pvt_objectives.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/pvt_validators.dart';
-import 'package:imis/performance_governance_system/performance_validation_tool_period/models/performance_validation_tool_period.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/performance_validation_tool_period/models/performance_validation_tool_period.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/services/performance_validation_services.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
