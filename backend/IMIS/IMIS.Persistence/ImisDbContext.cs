@@ -78,6 +78,8 @@ namespace IMIS.Persistence
         public DbSet<SWOTAnalysisServiceHead> SWOTAnalysisServiceHead { get; set; }
         public DbSet<StrategicChangeAgenda> StrategicChangeAgenda { get; set; }
         public DbSet<ISATPeriod> ISATPeriod { get; set; }
+        public DbSet<ISAT> ISAT { get; set; }
+        public DbSet<ISATSignatoryTemplate> ISATSignatoryTemplate { get; set; }
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
@@ -85,7 +87,7 @@ namespace IMIS.Persistence
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
-        {
+        { 
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {

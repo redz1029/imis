@@ -9,6 +9,8 @@ using IMIS.Application.EvaluatorOfficesModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Application.IndividualStrategicAlignmentTreePeriodModule;
+using IMIS.Application.ISATModule;
+using IMIS.Application.ISATSignatoryTemplateModule;
 using IMIS.Application.IsoStandardModule;
 using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadmapCoreSupportProcessModule;
@@ -60,7 +62,9 @@ using IMIS.Persistence.CalendarActivityModule;
 using IMIS.Persistence.EvaluatorOfficesModule;
 using IMIS.Persistence.ImpactStrategicGoalScoreCardModule;
 using IMIS.Persistence.ImpactStrategicGoalScoreCardPeriodModule;
+using IMIS.Persistence.ISATModule;
 using IMIS.Persistence.ISATPeriodModule;
+using IMIS.Persistence.ISATSignatoryTemplateModule;
 using IMIS.Persistence.IsoStandardModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.KraRoadMapAccomplishmentModule;
@@ -267,6 +271,12 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IISATPeriodRepository, ISATPeriodRepository>();
             services.AddScoped<IISATPeriodService, ISATPeriodService>();
+
+            services.AddScoped<IISATRepository, ISATRepository>();
+            services.AddScoped<IISATService, ISATService>();
+
+            services.AddScoped<IISATSignatoryTemplateRepository, ISATSignatoryTemplateRepository>();
+            services.AddScoped<IISATSignatoryTemplateService, ISATSignatoryTemplateService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();
