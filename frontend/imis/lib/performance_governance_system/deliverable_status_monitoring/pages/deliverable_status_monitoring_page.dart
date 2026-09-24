@@ -116,6 +116,8 @@ class _DeliverableStatusMonitoringPageState
       }
     }
 
+    final bool hasSingleService = service.length == 1;
+
     setState(() {
       periodList = period;
       serviceList = service;
@@ -126,7 +128,15 @@ class _DeliverableStatusMonitoringPageState
         selectedPeriodText =
             "${_dateConverter.toJson(activePeriod.startDate)} – ${_dateConverter.toJson(activePeriod.endDate)}";
       }
+      if (hasSingleService) {
+        _selectedServiceId = service.first.officeId.toString();
+      }
     });
+
+    if (hasSingleService) {
+      await _loadOfficesForService(_selectedServiceId!);
+    }
+
     fetchFilteredPgsList();
   }
 
