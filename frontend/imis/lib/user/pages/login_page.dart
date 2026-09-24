@@ -71,29 +71,42 @@ class _LoginPageState extends State<LoginPage> {
         if (context.mounted) {
           if (statusCode == 401) {
             MotionToast.error(
-              title: const Text("Invalid credentials!"),
+              title: const Text("Invalid Credentials"),
               description: const Text(
                 "Please check your username and password.",
               ),
               toastAlignment: Alignment.center,
             ).show(context);
+          } else if (statusCode == 423) {
+            MotionToast.warning(
+              title: const Text(
+                "Account Under Review",
+                style: TextStyle(fontSize: 13),
+              ),
+              description: const Text(
+                "Your account is pending admin approval. "
+                "Please wait for an administrator to approve your account before logging in.",
+                style: TextStyle(fontSize: 11),
+              ),
+              toastAlignment: Alignment.center,
+            ).show(context);
           } else {
             MotionToast.error(
-              title: const Text("An error has occurred!"),
+              title: const Text("An Error Has Occurred"),
               description: const Text(
                 "Oops! Something went wrong. Please try again.",
               ),
               toastAlignment: Alignment.center,
             ).show(context);
           }
-        }
-      } else {
-        if (context.mounted) {
-          MotionToast.error(
-            title: const Text("Server is Unreachable!"),
-            description: const Text("Please check your connection."),
-            toastAlignment: Alignment.topCenter,
-          ).show(context);
+        } else {
+          if (context.mounted) {
+            MotionToast.error(
+              title: const Text("Server Is Unreachable"),
+              description: const Text("Please check your connection."),
+              toastAlignment: Alignment.topCenter,
+            ).show(context);
+          }
         }
       }
     } finally {
