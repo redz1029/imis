@@ -9,7 +9,6 @@ using IMIS.Application.BreakThroughScoringModule;
 using IMIS.Application.CalendarActivityModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardModule;
 using IMIS.Application.ImpactStrategicGoalScoreCardPeriodModule;
-using IMIS.Application.ISATModule;
 using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadmapKpiAccomplishmentModule;
 using IMIS.Application.KraRoadMapModule;
@@ -81,8 +80,7 @@ namespace IMIS.Infrastructure.Auths
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
                 new StrategicChangeAgendaPermissionSetting(),
-                new StrategicChangeAgendaPermission(),
-                new ISATPermission());
+                new StrategicChangeAgendaPermission());
 
             // This will seed view only permissions for a role
             await PermissionSeeder.SeedViewOnlyPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
