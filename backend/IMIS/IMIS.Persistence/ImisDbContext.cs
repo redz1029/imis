@@ -80,6 +80,7 @@ namespace IMIS.Persistence
         public DbSet<ISATPeriod> ISATPeriod { get; set; }
         public DbSet<ISAT> ISAT { get; set; }
         public DbSet<ISATSignatoryTemplate> ISATSignatoryTemplate { get; set; }
+        public DbSet<ISATSignatory> ISATSignatory { get; set; }
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
@@ -119,7 +120,24 @@ namespace IMIS.Persistence
                       .HasForeignKey(x => x.StrategyReviewPeriodId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
-            
+            builder.Entity<ISATSignatory>(entity =>
+            {
+                entity.HasOne(x => x.ISAT)
+                    .WithMany(x => x.ISATSignatories)  
+                    .HasForeignKey(x => x.ISATId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.Signatory)
+                    .WithMany()
+                    .HasForeignKey(x => x.SignatoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.ISATSignatoryTemplate)
+                    .WithMany()
+                    .HasForeignKey(x => x.ISATSignatoryTemplateId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             builder.Entity<PerformanceValidationToolValidators>()
                 .HasOne<PerformanceValidationTool>()
                 .WithMany(x => x.Validators)
