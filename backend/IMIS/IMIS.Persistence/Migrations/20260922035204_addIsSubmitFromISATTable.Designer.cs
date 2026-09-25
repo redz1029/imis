@@ -4,6 +4,7 @@ using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IMIS.Persistence.Migrations
 {
     [DbContext(typeof(ImisDbContext))]
-    partial class ImisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260922035204_addIsSubmitFromISATTable")]
+    partial class addIsSubmitFromISATTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -6113,8 +6116,8 @@ namespace IMIS.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("OfficeId")
-                        .HasColumnType("int");
+                    b.Property<bool?>("IsSubmit")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("PostingDate")
                         .HasColumnType("datetime2");
@@ -6129,8 +6132,6 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("EmployeeUserId");
 
                     b.HasIndex("ISATPeriodId");
-
-                    b.HasIndex("OfficeId");
 
                     b.ToTable("ISAT");
                 });
@@ -6209,94 +6210,6 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("ISATPeriod");
                 });
 
-            modelBuilder.Entity("IMIS.Domain.ISATSignatory", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("DateSigned")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("ISATId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("ISATSignatoryTemplateId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<string>("SignatoryId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ISATId");
-
-                    b.HasIndex("ISATSignatoryTemplateId");
-
-                    b.HasIndex("SignatoryId");
-
-                    b.ToTable("ISATSignatory");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.ISATSignatoryTemplate", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("DefaultSignatoryId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("OfficeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OrderLevel")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Position")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<string>("SignatoryLabel")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DefaultSignatoryId");
-
-                    b.HasIndex("OfficeId");
-
-                    b.ToTable("ISATSignatoryTemplate");
-                });
-
             modelBuilder.Entity("IMIS.Domain.ISATStrategicObjectiveSupported", b =>
                 {
                     b.Property<long>("Id")
@@ -6310,9 +6223,6 @@ namespace IMIS.Persistence.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
-
-                    b.Property<long?>("KraRoadMapDeliverableId")
-                        .HasColumnType("bigint");
 
                     b.Property<long?>("KraRoadMapId")
                         .HasColumnType("bigint");
@@ -6328,8 +6238,6 @@ namespace IMIS.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ISATId");
-
-                    b.HasIndex("KraRoadMapDeliverableId");
 
                     b.HasIndex("KraRoadMapId");
 
@@ -10921,7 +10829,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "86b8cd32-0993-4eff-ae8c-b3f54f69ba40",
+                            ConcurrencyStamp = "03ad1463-1dd8-4d53-9e2c-96579e911965",
                             Email = "marcrejohncastillano@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Marc Rejohn",
@@ -10930,10 +10838,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "Ballares",
                             NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
                             NormalizedUserName = "CASTILLANO.MRB",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGGbmChnDsVXu6eoBIVf85B1uc9fSoJzrgs4tSZSrKLQRvaFg+FdCF/LSvzvCbKRYg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGYHEC1RK0eboCI+4jyTZU1G/6YNnri2prJvKHhUpOkSBYNwr/ilJ59ibaOqvizk2w==",
                             PhoneNumber = "09959283775",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "4dccaf6f-0d65-4d82-8595-dddffa4c1fe9",
+                            SecurityStamp = "4400d72d-7ba4-4d01-bf25-647a73d8b0ea",
                             TwoFactorEnabled = false,
                             UserName = "castillano.mrb"
                         },
@@ -10941,7 +10849,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6d4c66e2-3343-484b-bec8-3c401b73af85",
+                            ConcurrencyStamp = "3870b577-5643-470f-86ec-50a2b832cfc1",
                             Email = "earlmaerama@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Earlene Mae",
@@ -10950,10 +10858,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "Gallos",
                             NormalizedEmail = "EARLMAERAMA@GMAIL.COM",
                             NormalizedUserName = "RAMA.EMG",
-                            PasswordHash = "AQAAAAIAAYagAAAAEF9zTmskK2i1Ei+bP2z6+s1BNew3HNdpiVxroNOKeN/EqugtKeIXg79KlIHZUKrhWQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEELU3v95+2KNOr8261wA6Lfz6SIGfoOJK3eQHSRb+aXVhPBrIJHMNuxU8R0CVaSAxw==",
                             PhoneNumber = "09128293036",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "4726d3ff-64bd-4cd8-b882-f92c56541c7f",
+                            SecurityStamp = "a1c47bfd-1f97-40db-9d1f-9bc197b799d6",
                             TwoFactorEnabled = false,
                             UserName = "rama.emg"
                         },
@@ -10961,7 +10869,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9e6fdddf-eaca-4e65-8b06-aa6c3a9769dc",
+                            ConcurrencyStamp = "9798ccf7-4c7f-45d7-a98e-87b6fc86335c",
                             Email = "wilburpimentel09@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Wilbur",
@@ -10970,10 +10878,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "Bello",
                             NormalizedEmail = "WILBURPIMENTEL09@GMAIL.COM",
                             NormalizedUserName = "PIMENTEL.WB",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKqmYuxC1BOeBlNIIUaMX7cNF/+pEMNsmwhYtGECuk6MK3lLDjA10GFg186QXfYUSQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPXCt1C6gT+gO+0CD6Noto8aIWM/KxHBeP0xoG4lwlKsqlt2UDBsfXQQ3A+8U5Kedg==",
                             PhoneNumber = "09069043375",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "eab563cb-b6f8-4964-8d01-25fb142be171",
+                            SecurityStamp = "06513bb6-e9be-4291-bf1d-5d665fdaad88",
                             TwoFactorEnabled = false,
                             UserName = "pimentel.wb"
                         },
@@ -10981,7 +10889,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "537d9fcd-b505-4f93-afc6-17eb8eddff83",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b547c90b-efde-4302-9893-4aba62dc1642",
+                            ConcurrencyStamp = "1bd31192-9bae-445a-a3ce-e17b26be27b1",
                             Email = "Nolan1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Nolan",
@@ -10990,12 +10898,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "",
                             NormalizedEmail = "NOLAN1234@GMAIL.COM",
                             NormalizedUserName = "NOLAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPksQN06lhNl/8Wf1HoktkPAuCyKITM2sU28BgSc/micn2pHTX+BCZ3LbZEZPWnVBg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFPyhfHyzADQrWMIh8Gn8VceeLOb1COqH6G2h8LDKP32kbmqPz9FXUmFd/n8MCGXjg==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Integrated Hospital Operations and Management Program",
                             Prefix = "Mr.",
-                            SecurityStamp = "f0f3eff9-ef86-44f1-ae6b-f5f977d1d880",
+                            SecurityStamp = "960539d9-eba2-49bf-a467-5499e8cff7c0",
                             TwoFactorEnabled = false,
                             UserName = "Nolan"
                         },
@@ -11003,7 +10911,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "743b9807-3441-47c1-9285-5ff8dfd7acb9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9833e9f2-58b3-4963-b3b1-da4072827a4b",
+                            ConcurrencyStamp = "d83e5355-2453-435f-8fb3-64e49e9cb99a",
                             Email = "Sheila1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Sheila farisha",
@@ -11012,12 +10920,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "K.",
                             NormalizedEmail = "SHEILA1234@GMAIL.COM",
                             NormalizedUserName = "SHEILA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHPWb2xPa6z/SG8C1kQ1N7MGWFJBcAgnG1JnsB9V1G1QyJc+skTLRQeIHis66+dYiA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEO6EbHgtRFwCffwW4PcwRwd6KhaKGDePPNkXWcXgrAR8eCOtAn3hzS1DGjloAN8G5g==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Office for Strategy Management",
                             Prefix = "Dr.",
-                            SecurityStamp = "46493dc1-4685-491a-91e4-8567f0bee952",
+                            SecurityStamp = "8e3e2ca6-4fe2-4216-806f-630ac5bbde9c",
                             TwoFactorEnabled = false,
                             UserName = "Sheila"
                         },
@@ -11025,7 +10933,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7acb06ae-c2de-4fa1-8b62-53c1d63121f0",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "929c5cac-c6c9-46d2-876f-1ed8c1cbf6ea",
+                            ConcurrencyStamp = "e09fda91-fa02-48ff-a238-ceafca2d94c4",
                             Email = "Johari1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Johari",
@@ -11034,11 +10942,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "P.",
                             NormalizedEmail = "JOHARI1234@GMAIL.COM",
                             NormalizedUserName = "JOHARI",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOs5lo77O96/j7BMKrx+LbxGf0O6tjFflZNTkD5e0YvzcwdfCFxF+b/B3uUBIlqUkg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIuXw/+vDLND4MEv4Y4xaBrZSplfUITWIDqCJ2t4LjAv8lsflGzE9Lqvrl7IcqLJWg==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Prefix = "Atty.",
-                            SecurityStamp = "85c490c2-8c6b-4459-a565-fe609cabbf78",
+                            SecurityStamp = "46ae173e-27c9-4c48-a2ae-9aeb49212f77",
                             TwoFactorEnabled = false,
                             UserName = "Johari"
                         },
@@ -11046,7 +10954,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7eee5b08-df0d-4ac0-a8db-39d924dd30b7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "921a3655-3415-4eb2-b018-751144191f03",
+                            ConcurrencyStamp = "41552aec-5fb4-4a78-bfe4-c090f6eda6d0",
                             Email = "Linda1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Linda",
@@ -11055,12 +10963,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "P.",
                             NormalizedEmail = "LINDA1234@GMAIL.COM",
                             NormalizedUserName = "LINDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPHmKXj7hgYeE+jYY9tJC9c6OmEMGWyk5Wq9GhRtX8+vOZmQw9Q6DrpDLrzz7oIx/g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPCy/g57iIsngurBMMPcCUai5jwjvq6fbQ3aEMfVgMmm0H31eAjO/i4wtG23TIw9cQ==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Budget Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "8c4aeef8-1409-481d-9d84-5c250d357dba",
+                            SecurityStamp = "e126d1b3-482d-4ce8-b79d-487e396a7bb9",
                             TwoFactorEnabled = false,
                             UserName = "Linda"
                         },
@@ -11068,7 +10976,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8fa3f3e4-b8a2-4375-9dc8-91b6fbc55e4a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "45110881-b6cb-43df-96f4-d6da42d6b06c",
+                            ConcurrencyStamp = "7170c960-13e5-4fe2-9929-7b8fe3cacba0",
                             Email = "Java1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Sergio",
@@ -11077,12 +10985,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "C.",
                             NormalizedEmail = "JAVA1234@GMAIL.COM",
                             NormalizedUserName = "JAVA",
-                            PasswordHash = "AQAAAAIAAYagAAAAENF8XzIoLDdtYUoa3sh/ju8EhnUeLy2th0HCSinXft4s1pLcz/+H0V9olMr5QgvGXQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOtNaWrj2jKvjyhp4+k1Ycd5kVND1ZqqUz69NbwowyW+vPbq3QBl5pjEbwfit//9aQ==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Chief Administrative Officer",
                             Prefix = "Mr.",
-                            SecurityStamp = "54cd7c12-3a70-46cd-870b-9691b231684b",
+                            SecurityStamp = "c2e36daf-274d-4ff9-af37-43b258622855",
                             TwoFactorEnabled = false,
                             UserName = "Java"
                         },
@@ -11090,7 +10998,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a6866933-92a9-41e7-9100-8bee51ed0ada",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "30a4896d-d3c7-42d3-8755-04105b6142d2",
+                            ConcurrencyStamp = "84e003d3-d622-4d9c-a8d2-2ffcc9953188",
                             Email = "John1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "John",
@@ -11099,11 +11007,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "O.",
                             NormalizedEmail = "JOHN1234@GMAIL.COM",
                             NormalizedUserName = "JOHN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEC3hyV0ogvs7cyF9T/6boy71iaY8+3AN4RJMSTy4/+jSviIhPuxQD0mKSIUKLEDJGw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEjhVwujeW6zmYy6qs8WL5/DRK/IjQ3dJQkmYDUj99ZrDVTi6KpQ1TNjlsyleC97+g==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Prefix = "Dr.",
-                            SecurityStamp = "2f222c93-8bcf-4637-be37-0dde38b31f1e",
+                            SecurityStamp = "98f402f9-0553-45c2-9c9d-662089d50931",
                             TwoFactorEnabled = false,
                             UserName = "John"
                         },
@@ -11111,7 +11019,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9d635c2d-b7b6-4719-8bb8-81f04e046559",
+                            ConcurrencyStamp = "bf16cc8b-7c37-41b7-b511-4cf9f22b7ac7",
                             Email = "scibrahimtan@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Scheherazade",
@@ -11120,12 +11028,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "I.",
                             NormalizedEmail = "SCRIBRAHIMTAN@GMAIL.COM",
                             NormalizedUserName = "TAN.SI",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGuwhoDDD0zj5C7awXiiOtqLCAX6t+nofs/jrVoGNjb2wX+YUny5faoa8APCUYvfzw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPUbwbhsv4rJtPhdU8g3wYr/g7pJkngsEVLAS8n82Cq4vqbYJTcgry3OT5Kmk5juhA==",
                             PhoneNumber = "09178663037",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Out-Patient Department",
                             Prefix = "Dr.",
-                            SecurityStamp = "e60217c3-3c7d-4121-84ca-c6f858836a3b",
+                            SecurityStamp = "8196d012-14e0-4348-a485-e3e643d976b4",
                             TwoFactorEnabled = false,
                             UserName = "tan.si"
                         },
@@ -11133,7 +11041,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "e1a3ac20-1d20-4f37-8826-242657a746c7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "33b23051-7a53-486d-b8b1-3df5be4eded9",
+                            ConcurrencyStamp = "edb9bed3-8831-42ec-953f-177da28234db",
                             Email = "Dimaren1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Ishmael",
@@ -11142,12 +11050,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "R.",
                             NormalizedEmail = "DIMAREN1234@GMAIL.COM",
                             NormalizedUserName = "DIMAREN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAkKXxc7tkMbC2W6LjO4b1Ah0u/BXZ8kaApPwt9hlbD4NhMW9y61zOhUu27MLqxi+w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAlBbi2n5bwQYNjL6IyONVDQtLBqXCreclPWmqvu83IInkUkAoBRSvfXNrFIl77HqA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Medical Center Chief II",
                             Prefix = "Dr.",
-                            SecurityStamp = "db579569-b57c-486e-8d92-4cd08f7245f8",
+                            SecurityStamp = "ea7dca5f-2f28-425e-a82c-ad9701cc3224",
                             TwoFactorEnabled = false,
                             UserName = "Dimaren"
                         },
@@ -11155,7 +11063,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "e9bcc340-e63f-40e6-8326-8fe86cbef923",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c4dfac30-372a-4dd2-98cc-f1a6045ab09d",
+                            ConcurrencyStamp = "43337d2b-f3a6-4e7b-ba0f-f0b2ab35233e",
                             Email = "Precious1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Precious Love",
@@ -11164,12 +11072,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "Y.",
                             NormalizedEmail = "PRECIOUS1234@GMAIL.COM",
                             NormalizedUserName = "PRECIOUS",
-                            PasswordHash = "AQAAAAIAAYagAAAAECnjUbC5O8iePxlTcRlGgiXEWY9gIQWKQvINnthxPgEbI0fZryYRcAzgCn74MO+TUw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGGr9eMdxUpd54r9Z7ocKYw5ixIFYMpJANisC/5PEH/2WIcdxuLppF7yIs5qCqPKaA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Chief Administrative Officer",
                             Prefix = "Ms.",
-                            SecurityStamp = "e17d0d6a-e4f0-42b4-b846-9a5bd8e7128c",
+                            SecurityStamp = "6fec048f-848e-4b5d-a29e-794fc04b8998",
                             TwoFactorEnabled = false,
                             UserName = "Precious"
                         },
@@ -11177,7 +11085,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c7a21a28-989a-4f10-934b-12b5a9415d90",
+                            ConcurrencyStamp = "f027e861-db66-4ff7-9cc6-2201c5d138d0",
                             Email = "Singgon1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Bai Samirah",
@@ -11186,12 +11094,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "A.",
                             NormalizedEmail = "SINGGON1234@GMAIL.COM",
                             NormalizedUserName = "SINGGON",
-                            PasswordHash = "AQAAAAIAAYagAAAAEG1ZSSJbqnyYyn+1d1YqWJ43T4Tu6c0iseOiAQjrNIPVCrRrryjVLYc/+39MYrGhqw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECRHfSzk/xbP+9/8mMfFvJLrXSnKrOm10WBqtbk9Vn5ZpLdw1l5Dlsi8Vb+TJX7/UQ==",
                             PhoneNumber = "09177220668",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Pediatrics",
                             Prefix = "Dr.",
-                            SecurityStamp = "2d108721-bd1d-4a61-ba00-6230acd67ec4",
+                            SecurityStamp = "a923a1f1-d646-4522-aabb-122981782663",
                             TwoFactorEnabled = false,
                             UserName = "Singgon"
                         },
@@ -11199,7 +11107,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "399f5e43-93d8-4a28-b113-d23eccd2ea15",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8b636946-8c71-4bbe-b80f-60081255f150",
+                            ConcurrencyStamp = "1e57288d-a133-4202-a358-8d1c6b18f2f4",
                             Email = "npmangansakan@rocketmail.com",
                             EmailConfirmed = false,
                             FirstName = "NORHAN",
@@ -11208,10 +11116,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PIANG",
                             NormalizedEmail = "NPMANGANSAKAN@ROCKETMAIL.COM",
                             NormalizedUserName = "MANGANSAKAN.NORHAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJTJkSFdlQv9hh78qnPiGgNt58vrx7GkVS4+9HsiNRfwX68IW8pgOhyPXLVBPktdJA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFTIbUFpM3Jkcq9PsEYkb6rJsSZ+DCsclDJO/YtDsKyA0qpzVaySyCS18bKyDVVjqw==",
                             PhoneNumber = "09166629909",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ee33f3ae-0652-4657-8c47-2eda223ae85b",
+                            SecurityStamp = "ce00ff50-cc63-4377-a731-1cbb0360118a",
                             TwoFactorEnabled = false,
                             UserName = "mangansakan.norhan"
                         },
@@ -11219,7 +11127,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "e765e1f5-bc17-49b1-9c3f-8c5c2c18b420",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6420dfeb-ea3d-4e15-9154-113b2dfc4f5b",
+                            ConcurrencyStamp = "14407f5a-2618-4eda-8ade-fa48f9108adf",
                             Email = "nurlinda_06@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "NURLINDA",
@@ -11228,12 +11136,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PANGILAN",
                             NormalizedEmail = "NURLINDA_06@YAHOO.COM",
                             NormalizedUserName = "ARUMPAC.NURLINDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAELuh5R9ZzQpdx1W81X68jn912UexOQQsdKr196es9jPtiNvoYx0A+EncJQMhmyBusg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENLYaTskkVOZVMOFuFvxxb2Mj70+Tp97ZeOuBIf4KLi7+oTRxnwSbbepC8yCrcWETw==",
                             PhoneNumber = "09177266885",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Women and Child Protection Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "f55b78fb-b0c4-43f6-bf2b-06da26e3b7ce",
+                            SecurityStamp = "47e4de73-19e2-414c-bb9e-3e3ead384578",
                             TwoFactorEnabled = false,
                             UserName = "arumpac.nurlinda"
                         },
@@ -11241,7 +11149,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4efc160f-2045-4348-843d-7aaa1bc3e89d",
+                            ConcurrencyStamp = "c1dc4974-7f96-4f81-b2ad-a69cc9bfa1c7",
                             Email = "jrbedol@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "LINTANG",
@@ -11250,11 +11158,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BUAN",
                             NormalizedEmail = "JRBEDOL@GMAIL.COM",
                             NormalizedUserName = "BEDOL.LINTANG",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBkaAY63WEck7YJfp9WMngqNbMdQ8SI2I4Y7vt//e5PtUdjLiSdWSq1zHX63S4qpgQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELlamASgyrCACLvGmTD2c/g0KyUNzK/s5y66gs67dvrMXEF0l5RWUO6Rlakzq6E/Dg==",
                             PhoneNumber = "09226218394",
                             PhoneNumberConfirmed = false,
                             Prefix = "Dr.",
-                            SecurityStamp = "976fc52b-1a56-4a40-a3dc-92b0bfbdcd3c",
+                            SecurityStamp = "a96741fa-6c37-4f10-802f-edea94dec49a",
                             TwoFactorEnabled = false,
                             UserName = "bedol.lintang"
                         },
@@ -11262,7 +11170,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f8a17354-91b3-4c0e-9b71-d6af05f4e11e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "52233aff-c2de-4079-92e8-1fad1e743a86",
+                            ConcurrencyStamp = "3e9fa7d2-3d78-4c6a-a83a-50a239ad969d",
                             Email = "rhkadil@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RONALD",
@@ -11271,10 +11179,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "HIPONIA",
                             NormalizedEmail = "RHKADIL@GMAIL.COM",
                             NormalizedUserName = "KADIL.RONALD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFMlGgZNv+Q9fIhEvQpY1Q3cbvqiBiaPJOkfOmNf4qtruG5T6kQIBXlPRfsEfRN6OA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHYZiTC6IRbwZnLqKyglTA8nbQR+rFeplyqbAWUTnayH1Qq1qiSguc8wjHEL0+ihoQ==",
                             PhoneNumber = "09175333922",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "899b9ee9-2bc7-4e3d-87c4-3b811a120116",
+                            SecurityStamp = "6441c599-b7c3-4680-95a7-956dbaabf617",
                             TwoFactorEnabled = false,
                             UserName = "kadil.ronald"
                         },
@@ -11282,7 +11190,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "9b6d73e5-ff27-44bb-a9d0-f7c58b31c4a1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6bc37897-49b1-4ff8-ba36-af5d662235de",
+                            ConcurrencyStamp = "0e0737c8-10cd-42b6-ac66-78a2809d22b1",
                             Email = "madz.karao@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MOHAMAD",
@@ -11291,12 +11199,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DUMBI",
                             NormalizedEmail = "MADZ.KARAO@GMAIL.COM",
                             NormalizedUserName = "KARAO.MOHAMAD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMgfLAvvNQoOAwGE6ChqsJ5dRVfohqqYP9QAWkPv7ICGulw9DK6iyx7KlRcxPRHGrw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOfsbwylaeU5ua95kaJwBwY3pDK+UG4BRSQFhed7yAsDnbv9SsrXYcUruVaEwhAAFg==",
                             PhoneNumber = "09363769315",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Public Health Unit-Health Promotion Unit",
                             Prefix = "Mr.",
-                            SecurityStamp = "1fbbc2d3-fdf6-4b8e-bb39-b379e52a3904",
+                            SecurityStamp = "87c0c113-42bf-4f32-99e2-dc93dc7c2812",
                             TwoFactorEnabled = false,
                             UserName = "karao.mohamad"
                         },
@@ -11304,7 +11212,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a1f6d353-df11-4a17-b2be-49371b8c223d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7bf195fb-e6ba-4382-acb3-fd3291c2e6f6",
+                            ConcurrencyStamp = "0dd1fc6d-3136-4a8f-a579-fc87173304e8",
                             Email = "don_astillero@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "ADONIS",
@@ -11313,11 +11221,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CHAN",
                             NormalizedEmail = "DON_ASTILLERO@YAHOO.COM",
                             NormalizedUserName = "ASTILLERO.ADONIS",
-                            PasswordHash = "AQAAAAIAAYagAAAAEP4zaHuVzod4absAUHMYjCsEy9f8RDlpkpJvIX9iEEP/whK9eVecspd1nMzk+OUrQw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBhHbYnG/ZrN/Sx9rQwlz911Nkh6uwsq8gTCj91nv7GUMryYDkmOL/2rTB4pG9IZ9Q==",
                             PhoneNumber = "09176261812",
                             PhoneNumberConfirmed = false,
                             Prefix = "Mr.",
-                            SecurityStamp = "a1c83b16-e329-4cf3-a382-7adc2df17756",
+                            SecurityStamp = "6b51c112-15bc-40b6-b778-7334c3082f69",
                             TwoFactorEnabled = false,
                             UserName = "astillero.adonis"
                         },
@@ -11325,7 +11233,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f2b28c8e-58cf-47b2-8245-33a7a98a7344",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f068a18c-d951-474d-a0a8-24da1d791b1a",
+                            ConcurrencyStamp = "59ba6ecf-0fd0-4c2b-b527-bf2ff9666aeb",
                             Email = "abantasfaizah@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "BBGIRL FAIZAH",
@@ -11334,12 +11242,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SHARIF",
                             NormalizedEmail = "ABANTASFAIZAH@GMAIL.COM",
                             NormalizedUserName = "ABANTAS.BBGIRL",
-                            PasswordHash = "AQAAAAIAAYagAAAAELj3jy9L/aky9r6IDjo+6GqJf12+TN2vNVXZyL6uSOR8F4lLb8Ti28z0CQ7iX+jJTg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEM89MA2hMh/74a/znDCcTEWIkegLb4fPx1BH71RfMjuR2hyjznuocabidYhIyS+b9A==",
                             PhoneNumber = "09618235949",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Claims Section",
                             Prefix = "Dr.",
-                            SecurityStamp = "393ffc33-153a-4891-9dbe-83c48d6e52ca",
+                            SecurityStamp = "02e5be53-6bc9-4544-96db-a39ae77ae109",
                             TwoFactorEnabled = false,
                             UserName = "abantas.bbgirl"
                         },
@@ -11347,7 +11255,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6db39f4a-9d19-4fc2-b3ab-2aa37851bb71",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "56c86b5b-4788-4f32-8c28-964962b00ccd",
+                            ConcurrencyStamp = "a5052747-f1fe-40a9-9d0a-7e28e4420ea6",
                             Email = "anidaabubakar5@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ANIDA",
@@ -11356,12 +11264,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PENDALIDAY",
                             NormalizedEmail = "ANIDAABUBAKAR5@GMAIL.COM",
                             NormalizedUserName = "ABUBAKAR.ANIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAELeBSGyNoZ4IOllmjI51fGoRPTNKe6/sJNodAqhiCUHJAtQKwuptz8hB34NLGVSsfg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGRGjW6BhDVmH8I6+jS+dttHdWp39ngUUNoO+MHGVEjmCx93fhM/Qs+ZDTnlqRrbwQ==",
                             PhoneNumber = "09177234338",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Emergency Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "2f809199-d475-44f9-abac-178098ee6754",
+                            SecurityStamp = "a6770d40-cd30-4b4f-8b2e-cc8c8a0bd9b7",
                             TwoFactorEnabled = false,
                             UserName = "abubakar.anida"
                         },
@@ -11369,7 +11277,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c54d18f2-9a21-4f72-92eb-1f5d6e8f58de",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7106cc21-9d61-40b0-a84d-5350bab815f0",
+                            ConcurrencyStamp = "63ebbb18-c93b-4088-8d48-91d0904efc8a",
                             Email = "bashegal23@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ALIBASHER",
@@ -11378,10 +11286,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ABO",
                             NormalizedEmail = "BASHEGAL23@GMAIL.COM",
                             NormalizedUserName = "ADANG.ALIBASHER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDWVkx5BwE92/GRBEOe7Vvd1VuspWt8rHNKhEVwozpRngGX+jJiUwxVUXW1xiWta7w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOXArSP+FsW+zp38l9dLymV0Ot5TUBk0VPrpJZvrbStEx7tnTs4PdCTPQdh9V85I/A==",
                             PhoneNumber = "09369833653",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "73372cbf-36bc-4082-a7b1-98443f6dd0b3",
+                            SecurityStamp = "367f7756-01a7-4115-96d2-ac2a49972aa0",
                             TwoFactorEnabled = false,
                             UserName = "adang.alibasher"
                         },
@@ -11389,7 +11297,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a1a6e8f1-4749-4a8e-8f9b-0b6b2f05f38b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "921246e4-3811-4dd2-9a63-b047215012da",
+                            ConcurrencyStamp = "5083c670-6254-4de0-963c-2b2bf3c26c7d",
                             Email = "lailakaliaagting@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "LAILA",
@@ -11398,12 +11306,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "KALI",
                             NormalizedEmail = "LAILAKALIAAGTING@GMAIL.COM",
                             NormalizedUserName = "AGTING.LAILA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEILgntO2oczHxoXxXU9u7Xgv9AgdFzNT5IB/txvWI2MXp3NZOHIQQjhABVgc/oP/VA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGB+1u2yPHOZw2HtpGVwMcvsuZkh/Sjt4A3lrwmMR/LuDbcKI+IOlCivNcFmxq4dnw==",
                             PhoneNumber = "09177124579",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Sec. Ona Wing",
                             Prefix = "Ms.",
-                            SecurityStamp = "04d0cbb7-7f51-495b-bf5b-5a0df71d251a",
+                            SecurityStamp = "08882378-dc5c-4795-a1e0-685f7ce951af",
                             TwoFactorEnabled = false,
                             UserName = "agting.laila"
                         },
@@ -11411,7 +11319,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f79e34aa-f6a2-4ff1-b2e0-4a7c8194e61c",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "69e8b24c-762e-488b-ad07-ea6457dc50d2",
+                            ConcurrencyStamp = "19f7f1d9-4291-4b5e-8262-5c2483ba601b",
                             Email = "miemarandakan@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "AMERA",
@@ -11420,10 +11328,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MARANDACAN",
                             NormalizedEmail = "MIEMARANDAKAN@GMAIL.COM",
                             NormalizedUserName = "AKMAD.AMERA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJQpHPqSCfA7+zztGSou5slI2zBFZruJIH8LrzUFxX+6vvwfIn2NcJLIl+EXy/owUg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELqRVwpWeQ+cuJeDBl6+pQPljr3PpMijdn+ZqWtAUQeAfIuwKvedqSt0/CcOkVwb0w==",
                             PhoneNumber = "09560537326",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "1d7d0cf3-4e62-4212-b02f-a7f850a844ce",
+                            SecurityStamp = "7ff69ee7-98bb-4ab8-902a-203f47db4420",
                             TwoFactorEnabled = false,
                             UserName = "akmad.amera"
                         },
@@ -11431,7 +11339,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1b8a5144-b8a6-4df5-bb98-0136d7ebdf24",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0c23713b-f6c8-4138-a2b2-98f1ee599097",
+                            ConcurrencyStamp = "b39918ba-44f9-45ab-aa1d-aab5d397e1d3",
                             Email = "maraguia44@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ABDUL",
@@ -11440,11 +11348,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MARAGUIAL",
                             NormalizedEmail = "MARAGUIA44@GMAIL.COM",
                             NormalizedUserName = "AKMAD.ABDUL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJqmJBn6zqDs8WfO35pXYaFi7bVAolWXMhM0ETgcqrhcLWdfyJwKeXkN8shV8IgIMg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELLemnl79tBgsHSL0ziVocyLRs3HcDxDI2sOn1OH9JVAFCtq56LA6/il99zYClC+RA==",
                             PhoneNumber = "09209177429",
                             PhoneNumberConfirmed = false,
                             Position = "Head, EEG",
-                            SecurityStamp = "1331a314-8995-41e2-8271-a561510c770f",
+                            SecurityStamp = "686fd80e-53be-483f-b4be-87cfd3c92e11",
                             TwoFactorEnabled = false,
                             UserName = "akmad.abdul"
                         },
@@ -11452,7 +11360,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6c8454ef-fd19-4db5-9f88-dcd7b13e5c55",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "953c557c-ba11-46be-8364-406ee6b5a386",
+                            ConcurrencyStamp = "2b52ac3a-fa8c-4d8d-8fc4-4cce0b39516b",
                             Email = "rosarioalojipan@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ROSARIO",
@@ -11461,12 +11369,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DELA CRUZ",
                             NormalizedEmail = "ROSARIOALOJIPAN@GMAIL.COM",
                             NormalizedUserName = "ALOJIPAN.ROSARIO",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBgL8mSPqoqFi2ksAc5xKD10M1SI3Wnr+hM7Zx5iMDuZ5XFaTtjLz9kmSY+3EUP+/Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHTr22YyOdtDRD3SO+Afh6rRm0Z4mMAd/6diKGHfZYQD7UgsSG15X+yII98TK9tnkQ==",
                             PhoneNumber = "09178202970",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Operating Room",
                             Prefix = "Ms.",
-                            SecurityStamp = "fab27932-1a3d-4c67-aded-ddb944c5b626",
+                            SecurityStamp = "63c93e5e-1ccd-4dac-aa36-82f30830d766",
                             TwoFactorEnabled = false,
                             UserName = "alojipan.rosario"
                         },
@@ -11474,7 +11382,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "4f5b9c31-d406-4036-b8cd-37cb92d6b211",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f4a5aec8-eb61-47ae-9da6-d8a085bfe2a7",
+                            ConcurrencyStamp = "d83e8585-b0de-4915-8a11-b24257cbbb98",
                             Email = "yashou_07@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "YASSER FARID",
@@ -11483,10 +11391,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MAMA",
                             NormalizedEmail = "YASHOU_07@YAHOO.COM",
                             NormalizedUserName = "ANDAL.YASSER",
-                            PasswordHash = "AQAAAAIAAYagAAAAECnvhzP5B7HzPJ0uL6lGZsLNOpQ+zlRMeouyHq6TR7+PQND6e9sYUZkR7kbHPqxqpA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPsH0/lEt35rJhLpFJ/U8wjjhLkj2GrngCsTGITDUJNhkFIWMqyd8DSSRUDWJlGfqQ==",
                             PhoneNumber = "09173085559",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "62ee587e-8974-48a8-b080-99fd17a2a03b",
+                            SecurityStamp = "7b6d6117-8f28-4c2b-b1cd-50d6afe7a111",
                             TwoFactorEnabled = false,
                             UserName = "andal.yasser"
                         },
@@ -11494,7 +11402,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0b91d20a-0ab3-4820-b3f2-fbcf01c0af26",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c798b68a-3c0a-410e-a3d0-855f038bad78",
+                            ConcurrencyStamp = "7c4320ae-7362-4229-9c34-3e13277efb3e",
                             Email = "racsandamen13@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RAHMA",
@@ -11503,10 +11411,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "KALID",
                             NormalizedEmail = "RACSANDAMEN13@GMAIL.COM",
                             NormalizedUserName = "ANDAMEN.RAHMA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGiybcEO1y7vOYkpwxDH6c3c2Nk1dNmUiWJOgZfFFhyIrYKx/neK7RXXoC6cM/SqPQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENcH3Sk+vUCYTz0R/d4H8m85Jc/lyrcugZP7MVZ3o3OjEhsSiVsgoOyD2QG0S/V14g==",
                             PhoneNumber = "09456829380",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "32180c70-793f-46cf-aef2-facf75c1edd6",
+                            SecurityStamp = "4ff41b16-4986-429c-ade4-470f9571fe42",
                             TwoFactorEnabled = false,
                             UserName = "andamen.rahma"
                         },
@@ -11514,7 +11422,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2489fce0-858f-43af-b82a-65ee42cb2e33",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "328f5c40-0d67-4729-8b98-494a0b560726",
+                            ConcurrencyStamp = "ea973458-6740-46d5-bc00-5bf0f6cea269",
                             Email = "aljazzerangas@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "AL-JAZZER",
@@ -11523,11 +11431,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MAULANA",
                             NormalizedEmail = "ALJAZZERANGAS@YAHOO.COM",
                             NormalizedUserName = "ANGAS.AL-JAZZER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEEAxcqf/ERSw0UaJXC34gOXC5Cj4gtrvxDZ7V0AsbQ+gRbOm980hSNou3Lp5ePV/Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHzqS3lUy1UayQpo/O5ZFF659CjIWHqjp9sduov+mJkP4hdz9+SJ9QqbBwwllY2d5w==",
                             PhoneNumber = "09179755770",
                             PhoneNumberConfirmed = false,
                             Prefix = "Dr.",
-                            SecurityStamp = "d46ed15b-ffd5-460e-a505-fb2f2dec47c7",
+                            SecurityStamp = "14106a06-d319-4ab0-9d81-26cca7a362a2",
                             TwoFactorEnabled = false,
                             UserName = "angas.al-jazzer"
                         },
@@ -11535,16 +11443,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "5ff58cb5-9d0c-44b2-bc2a-5f96a3c9d621",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "32368d13-b9f5-4643-9c00-069c1ba1bcbf",
+                            ConcurrencyStamp = "e15dfbfc-738f-4bf6-b58e-a32a6f9b47b2",
                             EmailConfirmed = false,
                             FirstName = "RENANTE",
                             LastName = "ARIAS",
                             LockoutEnabled = false,
                             MiddleName = "ZIA",
                             NormalizedUserName = "ARIAS.RENANTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEK5nMdF7YU1+BgURekislfLH+V4i+VAobVudj8//AOY8QPdTTd9kFj2o6lyQKNyVQw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN8XuaabV4l3d4QmHVU64cUUsqx0OlhN4LkmyhpzG3xnAQtkG4gRJ0WFRESfFSr/nQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "266170dc-362a-42fd-84b3-0ba12dcfbb56",
+                            SecurityStamp = "b8763280-2982-4f2b-8e3a-9ced2dc1a5ca",
                             TwoFactorEnabled = false,
                             UserName = "arias.renante"
                         },
@@ -11552,7 +11460,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "cc505df2-3586-41a1-9d44-b5fc8f28e3a9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "164ea122-0abc-4f78-902c-88147b8de292",
+                            ConcurrencyStamp = "4bd50f0e-2906-4879-bea5-97f93e5764d6",
                             Email = "shiedhe@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "SHIEDHE",
@@ -11561,12 +11469,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "KEMBUAN",
                             NormalizedEmail = "SHIEDHE@YAHOO.COM",
                             NormalizedUserName = "BANGEN.SHIEDHE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOUVqjNLtOi7bCEWcy/qmLdA6GTJiGl15tusme5gUEGrI7jEFCDu3Fb1Y4H4HkjDkA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAED2stiet/C+EyPRWfKfN/QZT8S1Ac4vkP1SJxmrPza5vTwiNuQ9DOwAZ4acBnDLdCw==",
                             PhoneNumber = "09396526665",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Procurement Department",
                             Prefix = "Mr.",
-                            SecurityStamp = "5052a4bb-6f43-4200-9160-f0bad89ebaf3",
+                            SecurityStamp = "160248da-5a6b-4160-b91a-f5fad4ea8b1e",
                             TwoFactorEnabled = false,
                             UserName = "bangen.shiedhe"
                         },
@@ -11574,7 +11482,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8ea08a3f-066a-41ac-9ef0-ffb47d3657d9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6fe67158-e548-4e29-9438-d5e98f87b9fe",
+                            ConcurrencyStamp = "8bcb3049-18e4-43e4-8ce1-c5bc33b37c4d",
                             Email = "dannyfherbantilan@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "DANNY FHER",
@@ -11583,10 +11491,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BANQUIAO",
                             NormalizedEmail = "DANNYFHERBANTILAN@YAHOO.COM",
                             NormalizedUserName = "BANTILAN.DANNY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPztycMkrCeuxsWQ6JNw7LgYKxygl4uJdxIfQjwRoN3r6T02wvKRpw6QNjAuXQliPw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH0Eg8bNPGRhy3BaEv8YJ00di6BcCRVAyc4Xbwer8Zzw0HVCKT9twxzxwO+70IBuhA==",
                             PhoneNumber = "09272727645",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "f35cc2d9-b42e-4bcb-a645-9edb39ae8f84",
+                            SecurityStamp = "82dac089-2cbe-4b32-b990-e7de0eb93486",
                             TwoFactorEnabled = false,
                             UserName = "bantilan.danny"
                         },
@@ -11594,7 +11502,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c79be729-47b3-4907-88e1-0a67dd4e48b1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c805bdda-d305-49d1-920d-e40e9937abed",
+                            ConcurrencyStamp = "4b5506cc-fe43-425f-9e02-c5cfdc0b02c6",
                             Email = "zahidabationgbassal2018@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ZAHIDA",
@@ -11603,10 +11511,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BATIONG",
                             NormalizedEmail = "ZAHIDABATIONGBASSAL2018@GMAIL.COM",
                             NormalizedUserName = "BASSAL.ZAHIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAd27i8qbluhQdXJqpp/MOPO1Yx4eDYS9CKvlmSIWqmiIqBJTWUuFvz92rFMyy+IfQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEObymeLi8ew27b1j5kJ2+hKmwgrLfwVEh8azIZfFBvm+6YZ8E4B/AUTkwezUwA4IGA==",
                             PhoneNumber = "09161012599",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "24e5bf31-f7e7-4f41-adac-c1441280cbd8",
+                            SecurityStamp = "4dae24c5-bd9a-40a3-b97a-c9239c4b76e9",
                             TwoFactorEnabled = false,
                             UserName = "bassal.zahida"
                         },
@@ -11614,7 +11522,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "de17cb47-83e7-4a6b-b97c-13808e14a7ff",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "129efa1c-dd59-48e0-be31-4809bb4fec77",
+                            ConcurrencyStamp = "0c67d5f4-4f81-4a78-9b51-bfa5932fcb7e",
                             Email = "acocalbo@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "ANABELLE",
@@ -11623,10 +11531,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "COCAL",
                             NormalizedEmail = "ACOCALBO@YAHOO.COM",
                             NormalizedUserName = "BONES.ANABELLE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKorE8Koim4avg3NMbATqVActClDjmgfatcFDfcq47FGKaoodhoSrJhAsodELTirNA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGKTxFhEFo5qfjU3H9QYq/jO+2ltpoAP3jtq7OJZikFlIlL88v+c72gc7gHpa9JPMg==",
                             PhoneNumber = "09483207824",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "3b5a0168-9b5d-4b00-b3df-6004dbc93a66",
+                            SecurityStamp = "71456fac-15b9-49fc-bd90-46551d4ace81",
                             TwoFactorEnabled = false,
                             UserName = "bones.anabelle"
                         },
@@ -11634,7 +11542,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0ed1f88a-8859-4d6c-9a1f-84aaf19cc45c",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7d5f00b7-70c5-4412-bb24-3383cb92400f",
+                            ConcurrencyStamp = "d430b0fb-a1e7-413f-848d-87a66240acca",
                             Email = "amybonite09@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "EMELIA",
@@ -11643,12 +11551,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "YU",
                             NormalizedEmail = "AMYBONITE09@YAHOO.COM",
                             NormalizedUserName = "BONITE.EMELIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAENBOeTFd72v3rEiyiQuqN2EmBUYjoIfmi0O+ygdU9Xy91/lWLol/OZZNiywMNMblFg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOMkpWj2II7hPpKY5RajCMLCg6kbtp06vKf5jsv0sO5bnsj6xXdDKkRmOG45/liP6w==",
                             PhoneNumber = "09055207141",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Billing Section",
                             Prefix = "Ms.",
-                            SecurityStamp = "ad53813b-71f1-493b-bfe9-03ec97eb65e0",
+                            SecurityStamp = "f36690c0-428b-4a5f-8727-1acbb68c6729",
                             TwoFactorEnabled = false,
                             UserName = "bonite.emelia"
                         },
@@ -11656,7 +11564,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "74c35794-54d9-44a4-baf0-b8fa23e2d481",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e7d474ed-3e37-4313-9460-b7526ef213ad",
+                            ConcurrencyStamp = "055db01b-6688-4107-9787-0029e995ad7f",
                             Email = "Mulcaldea@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MAYLENE",
@@ -11665,10 +11573,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ULOG",
                             NormalizedEmail = "MULCALDEA@GMAIL.COM",
                             NormalizedUserName = "CALDEA.MAYLENE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKE4zg9bZCE7epI2qbADkWna8RSy46L/aV9gMqFemUxnp4RBI2zUD/1akS5p9cczog==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPJO0cdv0gkFAQ9j1qYWyOL4HjAmlovWd1oR9ex7T7ydiZpknIenigHHUDP2h3DJdA==",
                             PhoneNumber = "09953048269",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "4a0fb799-6bef-46fa-a95f-81461645cbf5",
+                            SecurityStamp = "9006e337-77be-4d6a-aeac-63d95be1a66f",
                             TwoFactorEnabled = false,
                             UserName = "caldea.maylene"
                         },
@@ -11676,7 +11584,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "53a2b071-d36f-4f1f-bf8e-3f7dbf7b8c7b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2e72d68c-1311-49ac-bcba-ffb6c25fd45b",
+                            ConcurrencyStamp = "b56567c7-bd4f-4e7f-b935-701823a5193b",
                             Email = "naughty_candao@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "ABDULBAYAN",
@@ -11685,10 +11593,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BAYAO",
                             NormalizedEmail = "NAUGHTY_CANDAO@YAHOO.COM",
                             NormalizedUserName = "CANDÃO.ABDULBAYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAECyhFWiqGIZ1gOtChbclO8VlRQd5hUljCe9/sibr7EyPpLG+Yviw+XGp8LjBxGI4og==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIkNetJB88iX699aJa/ElnedAqz2zFIxn48mV1F1Pyy+z3myMNtKyfiEOxEp8ofb+g==",
                             PhoneNumber = "09564021897",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "a97327c4-bcb4-4941-ae09-6dfd653789ee",
+                            SecurityStamp = "e4b01548-e454-44b4-b869-f151a25972d1",
                             TwoFactorEnabled = false,
                             UserName = "candao.abdulbayan"
                         },
@@ -11696,7 +11604,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "28a2a313-bc8e-4225-b8c2-85c2935b315e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "244c9c92-1b24-44b2-9349-3a941d444d67",
+                            ConcurrencyStamp = "2c2bdef2-d8e7-435a-aa6d-1520a8f60b38",
                             Email = "marcrejohncastillano@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MARC REJOHN",
@@ -11705,10 +11613,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BALLARES",
                             NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
                             NormalizedUserName = "CASTILLANO.MARC",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBbS+WL58sizU/xKW8fS35tlmkMosYedr012aIIBMHLLuEJWVQ5en4JES2bhyhhXZA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFxnRNI3kQyCmMCoLXEU17SM+MshbKZNH1pcHryBFxuCpK+IihPKLIBBZV9YhkkbJg==",
                             PhoneNumber = "09959283775",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "04921d2e-422c-414c-bfb2-47558645f087",
+                            SecurityStamp = "c5b8e190-f832-461c-94c3-2b7c294237b4",
                             TwoFactorEnabled = false,
                             UserName = "castillano.marc"
                         },
@@ -11716,17 +11624,17 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "35159a7c-2120-46f6-9135-8a8469b9c7b1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c1e15e1a-1ffb-4325-ad76-8d249167c78d",
+                            ConcurrencyStamp = "d4165924-aff4-4722-8416-efd2de60c387",
                             EmailConfirmed = false,
                             FirstName = "JOBERT",
                             LastName = "CASTILLON",
                             LockoutEnabled = false,
                             MiddleName = "ARMADA",
                             NormalizedUserName = "CASTILLON.JOBERT",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKLJIBxNN1XJ5gEzqP7taPQ1XNdpJe+jn6futK69dISXeUZ2y9LBFMJgPXlTrtCVnw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBMFPFVRYVQZgwH3Usfdsmo801woz4LWAyRHYGfcQA4C7A5lHzVbhSwcEJbv9rLRAA==",
                             PhoneNumber = "09395055897",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "3ea5a69d-0eb2-4adf-ba9c-d8c509a5f0a2",
+                            SecurityStamp = "01d213bb-851a-419a-9b68-8c346c657d21",
                             TwoFactorEnabled = false,
                             UserName = "castillon.jobert"
                         },
@@ -11734,7 +11642,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "ec4219b7-dfc6-4966-bf2a-3f1eecf17391",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "65125e74-d538-48c5-9e28-725633ca0656",
+                            ConcurrencyStamp = "7594f004-7b86-4585-b881-a2556d429982",
                             Email = "rndmpa@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ANTHONY",
@@ -11743,10 +11651,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CULAB",
                             NormalizedEmail = "RNDMPA@GMAIL.COM",
                             NormalizedUserName = "CUYONG.ANTHONY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDmF2/dGqjMvgaLtVLGXQG3wyeh6zRFOrtjP8X75WrIuERLtweN5+7rCSH5ytOvzOg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECkikc3mHxDvljA6SzRw9dQhmTWfMAp+fdfOFRmubk5phgD10IQo9kun8v+zLXQZww==",
                             PhoneNumber = "09453040405",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ccda1e12-af3b-459c-a40f-e2b239e72df0",
+                            SecurityStamp = "ae97c68a-f273-4842-ac85-0dc1c8cf2db9",
                             TwoFactorEnabled = false,
                             UserName = "cuyong.anthony"
                         },
@@ -11754,7 +11662,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1a9d8654-1c19-4b60-9491-4e33c176cc64",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "34e2a085-50e1-46b9-b426-8e215bf21339",
+                            ConcurrencyStamp = "f0568df7-1ae6-480e-b5f4-1bc93a227e61",
                             Email = "gloriacalubiran79@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "GLORIA",
@@ -11763,12 +11671,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CALUBIRAN",
                             NormalizedEmail = "GLORIACALUBIRAN79@GMAIL.COM",
                             NormalizedUserName = "DELOSREYES.GLORIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAECNVSRtoutSaM+CN4Vog36Fac0FvONsW5iYburZdzzGXTxVKtikmFs2SuJPuJO24YA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECfK9tCisff8a75x/s4h55ItAvLrv+AhB3+Up3oaW4jx1A6red/G+xmHkRMu7dNggw==",
                             PhoneNumber = "09363304534",
                             PhoneNumberConfirmed = false,
                             Position = "Head, SHTH",
                             Prefix = "Ms.",
-                            SecurityStamp = "dd694a07-15f9-4d0f-b03d-caf8c388925e",
+                            SecurityStamp = "daf47742-87dc-45aa-8a40-324b6f30c4e8",
                             TwoFactorEnabled = false,
                             UserName = "delosreyes.gloria"
                         },
@@ -11776,7 +11684,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1a9d8654-1c19-4b50-9431-4e23c174cc60",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d1c4acf8-0d89-42fa-890c-cc0be8a45f7d",
+                            ConcurrencyStamp = "42039305-3f2b-4734-88a4-dec1ae0640cf",
                             Email = "Biloa1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Andul Hanif",
@@ -11785,10 +11693,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "B.",
                             NormalizedEmail = "BILAO1234@GMAIL.COM",
                             NormalizedUserName = "BILAO.ABDULHANIF",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIsDK7QIQEbF+qpXZThSMKVuNi6+GH4ZO1pQtC8d8VPXB1xB4vZGQxQ4ZOc+Uf1JjQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA3OlQpmgbB/2Oxh2AekbmmxLZIMlbVN7pWnC2lNEi4eAnW+xgoOueQWAbmsts5Ung==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "a0b918df-3c16-4784-86f7-44a9389e0e2c",
+                            SecurityStamp = "7d9179cc-85c6-4fa4-8cbb-57748d902da0",
                             TwoFactorEnabled = false,
                             UserName = "bilao.abdulhanif"
                         },
@@ -11796,7 +11704,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2z9f8451-1n19-4b50-8432-4e23c164cs51",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "41345e90-37f2-4f0e-8975-e2f4b3f2fca8",
+                            ConcurrencyStamp = "0970cf95-91e9-408d-b9f5-6024126c387c",
                             Email = "Caoagdan1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Socorro",
@@ -11805,10 +11713,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "A.",
                             NormalizedEmail = "CAOAGDAN1234@GMAIL.COM",
                             NormalizedUserName = "CAOAGDAN.SOCORRO",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGKY7zMBaV5OveWkNWVkxpQooQSwUomDXtsOVlD47RBz4GYwQz/qnnIxVBmJvHac2Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEK6JptjRA8/MpWu6SWXjsg1IRJ2ua8IuLj9He+a4+EkKChmwwQK4e2/Sx9jIyqVz+g==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "7823362e-a818-48ce-a695-fc9a69233dff",
+                            SecurityStamp = "0a414d5a-bf78-40f4-b941-46616a06d585",
                             TwoFactorEnabled = false,
                             UserName = "caoagdan.socorro"
                         },
@@ -11816,7 +11724,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "9c49e0f2-4cb0-45b1-9f0e-4fbd24d25368",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a8919250-d2ce-46d4-af76-265d7dc04ae7",
+                            ConcurrencyStamp = "957a70ce-8f15-46ad-8f36-1031e5925b0a",
                             Email = "graceenlayo@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "HONEY GRACE",
@@ -11825,10 +11733,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ROMASANTA",
                             NormalizedEmail = "GRACEENLAYO@GMAIL.COM",
                             NormalizedUserName = "ENLAYOAPAAP.HONEYGRACE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBFE5skCYxDFoMONH63g8Blg0yV5HmexcR95GFTxF4bgf/0HCC8v5VWoY5tTEVzj4w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPT8cT4bEoWK8sHuoPUBb5AWlZyABZwzUWUNjE7mrcXZUS/HiaCXUYUfqhNOvOw2ow==",
                             PhoneNumber = "09754948544",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b8969fa4-219a-41b9-bdbf-2d74d4de4b56",
+                            SecurityStamp = "0deae5ea-7d6b-409c-ae6f-2c650996b26b",
                             TwoFactorEnabled = false,
                             UserName = "enlayoapaap.honeygrace"
                         },
@@ -11836,7 +11744,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "33a13c76-041f-4d68-8f67-41b7dd60c408",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1871f2cd-f01c-449a-b9f1-340bd36fc5d9",
+                            ConcurrencyStamp = "9e573af9-0d91-478a-8b75-5dab86f7c1a8",
                             Email = "henesijesmundo27@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "HENESI JEM",
@@ -11845,10 +11753,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "GAUDIANO",
                             NormalizedEmail = "HENESIJESMUNDO27@GMAIL.COM",
                             NormalizedUserName = "ESMUNDO.HENESIJEM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAuuBRrNBEk+Hb8EavQeTQRMLu0hkeJjMq7EYNCPPbAF211naIGtctc4uiXKBWzIIw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEODp+O9flcmcSucIhODqt+icFb0sck4VYn30bimi1EybRgS+Z9F1/6OCOMEOuQIAxQ==",
                             PhoneNumber = "09354975202",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "5b141bf6-d7f1-4b1f-8ab5-2d46dc6bf38f",
+                            SecurityStamp = "63fc68e9-ce6d-4c16-9982-eec02661a6c5",
                             TwoFactorEnabled = false,
                             UserName = "esmundo.henesijem"
                         },
@@ -11856,7 +11764,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "43cd6e17-9d86-4cb9-8d84-298e43a23450",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "658ff986-1dd6-4ed4-b4b5-5fc2f9a566b9",
+                            ConcurrencyStamp = "8ddad0d9-6efe-4e1d-9e1c-caeee86b264b",
                             Email = "jesryll.tupas@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "JESRYLL LEANA",
@@ -11865,10 +11773,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "TUPAS",
                             NormalizedEmail = "JESRYLL.TUPAS@YAHOO.COM",
                             NormalizedUserName = "FACTORA.JESRYLLLEANA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDDeON76DM+3X9JeT1/0Wt8L0zTYG/jYFQ9khxMYfCu/6v0qZ0zuou/1KB4yCNN7qw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL+hrpNXUxFH30zUWN+xeJ0zPJVpBX76PRSkB4zLmCoihpIbEeKLYD52yJNLEms3jg==",
                             PhoneNumber = "09176111210",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "7c100a0f-b1a6-413e-8fe2-1497f96ec7c4",
+                            SecurityStamp = "416bc0b4-3abf-4d4c-afe8-ae656adcc51e",
                             TwoFactorEnabled = false,
                             UserName = "factora.jesryllleana"
                         },
@@ -11876,7 +11784,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c77b5df0-836a-4f9e-9f29-d2f6c6cf4074",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b4261840-baf3-4179-83d6-b896bab5eac9",
+                            ConcurrencyStamp = "6ed46d87-0136-484b-82e3-db7db7a142e8",
                             Email = "cherfer22@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "CHERYL",
@@ -11885,12 +11793,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MAGBANUA",
                             NormalizedEmail = "CHERFER22@YAHOO.COM",
                             NormalizedUserName = "FERRER.CHERYL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPbT7jtRCfFLWuLc8ZNHYp7BKEblZqkBOVB3oALLxnsRwBFsCtBh8sat7S3AG2sypA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEATNMiNV9mjzn1nSRJymJDQHHmIJYSv7i+4a5DSUHmUjf8j3dneLqbk9wm7WtHEZA==",
                             PhoneNumber = "09276048113",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Paritoneal Dialysis Clinic",
                             Prefix = "Ms.",
-                            SecurityStamp = "0582353e-0a94-4c4d-a028-3797d9379cbe",
+                            SecurityStamp = "ca7e9d21-b5ad-4c4b-89a0-b939c4341c65",
                             TwoFactorEnabled = false,
                             UserName = "ferrer.cheryl"
                         },
@@ -11898,7 +11806,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "5d8a2197-b38b-40b2-940a-845e2a44b622",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9a377dae-ffdd-43c9-af0a-1724514dfddc",
+                            ConcurrencyStamp = "75fee2a2-0da3-4057-bf57-bc84ea91c3fa",
                             Email = "resildago1212@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RESILDA",
@@ -11907,10 +11815,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BAGGAYAN",
                             NormalizedEmail = "RESILDAGO1212@GMAIL.COM",
                             NormalizedUserName = "GO.RESILDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPht43gjRM9bdRRNNzrRSEBeckeoKUtpTr1a0yBKeV3FCYqwHORu0wVbyJIyVFBT/g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEI6sDZw6tkOOJDsHwmOLYiR9s/AMoUuO73JNMkwjAhcXyANa0gQX2nuvgpob9Um30Q==",
                             PhoneNumber = "09062249400",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "35ffa10f-db8d-4159-952d-68990cd79b03",
+                            SecurityStamp = "015c8c74-02e1-49d4-a612-c28442aded4d",
                             TwoFactorEnabled = false,
                             UserName = "go.resilda"
                         },
@@ -11918,7 +11826,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c79c6433-d1ad-46a3-ae87-84edb44476de",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b0a19956-73ae-4cd3-a565-14687e8eefa1",
+                            ConcurrencyStamp = "bb7149d3-3e3a-4f78-9377-1d92252a978b",
                             Email = "rendtesy0620@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RENETTE",
@@ -11927,12 +11835,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SUDARIO",
                             NormalizedEmail = "RENDTSEY0620@GMAIL.COM",
                             NormalizedUserName = "GONZALES.RENETTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEM5pyEFSa1MnpvNY8MAPCjV9NFqK4QmsJPCPR9wimctEusD3PAqJtUjguqv4YLWgxA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECQiJmYr0xOmy5aNO7E/LnCaPnUQYE3+GxubquIo4x91JJNEk1TWQ5gnVjefUFafDg==",
                             PhoneNumber = "09166248783",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Medicine Ward",
                             Prefix = "Ms.",
-                            SecurityStamp = "97adf996-bf9b-4c6f-a212-c363a4745767",
+                            SecurityStamp = "904be075-b1b0-461a-a378-487f54492d15",
                             TwoFactorEnabled = false,
                             UserName = "gonzales.renette"
                         },
@@ -11940,7 +11848,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f03cf528-c2a5-4820-91a5-6821dc5350f8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ab305169-d0fe-47c0-ba7d-a118f11d3b61",
+                            ConcurrencyStamp = "eeabfac0-f032-4315-9b41-abc08db318b0",
                             Email = "espurakoy@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "GABRIEL",
@@ -11949,10 +11857,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BLANCO",
                             NormalizedEmail = "ESPURAKOY@YAHOO.COM",
                             NormalizedUserName = "SERO.GABRIEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEB3wvKYns94uGShenxbdVgNI3OlM0wHXF2iV5oCmjgXO119RfrgOhXCCUCJxoWD7qw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEK4iuVzLb3XpoiHgXxnnUvktFyML4jHJwJ+MtwEn4CpNUyCDfoIZXaqRoeMMZP56KA==",
                             PhoneNumber = "09177239443",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b867539e-f577-49bc-bcde-0fc099b2eb2a",
+                            SecurityStamp = "83e8cd61-9cfe-4066-81b9-d121b118a6cb",
                             TwoFactorEnabled = false,
                             UserName = "sero.gabriel"
                         },
@@ -11960,7 +11868,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "5f33b779-c424-4e4d-89a9-7b8e5ac3e98d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "31f0f3df-bda9-436f-84e3-e9bbcd30d83e",
+                            ConcurrencyStamp = "03290f27-752e-4d31-bdf5-25e8e0e35c81",
                             Email = "jettFTS@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "JARRETT",
@@ -11969,10 +11877,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DORONILLA",
                             NormalizedEmail = "JETTFTS@GMAIL.COM",
                             NormalizedUserName = "SABRINE.JARRETT",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMvWPrLR3Kn/MhLNICpL8uDYazgN6Hreuoa3WdHhjDjeZP7SxE+WegLGeKsMu+WlsA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEa0FTE04/9yahi+b6qdX0TzOodPb9/mktNvuztkT+dFIJz3dW0ORrRn/cMeu6uk5Q==",
                             PhoneNumber = "09162012248",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2a767f58-7ccc-481f-a23b-5f7e5f2d3a14",
+                            SecurityStamp = "48793764-067f-480d-8b0e-8638bab505dc",
                             TwoFactorEnabled = false,
                             UserName = "sabrine.jarrett"
                         },
@@ -11980,17 +11888,17 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "baf0a172-7e0a-4999-8c03-8f9bfb62150b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d6338b55-632f-494c-af4c-be29ca413039",
+                            ConcurrencyStamp = "dd295612-db86-4368-8e51-a5b431126107",
                             EmailConfirmed = false,
                             FirstName = "FAISAL",
                             LastName = "SALIK",
                             LockoutEnabled = false,
                             MiddleName = "ONG",
                             NormalizedUserName = "SALIK.FAISAL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAkoDY0RH1NuMH1sPyvkzn+34ixo5MpnArPgfPV5RAhFKqmkJVQHhnzViZTk+C6HFA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDf0eTsi17CJ8vh3j1j0b2zP3A5BteIJrSXyLLxYNThKmEotjiBBjAskucvgO5plBA==",
                             PhoneNumber = "09773262708",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "c2b95bbb-3ce1-476d-b286-d0fe6b72bf7e",
+                            SecurityStamp = "06cda5e5-0bf3-4818-be06-482ed3a4349a",
                             TwoFactorEnabled = false,
                             UserName = "salik.faisal"
                         },
@@ -11998,7 +11906,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "88a1a0b3-943d-47a2-b0bb-f1c8763acaf4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fc2bc64e-dcbf-4057-aec5-db27157d3635",
+                            ConcurrencyStamp = "f5d84a06-5d9c-4c1b-a1ed-a84d7b86c718",
                             Email = "tardz03@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "GERALD",
@@ -12007,10 +11915,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "VEN",
                             NormalizedEmail = "TARDZ03@YAHOO.COM",
                             NormalizedUserName = "SORIANO.GERALD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPzdi+lIdA3x5nlFXpG55X+/5wfgatq2kNilmf3PyTTtBoLKv9tVsoqADrrRhlI0Wg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP11Q2UFq+BlHPTNAn1AQ4YKxK/g+QZoelfegvq66GO22V6lk0NHxCNm/A3OKgahZQ==",
                             PhoneNumber = "09224339675",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "8ae5849e-6687-4198-92eb-9f61694e6b56",
+                            SecurityStamp = "4eb33abb-b677-4ea4-bb87-dec319747dc2",
                             TwoFactorEnabled = false,
                             UserName = "soriano.gerald"
                         },
@@ -12018,7 +11926,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0ff9af54-f57a-4d1b-a2d6-679b3a4b8c30",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f50eedc3-a9ca-490e-b853-f3211663c854",
+                            ConcurrencyStamp = "4570d88b-c838-45a8-92e4-c2b917787c00",
                             Email = "abigailsaveland@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MA. ABIGAIL",
@@ -12027,10 +11935,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "YU",
                             NormalizedEmail = "ABIGAILSAVELAND@GMAIL.COM",
                             NormalizedUserName = "SALVATIERRA.MA.ABIGAIL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJLkiTzhUNVX+QzOtr7gTynjSv9eJj/23t3CN3bPB0V1JeOTgH4xMOLAim9byw4IWA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKqrOn5NlSaETCSzgmg2RNjAMrKVyvcH9mdl1bOmdq1TgJx7jaGZS9SRsv/fMjeSZA==",
                             PhoneNumber = "09088931724",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "1f47212e-f1b8-417f-a8a8-e15035f0ba49",
+                            SecurityStamp = "840ff7da-b8db-430a-8bc7-eb9b0b347459",
                             TwoFactorEnabled = false,
                             UserName = "salvatierra.ma.abigail"
                         },
@@ -12038,7 +11946,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "59b4a3e6-30c2-4a8c-8851-78b95cf11f5b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9ed05bd7-a2d0-481d-88ff-586dd6662b58",
+                            ConcurrencyStamp = "4fbe99c8-9556-4919-8419-9965eca224bd",
                             Email = "jomedellesampulna13@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "JOMEDELLE",
@@ -12047,10 +11955,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CHIO",
                             NormalizedEmail = "JOMEDELLESAMPULNA13@GMAIL.COM",
                             NormalizedUserName = "SAMPULNA.JOMEDELLE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFab3TJoZ2WUQ/W69WHEENxUOwZnsRAK0Kr41p+MdZOTDAJtKpzb0wlykDoASYjIvQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPGgTpQMCOoBnIFEJNBL4NsAPCUAq+E4n7VY9903Rhm0QgeHqrxJRTWfPfHTw6yJ/A==",
                             PhoneNumber = "09673774366",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "48de7c50-afec-40ea-9759-653647304da0",
+                            SecurityStamp = "88bb40e4-d7ed-4c27-bb41-59a462baff17",
                             TwoFactorEnabled = false,
                             UserName = "sampulna.jomedelle"
                         },
@@ -12058,7 +11966,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "3db6b5af-4b42-4747-a3f0-3a60b3e36a56",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ef0ed5c0-d5d7-4235-9ded-185a8652b906",
+                            ConcurrencyStamp = "3ed2dbf5-67ba-4355-b8ad-f4f987828143",
                             Email = "omaldetj9@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "TERRY JANE",
@@ -12067,12 +11975,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "OMALDE",
                             NormalizedEmail = "OMALDETJ9@YAHOO.COM",
                             NormalizedUserName = "SAPI.TERRYJANE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEH5LSgs3neHIXOAoGOYm3zLa7QXges3Fha8CI6IyZUtzQYXJhXILspcqr8pZMyqzgw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEPCnk43Ri79aDe8jkSG9OPX9B9m/zqROWIDOBdl+zBba13AaOFo+s+XWiMixuj+Dg==",
                             PhoneNumber = "09458244916",
                             PhoneNumberConfirmed = false,
                             Position = "Head, TTMF",
                             Prefix = "Ms.",
-                            SecurityStamp = "25721cc7-27e9-4864-b7ce-f8a972fc715c",
+                            SecurityStamp = "36eb0452-0ea8-4245-b9a1-c7711e641c74",
                             TwoFactorEnabled = false,
                             UserName = "sapi.terryjane"
                         },
@@ -12080,7 +11988,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7gf2b7zj-4b42-2476-f3f3-1x72b3e34aq68",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "debae69d-eb87-4e79-a4f8-87708c14fa9f",
+                            ConcurrencyStamp = "4364e18f-a549-4f87-8025-01017f5f3c8f",
                             Email = "saliling1234@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "Floredliza",
@@ -12089,10 +11997,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "J.",
                             NormalizedEmail = "SALILING@YAHOO.COM",
                             NormalizedUserName = "SALILING.FLOREDLIZA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEE7Y3o12bw7WS5dlbjnqlL+00xs4PTNmgzf+MHnh5y6U0huziDp7QIiAUC5lxw/vEg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKCgCS4mNWov0J0SMSPUFaxRHB4bzOHq8FwC7F5pukxCyKWd+iOgV5GuqGULHvPRGA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "299b4f1d-fc9c-45f3-95e0-bf0ba0a92a84",
+                            SecurityStamp = "94d0872d-b9ad-414f-91e0-fdf9d3ab4293",
                             TwoFactorEnabled = false,
                             UserName = "saliling.floredliza"
                         },
@@ -12100,7 +12008,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b83670e3-3d7c-40a4-8d07-5a3c3f6bde91",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e71ca8b9-033c-49f2-a913-83bcbb830425",
+                            ConcurrencyStamp = "00aff2e1-e503-4209-b6e3-f0114623805f",
                             Email = "paogratuito@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "JOHN PAUL",
@@ -12109,10 +12017,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CHOA KHAO UY",
                             NormalizedEmail = "PAOGRATUITO@GMAIL.COM",
                             NormalizedUserName = "GRATUITO.JOHNPAUL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEFJllylmiaZVRh+S6k6eTR3l9n2mxupqrGUK+wskdcm0rIclQRi5F6HsBZBabYgXg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMFnzI5jMV7s7XSs+gLVqbXRGtF3gklRozsIt8NjlxLxCUfo6P4c9/KCYBam1feZ+w==",
                             PhoneNumber = "09177027392",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "765bd3d5-90b5-4126-96d7-89df9430e359",
+                            SecurityStamp = "0948f671-828d-46da-9950-c32d26d7c66d",
                             TwoFactorEnabled = false,
                             UserName = "gratuito.johnpaul"
                         },
@@ -12120,7 +12028,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "3a4c88b0-5f73-41f0-82e7-255e19e8d9d1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "be8351fd-4700-43e6-b3ae-9a9681b12564",
+                            ConcurrencyStamp = "364b4999-83b3-49f8-9efc-377ed26fe393",
                             Email = "leyn0426@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "AILEEN",
@@ -12129,10 +12037,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SANTIAGO",
                             NormalizedEmail = "LEYN0426@YAHOO.COM",
                             NormalizedUserName = "GUMAPAC.AILEEN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAxWr24+GrMLw+saDjeyIVJ1yW7y62ehY5FQk5Ugd4SPMuTsOWiRgrKqDOJyhRNBcA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDhMQOujVPh2JX9ipyt2nJ1tA1/NRejnNJEEC8OC50Pix5/F5yj/2LoA2EAOtA4D0w==",
                             PhoneNumber = "09274449665",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "3a3f5a86-252f-40be-a59d-8bfddc8d7181",
+                            SecurityStamp = "f1c0e262-413b-4809-bf28-698795db220a",
                             TwoFactorEnabled = false,
                             UserName = "gumapac.aileen"
                         },
@@ -12140,7 +12048,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c0b41f2c-0f8d-4a53-b0a9-5cfa02b6a851",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ebb19c6c-a4d0-4de3-b50c-22e97a944aa1",
+                            ConcurrencyStamp = "30163e4b-be1e-4306-82fa-4df9b863e883",
                             Email = "jaheerhusseinismael@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "AMIR HUSSEIN",
@@ -12149,10 +12057,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MACAPENDENG",
                             NormalizedEmail = "JAHEERHUSSEINISMAEL@GMAIL.COM",
                             NormalizedUserName = "ISMAEL.AMIRHUSSEIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEA2J5vKfMbITlIEvRhHHQKrEiLP6jIiwL6OPT5u2ImPWFXRSCou1VcI/xqyJAH/PSQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDHod8uE96/4YWjklcDCtmp3twQEG5+HHYKq3bPOGdsQwNeCJjwH9CEAW/+luXPdJg==",
                             PhoneNumber = "09564020491",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ab41776f-6cc4-4547-8d1d-8d3d5e7b693b",
+                            SecurityStamp = "3d0a4d23-9256-44fa-b187-90984a657bac",
                             TwoFactorEnabled = false,
                             UserName = "ismael.amirhussein"
                         },
@@ -12160,7 +12068,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c171e56e-b2e0-43f2-91f1-8f258417bc3d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "72c07946-bbee-47c1-8081-a9800a0bb29d",
+                            ConcurrencyStamp = "61f64903-8e12-4b3f-a36a-17b036d39a52",
                             Email = "shingdumama@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SHARINAH",
@@ -12169,10 +12077,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CATALAN",
                             NormalizedEmail = "SHINGDUMAMA@GMAIL.COM",
                             NormalizedUserName = "IBRAHIMDUMAMA.SHARINAH",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGLrksiABpmH5r/YywUJH8JcINs97pNrnEkvPWKZ3DEqI4Rzs2f1oVUGpzTwOBgDSA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEK2vNHD8cjm2erPcq8anvdsZTBWBoxQivqccaLiyddQxodaihMDVX3hv+O7Q31Ak3w==",
                             PhoneNumber = "09177263399",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2b3d6f8a-524d-4175-8bfd-af8b1520a77f",
+                            SecurityStamp = "be6e14e2-fe87-4d51-a81c-34f0512eb6fd",
                             TwoFactorEnabled = false,
                             UserName = "ibrahimdumama.sharinah"
                         },
@@ -12180,7 +12088,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "43f6a708-995c-4a07-9e90-6d0a5efc32d5",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "717a7893-aa17-4b53-924d-338f815e3695",
+                            ConcurrencyStamp = "6f715c57-a7ce-4170-a311-c566c74bb34b",
                             Email = "baiyasminjaynonjuanday@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "BAI YASMIN",
@@ -12189,10 +12097,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "JAYNON",
                             NormalizedEmail = "BAIYASMINJAYNONJUANDAY@GMAIL.COM",
                             NormalizedUserName = "JUANDAY.BAIYASMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJYiYizeMBnDouAY6mamvg9EjkYnWuJHOH9Vsrfa4+I2vvKmDYELMmqc1X7FxQ5Kbg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIeD3WZxOPjlg1WwcsxPKz5ZtsedoPEJXwGCOW9vCXpgFFw9y+MGkg2jxTQA+DF+Jw==",
                             PhoneNumber = "09260474812",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "16241def-c266-440a-8935-e223748ee5a7",
+                            SecurityStamp = "91f7626e-e9db-4c30-8076-9ff61028adb3",
                             TwoFactorEnabled = false,
                             UserName = "juanday.baiyasmin"
                         },
@@ -12200,7 +12108,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "21d7b7dc-3425-464f-96d5-f6784b19b4cf",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fef0b0fc-76e5-4207-a56d-9ffd2a6fbd4e",
+                            ConcurrencyStamp = "bcf78018-2641-4b9d-afff-aa21bd50c679",
                             Email = "lenzkylu@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "LEONITA",
@@ -12209,10 +12117,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CHUA",
                             NormalizedEmail = "LENZKYLU@GMAIL.COM",
                             NormalizedUserName = "LU.LEONITA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJ4657jsyNCA/4jXOnrJCRT48h0y0KbrYPecuv/AGs50oLRaqj9/AJMwLFJakt668g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDL3k/BaTJmZ/fnF4SvDbCtTXP6/2riDbG5SSCF6coMt1JcZ1JCoS6gagvh/R8/nRA==",
                             PhoneNumber = "09178732580",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "d0467d1a-5ab7-4cf2-8d2a-65a25cd3c62f",
+                            SecurityStamp = "0dfd2727-6c00-4291-ad8c-88c63b33800c",
                             TwoFactorEnabled = false,
                             UserName = "lu.leonita"
                         },
@@ -12220,7 +12128,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c8dc080e-2c5f-4a8e-b0e0-9c29dc45a31f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7d756750-f0a9-49ba-b95f-3e7235f1eba9",
+                            ConcurrencyStamp = "282d6818-8d3f-41ea-84ee-728433bb76c7",
                             Email = "rbmaputi@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ROWENA",
@@ -12229,12 +12137,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MAPUTI",
                             NormalizedEmail = "RBMAPUTI@GMAIL.COM",
                             NormalizedUserName = "LU.ROWENA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJdMSOWhFXKn/B0MkXn9Q9cxze/9XHT1EZCKxyD4Nwd/4fCQw45np3DmhpSBEgQeWw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPojC4nCaidlXXcMcaqJwTmfoCAmpwX/n7SbUMxVkLr2XoaCqeapdQKXGIGbBGr5sw==",
                             PhoneNumber = "09173000155",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Health Information Management Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "07b575ce-b4db-48a6-9d99-79edaa6cd4d0",
+                            SecurityStamp = "5aed915c-ef64-4b7f-b88e-02c05c9a9b35",
                             TwoFactorEnabled = false,
                             UserName = "lu.rowena"
                         },
@@ -12242,7 +12150,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "13ab0a0e-5d9a-4e53-a5f0-5cb11a775fe3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7c420f09-86fe-4370-91a8-8590ef0eb906",
+                            ConcurrencyStamp = "cdbaa893-e73b-4ca4-b58f-a11aa79f9736",
                             Email = "rosalieluces05@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ROSALIE",
@@ -12251,12 +12159,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "OREJUDOS",
                             NormalizedEmail = "ROSALIELUCES05@GMAIL.COM",
                             NormalizedUserName = "LUCES.ROSALIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEI9U5uguG1ns6BWoVN5IT4dpV3jeDMz5jqalFHZTbT/Ds5TFpyCg21dmklcn+QYt9A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKdrrFZwdYHhT74F01Cog3qYvcBt1mZy9Ti5CLNSZSpEaKoKtu07E0wSJRGX4ivUbg==",
                             PhoneNumber = "09109099656",
                             PhoneNumberConfirmed = false,
                             Position = "Head, General Extension Ward",
                             Prefix = "Ms.",
-                            SecurityStamp = "d8658cf9-a693-4c16-9358-d81a4ae45122",
+                            SecurityStamp = "3bef288e-95ee-4be3-8fe6-13e566613f63",
                             TwoFactorEnabled = false,
                             UserName = "luces.rosalie"
                         },
@@ -12264,7 +12172,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a2a9b64b-1b54-4c49-90e2-4dbf1e59a98e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8edeb4da-b201-4389-b054-138668ff44e8",
+                            ConcurrencyStamp = "e291ef22-893c-471b-8e8c-36d093d691e6",
                             Email = "mabangsigrid@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SIGRID",
@@ -12273,10 +12181,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BARAGUIR",
                             NormalizedEmail = "MABANGSIGRID@GMAIL.COM",
                             NormalizedUserName = "MABANG.SIGRID",
-                            PasswordHash = "AQAAAAIAAYagAAAAELCDN4fKslsrBQTbCxEId0JYc6bosFNNMVH4LxhyloKZgh8lFeG4scxVkAAldVbpeA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDssUlDtm3iBEniJScZ+NIjJdAMVktOK15vNRZO4q0vUAmU4DcrKnfFkaIP6D8ErHg==",
                             PhoneNumber = "09351488175",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "1305555c-c605-4b1d-8732-171f88db34c2",
+                            SecurityStamp = "5c62cc10-6d6a-447b-8e02-804973cc780f",
                             TwoFactorEnabled = false,
                             UserName = "mabang.sigrid"
                         },
@@ -12284,7 +12192,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "49180f4a-cbe7-489b-8fd1-901e79dfe2f5",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b9e5ddca-f8e4-4b7b-8d19-c7cfc82ce982",
+                            ConcurrencyStamp = "42119123-a814-4faf-a4aa-f40f7d8672b2",
                             Email = "sacamaglangit.md@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SITTIE ANEZA CAMILLE",
@@ -12293,12 +12201,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "AMAD",
                             NormalizedEmail = "SACAMAGLANGIT.MD@GMAIL.COM",
                             NormalizedUserName = "MAGLANGIT.SITTIEANEZA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIZlId+px82MOIO9PtDYzSHc8cYDx6oagCSjdVaVdRgmcdHXH/ik1qWDiqm5J74O0A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHmelebwKU3o5ou/Fjk4BNdIM+0nV6ijcAQw6ae2nv9yOJSHnOOFypL/lAs/A3hvUQ==",
                             PhoneNumber = "09989913196",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Cancer Institute",
                             Prefix = "Dr.",
-                            SecurityStamp = "f5a8fb09-98ee-415e-8977-6e4a9efcc409",
+                            SecurityStamp = "00b58e4a-52ef-4581-be9d-1ee047877864",
                             TwoFactorEnabled = false,
                             UserName = "maglangit.sittieaneza"
                         },
@@ -12306,7 +12214,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "dcf663a4-36f5-4fd6-b124-bae31e0c9e2e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5ef52b09-71a1-4c2d-aed7-d183db57b946",
+                            ConcurrencyStamp = "74065703-ef56-433e-8f73-516b255458bc",
                             Email = "jayjay_malana@hotmail.com",
                             EmailConfirmed = false,
                             FirstName = "JAY-JAY",
@@ -12315,10 +12223,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MALANNAG",
                             NormalizedEmail = "JAYJAY_MALANA@HOTMAIL.COM",
                             NormalizedUserName = "MALANA.JAYJAY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEN59vn6lk08ZmCkb1z9VjpMKDPcBR+tBlD7bd4LgPP9o+tLai73NhAzXkC3Uoq7bdQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKW/dHP3JdmQT2X2R08AXz+lqhxsTby4cuHpn1b9w5I2F0l9kyh9dFI2WWdRki3JMA==",
                             PhoneNumber = "09274171288",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "48866171-cb18-4a37-b58d-a3774f0b468e",
+                            SecurityStamp = "a636f3e4-c344-4a59-9ecb-e0fd3947fd09",
                             TwoFactorEnabled = false,
                             UserName = "malana.jayjay"
                         },
@@ -12326,7 +12234,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "17793347-1bfa-4526-a0af-0ffcf374aa9a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a4cda3bb-8574-42b8-8092-643a7a2543ac",
+                            ConcurrencyStamp = "8c69d453-0881-4eb5-bc59-17e09234cb6e",
                             Email = "marjorenecorpuz@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MARJORENE",
@@ -12335,10 +12243,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CORPUZ",
                             NormalizedEmail = "MARJORENECORPUZ@YAHOO.COM",
                             NormalizedUserName = "MANAOIS.MARJORENE",
-                            PasswordHash = "AQAAAAIAAYagAAAAECGNYrTDcgNOeL7qtcXtTbMlH7c3Z+Uy9889fa7uSlS0z6Opxe9BnDMSgNuM0dqOSw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDGgH980jH/SIHCpgWltC0O9M0mb9h1tW/icg9FSuiBMEdPaZENgMIW6mWpilCW/uw==",
                             PhoneNumber = "09072856158",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "aeab4b34-f27f-4260-9976-6ac7a29195af",
+                            SecurityStamp = "ec5a91be-306a-49a2-ba29-7948afa92789",
                             TwoFactorEnabled = false,
                             UserName = "manaois.marjorene"
                         },
@@ -12346,7 +12254,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6f34a16a-6e68-4d8b-9f6a-0e0c07a09ed8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "30cea2d4-5421-4289-a6b5-2c2058ca8b8f",
+                            ConcurrencyStamp = "d3419eba-a662-47c0-b508-f243765d814e",
                             Email = "farizahm@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "FARIZAH",
@@ -12355,10 +12263,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MODIARAT",
                             NormalizedEmail = "FARIZAHM@YAHOO.COM",
                             NormalizedUserName = "MAMALUBA.FARIZAH",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIBtFW56x0RSSIMz6MKXgIZ8u0k4jHt317Vgp6O8Omz6NZ55qMyS3ceOS7ArUjjwJw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAEFyLhdrPkQI9vBE0c5dx4WB9gtWTQRNG96PVkvc2yeogXrc8FDhAOJDt04+nrL2w==",
                             PhoneNumber = "09168372024",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "76c69ed8-c16d-4004-90ea-71fb21c9d07d",
+                            SecurityStamp = "ac7b2820-7591-4b81-b5b3-e9c7dca477df",
                             TwoFactorEnabled = false,
                             UserName = "mamaluba.farizah"
                         },
@@ -12366,7 +12274,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6b937e7d-bbc5-48c7-8672-b699f002be60",
+                            ConcurrencyStamp = "09ef24d8-5be0-4b45-bd2e-ec620b7e0e78",
                             Email = "hunnyresquites88@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "HONEYLET",
@@ -12375,10 +12283,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "RESQUITES",
                             NormalizedEmail = "HUNNYRESQUITES88@YAHOO.COM",
                             NormalizedUserName = "MANGULAMAS.HONEYLET",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPKdSk1jjg+OigbypkoEpnr00urGyhUnMl7lwov7dOjbhjPImDHTwI/N8fLQDMNvZA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEidT+8jjV6TJ/KlS8r54XpWPNQrYWFRnDFjYTK+PIwbwHwWmQ10XU4Z0lyzQ+Vf6w==",
                             PhoneNumber = "09776146365",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "7af71cc3-d1af-43f0-b360-e254b25eb274",
+                            SecurityStamp = "1a13fc24-f602-4dac-9633-b510902b3316",
                             TwoFactorEnabled = false,
                             UserName = "mangulamas.honeylet"
                         },
@@ -12386,7 +12294,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "53ac9d08-f52f-4a25-92d7-10de53f612fa",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1292b367-cde5-4f3a-8e62-e949a8c69fea",
+                            ConcurrencyStamp = "2c012239-1f7c-4741-be6d-e5c35044d0ff",
                             Email = "rodelynmartinez619@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RODELYN",
@@ -12395,10 +12303,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CORTEZ",
                             NormalizedEmail = "RODELYNMARTINEZ619@GMAIL.COM",
                             NormalizedUserName = "MARTINEZ.RODELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEI7XYHCkrdtX/ZaF6jHVo8L7v+CQcaym7UQu8KZBjKsIGdgPST99nFWJ5O6p3FSitg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIZmHo+poWq+NHrL2kT1dhdupg+7evvlojxy2qzjNGSq3KDqRUwINK1m16qCl6UuNQ==",
                             PhoneNumber = "09177188038",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b5a0499f-a1b6-4c00-8977-16d2be0dd89e",
+                            SecurityStamp = "8ee92a8d-f85f-44bf-b8bc-cb6963e0e0db",
                             TwoFactorEnabled = false,
                             UserName = "martinez.rodelyn"
                         },
@@ -12406,7 +12314,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "827e71e5-479c-47a7-8f91-16327825a02d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "340eee2a-f836-4fbb-ae65-65a201bd9a52",
+                            ConcurrencyStamp = "5cce43a7-5210-4309-a16a-14bacd56d460",
                             Email = "faridaolama@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "FARIDA",
@@ -12415,12 +12323,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "OLAMA",
                             NormalizedEmail = "FARIDAOLAMA@GMAIL.COM",
                             NormalizedUserName = "MEDITAR.FARIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGfcjwlmsKQ486uQke4FDoUYLFKcP599HDbDh1HS1lPoz/8KjJ2XRGr+e5Ca1GCkBQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPyy2tCUY/4TIBAwjXbU0jQHE/ou7I0afFpECkCNLQVxzEib8QRI+3J/zC5mb535Fw==",
                             PhoneNumber = "09606059079",
                             PhoneNumberConfirmed = false,
                             Position = "Head, OB-Gyne Ward",
                             Prefix = "Ms.",
-                            SecurityStamp = "0f220805-a47e-46f2-8d51-20f2a09cb8c2",
+                            SecurityStamp = "427761ab-9093-431e-84f0-6181143e57a3",
                             TwoFactorEnabled = false,
                             UserName = "meditar.farida"
                         },
@@ -12428,7 +12336,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "dfb15a5f-9f4e-48e6-b781-f4a62c5bfb0a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b0d7b145-cfda-413d-9d42-18ce94aa4ef7",
+                            ConcurrencyStamp = "549e35a5-fa0c-4e00-9eeb-83a1e1042ba3",
                             Email = "midtimbangbebot@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "BEBOT",
@@ -12437,12 +12345,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "USOP",
                             NormalizedEmail = "MIDTIMBANGBEBOT@GMAIL.COM",
                             NormalizedUserName = "MIDTIMBANG.BEBOT",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBMfg446uaVybdzgIrUcQqFgDiH4IU98Dg/9J/+KX18npjNVjgVuTXZM8tk1GphjHQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIqxrOb54jPnPKEft9p4s9auNKYrNQOQS4JSMHd9cABg9+OeBwU8rk2s2nvzjYTelg==",
                             PhoneNumber = "09755272044",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Delivery Room",
                             Prefix = "Ms.",
-                            SecurityStamp = "6c7da4f7-a26d-4e29-a653-fa44185cf8bd",
+                            SecurityStamp = "97e29394-3121-4c4f-bfa4-fb2e45f182bd",
                             TwoFactorEnabled = false,
                             UserName = "midtimbang.bebot"
                         },
@@ -12450,7 +12358,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "12183b62-26ee-459b-a859-88a94e86c117",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "72aadad1-5b79-4b35-8ddf-b7c75d258208",
+                            ConcurrencyStamp = "c93c1923-1974-44ec-89c0-3f67435efaa6",
                             Email = "NA",
                             EmailConfirmed = false,
                             FirstName = "JOCELYN",
@@ -12459,12 +12367,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BAJAO",
                             NormalizedEmail = "NA",
                             NormalizedUserName = "MOJADO.JOCELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFd5Men2ixvBVI/G5Leox2TUFrcV6JQzuQZn8fJBFZY8aI/KTxd/UR6/xtXOjDfWvg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHxYNPfB+I211Sdz384pAPWBK26ffR0eMngf7om4jlLiFUSu1InWZTWwzjbJ1/zecQ==",
                             PhoneNumber = "NA",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Hemodialysis-Main",
                             Prefix = "Ms.",
-                            SecurityStamp = "3f038608-5f4b-4577-8a2e-a1d64a8856f3",
+                            SecurityStamp = "52476647-ab48-4c03-a0bd-2269acae4fee",
                             TwoFactorEnabled = false,
                             UserName = "mojado.jocelyn"
                         },
@@ -12472,7 +12380,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "ef529a6b-b381-4db1-a204-913ba73a6721",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bad2537d-3122-4efb-a0ca-f096fb458e5b",
+                            ConcurrencyStamp = "ac0c7a4d-a8fb-4b49-91c5-4efd9fd8a909",
                             Email = "iamarielolivo@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ARIEL",
@@ -12481,10 +12389,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MELOCOTON",
                             NormalizedEmail = "IAMARIELOLIVO@GMAIL.COM",
                             NormalizedUserName = "OLIVO.ARIEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIgg9IVl5aHwGpsMGLdVqY7c/09rl0YCNqjl82xWdDfw0IbBekmueoGNPLj7tHw2AQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELZUUAnqtRvLQLW68/N3cBSCEaHrzGhF2Zdq1WPYCfn9NB29RUX76wt8Q1B6bA+qGA==",
                             PhoneNumber = "09084724708",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "f236450f-c154-416e-be09-6bde47318c67",
+                            SecurityStamp = "4f68311a-85c3-4a88-8a64-4405d5285952",
                             TwoFactorEnabled = false,
                             UserName = "olivo.ariel"
                         },
@@ -12492,7 +12400,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "969fb51f-26aa-4637-8a8a-96247c7a67a4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c38adc0b-ffd1-4869-88f7-b190e5bb2756",
+                            ConcurrencyStamp = "7ad9c2ef-1dba-4d3d-9bc8-3fab6e6efc16",
                             Email = "hasmiamdo@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "HASMIA",
@@ -12501,10 +12409,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DATUMANONG",
                             NormalizedEmail = "HASMIAMDO@GMAIL.COM",
                             NormalizedUserName = "OMAR.HASMIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHS1nBlPToQJC3B3Mhq+P4SIPRct/ZmbpDXW64MluSW7TIRwS1FoifoSszGAzu5XQA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDzqed/Gh0LWo50jn8WVh8/Ao4Gvxo45hfiwT99bMIA7lthZGjCBA6c4kdTY0d248A==",
                             PhoneNumber = "09365268695",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "9277f200-5d88-4a87-a9bb-516c06c10e4c",
+                            SecurityStamp = "f5aec882-c015-48da-a9cb-06f6aa1b2680",
                             TwoFactorEnabled = false,
                             UserName = "omar.hasmia"
                         },
@@ -12512,7 +12420,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b5870b06-0240-4d35-a6b1-54a76c1e09fc",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fb0ac83d-32ad-4ccd-b6b1-e175f1a2c55f",
+                            ConcurrencyStamp = "7b1a9eb9-a098-4024-846a-5e286df865aa",
                             Email = "apple_foj@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MARIVETTE",
@@ -12521,10 +12429,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "TABUGO",
                             NormalizedEmail = "APPLE_FOJ@YAHOO.COM",
                             NormalizedUserName = "ONDOY.MARIVETTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKWXEODf9HbNxnTr6xazVQIZt7XZV69wp9JZ1an3AUmnQnHH+pk+OZ6nDr8GNVKHng==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENK6izo5ZWm00YjTMcgw6BuKFIDh209XTfmrLSY2f9Ydrlz3kP3qx7TWxsW47D5UOA==",
                             PhoneNumber = "09177228527",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "920f8c7c-fc56-41da-8c89-ec722623eeb6",
+                            SecurityStamp = "7b30c3ac-c675-427f-b830-5a4e05bb46f8",
                             TwoFactorEnabled = false,
                             UserName = "ondoy.marivette"
                         },
@@ -12532,7 +12440,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "bb22c692-bc14-44db-9a6e-5b0196c9a8c2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "18514ae5-0cce-42a9-9b57-5b60d76a0387",
+                            ConcurrencyStamp = "46f77150-94ea-45b2-83e7-25b74f33f400",
                             Email = "origmonaliza@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MONALIZA",
@@ -12541,10 +12449,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "NOR",
                             NormalizedEmail = "ORIGMONALIZA@GMAIL.COM",
                             NormalizedUserName = "ORIG.MONALIZA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEJaXNpbl/yQU3/MTl+dRLgadXF8s5q5IQxDppOHPDNnk8QITmKniJIQJHHP1Fkv3g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENJ+VWsNIflETv3D+Xq4zo5GK1pJTkepbUlCI7sKtrZQTW4oMDrEdxWKiR1w0A+gOA==",
                             PhoneNumber = "09274704538",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "437cd04b-5679-48e4-be05-28a3a5238fdd",
+                            SecurityStamp = "d1d8b604-aec3-45ef-ad52-9fff761d1a0f",
                             TwoFactorEnabled = false,
                             UserName = "orig.monaliza"
                         },
@@ -12552,7 +12460,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "5b7ff0c8-b6f9-489c-9f1d-9faadf9e6c6f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e389203a-0052-430a-a326-55b8e5ad53d7",
+                            ConcurrencyStamp = "eb11d4ea-4767-4b1a-8c4e-c65f65b6666c",
                             Email = "hor_he@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "JORGE",
@@ -12561,10 +12469,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LAMPITOC",
                             NormalizedEmail = "HOR_HE@YAHOO.COM",
                             NormalizedUserName = "PADILLA.JORGE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEO9o0jOsVZd5BdKKf57SXlk8cUgCc+fT9RifNswCu9OJH6ESgiWQz341oPcCa23bWw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMBXW0pfehR53tiDIw9KNN0wBE2HY/j7zaiica4debNKNGlLsK4rC+lxNVvE0wz95A==",
                             PhoneNumber = "09177900470",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "cbbd4009-588a-4ed8-b73a-75fcbcc9a9ff",
+                            SecurityStamp = "bed69147-933a-40de-a6d4-75d22d039f23",
                             TwoFactorEnabled = false,
                             UserName = "padilla.jorge"
                         },
@@ -12572,7 +12480,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "d65e3f58-b23d-4b83-8b15-15e66565d29f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b7cfd04e-ab97-47e1-ae0a-e85294707b68",
+                            ConcurrencyStamp = "41757abb-cf32-49d8-905b-e2ef15a3fe70",
                             Email = "shpagayao@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SANDRA",
@@ -12581,10 +12489,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PAGAYAO",
                             NormalizedEmail = "SHPAGAYAO@GMAIL.COM",
                             NormalizedUserName = "PANTARAN.SANDRA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJctmdAbjCmSRwUcRzX/CYWQChLexG137IYu3rpC2PhXeQ9DX+y5ld3jzpY1hiJE9A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEE3SNIhLMD03O7bpgG+yovL2FAQ5uu+WS8oxVFCDiwNBaEZTdmtMvC4I/5wKcg4gcQ==",
                             PhoneNumber = "09163771505",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b2776a66-cf19-4da2-adf6-d5e55e223a62",
+                            SecurityStamp = "63c0686d-4a61-4234-91c7-de4aad2a2573",
                             TwoFactorEnabled = false,
                             UserName = "pantaran.sandra"
                         },
@@ -12592,7 +12500,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a1e10c26-4d1d-4f9e-9378-1382457c82ad",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1f919db4-1151-477e-9de3-ddd1da453286",
+                            ConcurrencyStamp = "2dd491cc-2c9b-443c-8112-fc2b90bdc7c6",
                             Email = "beeyoupee@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "BAITAYAN",
@@ -12601,10 +12509,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "UNTONG",
                             NormalizedEmail = "BEEYOUPEE@GMAIL.COM",
                             NormalizedUserName = "PINGUIAMAN.BAITAYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEE5e9rVxDb+PuJLqIh1iDAK0E7L/qVovv3FZ/uHTaBnhY6golf4H6nNCByinB8i+DQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOqSlAzlRV0hd79i0L69gIAoPcy3x4jiX0noQ+oNSwdqJ03uj6Kwua7waRWW+wJ/Qg==",
                             PhoneNumber = "09056377715",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ab85fb31-425a-43ba-ac94-63b4d190a667",
+                            SecurityStamp = "250b2896-f012-4c63-9ade-2243f38c7de5",
                             TwoFactorEnabled = false,
                             UserName = "pinguiaman.baitayan"
                         },
@@ -12612,7 +12520,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "dfc40941-0cfb-46ed-8991-e285aa08c20e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2be65946-de8a-4282-9997-b404fba99bce",
+                            ConcurrencyStamp = "d9e381e1-adfe-4032-b38d-11b4b7e509b4",
                             Email = "quinto.jennifer82@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "JENNIFER",
@@ -12621,10 +12529,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CATBAGAN",
                             NormalizedEmail = "QUINTO.JENNIFER82@GMAIL.COM",
                             NormalizedUserName = "QUINTO.JENNIFER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBSNOM5VlUr+lXsm1BbQp3Vz8FcU7NPpiK4milLGPPgSdOfxlj3RJw3Obaz7PRVCnw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHq9IAukoCdYqgehptEi6hZrk4RP+yjEs4LDpz3/IJTIQ8gVm+l5GGfRw7WCxzLT6A==",
                             PhoneNumber = "09272708149",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "e1f24a47-326f-477d-9665-a43d5de14109",
+                            SecurityStamp = "841ba7d2-17f8-4714-978c-864fae1f42d0",
                             TwoFactorEnabled = false,
                             UserName = "quinto.jennifer"
                         },
@@ -12632,7 +12540,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f23ac0c6-68ac-41c8-94ff-383acbfc3e41",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a7568922-3065-4033-80fe-26d1570c3d5f",
+                            ConcurrencyStamp = "08c525ab-d612-43cd-be4c-192112551563",
                             Email = "estrellavsreal@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "VIVIAN",
@@ -12641,12 +12549,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SARATAO",
                             NormalizedEmail = "ESTRELLAVSREAL@YAHOO.COM",
                             NormalizedUserName = "REAL.VIVIAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPE/MeAoU8H8cvZiOCZyPw6PXFy1zUlo4ZghDz1DvTH3+epvwLZXIsGi/d4pzhtM6A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEI057r5BPa6mzVBUVFflTKMwcnw3Y3IlF+UxVf4MDENeUv1WmDrAaE+6gLw3dZr8ew==",
                             PhoneNumber = "09171027173",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Dental Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "d7b288a2-2df7-4e68-810c-d2710b927336",
+                            SecurityStamp = "b81e2565-36ee-47d2-80ef-22c07a520378",
                             TwoFactorEnabled = false,
                             UserName = "real.vivian"
                         },
@@ -12654,7 +12562,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "50e3ff41-8195-4d52-805a-d55efb68f08a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "dc6e521b-a704-4722-9b04-186c5cbb46f5",
+                            ConcurrencyStamp = "adc7cd2b-34c7-4e03-8b21-828ee1dda60c",
                             Email = "lienocius@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "NEIL ALFONSO",
@@ -12663,11 +12571,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "VIRAY",
                             NormalizedEmail = "LIENOCIUS@GMAIL.COM",
                             NormalizedUserName = "SUICO.NEILALFONSO",
-                            PasswordHash = "AQAAAAIAAYagAAAAEI/h85VN4NEQkzeUqlzifu7GuxVc1JQViHTeK8TLM8ridWF1m7UPwzSVSVGX5FotQw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOvz9n4lUBhlSMByNRq7/4rMyNLZiLcOJ5UejIv2xtQgdoyBXJPEia83jVfr5+C93A==",
                             PhoneNumber = "09260398619",
                             PhoneNumberConfirmed = false,
                             Prefix = "Mr.",
-                            SecurityStamp = "b686caa3-4099-4b38-8d83-c9359c4ee7dc",
+                            SecurityStamp = "47737744-8e0f-4a03-92f5-fcbe489844a6",
                             TwoFactorEnabled = false,
                             UserName = "suico.neilalfonso"
                         },
@@ -12675,7 +12583,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "55c79a0c-4f48-472f-9d13-1801e2e5c167",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "55d39cde-5cb3-4c85-a78b-ad58adc7a2b4",
+                            ConcurrencyStamp = "fc845d28-eea6-44df-94ac-d86df82f9404",
                             Email = "janesuperales27@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MARY JANE",
@@ -12684,11 +12592,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ORTEGA",
                             NormalizedEmail = "JANESUPERALES27@GMAIL.COM",
                             NormalizedUserName = "SUPERALES.MARYJANE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJMLLV/MtTAryDduFjIfXxEd+MunpFPkSvCqYybQHVH6XS1rtK0pM+BFAhCvb8gmkg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPbrzuEyCOuvIIM1PdVvjE9YH2og+xup7iHWVGSvHNowo1XYsBptvtPbqqD/KnQ3HA==",
                             PhoneNumber = "09162424748",
                             PhoneNumberConfirmed = false,
                             Prefix = "Ms.",
-                            SecurityStamp = "0f94aa01-9b7d-4ade-aabd-64b6c946baf3",
+                            SecurityStamp = "a0624806-0940-4b02-acd7-d9fa9a7cc6e1",
                             TwoFactorEnabled = false,
                             UserName = "superales.maryjane"
                         },
@@ -12696,7 +12604,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2e889d55-159e-44a0-b9c9-44cc9f25c66b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d0ff03f9-c9de-43bd-bab7-ce24313874d9",
+                            ConcurrencyStamp = "810a5f6d-3ab5-4a68-99fd-461bba444f29",
                             Email = "suzettetocao@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SUZETTE",
@@ -12705,10 +12613,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "COMPLETANO",
                             NormalizedEmail = "SUZETTE TOCAO@GMAIL.COM",
                             NormalizedUserName = "TOCAO.SUZETTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEH0lPkzJj6V9GrCkUKcfJlpIliFwz7Pe3dsw/T86bZ9PiU0OLHUnPveOaKQYNvtJig==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIbhAz1t5ih4NO76E0DVWQ4pYrdqTla+I+Wov4A2gZx8pcTtBe0LanesDOUvsiwzrQ==",
                             PhoneNumber = "09219908520",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "af796579-6d9b-4cb7-ae6e-f764884a96c4",
+                            SecurityStamp = "cd7eb5a2-03c4-4484-9d2e-157db52ff901",
                             TwoFactorEnabled = false,
                             UserName = "tocao.suzette"
                         },
@@ -12716,7 +12624,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2ec1e24b-50c6-48b7-8e9c-18c64a42e172",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6ea35146-7759-4f8a-9712-a38389024fd8",
+                            ConcurrencyStamp = "08ef0470-d953-4061-a487-6603de4f5f92",
                             Email = "ashmatik23@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ASWARFY",
@@ -12725,10 +12633,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MOHAMAD",
                             NormalizedEmail = "ASHMATIK23@GMAIL.COM",
                             NormalizedUserName = "USMAN.ASWARFY",
-                            PasswordHash = "AQAAAAIAAYagAAAAECYhMK20hxhDNnMPjB5SPuwYLzxUFzfJbUJyff2lkXOfLSrA4ZRqlxkNENhwRkl1aA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAvL149Ot2v2QViAXt323P+cv3D5WgUqL3MLtX8CuQTC9ipHPI9yX796rKbafDlIpQ==",
                             PhoneNumber = "09173383890",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b0351dab-9a5a-4425-a0ab-af15e855df20",
+                            SecurityStamp = "62c0b483-eee8-4dd1-a1e3-6eddaeb070ad",
                             TwoFactorEnabled = false,
                             UserName = "usman.aswarfy"
                         },
@@ -12736,7 +12644,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "87234d0c-41c3-44e5-8cb7-5d7a7a9209c8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bc05417e-60d6-456d-9d55-f76d9179387e",
+                            ConcurrencyStamp = "01e866d3-2b0e-4746-891d-beb06f499ef7",
                             Email = "hamidadubali@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "HAMIDA",
@@ -12745,12 +12653,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DATUMANONG",
                             NormalizedEmail = "HAMIDADUBALI@GMAIL.COM",
                             NormalizedUserName = "USMANBALI.HAMIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOhDasO32NXFIDdAjczg9jjZaJn6PJWG/v548aljXRa9wuZTOry4pPhgc4jYh+cCIQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENtxjV/7NYMkhPkAmbBGo0claneRSRXeoPusvO3q0MzA0PSk65OwVJxTpAofUi3p1A==",
                             PhoneNumber = "09368159393",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Materials and Supplies Management Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "eecde6cf-6697-47be-8347-eabced739fba",
+                            SecurityStamp = "fb51c99f-3b5a-4d11-8951-040f5bc36478",
                             TwoFactorEnabled = false,
                             UserName = "usmanbali.hamida"
                         },
@@ -12758,7 +12666,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "39987409-6b12-4a73-a9a3-61c7f117dcab",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5e229eed-963d-482e-b342-28cea361d158",
+                            ConcurrencyStamp = "4fb6a45a-9ffa-43c2-b5da-5e132f24f7b1",
                             Email = "claurencevasay@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "CLAURENCE",
@@ -12767,10 +12675,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ACHAS",
                             NormalizedEmail = "CLAURENCEVASAY@GMAIL.COM",
                             NormalizedUserName = "VASAY.CLAURENCE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJI0j6b+yECxBckjZUtBQuHulS6f516EtnR1o24kMN+v9sL5jc5h317kEHz8af450Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMqPFUj80YxLkWI50/dCYg+P8IKW9p1lnXbKrt9wLHVLMQxkaCH0ukNnptLmZ3sMBA==",
                             PhoneNumber = "09555765345",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "3f73dea6-ad2c-454a-8f81-0fd725068d6a",
+                            SecurityStamp = "623fd8a2-7b75-4e5e-a56b-4f6cb69fcc16",
                             TwoFactorEnabled = false,
                             UserName = "vasay.claurence"
                         },
@@ -12778,7 +12686,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "56731842-6b12-9a46-k9h2-61c7f212hyex",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c0c11314-8d67-49cf-8102-b01087968489",
+                            ConcurrencyStamp = "0c75bb4c-2e0f-4682-8835-358c90f9e2cc",
                             Email = "Silvestre1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Chrislen Lee",
@@ -12787,10 +12695,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "C.",
                             NormalizedEmail = "SILVESTRE1234@GMAIL.COM",
                             NormalizedUserName = "SILVESTRE.CHRISLENLEE",
-                            PasswordHash = "AQAAAAIAAYagAAAAENXp0IBirPwsvrWDa0Ns5/L/VNmZufIhH0QB/d/aiPE2gvxtJpv8n95hxI8lBLj6Xw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGWDAU/EMJbPv9Ttt2Nd+UBiIZUXsIr6w61YKyMC6S00Qsg+7G9qCij/4MyRFUfZ8w==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "666b610f-6674-46e8-9410-a71082c6f39b",
+                            SecurityStamp = "94cec906-b3b1-4373-8c60-56e80bfc8498",
                             TwoFactorEnabled = false,
                             UserName = "silvestre.chrislenlee"
                         },
@@ -12798,7 +12706,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c8463e9f-8ac6-40c3-91b1-2385f6a91eb4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f15aa786-20a4-466d-9c58-7e17471cab38",
+                            ConcurrencyStamp = "d3e41d1b-c40c-4a87-9cab-5605c44a941d",
                             Email = "holy_voltz771989@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "RUSSEL KIRK",
@@ -12807,10 +12715,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "GUALINGCO",
                             NormalizedEmail = "HOLY_VOLTZ771989@YAHOO.COM",
                             NormalizedUserName = "VILLA.RUSSELKIRK",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBu2bc0qi/sib7X3QxHjTiFQ++OJUc7sjNL2C5ESdve7F+/IOJ6C8X4BGRKCOLKZnw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHmCXZfH9Ko0uQjRrMIXrBfar9ifbk6wwR1Z2ycRo9z3QZLaUtlq/6rjLgv9og7qWw==",
                             PhoneNumber = "09095412351",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "bc9cb47b-f3de-4397-b4ed-97df924d7fdd",
+                            SecurityStamp = "d55bcdc1-b6be-49d8-814e-e433ff89e704",
                             TwoFactorEnabled = false,
                             UserName = "villa.russelkirk"
                         },
@@ -12818,7 +12726,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "abfc1b6f-9f29-44dd-9c45-cdcddaa6eb83",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "43e9a5b4-5d56-4182-bfe6-0040d4c59d34",
+                            ConcurrencyStamp = "fe372349-d10a-4a4f-a6ec-174b4d05c227",
                             Email = "ruby012770@outlook.com",
                             EmailConfirmed = false,
                             FirstName = "RUBY",
@@ -12827,12 +12735,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ELEVAZO",
                             NormalizedEmail = "RUBY012770@OUTLOOK.COM",
                             NormalizedUserName = "VILLANUEVA.RUBY",
-                            PasswordHash = "AQAAAAIAAYagAAAAECJUY9v3yHN2uYcX1TLl+Kfz9OobuFRqkHCGoQH1z9Z78chjB1j47j3KNGJmSH8i4w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGge13Hw9EpM3wh0IediqazldCkeftCM5H4Jx9/P02nsrIHHDDXGZpvMFrTENrovQg==",
                             PhoneNumber = "09173510613",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Credit and Collection Section",
                             Prefix = "Ms.",
-                            SecurityStamp = "0e50b0a9-13d6-4f6a-a60b-5e9063438e79",
+                            SecurityStamp = "32be7f6d-c64e-42c7-b373-4a6c98c07de9",
                             TwoFactorEnabled = false,
                             UserName = "villanueva.ruby"
                         },
@@ -12840,7 +12748,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "db7fba3d-88fc-47cf-b119-f868d9196f02",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "22f9e3ee-daab-43f4-b38c-e6ff3ab3f1c6",
+                            ConcurrencyStamp = "755a14c9-b7db-4bc4-9df7-1feadaa8ef48",
                             Email = "ronfaith2003@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RONNIE",
@@ -12849,10 +12757,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "GREGORIO",
                             NormalizedEmail = "RONFAITH2003@GMAIL.COM",
                             NormalizedUserName = "VILLAROSA.RONNIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMmCl7h8Bfll1HnyJHQ9aHiyceRNJckOrCPlY98Es+c2oCwVp9OYq0Q3UCn1XJdmCg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEONduuyEBOI/xc05dOCRBP/1pMTStBgggQ6wqmxA2ULUgxdQNSzkig8uUEiSoJ3uNg==",
                             PhoneNumber = "09956598896",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "be7cbfb9-b416-4043-9b8b-fc91ee2081c2",
+                            SecurityStamp = "3fafde07-b119-473b-a36d-fa285ec8fffe",
                             TwoFactorEnabled = false,
                             UserName = "villarosa.ronnie"
                         },
@@ -12860,7 +12768,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7cfd0766-f3d3-47aa-9a48-53d437d6c232",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a8d61e35-a394-4d1b-b550-f78e4bdbf690",
+                            ConcurrencyStamp = "09550fdf-5f40-4b4d-bf7a-140599fa1c32",
                             Email = "wahidamaniala@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "WAHIDA",
@@ -12869,10 +12777,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MANIALA",
                             NormalizedEmail = "WAHIDAMANIALA@GMAIL.COM",
                             NormalizedUserName = "ZAMAN.WAHIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAELGsny+rmx010AkGzc72vsuUWMCz5Wd4yb83ygheVcKgJDfRnDUGNfJIewpXr6ih8Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEACe2aCKIyxIcDZ6FsInSJMbHakdbO76f76gqmjGBTZb5Ng2dSqRKmKcPmfH3Iq+7A==",
                             PhoneNumber = "09065830887",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "f7bacdb3-0692-4374-bfdc-ce824bc6b755",
+                            SecurityStamp = "9c9ea3a7-1b29-49e2-a53d-5d40de62b139",
                             TwoFactorEnabled = false,
                             UserName = "zaman.wahida"
                         },
@@ -12880,7 +12788,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "9821dbf5-0f70-4630-8c68-f2077a3abf08",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1934bc56-5ebd-46f5-8f6b-9bea0b897d79",
+                            ConcurrencyStamp = "758e833e-3ea8-4823-92c1-21e23639ace9",
                             Email = "ZAMBRANO.REHABMD@GMAIL.COM",
                             EmailConfirmed = false,
                             FirstName = "JHOANA MARIE",
@@ -12889,12 +12797,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "JUANEZA",
                             NormalizedEmail = "ZAMBRANO.REHABMD@GMAIL.COM",
                             NormalizedUserName = "ZAMBRANO.JHOANAMARIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL7KWVDJj0E8U+nNkNG2wb38TlneFXCV+EbMKk0zopwceqUBVHAz7FhgLYSkyA3tsg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHl1O4U5yAi51CocKuBgRMO0Jylk6M2GdmcRmL5E48By2DMY8Ds0FSl/T56NM9p7Mg==",
                             PhoneNumber = "09178470437",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Physical Medicine and Rehabilitation Department",
                             Prefix = "Dr.",
-                            SecurityStamp = "46102f69-ad18-4e6b-aa92-4907aacc7ba4",
+                            SecurityStamp = "fc11d0f3-172d-47f6-a40c-09b877d643f8",
                             TwoFactorEnabled = false,
                             UserName = "zambrano.jhoanamarie"
                         },
@@ -12902,7 +12810,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8e4f430c-72da-4142-83d9-cd9d9c6f2a6e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6c12d468-1a9d-482f-820a-db4ccce5a5d9",
+                            ConcurrencyStamp = "8b784199-a562-4207-bdf7-ea9d599f442a",
                             Email = "sittierayhana@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SITTIE RAYHANA",
@@ -12911,12 +12819,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MARICOR",
                             NormalizedEmail = "SITTIERAYHANA@GMAIL.COM",
                             NormalizedUserName = "SANTURING.SITTIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFnHg8sjoEG9hZwmJMs0CS7tFdrmCdCqOIVcKM5L7Vbtwwgc6FpbHll76rFJRQQuqg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDnRJz2XNyo1fhb5ELGxE6VIc3IDbN2hldiEQnwJ8J3I1QsFJoHKJUShhY9Nlce/Xw==",
                             PhoneNumber = "09451067619",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Legal Unit",
                             Prefix = "Atty.",
-                            SecurityStamp = "973bcf91-780c-4b6d-bb2f-9a1342adcc1c",
+                            SecurityStamp = "7a2dc216-a896-4414-9819-c772882444af",
                             TwoFactorEnabled = false,
                             UserName = "santuring.sittie"
                         },
@@ -12924,7 +12832,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "4e21fe59-4f5e-46b3-82b7-28df270038da",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fdf3fe03-2a52-4175-bd5d-68b0420b71ea",
+                            ConcurrencyStamp = "7fa68c16-7315-4b96-a576-49ee085194d7",
                             Email = "norainekansimd@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "NOR-AINE",
@@ -12933,12 +12841,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PENDONG",
                             NormalizedEmail = "NORAINEKANSIMD@GMAIL.COM",
                             NormalizedUserName = "KANSI.NORAINE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAK7W8s9aGcuOJ8DZztfILfwdLf1esTvtA+wobRD435ZL0KY7CbN7gfluvKJkzgLeQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPG3kwUPc1K4heAlt97ZqxefWSY8hT+dvh2MlAdXfUWAt98K7nco5mShk9d4RA6wgw==",
                             PhoneNumber = "0917846224",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Hospital Epidemiology and Surveillance Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "4ffa8bfa-9573-4942-85f7-23d95c7f0889",
+                            SecurityStamp = "49b771d7-20d1-4c45-b0e5-08efac7e08f6",
                             TwoFactorEnabled = false,
                             UserName = "kansi.noraine"
                         },
@@ -12946,7 +12854,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b582fc78-cd33-46d4-a994-8c43789600ff",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6bd7a716-ebb5-48e1-b025-1b1b0d5e273a",
+                            ConcurrencyStamp = "73cbf927-b3af-4e1f-adef-2d6f438fbcba",
                             Email = "fasl.buenaflor@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "FASL GOLDANNE",
@@ -12955,12 +12863,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BIRUAR",
                             NormalizedEmail = "FASL.BUENAFLOR@GMAIL.COM",
                             NormalizedUserName = "BUENAFLOR.FASL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMqaXJn8F6JE9uVnw0dMW7xE/xHmUhTq8LT/SOfIp5yeBpHmNpcM3g6Rux7nPifXCQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENhefFW8zqlrjkuT6dfrHoTn85mmwrD0wieXCVK440k0nk56fiqKO39zylkT/taGag==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Professional Education Training Development Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "4b5d2be1-3d97-4261-b11a-f3ba8f4ca768",
+                            SecurityStamp = "d62f80fb-771e-4750-b742-f79eddace236",
                             TwoFactorEnabled = false,
                             UserName = "buenaflor.fasl"
                         },
@@ -12968,7 +12876,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0301f6de-6d6d-448f-a46c-2bb32ba97a28",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "756416d9-1602-4a2e-8a29-505219707c69",
+                            ConcurrencyStamp = "7fddf1a8-c73d-4b36-a67a-9218ff854ec0",
                             Email = "sigmundprabago@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SIGMUND",
@@ -12977,12 +12885,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PASCUAL",
                             NormalizedEmail = "SIGMUNDRABAGO@GMAIL.COM",
                             NormalizedUserName = "RABAGO.SIGMUND",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBjE5SNn6CO3EhixfaTMqdVv+/j4G9bP623Ri0kd6bcxfo4DeFNzrYYQhcWQdsALWg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDfH6gGYiNl0yBs3xZfqKV7HiTCgyVYo81FAdOrciAWB4dfD2Ya2bRAxeR1htwBhOg==",
                             PhoneNumber = "09682425921",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Public Assistance and Complaint Desk",
                             Prefix = "Mr.",
-                            SecurityStamp = "3d5b6554-457a-4847-a48e-058003c8d893",
+                            SecurityStamp = "f6a78b6f-246c-42d7-b6b8-c49149c6fd3f",
                             TwoFactorEnabled = false,
                             UserName = "rabago.sigmund"
                         },
@@ -12990,7 +12898,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "eeadfae2-544f-4a5d-9027-808537e694b1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "31a815de-c46b-4456-bea2-a9b68cf7789d",
+                            ConcurrencyStamp = "988d733f-9092-4fd3-90a6-c39243b8f227",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "FAISAL",
@@ -12999,12 +12907,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "KASID",
                             NormalizedEmail = "",
                             NormalizedUserName = "ROMANCAP.FAISAL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEO9XcwT3JSb1ZYM5hryXwr08614ZqA0ILvO44e0V/SXRQzyzD0cA94RxmN0FSDXusg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELZPG4oDsrXaSG8IH/SZVF6XQSMdwoD/Uzfsz6ePlfDW2PjYQFJy2XlgxprkaTgkIw==",
                             PhoneNumber = "09176339433",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Surgery",
                             Prefix = "Dr.",
-                            SecurityStamp = "e42581be-d88a-498f-b7cc-fc3dea20a454",
+                            SecurityStamp = "5972940c-d6c1-4eea-b2e2-b85e6627e3cb",
                             TwoFactorEnabled = false,
                             UserName = "romancap.faisal"
                         },
@@ -13012,7 +12920,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "562a00d1-f6de-4c44-bfc2-b55e99074bcf",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c32f6c75-ee07-4e9b-98a3-f001d39c7695",
+                            ConcurrencyStamp = "8f9120af-b9f7-4281-ae4b-1794e2a69354",
                             Email = "mokibox2@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MOCTAR",
@@ -13021,12 +12929,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MOPAC",
                             NormalizedEmail = "MOKIBOX2@GMAIL.COM",
                             NormalizedUserName = "MABANG.MOCTAR",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGx9s9poNHr00RYFHyaJrcF6asPY0D1IYT+g+E8a4vtlcuzd6M0isROh8AnAovfl7g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHbhdielBSw/QLqfIPyESfE6AvgEuFpOjdTCpHKV1zmOulCRdjpK4r2kk60M50E1rw==",
                             PhoneNumber = "09177237960",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Research Institute",
                             Prefix = "Dr.",
-                            SecurityStamp = "d060f507-cf73-413d-822a-4c3e4aa6ab3f",
+                            SecurityStamp = "4544cdee-8f14-45db-bec0-0efea163e284",
                             TwoFactorEnabled = false,
                             UserName = "mabang.moctar"
                         },
@@ -13034,7 +12942,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "ba16dd9a-fbdb-4ed6-9cfa-b972bda73917",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f1efeea9-0db7-42ff-8c70-e0d487e2d1da",
+                            ConcurrencyStamp = "806fdb3f-fc18-4d08-8839-9287dc4969c6",
                             Email = "flickersps@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SHIRLEY",
@@ -13043,12 +12951,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PULIDO",
                             NormalizedEmail = "FLICKERSPS@GMAIL.COM",
                             NormalizedUserName = "SALIK.SHIRLEY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDmWgqtGZXPSKd/eu2SBsNOPnubP1J1weVMnHXAAKHQlm7SYSG93WPS9oRL6Dijjqg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA8x8T3yyDd+X9ef++tiPolDdBgvzp8bio8ykJdb4BKcXVvf/94pkVnW63eQe1Hmtg==",
                             PhoneNumber = "09177229341",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Medical Social Work Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "f36cb03f-8227-4c77-a7f7-ed37a20b373f",
+                            SecurityStamp = "27e26600-8bbe-4f40-a920-123537ee7b2d",
                             TwoFactorEnabled = false,
                             UserName = "salik.shirley"
                         },
@@ -13056,7 +12964,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "bacdfd11-acd7-40fe-9fb3-b8831f94d7de",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b26e4f21-6faf-414e-8237-83080b3ecbf7",
+                            ConcurrencyStamp = "d5eca156-3911-4510-91f4-243b14581136",
                             Email = "fsornd@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "FEBE",
@@ -13065,12 +12973,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SUYO",
                             NormalizedEmail = "FSORND@GMAIL.COM",
                             NormalizedUserName = "ONG.FEBE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJJr4uYWeX4k+wu9jZkO3xDTLuLlBrI9zO66hufOEGwd6ELcuIwqNunFCDlPVkIr0g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDXm8mS5U60hxEK1fDfML0h2PRQilCyq7Zk5O9gXPg802MRqQhG42rWjCD4mzQ0p4w==",
                             PhoneNumber = "09422188023",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Nutrition and Dietetics Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "97e40ca2-665b-412f-8110-9562edb8b9f9",
+                            SecurityStamp = "b49dc5c0-ad88-4de5-8584-2c2a24acc67c",
                             TwoFactorEnabled = false,
                             UserName = "ong.febe"
                         },
@@ -13078,7 +12986,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "75228ef1-9a3f-4a55-8181-b1794ec72e8d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6aebc0d6-1e3f-4e47-b2ea-61cc1c8d7e2f",
+                            ConcurrencyStamp = "891ba1e5-efbe-4770-a0f9-4f987aef82e8",
                             Email = "sofia_alfonso64@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SOFIA",
@@ -13087,12 +12995,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DUMAMA",
                             NormalizedEmail = "SOFIA_ALFONSO64@GMAIL.COM",
                             NormalizedUserName = "ALFONSO.SOFIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMukBUR87UzPVEt1g1/+3Xk2V9yhvgz17GmO+vf9OR6G4GlEiFnfqc2k0K623x9FzQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOcBhBQqy5af6nLrxnwLVXkkt3W+lIyIFrwpQxrrUPu/KCBv8DOW7gduo/BbbQM5pQ==",
                             PhoneNumber = "09176338010",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Pharmacy Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "00624312-5769-4ad2-b5de-5f9beb3fc550",
+                            SecurityStamp = "4bc4300e-71da-4483-9e90-f149f24d09f2",
                             TwoFactorEnabled = false,
                             UserName = "alfonso.sofia"
                         },
@@ -13100,7 +13008,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0c0e6892-41a4-4536-bda7-757dd5aeb4ee",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d0f1306d-7b14-4061-8a05-8a00cf0773de",
+                            ConcurrencyStamp = "99d9ee9a-d8fb-48ec-8b99-6031cf49fe2a",
                             Email = "almarodriguez1969@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "ALMA ROSARIO",
@@ -13109,12 +13017,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PIOQUINTO",
                             NormalizedEmail = "ALMARODRIGUEZ1969@YAHOO.COM",
                             NormalizedUserName = "RODRIGUEZ.ALMA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKbF8b9cL4ZmlYigx8VZddLjef8/z5IVyRs0sHZQXqQ3dqYSXV8BQ6c3hzQmSUAAJw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIqgv5ms3DGxvhtLxmB+9ZLEMpK+8d9MiP6T5/sMDUQjx5gbrVTFa9a92ZHEFHLung==",
                             PhoneNumber = "093233910958",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Human Resource Management Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "ecf04ac6-1c1c-4395-a941-b906f0708d97",
+                            SecurityStamp = "0dd6f366-3110-49ef-bac0-32c8598e8840",
                             TwoFactorEnabled = false,
                             UserName = "rodriguez.alma"
                         },
@@ -13122,7 +13030,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "576fc42f-b0f9-433b-907a-29d98ebf7af6",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d1643b22-d95a-4859-a58a-4e901ed630fb",
+                            ConcurrencyStamp = "36af1bc2-a851-44cc-8768-0bea87a07a3a",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "RONALD BENEDICK",
@@ -13131,12 +13039,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "RIVERO",
                             NormalizedEmail = "",
                             NormalizedUserName = "JULIANO.RONALD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJpxA5AZGIPNJJFp/4QLx1xjlDYhV/TO0hz4vT2z1G65E/XfqQW++QTspgHQHlLM5w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMRqJzC82QU1ucLJkG5AHvQ0TJL69vxfUGZu3mbEz0IlbgQpsD3dqU4cqaSXWqBUcw==",
                             PhoneNumber = "09393704748",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Engineering and Facilities Management Department",
                             Prefix = "Engr.",
-                            SecurityStamp = "e867099a-8794-49b9-8347-7cf6636c7567",
+                            SecurityStamp = "628c8fb9-1ac9-41c3-a531-1b87a41a6256",
                             TwoFactorEnabled = false,
                             UserName = "juliano.ronald"
                         },
@@ -13144,7 +13052,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "aa704a60-ad3d-4148-90c0-316803202de6",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0e9d917a-6eda-4869-9166-767c1a877984",
+                            ConcurrencyStamp = "edaec096-ac67-487e-a9d7-5dda4ce0d25b",
                             Email = "sheryllbargo041388@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SHERYLL",
@@ -13153,12 +13061,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LUMACAD",
                             NormalizedEmail = "SHERYLLBARGO041388@GMAIL.COM",
                             NormalizedUserName = "BARGO.SHERYLL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHk/o4MI2+aFOwdfLa4EGsX+bxZ1lXbWuN+uIHZNaIoCRyPGH5XkhXak0h1qLQE+cg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL6Kue3g3NYTdgdDUv2Drjj2Zad2ANwi3krLUzzo9Whr5W0LEZSIj1CmWwfF74kgCA==",
                             PhoneNumber = "09178319784",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Accounting Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "b71c43ad-d7df-4257-846c-621b7a178cf9",
+                            SecurityStamp = "1f93d463-6cac-4928-aed3-191a476d4ea1",
                             TwoFactorEnabled = false,
                             UserName = "bargo.sheryll"
                         },
@@ -13166,7 +13074,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "08a7ead1-5c61-4207-8ea5-aec3d6b691d0",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b89ba2ed-1cc0-4aca-b603-dae2c74eb034",
+                            ConcurrencyStamp = "015e94f1-77fe-4f20-aa1c-241e07c4f3ae",
                             Email = "pong_rg@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "FELISA",
@@ -13175,12 +13083,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "RODRIGUEZ",
                             NormalizedEmail = "PONG_RG@YAHOO.COM",
                             NormalizedUserName = "GECOSALA.FELISA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPgY7VYBbShzg736LVUi/s9AjADrystucVhSig/WmT8CqsbWH9FZyOvSOokWkRYl1w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMdSBFVc/oYmQ5qpD1KIoG2PBv/9untBtvmdU9+mxl3qU2kokb/528RYdYrH9avYVQ==",
                             PhoneNumber = "09227487001",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Cash Operations Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "46269767-6bba-4083-981c-bf86bfd33e79",
+                            SecurityStamp = "a8e20009-ef2f-4148-8229-08653831fb5f",
                             TwoFactorEnabled = false,
                             UserName = "gecosala.felisa"
                         },
@@ -13188,7 +13096,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "d55b7093-1298-42fb-96b2-b12edb1cf49f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7f2f7ba2-66bf-4816-a61a-be556e229041",
+                            ConcurrencyStamp = "78d6fd7e-d9c1-4a20-9512-70d3385090a1",
                             Email = "paridasatol@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "PARIDA",
@@ -13197,12 +13105,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "KIMAMAO",
                             NormalizedEmail = "PARIDASATOL@YAHOO.COM",
                             NormalizedUserName = "SATOL.PARIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGqMztX2y02c9QwU+JE4NnlUly7sujfdR1bnooWK0pL120PLgViTk7/CK1DxeoBxBg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ9Zyks0/hGGVHVXPXFbLJFavNvqQJ5dVvT/Tliz6afQhftxBdWQsLJ5XDyX8hyvvw==",
                             PhoneNumber = "09174470268",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Out-Patient Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "34b6f649-977b-491d-9092-4068bfaf7088",
+                            SecurityStamp = "26c87aad-991c-41dc-8a84-ad75c636a00c",
                             TwoFactorEnabled = false,
                             UserName = "satol.parida"
                         },
@@ -13210,7 +13118,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "35035c73-8072-4005-85bb-0a91cd97741b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "277ae24b-89d9-4ec2-8b03-0d6ad25a1bb9",
+                            ConcurrencyStamp = "54532b53-997d-4f95-94da-df81b6a87f8b",
                             Email = "rotchelcambri38@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ROTCHEL",
@@ -13219,12 +13127,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "GUIAMAD",
                             NormalizedEmail = "ROTCHELCAMBRI38@GMAIL.COM",
                             NormalizedUserName = "CAMBRI.ROTCHEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKt01rHvn7NK8Uzd/p0sTNFd4ThW6PyZczUCQepwzP+aeJaJqrO5JPTVT/HOMP6tFQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDEKRIKP+IMGjsJwIRsFE5t2/EgBlHG7liDbmfsKD1jT3qtChDCV7lyt2oUylRZqgw==",
                             PhoneNumber = "09171280911",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Central Supply and Sterilization Room",
                             Prefix = "Ms.",
-                            SecurityStamp = "02ddce6a-4d7e-4d0e-a466-f89bf67133c0",
+                            SecurityStamp = "3d97c04c-268b-4909-923d-516921107444",
                             TwoFactorEnabled = false,
                             UserName = "cambri.rotchel"
                         },
@@ -13232,7 +13140,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b1ec6cc6-9920-4df6-bce0-b22b107a476d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b3145656-f121-446a-98df-f580ad8b81ac",
+                            ConcurrencyStamp = "221662fc-c219-4df1-8959-89c9098bde7f",
                             Email = "vernon_uy@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "VERNON",
@@ -13241,12 +13149,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LIM",
                             NormalizedEmail = "VERNON_UY@YAHOO.COM",
                             NormalizedUserName = "UY.VERNON",
-                            PasswordHash = "AQAAAAIAAYagAAAAECsXI6yRuOpDSw5qJEreXXOB7b5Rr1YIoXDjRYBAkXgqmBc0whhz0RvLu98qmaDfxg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFX7h6TbcGxKI0yspN7Xk5LsDaaoLxoahMXEwgIqYISIE+md44wmHhiV4B/NsSSWCQ==",
                             PhoneNumber = "09177227460",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Pediatrics Ward",
                             Prefix = "Mr.",
-                            SecurityStamp = "d95c8605-3337-447a-ac87-9a5bc8895044",
+                            SecurityStamp = "857f7eaf-4df7-480a-b90f-93987e5f4584",
                             TwoFactorEnabled = false,
                             UserName = "uy.vernon"
                         },
@@ -13254,7 +13162,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "31298867-e329-4dbf-8c68-2e557d98e864",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d034eb64-7bea-4839-aa58-776d82742c6e",
+                            ConcurrencyStamp = "9cb472ec-c083-4e22-94e7-dc64f1e61448",
                             Email = "chiquivsongcayauon@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "CHIQUI",
@@ -13263,12 +13171,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "VILLANUEVA",
                             NormalizedEmail = "CHIQUIVSONGCAYAUON@GMAIL.COM",
                             NormalizedUserName = "SONGCAYAUON.CHIQUI",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAoAV5qDli4W5rOhhylEykGHweoYP7sjU89DsE9DZI5CD0SfZfEgnc0hpVxzY078HQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFnUfUHfbA9hgdjXqt/jdYfCDzUDog63Z7DiDU4gkePs/PDWGlhcoxA255cheeAKHA==",
                             PhoneNumber = "09568141482",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Surgery Wing",
                             Prefix = "Ms.",
-                            SecurityStamp = "e3345dfe-4ed6-4aae-8f9f-c90d7b4c6304",
+                            SecurityStamp = "ba46bc2e-24c7-4478-9d01-3b2fc9ff9c6c",
                             TwoFactorEnabled = false,
                             UserName = "songcayauon.chiqui"
                         },
@@ -13276,7 +13184,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "86e65501-a4a6-438c-abe7-5ec802032bd4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "87fe1357-4ecf-4545-b91e-eea71ae91059",
+                            ConcurrencyStamp = "389979c8-0602-4068-84c9-417640ff112b",
                             Email = "g_lou08@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MARILOU",
@@ -13285,12 +13193,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ACEJO",
                             NormalizedEmail = "G_LOU08@YAHOO.COM",
                             NormalizedUserName = "LAMPITCO.MARILOU",
-                            PasswordHash = "AQAAAAIAAYagAAAAELczZqbIeMTaDW9acB6LFK6xQaH3HAr+HVgiaRPhL0F5PEJxU1Vp3LcmttGlJQRzJw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGV3/k9WPRVKxZ5t1doYGSOoK0RHQdzfdyLfeLGE9cmu45yy5Chv9dDHmBOh1rkw0Q==",
                             PhoneNumber = "09157358418",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Oncology Ward",
                             Prefix = "Ms.",
-                            SecurityStamp = "16f9644d-ddae-42bd-a257-d3c6bbe44a7a",
+                            SecurityStamp = "787facdf-c319-408d-8929-1c65a5166cb9",
                             TwoFactorEnabled = false,
                             UserName = "lampitco.marilou"
                         },
@@ -13298,7 +13206,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "60cbc60f-8572-47ba-b70c-cc328c363bd7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1fd42716-ec0d-401d-92b8-1b31de634f8a",
+                            ConcurrencyStamp = "6b72c15d-baa3-4936-98ee-490ae71b3324",
                             Email = "shanarizza@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "SHANA RIZZA",
@@ -13307,12 +13215,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BIRUAR",
                             NormalizedEmail = "SHANARIZZA@YAHOO.COM",
                             NormalizedUserName = "DUMAMA-REMO.SHANA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPooWJZbRT3FdNdXmf2wZpRYc/LcRJwMQfHS2sOnI8CqOvtn0f3PY2Rjp8WiOltKhA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBq7CXZqeL6NX7CZChPflcxt1Y95DOyH59cVQEIfkZhx/8Oh6CiDK771U0IiV10UGA==",
                             PhoneNumber = "09175277669",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Internal Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "a2c8e3ff-479d-478c-b116-0d4733f5fc5d",
+                            SecurityStamp = "7c1df0d1-b928-4e61-8c2c-739e57f64cc1",
                             TwoFactorEnabled = false,
                             UserName = "dumama-remo.shana"
                         },
@@ -13320,7 +13228,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6ccacdfe-d21f-404a-a09a-fbb0a8027c9e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "45594bac-a147-4d77-940d-e35328c38200",
+                            ConcurrencyStamp = "404a0ec3-dd5c-40ba-8c91-226d0ef797be",
                             Email = "ljalao28@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "LOUELLA JEANNE",
@@ -13329,12 +13237,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "AGDEPPA",
                             NormalizedEmail = "LJALAO28@YAHOO.COM",
                             NormalizedUserName = "LAO.LOUELLA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBvg/S1wjTkUw4jcXZ32vmv2Vewu/w1UzqIwf3v7t08O1yXJOStSx9wsDlqTkZzdEQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOv6jpkIz5cBav4WE6USdagjQ5HR6C7DjQS7YGbKfbCqQb6cQ6CC+eYaaTtptFVMwQ==",
                             PhoneNumber = "09177267389",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Obstetics-Gynecology",
                             Prefix = "Dr.",
-                            SecurityStamp = "0a4eafc8-a0aa-4cf8-9cb9-6a941d17517b",
+                            SecurityStamp = "2a7df668-5023-4f0e-bf4b-9365ddf0fc75",
                             TwoFactorEnabled = false,
                             UserName = "lao.louella"
                         },
@@ -13342,7 +13250,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2902eb0b-328f-4c82-a37b-e6b67c1e7770",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5b3050fe-6321-4b92-828b-47581ede453b",
+                            ConcurrencyStamp = "86702dda-ff8c-4f05-b36b-6da8093552bc",
                             Email = "hazel_calingasan@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "HAZEL",
@@ -13351,12 +13259,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LOPEZ",
                             NormalizedEmail = "HAZEL_CALINGASAN@YAHOO.COM",
                             NormalizedUserName = "CALINGASAN.HAZEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOwN3j+cnnhLNYUHkTU8LPDANiXj5+deCZ1ujWd09ulphEV9zH5YwdCLi6VJxQe6kA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHV88c7c3Ml1N3/Az1sEpgihURFdw0C2COAVdX2q79NgRl+IWE3VgiNuMwUsNUdfYA==",
                             PhoneNumber = "09173228233",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Anesthesiology",
                             Prefix = "Dr.",
-                            SecurityStamp = "d53b89db-192f-4bc6-a861-a21134dca674",
+                            SecurityStamp = "b1260fa0-cf98-401b-ab88-f317d1b79871",
                             TwoFactorEnabled = false,
                             UserName = "calingasan.hazel"
                         },
@@ -13364,7 +13272,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "756c27c7-7637-4525-9b85-c1f41c0c5a8f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6545b5ad-f017-4f38-9f6a-24748bb53cc3",
+                            ConcurrencyStamp = "113a4aa0-1b9d-45bc-af3d-8f37897522b5",
                             Email = "cheridinemd@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "CHERIDINE",
@@ -13373,12 +13281,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PAGARIGAN",
                             NormalizedEmail = "CHERIDINEMD@GMAIL.COM",
                             NormalizedUserName = "ORO-JOSEF.CHERIDINE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAmm5amBUzT1wpetEFci1fn64FAeJ6Da2oR68Xtx+0VYVokybQttucOgftOjjcg/Qw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH5/0UvyE7Ysi2yMYR/+JzhqPYHXj8mqVmnSPBil5U7FOlNxZXeptTlGTju29iwINA==",
                             PhoneNumber = "09228270573",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Family and Community Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "5eccd3aa-eb92-4534-9bb6-de94b01dea51",
+                            SecurityStamp = "3281730c-555f-43b8-85d1-3bd7ac9fa067",
                             TwoFactorEnabled = false,
                             UserName = "oro-josef.cheridine"
                         },
@@ -13386,7 +13294,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "32074da3-f8f8-4755-8cd5-f2aabba599e2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bacc087d-e66a-4f48-966f-a03d207fcfbb",
+                            ConcurrencyStamp = "a85c958a-e1b0-4557-a4b6-16bb70c9394d",
                             Email = "veniciusdoruelo@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "VENICIUS",
@@ -13395,12 +13303,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PADUA",
                             NormalizedEmail = "VENICIUSDORUELO@YAHOO.COM",
                             NormalizedUserName = "DORUELO.VENICIUS",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOSKDbA3b7MvvfDciNpQPr32stbjPYOqIOwCQCu+iCc0/tdXljsqvj6kHbXVM+Xjjw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDopcDh1HM/1IyTeVRt2Sip1+fGkdR8hlU70MjrKRB6h+bhv2zV7XPU7SsWpSNxE4w==",
                             PhoneNumber = "09173012016",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Diagnostic and Therapuetic Radiology",
                             Prefix = "Dr.",
-                            SecurityStamp = "eef74fb4-6585-429b-8f93-9ec107d2e019",
+                            SecurityStamp = "0761127d-1a6f-44d5-b202-e6e48bfcb25f",
                             TwoFactorEnabled = false,
                             UserName = "doruelo.venicius"
                         },
@@ -13408,7 +13316,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a452e452-d791-439e-b390-d80dba5ffbc0",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e0a7262d-39f0-4086-9953-9199847a4c1b",
+                            ConcurrencyStamp = "9d031c8f-a34e-4066-863e-4a1c38e8d9f8",
                             Email = "rocelynmbarrientos@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ROCELYN",
@@ -13417,12 +13325,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BARRIENTOS",
                             NormalizedEmail = "ROCELYNMBARRIENTOS@GMAIL.COM",
                             NormalizedUserName = "SANTOS.ROCELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGNMIs1ZsT+sH5QgMtvN007RVICHUmaYpOGkGx01ApKPzCjbxV957fTCVnb1ImPUWA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKWfNSyX4BvVGMKJWE1s5/CIJan1FrUTv+AnmsIeIfH93ePHC0v60BsStBQ9CZ1ozA==",
                             PhoneNumber = "09176592255",
                             PhoneNumberConfirmed = false,
                             Position = "OIC-Head, Department of Pathology",
                             Prefix = "Dr.",
-                            SecurityStamp = "6171a270-ebdd-47ac-8779-5384ca00c86a",
+                            SecurityStamp = "3e21d20e-c3b1-460b-8a5e-2628dd7720f7",
                             TwoFactorEnabled = false,
                             UserName = "santos.rocelyn"
                         },
@@ -13430,7 +13338,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6517b46b-eade-4618-984b-525a31aec14f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7be3ba31-df50-42bd-b3d7-efaa06366665",
+                            ConcurrencyStamp = "309913ad-9ead-435f-945c-61b00ab56492",
                             Email = "lhemy_K@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "HALIMA",
@@ -13439,12 +13347,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "OMAR",
                             NormalizedEmail = "LHEMY_K@YAHOO.COM",
                             NormalizedUserName = "MOKAMAD-ROMANCAP.HALIMA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHftwrFCRHBedjWw6QJpTaD7QOKpMLBtZqwntZEwsCe1g490GQlLTYvVdZa2hFDjYw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDXs1VMDwRiItFewCGiNKNMyX2laDY3tLVZHmxz3hptrOiRvGRV2WcwAwRh4E6hH0Q==",
                             PhoneNumber = "09173049710",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Emergency Department",
                             Prefix = "Dr.",
-                            SecurityStamp = "be77647d-93b6-4e6f-aa2d-f5ab8d9f8730",
+                            SecurityStamp = "0e20717e-bfd4-4e47-a773-80d8a6d19a5e",
                             TwoFactorEnabled = false,
                             UserName = "mokamad-romancap.halima"
                         },
@@ -13452,7 +13360,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "3cfa9401-553a-4ac5-ab8d-3d65899090b3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "96ba5ef5-4ea3-4cf1-86b1-f6bb33b6442a",
+                            ConcurrencyStamp = "d8d4019b-8946-40c0-8275-893c932ff782",
                             Email = "mar23md@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MILDRED",
@@ -13461,12 +13369,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "VINLUAN",
                             NormalizedEmail = "MAR23MD@YAHOO.COM",
                             NormalizedUserName = "APOSTOL.MILDRED",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBGW+QuQ0jz2PurnH91ZkfS7JUPo91ZT8xstEAqiZPyqYxWlsLMzBHKUd5ojD8O2XQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAED+9759hTox8HAdjiOz5Z8btK/0g+duco/2aKlpHghPuvdjP5RC23Wg02gLOclSFeQ==",
                             PhoneNumber = "09177068296",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Mental Health Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "ad79f6d3-9f6a-4818-b590-c32554033a28",
+                            SecurityStamp = "69ce1c19-d268-42a6-8126-ae4e89d3fa67",
                             TwoFactorEnabled = false,
                             UserName = "apostol.mildred"
                         },
@@ -13474,7 +13382,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "45fm8462-553a-4ac5-ap8i-3d65879641h8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "36a4750c-a5c6-449a-9c43-3946babf09f8",
+                            ConcurrencyStamp = "c9e7a387-bd60-4a08-9e04-7d211aeb35c9",
                             Email = "manilyn.hong@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MANILYN ANNE",
@@ -13483,12 +13391,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CONSTANTINO",
                             NormalizedEmail = "MANILYN.HONG@GMAIL.COM",
                             NormalizedUserName = "HONG.MANILYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFDH+F78GkP2WsBpFJijC5PAO5iwIhvmfYKo8CdhRjhQu8ZaOQhLpICZp7jsEl9Kbg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN5CPFqCtI7W4P/0U4VOqrv78HR64Qxy3Sm4Tnl8RaQSDReh9xqkIcP3DtTzYSL25Q==",
                             PhoneNumber = "09664010006",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Brain and Spine Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "39933a3e-2086-4bef-b925-92d55bd5888e",
+                            SecurityStamp = "fffd14d3-77de-4354-b689-5084cd55275f",
                             TwoFactorEnabled = false,
                             UserName = "hong.manilyn"
                         },
@@ -13496,7 +13404,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "21ag1234-884k-0ak8-ap8i-2y54768532d2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c2260184-23b1-452a-b154-5d6ea2039793",
+                            ConcurrencyStamp = "c9eee000-596f-4010-9f44-87d82f0be991",
                             Email = "janefabrienne@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "JANE FABRIENNE",
@@ -13505,11 +13413,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SAGPAO",
                             NormalizedEmail = "JANEFABRIENNE@GMAIL.COM",
                             NormalizedUserName = "GARCIA.JANE",
-                            PasswordHash = "AQAAAAIAAYagAAAAENxQ9R1EcllNv+cu8xTLByp5/qKPyN5zOBvdOYG+t4QC+itB5FtFUfvHMLQz7lVpEQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKap5QwkdRfgi87mbkWsbteVxJ4CYkf+1hjaX7V1uLaI2EfalQ4DeDagZSIypimx+w==",
                             PhoneNumber = "09177248567",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Brain and Spine Care",
-                            SecurityStamp = "77a466d0-9ba8-4294-8a3e-0b32cf1eeccb",
+                            SecurityStamp = "9fb86ac5-199a-4055-82ee-82d3947cd1d5",
                             TwoFactorEnabled = false,
                             UserName = "garcia.jane"
                         },
@@ -13517,7 +13425,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "66fg1385-86sd-8aw9-vm5g-1s87643521j5",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a3bd1f98-cabf-4d12-9c1f-3d8f7ce71354",
+                            ConcurrencyStamp = "2deb23ca-f3df-4f5f-846f-2d774a4ed86c",
                             Email = "jedjumaoas.md@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "JED WAYLON",
@@ -13526,12 +13434,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LIM",
                             NormalizedEmail = "JEDJUMAOAS.MD@YAHOO.COM",
                             NormalizedUserName = "JUMAO-AS.JED",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBeQ76cCfwmkAn42j6yn1voJHWTDY8krUEYrwh9OsmxtC0SVNyKr2NeVfbyHCf579w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECEsEIW1r/j6/IJe5sZFKRTF8fMegb14JWp1I37wf9PA53XaVhBIaL/OV/9IkErEbw==",
                             PhoneNumber = "09224969711",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Burn Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "e78b5494-7ba0-40e5-9ee3-71b7f59d9c01",
+                            SecurityStamp = "ba9f0def-a15e-4488-9482-330bcd5a5d2d",
                             TwoFactorEnabled = false,
                             UserName = "jumao-as.jed"
                         },
@@ -13539,7 +13447,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f82a9135-7bdf-4ca1-9ea2-2c8b63a1d7f9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "78c773b0-04db-4788-bbd6-efed7b09654d",
+                            ConcurrencyStamp = "f8d9a00f-b8a5-48a7-a96c-cf39c6b632f9",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "HASSANA",
@@ -13548,11 +13456,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DIALO",
                             NormalizedEmail = "",
                             NormalizedUserName = "ONTOK-MANGINDRA.HASSANA",
-                            PasswordHash = "AQAAAAIAAYagAAAAECGyt6sr6vaRzdX+Q79ZwhxpUcK6ttxMOZgAQ9g/tYuiXIcLFIKHhWK6oOTb7elV2Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ0uJtqm4u2+rLOBL71nuiwgqOJXMnKpZ+0IShMipZuRNGxWTA9Mf1rjmxCs49+y5w==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Carsdiovascular Center",
-                            SecurityStamp = "c61d0a1d-faa2-4416-97a6-73e185ce4d4c",
+                            SecurityStamp = "d7d53e67-b989-44a9-97f5-150ae22c9c17",
                             TwoFactorEnabled = false,
                             UserName = "ontok-mangindra.hassana"
                         },
@@ -13560,7 +13468,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c63b2e15-8ad4-45b8-bfd1-3a98216c5ea4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "364797ef-a2ee-4f71-9aa0-088803f3ae76",
+                            ConcurrencyStamp = "939b11da-a46b-46d0-b15d-eac480ffedc2",
                             Email = "princesaportia_md@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "PORTIA CHARISMA RUTH",
@@ -13569,12 +13477,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "AGDEPPA",
                             NormalizedEmail = "PRINCESAPORTIA_MD@YAHOO.COM",
                             NormalizedUserName = "ORTIZ.PORTIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEUn3dH3wTLZgYE1p+cm7UgrqHs48ksTxEWISnQn2ThJI3VDQKrxs9Tmac91w8kVYw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECoxHWtXt5dwh7gXjMctnpyn/jswaH8kfvtZu7NPIdM2HgWLzWDp5KpXuCZF7E3NgA==",
                             PhoneNumber = "09279667275",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Dermatology",
                             Prefix = "Dr.",
-                            SecurityStamp = "e9b8a9a7-8337-40fe-8708-bec53a0a5de9",
+                            SecurityStamp = "9445aab7-4e27-4d01-9631-ad1218e84b1c",
                             TwoFactorEnabled = false,
                             UserName = "ortiz.portia"
                         },
@@ -13582,7 +13490,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b7f4e831-25ad-48a9-91d3-7e26f53a4db2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "59eed01c-08b3-44f1-b97e-89a22991c54b",
+                            ConcurrencyStamp = "d38bffb0-b650-4008-9783-ee26be36e01d",
                             Email = "bomsiao.mariano@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SHALAM",
@@ -13591,12 +13499,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BACAR",
                             NormalizedEmail = "BOMSIAO.MARIANO@GMAIL.COM",
                             NormalizedUserName = "SIAO.SHALAM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEERTCN/+Rror/hriQYhmXuAtyXoKWlVkHxgKbrV6D07NdRhf3fZYbR/klyWN2VPEQw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELIqCIP1274bJsK3JHUzrhZuhPqVutcC3tiMvz7lvnnhR/zMnvrgxWeOnyEFOPNF2w==",
                             PhoneNumber = "09175483387",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Eye Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "3f5a7164-67cc-4b16-9328-f7736718fade",
+                            SecurityStamp = "1627715c-9baa-484a-b118-2dd334170008",
                             TwoFactorEnabled = false,
                             UserName = "siao.shalam"
                         },
@@ -13604,7 +13512,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a1c7d995-3f89-4fcb-86c4-4d8d193b57a3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "3f9adb91-8239-47b2-80db-2446ca902c57",
+                            ConcurrencyStamp = "95567a31-d688-44c4-a4b2-943c7c623760",
                             Email = "maylilene@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MAYLILENE",
@@ -13613,11 +13521,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BUHAT",
                             NormalizedEmail = "MAYLILENE@GMAIL.COM",
                             NormalizedUserName = "FUENTES.MAYLILENE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL99jBWmjC3dhAl3zD4OuLHE4H5D+Wa4+k8J9LLiwveVfT4wx+gpi0gak8uCoIIENg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIAG3wWlS3EcFziRLPFCq48eBo3AW2dwnyT/jTkonohZ7+76DkQBDJ4Wb9m91adF5g==",
                             PhoneNumber = "09154206679",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Geriatric Care",
-                            SecurityStamp = "33c01d4f-eda8-40ce-913d-1d35fe4a0881",
+                            SecurityStamp = "30324971-b817-4e86-b82e-30756dd4dda0",
                             TwoFactorEnabled = false,
                             UserName = "fuentes.maylilene"
                         },
@@ -13625,7 +13533,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "d5e2c4f8-95b1-47b9-bc12-8c4f9d8e2b17",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9ca24800-fd74-47d1-bd0a-087d7db6c7d2",
+                            ConcurrencyStamp = "72d1884d-eecc-4c14-ab75-4ffd0ed7d105",
                             Email = "abenojarmd@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "EMELYN",
@@ -13634,12 +13542,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "NOBLE",
                             NormalizedEmail = "ABENOJARMD@GMAIL.COM",
                             NormalizedUserName = "ABENOJAR-CONCON.EMELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAENT+dy3lvGoCcLKnJIEqGaGQ6obkfn3zgYMpUG6kCWw5Lm4w4zSH94vqPg+RMvAbug==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJqcGXKd1V/ieQSP1uM1HM7cDhk53cwdGnXzVxVDRczJSW917CWGQwr0y4/Uxg6OGw==",
                             PhoneNumber = "09178202383",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Lung Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "51e9750a-48c3-4b0d-9fce-02490a04ac5e",
+                            SecurityStamp = "ce958536-5532-49a8-a3dc-0f1a87a5ae46",
                             TwoFactorEnabled = false,
                             UserName = "abenojar-concon.emelyn"
                         },
@@ -13647,7 +13555,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "e4b3a611-7c8a-4f9b-83a6-2a5b9e61d4c8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ba9826ba-fd28-40a6-aeb9-54251e23687f",
+                            ConcurrencyStamp = "abdce33d-2f94-489b-9bc8-c631f9d5d361",
                             Email = "jdesaca@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "JONAH ANN",
@@ -13656,12 +13564,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DESACA",
                             NormalizedEmail = "JDESACA@YAHOO.COM",
                             NormalizedUserName = "BESANA.JONAH",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEExzBkLMjKp1i1HLgXi3BLEjKMLV//rc8lf707c7WSIgv+lZhvHHrW//waTlNohtQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOYJkioHMbFTolUIRh027Erx4ez0JlsneXX8oYDolOOGumdWUBsOL19spI+xuPCzmg==",
                             PhoneNumber = "09277197299",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Noenatal Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "8f956aa5-7a79-46f8-88bc-5440788e76fa",
+                            SecurityStamp = "59594b33-3a76-49f9-a225-b282894390ae",
                             TwoFactorEnabled = false,
                             UserName = "besana.jonah"
                         },
@@ -13669,7 +13577,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "9f3b1c52-2e4a-4d65-8d13-6f2c7a9b5f42",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "809f779f-6535-4995-9f3f-1f691fc2a7e0",
+                            ConcurrencyStamp = "630fd485-5972-4c75-a391-fa4fd836ecab",
                             Email = "dulce_doy@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "LYNN SARAH",
@@ -13678,12 +13586,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ANIÑON",
                             NormalizedEmail = "DULCE_DOY@YAHOO.COM",
                             NormalizedUserName = "AGDEPPA.LYNN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDt8pUwli/fPanE0Ull6Il8QoVZXmYMZQsN417hqZmmzAwQGrlzsUMwICLEuBWqwWA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDWTVO4titG4ePwJmYqV2iehXWl2HXlWQXYOMR97BQ5JB0K8DHza63VYSkbW4KXgkA==",
                             PhoneNumber = "09177260949",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Orthopedic Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "48ad6be4-537a-41b8-b61c-5d1386871702",
+                            SecurityStamp = "448d66c0-7d45-49df-8742-c246a28bf1b9",
                             TwoFactorEnabled = false,
                             UserName = "agdeppa.lynn"
                         },
@@ -13691,7 +13599,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2e9a6b74-7a21-4d33-9a84-5b9f1e8a3d27",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "67c89626-5657-46c9-bb18-aaa31a313f7c",
+                            ConcurrencyStamp = "11290a35-81be-44db-a9e0-fc121e04e206",
                             Email = "xin_ya314@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MARY ANNE",
@@ -13700,12 +13608,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CHONG",
                             NormalizedEmail = "XIN_YA314@YAHOO.COM",
                             NormalizedUserName = "LU.MARY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJUN54CrXf0Uvr49+LYDA8K9x6OgUpNs6NyCpDOV8H4WM1SfxXJ8Vso//uMhFcPV6w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJx0GdjuAQWTZ4cLUvLB8E2cNhTpKwW07N/Ef4/yS38UnT0bkTAr8+AnKt4GSgT+Xw==",
                             PhoneNumber = "09175114716",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Renal Care and Kidney Transplant",
                             Prefix = "Dr.",
-                            SecurityStamp = "a7451e67-cfac-4db9-9cff-d6eb990d413d",
+                            SecurityStamp = "febb9102-6a44-4300-b33d-c4ce70d3afbd",
                             TwoFactorEnabled = false,
                             UserName = "lu.mary"
                         },
@@ -13713,7 +13621,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8c1f5b93-4e7a-4f18-b3c9-1a2d5f84c9e1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "57018b89-649b-4e1b-8cec-d4565f81b6a8",
+                            ConcurrencyStamp = "c1c4b96c-c454-4ef0-84d0-6cecedb7fafa",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "MUHAMMAD SIDIK",
@@ -13722,11 +13630,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MANALASAL",
                             NormalizedEmail = "",
                             NormalizedUserName = "DIMALEN.MUHAMMAD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBLH/xCaPj6LieYMGZ24Xgxx5iJiOmkVda7ftCoER6FCztpUPLN9b18363AD7FTJdA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ7mpkRiuU0q1TgB43thT9VjrbkSIEfdYVrFsSuAcdjk+OBARx5S7dcT2iEprdziqA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Renal Care and Kidney Transplant",
-                            SecurityStamp = "78cef5a3-6390-4374-a328-5e7ea8ed3e02",
+                            SecurityStamp = "6dede061-41e2-4b71-9659-d887afb60c86",
                             TwoFactorEnabled = false,
                             UserName = "dimalen.muhammad"
                         },
@@ -13734,7 +13642,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7e4c8a59-1b9d-4c5e-ae31-8c2f3d5b7a61",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "27cc96c4-e6b1-4ad8-83a4-f32b7b4020fe",
+                            ConcurrencyStamp = "5c72619f-d5b0-401b-802f-960836b4b490",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "PISCES RAYMOND",
@@ -13743,11 +13651,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "YUMANG",
                             NormalizedEmail = "",
                             NormalizedUserName = "LUMAQUE.PISCES",
-                            PasswordHash = "AQAAAAIAAYagAAAAEB07UDEi9kmq1m56e/LiOSERNyA57vdCTkIN6MTp68Jr7LH4lUKvjjVm7TV5WzeCAw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECiLF4f7cVR8UUWVMsNlRK8mD3Hb2wSxp5zgwzTF7xhMIhETNSJfO4bqWLTMg2ZkdA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Renal Care and Kidney Transplant",
-                            SecurityStamp = "c0960939-dbfd-4ca3-b80a-d011e24b180f",
+                            SecurityStamp = "7097a03b-d025-47dd-a5ec-0b3fb06992fb",
                             TwoFactorEnabled = false,
                             UserName = "lumaque.pisces"
                         },
@@ -13755,7 +13663,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1a9e3f84-2b4d-45a8-9e3f-7b6c8d1e2f94",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8d5909f8-59d7-4ac8-986b-8f8ac6c1ef5c",
+                            ConcurrencyStamp = "b32d8543-df26-4484-8512-69c86fca233a",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "Ella Joy",
@@ -13764,12 +13672,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "",
                             NormalizedEmail = "",
                             NormalizedUserName = "NOGAS.ELLA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGxUdNBvlmoj7dZrwW+BJvW7qsuDYLNK6+2xetnDtsOwg8HQWzSNSBo/k9bXToUb2g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEG9wn3ZcS3giuwiPxXsY5VoJY4AWq288r/WPh006/kAbTEArhiuB42jCvFuUMGE5mg==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Toxicology",
                             Prefix = "Dr.",
-                            SecurityStamp = "6eb03826-87e9-4d24-81cb-e371ec7971eb",
+                            SecurityStamp = "0f5819d6-b918-4f33-849e-1cc3394fec1f",
                             TwoFactorEnabled = false,
                             UserName = "nogas.ella"
                         },
@@ -13777,7 +13685,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6b3f8d72-9a1e-4c65-bd43-2e9c7f4b6a85",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4764e484-e027-4102-9cfc-9e1f364daf72",
+                            ConcurrencyStamp = "1897a9f9-fd0c-421d-be01-83f4dc4407e4",
                             Email = "adlynbeabernaldez@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ADLYN BEA",
@@ -13786,11 +13694,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ALBESA",
                             NormalizedEmail = "ADLYNBEABERNALDEZ@GMAIL.COM",
                             NormalizedUserName = "BERNALDEZ.ADLYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEK/SrJoz0QJolOgnrUPeq891lT05nDNTaB7YMh8mq2xyWZJ5XbVL6b1G7w9VNU2Lyg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMBiLuDo1gpg0fFF6ywPNQkSo50OnJMXoR9TcR17MonN0W/E6WR+543w8e2zIZYZ7Q==",
                             PhoneNumber = "09171340137",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Toxicology",
-                            SecurityStamp = "c4fcd0a1-5354-449d-a926-049a2a282a4b",
+                            SecurityStamp = "94ac5ad9-12fb-4305-9da5-279aba8855b0",
                             TwoFactorEnabled = false,
                             UserName = "bernaldez.adlyn"
                         },
@@ -13798,7 +13706,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1a7c3e9b-42f8-4b25-9f81-7cd92c84b9a3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d391aa75-832b-4df8-ab90-57c0e52231b4",
+                            ConcurrencyStamp = "01db7470-86c5-41f7-ae05-3964f6b0ded5",
                             Email = "dats_88@yahoo.com/yoshiokadat88@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ABDULKADIR",
@@ -13807,12 +13715,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "YOSHIOKA",
                             NormalizedEmail = "DATS_88@YAHOO.COM/YOSHIOKADAT88@GMAIL.COM",
                             NormalizedUserName = "DATUMANONG.ABDULKADIR",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKLcJ4ZvU7VDSuzVpSJAv4JgTt4+KfW9n3jF5sxdyOIE+YS/S/YRK/1zKq6TBFIWWQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELL+lenePa9G7jUcZuripVjtpP3KuMgSMnSvoQ+pUsN6KcSzzlUhCnJRuatkw6YAcQ==",
                             PhoneNumber = "09053278687",
                             PhoneNumberConfirmed = false,
                             Position = "Head, ICU Complex",
                             Prefix = "Mr.",
-                            SecurityStamp = "c253bf15-6363-44b1-801a-0a2bb9000a05",
+                            SecurityStamp = "cb3eb23a-59bd-4224-9a95-e4e23997137a",
                             TwoFactorEnabled = false,
                             UserName = "datumanong.abdulkadir"
                         },
@@ -13820,7 +13728,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c5e81f9d-73a0-4b93-b6fc-97c72e3c15e8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c26e7dc7-946c-48c7-8aa3-d3132f7270e6",
+                            ConcurrencyStamp = "b6808f26-ff7b-498f-9d81-94c3b75ed210",
                             Email = "peria_cynthia@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "CYNTHIA",
@@ -13829,12 +13737,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BADE",
                             NormalizedEmail = "PERIA_CYNTHIA@YAHOO.COM",
                             NormalizedUserName = "PERIA.CYNTHIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMBq6iPC28hWjqpWmbuNNgAiBnpDT7reLytwfq3k1TVdQT22zb/7KiEZo6fJZHdAig==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJCjDUL2XHtQZzS7Yc4svfjNoIo525gIa405Z1Yh70Q+iYXUTn9yI0h9pr3emsNa3A==",
                             PhoneNumber = "09167805311",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Neonatal Intensive Care Unit",
                             Prefix = "Ms.",
-                            SecurityStamp = "63fcdf40-2be3-433d-80f8-00015b47e732",
+                            SecurityStamp = "fb203365-61e1-43f3-af77-ab81d1265da7",
                             TwoFactorEnabled = false,
                             UserName = "peria.cynthia"
                         },
@@ -13842,7 +13750,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8d9a1b3f-0c84-46a7-b932-13cf8d05f2a1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f5d71dc2-91c6-4c79-bc77-fad4df331992",
+                            ConcurrencyStamp = "0f788c7e-f368-44d9-aedd-89d601e0ee62",
                             Email = "geraldine_navarra@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "GERALDINE",
@@ -13851,12 +13759,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ABOGHO",
                             NormalizedEmail = "GERALDINE_NAVARRA@YAHOO.COM",
                             NormalizedUserName = "NAVARRA.GERALDINE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEvKzBxrR/PZKEdnw4iythKkqRg1nGrbVm8QFu3GgT2xLXtcNSQwxxm1WY09uDnQ/w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEF7MJ63Jln9BkDbx4QeVunR7GMCg8ErqVHdI9oKr/vvso4rJ7Ak3Fh6CliTFqjqPqA==",
                             PhoneNumber = "09177272645",
                             PhoneNumberConfirmed = false,
                             Position = "Head, TB-Isolation",
                             Prefix = "Ms.",
-                            SecurityStamp = "359792b1-595d-476a-bec0-5d0691e0feed",
+                            SecurityStamp = "d4e585e5-3d4d-4003-9a37-7c7123100da4",
                             TwoFactorEnabled = false,
                             UserName = "navarra.geraldine"
                         },
@@ -13864,7 +13772,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c4bd9e2a-1cb3-4c3b-9d0c-2ff2e43c7d1b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0f83d08c-a77a-481f-abd7-01660a5be657",
+                            ConcurrencyStamp = "ae7246ca-57ba-4082-b877-94db1e25c4cb",
                             Email = "ryanchrisolero@outlook.com",
                             EmailConfirmed = false,
                             FirstName = "RYAN CHRIS",
@@ -13873,11 +13781,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ELEVAZO",
                             NormalizedEmail = "RYANCHRISOLERO@OUTLOOK.COM",
                             NormalizedUserName = "OLERO.RYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOBIbwlBJJ675nT/V80AfbBRxvdQsHJPqiTnscfC8hOIZibGo0x4+cJEfcWnSNihbg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKq01BXCbxfCpQOHWUNSAEz8hzeCKT76u8i0HMuo3QcMaOBrDrAhDAz+oJJRIAV1Rw==",
                             PhoneNumber = "09175170327",
                             PhoneNumberConfirmed = false,
                             Position = "Computer Maintenance Technologist II",
-                            SecurityStamp = "b07105f7-0f9c-4cfa-92e3-89385aa8983d",
+                            SecurityStamp = "541fa48f-3953-4d19-b683-fd0c5fdc2a98",
                             TwoFactorEnabled = false,
                             UserName = "olero.ryan"
                         },
@@ -13885,7 +13793,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "m3xzke5a-1cb3-4c3b-9d0o-9kk8f72v8j5f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fdebeee2-e5b5-46dc-8dc8-e685e777a31d",
+                            ConcurrencyStamp = "f9cf7660-b16c-487d-b4ec-c22cff8b3c3d",
                             Email = "doc_annie@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "ANNELYN GRACE",
@@ -13894,12 +13802,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "COCAL",
                             NormalizedEmail = "DOC_ANNIE@YAHOO.COM",
                             NormalizedUserName = "SABANAL.ANNELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGmZmXJWfR9+I0UdR+MSnXp/KWOE0VZUhnCHOqBGm1JHji5Kmn7Kw0L7pa16/FtAuA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDXgoAXY0oPetLMBuqFY8oh5boQmXUP0f9yKDVAa0Igeanjjjv2uKNWgbg0TguHCRQ==",
                             PhoneNumber = "09176348295",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Dental Department",
                             Prefix = "Dr.",
-                            SecurityStamp = "cd0b5400-0f41-4687-81e8-2d3ae8e12301",
+                            SecurityStamp = "d3d51722-fd62-4bf9-b6b2-72e2b61cbd9e",
                             TwoFactorEnabled = false,
                             UserName = "sabanal.annelyn"
                         },
@@ -13907,7 +13815,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1k3bdpoy-1cb3-4c3b-1fp0-kff9k71h3ysg",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "531bab52-d4da-47bd-88a1-5397587eb7fe",
+                            ConcurrencyStamp = "19f77a22-9e0f-4559-a8d2-e2561b542099",
                             Email = "honeyletchristie@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "HONEYLET CHRISTIE",
@@ -13916,12 +13824,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MAGHANOY",
                             NormalizedEmail = "HONRYLETCHRISTTIE@YAHOO.COM",
                             NormalizedUserName = "TADINA.HONEYLET",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPB9MEyjqdZ1J5Q0Zq3D0VwR6lc/nBcmt9QmNIROkDmFafaxsfmZ3ar5U7whBdHsSA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELoywWdqL/jGSdpidLvbXpIlCjrBft9oFBsfvhMnpOzo5K66loLwrdMlEr0guUonIQ==",
                             PhoneNumber = "09359763862",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Budget Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "a28e97f8-a59d-415b-ae00-4a288241c4ee",
+                            SecurityStamp = "5b368dff-5816-4cf9-ad56-b0ed81ed2e9f",
                             TwoFactorEnabled = false,
                             UserName = "tadina.honeylet"
                         },
@@ -13929,7 +13837,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "4gghfkad-4xhj-4c3b-1fp0-damxmbak242V",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "19c4e158-df0a-422a-8002-69b821c2dda9",
+                            ConcurrencyStamp = "de4cef35-ba20-4f0b-8eea-26385c7aa503",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "MINDA",
@@ -13938,12 +13846,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BADILLES",
                             NormalizedEmail = "",
                             NormalizedUserName = "CARE-IT.MINDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKeSEHlL0E8i/wHbvMuC8Iql1zI7aYB2s/92UGxl3XhmW9/JixIm9Qesasaatdp36A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMJv/I7ePfk6VQZN92etF4GW5IW/8L7ZJbNRVxOCrU0br2gFejF/o3Q42spbCJGL9w==",
                             PhoneNumber = "09326564879",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Planning and Management Unit",
                             Prefix = "Ms.",
-                            SecurityStamp = "93270471-bb8d-4c53-9609-e42ae7c386c3",
+                            SecurityStamp = "34a1e1c4-0ab8-4e10-8f71-84d053f0d1ac",
                             TwoFactorEnabled = false,
                             UserName = "care-it.minda"
                         },
@@ -13951,7 +13859,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8rrdhjqf-2xhj-4c3b-1fp0-hqvxadfh137e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6c2dc86b-ac50-4fd0-b5ae-c1a980d1a692",
+                            ConcurrencyStamp = "f88d026b-95d8-4761-9a39-15cc660c96a0",
                             Email = "sherjank@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SHERJAN",
@@ -13960,12 +13868,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PANGATO",
                             NormalizedEmail = "SHERJANK@GMAIL.COM",
                             NormalizedUserName = "KALIM.SHERJAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOxADRlEQ1VpZEADnD0+iVWUdF9YHAYidcVG//UNI7j3kMCsCB6gxeydMyqKYC6NJA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOnv+3VHTEx1I+eNEwNPRYf7JGSWF9jsQU5Yi/n/K9vC6iEEBByUEXzEwLauOAWyhg==",
                             PhoneNumber = "09179713201",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Soccsksargen Regional Blood Center",
                             Prefix = "Dr.",
-                            SecurityStamp = "46e677df-a3e3-436d-87a7-714570958eeb",
+                            SecurityStamp = "e5c2bded-5dda-472c-9387-d71f2da4e558",
                             TwoFactorEnabled = false,
                             UserName = "kalim.sherjan"
                         },
@@ -13973,7 +13881,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "813tyuio-7asd-1f7k-6kl0-aqFx134Tv190",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9cfeebba-e291-4cb7-9564-0834d982f4d5",
+                            ConcurrencyStamp = "f0517559-64bb-44c2-bdac-1ae08fc84e59",
                             Email = "somairha@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "PRECIOUS SOMAIRHA",
@@ -13982,12 +13890,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ALIBASA",
                             NormalizedEmail = "SOMAIRHA@GMAIL.COM",
                             NormalizedUserName = "GIO.PRECIOUS",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFWHBjf2SXGdnO5B4YxO2MpQUZlOQfJX9kYYFTpw4mttsb5HFket34DD3cGDSawKVg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEORbwJPBlTIylrf7qKeJfr/y1Hc2HpuL4sT951i8jDpuBiA2yANIBKC3iFOLT3TBkQ==",
                             PhoneNumber = "09171237248",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Emergency Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "6302c148-d4d1-4813-97e1-e59e1cc0249b",
+                            SecurityStamp = "0de113b0-06f6-45fd-84a1-a51f7b046487",
                             TwoFactorEnabled = false,
                             UserName = "gio.precious"
                         },
@@ -13995,7 +13903,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "924omboD-0Dvi-3fkhQ-blh6-yaFv1de62431",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "14dfd1b5-18b0-4dbe-bf8e-51a09765d853",
+                            ConcurrencyStamp = "5a1fc6f8-44d9-44e8-aec4-5f94c4c1f827",
                             Email = "cpulauban@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "CHEERILOU",
@@ -14004,12 +13912,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "UKO",
                             NormalizedEmail = "CPULAIBAN@YAHOO.COM",
                             NormalizedUserName = "LAUBAN.CHEERILOU",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL1+WvEM9jJSuTGT1ePeqU6jzYNITN+zvC+JL4JKQOS3i1RgbWMz1C0bV1F1uU+GxQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBP68olwsIiVDb2MuoLOs47W6kUnxsVN4HBIu1UbI1Hj/6Ko8ZPXbCqrxXAe9wXTJg==",
                             PhoneNumber = "09171237248",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Medical Insurance Evaluation and Reconcillation Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "a89b1758-bd26-427e-a4ba-4bffdaf16eb6",
+                            SecurityStamp = "6980091a-3c45-41f0-b3f6-55fbf0afbc11",
                             TwoFactorEnabled = false,
                             UserName = "lauban.cheerilou"
                         },
@@ -14017,7 +13925,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "822rlioO-0Dvi-3fo9O-bjh8-ya846jg58t24",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "67a8a1f6-7bc2-4c8c-a5ef-b82e9c48e420",
+                            ConcurrencyStamp = "5b61bad8-5ff3-414e-b518-a1a767065486",
                             Email = "mtmadeha@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MADEHA",
@@ -14026,12 +13934,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "TAHAL",
                             NormalizedEmail = "MTMADEHA@YAHOO.COM",
                             NormalizedUserName = "MADID.MADEHA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMmXaebm5/8dZqv/YzTjSkvu5nIHcJbncBsc6KlEkGPIQVRMRJTmi7wMHECRwJoEew==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHoF8UsUaP40jO9Awk8BfZJGFM8kUHrJhdgWuFwzDJhaGFXP+TYqcebfJpAr2FRbFA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Geriatric Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "fe04e106-5596-47d7-8796-f8a72bac790a",
+                            SecurityStamp = "ac6579b1-6c1c-471d-b08b-b9501dfb6af8",
                             TwoFactorEnabled = false,
                             UserName = "madid.madeha"
                         },
@@ -14039,7 +13947,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "123rliom-2akV-cl381-uwe9-kah8h3f98632",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1f38c0b4-d4f5-43c7-a5c4-56f2289b66cd",
+                            ConcurrencyStamp = "04db90b8-707a-4ab6-8322-16a40e768f47",
                             Email = "sonjaandsanji@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SONJA",
@@ -14048,12 +13956,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DE LUNA",
                             NormalizedEmail = "SONJAANDSANJI@GMAIL.COM",
                             NormalizedUserName = "ESCARA.SONJA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL/WARQk9l/BleQfHdepD2EeiLjWGOkPscNeAWr+HGEmP8YXOIcrdapZ46Xzhw1now==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ9FW7Zo2p8VN4hYj5ODW8lqCLsuUmlPyT4Omd2iTAYr72K0Y4BuiM33ckX5/GCX8A==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Infectious Disease and Tropical Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "b1248240-31e8-4cf8-a6c5-f510d5143590",
+                            SecurityStamp = "7b92f0b0-671e-47b0-aa42-ed0a65359a6e",
                             TwoFactorEnabled = false,
                             UserName = "escara.sonja"
                         },
@@ -14061,7 +13969,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "234glioh-2akV-BL062-Hh28-LSJ2Gnj976w3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6107495a-7bad-40e1-b3d0-2a58a238c527",
+                            ConcurrencyStamp = "f8d952a0-017c-4a84-bb71-8998cff940d9",
                             Email = "alnazaer1994@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "AL-NAZAER",
@@ -14070,12 +13978,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ABAS",
                             NormalizedEmail = "ALNAZAER1994@GMAIL.COM",
                             NormalizedUserName = "USOP.AL-NAZAER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEF0lASHRiogFIPWwwV1+gIYy0zcMhANrXO/JtxmpjZ/4GUDnCs0H+WJEXYNjGbHchQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELQ6ib/VR9kXhgKsPaq1N853Nz6l7wPsMxD535gS8K8q1wa1gbMSe0h79jTOG06JUg==",
                             PhoneNumber = "09458250199",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Infectious Disease and Tropical Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "d7f6b4ae-8ec8-4965-a8f3-f7f423300f01",
+                            SecurityStamp = "3fb4e014-608b-4225-ab3f-942f7a00fd84",
                             TwoFactorEnabled = false,
                             UserName = "usop.al-nazaer"
                         },
@@ -14083,7 +13991,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "654hHioh-NkaH-jB19f-9uh12-33dFJnY823f2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "433bfbe4-e450-4e8b-97c5-2f8513173379",
+                            ConcurrencyStamp = "46e271ca-576d-4774-a1ce-563438f9677e",
                             Email = "aprilglimada01@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "APRIL AISHA",
@@ -14092,12 +14000,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MACAVINTA",
                             NormalizedEmail = "APRILGLIMADA01@GMAIL.COM",
                             NormalizedUserName = "GLIMADA.APRIL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPeFDzCHj/vWbvG+ag69vfxHyS5KrjAOgKePZQ2sSqwq4Ier6AgPhODGh08vkinWRg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIColeV8LTj9gJ9g/vrWBCE/S3yhngN/1qccfvhkl/KiXAtZTU4t2asDz6xr/q+AqA==",
                             PhoneNumber = "09171488596",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Mental Health Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "3b29b5db-b598-4b1c-8bab-96e98fa6a3fd",
+                            SecurityStamp = "38333101-e283-4cd6-9024-423dbf3a20a6",
                             TwoFactorEnabled = false,
                             UserName = "glimada.april"
                         },
@@ -14105,7 +14013,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0020lEhG-NkaH-jB19f-9uh12-11dFwnTe6543",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fcfad87b-d43c-4f1d-80a8-c0e633b3e983",
+                            ConcurrencyStamp = "4d507f7e-cce5-47e8-9fb8-15f24ce038bd",
                             Email = "ramilramirez097@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RAMIL",
@@ -14114,11 +14022,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LIMBAC",
                             NormalizedEmail = "RAMILRAMIREZ097@GMAIL.COM",
                             NormalizedUserName = "RAMIREZ.RAMIL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDTLRokktNUGg1fc/H6le9zQWDp9bUOJFNFg9Hx/JtM0uEhiGXtKtY8W/MB51o2CDw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELzghkyeCv0K9iY3cFWUP4NsDQgYPPLSaMW7Z3kxGLAIkACvLc3evalPqsOrCN9uqA==",
                             PhoneNumber = "09065343887",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Housekeeping Unit",
-                            SecurityStamp = "c3aae93e-d6e8-42c8-b557-022fae1b896e",
+                            SecurityStamp = "ff5d5202-30fc-438e-8c98-0cea9a7a8a13",
                             TwoFactorEnabled = false,
                             UserName = "ramirez.ramil"
                         },
@@ -14126,7 +14034,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0201JEhG-NkaH-jB19f-9uh12-22GYwrTr9872",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1d7ba3ff-8ac1-4492-9df9-ffa8f3eac8a0",
+                            ConcurrencyStamp = "48c6a827-7628-40c9-855b-5041caf5a809",
                             Email = "quilnetgerry@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "GERRY",
@@ -14135,11 +14043,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "APARECE",
                             NormalizedEmail = "QUILNETGERRY@GMAIL.COM",
                             NormalizedUserName = "QUILNET.GERRY",
-                            PasswordHash = "AQAAAAIAAYagAAAAELLuyoG07qOZqzE1+snqs1NhHB3XRc4dYoJp2BDez8gmDX6rkSVpC+bJLwa0u+r1bQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP5dk/flv370Kl7iD5BNra5iMalB8EWE4XZYwfpgOYzGcahWd9VTzKuna3oYG/vm6w==",
                             PhoneNumber = "09273691473",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Laundry and Linen Unit",
-                            SecurityStamp = "db6f7ae8-e634-4963-b06f-f1f3c48aa5a3",
+                            SecurityStamp = "55b26dad-204d-4c35-bd68-3c452c8cf781",
                             TwoFactorEnabled = false,
                             UserName = "quilnet.gerry"
                         },
@@ -14147,7 +14055,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7A91XEhQ-MpZ3-KL28-A9uT1-88HWrLQe5630",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6ed383d0-d464-41dd-8d8f-82abed82f626",
+                            ConcurrencyStamp = "ea9106f8-f638-4571-bb73-35ed6fd768e2",
                             Email = "aryanrodereck@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "RYAN RODERECK",
@@ -14156,11 +14064,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ARCONADO",
                             NormalizedEmail = "ARYANRODERECK@YAHOO.COM",
                             NormalizedUserName = "ABAYON.RYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMHRNti1od3u0qznCTYvrpAnJDV5RJA24PbAQJqDzLhG6Wh64FsLFodYh5awwpH0qQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELxoFYmNiVz/c59Zy7i7rt5ZnkX0V0lKSZMVVbSL29caB8oZ/BHVnczDjMFSw+aXIQ==",
                             PhoneNumber = "9268336993",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Electrical Section",
-                            SecurityStamp = "50d8e7a1-53f9-4a29-986b-c7789210ad28",
+                            SecurityStamp = "341276a6-7b14-449e-918e-d69ece4fe897",
                             TwoFactorEnabled = false,
                             UserName = "abayon.ryan"
                         });
@@ -16490,147 +16398,147 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "56996e97-9e8a-4d22-a693-c865144e9b96",
-                            ConcurrencyStamp = "b0ac06b7-270b-462a-8ceb-f106e180c775",
+                            ConcurrencyStamp = "14b002d4-1f98-421d-8da1-86ba3612947a",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
-                            ConcurrencyStamp = "f1c5329a-e0e8-46ba-b0ec-d91d71e26944",
+                            ConcurrencyStamp = "1c804de3-79f7-45ef-8dce-c302e48b2ec9",
                             Name = "PGS Core Team",
                             NormalizedName = "PGS CORE TEAM"
                         },
                         new
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            ConcurrencyStamp = "1f6b50b1-670b-46a3-8d81-0e4b311184e8",
+                            ConcurrencyStamp = "c850c6be-539d-48cb-933d-702ffab340ef",
                             Name = "Standard User",
                             NormalizedName = "STANDARD USER"
                         },
                         new
                         {
                             Id = "af7b586c7ee6490bbd878f46f6a47831",
-                            ConcurrencyStamp = "9eaee1b5-d3ab-48fa-b607-95255f4cbed8",
+                            ConcurrencyStamp = "154522f2-0f05-4660-8baf-9d522bbd7589",
                             Name = "Auditor",
                             NormalizedName = "AUDITOR"
                         },
                         new
                         {
                             Id = "95f224dd-3973-42ef-b350-7af30f67c2ca",
-                            ConcurrencyStamp = "1ccf37f2-abb7-49ca-a92d-0aff60e6e61f",
+                            ConcurrencyStamp = "b9a2b5b3-1929-4707-8aae-584335f65889",
                             Name = "Service Head",
                             NormalizedName = "SERVICE HEAD"
                         },
                         new
                         {
                             Id = "b6b97a7d-23b0-4c2f-9f9a-54d4f67b1234",
-                            ConcurrencyStamp = "a3d70b2e-7bbb-4aeb-b728-e420d1ddc3ac",
+                            ConcurrencyStamp = "267f8c30-1035-433b-b7c1-eb0fac4639f2",
                             Name = "PGS Head",
                             NormalizedName = "PGS HEAD"
                         },
                         new
                         {
                             Id = "e2a6a3fc-1f3a-4e9e-9df0-5f4a6e1f8c21",
-                            ConcurrencyStamp = "fb8aaafd-d24a-46b8-b6ac-08d289b14b19",
+                            ConcurrencyStamp = "a8140cf9-b84d-4b9b-8214-2d2f10768cfd",
                             Name = "MCC",
                             NormalizedName = "MCC"
                         },
                         new
                         {
                             Id = "a3c8f0de-45d7-49ab-9c3f-8e25b5e7d421",
-                            ConcurrencyStamp = "a14beddd-31a3-4a32-a28f-087c30871f35",
+                            ConcurrencyStamp = "3c65f358-fafb-4a0b-ba13-41661e792f43",
                             Name = "OSM",
                             NormalizedName = "OSM"
                         },
                         new
                         {
                             Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
-                            ConcurrencyStamp = "77fbd9fc-5b60-4908-912a-d62b4227b5e5",
+                            ConcurrencyStamp = "bd8ecf82-3f04-453c-8b99-e3d11ceed324",
                             Name = "PGS Auditor Head",
                             NormalizedName = "PGS AUDITOR HEAD"
                         },
                         new
                         {
                             Id = "4c1c9c2e-9e2b-4c88-8a94-6a7d3e4c5a01",
-                            ConcurrencyStamp = "4df30444-043f-4647-9ca1-606f57771baa",
+                            ConcurrencyStamp = "0829a927-3168-473d-8b1a-7e6d3c25f2a3",
                             Name = "Service Officer",
                             NormalizedName = "SERVICE OFFICER"
                         },
                         new
                         {
                             Id = "9b7d2e11-6c3a-4f2e-a1d8-0f7c4b2e91a4",
-                            ConcurrencyStamp = "f8aa1ed4-54f5-4cc6-ab6c-98610544391c",
+                            ConcurrencyStamp = "bb928121-d3f9-4aa1-88fc-b361095e290d",
                             Name = "Research Officer",
                             NormalizedName = "RESEARCH OFFICER"
                         },
                         new
                         {
                             Id = "2a6f5c90-1d3b-4e8f-9c42-7b1e5d0a83c2",
-                            ConcurrencyStamp = "18bd565c-a481-4f8b-b4cd-5529a1226fe1",
+                            ConcurrencyStamp = "669f3649-f633-402b-9801-7c918f0e2409",
                             Name = "Training Officer",
                             NormalizedName = "TRAINING OFFICER"
                         },
                         new
                         {
                             Id = "e3f7a4c1-5b29-4a8e-9d10-8c6e2f91b4a7",
-                            ConcurrencyStamp = "a99f6299-d554-4748-a551-907fca8ea067",
+                            ConcurrencyStamp = "4f456285-34c0-44f4-a580-12c1b4e4f309",
                             Name = "Linkages Officer",
                             NormalizedName = "LINKAGES OFFICER"
                         },
                         new
                         {
                             Id = "7d8b0f3c-4a6e-4f9b-8c21-2e5a1d7b90f3",
-                            ConcurrencyStamp = "2205bd77-4953-4924-acd3-4a08ae986eed",
+                            ConcurrencyStamp = "c21822fd-2f0e-47e2-9956-79a174e1be8e",
                             Name = "Facilities Officer",
                             NormalizedName = "FACILITIES OFFICER"
                         },
                         new
                         {
                             Id = "5c2e8b9f-6a1d-4e73-9f0b-1c7a4d3e8b52",
-                            ConcurrencyStamp = "2fa308c4-4821-4032-a3c1-7430230e2807",
+                            ConcurrencyStamp = "b137f07a-b9fc-4b8c-ae71-843add699909",
                             Name = "Finance Officer",
                             NormalizedName = "FINANCE OFFICER"
                         },
                         new
                         {
                             Id = "f0a8d2c7-1e9b-4c5a-8f63-7b4e2d9c1a30",
-                            ConcurrencyStamp = "e34fbf20-32ec-4cc5-a662-a015d7847e75",
+                            ConcurrencyStamp = "f268b3ec-77be-442e-b449-ac4f1b91eb9c",
                             Name = "Information Officer",
                             NormalizedName = "INFORMATION OFFICER"
                         },
                         new
                         {
                             Id = "3e1b5f2c-9d8a-4a07-8c64-fb2e9d7a1c50",
-                            ConcurrencyStamp = "2b942337-e528-4914-9ecf-721fa2932f7a",
+                            ConcurrencyStamp = "ee9e7519-2630-4e78-8a05-7f22aa9dc65c",
                             Name = "HR Officer",
                             NormalizedName = "HR OFFICER"
                         },
                         new
                         {
                             Id = "6b7f1c2e-8a4d-4f90-9e53-0d3a5c2b718f",
-                            ConcurrencyStamp = "fc7a4100-240f-4173-b582-bb64e6d4709f",
+                            ConcurrencyStamp = "c35c41d2-9266-4e37-8ffd-d5505e2fd484",
                             Name = "Safety Officer",
                             NormalizedName = "SAFETY OFFICER"
                         },
                         new
                         {
                             Id = "5ef7f4d6-712b-4a7c-94d0-cc0fc6a16f88",
-                            ConcurrencyStamp = "2c401e5d-537e-4ca6-b32c-2fe0fecc47e7",
+                            ConcurrencyStamp = "3b832d79-1fe1-4a1a-9773-28817add0045",
                             Name = "Multi-Sector Governance Council Officer",
                             NormalizedName = "MULTI-SECTOR GOVERNANCE COUNCIL OFFICER"
                         },
                         new
                         {
                             Id = "9d2a6f4b-3c81-4e7a-b5d2-1f8c6a9e2740",
-                            ConcurrencyStamp = "f332d07a-7455-4d1b-b66e-8b9ce5b3f2e1",
+                            ConcurrencyStamp = "719453bd-59ab-4b83-a296-4ad7d3d230de",
                             Name = "TWG",
                             NormalizedName = "TWG"
                         },
                         new
                         {
                             Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e6041f",
-                            ConcurrencyStamp = "11e42c9f-d8b8-4363-a5f8-da1dc418bc3d",
+                            ConcurrencyStamp = "a21b1529-d5e6-4bc0-84c4-74405637d682",
                             Name = "Evaluator",
                             NormalizedName = "EVALUATOR"
                         });
@@ -16800,21 +16708,15 @@ namespace IMIS.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("IMIS.Domain.PgsPeriod", "ISATPeriod")
+                    b.HasOne("IMIS.Domain.ISATPeriod", "ISATPeriod")
                         .WithMany()
                         .HasForeignKey("ISATPeriodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("IMIS.Domain.Office", "Office")
-                        .WithMany()
-                        .HasForeignKey("OfficeId");
-
                     b.Navigation("EmployeeUser");
 
                     b.Navigation("ISATPeriod");
-
-                    b.Navigation("Office");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ISATAnnualPerformanceCommitments", b =>
@@ -16826,49 +16728,6 @@ namespace IMIS.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("IMIS.Domain.ISATSignatory", b =>
-                {
-                    b.HasOne("IMIS.Domain.ISAT", "ISAT")
-                        .WithMany("ISATSignatories")
-                        .HasForeignKey("ISATId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("IMIS.Domain.ISATSignatoryTemplate", "ISATSignatoryTemplate")
-                        .WithMany()
-                        .HasForeignKey("ISATSignatoryTemplateId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("IMIS.Domain.User", "Signatory")
-                        .WithMany()
-                        .HasForeignKey("SignatoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ISAT");
-
-                    b.Navigation("ISATSignatoryTemplate");
-
-                    b.Navigation("Signatory");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.ISATSignatoryTemplate", b =>
-                {
-                    b.HasOne("IMIS.Domain.User", "DefaultSignatory")
-                        .WithMany()
-                        .HasForeignKey("DefaultSignatoryId");
-
-                    b.HasOne("IMIS.Domain.Office", "Office")
-                        .WithMany()
-                        .HasForeignKey("OfficeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DefaultSignatory");
-
-                    b.Navigation("Office");
-                });
-
             modelBuilder.Entity("IMIS.Domain.ISATStrategicObjectiveSupported", b =>
                 {
                     b.HasOne("IMIS.Domain.ISAT", null)
@@ -16877,17 +16736,11 @@ namespace IMIS.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("IMIS.Domain.KraRoadMapDeliverable", "KraRoadMapDeliverable")
-                        .WithMany()
-                        .HasForeignKey("KraRoadMapDeliverableId");
-
                     b.HasOne("IMIS.Domain.KraRoadMap", "KraRoadMap")
                         .WithMany()
                         .HasForeignKey("KraRoadMapId");
 
                     b.Navigation("KraRoadMap");
-
-                    b.Navigation("KraRoadMapDeliverable");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ISATStrategyContribution", b =>
@@ -17632,8 +17485,6 @@ namespace IMIS.Persistence.Migrations
             modelBuilder.Entity("IMIS.Domain.ISAT", b =>
                 {
                     b.Navigation("ISATAnnualPerformanceCommitments");
-
-                    b.Navigation("ISATSignatories");
 
                     b.Navigation("ISATStrategicObjectiveSupported");
 
