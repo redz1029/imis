@@ -100,8 +100,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
   final _recognizeRewardKey = GlobalKey();
   final _frequencyKey = GlobalKey();
 
-  /// True kapag existing record na naka-Submit na (isDraft == false).
-  /// Locked na dapat ang lahat ng fields/dropdown pag ganito.
   bool get _isLocked =>
       widget.existingProtocol != null &&
       widget.existingProtocol!.isDraft == false;
@@ -472,8 +470,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     return false;
   }
 
-  /// Runs required-field validation and updates the *Error flags.
-  /// Returns true if everything is valid.
   bool _validateForSubmit() {
     setState(() {
       _deputyError = _deputyController.text.trim().isEmpty;
@@ -523,8 +519,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     });
   }
 
-  /// Scrolls the form so the first field with a validation error is
-  /// visible — sinusundan yung visual top-to-bottom order ng form.
   void _scrollToFirstError() {
     final fields = <({bool hasError, GlobalKey key})>[
       (hasError: _documenterError, key: _documenterKey),
@@ -591,9 +585,9 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       _frequencyController.text.trim(),
       _minutesDeleted ? '' : (_existingMinutesPath ?? ''),
       widget.month,
-      _minutesDeleted, // removeAttachment (19th positional param)
+      _minutesDeleted,
       divisionId: int.tryParse(_serviceId ?? ''),
-      isDraft: isDraft, // isDraft is a NAMED param sa model, hindi positional
+      isDraft: isDraft,
     );
 
     final accomplishmentUpdates =

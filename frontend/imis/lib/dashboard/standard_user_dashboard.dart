@@ -973,14 +973,9 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
         isMine ? "My Offices with Deliverables" : "Offices with Deliverables",
         data.totalOffices,
         Icons.apartment_outlined,
-        blue,
+        Colors.purple,
       ),
-      BarEntry(
-        "Audited",
-        data.totalAudited,
-        Icons.fact_check_outlined,
-        Colors.purple.shade300,
-      ),
+      BarEntry("Audited", data.totalAudited, Icons.fact_check_outlined, blue),
     ];
 
     return LayoutBuilder(
@@ -1303,7 +1298,7 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
       ChartBarEntry("Not Started", data.notStarted, Colors.redAccent),
       ChartBarEntry("On Going", data.ongoing, Colors.orange.shade300),
       ChartBarEntry("Completed", data.completed, kSuccess),
-      ChartBarEntry("Audited", data.totalAudited, Colors.purple.shade300),
+      ChartBarEntry("Audited", data.totalAudited, blue),
     ];
 
     final maxValue = entries
@@ -1365,7 +1360,7 @@ class StandardUserDashboardState extends State<StandardUserDashboard> {
                   label: "Audited",
                   percent: audiedPercent,
                   count: data.totalAudited,
-                  color: Colors.purple.shade300,
+                  color: blue,
                   icon: Icons.fact_check_outlined,
                 ),
               ];

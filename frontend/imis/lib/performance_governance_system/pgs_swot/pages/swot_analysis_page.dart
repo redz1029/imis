@@ -116,7 +116,6 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
   final _commonService = CommonService(Dio());
   final _swotServiceHeadService = SwotServiceHeadService(Dio());
   bool get _isServiceHeadView => _viewMode == SwotViewMode.serviceHead;
-
   String get _viewTitle {
     return _isServiceHeadView ? 'Service Head SWOT' : 'Department Head SWOT';
   }
@@ -824,7 +823,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                 ),
 
                 Text(
-                  '${filteredList.length} record${filteredList.length != 1 ? 's' : ''} found',
+                  '$totalCount record${totalCount != 1 ? 's' : ''} found',
                   style: TextStyle(
                     fontSize: isMobile ? 10 : 12,
                     color: Colors.grey.shade600,
@@ -838,30 +837,34 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                PermissionWidget(
-                  permission: AppPermissions.addSWOTAnalysis,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _openDialog(isServiceHead: false),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 16,
+                if (!_isServiceHeadView) ...[
+                  PermissionWidget(
+                    permission: AppPermissions.addSWOTAnalysis,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openDialog(isServiceHead: false),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                      icon: const Icon(
+                        Icons.add,
+                        size: 16,
+                        color: Colors.white,
                       ),
-                    ),
-                    icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                    label: const Text(
-                      'Add New',
-                      style: TextStyle(fontSize: 13, color: Colors.white),
+                      label: const Text(
+                        'Add New',
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
                     ),
                   ),
-                ),
-
-                const SizedBox(width: 8),
-
+                ],
+                SizedBox(width: 10),
                 PermissionWidget(
                   permission: AppPermissions.addSWOTAnalysisServiceHead,
                   child: ElevatedButton.icon(
@@ -1218,6 +1221,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
   List<SwotContextEntry> _internal = [];
   List<SwotContextEntry> _external = [];
+  int _currentStep = 0;
 
   bool _loadingLabels = true;
   String? _loadError;
@@ -1807,7 +1811,6 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
     final isSmall = size.width < 700;
 
     return Dialog(
@@ -1826,11 +1829,8 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildDialogHeader(),
-
             Expanded(child: _buildDialogBody(isSmall)),
-
             const Divider(height: 1),
-
             _buildDialogActions(),
           ],
         ),
@@ -1880,16 +1880,13 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(_loadError!),
-
             const SizedBox(height: 8),
-
             TextButton(
               onPressed: () {
                 setState(() {
                   _loadingLabels = true;
                   _loadError = null;
                 });
-
                 _loadLabels();
               },
               child: const Text('Retry'),
@@ -1914,25 +1911,27 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                 _labeledField(
                   'Objective Statement',
                   _objectiveCtrl,
-                  maxLines: 2,
                   required: true,
                 ),
-                const SizedBox(height: 16),
-                _SwotContextTable(
-                  title: 'Internal Context',
-                  leftHeader: 'Strengths',
-                  rightHeader: 'Weaknesses',
-                  entries: _internal,
-                  isSmall: isSmall,
-                ),
                 const SizedBox(height: 20),
-                _SwotContextTable(
-                  title: 'External Context',
-                  leftHeader: 'Opportunities',
-                  rightHeader: 'Threats',
-                  entries: _external,
-                  isSmall: isSmall,
-                ),
+                _buildContextStepper(),
+                const SizedBox(height: 16),
+                if (_currentStep == 0)
+                  _SwotContextTable(
+                    title: 'Internal Context',
+                    leftHeader: 'Strengths',
+                    rightHeader: 'Weaknesses',
+                    entries: _internal,
+                    isSmall: isSmall,
+                  )
+                else
+                  _SwotContextTable(
+                    title: 'External Context',
+                    leftHeader: 'Opportunities',
+                    rightHeader: 'Threats',
+                    entries: _external,
+                    isSmall: isSmall,
+                  ),
               ],
             ),
           ),
@@ -1945,6 +1944,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
   Widget _buildDialogActions() {
     final isEditing = widget.existing != null;
+    final isLastStep = _currentStep == 1;
 
     final String permission =
         widget.isServiceHead
@@ -1960,20 +1960,52 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(foregroundColor: primaryColor),
-            child: const Text('Cancel'),
-          ),
-
-          const SizedBox(width: 8),
-
-          PermissionWidget(
-            permission: permission,
-            child: ElevatedButton(
+          if (isLastStep) ...[
+            TextButton.icon(
+              onPressed: () => setState(() => _currentStep -= 1),
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: const Text('Back'),
+              style: TextButton.styleFrom(foregroundColor: primaryColor),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(foregroundColor: primaryColor),
+              child: const Text('Cancel'),
+            ),
+            const SizedBox(width: 8),
+            PermissionWidget(
+              permission: permission,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                onPressed:
+                    (_loadingLabels || _loadError != null || _officeLoading)
+                        ? null
+                        : _saveSwot,
+                child: Text(isEditing ? 'Update' : 'Save'),
+              ),
+            ),
+          ] else
+            ElevatedButton.icon(
+              onPressed: () => setState(() => _currentStep += 1),
+              icon: const Icon(
+                Icons.arrow_forward,
+                size: 16,
+                color: Colors.white,
+              ),
+              label: const Text('Next', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 10,
@@ -1982,13 +2014,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                   borderRadius: BorderRadius.circular(6),
                 ),
               ),
-              onPressed:
-                  (_loadingLabels || _loadError != null || _officeLoading)
-                      ? null
-                      : _saveSwot,
-              child: Text(isEditing ? 'Update' : 'Save'),
             ),
-          ),
         ],
       ),
     );
@@ -2138,10 +2164,89 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
     );
   }
 
+  Widget _buildContextStepper() {
+    const steps = ['Internal Context', 'External Context'];
+    const circleSize = 30.0;
+
+    Widget stepColumn(int index) {
+      final isCompleted = _currentStep > index;
+      final isCurrent = _currentStep == index;
+      final active = isCompleted || isCurrent;
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () => setState(() => _currentStep = index),
+            child: Container(
+              width: circleSize,
+              height: circleSize,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: active ? primaryColor : Colors.white,
+                border: Border.all(
+                  color: active ? primaryColor : Colors.grey.shade400,
+                  width: 1.5,
+                ),
+              ),
+              child:
+                  isCompleted
+                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+                      : Text(
+                        '${index + 1}',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isCurrent ? Colors.white : Colors.grey.shade500,
+                        ),
+                      ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            steps[index],
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+              color: active ? primaryColor : Colors.grey.shade500,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Center(
+      child: SizedBox(
+        width: 260,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            stepColumn(0),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: circleSize / 2 - 1,
+                  left: 8,
+                  right: 8,
+                ),
+                child: Container(
+                  height: 2,
+                  color: _currentStep > 0 ? primaryColor : Colors.grey.shade300,
+                ),
+              ),
+            ),
+            stepColumn(1),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _labeledField(
     String label,
     TextEditingController ctrl, {
-    int maxLines = 1,
     bool required = false,
   }) {
     return Column(
@@ -2160,7 +2265,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
         TextFormField(
           controller: ctrl,
-          maxLines: maxLines,
+          maxLines: null,
           style: const TextStyle(fontSize: 13),
           decoration: InputDecoration(
             isDense: true,

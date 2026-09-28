@@ -236,7 +236,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                                       Icons
                                                           .description_outlined,
                                                       size: 16,
-                                                      color: Colors.blueAccent,
+                                                      color: blue,
                                                     ),
                                                     onPressed: () {
                                                       openProcessCoreSupportPrintPreview(
@@ -282,7 +282,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                                           icon: const Icon(
                                             Icons.description_outlined,
                                             size: 16,
-                                            color: Colors.blueAccent,
+                                            color: blue,
                                           ),
                                           onPressed: () {
                                             openProcessCoreSupportPrintPreview(

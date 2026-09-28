@@ -9,12 +9,10 @@ import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_strategic_change_agenda/models/strategic_change_agenda.dart';
 import 'package:imis/performance_governance_system/pgs_strategic_change_agenda/services/strategy_change_agenda_service.dart';
-import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class StrategicChangeAgendaValueEntry {
   final int id;
@@ -143,23 +141,6 @@ class _StrategicChangeAgendaPageState extends State<StrategicChangeAgendaPage> {
   void initState() {
     super.initState();
     _fetch();
-  }
-
-  Future<String> _getRoleId() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? selectedRoleName = prefs.getString('selectedRole');
-    final roles = await AuthUtil.fetchRoles();
-
-    if (roles != null && roles.isNotEmpty) {
-      var currentRole = roles.first;
-      if (selectedRoleName != null) {
-        try {
-          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
-        } catch (_) {}
-      }
-      return currentRole.id;
-    }
-    return '';
   }
 
   Future<void> _fetch({int page = 1, String? searchQuery}) async {
@@ -452,7 +433,7 @@ class _StrategicChangeAgendaPageState extends State<StrategicChangeAgendaPage> {
                     icon: const Icon(
                       Icons.description_outlined,
                       size: 16,
-                      color: Colors.blueAccent,
+                      color: blue,
                     ),
                     onPressed: () {
                       openStrategicChangeAgenda(item.id.toString(), '');
@@ -526,7 +507,7 @@ class _StrategicChangeAgendaPageState extends State<StrategicChangeAgendaPage> {
                             Icon(
                               Icons.description_outlined,
                               size: 16,
-                              color: Colors.blueAccent,
+                              color: blue,
                             ),
                             SizedBox(width: 8),
                             Text('Print Preview'),

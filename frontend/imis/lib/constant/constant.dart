@@ -35,12 +35,14 @@ const Color blue = Color(0xFF118ab2);
 const kCardShadow = Color(0x0A000000);
 const kPrimaryLight = Color(0xFFEBF2FF);
 const kDangerLight = Color(0xFFFEF2F2);
+const Color kAccent = Color(0xFFCD2C58);
 
 const kPrimaryMedium = Color(0xFFD4919E);
 const kPrimaryBg = Color(0xFFF2D5D9);
 const kBg = Color(0xFFFAF7F8);
 const kTextMid = Color(0xFF6B4E53);
 const kTextLight = Color(0xFF9E8285);
+const Color kSidebarBg = Color(0xFF1A1A1A);
 
 //Sizing
 const gap4px = SizedBox(height: 4);

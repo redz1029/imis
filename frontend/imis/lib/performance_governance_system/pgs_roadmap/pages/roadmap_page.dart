@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/dialog/roadmap_history_dialog.dart';
-import 'package:imis/performance_governance_system/pgs_roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
+import 'package:imis/performance_governance_system/pgs_roadmap/pgs_roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/models/kpi_roadmap.dart';
