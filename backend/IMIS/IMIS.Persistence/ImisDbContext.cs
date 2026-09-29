@@ -1,4 +1,5 @@
-﻿using Base.Abstractions;
+﻿using System.Reflection.Emit;
+using Base.Abstractions;
 using Base.Auths;
 using Base.Utilities;
 using IMIS.Domain;
@@ -137,6 +138,17 @@ namespace IMIS.Persistence
                     .HasForeignKey(x => x.ISATSignatoryTemplateId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+            builder.Entity<ISAT>()
+                .HasOne(x => x.ImmediateSupervisorUser) 
+                .WithMany()
+                .HasForeignKey(x => x.ImmediateSupervisorUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ISAT>()
+                .HasOne(x => x.EmployeeUser)
+                .WithMany()
+                .HasForeignKey(x => x.EmployeeUserId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<PerformanceValidationToolValidators>()
                 .HasOne<PerformanceValidationTool>()

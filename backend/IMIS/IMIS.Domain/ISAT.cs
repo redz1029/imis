@@ -13,6 +13,14 @@ namespace IMIS.Domain
         public int? OfficeId { get; set; }
         public Office? Office { get; set; }
 
+        public required string ImmediateSupervisorUserId { get; set; }
+        public User? ImmediateSupervisorUser { get; set; }
+
+        public string? Position { get; set; }
+
+        public int? ServiceId { get; set; }
+        public Office? Service { get; set; }
+
         public List<ISATStrategicObjectiveSupported>? ISATStrategicObjectiveSupported { get; set; }
         public List<ISATStrategyContribution>? ISATStrategyContribution { get; set; }
         public List<ISATAnnualPerformanceCommitments>? ISATAnnualPerformanceCommitments { get; set; }

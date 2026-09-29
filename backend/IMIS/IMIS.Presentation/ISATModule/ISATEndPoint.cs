@@ -1,6 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.ISATModule;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +37,30 @@ namespace IMIS.Presentation.ISATModule
             .WithTags(_iSAT)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_iSAT), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _iSATPermission.View));
+       
+            app.MapGet("/report/{id:long}", async (int id, IISATService service, HttpResponse response, CancellationToken cancellationToken) =>
+            {
+                var reportKraRoadMapDto = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                var file = await ReportUtil.GeneratePdfReport<ReportISATDto>(
+                    "ISATReport",
+                    new List<ReportISATDto> { reportKraRoadMapDto! },
+                    "ISAT",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                //Force inline rendering in browser with dynamic timestamp filename
+                //var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                //response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                //return Results.File(file, "application/pdf");
+
+                return Results.File(file, "application/pdf", $"ISATReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                //
+                //var result = await service.ReportGetByIdAsync(id, cancellationToken);
+                //return result is null ? Results.NotFound() : Results.Ok(result);
+            })
+          .WithTags(_iSAT)
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_iSAT), true);
 
             app.MapPut("/", async ([FromBody] ISATDto dto, IISATService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

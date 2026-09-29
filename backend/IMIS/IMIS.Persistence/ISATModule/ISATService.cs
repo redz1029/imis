@@ -18,19 +18,15 @@ namespace IMIS.Persistence.ISATModule
     {
         private const string StatusPrepared = "Prepared";
         private const string StatusPending = "Pending";
-        private const string StatusEmployee = "Employee";
-        private const string StatusOfficeHead = "Office Head";
+        private const string StatusEmployee = "Prepared By";
+        private const string StatusOfficeHead = "Reviewed By";
 
         private readonly IISATRepository _repository;
         private readonly IISATSignatoryTemplateRepository _signatoryTemplateRepository;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
-        public ISATService(
-            IISATRepository repository,
-            IISATSignatoryTemplateRepository signatoryTemplateRepository,
-            UserManager<User> userManager,
-            RoleManager<IdentityRole> roleManager)
+        public ISATService(IISATRepository repository, IISATSignatoryTemplateRepository signatoryTemplateRepository, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             _repository = repository;
             _signatoryTemplateRepository = signatoryTemplateRepository;
@@ -52,7 +48,7 @@ namespace IMIS.Persistence.ISATModule
         {
             return await _repository.GetRoadMapListAsync(cancellationToken);
         }
-     
+        
         public async Task<DtoPageList<ISATDto, ISAT, long>?> GetPaginatedByUserIdAsync(string userId, string roleId, int? officeId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var role = await _roleManager.FindByIdAsync(roleId);
@@ -73,12 +69,25 @@ namespace IMIS.Persistence.ISATModule
                 if (all.TotalCount == 0)
                     return null;
 
-                return DtoPageList<ISATDto, ISAT, long>.Create(all.Items, page, pageSize, all.TotalCount);
+                var result = DtoPageList<ISATDto, ISAT, long>.Create(all.Items, page, pageSize, all.TotalCount);
+
+                foreach (var item in result.Items)
+                {
+                    var entity = all.Items.FirstOrDefault(e => e.Id == item.Id);
+                    if (entity == null)
+                        continue;
+
+                    var (signatories, isDraft) = await ProcessSignatoriesAsync(entity, cancellationToken);
+                    item.ISATSignatories = signatories;
+                    item.IsDraft = isDraft;
+                }
+
+                return result;
             }
-       
+
             var candidates = await _repository.GetCandidatesForUserAsync(userId, officeId, cancellationToken);
 
-            var visible = new List<(ISAT Entity, bool IsNext)>();
+            var visible = new List<(ISAT Entity, List<ISATSignatoryDto> Signatories, bool IsDraft, bool IsNext)>();
 
             foreach (var isat in candidates)
             {
@@ -86,7 +95,7 @@ namespace IMIS.Persistence.ISATModule
 
                 var isOwner = string.Equals(isat.EmployeeUserId, userId, StringComparison.OrdinalIgnoreCase);
 
-                var (signatories, _) = await ProcessSignatoriesAsync(isat, cancellationToken);
+                var (signatories, isDraft) = await ProcessSignatoriesAsync(isat, cancellationToken);
 
                 var isNext = signatories.Any(s =>
                     s.IsNextStatus &&
@@ -98,7 +107,7 @@ namespace IMIS.Persistence.ISATModule
 
                 if (isOwner || isNext || hasSigned)
                 {
-                    visible.Add((isat, isNext));
+                    visible.Add((isat, signatories, isDraft, isNext));
                 }
             }
 
@@ -108,7 +117,6 @@ namespace IMIS.Persistence.ISATModule
             var ordered = visible
                 .OrderByDescending(v => v.IsNext)
                 .ThenByDescending(v => v.Entity.PostingDate)
-                .Select(v => v.Entity)
                 .ToList();
 
             var totalCount = ordered.Count;
@@ -118,7 +126,21 @@ namespace IMIS.Persistence.ISATModule
                 .Take(pageSize)
                 .ToList();
 
-            return DtoPageList<ISATDto, ISAT, long>.Create(paged, page, pageSize, totalCount);
+            var pagedEntities = paged.Select(v => v.Entity).ToList();
+
+            var pageList = DtoPageList<ISATDto, ISAT, long>.Create(pagedEntities, page, pageSize, totalCount);
+
+            foreach (var item in pageList.Items)
+            {
+                var match = paged.FirstOrDefault(v => v.Entity.Id == item.Id);
+                if (match.Entity == null)
+                    continue;
+
+                item.ISATSignatories = match.Signatories;
+                item.IsDraft = match.IsDraft;
+            }
+
+            return pageList;
         }
 
         public async Task<ISATEmployeeProfileDto?> GetEmployeeProfileByUserIdAsync(string userId, CancellationToken cancellationToken)
@@ -152,7 +174,7 @@ namespace IMIS.Persistence.ISATModule
             }
 
             var officeHead = await _repository.GetOfficeHeadAsync(office.Id, cancellationToken).ConfigureAwait(false);
-            if (officeHead != null && !string.Equals(officeHead.UserId, userId, StringComparison.OrdinalIgnoreCase))
+            if (officeHead != null)
             {
                 var supervisor = await _userManager.FindByIdAsync(officeHead.UserId);
                 if (supervisor != null)
@@ -194,6 +216,27 @@ namespace IMIS.Persistence.ISATModule
             return dto;
         }
 
+        public async Task<ReportISATDto?> ReportGetByIdAsync(long id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIsatIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+            if (entity == null)
+            {
+                return null;
+            }
+
+            var dto = new ReportISATDto(entity);
+
+            var (signatories, isDraft) = await ProcessSignatoriesAsync(entity, cancellationToken);
+
+            dto.ISATSignatories = signatories
+                .Where(s => s.Status == StatusPrepared)
+                .ToList();
+            dto.IsDraft = isDraft;
+
+            return dto;
+        }
+
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             if (dto is not ISATDto isatDto)
@@ -212,6 +255,9 @@ namespace IMIS.Persistence.ISATModule
                 isatEntity.ISATPeriodId = isatDto.ISATPeriodId;
                 isatEntity.OfficeId = isatDto.OfficeId;
                 isatEntity.EmployeeUserId = isatDto.EmployeeUserId;
+                isatEntity.ImmediateSupervisorUserId = isatDto.ImmediateSupervisorUserId;
+                isatEntity.Position = isatDto.Position;
+                isatEntity.ServiceId = isatDto.ServiceId;
                 isatEntity.PostingDate = isatDto.PostingDate;
 
                 await SyncStrategicObjectiveSupportedAsync(isatDto.ISATStrategicObjectiveSupported, isatEntity.Id, cancellationToken);
@@ -293,7 +339,7 @@ namespace IMIS.Persistence.ISATModule
                 .Where(u => userIds.Contains(u.Id))
                 .ToDictionaryAsync(u => u.Id, cancellationToken);
 
-            string GetFullName(string? id) =>  id != null && usersDict.TryGetValue(id, out var u) ? FormatName(u) : string.Empty;
+            string GetFullName(string? id) =>  id != null && usersDict.TryGetValue(id, out var u) ? ISATSignatoryDto.FormatFullName(u) ?? string.Empty : string.Empty;          
 
             bool IsEmployeeRow(ISATSignatory s) => s.ISATSignatoryTemplateId == null && string.Equals(s.SignatoryId, employeeId, StringComparison.OrdinalIgnoreCase);
 
@@ -327,7 +373,7 @@ namespace IMIS.Persistence.ISATModule
                     ISATId = isat.Id,
                     ISATSignatoryTemplateId = s.ISATSignatoryTemplateId,
                     SignatoryId = s.SignatoryId,
-                    SignatoryName = GetFullName(s.SignatoryId),
+                    SignatoryName = GetFullName(s.SignatoryId),                  
                     DateSigned = s.DateSigned,
                     Label = label,
                     OrderLevel = order,
@@ -393,6 +439,10 @@ namespace IMIS.Persistence.ISATModule
             var next = result.FirstOrDefault(x => x.Status == StatusPending);
             if (next != null)
                 next.IsNextStatus = true;
+
+            result = result
+                .Where(x => x.Status == StatusPrepared || x.IsNextStatus)
+                .ToList();
 
             return (result, isDraft);
         }

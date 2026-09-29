@@ -10,6 +10,7 @@ namespace IMIS.Application.ISATModule
         Task<List<KraRoadMapDeliverableListDto>> GetDeliverablesByRoadMapIdAndYearAsync(long roadMapId, int year, CancellationToken cancellationToken);
         Task<List<KraRoadMapListDto>> GetRoadMapListAsync(CancellationToken cancellationToken);
         Task<ISATDto?> GetByIdAsync(long id, CancellationToken cancellationToken);
+        Task<ReportISATDto?> ReportGetByIdAsync(long id, CancellationToken cancellationToken);
         Task<ISATEmployeeProfileDto?> GetEmployeeProfileByUserIdAsync(string userid, CancellationToken cancellationToken);
         Task<DtoPageList<ISATDto, ISAT, long>?> GetPaginatedByUserIdAsync(string userId, string roleId, int? officeId, int page, int pageSize, CancellationToken cancellationToken);
         Task<ISATDto> Submit(ISATDto dto, string userId, CancellationToken cancellationToken);
