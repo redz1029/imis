@@ -39,7 +39,7 @@ _Screen _screenOf(BuildContext ctx) {
 
 const double kActionColW = 72.0;
 const double kEnablerColW = 72.0;
-const double kSeqColW = 44.0; // NEW: width for the sequence dropdown
+const double kSeqColW = 44.0;
 
 class _GutQuestion {
   final String question;
@@ -95,7 +95,7 @@ class _KpiEntry {
 
   final Map<String, TextEditingController> yearTargetCtrls;
 
-  int? sequenceId; // NEW: selected kraRoadmapKpiSequenceId for this KPI
+  int? sequenceId;
 
   _KpiEntry({this.existingKpi, List<String> year = const []})
     : kpiCtrl = TextEditingController(text: existingKpi?.kpiDescription ?? ''),
@@ -108,11 +108,9 @@ class _KpiEntry {
       if (key != null && yearTargetCtrls.containsKey(key)) {
         yearTargetCtrls[key]!.text = item.target ?? '';
       } else if (baselineCtrl.text.isEmpty) {
-        // item's year falls outside the period's year list -> it's the baseline
         baselineCtrl.text = item.target ?? '';
       }
 
-      // NEW: grab the sequence id once (all items of a KPI should share the same one)
       sequenceId ??= item.kraRoadmapKpiSequenceId;
     }
   }

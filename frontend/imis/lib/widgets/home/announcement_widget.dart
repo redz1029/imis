@@ -44,141 +44,145 @@ class _AnnouncementListState extends State<AnnouncementList> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.only(top: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: FutureBuilder<List<Announcement>>(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Announcements',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A2E),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  FutureBuilder<List<Announcement>>(
                     future: _announcementsFuture,
                     builder: (context, snapshot) {
                       final count = snapshot.data?.length ?? 0;
-                      final label =
-                          count == 0 ? 'Announcement' : '$count Announcements';
                       return Text(
-                        snapshot.hasData ? label : 'Announcements',
+                        snapshot.hasData
+                            ? '$count ${count == 1 ? 'update' : 'updates'}'
+                            : ' ',
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: primaryTextColor,
+                          fontSize: 12,
+                          color: Colors.grey.shade400,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       );
                     },
                   ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    PermissionWidget(
-                      allowedRoles: [
-                        PermissionRoleString.roleAdmin,
-                        PermissionRoleString.mcc,
-                      ],
-                      child: Tooltip(
-                        message: 'Add announcement',
-                        child: Ink(
-                          decoration: const ShapeDecoration(
-                            color: Colors.blue,
-                            shape: CircleBorder(),
-                          ),
-                          child: IconButton(
-                            onPressed: () => showAnnouncementFormDialog(),
-                            icon: const Icon(Icons.add, color: primaryColor),
-                            iconSize: 18,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    PermissionWidget(
-                      allowedRoles: [
-                        PermissionRoleString.roleAdmin,
-                        PermissionRoleString.mcc,
-                      ],
-                      child: Tooltip(
-                        message: 'Manage announcement',
-                        child: IconButton(
-                          onPressed: () => _showManageAnnouncementsDialog(),
-                          icon: const Icon(Icons.list),
-                          iconSize: 18,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ),
-                    ),
+                ],
+              ),
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                PermissionWidget(
+                  allowedRoles: [
+                    PermissionRoleString.roleAdmin,
+                    PermissionRoleString.mcc,
                   ],
+                  child: Tooltip(
+                    message: 'Add announcement',
+                    child: Ink(
+                      decoration: const ShapeDecoration(
+                        color: Colors.blue,
+                        shape: CircleBorder(),
+                      ),
+                      child: IconButton(
+                        onPressed: () => showAnnouncementFormDialog(),
+                        icon: const Icon(Icons.add, color: primaryColor),
+                        iconSize: 18,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                PermissionWidget(
+                  allowedRoles: [
+                    PermissionRoleString.roleAdmin,
+                    PermissionRoleString.mcc,
+                  ],
+                  child: Tooltip(
+                    message: 'Manage announcement',
+                    child: IconButton(
+                      onPressed: () => _showManageAnnouncementsDialog(),
+                      icon: const Icon(Icons.list),
+                      iconSize: 18,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-          gap16px,
-          Expanded(
-            child: FutureBuilder<List<Announcement>>(
-              future: _announcementsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: primaryColor),
-                  );
-                }
+          ],
+        ),
+        gap16px,
+        Expanded(
+          child: FutureBuilder<List<Announcement>>(
+            future: _announcementsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: primaryColor),
+                );
+              }
 
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'Failed to load announcements: ${snapshot.error}',
-                      style: const TextStyle(color: Colors.redAccent),
-                    ),
-                  );
-                }
-
-                final announcements = snapshot.data ?? [];
-                if (announcements.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No announcements at the moment.',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: _refreshAnnouncements,
-                  child: ListView.builder(
-                    itemCount: announcements.length,
-                    itemBuilder: (context, index) {
-                      return _AnnouncementCard(
-                        announcement: announcements[index],
-                        borderColor: Color(0xFFCD2C58),
-                        onEdit: (announcement) {
-                          showAnnouncementFormDialog(
-                            id: announcement.id.toString(),
-                            title: announcement.title,
-
-                            description: announcement.description,
-                            isActive: announcement.isActive,
-                          );
-                        },
-                      );
-                    },
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text(
+                    'Failed to load announcements: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.redAccent),
                   ),
                 );
-              },
-            ),
+              }
+
+              final announcements = snapshot.data ?? [];
+              if (announcements.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No announcements at the moment.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+              }
+
+              return RefreshIndicator(
+                onRefresh: _refreshAnnouncements,
+                child: ListView.builder(
+                  itemCount: announcements.length,
+                  itemBuilder: (context, index) {
+                    return _AnnouncementCard(
+                      announcement: announcements[index],
+                      accentColor: kAccent,
+                      isLast: index == announcements.length - 1,
+                      onEdit: (announcement) {
+                        showAnnouncementFormDialog(
+                          id: announcement.id.toString(),
+                          title: announcement.title,
+                          description: announcement.description,
+                          isActive: announcement.isActive,
+                        );
+                      },
+                    );
+                  },
+                ),
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -692,15 +696,37 @@ class _AnnouncementListState extends State<AnnouncementList> {
 
 class _AnnouncementCard extends StatelessWidget {
   final Announcement announcement;
-  final Color borderColor;
+  final Color accentColor;
+  final bool isLast;
   final Function(Announcement) onEdit;
   final _dateConverter = const LongDateOnlyConverter();
 
   const _AnnouncementCard({
     required this.announcement,
-    required this.borderColor,
+    required this.accentColor,
+    required this.isLast,
     required this.onEdit,
   });
+
+  String _relativeTime(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inSeconds < 60) return 'Just now';
+    if (difference.inMinutes < 60) {
+      final mins = difference.inMinutes;
+      return '$mins ${mins == 1 ? 'minute' : 'minutes'} ago';
+    }
+    if (difference.inHours < 24) {
+      final hrs = difference.inHours;
+      return '$hrs ${hrs == 1 ? 'hour' : 'hours'} ago';
+    }
+    if (difference.inDays < 7) {
+      final days = difference.inDays;
+      return '$days ${days == 1 ? 'day' : 'days'} ago';
+    }
+    return _dateConverter.toJson(date);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -708,163 +734,120 @@ class _AnnouncementCard extends StatelessWidget {
     final toDateStr = _dateConverter.toJson(announcement.toDate);
     final displayDate =
         fromDateStr == toDateStr ? fromDateStr : '$fromDateStr – $toDateStr';
-    String getRelativeTime(DateTime date) {
-      final now = DateTime.now();
-      final difference = now.difference(date);
 
-      if (difference.inSeconds < 60) {
-        return 'Just now';
-      } else if (difference.inMinutes < 60) {
-        final mins = difference.inMinutes;
-        return '$mins ${mins == 1 ? 'minute' : 'minutes'} ago';
-      } else if (difference.inHours < 24) {
-        final hrs = difference.inHours;
-        return '$hrs ${hrs == 1 ? 'hour' : 'hours'} ago';
-      } else if (difference.inDays < 7) {
-        final days = difference.inDays;
-        return '$days ${days == 1 ? 'day' : 'days'} ago';
-      } else {
-        return _dateConverter.toJson(date);
-      }
-    }
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Left accent bar
-            Container(
-              width: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFCD2C58),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(10),
-                  bottomLeft: Radius.circular(10),
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Dot + dashed connector
+          SizedBox(
+            width: 16,
+            child: Column(
+              children: [
+                Container(
+                  width: 9,
+                  height: 9,
+                  margin: const EdgeInsets.only(top: 4),
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    shape: BoxShape.circle,
+                  ),
                 ),
+                if (!isLast)
+                  Expanded(
+                    child: CustomPaint(
+                      size: const Size(1, double.infinity),
+                      painter: _DashedLinePainter(color: Colors.grey.shade300),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20, right: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SelectableText(
+                    announcement.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Color(0xFF1A1A2E),
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Tooltip(
+                    message: displayDate,
+                    child: Text(
+                      _relativeTime(announcement.fromDate),
+                      style: TextStyle(
+                        color: blue.withValues(alpha: 0.7),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  SelectableLinkify(
+                    text: announcement.description,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: Colors.grey.shade600,
+                      height: 1.4,
+                    ),
+                    linkStyle: const TextStyle(
+                      color: Colors.lightBlue,
+                      decoration: TextDecoration.underline,
+                      fontSize: 12.5,
+                    ),
+                    onOpen: (link) async {
+                      final url = Uri.parse(link.url);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(
+                          url,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Could not open link')),
+                        );
+                      }
+                    },
+                  ),
+                ],
               ),
             ),
-
-            // Content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: SelectableText(
-                            announcement.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              color: Color(0xFF1A1A2E),
-                              height: 1.3,
-                            ),
-                          ),
-                        ),
-                        PermissionWidget(
-                          allowedRoles: [
-                            PermissionRoleString.roleAdmin,
-                            PermissionRoleString.mcc,
-                          ],
-                          child: Tooltip(
-                            message: 'Edit announcement',
-                            child: InkWell(
-                              onTap: () => onEdit(announcement),
-                              borderRadius: BorderRadius.circular(6),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: Icon(
-                                  Icons.edit_outlined,
-                                  size: 15,
-                                  color: Colors.grey.shade400,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time_outlined,
-                          size: 11,
-                          color: const Color(0xFFCD2C58).withValues(alpha: 0.8),
-                        ),
-                        const SizedBox(width: 4),
-                        Tooltip(
-                          message: displayDate,
-                          child: Text(
-                            getRelativeTime(announcement.fromDate),
-                            style: TextStyle(
-                              color: const Color(
-                                0xFFCD2C58,
-                              ).withValues(alpha: 0.8),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Divider(
-                      color: Colors.grey.shade100,
-                      height: 1,
-                      thickness: 1,
-                    ),
-                    const SizedBox(height: 8),
-                    SelectableLinkify(
-                      text: announcement.description,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF4A4A6A),
-                        height: 1.5,
-                      ),
-                      linkStyle: const TextStyle(
-                        color: Colors.lightBlue,
-                        decoration: TextDecoration.underline,
-                        fontSize: 13,
-                      ),
-                      onOpen: (link) async {
-                        final url = Uri.parse(link.url);
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(
-                            url,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Could not open link'),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _DashedLinePainter extends CustomPainter {
+  final Color color;
+  const _DashedLinePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = color
+          ..strokeWidth = 1.2;
+    const dashHeight = 3.0;
+    const dashSpace = 3.0;
+    double startY = 0;
+    while (startY < size.height) {
+      canvas.drawLine(Offset(0, startY), Offset(0, startY + dashHeight), paint);
+      startY += dashHeight + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedLinePainter oldDelegate) =>
+      oldDelegate.color != color;
 }

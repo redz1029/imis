@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/performance_governance_system/pgs_isat/isat_signatory_template/models/isat_signatory.dart';
+import 'package:imis/performance_governance_system/pgs_isat/models/isat_signatory.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_annual_performance_commitments.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_roadmap.dart';

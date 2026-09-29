@@ -1,5 +1,5 @@
 import 'package:imis/office/models/office.dart';
-import 'package:imis/performance_governance_system/pgs_isat/isat_signatory_template/models/isat_signatory.dart';
+import 'package:imis/performance_governance_system/pgs_isat/models/isat_signatory.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_annual_performance_commitments.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_strategic_contribution.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_strategic_objective_supported.dart';
