@@ -14,6 +14,7 @@ Office _$OfficeFromJson(Map<String, dynamic> json) => Office(
   isActive: json['isActive'] as bool? ?? true,
   isDeleted: json['isDeleted'] as bool? ?? false,
   rowVersion: json['rowVersion'] as String? ?? "",
+  auditors: json['auditors'] as String?,
 );
 
 Map<String, dynamic> _$OfficeToJson(Office instance) => <String, dynamic>{
@@ -24,4 +25,5 @@ Map<String, dynamic> _$OfficeToJson(Office instance) => <String, dynamic>{
   'rowVersion': instance.rowVersion,
   'officeTypeId': instance.officeTypeId,
   'parentOfficeId': instance.parentOfficeId,
+  'auditors': instance.auditors,
 };

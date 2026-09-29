@@ -11,6 +11,7 @@ class Office {
   String? rowVersion;
   int? officeTypeId;
   int? parentOfficeId;
+  String? auditors;
 
   Office({
     required this.id,
@@ -20,6 +21,7 @@ class Office {
     this.isActive = true,
     this.isDeleted = false,
     this.rowVersion = "",
+    this.auditors,
   });
 
   factory Office.fromJson(Map<String, dynamic> json) => _$OfficeFromJson(json);
