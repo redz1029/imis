@@ -62,11 +62,27 @@ namespace IMIS.Persistence.AuditChecklistModule
                 cancellationToken)
                 .ConfigureAwait(false);
         }
+        public async Task<IEnumerable<AuditChecklist>> GetByProcessIdAsync(int processId, CancellationToken cancellationToken)
+        {
+            return await WithDetails(_entities.AsNoTracking())
+                .Where(c => c.AuditPlanEntry != null &&
+                            c.AuditPlanEntry.AuditPlanProcesses.Any(p => p.OfficeId == processId || p.Id == processId))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         public async Task<AuditChecklist?> GetByIdForDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await _entities
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<AuditChecklist>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken)
+        {
+            return await WithDetails(_entities.AsNoTracking())
+                .Where(x => x.AuditScheduleId == auditScheduleId && !x.IsDeleted)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
 

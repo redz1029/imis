@@ -17,6 +17,13 @@ class AuditPlan {
   @JsonKey(defaultValue: 0)
   final int auditProgrammeId;
 
+  // FIX: added — AuditPlanDto.PlanName is `required` on the backend.
+  // Without this field, fromJson() silently dropped the key the client
+  // sent, and toJson() never re-emitted it, so every save (create or
+  // edit) reached the server with no planName at all.
+  @JsonKey(defaultValue: '')
+  final String planName;
+
   // The backend no longer sends 'planStatus' — real status comes from
   // auditStatusId/statusCode/statusName, kept in sync via the approval flow.
   @JsonKey(defaultValue: 'Draft')
@@ -36,13 +43,12 @@ class AuditPlan {
   @JsonKey(fromJson: _entriesFromJson, defaultValue: [])
   final List<AuditPlanEntry> entries;
 
-
-
   const AuditPlan({
     this.id = 0,
     this.isDeleted = false,
     this.rowVersion,
     this.auditProgrammeId = 0,
+    this.planName = '',
     this.planStatus = 'Draft',
     this.auditStatusId = 1,
     this.statusCode,
@@ -61,9 +67,6 @@ class AuditPlan {
 
   /// Falls back to "Draft" while a record has no resolved status name.
   String get effectiveStatusName => statusName ?? 'Draft';
-
-  
-
 
   static List<AuditPlanEntry> _entriesFromJson(Object? json) {
     if (json is List) {

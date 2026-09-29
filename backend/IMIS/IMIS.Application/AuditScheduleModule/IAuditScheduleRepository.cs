@@ -21,6 +21,10 @@ namespace IMIS.Application.AuditScheduleModule
 
         Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken);
 
+        Task<IEnumerable<AuditSchedule>> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken);
+
+        Task<IEnumerable<AuditSchedule>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken);
+
         Task<EntityPageList<AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
 
         // Child helpers for managing many-to-many or one-to-many relationships

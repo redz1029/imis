@@ -102,5 +102,11 @@ namespace IMIS.Persistence.AuditReportModule
                 pageSize,
                 result.TotalCount);
         }
+
+        public async Task<IEnumerable<AuditReportDto>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken)
+        {
+            var entities = await _repository.GetByAuditScheduleIdAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
+            return entities.Select(x => new AuditReportDto(x));
+        }
     }
 }

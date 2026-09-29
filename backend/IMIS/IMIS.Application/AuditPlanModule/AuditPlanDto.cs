@@ -1,7 +1,8 @@
 using Base.Primitives;
 using IMIS.Application.AuditPlanEntryModule;
-using IMIS.Application.AuditPlanApprovalModule;
+using IMIS.Application.AuditProgrammeModule;
 using IMIS.Application.AuditScheduleModule;
+using IMIS.Application.IQASignatoryModule;
 using IMIS.Application.IsoAuditorModule;
 using IMIS.Domain;
 using System;
@@ -9,12 +10,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
-using IMIS.Application.AuditProgrammeModule;
 
 namespace IMIS.Application.AuditPlanModule
 {
     public class AuditPlanDto : BaseDto<AuditPlan, int>
     {
+        public required string PlanName { get; set; }
         public required DateTime StartDate { get; set; }
         public required DateTime EndDate { get; set; }
 
@@ -26,12 +27,9 @@ namespace IMIS.Application.AuditPlanModule
         public int? PreparerId { get; set; }
         public IsoAuditorDto? Preparer { get; set; }
 
-        // REMOVED: string PlanStatus — replaced with AuditStatusId FK pattern.
-        // Status transitions go through ChangeStatusAsync only, never through
-        // a general save. AuditStatusId is intentionally NOT mapped in ToEntity()
-        // for the same reason as AuditProgrammeDto — prevents silent status revert
-        // on every ordinary edit.
-        public int AuditStatusId { get; set; }
+        // Read-only, derived from the IQA signatory rows (DRAFT / PENDING /
+        // APPROVED / DISAPPROVED). NEVER mapped in ToEntity() — the state only
+        // changes through AuditPlanService.SubmitAsync / DecideAsync.
         public string? StatusCode { get; set; }
         public string? StatusName { get; set; }
 
@@ -39,8 +37,10 @@ namespace IMIS.Application.AuditPlanModule
         public DateTime? LastModifiedDate { get; set; }
 
         public List<AuditPlanEntryDto> Entries { get; set; } = new();
-        public List<AuditPlanApprovalDto> Approvals { get; set; } = new();
         public List<AuditScheduleDto> AuditSchedules { get; set; } = new();
+
+        // Live approval chain, in signing order.
+        public List<IQASignatoryDto> Signatories { get; set; } = new();
 
         public AuditPlanDto() { }
 
@@ -48,14 +48,19 @@ namespace IMIS.Application.AuditPlanModule
         public AuditPlanDto(AuditPlan entity)
         {
             this.Id = entity.Id;
+            this.PlanName = entity.PlanName;
             this.StartDate = entity.StartDate;
             this.EndDate = entity.EndDate;
-            this.AuditStatusId = entity.AuditStatusId;
-            this.StatusCode = entity.AuditStatus?.Code;
-            this.StatusName = entity.AuditStatus?.Name;
             this.CreatedDate = entity.CreatedDate;
             this.LastModifiedDate = entity.LastModifiedDate;
             this.AuditProgrammeId = entity.AuditProgrammeId;
+
+            // Callers must load IQASignatories (non-deleted) or this reads as Draft.
+            var signatories = IQAApprovalWorkflow.Ordered(entity.IQASignatories);
+            var stateCode = IQAApprovalWorkflow.DeriveStateCode(signatories);
+            this.StatusCode = stateCode;
+            this.StatusName = IQAApprovalWorkflow.StateName(stateCode);
+            this.Signatories = signatories.Select(s => new IQASignatoryDto(s)).ToList();
 
             if (entity.Preparer != null)
             {
@@ -72,10 +77,6 @@ namespace IMIS.Application.AuditPlanModule
                 ? entity.Entries.Select(x => new AuditPlanEntryDto(x)).ToList()
                 : new List<AuditPlanEntryDto>();
 
-            this.Approvals = entity.Approvals != null
-                ? entity.Approvals.Select(x => new AuditPlanApprovalDto(x)).ToList()
-                : new List<AuditPlanApprovalDto>();
-
             this.AuditSchedules = entity.AuditSchedules != null
                 ? entity.AuditSchedules.Select(x => new AuditScheduleDto(x)).ToList()
                 : new List<AuditScheduleDto>();
@@ -88,6 +89,7 @@ namespace IMIS.Application.AuditPlanModule
             return new AuditPlan
             {
                 Id = this.Id,
+                PlanName = this.PlanName,
                 StartDate = this.StartDate,
                 EndDate = this.EndDate,
                 CreatedDate = this.CreatedDate,
@@ -95,15 +97,8 @@ namespace IMIS.Application.AuditPlanModule
                 AuditProgrammeId = this.AuditProgrammeId,
                 Preparer = this.Preparer?.ToEntity(),
 
-                // AuditStatusId intentionally NOT mapped here — same rule as
-                // AuditProgrammeDto. New entities keep the domain Draft default;
-                // SaveOrUpdateAsync explicitly preserves the existing value on
-                // updates. Only ChangeStatusAsync may move the status forward.
-
                 Entries = this.Entries?.Select(x => x.ToEntity()).ToList()
                                  ?? new List<AuditPlanEntry>(),
-                Approvals = this.Approvals?.Select(x => x.ToEntity()).ToList()
-                                 ?? new List<AuditPlanApproval>(),
                 AuditSchedules = this.AuditSchedules?.Select(x => x.ToEntity()).ToList()
                                  ?? new List<AuditSchedule>(),
 

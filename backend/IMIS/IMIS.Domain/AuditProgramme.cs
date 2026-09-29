@@ -26,14 +26,13 @@ namespace IMIS.Domain
         public required string AuditLimitations { get; set; }
 
         
-        public int AuditStatusId { get; set; } = AuditStatusSeedIds.Draft;
-        public AuditPlanStatus? AuditStatus { get; set; }
-
-        public ICollection<AuditProgrammeStatusHistory> StatusHistory { get; set; } = new List<AuditProgrammeStatusHistory>();
-
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? LastModifiedDate { get; set; }
-        public ICollection<AuditPlanApproval> Approvals { get; set; } = new List<AuditPlanApproval>();
         public ICollection<AuditPlan> AuditPlans { get; set; } = new List<AuditPlan>();
+
+        /// <summary>
+        /// IQA Signatory records for this audit programme (approval workflow)
+        /// </summary>
+        public ICollection<IQASignatory> IQASignatories { get; set; } = new List<IQASignatory>();
     }
 }

@@ -18,9 +18,7 @@ namespace IMIS.Application.AuditPlanModule
 
         // Child helpers
         Task<List<int>> GetExistingAuditPlanEntryIdsAsync(int auditPlanId, CancellationToken cancellationToken);
-        Task<List<int>> GetExistingAuditPlanApprovalIdsAsync(int auditPlanId, CancellationToken cancellationToken);
 
         Task AddAuditPlanEntriesAsync(List<AuditPlanEntry> entries, CancellationToken cancellationToken);
-        Task AddAuditPlanApprovalsAsync(List<AuditPlanApproval> approvals, CancellationToken cancellationToken);
     }
 }

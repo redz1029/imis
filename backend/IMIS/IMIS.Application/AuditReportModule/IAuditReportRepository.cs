@@ -1,6 +1,7 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
 using IMIS.Domain;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,5 +12,6 @@ namespace IMIS.Application.AuditReportModule
         Task<AuditReport?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken);
         Task<EntityPageList<AuditReport, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<AuditReport?> GetByIdForDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<AuditReport>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken);
     }
 }

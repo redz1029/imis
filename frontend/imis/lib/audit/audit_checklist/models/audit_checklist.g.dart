@@ -15,12 +15,12 @@ AuditChecklist _$AuditChecklistFromJson(Map<String, dynamic> json) =>
       findingAndRemarks: json['findingAndRemarks'] as String?,
       auditPlanEntryId: (json['auditPlanEntryId'] as num?)?.toInt() ?? 0,
       auditChecklistQNAId: (json['auditChecklistQNAId'] as num?)?.toInt() ?? 0,
+      auditeeId: (json['auditeeId'] as num?)?.toInt(),
+      auditeeName: json['auditeeName'] as String?,
       criteria: json['criteria'] as String?,
       itemsAndQuestions: json['itemsAndQuestions'] as String?,
       officeProcess: json['officeProcess'] as String?,
-      auditScope: json['auditScope'] as String?,
       auditTeamName: json['auditTeamName'] as String?,
-      auditees: json['auditees'] as String?,
     );
 
 Map<String, dynamic> _$AuditChecklistToJson(AuditChecklist instance) =>
@@ -32,10 +32,10 @@ Map<String, dynamic> _$AuditChecklistToJson(AuditChecklist instance) =>
       'findingAndRemarks': instance.findingAndRemarks,
       'auditPlanEntryId': instance.auditPlanEntryId,
       'auditChecklistQNAId': instance.auditChecklistQNAId,
+      'auditeeId': instance.auditeeId,
+      'auditeeName': instance.auditeeName,
       'criteria': instance.criteria,
       'itemsAndQuestions': instance.itemsAndQuestions,
       'officeProcess': instance.officeProcess,
-      'auditScope': instance.auditScope,
       'auditTeamName': instance.auditTeamName,
-      'auditees': instance.auditees,
     };

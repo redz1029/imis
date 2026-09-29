@@ -16,6 +16,8 @@ namespace IMIS.Application.AuditChecklistModule
 
         Task<IEnumerable<AuditChecklistDto>> GetByAuditeeIdAsync(int auditeeId, CancellationToken cancellationToken);
 
+        Task<IEnumerable<AuditChecklistDto>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken);
+
         Task<bool> SaveChecklistAsync(AuditChecklistDto dto, CancellationToken cancellationToken);
 
         Task<DtoPageList<AuditChecklistDto, AuditChecklist, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
@@ -25,5 +27,6 @@ namespace IMIS.Application.AuditChecklistModule
         Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
             where TEntity : Entity<TId>;
         Task<object?> GetByProcessIdAsync(int processId, CancellationToken cancellationToken);
+        Task<ReportAuditChecklistDto> ReportGetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AuditScheduleModule;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -111,6 +112,31 @@ namespace IMIS.Presentation.AuditScheduleModule
                 return Results.Ok(result);
             })
             .WithTags(_AuditSchedule)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+            // GENERATE PDF REPORT
+            app.MapGet("/PdF/{id:int}", async (
+                HttpResponse response,
+                int id,
+                IAuditScheduleService service,
+                CancellationToken cancellationToken) =>
+            {
+                var auditData = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                if (auditData == null)
+                    return Results.NotFound(new { message = $"Audit Schedule with ID {id} was not found." });
+
+                var file = await ReportUtil.GeneratePdfReport<ReportAuditScheduleDto>(
+                    "AuditSchedule",
+                    new List<ReportAuditScheduleDto> { auditData },
+                    "ScheduleData",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                return Results.File(file, "application/pdf", $"AuditSchedule_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+            .WithTags(_AuditSchedule)
+            .RequireCors("_allowedOrigins")
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 

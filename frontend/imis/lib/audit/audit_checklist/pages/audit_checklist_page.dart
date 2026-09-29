@@ -18,7 +18,7 @@ class AuditChecklistPage extends StatefulWidget {
 class _AuditChecklistPageState extends State<AuditChecklistPage> {
   static const Color primaryThemeColor = Color(0xFF883942);
 
-   final AuditChecklistService _service = AuditChecklistService(Dio());
+  final AuditChecklistService _service = AuditChecklistService(Dio());
   final AuditeeService _auditeeService = AuditeeService(Dio());
 
   late Future<List<AuditChecklist>> _future;
@@ -28,6 +28,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
 
   final TextEditingController _auditeeTextController = TextEditingController();
   final FocusNode _auditeeFocusNode = FocusNode();
+  int? _selectedAuditeeId;
 
   bool _saving = false;
 
@@ -42,7 +43,8 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     final rows = await _service.getOrGenerateForAuditPlanEntry(widget.auditPlanEntryId);
     _rows = rows;
     if (rows.isNotEmpty) {
-      _auditeeTextController.text = rows.first.auditees ?? '';
+      _selectedAuditeeId = rows.first.auditeeId;
+      _auditeeTextController.text = rows.first.auditeeName ?? '';
     }
     for (final r in rows) {
       _remarksControllers[r.id] = TextEditingController(text: r.findingAndRemarks ?? '');
@@ -78,12 +80,16 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   Future<void> _saveAll() async {
     setState(() => _saving = true);
     try {
-      final auditeesText = _auditeeTextController.text.trim();
-      final auditees = auditeesText.isEmpty ? null : auditeesText;
+      final auditeeName = _auditeeTextController.text.trim().isEmpty
+          ? null
+          : _auditeeTextController.text.trim();
       for (var i = 0; i < _rows.length; i++) {
         final remarks = _remarksControllers[_rows[i].id]?.text;
         var updated = _rows[i].copyWithResponse(findingAndRemarks: remarks);
-        updated = updated.copyWithAuditees(auditees);
+        updated = updated.copyWithAuditee(
+          auditeeId: _selectedAuditeeId,
+          auditeeName: auditeeName,
+        );
         _rows[i] = await _service.save(updated);
       }
       if (mounted) {
@@ -137,20 +143,17 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
       textEditingController: _auditeeTextController,
       focusNode: _auditeeFocusNode,
       optionsBuilder: (TextEditingValue value) {
-        final segment = _currentSegment(value.text);
-        if (segment.isEmpty) return const Iterable<Auditee>.empty();
-        final query = segment.toLowerCase();
+        if (value.text.trim().isEmpty) return _auditeeSuggestions;
+        final query = value.text.trim().toLowerCase();
         return _auditeeSuggestions
             .where((a) => a.displayName.toLowerCase().contains(query));
       },
       displayStringForOption: (a) => a.displayName,
       onSelected: (Auditee selection) {
-        final text = _auditeeTextController.text;
-        final lastComma = text.lastIndexOf(',');
-        final prefix = lastComma == -1 ? '' : text.substring(0, lastComma + 1);
-        final newText = (prefix.isEmpty ? '' : '$prefix ') + '${selection.displayName}, ';
-        _auditeeTextController.text = newText;
-        _auditeeTextController.selection = TextSelection.collapsed(offset: newText.length);
+        setState(() {
+          _selectedAuditeeId = selection.id;
+          _auditeeTextController.text = selection.displayName;
+        });
       },
       fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
         return TextFormField(
@@ -158,14 +161,14 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
           focusNode: focusNode,
           style: const TextStyle(fontSize: 13),
           decoration: InputDecoration(
-            labelText: 'AUDITEE/S',
+            labelText: 'AUDITEE',
             labelStyle: const TextStyle(
               color: primaryThemeColor,
               fontSize: 13,
               fontWeight: FontWeight.bold,
             ),
             isDense: true,
-            hintText: 'Type or select auditee names, separated by commas',
+            hintText: 'Type or select the auditee',
             hintStyle: const TextStyle(fontSize: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
@@ -180,6 +183,10 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
               borderSide: const BorderSide(color: primaryThemeColor, width: 1.5),
             ),
           ),
+          onChanged: (val) {
+            final match = _auditeeSuggestions.where((a) => a.displayName == val);
+            _selectedAuditeeId = match.isNotEmpty ? match.first.id : null;
+          },
         );
       },
       optionsViewBuilder: (context, onSelected, options) {
@@ -212,12 +219,6 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     );
   }
 
-  String _currentSegment(String text) {
-    final lastComma = text.lastIndexOf(',');
-    final segment = lastComma == -1 ? text : text.substring(lastComma + 1);
-    return segment.trim();
-  }
-
   Widget _buildHeader(AuditChecklist header) {
     return Padding(
       padding: const EdgeInsets.all(12),
@@ -235,7 +236,6 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 12),
           _headerRow('OFFICE/PROCESS', header.officeProcess),
-          _headerRow('AUDIT SCOPE', header.auditScope),
           _headerRow('AUDITOR/S', header.auditTeamName),
           const SizedBox(height: 8),
           _buildAuditeeCombo(),

@@ -15,10 +15,9 @@ namespace IMIS.Domain
 
         public required DateTime StartDate { get; set; }
         public required DateTime EndDate { get; set; }
+        public required string PlanName { get; set; }
         public IsoAuditor? Preparer { get; set; }
 
-        public int AuditStatusId { get; set; } = AuditStatusSeedIds.Draft;
-        public AuditPlanStatus? AuditStatus {get; set;}
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? LastModifiedDate { get; set; }
 
@@ -26,10 +25,14 @@ namespace IMIS.Domain
         public AuditProgramme? AuditProgramme { get; set; }
 
         public ICollection<AuditPlanEntry> Entries { get; set; } = new List<AuditPlanEntry>();
-        public ICollection<AuditPlanApproval> Approvals { get; set; } = new List<AuditPlanApproval>();
 
         // Fix: schedules that belong to this plan
         public ICollection<AuditSchedule> AuditSchedules { get; set; } = new List<AuditSchedule>();
+
+        /// <summary>
+        /// IQA Signatory records for this audit plan (approval workflow)
+        /// </summary>
+        public ICollection<IQASignatory> IQASignatories { get; set; } = new List<IQASignatory>();
 
         // Fix: pushes this plan's date range onto every linked schedule.
         // Call this in the save flow before SaveChangesAsync.

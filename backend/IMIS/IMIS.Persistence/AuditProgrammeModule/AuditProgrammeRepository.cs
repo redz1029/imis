@@ -21,13 +21,8 @@ namespace IMIS.Persistence.AuditProgrammeModule
         /// </summary>
         public async Task<AuditProgramme?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await GetDbContext().Set<AuditProgramme>()
-                .AsSplitQuery() // Prevent Cartesian explosion on multi-level includes
-                .Include(ap => ap.AuditStatus)
-                .Include(ap => ap.StatusHistory.OrderBy(h => h.ChangedDate))
-                    .ThenInclude(h => h.AuditStatus)
-                .Include(ap => ap.Approvals.Where(a => !a.IsDeleted))
-                    .ThenInclude(a => a.Approver)
+            return await WithSignatories(GetDbContext().Set<AuditProgramme>()
+                .AsSplitQuery()) // Prevent Cartesian explosion on multi-level includes
                 .Include(ap => ap.Objectives.Where(o => !o.IsDeleted))
                 .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
                     .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
@@ -79,7 +74,11 @@ namespace IMIS.Persistence.AuditProgrammeModule
                 .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken)
                 .ConfigureAwait(false);
         }
-
+        private static IQueryable<AuditProgramme> WithSignatories(IQueryable<AuditProgramme> query) => query
+    .Include(ap => ap.IQASignatories.Where(s => !s.IsDeleted))
+        .ThenInclude(s => s.Signatory)
+    .Include(ap => ap.IQASignatories.Where(s => !s.IsDeleted))
+        .ThenInclude(s => s.IQASignatoryTemplate);
         /// <summary>
         /// Retrieves all Audit Programmes along with their full child entity
         /// graph. StatusHistory/Approvals are a detail-view concern, not
@@ -87,13 +86,12 @@ namespace IMIS.Persistence.AuditProgrammeModule
         /// </summary>
         public async Task<IEnumerable<AuditProgramme>> GetAllAsync(CancellationToken cancellationToken)
         {
-            return await _entities
-                .AsNoTracking()
-                .AsSplitQuery()
-                .Where(x => !x.IsDeleted)
-                .Include(ap => ap.AuditStatus)
-                .Include(ap => ap.Objectives.Where(o => !o.IsDeleted))
-                .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
+            return await WithSignatories(_entities
+                    .AsNoTracking()
+                    .AsSplitQuery()
+                    .Where(x => !x.IsDeleted))
+                    .Include(ap => ap.Objectives.Where(o => !o.IsDeleted))
+                    .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
                     .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
                         .ThenInclude(e => e.AuditPlanProcesses.Where(app => !app.IsDeleted))
                             .ThenInclude(app => app.Office)
@@ -136,10 +134,9 @@ namespace IMIS.Persistence.AuditProgrammeModule
         /// </summary>
         public async Task<EntityPageList<AuditProgramme, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var query = _entities.AsNoTracking()
-                .Include(x => x.AuditStatus)
+            var query = WithSignatories(_entities.AsNoTracking())
                 .Include(x => x.Objectives.Where(o => !o.IsDeleted))
-                .Where(x => !x.IsDeleted);
+                        .Where(x => !x.IsDeleted);
 
             return await EntityPageList<AuditProgramme, int>
                 .CreateAsync(query, page, pageSize, cancellationToken)

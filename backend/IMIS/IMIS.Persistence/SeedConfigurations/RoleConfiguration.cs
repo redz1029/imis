@@ -17,6 +17,8 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     NormalizedName = "ADMINISTRATOR",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                 },
+
+
                 new IdentityRole
                 {
                     Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
@@ -156,7 +158,36 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     Name = new PgsEvaluatorRole().Name,
                     NormalizedName = "EVALUATOR",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e604ff",
+                    Name = new QMR().Name,
+                    NormalizedName = "QMR",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e634ff",
+                    Name = new LeadAuditor().Name  ,
+                    NormalizedName = "LEAD AUDITOR",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e634hh",
+                    Name = new AuditorTeamLeader().Name,
+                    NormalizedName = "AUDITOR TEAM LEADER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e634ii",
+                    Name = new DepartmentHead().Name,
+                    NormalizedName = "DEPARTMENT HEAD",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
                 }
+
         );
     }
 }

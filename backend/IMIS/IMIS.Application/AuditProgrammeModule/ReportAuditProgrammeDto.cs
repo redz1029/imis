@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using IMIS.Application.IQASignatoryModule;
 using Base.Primitives;
 using IMIS.Domain;
 
@@ -77,8 +78,8 @@ namespace IMIS.Application.AuditProgrammeModule
                     {
                         Id = plan.Id,
                         StartDate = plan.StartDate,
-                        EndDate = plan.EndDate,
-                        PlanStatus = plan.AuditStatus?.Name ?? "Draft",   // was: plan.PlanStatus ?? "Draft"
+                        EndDate = plan.EndDate,  // was: plan.PlanStatus ?? "Draft"
+                        PlanStatus = IQAApprovalWorkflow.StateName(IQAApprovalWorkflow.DeriveStateCode(plan.IQASignatories)),
                         BatchIndexString = batchCounter.ToString(),
                         BatchFormattedDates = FormatBatchDateRange(plan.StartDate, plan.EndDate),
                         Entries = new List<ReportScheduleEntryDto>()

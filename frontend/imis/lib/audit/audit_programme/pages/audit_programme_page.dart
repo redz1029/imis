@@ -16,15 +16,9 @@ class AuditPlanEntryRow {
   int? id;
   int dayNumber;
 
-  // "Organizational Unit and Processes" — editable combo box:
-  // - selectedOfficeId is set when the typed text matches a known office
-  //   exactly (or the user picked one from the suggestion list).
-  // - officeText always holds whatever is currently in the box (free text
-  //   allowed).
   int? selectedOfficeId;
   String officeText;
 
-  // "Standard Chapter" — multi-select: a list of ISO standard IDs.
   List<int> selectedIsoStandardIds;
 
   int? selectedTeamId;
@@ -99,8 +93,6 @@ class AuditPlanEntryRow {
     );
   }
 
-  /// [dayDate] is the day group's date — sent as-is (no time-of-day
-  /// component) as the backend's 'time' field for this entry.
   Map<String, dynamic> toBackendDtoJson(
     int auditPlanId, {
     required DateTime dayDate,
@@ -220,6 +212,10 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     text:
         'Preparation and submission for approval of the ISO Internal Quality Audit Programme.',
   );
+  // FIX: added, was declared but never disposed/loaded/shown/sent.
+  final TextEditingController _planNameController = TextEditingController(
+    text: 'ISO Internal Quality Audit Plan',
+  );
   final TextEditingController
   _internalAuditSchedController = TextEditingController(
     text:
@@ -273,15 +269,11 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
   final List<AuditPlanEntryRow> _entries = [];
 
-  // The existing AuditPlan's own id when editing — must be preserved on save,
-  // otherwise the backend treats every save as a brand new plan.
   int? _existingAuditPlanId;
   int _existingAuditStatusId = AuditStatusSeedIds.draft;
-String _existingRowVersion = '';
-bool _existingIsDeleted = false;
+  String _existingRowVersion = '';
+  bool _existingIsDeleted = false;
 
-  // One date per day number, e.g. {1: May 20 2025, 2: May 21 2025} — this is
-  // what renders in each "DAY N — <date>" banner.
   final Map<int, DateTime> _dayDates = {};
 
   List<OfficeDto> _offices = [];
@@ -302,6 +294,8 @@ bool _existingIsDeleted = false;
     _forController.dispose();
     _fromController.dispose();
     _purposeController.dispose();
+    // FIX: was missing — leaked this controller on every close.
+    _planNameController.dispose();
     _internalAuditSchedController.dispose();
     _auditPlanObjectiveController.dispose();
     _scopeOfAuditController.dispose();
@@ -314,7 +308,6 @@ bool _existingIsDeleted = false;
     _verificationController.dispose();
     _limitationsController.dispose();
 
-    
     for (final entry in _entries) {
       entry.dispose();
     }
@@ -342,9 +335,9 @@ bool _existingIsDeleted = false;
         if (programme != null) {
           final jsonMap = programme.toJson();
 
-            _existingAuditStatusId = programme.auditStatusId;
-  _existingRowVersion = programme.rowVersion;
-  _existingIsDeleted = programme.isDeleted;
+          _existingAuditStatusId = programme.auditStatusId;
+          _existingRowVersion = programme.rowVersion;
+          _existingIsDeleted = programme.isDeleted;
 
           _forController.text = jsonMap['for'] ?? jsonMap['For'] ?? '';
           _fromController.text = jsonMap['from'] ?? jsonMap['From'] ?? '';
@@ -405,15 +398,22 @@ bool _existingIsDeleted = false;
           for (var plan in auditPlans) {
             _existingAuditPlanId ??= (plan['id'] ?? plan['Id']) as int?;
 
+            // FIX: was missing — PlanName is `required` on AuditPlanDto;
+            // without loading it back, editing an existing programme and
+            // saving again would send an empty string, which is valid JSON
+            // but silently blanks out the real plan name server-side.
+            final loadedPlanName = plan['planName'] ?? plan['PlanName'];
+            if (loadedPlanName != null &&
+                (loadedPlanName as String).isNotEmpty) {
+              _planNameController.text = loadedPlanName;
+            }
+
             final entriesList =
                 plan['entries'] as List? ?? plan['Entries'] as List? ?? [];
             for (var entryJson in entriesList) {
               final row = AuditPlanEntryRow.fromJson(entryJson);
               _entries.add(row);
 
-              // Derive this day's banner date from the first entry seen for
-              // that day (its 'time' field carries the date, even though
-              // there is no time-of-day component anymore).
               if (!_dayDates.containsKey(row.dayNumber)) {
                 final rawTime = entryJson['time'] ?? entryJson['Time'];
                 final parsed = rawTime != null
@@ -484,8 +484,6 @@ bool _existingIsDeleted = false;
       ? 1
       : (_dayDates.keys.reduce((a, b) => a > b ? a : b) + 1);
 
-  /// Adds a brand-new day banner (defaults to the day after the latest
-  /// existing day) with one blank entry row under it.
   void _addDay() {
     setState(() {
       final day = _nextDayNumber;
@@ -497,7 +495,6 @@ bool _existingIsDeleted = false;
     });
   }
 
-  /// Adds another entry row under an existing day.
   void _addRowToDay(int day) {
     setState(() {
       _entries.add(AuditPlanEntryRow(dayNumber: day));
@@ -511,8 +508,6 @@ bool _existingIsDeleted = false;
     });
   }
 
-  /// Removes an entire day and every entry under it. Disabled when it's the
-  /// only remaining day.
   void _removeDay(int day) {
     setState(() {
       final toRemove = _entries.where((e) => e.dayNumber == day).toList();
@@ -633,8 +628,6 @@ bool _existingIsDeleted = false;
             ),
           ),
           const SizedBox(width: 8),
-          // A new programme is always created as Draft; only an existing
-          // (edited) one can be Submitted for approval.
           if (isEdit)
             OutlinedButton(
               onPressed: _isSaving
@@ -713,7 +706,6 @@ bool _existingIsDeleted = false;
 
     if (confirmed != true) return;
 
-    // The plan's StartDate/EndDate span every day that currently has entries.
     final allDates = _dayDates.values.toList()..sort();
     final startDate = allDates.isNotEmpty ? allDates.first : DateTime.now();
     final endDate = allDates.isNotEmpty
@@ -749,23 +741,25 @@ bool _existingIsDeleted = false;
       'verificationOfPreviousNonconformities': _verificationController.text,
       'auditLimitations': _limitationsController.text,
       'auditPlan': [
-  {
-    'id': _existingAuditPlanId ?? 0,
-    'auditProgrammeId': widget.programmeId ?? 0,
-    'startDate': startDate.toIso8601String(),
-    'endDate': endDate.toIso8601String(),
-    // AuditStatusId is never set by the client — AuditPlan defaults to
-    // Draft server-side and only changes via the submit/decide endpoints.
-    'entries': _entries
-        .map(
-          (e) => e.toBackendDtoJson(
-            _existingAuditPlanId ?? 0,
-            dayDate: _dayDates[e.dayNumber] ?? DateTime.now(),
-          ),
-        )
-        .toList(),
-  },
-],
+        {
+          'id': _existingAuditPlanId ?? 0,
+          'auditProgrammeId': widget.programmeId ?? 0,
+          // FIX: was missing — AuditPlanDto.PlanName is `required`; every
+          // save was crashing the backend with a 400 JsonException before
+          // this field existed on the payload.
+          'planName': _planNameController.text,
+          'startDate': startDate.toIso8601String(),
+          'endDate': endDate.toIso8601String(),
+          'entries': _entries
+              .map(
+                (e) => e.toBackendDtoJson(
+                  _existingAuditPlanId ?? 0,
+                  dayDate: _dayDates[e.dayNumber] ?? DateTime.now(),
+                ),
+              )
+              .toList(),
+        },
+      ],
     };
 
     setState(() => _isSaving = true);
@@ -773,8 +767,6 @@ bool _existingIsDeleted = false;
       final programme = AuditProgramme.fromJson(payload);
       await _service.addOrUpdateAuditProgramme(programme);
 
-      // Status only ever moves via the dedicated submit endpoint — the
-      // regular save above never carries a status change.
       if (!isDraft && widget.programmeId != null) {
         await _service.submitAuditProgramme(widget.programmeId!);
       }
@@ -837,141 +829,155 @@ bool _existingIsDeleted = false;
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             _buildCard(
-                      title: 'PROGRAMME HEADER',
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _forController,
-                                  decoration: _inputDecoration('FOR'),
-                                ),
+                              title: 'PROGRAMME HEADER',
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextFormField(
+                                          controller: _forController,
+                                          decoration: _inputDecoration('FOR'),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: TextFormField(
+                                          controller: _fromController,
+                                          decoration: _inputDecoration('FROM'),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextFormField(
+                                    controller: _purposeController,
+                                    maxLines: 2,
+                                    decoration: _inputDecoration('PURPOSE'),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // FIX: was missing — no UI control ever
+                                  // existed for the plan's required name.
+                                  TextFormField(
+                                    controller: _planNameController,
+                                    decoration: _inputDecoration('PLAN NAME'),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _fromController,
-                                  decoration: _inputDecoration('FROM'),
-                                ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            _buildCard(
+                              title:
+                                  'I. OBJECTIVES & II. SCOPE AND FREQUENCY OF AUDIT',
+                              child: Column(
+                                children: [
+                                  TextFormField(
+                                    controller: _objectivesController,
+                                    maxLines: 4,
+                                    decoration: _inputDecoration(
+                                      'I. OBJECTIVES',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextFormField(
+                                    controller: _scopeController,
+                                    maxLines: 3,
+                                    decoration: _inputDecoration(
+                                      'II. SCOPE AND FREQUENCY OF AUDIT',
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _purposeController,
-                            maxLines: 2,
-                            decoration: _inputDecoration('PURPOSE'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                            ),
+                            const SizedBox(height: 16),
 
-                    _buildCard(
-                      title: 'I. OBJECTIVES & II. SCOPE AND FREQUENCY OF AUDIT',
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _objectivesController,
-                            maxLines: 4,
-                            decoration: _inputDecoration('I. OBJECTIVES'),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _scopeController,
-                            maxLines: 3,
-                            decoration: _inputDecoration(
-                              'II. SCOPE AND FREQUENCY OF AUDIT',
+                            AuditPlanEntriesSection(
+                              internalAuditSchedController:
+                                  _internalAuditSchedController,
+                              auditPlanObjectiveController:
+                                  _auditPlanObjectiveController,
+                              scopeOfAuditController: _scopeOfAuditController,
+                              entries: _entries,
+                              dayDates: _dayDates,
+                              offices: _offices,
+                              standards: _standards,
+                              teams: _teams,
+                              onAddDay: _addDay,
+                              onAddRowToDay: _addRowToDay,
+                              onRemoveEntry: _removeEntry,
+                              onRemoveDay: _removeDay,
+                              onPickDayDate: _pickDayDate,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                    // III. Internal Audit Schedule (narrative) + day-grouped entries
-                    AuditPlanEntriesSection(
-                      internalAuditSchedController:
-                          _internalAuditSchedController,
-                      auditPlanObjectiveController:
-                          _auditPlanObjectiveController,
-                      scopeOfAuditController: _scopeOfAuditController,
-                      entries: _entries,
-                      dayDates: _dayDates,
-                      offices: _offices,
-                      standards: _standards,
-                      teams: _teams,
-                      onAddDay: _addDay,
-                      onAddRowToDay: _addRowToDay,
-                      onRemoveEntry: _removeEntry,
-                      onRemoveDay: _removeDay,
-                      onPickDayDate: _pickDayDate,
-                    ),
-                    const SizedBox(height: 16),
-
-                    _buildCard(
-                      title: 'IV - IX. AUDIT SPECIFICATIONS & PROCEDURES',
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _criteriaController,
-                            maxLines: 4,
-                            decoration: _inputDecoration('IV. AUDIT CRITERIA'),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _methodologyController,
-                            maxLines: 4,
-                            decoration: _inputDecoration(
-                              'V. AUDIT METHODOLOGY',
+                            _buildCard(
+                              title:
+                                  'IV - IX. AUDIT SPECIFICATIONS & PROCEDURES',
+                              child: Column(
+                                children: [
+                                  TextFormField(
+                                    controller: _criteriaController,
+                                    maxLines: 4,
+                                    decoration: _inputDecoration(
+                                      'IV. AUDIT CRITERIA',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextFormField(
+                                    controller: _methodologyController,
+                                    maxLines: 4,
+                                    decoration: _inputDecoration(
+                                      'V. AUDIT METHODOLOGY',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextFormField(
+                                    controller: _auditorSelectionController,
+                                    maxLines: 2,
+                                    decoration: _inputDecoration(
+                                      'VI. SELECTION AND EVALUATION OF AUDITORS',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextFormField(
+                                    controller: _reportingController,
+                                    maxLines: 2,
+                                    decoration: _inputDecoration(
+                                      'VII. REPORTING',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextFormField(
+                                    controller: _verificationController,
+                                    maxLines: 2,
+                                    decoration: _inputDecoration(
+                                      'VIII. VERIFICATION OF PREVIOUS NONCONFORMITIES / FOLLOW UP ACTIONS',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextFormField(
+                                    controller: _limitationsController,
+                                    maxLines: 3,
+                                    decoration: _inputDecoration(
+                                      'IX. AUDIT LIMITATIONS',
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _auditorSelectionController,
-                            maxLines: 2,
-                            decoration: _inputDecoration(
-                              'VI. SELECTION AND EVALUATION OF AUDITORS',
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _reportingController,
-                            maxLines: 2,
-                            decoration: _inputDecoration('VII. REPORTING'),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _verificationController,
-                            maxLines: 2,
-                            decoration: _inputDecoration(
-                              'VIII. VERIFICATION OF PREVIOUS NONCONFORMITIES / FOLLOW UP ACTIONS',
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _limitationsController,
-                            maxLines: 3,
-                            decoration: _inputDecoration(
-                              'IX. AUDIT LIMITATIONS',
-                            ),
-                          ),
-                        ],
+                            const SizedBox(height: 24),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
               ),
-            ),
-            _buildFooter(),
-          ],
+              _buildFooter(),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildCard({required String title, required Widget child}) {
     return Container(
@@ -1013,9 +1019,7 @@ bool _existingIsDeleted = false;
 }
 
 // =============================================================================
-// 3. AUDIT PLAN ENTRIES SECTION — grouped by Day, each with its own banner
-//    date (matching the printed "DAY 1 — MAY 20, 2025" layout) and its own
-//    Add Row button.
+// 3. AUDIT PLAN ENTRIES SECTION
 // =============================================================================
 
 class AuditPlanEntriesSection extends StatefulWidget {
@@ -1256,7 +1260,6 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
 
   @override
   Widget build(BuildContext context) {
-    // Group entries by dayNumber, preserving/sorting day order.
     final Map<int, List<AuditPlanEntryRow>> grouped = {};
     for (final e in widget.entries) {
       grouped.putIfAbsent(e.dayNumber, () => []).add(e);
@@ -1362,9 +1365,6 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
     );
   }
 
-  /// One "DAY N — DATE" banner (tap the date to change it) followed by that
-  /// day's entry rows and its own "Add Row" button — matches the printed
-  /// document's DAY 1 / DAY 2 / DAY 3 grouping.
   Widget _buildDayGroup(int day, List<AuditPlanEntryRow> dayEntries) {
     final date = widget.dayDates[day] ?? DateTime.now();
 
@@ -1373,7 +1373,6 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Day banner — mirrors "DAY 1 – MAY 20, 2025" from the printed doc.
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(

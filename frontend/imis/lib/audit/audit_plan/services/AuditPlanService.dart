@@ -173,6 +173,63 @@ class AuditPlanService {
       rethrow;
     }
   }
+    /// Sends [payload] exactly as built — bypassing AuditPlan.fromJson() /
+  /// toJson()'s DateTimeConverter round-trip entirely. The ISO8601 'time'
+  /// strings AuditPlanEntryRow.toBackendDtoJson() builds (with the picked
+  /// hour/minute already baked in) reach the backend byte-for-byte this
+  /// way, instead of being re-parsed and re-serialized by a converter whose
+  /// exact time-of-day handling hasn't been confirmed.
+  Future<Map<String, dynamic>> saveAuditPlanRaw(
+    Map<String, dynamic> payload,
+  ) async {
+    final id = (payload['id'] ?? 0) as int;
+    final bool isUpdate = id > 0;
+    final url = isUpdate ? '$_auditPlanBaseUrl/$id' : _auditPlanBaseUrl;
+
+    try {
+      final response = isUpdate
+          ? await AuthenticatedRequest.put(_dio, url, data: payload)
+          : await AuthenticatedRequest.post(_dio, url, data: payload);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw Exception(
+          isUpdate
+              ? 'Failed to update Audit Plan'
+              : 'Failed to create Audit Plan',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) {
+        final data = e.response?.data;
+        debugPrint('ASP.NET Validation Error Payload: $data');
+
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('Errors') && data['Errors'] is List) {
+            final List errors = data['Errors'];
+            throw Exception(errors.join('\n'));
+          } else if (data.containsKey('errors') && data['errors'] is Map) {
+            final Map errorsMap = data['errors'];
+            final List<String> messages = [];
+            errorsMap.forEach((_, value) {
+              if (value is List) {
+                messages.addAll(value.map((e) => e.toString()));
+              }
+            });
+            throw Exception(messages.join('\n'));
+          } else if (data.containsKey('message')) {
+            throw Exception(data['message'].toString());
+          }
+        } else if (data is String) {
+          throw Exception(data);
+        }
+      }
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
   
 
   /// Fetch a single Audit Plan by its own id — GET /auditPlan/{id}. Assumed

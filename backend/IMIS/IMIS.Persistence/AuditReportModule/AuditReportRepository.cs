@@ -51,5 +51,20 @@ namespace IMIS.Persistence.AuditReportModule
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<IEnumerable<AuditReport>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<AuditReport>()
+                .Include(x => x.OfficeAudited)
+                .Include(x => x.AuditStandardISO)
+                .Include(x => x.Auditee)
+                .Include(x => x.AuditPlanEntry)
+                .Include(x => x.AuditComFindings)
+                .Include(x => x.AuditScope)
+                .Include(x => x.AuditSummaryFIndings)
+                .Where(x => x.AuditScheduleId == auditScheduleId && !x.IsDeleted)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

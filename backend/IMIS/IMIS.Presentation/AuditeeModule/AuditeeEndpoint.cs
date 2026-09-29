@@ -13,17 +13,14 @@ namespace IMIS.Presentation.AuditeeModule
     {
         private const string _Auditee = "Auditee";
 
-        public AuditeeEndpoint() : base("Auditee")
+        public AuditeeEndpoint() : base("/auditee")
         {
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("Auditee")
-                           .WithTags(_Auditee);
-
-            // CREATE / UPDATE//
-            group.MapPost("/", async ([FromBody] AuditeeDto dto, IAuditeeService service, IOutputCacheStore cache, CancellationToken ct) =>
+            // CREATE / UPDATE
+            app.MapPost("/", async ([FromBody] AuditeeDto dto, IAuditeeService service, IOutputCacheStore cache, CancellationToken ct) =>
             {
                 if (dto == null) return Results.BadRequest("Request body is required.");
 
@@ -31,18 +28,20 @@ namespace IMIS.Presentation.AuditeeModule
                 await cache.EvictByTagAsync(_Auditee, ct).ConfigureAwait(false);
 
                 return Results.Ok(new { message = "Auditee saved successfully." });
-            });
+            })
+            .WithTags(_Auditee);
 
             // GET ALL
-            group.MapGet("/", async (IAuditeeService service, CancellationToken ct) =>
+            app.MapGet("/", async (IAuditeeService service, CancellationToken ct) =>
             {
                 var result = await service.GetAll(ct).ConfigureAwait(false);
                 return result is not null && result.Any() ? Results.Ok(result) : Results.NoContent();
             })
+            .WithTags(_Auditee)
             .CacheOutput(b => b.Expire(TimeSpan.FromMinutes(2)).Tag(_Auditee));
 
             // GET PAGINATED
-            group.MapGet("/paginated", async ([FromQuery] int page, [FromQuery] int pageSize, IAuditeeService service, CancellationToken ct) =>
+            app.MapGet("/paginated", async ([FromQuery] int page, [FromQuery] int pageSize, IAuditeeService service, CancellationToken ct) =>
             {
                 if (page <= 0 || pageSize <= 0)
                     return Results.BadRequest("Page parameters must be positive.");
@@ -50,25 +49,28 @@ namespace IMIS.Presentation.AuditeeModule
                 var result = await service.GetPaginatedAsync(page, pageSize, ct).ConfigureAwait(false);
                 return result is not null ? Results.Ok(result) : Results.NoContent();
             })
+            .WithTags(_Auditee)
             .CacheOutput(b => b.Expire(TimeSpan.FromMinutes(2)).Tag(_Auditee));
 
             // GET BY ID
-            group.MapGet("/{id:int}", async (int id, IAuditeeService service, CancellationToken ct) =>
+            app.MapGet("/{id:int}", async (int id, IAuditeeService service, CancellationToken ct) =>
             {
                 var result = await service.GetByIdAsync(id, ct).ConfigureAwait(false);
                 return result is not null ? Results.Ok(result) : Results.NotFound();
             })
+            .WithTags(_Auditee)
             .CacheOutput(b => b.Expire(TimeSpan.FromMinutes(2)).Tag(_Auditee));
 
             // SOFT DELETE
-            group.MapDelete("/{id:int}", async (int id, IAuditeeService service, IOutputCacheStore cache, CancellationToken ct) =>
+            app.MapDelete("/{id:int}", async (int id, IAuditeeService service, IOutputCacheStore cache, CancellationToken ct) =>
             {
                 var success = await service.SoftDeleteAsync(id, ct).ConfigureAwait(false);
                 if (!success) return Results.NotFound(new { message = "Auditee not found." });
 
                 await cache.EvictByTagAsync(_Auditee, ct).ConfigureAwait(false);
                 return Results.Ok(new { message = "Auditee deleted successfully." });
-            });
+            })
+            .WithTags(_Auditee);
         }
     }
 }

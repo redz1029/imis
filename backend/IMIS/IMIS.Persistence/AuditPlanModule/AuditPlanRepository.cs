@@ -14,21 +14,27 @@ namespace IMIS.Persistence.AuditPlanModule
     {
         public AuditPlanRepository(ImisDbContext dbContext) : base(dbContext) { }
 
+        // Live approval chain (with each signatory's user and template) — the plan's
+        // status is derived from these rows, so every read that builds an
+        // AuditPlanDto must load them.
+        private static IQueryable<AuditPlan> WithSignatories(IQueryable<AuditPlan> query) => query
+            .Include(x => x.IQASignatories.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.Signatory)
+            .Include(x => x.IQASignatories.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.IQASignatoryTemplate);
+
         public override async Task<AuditPlan?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await GetDbContext().Set<AuditPlan>()
-                .Include(x => x.AuditStatus)
+            return await WithSignatories(GetDbContext().Set<AuditPlan>().AsSplitQuery())
                 .Include(x => x.Preparer)
                 .Include(x => x.Entries)
-                .Include(x => x.Approvals)
                 .Include(x => x.AuditSchedules)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
         public async Task<AuditPlan?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
-            return await GetDbContext().Set<AuditPlan>()
-                .Include(x => x.AuditStatus)
+            return await WithSignatories(GetDbContext().Set<AuditPlan>().AsSplitQuery())
                 .Include(x => x.Preparer)
                 .Include(x => x.Entries)
                     .ThenInclude(e => e.IsoAuditors)
@@ -42,9 +48,6 @@ namespace IMIS.Persistence.AuditPlanModule
                     .ThenInclude(e => e.AuditPlanProcesses)
                         .ThenInclude(app => app.Office)
                             .ThenInclude(o => o!.ParentOffice)
-                .Include(x => x.Approvals)
-                    .Include(x => x.Approvals)
-    .ThenInclude(a => a.Approver)
                 .Include(x => x.AuditSchedules)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
@@ -52,18 +55,14 @@ namespace IMIS.Persistence.AuditPlanModule
         public async Task<AuditPlan?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await GetDbContext().Set<AuditPlan>()
-                .Include(x => x.AuditStatus)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
         public async Task<IEnumerable<AuditPlan>> GetAllAsync(CancellationToken cancellationToken)
         {
-            return await _entities
-                .AsNoTracking()
-                .Include(x => x.AuditStatus)
+            return await WithSignatories(_entities.AsNoTracking().AsSplitQuery())
                 .Include(x => x.Preparer)
                 .Include(x => x.Entries)
-                .Include(x => x.Approvals)
                 .Include(x => x.AuditSchedules)
                 .ToListAsync(cancellationToken);
         }
@@ -72,7 +71,7 @@ namespace IMIS.Persistence.AuditPlanModule
         {
             return await EntityPageList<AuditPlan, int>
                 .CreateAsync(
-                    _entities.AsNoTracking().Include(x => x.AuditStatus),
+                    WithSignatories(_entities.AsNoTracking()),
                     page, pageSize, cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -85,14 +84,6 @@ namespace IMIS.Persistence.AuditPlanModule
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<int>> GetExistingAuditPlanApprovalIdsAsync(int auditPlanId, CancellationToken cancellationToken)
-        {
-            return await GetDbContext().Set<AuditPlanApproval>()
-                .Where(x => x.AuditPlanId == auditPlanId)
-                .Select(x => x.Id)
-                .ToListAsync(cancellationToken);
-        }
-
         public async Task AddAuditPlanEntriesAsync(List<AuditPlanEntry> entries, CancellationToken cancellationToken)
         {
             var context = GetDbContext();
@@ -100,23 +91,10 @@ namespace IMIS.Persistence.AuditPlanModule
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task AddAuditPlanApprovalsAsync(List<AuditPlanApproval> approvals, CancellationToken cancellationToken)
-        {
-            var context = GetDbContext();
-            await context.Set<AuditPlanApproval>().AddRangeAsync(approvals, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
-        }
-
         public void RemoveAuditPlanEntries(List<AuditPlanEntry> entries)
         {
             if (entries == null || !entries.Any()) return;
             GetDbContext().Set<AuditPlanEntry>().RemoveRange(entries);
-        }
-
-        public void RemoveAuditPlanApprovals(List<AuditPlanApproval> approvals)
-        {
-            if (approvals == null || !approvals.Any()) return;
-            GetDbContext().Set<AuditPlanApproval>().RemoveRange(approvals);
         }
     }
 }

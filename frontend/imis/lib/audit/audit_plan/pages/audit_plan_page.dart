@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:imis/audit/audit_plan/models/audit_plan.dart';
 import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/common_services/common_service.dart';
@@ -127,7 +126,10 @@ class AuditPlanEntryRow {
     );
   }
 
-  factory AuditPlanEntryRow.fromJson(Map<String, dynamic> json) {
+    factory AuditPlanEntryRow.fromJson(
+    Map<String, dynamic> json, {
+    required List<IsoStandardDto> allStandards,
+  }) {
     int? officeId;
     String officeName = '';
     final processes = json['auditPlanProcesses'] ?? json['AuditPlanProcesses'];
@@ -141,9 +143,12 @@ class AuditPlanEntryRow {
       officeName = rawName?.toString() ?? '';
     }
 
-    // Prefer the new free-typed 'standardText' field. Fall back to
-    // reconstructing it from any legacy isoStandardAuditPlans payload so
-    // older saved records still display something sensible.
+    // FIX: the backend returns each isoStandardAuditPlans item as a bare
+    // {isoStandardId, ...} with no nested isoStandard/clauseRef object, so
+    // the old lookup (clauseRef / isoStandard.clauseRef) never matched
+    // anything and standardText always came back empty. Resolve the bare
+    // id against the master standards list instead — same join
+    // fromProgrammeEntry() already does correctly.
     String standardText = (json['standardText'] ?? json['StandardText'] ?? '')
         .toString();
     if (standardText.isEmpty) {
@@ -152,12 +157,29 @@ class AuditPlanEntryRow {
       if (standards != null) {
         final labels = <String>[];
         for (final item in (standards as List)) {
-          final label =
+          // Keep supporting an already-resolved label, in case the backend
+          // ever starts including one.
+          final directLabel =
               item['clauseRef'] ??
               item['ClauseRef'] ??
               item['isoStandard']?['clauseRef'] ??
               item['isoStandard']?['ClauseRef'];
-          if (label != null) labels.add(label.toString());
+          if (directLabel != null) {
+            labels.add(directLabel.toString());
+            continue;
+          }
+
+          final rawId = item['isoStandardId'] ?? item['IsoStandardId'];
+          if (rawId == null) continue;
+          final parsedId =
+              rawId is int ? rawId : int.tryParse(rawId.toString());
+          if (parsedId == null) continue;
+
+          final match = allStandards.where((s) => s.id == parsedId);
+          if (match.isEmpty) continue;
+          final s = match.first;
+          final label = s.clause.isNotEmpty ? s.clause : s.displayLabel;
+          if (label.isNotEmpty) labels.add(label);
         }
         standardText = labels.join(', ');
       }
@@ -546,8 +568,11 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
           final plan = match.first;
           final entriesList =
               (plan['entries'] as List? ?? plan['Entries'] as List? ?? []);
-          for (final e in entriesList) {
-            final row = AuditPlanEntryRow.fromJson(e as Map<String, dynamic>);
+                    for (final e in entriesList) {
+            final row = AuditPlanEntryRow.fromJson(
+              e as Map<String, dynamic>,
+              allStandards: _standards,
+            );
             _entries.add(row);
             _dayDates.putIfAbsent(row.dayNumber, () {
               final rawTime = e['time'] ?? e['Time'];
@@ -920,12 +945,14 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
     final startDate = allDates.isNotEmpty ? allDates.first : DateTime.now();
     final endDate = allDates.isNotEmpty ? allDates.last : DateTime.now();
 
-    final payload = {
+        final payload = {
       'id': widget.auditPlanId ?? 0,
+      'planName': _programmeTitle.isNotEmpty
+          ? '$_programmeTitle - Audit Plan'
+          : 'Audit Plan',
       'auditProgrammeId': _resolvedProgrammeId,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate.toIso8601String(),
-      'planStatus': 'PendingApproval',
       'entries': _entries
           .map(
             (e) => e.toBackendDtoJson(
@@ -936,9 +963,8 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
           .toList(),
     };
 
-    try {
-      final plan = AuditPlan.fromJson(payload);
-      await _auditPlanService.saveAuditPlan(plan);
+        try {
+      await _auditPlanService.saveAuditPlanRaw(payload);
       if (!mounted) return;
       MotionToast.success(
         toastAlignment: Alignment.topCenter,

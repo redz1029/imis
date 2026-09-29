@@ -24,11 +24,14 @@ namespace IMIS.Application.AuditReportModule
         public int? AuditeeId { get; set; }
         public string? AuditeeName { get; set; }
 
-        // New: replaces DateofAuditId — pulls date/office/team through the plan entry
         public int? AuditPlanEntryId { get; set; }
         public DateTime? AuditDate { get; set; }
         public string? PlanOfficeProcess { get; set; }
         public string? PlanAuditTeamName { get; set; }
+
+        // FIX: AuditReport.AuditScheduleId is required on the entity —
+        // ToEntity() must set it or the object initializer fails.
+        public required int AuditScheduleId { get; set; }
 
         public ICollection<AuditComFindingsDto> AuditComFindings { get; set; } = new List<AuditComFindingsDto>();
         public ICollection<AuditScopeDto> AuditScope { get; set; } = new List<AuditScopeDto>();
@@ -44,6 +47,9 @@ namespace IMIS.Application.AuditReportModule
             AuditConclusions = entity.AuditConclisions;
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
+
+            AuditPlanEntryId = entity.AuditPlanEntryId;
+            AuditScheduleId = entity.AuditScheduleId;
 
             if (entity.OfficeAudited != null)
             {
@@ -65,7 +71,6 @@ namespace IMIS.Application.AuditReportModule
 
             if (entity.AuditPlanEntry != null)
             {
-                AuditPlanEntryId = entity.AuditPlanEntry.Id;
                 AuditDate = entity.AuditPlanEntry.Time;
 
                 var processes = entity.AuditPlanEntry.AuditPlanProcesses;
@@ -100,6 +105,8 @@ namespace IMIS.Application.AuditReportModule
                 Id = Id,
                 AuditPurpose = AuditPurpose,
                 AuditConclisions = AuditConclusions,
+                AuditPlanEntryId = AuditPlanEntryId,
+                AuditScheduleId = AuditScheduleId,
                 IsDeleted = IsDeleted,
                 RowVersion = RowVersion,
 

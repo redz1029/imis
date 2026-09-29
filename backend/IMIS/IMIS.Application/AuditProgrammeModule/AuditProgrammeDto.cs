@@ -1,7 +1,6 @@
 ﻿using Base.Primitives;
-using IMIS.Application.AuditPlanApprovalModule;
 using IMIS.Application.AuditPlanModule;
-using IMIS.Application.AuditProgrammeStatusHistoryModule;
+using IMIS.Application.IQASignatoryModule;
 using IMIS.Domain;
 using System;
 using System.Collections.Generic;
@@ -29,16 +28,14 @@ namespace IMIS.Application.AuditProgrammeModule
         public required string VerificationOfPreviousNonconformities { get; set; }
         public required string AuditLimitations { get; set; }
 
-        // Read-only. NEVER mapped in ToEntity() — status only changes
-        // through AuditProgrammeService.SubmitAsync / DecideAsync.
-        public int AuditStatusId { get; set; }
+        // Read-only, derived from the IQA signatory rows (DRAFT / PENDING /
+        // APPROVED / DISAPPROVED). NEVER mapped in ToEntity() — the state only
+        // changes through AuditProgrammeService.SubmitAsync / DecideAsync.
         public string? StatusCode { get; set; }
         public string? StatusName { get; set; }
-        public List<AuditProgrammeStatusHistoryDto> StatusHistory { get; set; } = new();
 
-        // The AuditPlanApproval rows belonging to this programme
-        // (AuditProgrammeId set, AuditPlanId null on each).
-        public List<AuditPlanApprovalDto> Approvals { get; set; } = new();
+        // Live approval chain, in signing order.
+        public List<IQASignatoryDto> Signatories { get; set; } = new();
 
         public List<AuditProgrammeObjectiveDto> Objectives { get; set; } = new();
 
@@ -70,43 +67,15 @@ namespace IMIS.Application.AuditProgrammeModule
             VerificationOfPreviousNonconformities = entity.VerificationOfPreviousNonconformities;
             AuditLimitations = entity.AuditLimitations;
 
-            AuditStatusId = entity.AuditStatusId;
-            StatusCode = entity.AuditStatus?.Code;
-            StatusName = entity.AuditStatus?.Name;
+            // Callers must load IQASignatories (non-deleted) or this reads as Draft.
+            var signatories = IQAApprovalWorkflow.Ordered(entity.IQASignatories);
+            var stateCode = IQAApprovalWorkflow.DeriveStateCode(signatories);
+            StatusCode = stateCode;
+            StatusName = IQAApprovalWorkflow.StateName(stateCode);
+            Signatories = signatories.Select(s => new IQASignatoryDto(s)).ToList();
 
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
-
-            if (entity.StatusHistory != null && entity.StatusHistory.Any())
-            {
-                StatusHistory = entity.StatusHistory
-                    .OrderBy(h => h.ChangedDate)
-                    .Select(h => new AuditProgrammeStatusHistoryDto
-                    {
-                        Id = h.Id,
-                        StatusCode = h.AuditStatus?.Code ?? string.Empty,
-                        StatusName = h.AuditStatus?.Name ?? string.Empty,
-                        ChangedDate = h.ChangedDate,
-                        Remarks = h.Remarks
-                    })
-                    .ToList();
-            }
-
-            if (entity.Approvals != null && entity.Approvals.Any())
-            {
-                Approvals = entity.Approvals
-                    .OrderBy(a => a.Timestamp)
-                    .Select(a => new AuditPlanApprovalDto
-                    {
-                        Id = a.Id,
-                        ApproverId = a.ApproverId,
-                        ApproverName = a.Approver?.UserName,
-                        Action = a.Action,
-                        Timestamp = a.Timestamp,
-                        Comments = a.Comments
-                    })
-                    .ToList();
-            }
 
             if (entity.Objectives != null && entity.Objectives.Any())
             {
@@ -147,8 +116,6 @@ namespace IMIS.Application.AuditProgrammeModule
                 Reporting = Reporting,
                 VerificationOfPreviousNonconformities = VerificationOfPreviousNonconformities,
                 AuditLimitations = AuditLimitations,
-
-                // AuditStatusId intentionally NOT mapped — see SubmitAsync/DecideAsync.
 
                 IsDeleted = IsDeleted,
                 RowVersion = RowVersion,

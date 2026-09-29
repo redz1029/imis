@@ -19,7 +19,8 @@ namespace IMIS.Domain
 
         public ICollection<IsoAuditor>? IsoAuditors { get; set; } 
         public ICollection<IsoStandardAuditPlan>? IsoStandardAuditPlans { get; set; }
-        public ICollection<AuditPlanProcess>? AuditPlanProcesses { get; set; } 
+        public ICollection<AuditPlanProcess>? AuditPlanProcesses { get; set; }
+        public ICollection<AuditSchedule>? AuditSchedules { get; set; }
 
 
     }

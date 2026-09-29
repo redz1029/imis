@@ -2,6 +2,7 @@
 using Base.Primitives;
 using IMIS.Application.AuditPlanModule;
 using IMIS.Application.AuditProgrammeModule;
+using IMIS.Application.IQASignatoryModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -20,17 +21,6 @@ namespace IMIS.Application.AuditPlanModule
         {
             _repository = repository;
         }
-
-        // ------------------------------------------------------------------ //
-        //  Transition table — mirrors AuditProgrammeService exactly.          //
-        // ------------------------------------------------------------------ //
-        private static readonly Dictionary<string, string[]> _allowedTransitions = new()
-        {
-            [AuditStatusCodes.Draft] = new[] { AuditStatusCodes.Pending },
-            [AuditStatusCodes.Pending] = new[] { AuditStatusCodes.Approved, AuditStatusCodes.Disapproved },
-            [AuditStatusCodes.Disapproved] = new[] { AuditStatusCodes.Draft },
-            [AuditStatusCodes.Approved] = Array.Empty<string>(),
-        };
 
         // ------------------------------------------------------------------ //
         //  Save / Update                                                       //
@@ -54,8 +44,7 @@ namespace IMIS.Application.AuditPlanModule
 
             if (entity.Id == 0)
             {
-                // BRAND NEW — always Draft, stated explicitly so it can't drift.
-                entity.AuditStatusId = AuditStatusSeedIds.Draft;
+                // New plan: no signatory rows yet, which IS the Draft state.
                 entity.CreatedDate = DateTime.UtcNow;
 
                 // Push StartDate/EndDate onto any schedules in the same payload
@@ -64,6 +53,12 @@ namespace IMIS.Application.AuditPlanModule
 
                 dbContext.Add(entity);
                 await dbContext.SaveChangesAsync(cancellationToken);
+
+                // ToEntity() builds a separate object graph; hand the generated id
+                // back to the caller's dto (the POST endpoint echoes it).
+                aDto.Id = entity.Id;
+                aDto.StatusCode = IQAApprovalWorkflow.StateCodes.Draft;
+                aDto.StatusName = IQAApprovalWorkflow.StateName(IQAApprovalWorkflow.StateCodes.Draft);
             }
             else
             {
@@ -71,36 +66,13 @@ namespace IMIS.Application.AuditPlanModule
                 var existing = await _repository.GetByIdWithDetailsAsync(entity.Id, cancellationToken);
                 if (existing == null) throw new KeyNotFoundException("Audit Plan not found.");
 
-                // FIX: preserve status — SetValues would otherwise overwrite the
-                // real status with the DTO's default, silently reverting a
-                // Pending/Approved plan back to Draft on every ordinary edit.
-                var preservedStatusId = existing.AuditStatusId;
+                // SetValues copies every scalar from the freshly built entity,
+                // including CreatedDate (whatever the client sent). Preserve the real one.
+                var preservedCreatedDate = existing.CreatedDate;
 
                 dbContext.Entry(existing).CurrentValues.SetValues(entity);
-                existing.AuditStatusId = preservedStatusId;
+                existing.CreatedDate = preservedCreatedDate;
                 existing.LastModifiedDate = DateTime.UtcNow;
-
-                // --- Sync Approvals ---
-                existing.Approvals ??= new List<AuditPlanApproval>();
-                entity.Approvals ??= new List<AuditPlanApproval>();
-
-                var approvalsToRemove = existing.Approvals
-                    .Where(ea => !entity.Approvals.Any(ia => ia.Id == ea.Id && ea.Id != 0))
-                    .ToList();
-                foreach (var approval in approvalsToRemove)
-                {
-                    existing.Approvals.Remove(approval);
-                    dbContext.Set<AuditPlanApproval>().Remove(approval);
-                }
-                foreach (var incomingApproval in entity.Approvals)
-                {
-                    var existingApproval = existing.Approvals
-                        .FirstOrDefault(ea => ea.Id == incomingApproval.Id && ea.Id != 0);
-                    if (existingApproval == null)
-                        existing.Approvals.Add(incomingApproval);
-                    else
-                        dbContext.Entry(existingApproval).CurrentValues.SetValues(incomingApproval);
-                }
 
                 // --- Sync AuditSchedules ---
                 existing.AuditSchedules ??= new List<AuditSchedule>();
@@ -166,43 +138,72 @@ namespace IMIS.Application.AuditPlanModule
         }
 
         // ------------------------------------------------------------------ //
-        //  Status transition                                                   //
+        //  Approval workflow (IQA signatories)                                 //
         // ------------------------------------------------------------------ //
 
-        public async Task<(bool Success, string? Error)> ChangeStatusAsync(
-            int id,
-            string newStatusCode,
-            string? remarks,
-            CancellationToken cancellationToken)
+        public async Task<(bool Success, string? Error)> SubmitAsync(int id, CancellationToken cancellationToken)
         {
             var dbContext = _repository.GetDbContext();
 
             var entity = await dbContext.Set<AuditPlan>()
-                .Include(x => x.AuditStatus)
                 .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
 
-            if (entity?.AuditStatus == null)
+            if (entity == null)
                 return (false, "Audit plan not found.");
 
-            var currentCode = entity.AuditStatus.Code;
+            var entryCount = await dbContext.Set<AuditPlanEntry>()
+                .CountAsync(e => e.AuditPlanId == id && !e.IsDeleted, cancellationToken);
 
-            if (!_allowedTransitions.TryGetValue(currentCode, out var allowed)
-                || !allowed.Contains(newStatusCode))
-                return (false, $"Cannot move from {currentCode} to {newStatusCode}.");
+            var errors = BuildValidationErrors(entity.StartDate, entity.EndDate, entryCount);
+            if (errors.Any())
+                return (false, string.Join(" ", errors));
 
-            var newStatus = await dbContext.Set<AuditPlanStatus>()
-                .FirstOrDefaultAsync(s => s.Code == newStatusCode, cancellationToken);
-            if (newStatus == null)
-                return (false, $"Status '{newStatusCode}' does not exist.");
+            var result = await IQAApprovalWorkflow.SubmitAsync(
+                dbContext, IQAApprovalWorkflow.EntityTypes.AuditPlan, entity.Id, "audit plan", cancellationToken);
+            if (!result.Success)
+                return result;
 
-            // FIX: Draft-only delete guard lives in SoftDeleteAsync.
-            // Status guard lives here. The two are separate so neither needs
-            // to know about the other's concerns.
-            entity.AuditStatusId = newStatus.Id;
+            // Touching the plan row also makes a concurrent double-submit
+            // fail on the row version instead of creating two chains.
             entity.LastModifiedDate = DateTime.UtcNow;
+            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+        }
 
-            await dbContext.SaveChangesAsync(cancellationToken);
-            return (true, null);
+        public async Task<(bool Success, string? Error)> DecideAsync(
+            int id, string approverId, bool approve, string? comments, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(approverId))
+                return (false, "Approver is required.");
+
+            var dbContext = _repository.GetDbContext();
+
+            var entity = await dbContext.Set<AuditPlan>()
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
+
+            if (entity == null)
+                return (false, "Audit plan not found.");
+
+            var result = await IQAApprovalWorkflow.DecideAsync(
+                dbContext, IQAApprovalWorkflow.EntityTypes.AuditPlan, entity.Id, "audit plan",
+                approverId, approve, comments, cancellationToken);
+            if (!result.Success)
+                return result;
+
+            entity.LastModifiedDate = DateTime.UtcNow;
+            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+        }
+
+        private static async Task<(bool Success, string? Error)> SaveWorkflowChangesAsync(DbContext dbContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+                return (true, null);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return (false, "This audit plan was changed by someone else. Please refresh and try again.");
+            }
         }
 
         // ------------------------------------------------------------------ //
@@ -214,11 +215,15 @@ namespace IMIS.Application.AuditPlanModule
             var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
             if (entity == null) return false;
 
-            if (entity.AuditStatusId != AuditStatusSeedIds.Draft)
+            var dbContext = _repository.GetDbContext();
+
+            var state = await IQAApprovalWorkflow.GetStateCodeAsync(
+                dbContext, IQAApprovalWorkflow.EntityTypes.AuditPlan, id, cancellationToken);
+            if (state != IQAApprovalWorkflow.StateCodes.Draft)
                 throw new InvalidOperationException("Only draft audit plans can be deleted.");
 
             entity.IsDeleted = true;
-            await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
 
@@ -268,15 +273,18 @@ namespace IMIS.Application.AuditPlanModule
 
         public async Task<List<string>> GetConflictValidationsAsync(AuditPlanDto dto, CancellationToken cancellationToken)
         {
+            // Status is no longer a field on the plan; it is derived from the signatory rows.
+            return await Task.FromResult(BuildValidationErrors(dto.StartDate, dto.EndDate, dto.Entries?.Count ?? 0));
+        }
+
+        private static List<string> BuildValidationErrors(DateTime startDate, DateTime endDate, int entryCount)
+        {
             var errors = new List<string>();
 
-            if (dto.StartDate > dto.EndDate)
+            if (startDate > endDate)
                 errors.Add("Start date cannot be greater than end date.");
 
-            // REMOVED: string PlanStatus null-check — field no longer exists.
-            // Status is enforced by the FK default and transition guard instead.
-
-            if (dto.Entries == null || !dto.Entries.Any())
+            if (entryCount == 0)
                 errors.Add("At least one Audit Plan Entry is required.");
 
             return errors;
@@ -374,7 +382,7 @@ namespace IMIS.Application.AuditPlanModule
                 Id = entity.Id,
                 StartDate = entity.StartDate,
                 EndDate = entity.EndDate,
-                PlanStatus = entity.AuditStatus?.Name ?? "Draft",
+                PlanStatus = IQAApprovalWorkflow.StateName(IQAApprovalWorkflow.DeriveStateCode(entity.IQASignatories)),
                 BatchFormattedDates = FormatBatchDateRange(entity.StartDate, entity.EndDate),
                 IsDeleted = entity.IsDeleted,
                 RowVersion = entity.RowVersion,
@@ -392,15 +400,20 @@ namespace IMIS.Application.AuditPlanModule
                 FlatEntries = new List<ReportScheduleEntryDto>()
             };
 
-            var latestApproval = entity.Approvals?
-                .Where(a => string.Equals(a.Action, "Approved", StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(a => a.Timestamp)
-                .FirstOrDefault();
-
-            if (latestApproval != null)
+            // "Approved by" is the last person to sign, and only once the whole chain has approved.
+            var liveSignatories = IQAApprovalWorkflow.Ordered(entity.IQASignatories);
+            if (IQAApprovalWorkflow.DeriveStateCode(liveSignatories) == IQAApprovalWorkflow.StateCodes.Approved)
             {
-                dto.ApprovedByName = ResolveUserName(latestApproval.Approver);
-                dto.ApprovedByDate = latestApproval.Timestamp.ToString("MMMM dd, yyyy");
+                var finalSigner = liveSignatories
+                    .Where(sig => sig.DateSigned != null)
+                    .OrderByDescending(sig => sig.DateSigned)
+                    .FirstOrDefault();
+
+                if (finalSigner != null)
+                {
+                    dto.ApprovedByName = ResolveUserName(finalSigner.Signatory);
+                    dto.ApprovedByDate = finalSigner.DateSigned!.Value.ToString("MMMM dd, yyyy");
+                }
             }
 
             if (entity.Entries != null && entity.Entries.Any())

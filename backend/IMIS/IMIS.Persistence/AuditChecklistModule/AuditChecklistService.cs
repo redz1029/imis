@@ -2,6 +2,7 @@
 using Base.Primitives;
 using IMIS.Application.AuditChecklistModule;
 using IMIS.Application.AuditChecklistQNAModule;
+using IMIS.Application.AuditScheduleModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -35,17 +36,7 @@ namespace IMIS.Persistence.AuditChecklistModule
 
         public async Task<object?> GetByProcessIdAsync(int processId, CancellationToken cancellationToken)
         {
-            // Queries AuditPlanEntry processes matching processId / officeId
-            var checklists = await _dbContext.Set<AuditChecklist>()
-                .Include(c => c.AuditChecklistQNA)
-                .Include(c => c.AuditPlanEntry)
-                    .ThenInclude(e => e!.AuditPlanProcesses)
-                        .ThenInclude(p => p.Office)
-                .Where(c => c.AuditPlanEntry != null && 
-                            c.AuditPlanEntry.AuditPlanProcesses.Any(p => p.OfficeId == processId || p.Id == processId))
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-
+            var checklists = await _repository.GetByProcessIdAsync(processId, cancellationToken).ConfigureAwait(false);
             return checklists.Select(x => new AuditChecklistDto(x));
         }
 
@@ -55,6 +46,23 @@ namespace IMIS.Persistence.AuditChecklistModule
             if (existing.Any())
             {
                 return existing.Select(x => new AuditChecklistDto(x));
+            }
+
+            // FIX: AuditChecklist.AuditScheduleId is now required — a
+            // checklist can't be generated until this entry's schedule
+            // exists. If it doesn't, we fail loudly rather than insert
+            // rows with a garbage FK.
+            var schedule = await _dbContext.Set<AuditSchedule>()
+                .Where(s => s.AuditPlanEntryId == auditPlanEntryId)
+                .Select(s => new { s.Id })
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            if (schedule == null)
+            {
+                throw new InvalidOperationException(
+                    $"No Audit Schedule exists for Audit Plan Entry {auditPlanEntryId}. " +
+                    "A schedule must be created for this entry before its checklist can be generated.");
             }
 
             var entry = await _dbContext.Set<AuditPlanEntry>()
@@ -86,6 +94,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                     {
                         Id = 0,
                         AuditPlanEntryId = auditPlanEntryId,
+                        AuditScheduleId = schedule.Id,
                         AuditChecklistQNAId = q.Id,
                         Conforming = null,
                         FindingAndRemarks = null
@@ -153,10 +162,24 @@ namespace IMIS.Persistence.AuditChecklistModule
                 await SaveChecklistAsync(checklistDto, cancellationToken).ConfigureAwait(false);
             }
         }
+
         public async Task<IEnumerable<AuditChecklistDto>> GetByAuditeeIdAsync(int auditeeId, CancellationToken cancellationToken)
         {
             var entities = await _repository.GetByAuditeeIdAsync(auditeeId, cancellationToken).ConfigureAwait(false);
             return entities.Select(x => new AuditChecklistDto(x));
+        }
+
+        public async Task<IEnumerable<AuditChecklistDto>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken)
+        {
+            var entities = await _repository.GetByAuditScheduleIdAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
+            return entities.Select(x => new AuditChecklistDto(x));
+        }
+        public async Task<ReportAuditChecklistDto?> ReportGetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken)
+        {
+            
+            var entities = await _repository.GetByAuditScheduleIdAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
+            var list = entities.ToList();
+            return list.Any() ? new ReportAuditChecklistDto(list) : null;
         }
     }
 }

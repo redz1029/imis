@@ -11,6 +11,11 @@ namespace IMIS.Application.AuditChecklistModule
         public string? FindingAndRemarks { get; set; }
 
         public required int AuditPlanEntryId { get; set; }
+
+        // FIX: AuditSchedule is now required on the entity — must be set
+        // here too, or ToEntity() fails the same way AuditScheduleId did.
+        public required int AuditScheduleId { get; set; }
+
         public required int AuditChecklistQNAId { get; set; }
         public int? AuditeeId { get; set; }
 
@@ -32,6 +37,7 @@ namespace IMIS.Application.AuditChecklistModule
             Conforming = entity.Conforming;
             FindingAndRemarks = entity.FindingAndRemarks;
             AuditPlanEntryId = entity.AuditPlanEntryId;
+            AuditScheduleId = entity.AuditScheduleId;
             AuditChecklistQNAId = entity.AuditChecklistQNAId;
             AuditeeId = entity.AuditeeId;
 
@@ -75,6 +81,7 @@ namespace IMIS.Application.AuditChecklistModule
                 Conforming = Conforming,
                 FindingAndRemarks = FindingAndRemarks,
                 AuditPlanEntryId = AuditPlanEntryId,
+                AuditScheduleId = AuditScheduleId,
                 AuditChecklistQNAId = AuditChecklistQNAId,
                 AuditeeId = AuditeeId,
                 IsDeleted = IsDeleted,

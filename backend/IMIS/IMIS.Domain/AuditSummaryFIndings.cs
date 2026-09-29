@@ -10,7 +10,10 @@ namespace IMIS.Domain
         public IsoStandard? Criteria { get; set; }
         public required string Findings { get; set; }
 
-        public AuditNcarStatus? NcarStatus { get; set; }    
+        public int? AuditNcarStatusId { get; set; }
 
+        public AuditNcarStatus? NcarStatus { get; set; }
+        public required int AuditReportId { get; set; }
+        public AuditReport? AuditReport { get; set; }
     }
 }

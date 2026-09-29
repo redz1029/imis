@@ -18,7 +18,7 @@ namespace IMIS.Persistence.AuditScheduleModule
         public async Task<AuditSchedule?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<AuditSchedule>()
-                .Include(x => x.AuditorTeams)
+                .Include(x => x.Team)
                 .Include(x => x.AuditableOffices)
                 .Include(x => x.AuditSchduleDetails)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -29,7 +29,7 @@ namespace IMIS.Persistence.AuditScheduleModule
             // Note: If AuditableOffices or AuditSchduleDetails had deeper nested children, 
             // you would add .ThenInclude() here similar to the AuditPlan pattern.
             return await ReadOnlyDbContext.Set<AuditSchedule>()
-                .Include(x => x.AuditorTeams)
+                .Include(x => x.Team)
                 .Include(x => x.AuditableOffices)
                 .Include(x => x.AuditSchduleDetails)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -44,7 +44,7 @@ namespace IMIS.Persistence.AuditScheduleModule
         public async Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _entities
-                .Include(x => x.AuditorTeams)
+                .Include(x => x.Team)
                 .Include(x => x.AuditableOffices)
                 .Include(x => x.AuditSchduleDetails)
                 .ToListAsync(cancellationToken);
@@ -86,6 +86,26 @@ namespace IMIS.Persistence.AuditScheduleModule
             var context = GetDbContext();
             await context.Set<AuditScheduleDetails>().AddRangeAsync(details, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<AuditSchedule>> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .Where(x => x.AuditPlanId == auditPlanId && !x.IsDeleted)
+                .Include(x => x.Team)
+                .Include(x => x.AuditableOffices)
+                .Include(x => x.AuditSchduleDetails)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<AuditSchedule>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .Where(x => x.AuditPlanEntryId == auditPlanEntryId && !x.IsDeleted)
+                .Include(x => x.Team)
+                .Include(x => x.AuditableOffices)
+                .Include(x => x.AuditSchduleDetails)
+                .ToListAsync(cancellationToken);
         }
     }
 }

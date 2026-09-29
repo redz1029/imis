@@ -7,7 +7,6 @@ namespace IMIS.Domain
     public class AuditSchedule : Entity<int>
     {
         public required string Purpose { get; set; }
-        public required AuditorTeams? AuditorTeams { get; set; }
         public required string Activity { get; set; }
 
         public required bool IsActive { get; set; }
@@ -22,5 +21,15 @@ namespace IMIS.Domain
 
         public ICollection<AuditableOffices>? AuditableOffices { get; set; }
         public ICollection<AuditScheduleDetails>? AuditSchduleDetails { get; set; }
+        public required int AuditPlanEntryId { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; }
+
+        public int? TeamId { get; set; }
+        public Team? Team { get; set; }
+
+        /// <summary>
+        /// IQA Signatory records for this audit schedule (approval workflow)
+        /// </summary>
+        public ICollection<IQASignatory> IQASignatories { get; set; } = new List<IQASignatory>();
     }
 }

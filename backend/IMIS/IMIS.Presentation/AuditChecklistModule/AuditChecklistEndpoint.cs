@@ -2,6 +2,7 @@
 using Carter;
 using IMIS.Application.AuditChecklistModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -84,6 +85,29 @@ namespace IMIS.Presentation.AuditChecklistModule
                 return Results.Ok(new { Message = "Deleted Successfully" });
             })
             .WithTags(_auditChecklist);
+            // GENERATE PDF REPORT — one PDF per AuditSchedule (all its checklist rows)
+            app.MapGet("/PdF/schedule/{auditScheduleId:int}", async (
+                HttpResponse response,
+                int auditScheduleId,
+                IAuditChecklistService service,
+                CancellationToken cancellationToken) =>
+            {
+                var auditData = await service.ReportGetByAuditScheduleIdAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
+
+                if (auditData == null)
+                    return Results.NotFound(new { message = $"No checklist rows found for Audit Schedule {auditScheduleId}." });
+
+                var file = await ReportUtil.GeneratePdfReport<ReportAuditChecklistDto>(
+                    "AuditChecklist",
+                    new List<ReportAuditChecklistDto> { auditData },
+                    "ChecklistData",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                return Results.File(file, "application/pdf", $"AuditChecklist_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+            .WithTags(_auditChecklist)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
             // GET BY AUDITEE ID
             app.MapGet("/auditee/{auditeeId:int}", async (int auditeeId, IAuditChecklistService service, CancellationToken cancellationToken) =>
             {

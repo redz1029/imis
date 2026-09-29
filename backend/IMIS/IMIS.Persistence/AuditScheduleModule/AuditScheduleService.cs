@@ -50,7 +50,10 @@ namespace IMIS.Application.AuditScheduleModule
                     existing.Purpose = entity.Purpose;
                     existing.Activity = entity.Activity;
                     existing.IsActive = entity.IsActive;
-                    existing.AuditorTeams = entity.AuditorTeams;
+
+                    // FIX: was existing.AuditorTeams = entity.AuditorTeams —
+                    // that property no longer exists on AuditSchedule.
+                    existing.TeamId = entity.TeamId;
 
                     // Remove old children to avoid FK conflicts/duplicates during replacement
                     if (existing.AuditableOffices?.Any() == true)
@@ -112,6 +115,23 @@ namespace IMIS.Application.AuditScheduleModule
             if (result.TotalCount == 0) return null;
 
             return DtoPageList<AuditScheduleDto, AuditSchedule, int>.Create(result.Items, page, pageSize, result.TotalCount);
+        }
+
+        public async Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken)
+        {
+            var entities = await _repository.GetByAuditPlanIdAsync(auditPlanId, cancellationToken);
+            return entities.Select(x => new AuditScheduleDto(x));
+        }
+
+        public async Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken)
+        {
+            var entities = await _repository.GetByAuditPlanEntryIdAsync(auditPlanEntryId, cancellationToken);
+            return entities.Select(x => new AuditScheduleDto(x));
+        }
+        public async Task<ReportAuditScheduleDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
+            return entity != null ? new ReportAuditScheduleDto(entity) : null;
         }
     }
 }

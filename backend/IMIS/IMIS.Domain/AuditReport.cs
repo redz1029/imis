@@ -16,7 +16,8 @@ namespace IMIS.Domain
         public Auditee? Auditee { get; set; }
         public int? AuditPlanEntryId { get; set; }
         public AuditPlanEntry? AuditPlanEntry { get; set; }
-
+        public required int AuditScheduleId { get; set; }
+        public AuditSchedule? AuditSchedule { get; set; }
 
 
         public ICollection<AuditComFindings>? AuditComFindings { get; set; }

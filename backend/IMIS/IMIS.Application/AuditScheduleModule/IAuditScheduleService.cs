@@ -13,6 +13,8 @@ namespace IMIS.Application.AuditScheduleModule
         // --- Retrieval ---
         Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<AuditScheduleDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken);
+        Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken);
 
         // --- Save / Update ---
         Task<bool> SaveAuditScheduleAsync(AuditScheduleDto dto, CancellationToken cancellationToken);
@@ -29,5 +31,6 @@ namespace IMIS.Application.AuditScheduleModule
         // --- Generic Save for parent + child collections ---
         Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
             where TEntity : Entity<TId>;
+        Task<ReportAuditScheduleDto> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
     }
 }

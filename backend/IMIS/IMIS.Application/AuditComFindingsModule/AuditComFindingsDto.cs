@@ -7,8 +7,11 @@ namespace IMIS.Application.AuditComFindingsModule
     public class AuditComFindingsDto : BaseDto<AuditComFindings, int>
     {
         public required string CommendableFindings { get; set; }
-        public required int Area { get; set; }
         public int? AreasId { get; set; }
+
+        // FIX: AuditComFindings.AuditReportId is required on the entity —
+        // ToEntity() must set it, and previously didn't.
+        public required int AuditReportId { get; set; }
 
         public AuditComFindingsDto() { }
 
@@ -17,7 +20,7 @@ namespace IMIS.Application.AuditComFindingsModule
         {
             Id = entity.Id;
             CommendableFindings = entity.CommendableFindings;
-            Area = entity.Area;
+            AuditReportId = entity.AuditReportId;
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
 
@@ -33,7 +36,8 @@ namespace IMIS.Application.AuditComFindingsModule
             {
                 Id = Id,
                 CommendableFindings = CommendableFindings,
-                Area = Area,
+                Area = AreasId ?? 0, // Assuming Area is required and should default to 0 if AreasId is null
+                AuditReportId = AuditReportId,
                 IsDeleted = IsDeleted,
                 RowVersion = RowVersion
             };

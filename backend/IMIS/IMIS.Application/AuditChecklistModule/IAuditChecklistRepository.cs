@@ -12,10 +12,12 @@ namespace IMIS.Application.AuditChecklistModule
         Task<AuditChecklist?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<AuditChecklist>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken);
         Task<IEnumerable<AuditChecklist>> GetByAuditeeIdAsync(int auditeeId, CancellationToken cancellationToken);
+        Task<IEnumerable<AuditChecklist>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken);
 
         Task<EntityPageList<AuditChecklist, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
 
         Task<AuditChecklist?> GetByIdForDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<AuditChecklist>> GetByProcessIdAsync(int processId, CancellationToken cancellationToken);
         Task SaveOrUpdateAsync(CancellationToken cancellationToken);
     }
 }

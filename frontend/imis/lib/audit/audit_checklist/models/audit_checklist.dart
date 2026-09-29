@@ -25,13 +25,18 @@ class AuditChecklist {
   @JsonKey(defaultValue: 0)
   final int auditChecklistQNAId;
 
-  // Read-only display fields populated by the backend join — never sent back on save.
+  // The Auditee connection — matches AuditChecklistDto.AuditeeId (the real
+  // FK, sent back on save) and AuditeeName (read-only display). The backend
+  // supports exactly one auditee per checklist row, not a list.
+  final int? auditeeId;
+  final String? auditeeName;
+
+  // Read-only display fields derived from AuditPlanEntry on the backend —
+  // never sent back on save (AuditChecklistDto.ToEntity() ignores them).
   final String? criteria;
   final String? itemsAndQuestions;
   final String? officeProcess;
-  final String? auditScope;
   final String? auditTeamName;
-  final String? auditees;
 
   const AuditChecklist({
     this.id = 0,
@@ -41,12 +46,12 @@ class AuditChecklist {
     this.findingAndRemarks,
     required this.auditPlanEntryId,
     required this.auditChecklistQNAId,
+    this.auditeeId,
+    this.auditeeName,
     this.criteria,
     this.itemsAndQuestions,
     this.officeProcess,
-    this.auditScope,
     this.auditTeamName,
-    this.auditees,
   });
 
   factory AuditChecklist.fromJson(Map<String, dynamic> json) =>
@@ -71,19 +76,18 @@ class AuditChecklist {
       findingAndRemarks: findingAndRemarks ?? this.findingAndRemarks,
       auditPlanEntryId: auditPlanEntryId,
       auditChecklistQNAId: auditChecklistQNAId,
+      auditeeId: auditeeId,
+      auditeeName: auditeeName,
       criteria: criteria,
       itemsAndQuestions: itemsAndQuestions,
       officeProcess: officeProcess,
-      auditScope: auditScope,
       auditTeamName: auditTeamName,
-      auditees: auditees,
     );
   }
 
-  /// Copy with the header's AUDITEE/S value replaced. Separate from
-  /// copyWithResponse since this is a header-level field, not a
-  /// per-row answer, but every row still carries it (flat-list shape).
-  AuditChecklist copyWithAuditees(String? auditees) {
+  /// Replaces the selected auditee (single value, matching the backend's
+  /// AuditeeId FK). Pass both null to clear the selection.
+  AuditChecklist copyWithAuditee({int? auditeeId, String? auditeeName}) {
     return AuditChecklist(
       id: id,
       isDeleted: isDeleted,
@@ -92,12 +96,12 @@ class AuditChecklist {
       findingAndRemarks: findingAndRemarks,
       auditPlanEntryId: auditPlanEntryId,
       auditChecklistQNAId: auditChecklistQNAId,
+      auditeeId: auditeeId,
+      auditeeName: auditeeName,
       criteria: criteria,
       itemsAndQuestions: itemsAndQuestions,
       officeProcess: officeProcess,
-      auditScope: auditScope,
       auditTeamName: auditTeamName,
-      auditees: auditees,
     );
   }
 }
