@@ -2132,6 +2132,106 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
+  Widget _statusCell(PerformanceGovernanceSystem pgs, String status) {
+    final bool isDraft = status == 'Draft';
+    final Color color = isDraft ? Colors.grey.shade600 : getStatusColor(status);
+    String nextName = '';
+    if (status == 'Pending') {
+      final next =
+          (pgs.pgsSignatories ?? [])
+              .where((s) => s.isNextStatus == true)
+              .firstOrNull;
+      if (next != null) {
+        final json = next.toJson();
+        nextName =
+            (json['signatoryName'] ?? json['name'] ?? json['fullName'] ?? '')
+                .toString()
+                .replaceAll('..', '.')
+                .trim();
+      }
+    }
+
+    return Tooltip(
+      message: 'View approval timeline',
+
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _showSignatoryTimeline(context, pgs),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      isDraft
+                          ? Colors.grey.shade200
+                          : color.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      status,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isDraft ? FontWeight.w500 : FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (nextName.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3, left: 10),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 240),
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Awaiting ',
+                            style: TextStyle(color: Colors.grey.shade500),
+                          ),
+                          TextSpan(
+                            text: nextName,
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildListView(bool isMobile) {
     if (_isLoading) {
       return Center(child: CircularProgressIndicator(color: primaryColor));
@@ -2223,47 +2323,7 @@ class _PerformanceGovernanceSystemPageState
                   ),
                 ),
                 const SizedBox(width: 24),
-                Expanded(
-                  flex: 2,
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () => _showSignatoryTimeline(context, pgs),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 16,
-                            height: 16,
-                            margin: const EdgeInsets.only(right: 4),
-                            decoration: BoxDecoration(
-                              color: getStatusColor(status),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(child: getStatusIcon(status)),
-                          ),
-                          Tooltip(
-                            message: "Track Deliverables",
-                            child: Text(
-                              status,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: getStatusColor(status),
-                                decorationColor: getStatusColor(status),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.info_outline,
-                            size: 13,
-                            color: getStatusColor(status),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
+                Expanded(flex: 2, child: _statusCell(pgs, status)),
                 Expanded(
                   flex: 2,
                   child: Wrap(
@@ -2634,48 +2694,8 @@ class _PerformanceGovernanceSystemPageState
                 ],
               ),
               gap8px,
-
-              Row(
-                children: [
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () => _showSignatoryTimeline(context, pgs),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 16,
-                            height: 16,
-                            margin: const EdgeInsets.only(right: 4),
-                            decoration: BoxDecoration(
-                              color: getStatusColor(status),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(child: getStatusIcon(status)),
-                          ),
-                          Text(
-                            status,
-                            style: TextStyle(
-                              color: getStatusColor(status),
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.info_outline,
-                            size: 13,
-                            color: getStatusColor(status),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
+              _statusCell(pgs, status),
               gap4px,
-
               Row(
                 children: [
                   Expanded(
@@ -2686,9 +2706,7 @@ class _PerformanceGovernanceSystemPageState
                   ),
                 ],
               ),
-
               gap4px,
-
               Row(
                 children: [
                   Expanded(
