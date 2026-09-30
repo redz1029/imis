@@ -579,7 +579,8 @@ namespace IMIS.Infrastructure.Auths
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
                 new StrategicChangeAgendaPermissionSetting(),
-                new StrategicChangeAgendaPermission());
+                new StrategicChangeAgendaPermission(),
+                new StrategyReviewPermission());
 
             await PermissionSeeder.SeedPermissionForRole<SafetyOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
