@@ -1,9 +1,7 @@
-// ignore_for_file: library_prefixes
-
 import 'package:dio/dio.dart';
-import 'package:http/http.dart' as AuthenticatedRequest;
 import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';
 import 'package:imis/utils/pagination_util.dart';
 
@@ -46,33 +44,56 @@ class AuditSchedulesService {
 
   Future<AuditSchedules?> getAuditScheduleById(int id) async {
     final url = '${ApiEndpoint().auditSchedule}/$id';
-    final response = await dio.get(url);
-
-    if (response.statusCode == 200 && response.data != null) {
-      return AuditSchedules.fromJson(response.data as Map<String, dynamic>);
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+      if (response.statusCode == 200 && response.data != null) {
+        return AuditSchedules.fromJson(response.data as Map<String, dynamic>);
+      }
+      return null;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
     }
-    return null;
   }
 
-  Future<void> addAuditSchedule(AuditSchedules auditSchedule) async {
+  /// POST handles both create (id == 0) and update — same save-or-update
+  /// pattern as every other service built alongside this one; if the
+  /// backend's AuditSchedule endpoint really does expose a separate PUT
+  /// route, tell me and I'll split this back into two calls.
+  Future<AuditSchedules> addAuditSchedule(AuditSchedules auditSchedule) async {
     final url = ApiEndpoint().auditSchedule;
-    final isUpdating = auditSchedule.id != 0;
-    final Map<String, dynamic> requestData = auditSchedule.toJson();
-
-    final response = isUpdating
-        ? await AuthenticatedRequest.put(
-            Uri.parse('$url/${auditSchedule.id}'),
-            body: requestData,
-          )
-        : await AuthenticatedRequest.post(Uri.parse(url), body: requestData);
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create/update audit schedule');
+    try {
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: auditSchedule.toJson(),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return AuditSchedules.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw Exception('Failed to create/update audit schedule.');
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is String && data.isNotEmpty) throw Exception(data);
+      if (data is Map && data['message'] != null) {
+        throw Exception(data['message'].toString());
+      }
+      rethrow;
     }
   }
 
   Future<void> deleteAuditSchedule(int auditScheduleId) async {
     final url = '${ApiEndpoint().auditSchedule}/$auditScheduleId';
-    await AuthenticatedRequest.delete(dio as Uri, body: url);
+    try {
+      final response = await AuthenticatedRequest.delete(dio, url);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete audit schedule.');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Audit schedule not found.');
+      }
+      rethrow;
+    }
   }
 }

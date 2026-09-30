@@ -140,6 +140,7 @@ namespace IMIS.Presentation.AuditScheduleModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
+
             // DELETE (SOFT DELETE)
             app.MapDelete("/{id:int}", async (
                 int id,
@@ -157,6 +158,51 @@ namespace IMIS.Presentation.AuditScheduleModule
             })
             .WithTags(_AuditSchedule)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+
+            // SUBMIT — Draft/Disapproved -> Pending
+            app.MapPut("/{id:int}/submit", async (
+                int id,
+                IAuditScheduleService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                var (success, error) = await service.SubmitAsync(id, cancellationToken);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
+                return Results.Ok(new { message = "Submitted for approval." });
+            })
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+
+            // DECIDE — Pending -> Approved/Disapproved
+            app.MapPut("/{id:int}/decide", async (
+                int id,
+                [FromBody] DecideAuditScheduleRequest dto,
+                IAuditScheduleService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                if (dto is null)
+                    return Results.BadRequest("Invalid request.");
+
+                var (success, error) = await service.DecideAsync(
+                    id, dto.ApproverId, dto.Approve, dto.Comments, cancellationToken
+                );
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
+                return Results.Ok(new { message = dto.Approve ? "Approved." : "Disapproved." });
+            })
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+
         }
+
+        public record DecideAuditScheduleRequest(string ApproverId, bool Approve, string? Comments);
     }
 }

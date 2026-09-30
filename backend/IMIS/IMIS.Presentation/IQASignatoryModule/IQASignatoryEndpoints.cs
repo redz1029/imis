@@ -28,17 +28,17 @@ namespace IMIS.Presentation.IQASignatoryModule
     {
         private const string _iqaSignatory = "IQASignatory";
 
-        public IQASignatoryEndpoints() : base("/api/IQASignatory")
+        public IQASignatoryEndpoints() : base("IQASignatory")
         {
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/IQASignatory")
+            var group = app.MapGroup("IQASignatory")
                            .WithTags(_iqaSignatory);
 
             // ================================================================
-            // GET METHODS
+            // GET METHODS 
             // ================================================================
 
             // GET ALL BY AUDIT ENTITY TYPE

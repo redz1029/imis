@@ -423,7 +423,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              '${p.planStatus} • $dateRange',
+  '${p.effectiveStatusName} • $dateRange',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
             trailing: const Icon(Icons.chevron_right, color: primaryThemeColor),

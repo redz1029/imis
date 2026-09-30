@@ -1,57 +1,73 @@
-import 'package:imis/audit/audit_schedules/models/auditable_offices.dart';
-import 'package:imis/auditor_team/models/auditor_team.dart';
-import 'package:imis/office/models/office.dart';
+
+import 'package:imis/audit/iqa_signatory/model/iqa_signatory.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'audit_schedule_details.dart';
 
 part 'audit_schedules.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class AuditSchedules {
-  int id;
-  String purpose;
-  String activity;
+  @JsonKey(defaultValue: 0)
+  final int id;
+
+  @JsonKey(defaultValue: '')
+  final String purpose;
+
+  @JsonKey(defaultValue: '')
+  final String activity;
+
+  @JsonKey(defaultValue: true)
+  final bool isActive;
+
+  final String? rowVersion;
 
   @DateTimeConverter()
-  DateTime startDate;
+  final DateTime startDate;
 
   @DateTimeConverter()
-  DateTime endDate;
+  final DateTime endDate;
 
-  bool isActive;
-  bool isDeleted;
-  String? rowVersion;
+  @JsonKey(defaultValue: 0)
+  final int auditPlanId;
 
-  int auditPlanId;
+  @JsonKey(defaultValue: 0)
+  final int auditPlanEntryId;
 
-  AuditorTeam? auditorTeams;
-  List<Office>? offices;
+  final int? teamId;
 
-  @JsonKey(defaultValue: <AuditableOffices>[])
-  final List<AuditableOffices> auditableOffices;
+  final String? statusCode;
+  final String? statusName;
 
-  @JsonKey(defaultValue: <AuditScheduleDetails>[])
-  final List<AuditScheduleDetails> auditSchduleDetails;
+  @JsonKey(
+    fromJson: _signatoriesFromJson,
+    includeToJson: false,
+    defaultValue: [],
+  )
+  final List<IQASignatory> signatories;
 
-  AuditSchedules({
-    required this.id,
-    required this.purpose,
-    required this.activity,
+  const AuditSchedules({
+    this.id = 0,
+    this.purpose = '',
+    this.activity = '',
+    this.isActive = true,
+    this.rowVersion,
     required this.startDate,
     required this.endDate,
-    required this.isActive,
-    required this.isDeleted,
-    this.rowVersion,
-    required this.auditPlanId,
-    this.auditorTeams,
-    this.offices,
-    required this.auditableOffices,
-    required this.auditSchduleDetails,
+    this.auditPlanId = 0,
+    this.auditPlanEntryId = 0,
+    this.teamId,
+    this.statusCode,
+    this.statusName,
+    this.signatories = const [],
   });
 
   factory AuditSchedules.fromJson(Map<String, dynamic> json) =>
       _$AuditSchedulesFromJson(json);
 
   Map<String, dynamic> toJson() => _$AuditSchedulesToJson(this);
+
+  String get effectiveStatusName => statusName ?? 'Draft';
+
+  static List<IQASignatory> _signatoriesFromJson(Object? json) =>
+      IQASignatory.listFromJson(json);
 }

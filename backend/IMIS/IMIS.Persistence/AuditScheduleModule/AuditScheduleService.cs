@@ -1,6 +1,7 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditScheduleModule;
+using IMIS.Application.IQASignatoryModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -132,6 +133,74 @@ namespace IMIS.Application.AuditScheduleModule
         {
             var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
             return entity != null ? new ReportAuditScheduleDto(entity) : null;
+        }
+
+        public async Task<(bool Success, string? Error)> SubmitAsync(int id, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var entity = await dbContext.Set<AuditSchedule>()
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive, cancellationToken);
+
+            if (entity == null)
+                return (false, "Audit schedule not found.");
+
+            if (string.IsNullOrWhiteSpace(entity.Purpose) || string.IsNullOrWhiteSpace(entity.Activity))
+                return (false, "Purpose and Activity are required before submitting.");
+
+            var result = await IQAApprovalWorkflow.SubmitAsync(
+                dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, entity.Id,
+                "audit schedule", cancellationToken);
+            if (!result.Success) return result;
+
+            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+        }
+
+        public async Task<(bool Success, string? Error)> DecideAsync(
+            int id, string approverId, bool approve, string? comments, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(approverId))
+                return (false, "Approver is required.");
+
+            var dbContext = _repository.GetDbContext();
+
+            var entity = await dbContext.Set<AuditSchedule>()
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+            if (entity == null)
+                return (false, "Audit schedule not found.");
+
+            var result = await IQAApprovalWorkflow.DecideAsync(
+                dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, entity.Id,
+                "audit schedule", approverId, approve, comments, cancellationToken);
+
+            if (!result.Success) return result;
+
+            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+        }
+
+        private static async Task<(bool Success, string? Error)> SaveWorkflowChangesAsync(
+            DbContext dbContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+                return (true, null);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return (false, "This audit schedule was changed by someone else. Please refresh and try again.");
+            }
+        }
+
+        Task<(bool success, object error)> IAuditScheduleService.DecideAsync(int id, string approverId, bool approve, string comments, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<(bool success, object error)> IAuditScheduleService.SubmitAsync(int id, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

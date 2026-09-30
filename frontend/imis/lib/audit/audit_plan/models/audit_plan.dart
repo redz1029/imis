@@ -1,4 +1,5 @@
 import 'package:imis/audit/audit_plan/models/audit_plan_entry.dart';
+import 'package:imis/audit/iqa_signatory/model/iqa_signatory.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -17,20 +18,13 @@ class AuditPlan {
   @JsonKey(defaultValue: 0)
   final int auditProgrammeId;
 
-  // FIX: added — AuditPlanDto.PlanName is `required` on the backend.
-  // Without this field, fromJson() silently dropped the key the client
-  // sent, and toJson() never re-emitted it, so every save (create or
-  // edit) reached the server with no planName at all.
+  // AuditPlanDto.PlanName is `required` on the backend.
   @JsonKey(defaultValue: '')
   final String planName;
 
-  // The backend no longer sends 'planStatus' — real status comes from
-  // auditStatusId/statusCode/statusName, kept in sync via the approval flow.
-  @JsonKey(defaultValue: 'Draft')
-  final String planStatus;
-
-  @JsonKey(defaultValue: 1)
-  final int auditStatusId;
+  // REMOVED: planStatus / auditStatusId — AuditPlanDto sends neither field
+  // anymore. Status is derived server-side from the `signatories` chain
+  // below; statusCode/statusName are the only source of truth now.
   final String? statusCode;
   final String? statusName;
 
@@ -43,19 +37,27 @@ class AuditPlan {
   @JsonKey(fromJson: _entriesFromJson, defaultValue: [])
   final List<AuditPlanEntry> entries;
 
+  // Live approval chain, in signing order. Read-only — never sent back on
+  // save (see toJson exclusion below).
+  @JsonKey(
+    fromJson: _signatoriesFromJson,
+    includeToJson: false,
+    defaultValue: [],
+  )
+  final List<IQASignatory> signatories;
+
   const AuditPlan({
     this.id = 0,
     this.isDeleted = false,
     this.rowVersion,
     this.auditProgrammeId = 0,
     this.planName = '',
-    this.planStatus = 'Draft',
-    this.auditStatusId = 1,
     this.statusCode,
     this.statusName,
     required this.startDate,
     required this.endDate,
     this.entries = const [],
+    this.signatories = const [],
   });
 
   factory AuditPlan.fromJson(Map<String, dynamic> json) =>
@@ -79,4 +81,7 @@ class AuditPlan {
     }
     return [];
   }
+
+  static List<IQASignatory> _signatoriesFromJson(Object? json) =>
+      IQASignatory.listFromJson(json);
 }

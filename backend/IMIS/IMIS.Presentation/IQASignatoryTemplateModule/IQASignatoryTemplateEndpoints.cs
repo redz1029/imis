@@ -13,13 +13,13 @@ namespace IMIS.Presentation.IQASignatoryTemplateModule
     {
         private const string _iqaSignatoryTemplate = "IQASignatoryTemplate";
 
-        public IQASignatoryTemplateEndpoints() : base("/api/IQASignatoryTemplate")
+        public IQASignatoryTemplateEndpoints()
         {
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/IQASignatoryTemplate")
+            var group = app.MapGroup("IQASignatoryTemplate")
                            .WithTags(_iqaSignatoryTemplate);
 
             // CREATE / UPDATE

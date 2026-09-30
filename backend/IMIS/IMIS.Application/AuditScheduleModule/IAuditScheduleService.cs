@@ -32,5 +32,7 @@ namespace IMIS.Application.AuditScheduleModule
         Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
             where TEntity : Entity<TId>;
         Task<ReportAuditScheduleDto> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<(bool success, object error)> DecideAsync(int id, string approverId, bool approve, string comments, CancellationToken cancellationToken);
+        Task<(bool success, object error)> SubmitAsync(int id, CancellationToken cancellationToken);
     }
 }

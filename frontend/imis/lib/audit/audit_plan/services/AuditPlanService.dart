@@ -145,7 +145,6 @@ class AuditPlanService {
     return AuditPlan(
       id: 0,
       auditProgrammeId: programmeId,
-      planStatus: 'Draft',
       startDate: startDate,
       endDate: endDate,
       entries: [],

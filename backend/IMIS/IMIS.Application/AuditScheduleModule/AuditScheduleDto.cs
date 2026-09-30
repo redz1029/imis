@@ -1,17 +1,16 @@
 ﻿using Base.Primitives;
+using IMIS.Application.IQASignatoryModule;
 using IMIS.Domain;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace IMIS.Application.AuditScheduleModule
 {
     public class AuditScheduleDto : BaseDto<AuditSchedule, int>
     {
         public required string Purpose { get; set; }
-
-        // FIX: was AuditorTeams (a single team-member pairing).
         public int? TeamId { get; set; }
-
         public required string Activity { get; set; }
         public required bool IsActive { get; set; }
 
@@ -19,10 +18,15 @@ namespace IMIS.Application.AuditScheduleModule
         public DateTime EndDate { get; set; }
 
         public int AuditPlanId { get; set; }
-
-        // FIX: AuditSchedule.AuditPlanEntryId is required on the entity —
-        // ToEntity() must set it or the object initializer fails.
         public required int AuditPlanEntryId { get; set; }
+
+        // Read-only, derived from the IQA signatory rows. NEVER mapped in
+        // ToEntity() — only SubmitAsync/DecideAsync change these.
+        public string? StatusCode { get; set; }
+        public string? StatusName { get; set; }
+
+        // Live approval chain, in signing order.
+        public List<IQASignatoryModule.IQASignatoryDto> Signatories { get; set; } = new();
 
         public AuditScheduleDto() { }
 
@@ -39,6 +43,15 @@ namespace IMIS.Application.AuditScheduleModule
             this.AuditPlanId = entity.AuditPlanId;
             this.AuditPlanEntryId = entity.AuditPlanEntryId;
             this.RowVersion = entity.RowVersion;
+
+            // Callers must load IQASignatories (non-deleted) or this reads as Draft.
+            var signatories = IQAApprovalWorkflow.Ordered(entity.IQASignatories);
+            var stateCode = IQAApprovalWorkflow.DeriveStateCode(signatories);
+            this.StatusCode = stateCode;
+            this.StatusName = IQAApprovalWorkflow.StateName(stateCode);
+            this.Signatories = signatories
+                .Select(s => new IQASignatoryModule.IQASignatoryDto(s))
+                .ToList();
         }
 
         public override AuditSchedule ToEntity()

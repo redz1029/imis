@@ -16,6 +16,7 @@ import 'package:imis/audit/audit_checklist/pages/audit_checklist_page.dart';
 import 'package:imis/audit/audit_programme/pages/audit_programme_list_page.dart';
 import 'package:imis/audit/audit_report/pages/audit_report_list_page.dart';
 import 'package:imis/audit/audit_schedules/pages/audit_schedules_list_page.dart';
+import 'package:imis/audit/iqa_signatory/pages/iqa_signatory_template_page.dart';
 import 'package:imis/audit/iso_standard/page/iso_standard_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
@@ -1349,6 +1350,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 13) return const UserOfficePage();
       if (selectedSubPage == 14) return const UserRolePage();
       if (selectedSubPage == 15) return const StrategyReviewPeriodPage();
+      if (selectedSubPage == 25) return const IQASignatoryTemplatePage();
       if (selectedSubPage == 16) {
         return const PerformanceValidationToolPeriodPage();
       }
@@ -1631,6 +1633,7 @@ class SidebarState extends State<Sidebar> {
           _NavChild('Service Head Office', 22),
           _NavChild('Audit Plan Approval', 23),
           _NavChild('Audit Plan Status', 24),
+          _NavChild('Audit IQA Signatory', 25),                                       
         ],
       ),
     ];
