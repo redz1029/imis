@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:imis/audit/audit_report/model/audit_com_findings.dart';
   
@@ -9,8 +10,15 @@ class AuditComFindingsService {
 
   Future<AuditComFindings?> getById(int id) async {
     final res = await _dio.get('$_base/$id');
-    if (res.statusCode == 404) return null;
-    return AuditComFindings.fromJson(res.data);
+    if (res.statusCode == 404 || res.data == null) return null;
+    dynamic data = res.data;
+    if (data is String) {
+      try { data = jsonDecode(data); } catch (_) { return null; }
+    }
+    if (data is Map) {
+      return AuditComFindings.fromJson(Map<String, dynamic>.from(data));
+    }
+    return null;
   }
 
   Future<List<AuditComFindings>> getPage(int page, int pageSize) async {
@@ -18,9 +26,23 @@ class AuditComFindingsService {
       'page': page,
       'pageSize': pageSize,
     });
-    final items = res.data['items'] ?? res.data['Items'] ?? [];
-    return (items as List)
-        .map((e) => AuditComFindings.fromJson(e as Map<String, dynamic>))
+    if (res.statusCode != 200 || res.data == null) return [];
+    dynamic data = res.data;
+    if (data is String) {
+      final trimmed = data.trim();
+      if (trimmed.isEmpty || trimmed == 'null') return [];
+      try { data = jsonDecode(trimmed); } catch (_) { return []; }
+    }
+    dynamic items;
+    if (data is Map) {
+      items = data['items'] ?? data['Items'] ?? data['data'] ?? [];
+    } else if (data is List) {
+      items = data;
+    }
+    if (items is! List) return [];
+    return items
+        .whereType<Map>()
+        .map((e) => AuditComFindings.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
 

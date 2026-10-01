@@ -2,7 +2,6 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:imis/audit/audit_plan_status/models/audit_status_seed_ids.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
@@ -270,7 +269,6 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   final List<AuditPlanEntryRow> _entries = [];
 
   int? _existingAuditPlanId;
-  int _existingAuditStatusId = AuditStatusSeedIds.draft;
   String _existingRowVersion = '';
   bool _existingIsDeleted = false;
 
@@ -335,7 +333,6 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
         if (programme != null) {
           final jsonMap = programme.toJson();
 
-          _existingAuditStatusId = programme.auditStatusId;
           _existingRowVersion = programme.rowVersion;
           _existingIsDeleted = programme.isDeleted;
 
@@ -714,7 +711,6 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
     final payload = {
       'id': widget.programmeId ?? 0,
-      'auditStatusId': _existingAuditStatusId,
       'rowVersion': _existingRowVersion,
       'isDeleted': _existingIsDeleted,
       'year': DateTime.now().year,

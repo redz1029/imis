@@ -38,7 +38,13 @@ namespace IMIS.Persistence.AuditReportModule
                     .Include(x => x.OfficeAudited)
                     .Include(x => x.AuditStandardISO)
                     .Include(x => x.Auditee)
-                    .Include(x => x.AuditPlanEntry),
+                    .Include(x => x.AuditPlanEntry)
+                        .ThenInclude(e => e!.AuditPlanProcesses)!
+                            .ThenInclude(p => p.Office)
+                    .Include(x => x.AuditPlanEntry)
+                        .ThenInclude(e => e!.IsoAuditors)!
+                            .ThenInclude(a => a.Team)
+                    .Include(x => x.AuditScope),
                 page,
                 pageSize,
                 cancellationToken)

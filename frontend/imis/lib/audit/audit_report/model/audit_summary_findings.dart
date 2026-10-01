@@ -11,6 +11,7 @@ class AuditSummaryFindings {
 
   int no;
   String findings;
+  int? auditNcarStatusId;
 
   AuditSummaryFindings({
     this.id = 0,
@@ -18,6 +19,7 @@ class AuditSummaryFindings {
     this.rowVersion = "",
     required this.no,
     required this.findings,
+    this.auditNcarStatusId,
   });
 
   factory AuditSummaryFindings.fromJson(Map<String, dynamic> json) =>

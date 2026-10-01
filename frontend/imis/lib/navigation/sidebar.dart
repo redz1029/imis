@@ -9,9 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
-import 'package:imis/audit/audit_approvals/pages/audit_plan_approval_page.dart';
 import 'package:imis/audit/audit_plan/pages/audit_plan_list_page.dart';
-import 'package:imis/audit/audit_plan_status/pages/audit_plan_status_page.dart';
 import 'package:imis/audit/audit_checklist/pages/audit_checklist_page.dart';
 import 'package:imis/audit/audit_programme/pages/audit_programme_list_page.dart';
 import 'package:imis/audit/audit_report/pages/audit_report_list_page.dart';
@@ -1350,7 +1348,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 13) return const UserOfficePage();
       if (selectedSubPage == 14) return const UserRolePage();
       if (selectedSubPage == 15) return const StrategyReviewPeriodPage();
-      if (selectedSubPage == 25) return const IQASignatoryTemplatePage();
+      if (selectedSubPage == 23) return const IQASignatoryTemplatePage();
       if (selectedSubPage == 16) {
         return const PerformanceValidationToolPeriodPage();
       }
@@ -1372,12 +1370,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 22) {
         return const ServiceHeadOfficePage();
       }
-      if (selectedSubPage == 23) {
-        return const AuditPlanApprovalPage();
-      }
-      if (selectedSubPage == 24) {
-        return const AuditPlanStatusPage();
-      }
+      
     }
     return HomePage();
   }
@@ -1631,9 +1624,7 @@ class SidebarState extends State<Sidebar> {
           _NavChild('SWOT — Opportunities & Threats', 20),
           _NavChild('Evaluator Offices', 21),
           _NavChild('Service Head Office', 22),
-          _NavChild('Audit Plan Approval', 23),
-          _NavChild('Audit Plan Status', 24),
-          _NavChild('Audit IQA Signatory', 25),                                       
+          _NavChild('Audit IQA Signatory', 23),                                       
         ],
       ),
     ];

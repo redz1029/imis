@@ -5,7 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Base.Pagination;
 using Base.Primitives;
+using IMIS.Application.AuditComFindingsModule;
 using IMIS.Application.AuditReportModule;
+using IMIS.Application.AuditScopeModule;
+using IMIS.Application.AuditSummaryFindingsModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -71,7 +74,69 @@ namespace IMIS.Persistence.AuditReportModule
             }
 
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            // The three child collections are nulled out in AuditReportDto.ToEntity()
+            // (the parent must be tracked without them), so the DTO's rows have to be
+            // re-attached here. This runs AFTER the parent insert so entity.Id is the
+            // real generated key, and it re-keys the children to that id rather than
+            // trusting whatever AuditReportId the client sent. AuditReportId is
+            // required + FK on all three child entities, so without this block the
+            // commendable findings / auditees / summary-of-findings rows were deleted
+            // on update and never re-created — silently discarding the user's input.
+            AddChildCollections(dbContext, aDto, entity.Id);
+
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             aDto.Id = entity.Id;
+        }
+
+        private static void AddChildCollections(DbContext dbContext, AuditReportDto dto, int auditReportId)
+        {
+            // Children are built with an object initializer rather than ToEntity()
+            // because Id/RowVersion are init-only and cannot be reset after the
+            // fact. Every child is re-inserted instead of updated: the existing rows
+            // were removed just above, so carrying the client's Id over would make
+            // EF issue an INSERT against a primary key that was deleted moments
+            // earlier and fail with a PK violation. The DTO's child Ids therefore
+            // only identify "which row this was", not what to persist.
+            foreach (var child in dto.AuditComFindings ?? new List<AuditComFindingsDto>())
+            {
+                if (child == null) continue;
+                dbContext.Set<AuditComFindings>().Add(new AuditComFindings
+                {
+                    Id = 0,
+                    CommendableFindings = child.CommendableFindings,
+                    Area = child.AreasId ?? 0,
+                    AuditReportId = auditReportId,
+                    IsDeleted = false
+                });
+            }
+
+            foreach (var child in dto.AuditScope ?? new List<AuditScopeDto>())
+            {
+                if (child == null) continue;
+                dbContext.Set<AuditScope>().Add(new AuditScope
+                {
+                    Id = 0,
+                    Auditee = child.Auditee,
+                    TeamId = child.TeamId,
+                    AuditReportId = auditReportId,
+                    IsDeleted = false
+                });
+            }
+
+            foreach (var child in dto.AuditSummaryFindings ?? new List<AuditSummaryFindingsDto>())
+            {
+                if (child == null) continue;
+                dbContext.Set<AuditSummaryFIndings>().Add(new AuditSummaryFIndings
+                {
+                    Id = 0,
+                    No = child.No,
+                    Findings = child.Findings,
+                    AuditNcarStatusId = child.AuditNcarStatusId,
+                    AuditReportId = auditReportId,
+                    IsDeleted = false
+                });
+            }
         }
 
         public async Task<AuditReportDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
@@ -93,7 +158,6 @@ namespace IMIS.Persistence.AuditReportModule
         public async Task<DtoPageList<AuditReportDto, AuditReport, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var result = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (result.TotalCount == 0) return null!;
 
             // Uses explicit raw database collection arrays to perfectly satisfy base signatures
             return DtoPageList<AuditReportDto, AuditReport, int>.Create(

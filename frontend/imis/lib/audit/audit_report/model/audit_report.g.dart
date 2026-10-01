@@ -10,8 +10,8 @@ AuditReport _$AuditReportFromJson(Map<String, dynamic> json) => AuditReport(
   id: (json['id'] as num?)?.toInt() ?? 0,
   isDeleted: json['isDeleted'] as bool? ?? false,
   rowVersion: json['rowVersion'] as String? ?? "",
-  auditPurpose: json['auditPurpose'] as String,
-  auditConclusions: json['auditConclusions'] as String,
+  auditPurpose: json['auditPurpose'] as String? ?? '',
+  auditConclusions: json['auditConclusions'] as String? ?? '',
   officeAuditedId: (json['officeAuditedId'] as num?)?.toInt(),
   officeAuditedName: json['officeAuditedName'] as String?,
   auditStandardISOId: (json['auditStandardISOId'] as num?)?.toInt(),
@@ -25,6 +25,12 @@ AuditReport _$AuditReportFromJson(Map<String, dynamic> json) => AuditReport(
           : AuditPlanEntry.fromJson(
             json['auditPlanEntry'] as Map<String, dynamic>,
           ),
+  auditScheduleId: (json['auditScheduleId'] as num?)?.toInt() ?? 0,
+  auditDate: const IsoDateTimeConverter().fromJson(
+    json['auditDate'] as String?,
+  ),
+  planOfficeProcess: json['planOfficeProcess'] as String?,
+  planAuditTeamName: json['planAuditTeamName'] as String?,
   auditComFindings:
       (json['auditComFindings'] as List<dynamic>?)
           ?.map((e) => AuditComFindings.fromJson(e as Map<String, dynamic>))
@@ -53,7 +59,10 @@ Map<String, dynamic> _$AuditReportToJson(AuditReport instance) =>
       'auditeeId': instance.auditeeId,
       'auditeeName': instance.auditeeName,
       'auditPlanEntryId': instance.auditPlanEntryId,
-      'auditPlanEntry': instance.auditPlanEntry?.toJson(),
+      'auditScheduleId': instance.auditScheduleId,
+      'auditDate': const IsoDateTimeConverter().toJson(instance.auditDate),
+      'planOfficeProcess': instance.planOfficeProcess,
+      'planAuditTeamName': instance.planAuditTeamName,
       'auditComFindings':
           instance.auditComFindings?.map((e) => e.toJson()).toList(),
       'auditScope': instance.auditScope?.map((e) => e.toJson()).toList(),

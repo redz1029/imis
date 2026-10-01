@@ -65,12 +65,23 @@ namespace IMIS.Persistence.IQASignatoryModule
             if (string.IsNullOrWhiteSpace(auditEntityType) || auditEntityId <= 0)
                 return new List<IQASignatoryDto>();
 
+            // The three typed cases below go through repository methods that
+            // filter on the dedicated FK (AuditProgrammeId / AuditPlanId /
+            // AuditScheduleId). Any other entity type — "AuditReport" today,
+            // anything added later — has no such FK, so it falls back to the
+            // generic (AuditEntityType, AuditEntityId) pair that
+            // SubmitForApprovalAsync always populates. Without this fallback
+            // every approval read/write for a new entity type silently
+            // returned an empty chain.
             IEnumerable<IQASignatory> signatories = auditEntityType switch
             {
                 "AuditProgramme" => await _signatoryRepository.GetByAuditProgrammeIdAsync(auditEntityId, cancellationToken),
                 "AuditPlan" => await _signatoryRepository.GetByAuditPlanIdAsync(auditEntityId, cancellationToken),
                 "AuditSchedule" => await _signatoryRepository.GetByAuditScheduleIdAsync(auditEntityId, cancellationToken),
-                _ => new List<IQASignatory>()
+                _ => await _dbContext.Set<IQASignatory>()
+                        .Where(s => s.AuditEntityType == auditEntityType && s.AuditEntityId == auditEntityId)
+                        .Include(s => s.IQASignatoryTemplate)
+                        .ToListAsync(cancellationToken)
             };
 
             return signatories

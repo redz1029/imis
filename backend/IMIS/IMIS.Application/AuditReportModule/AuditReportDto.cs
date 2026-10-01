@@ -54,13 +54,13 @@ namespace IMIS.Application.AuditReportModule
             if (entity.OfficeAudited != null)
             {
                 OfficeAuditedId = entity.OfficeAudited.Id;
-                OfficeAuditedName = entity.OfficeAudited.ToString();
+                OfficeAuditedName = entity.OfficeAudited.Office?.Name ?? entity.OfficeAudited.ProcessName;
             }
 
             if (entity.AuditStandardISO != null)
             {
                 AuditStandardISOId = entity.AuditStandardISO.Id;
-                AuditStandardISOName = entity.AuditStandardISO.ToString();
+                AuditStandardISOName = entity.AuditStandardISO.Particulars ?? entity.AuditStandardISO.ClauseRef ?? entity.AuditStandardISO.ToString();
             }
 
             if (entity.Auditee != null)
@@ -79,6 +79,11 @@ namespace IMIS.Application.AuditReportModule
                     PlanOfficeProcess = string.Join(", ", processes
                         .Select(p => p.Office?.Name ?? p.ProcessName)
                         .Where(n => !string.IsNullOrWhiteSpace(n)));
+
+                    if (string.IsNullOrWhiteSpace(OfficeAuditedName))
+                    {
+                        OfficeAuditedName = PlanOfficeProcess;
+                    }
                 }
 
                 var auditors = entity.AuditPlanEntry.IsoAuditors;
@@ -92,7 +97,15 @@ namespace IMIS.Application.AuditReportModule
                 AuditComFindings = entity.AuditComFindings.Select(x => new AuditComFindingsDto(x)).ToList();
 
             if (entity.AuditScope != null)
+            {
                 AuditScope = entity.AuditScope.Select(x => new AuditScopeDto(x)).ToList();
+                if (string.IsNullOrWhiteSpace(AuditeeName) && entity.AuditScope.Any())
+                {
+                    AuditeeName = string.Join(", ", entity.AuditScope
+                        .Select(s => s.Auditee)
+                        .Where(a => !string.IsNullOrWhiteSpace(a)));
+                }
+            }
 
             if (entity.AuditSummaryFIndings != null)
                 AuditSummaryFindings = entity.AuditSummaryFIndings.Select(x => new AuditSummaryFindingsDto(x)).ToList();
