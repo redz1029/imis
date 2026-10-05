@@ -28,6 +28,11 @@ namespace IMIS.Application.IQASignatoryModule
             public const string Pending = "PENDING";
             public const string Approved = "APPROVED";
             public const string Disapproved = "DISAPPROVED";
+            public const string Rejected = "REJECTED";
+            public const string RevisionRequired = "REVISION_REQUIRED";
+            public const string Resubmitted = "RESUBMITTED";
+            public const string PendingConfirmation = "PENDING_CONFIRMATION";
+            public const string Confirmed = "CONFIRMED";
         }
 
         public static class Decisions
@@ -35,36 +40,87 @@ namespace IMIS.Application.IQASignatoryModule
             public const string Pending = "Pending";
             public const string Approved = "Approved";
             public const string Disapproved = "Disapproved";
+            public const string Rejected = "Rejected";
+            public const string Noted = "Noted";
+            public const string Confirmed = "Confirmed";
+        }
+
+        public static class Actions
+        {
+            public const string Submitted = "Submitted";
+            public const string Resubmitted = "Resubmitted";
+            public const string Approved = "Approved";
+            public const string Rejected = "Rejected";
+            public const string Noted = "Noted";
+            public const string Confirmed = "Confirmed";
         }
 
         private static bool Is(string? value, string expected) =>
             string.Equals(value, expected, StringComparison.OrdinalIgnoreCase);
 
-        public static string StateName(string stateCode) => stateCode switch
+        public static string StateName(string stateCode, string? entityType = null) => stateCode switch
         {
-            StateCodes.Pending => "Pending",
+            StateCodes.Pending => entityType == EntityTypes.AuditSchedule ? "Pending Confirmation" : "Pending Approval",
+            StateCodes.PendingConfirmation => "Pending Confirmation",
             StateCodes.Approved => "Approved",
-            StateCodes.Disapproved => "Disapproved",
+            StateCodes.Confirmed => "Confirmed",
+            StateCodes.Disapproved => "Rejected",
+            StateCodes.Rejected => "Rejected",
+            StateCodes.RevisionRequired => "Revision Required",
+            StateCodes.Resubmitted => "Resubmitted",
             _ => "Draft"
         };
 
-        /// <summary>Live (not deleted) rows in approval order.</summary>
+        public static int GetWorkflowOrder(IQASignatoryTemplate? template)
+        {
+            if (template == null) return 99;
+            var label = (template.SignatoryLabel ?? "").ToUpperInvariant();
+            var pos = (template.Position ?? "").ToUpperInvariant();
+
+            if (label.Contains("PREPAR") || pos.Contains("PREPAR") || label.Contains("LEAD AUDITOR") || pos.Contains("LEAD AUDITOR"))
+                return 1;
+            if (label.Contains("NOTE") || pos.Contains("NOTE") || label.Contains("RECOMMEND") || pos.Contains("REVIEW") || label.Contains("ENDORSE"))
+                return 2;
+            if (label.Contains("APPROV") || pos.Contains("APPROV") || label.Contains("QMR") || pos.Contains("CHIEF"))
+                return 3;
+
+            return template.OrderLevel > 0 ? template.OrderLevel : 99;
+        }
+
+        /// <summary>Live (not deleted) rows in workflow hierarchy order.</summary>
         public static List<IQASignatory> Ordered(IEnumerable<IQASignatory>? signatories) =>
             (signatories ?? Enumerable.Empty<IQASignatory>())
                 .Where(s => !s.IsDeleted)
-                .OrderBy(s => s.IQASignatoryTemplate?.OrderLevel ?? int.MaxValue)
+                .OrderBy(s => GetWorkflowOrder(s.IQASignatoryTemplate))
+                .ThenBy(s => s.IQASignatoryTemplate?.OrderLevel ?? int.MaxValue)
                 .ThenBy(s => s.Id)
                 .ToList();
 
-        public static string DeriveStateCode(IEnumerable<IQASignatory>? signatories) =>
-            DeriveFromStatuses(Ordered(signatories).Select(s => s.ApprovalStatus).ToList());
-
-        private static string DeriveFromStatuses(IReadOnlyCollection<string?> statuses)
+        public static string DeriveStateCode(
+            IEnumerable<IQASignatory>? signatories,
+            string? entityType = null,
+            bool hasScheduleNeedingRevision = false)
         {
+            if (hasScheduleNeedingRevision)
+                return StateCodes.RevisionRequired;
+
+            var ordered = Ordered(signatories);
+            var statuses = ordered.Select(s => s.ApprovalStatus).ToList();
+
             if (statuses.Count == 0) return StateCodes.Draft;
-            if (statuses.Any(s => Is(s, Decisions.Disapproved))) return StateCodes.Disapproved;
-            if (statuses.Any(s => !Is(s, Decisions.Approved))) return StateCodes.Pending;
-            return StateCodes.Approved;
+
+            if (statuses.Any(s => Is(s, Decisions.Rejected) || Is(s, Decisions.Disapproved)))
+                return StateCodes.RevisionRequired;
+
+            bool allSigned = statuses.All(s =>
+                Is(s, Decisions.Approved) || Is(s, Decisions.Noted) || Is(s, Decisions.Confirmed));
+
+            if (allSigned)
+            {
+                return entityType == EntityTypes.AuditSchedule ? StateCodes.Confirmed : StateCodes.Approved;
+            }
+
+            return entityType == EntityTypes.AuditSchedule ? StateCodes.PendingConfirmation : StateCodes.Pending;
         }
 
         public static async Task<string> GetStateCodeAsync(
@@ -76,23 +132,47 @@ namespace IMIS.Application.IQASignatoryModule
                 .Select(s => s.ApprovalStatus)
                 .ToListAsync(ct);
 
-            return DeriveFromStatuses(statuses);
+            bool scheduleNeedsRevision = false;
+            if (entityType == EntityTypes.AuditPlan)
+            {
+                scheduleNeedsRevision = await db.Set<AuditSchedule>()
+                    .Where(s => s.AuditPlanId == entityId && !s.IsDeleted)
+                    .SelectMany(s => s.IQASignatories.Where(sig => !sig.IsDeleted))
+                    .AnyAsync(sig => sig.ApprovalStatus == Decisions.Rejected || sig.ApprovalStatus == Decisions.Disapproved, ct);
+            }
+
+            return DeriveStateCode(
+                statuses.Select(st => new IQASignatory { Id = 0, AuditEntityType = entityType, AuditEntityId = entityId, SignatoryId = "", ApprovalStatus = st }),
+                entityType,
+                scheduleNeedsRevision);
         }
 
         /// <summary>
-        /// Draft or Disapproved -> Pending. Retires any previous chain (soft delete,
-        /// rows stay in the DB) and creates a fresh Pending row per template.
+        /// Draft / Rejected / Revision Required -> Pending Approval (or Pending Confirmation).
+        /// Soft-deletes any previous active signatory chain and creates a fresh Pending row per template.
+        /// Records persistent entry in IQAApprovalHistory (survives resubmissions).
         /// </summary>
         public static async Task<(bool Success, string? Error)> SubmitAsync(
-            DbContext db, string entityType, int entityId, string displayName, CancellationToken ct)
+            DbContext db,
+            string entityType,
+            int entityId,
+            string displayName,
+            string? userId,
+            string? comments,
+            CancellationToken ct)
         {
             var live = await db.Set<IQASignatory>()
                 .Where(s => s.AuditEntityType == entityType && s.AuditEntityId == entityId && !s.IsDeleted)
                 .ToListAsync(ct);
 
-            var state = DeriveStateCode(live);
-            if (state != StateCodes.Draft && state != StateCodes.Disapproved)
-                return (false, $"Cannot submit {displayName} from status '{StateName(state)}'.");
+            var state = DeriveStateCode(live, entityType);
+            if (state != StateCodes.Draft &&
+                state != StateCodes.Disapproved &&
+                state != StateCodes.Rejected &&
+                state != StateCodes.RevisionRequired)
+            {
+                return (false, $"Cannot submit {displayName} from status '{StateName(state, entityType)}'.");
+            }
 
             var templates = await db.Set<IQASignatoryTemplate>()
                 .AsNoTracking()
@@ -103,31 +183,85 @@ namespace IMIS.Application.IQASignatoryModule
             if (templates.Count == 0)
                 return (false, $"No active approval signatory template is configured for {displayName}.");
 
-            if (templates.Select(t => t.OfficeId).Distinct().Count() > 1)
-                return (false, $"Approval signatory templates for {displayName} are configured under more than one office. Keep a single active chain.");
+            // For AuditSchedule, find the Department Head of the scheduled office
+            string? deptHeadUserId = null;
+            string? scheduledOfficeName = null;
+            if (entityType == EntityTypes.AuditSchedule)
+            {
+                var schedule = await db.Set<AuditSchedule>()
+                    .Include(s => s.AuditableOffices!)
+                        .ThenInclude(ao => ao.Office)
+                    .FirstOrDefaultAsync(s => s.Id == entityId, ct);
 
-            // Never skip a level silently: a chain with a missing level would
-            // otherwise reach "Approved" without that person ever signing.
-            var missing = templates
-                .Where(t => string.IsNullOrWhiteSpace(t.DefaultSignatoryId))
-                .Select(t => t.SignatoryLabel)
-                .ToList();
-            if (missing.Count > 0)
-                return (false, $"No default signatory is assigned for: {string.Join(", ", missing)}.");
+                var office = schedule?.AuditableOffices?.FirstOrDefault()?.Office;
+                if (office != null)
+                {
+                    scheduledOfficeName = office.Name;
+                    var head = await db.Set<UserOffices>()
+                        .Where(uo => uo.OfficeId == office.Id && uo.IsOfficeHead && uo.IsActive && !uo.IsDeleted)
+                        .Select(uo => uo.UserId)
+                        .FirstOrDefaultAsync(ct);
+                    if (!string.IsNullOrWhiteSpace(head))
+                    {
+                        deptHeadUserId = head;
+                    }
+                }
+            }
 
+            // Check if any template lacks a signatory
+            foreach (var t in templates)
+            {
+                bool isDeptHeadSlot = t.SignatoryLabel.Contains("Department Head", StringComparison.OrdinalIgnoreCase);
+                if (isDeptHeadSlot && !string.IsNullOrWhiteSpace(deptHeadUserId))
+                {
+                    continue; // Will use resolved department head
+                }
+                if (string.IsNullOrWhiteSpace(t.DefaultSignatoryId))
+                {
+                    return (false, $"No default signatory is assigned for: {t.SignatoryLabel}.");
+                }
+            }
+
+            var hadRejection = await db.Set<IQAApprovalHistory>()
+                .AnyAsync(h => h.AuditEntityType == entityType && h.AuditEntityId == entityId &&
+                    (h.Action == Actions.Rejected || h.Status == StateName(StateCodes.RevisionRequired, entityType)), ct);
+
+            // Retire previous live signatory chain (their history remains preserved in IQAApprovalHistory)
             foreach (var old in live)
                 old.IsDeleted = true;
 
-            foreach (var template in templates)
+            // Create fresh signatories ordered by workflow hierarchy:
+            // 1: Prepared by (Norhan Mangansakan / Lead Auditor)
+            // 2: Noted by (Dr. Nurlinda P. Arumpac)
+            // 3: Approved by (Dr. John O. Maliga)
+            var orderedTemplates = templates
+                .OrderBy(t => GetWorkflowOrder(t))
+                .ThenBy(t => t.OrderLevel)
+                .ThenBy(t => t.Id)
+                .ToList();
+
+            foreach (var template in orderedTemplates)
             {
+                string targetSignatoryId = template.DefaultSignatoryId ?? "";
+                bool isDeptHeadSlot = template.SignatoryLabel.Contains("Department Head", StringComparison.OrdinalIgnoreCase);
+                if (isDeptHeadSlot && !string.IsNullOrWhiteSpace(deptHeadUserId))
+                {
+                    targetSignatoryId = deptHeadUserId;
+                }
+
+                int stage = GetWorkflowOrder(template);
+                bool isPreparer = stage == 1;
+
                 var row = new IQASignatory
                 {
                     Id = 0,
                     AuditEntityType = entityType,
                     AuditEntityId = entityId,
                     IQASignatoryTemplateId = template.Id,
-                    SignatoryId = template.DefaultSignatoryId!,
-                    ApprovalStatus = Decisions.Pending
+                    SignatoryId = isPreparer && !string.IsNullOrWhiteSpace(userId) ? userId : targetSignatoryId,
+                    ApprovalStatus = isPreparer ? Decisions.Approved : Decisions.Pending,
+                    DateSigned = isPreparer ? DateTime.UtcNow : null,
+                    Remarks = isPreparer ? "Prepared and submitted" : null
                 };
 
                 switch (entityType)
@@ -140,47 +274,241 @@ namespace IMIS.Application.IQASignatoryModule
                 db.Set<IQASignatory>().Add(row);
             }
 
+            string actionName = hadRejection ? Actions.Resubmitted : Actions.Submitted;
+            string resultingStatus = entityType == EntityTypes.AuditSchedule
+                ? "Pending Confirmation"
+                : "Pending Approval";
+
+            var historyRecord = new IQAApprovalHistory
+            {
+                Id = 0,
+                AuditEntityType = entityType,
+                AuditEntityId = entityId,
+                AuditProgrammeId = entityType == EntityTypes.AuditProgramme ? entityId : null,
+                AuditPlanId = entityType == EntityTypes.AuditPlan ? entityId : null,
+                AuditScheduleId = entityType == EntityTypes.AuditSchedule ? entityId : null,
+                Action = actionName,
+                Status = resultingStatus,
+                UserId = !string.IsNullOrWhiteSpace(userId) ? userId : "system",
+                ActionDate = DateTime.UtcNow,
+                Comments = comments,
+                OfficeName = scheduledOfficeName,
+                RoleOrPosition = "Preparer"
+            };
+
+            db.Set<IQAApprovalHistory>().Add(historyRecord);
+
             return (true, null);
         }
 
+        public static Task<(bool Success, string? Error)> SubmitAsync(
+            DbContext db, string entityType, int entityId, string displayName, CancellationToken ct) =>
+            SubmitAsync(db, entityType, entityId, displayName, null, null, ct);
+
         /// <summary>
-        /// Pending -> Approved/Disapproved. Signs the FIRST unsigned row, and only if it belongs
-        /// to approverId. A disapproval stops the chain; later rows are left untouched.
+        /// Handles Approve, Reject, Noted, Confirm decisions.
+        /// When rejected: comments/reason is REQUIRED.
+        /// Records persistent entry in IQAApprovalHistory.
         /// </summary>
         public static async Task<(bool Success, string? Error)> DecideAsync(
-            DbContext db, string entityType, int entityId, string displayName,
-            string approverId, bool approve, string? remarks, CancellationToken ct)
+            DbContext db,
+            string entityType,
+            int entityId,
+            string displayName,
+            string approverId,
+            string action,
+            string? comments,
+            string? officeName,
+            CancellationToken ct)
         {
             var live = Ordered(await db.Set<IQASignatory>()
                 .Include(s => s.IQASignatoryTemplate)
                 .Where(s => s.AuditEntityType == entityType && s.AuditEntityId == entityId && !s.IsDeleted)
                 .ToListAsync(ct));
 
-            var state = DeriveStateCode(live);
-            if (state != StateCodes.Pending)
-                return (false, $"Cannot decide on {displayName} in status '{StateName(state)}'.");
+            var state = DeriveStateCode(live, entityType);
+            if (state != StateCodes.Pending && state != StateCodes.PendingConfirmation)
+                return (false, $"Cannot decide on {displayName} in status '{StateName(state, entityType)}'.");
 
-            var next = live.FirstOrDefault(s => !Is(s.ApprovalStatus, Decisions.Approved));
-            if (next == null)
-                return (false, "No pending signatory found.");
-
-            if (!string.Equals(next.SignatoryId, approverId, StringComparison.OrdinalIgnoreCase))
+            // Check if user is an Administrator (Admin has master override across all workflow approvals)
+            bool isAdmin = false;
+            if (!string.IsNullOrWhiteSpace(approverId))
             {
-                var inChain = live.Any(s =>
-                    !Is(s.ApprovalStatus, Decisions.Approved) &&
-                    string.Equals(s.SignatoryId, approverId, StringComparison.OrdinalIgnoreCase));
-                var waitingOn = next.IQASignatoryTemplate?.SignatoryLabel ?? "the previous signatory";
-
-                return (false, inChain
-                    ? $"It is not your turn to sign yet. Waiting for {waitingOn}."
-                    : $"You are not a pending signatory for {displayName}.");
+                var adminRoleId = "56996e97-9e8a-4d22-a693-c865144e9b96";
+                isAdmin = await db.Set<Microsoft.AspNetCore.Identity.IdentityUserRole<string>>()
+                    .AnyAsync(ur => ur.UserId == approverId && ur.RoleId == adminRoleId, ct);
             }
 
-            next.ApprovalStatus = approve ? Decisions.Approved : Decisions.Disapproved;
-            next.DateSigned = DateTime.UtcNow;
-            next.Remarks = remarks;
+            // Find matching pending slot for this caller:
+            // First check if approverId directly matches a pending slot (e.g. Dr. Arumpac or Dr. Maliga)
+            var targetSlot = live.FirstOrDefault(s =>
+                string.Equals(s.SignatoryId, approverId, StringComparison.OrdinalIgnoreCase) &&
+                !Is(s.ApprovalStatus, Decisions.Approved) &&
+                !Is(s.ApprovalStatus, Decisions.Noted) &&
+                !Is(s.ApprovalStatus, Decisions.Confirmed));
+
+            // Department Head dynamic association for AuditSchedule
+            if (targetSlot == null && entityType == EntityTypes.AuditSchedule)
+            {
+                var deptSlot = live.FirstOrDefault(s =>
+                    s.IQASignatoryTemplate?.SignatoryLabel.Contains("Department Head", StringComparison.OrdinalIgnoreCase) == true &&
+                    !Is(s.ApprovalStatus, Decisions.Approved) &&
+                    !Is(s.ApprovalStatus, Decisions.Confirmed));
+
+                if (deptSlot != null)
+                {
+                    var schedule = await db.Set<AuditSchedule>()
+                        .Include(s => s.AuditableOffices)
+                        .FirstOrDefaultAsync(s => s.Id == entityId, ct);
+                    var scheduleOfficeId = schedule?.AuditableOffices?.FirstOrDefault()?.OfficeId;
+                    if (scheduleOfficeId.HasValue)
+                    {
+                        bool isHead = await db.Set<UserOffices>()
+                            .AnyAsync(uo => uo.OfficeId == scheduleOfficeId.Value && uo.UserId == approverId && uo.IsOfficeHead && uo.IsActive && !uo.IsDeleted, ct);
+                        if (isHead)
+                        {
+                            deptSlot.SignatoryId = approverId;
+                            targetSlot = deptSlot;
+                        }
+                    }
+                }
+            }
+
+            // If Admin or no exact slot, pick the next pending slot
+            if (targetSlot == null && isAdmin)
+            {
+                if (Is(action, Actions.Approved) || Is(action, "Approve"))
+                {
+                    targetSlot = live.LastOrDefault(s =>
+                        !Is(s.ApprovalStatus, Decisions.Approved) &&
+                        !Is(s.ApprovalStatus, Decisions.Noted) &&
+                        !Is(s.ApprovalStatus, Decisions.Confirmed));
+                }
+                else
+                {
+                    targetSlot = live.FirstOrDefault(s =>
+                        !Is(s.ApprovalStatus, Decisions.Approved) &&
+                        !Is(s.ApprovalStatus, Decisions.Noted) &&
+                        !Is(s.ApprovalStatus, Decisions.Confirmed));
+                }
+            }
+
+            if (targetSlot == null)
+            {
+                return (false, $"You are not an authorized pending signatory for {displayName}.");
+            }
+
+            bool isRejection = Is(action, Actions.Rejected) || Is(action, "Disapprove") || Is(action, "Reject");
+
+            if (isRejection)
+            {
+                if (string.IsNullOrWhiteSpace(comments))
+                {
+                    return (false, "Please provide a comment or reason for rejection.");
+                }
+
+                targetSlot.ApprovalStatus = Decisions.Rejected;
+                targetSlot.DateSigned = DateTime.UtcNow;
+                targetSlot.Remarks = comments;
+
+                var rejectionRecord = new IQAApprovalHistory
+                {
+                    Id = 0,
+                    AuditEntityType = entityType,
+                    AuditEntityId = entityId,
+                    AuditProgrammeId = entityType == EntityTypes.AuditProgramme ? entityId : null,
+                    AuditPlanId = entityType == EntityTypes.AuditPlan ? entityId : null,
+                    AuditScheduleId = entityType == EntityTypes.AuditSchedule ? entityId : null,
+                    Action = Actions.Rejected,
+                    Status = "Revision Required",
+                    UserId = approverId,
+                    ActionDate = DateTime.UtcNow,
+                    Comments = comments,
+                    OfficeName = officeName,
+                    RoleOrPosition = targetSlot.IQASignatoryTemplate?.SignatoryLabel ?? (isAdmin ? "Administrator" : "Approver")
+                };
+                db.Set<IQAApprovalHistory>().Add(rejectionRecord);
+
+                return (true, null);
+            }
+
+            string normalizedAction = Actions.Approved;
+            string decisionStatus = Decisions.Approved;
+
+            if (Is(action, Actions.Noted) || Is(action, "Note"))
+            {
+                normalizedAction = Actions.Noted;
+                decisionStatus = Decisions.Noted;
+            }
+            else if (Is(action, Actions.Confirmed) || Is(action, "Confirm"))
+            {
+                normalizedAction = Actions.Confirmed;
+                decisionStatus = Decisions.Confirmed;
+            }
+
+            targetSlot.ApprovalStatus = decisionStatus;
+            targetSlot.DateSigned = DateTime.UtcNow;
+            targetSlot.Remarks = comments;
+
+            // If the final approver approves (e.g. Dr. Maliga), mark any preceding uncompleted review/noted slots as Noted
+            int targetStage = GetWorkflowOrder(targetSlot.IQASignatoryTemplate);
+            if (targetStage >= 3 && (normalizedAction == Actions.Approved || normalizedAction == Actions.Confirmed))
+            {
+                var precedingUnsigned = live.Where(s =>
+                    GetWorkflowOrder(s.IQASignatoryTemplate) < targetStage &&
+                    !Is(s.ApprovalStatus, Decisions.Approved) &&
+                    !Is(s.ApprovalStatus, Decisions.Noted) &&
+                    !Is(s.ApprovalStatus, Decisions.Confirmed)).ToList();
+
+                foreach (var prec in precedingUnsigned)
+                {
+                    prec.ApprovalStatus = Decisions.Noted;
+                    prec.DateSigned = DateTime.UtcNow;
+                    prec.Remarks = "Noted upon final approval";
+                }
+            }
+
+            var remaining = live.Where(s =>
+                s.Id != targetSlot.Id &&
+                !Is(s.ApprovalStatus, Decisions.Approved) &&
+                !Is(s.ApprovalStatus, Decisions.Noted) &&
+                !Is(s.ApprovalStatus, Decisions.Confirmed)).ToList();
+
+            bool isFullyApproved = remaining.Count == 0;
+            string resultingStatus = isFullyApproved
+                ? (entityType == EntityTypes.AuditSchedule ? "Confirmed" : "Approved")
+                : (entityType == EntityTypes.AuditSchedule ? "Pending Confirmation" : "Pending Approval");
+
+            var historyRecord = new IQAApprovalHistory
+            {
+                Id = 0,
+                AuditEntityType = entityType,
+                AuditEntityId = entityId,
+                AuditProgrammeId = entityType == EntityTypes.AuditProgramme ? entityId : null,
+                AuditPlanId = entityType == EntityTypes.AuditPlan ? entityId : null,
+                AuditScheduleId = entityType == EntityTypes.AuditSchedule ? entityId : null,
+                Action = normalizedAction,
+                Status = resultingStatus,
+                UserId = approverId,
+                ActionDate = DateTime.UtcNow,
+                Comments = comments,
+                OfficeName = officeName,
+                RoleOrPosition = targetSlot.IQASignatoryTemplate?.SignatoryLabel ?? (isAdmin ? "Administrator" : "Approver")
+            };
+            db.Set<IQAApprovalHistory>().Add(historyRecord);
 
             return (true, null);
         }
+
+        public static Task<(bool Success, string? Error)> DecideAsync(
+            DbContext db,
+            string entityType,
+            int entityId,
+            string displayName,
+            string approverId,
+            bool approve,
+            string? remarks,
+            CancellationToken ct) =>
+            DecideAsync(db, entityType, entityId, displayName, approverId, approve ? Actions.Approved : Actions.Rejected, remarks, null, ct);
     }
 }

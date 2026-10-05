@@ -1,4 +1,5 @@
 
+import 'package:imis/audit/iqa_signatory/model/iqa_approval_history.dart';
 import 'package:imis/audit/iqa_signatory/model/iqa_signatory.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -45,6 +46,24 @@ class AuditSchedules {
   )
   final List<IQASignatory> signatories;
 
+  @JsonKey(
+    includeFromJson: false,
+    includeToJson: false,
+  )
+  final List<IQAApprovalHistory> approvalHistory;
+
+  @JsonKey(
+    includeFromJson: false,
+    includeToJson: false,
+  )
+  final RejectionDetails? latestRejection;
+
+  @JsonKey(
+    includeFromJson: false,
+    includeToJson: false,
+  )
+  final String? officeName;
+
   const AuditSchedules({
     this.id = 0,
     this.purpose = '',
@@ -59,10 +78,45 @@ class AuditSchedules {
     this.statusCode,
     this.statusName,
     this.signatories = const [],
+    this.approvalHistory = const [],
+    this.latestRejection,
+    this.officeName,
   });
 
-  factory AuditSchedules.fromJson(Map<String, dynamic> json) =>
-      _$AuditSchedulesFromJson(json);
+  factory AuditSchedules.fromJson(Map<String, dynamic> json) {
+    final base = _$AuditSchedulesFromJson(json);
+    final history = IQAApprovalHistory.listFromJson(
+      json['approvalHistory'] ?? json['ApprovalHistory'],
+    );
+    RejectionDetails? rej;
+    final rejRaw = json['latestRejection'] ?? json['LatestRejection'];
+    if (rejRaw is Map<String, dynamic>) {
+      rej = RejectionDetails.fromJson(rejRaw);
+    } else if (rejRaw is Map) {
+      rej = RejectionDetails.fromJson(Map<String, dynamic>.from(rejRaw));
+    }
+
+    final officeName = json['officeName'] ?? json['OfficeName'] as String?;
+
+    return AuditSchedules(
+      id: base.id,
+      purpose: base.purpose,
+      activity: base.activity,
+      isActive: base.isActive,
+      rowVersion: base.rowVersion,
+      startDate: base.startDate,
+      endDate: base.endDate,
+      auditPlanId: base.auditPlanId,
+      auditPlanEntryId: base.auditPlanEntryId,
+      teamId: base.teamId,
+      statusCode: base.statusCode,
+      statusName: base.statusName,
+      signatories: base.signatories,
+      approvalHistory: history,
+      latestRejection: rej,
+      officeName: officeName,
+    );
+  }
 
   Map<String, dynamic> toJson() => _$AuditSchedulesToJson(this);
 

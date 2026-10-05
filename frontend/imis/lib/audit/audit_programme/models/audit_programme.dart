@@ -1,6 +1,8 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'audit_programme_objective.dart';
 import 'package:imis/audit/audit_plan/models/audit_plan.dart';
+import 'package:imis/audit/iqa_signatory/model/iqa_approval_history.dart';
+import 'package:imis/audit/iqa_signatory/model/iqa_signatory.dart';
 
 part 'audit_programme.g.dart';
 
@@ -70,6 +72,15 @@ class AuditProgramme {
   @JsonKey(name: 'auditPlan', defaultValue: [])
   List<AuditPlan> auditPlans;
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  List<IQASignatory> signatories;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  List<IQAApprovalHistory> approvalHistory;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  RejectionDetails? latestRejection;
+
   AuditProgramme({
     this.id = 0,
     this.isDeleted = false,
@@ -93,10 +104,28 @@ class AuditProgramme {
     this.verificationOfPreviousNonconformities = "",
     this.auditLimitations = "",
     this.auditPlans = const [],
+    this.signatories = const [],
+    this.approvalHistory = const [],
+    this.latestRejection,
   });
 
-  factory AuditProgramme.fromJson(Map<String, dynamic> json) =>
-      _$AuditProgrammeFromJson(json);
+  factory AuditProgramme.fromJson(Map<String, dynamic> json) {
+    final prog = _$AuditProgrammeFromJson(json);
+    prog.signatories = IQASignatory.listFromJson(
+      json['signatories'] ?? json['Signatories'],
+    );
+    prog.approvalHistory = IQAApprovalHistory.listFromJson(
+      json['approvalHistory'] ?? json['ApprovalHistory'],
+    );
+    final rejRaw = json['latestRejection'] ?? json['LatestRejection'];
+    if (rejRaw is Map<String, dynamic>) {
+      prog.latestRejection = RejectionDetails.fromJson(rejRaw);
+    } else if (rejRaw is Map) {
+      prog.latestRejection =
+          RejectionDetails.fromJson(Map<String, dynamic>.from(rejRaw));
+    }
+    return prog;
+  }
 
   get forField => null;
 

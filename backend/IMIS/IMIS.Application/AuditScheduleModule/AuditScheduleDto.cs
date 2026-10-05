@@ -28,6 +28,12 @@ namespace IMIS.Application.AuditScheduleModule
         // Live approval chain, in signing order.
         public List<IQASignatoryModule.IQASignatoryDto> Signatories { get; set; } = new();
 
+        // Persistent approval, confirmation, and rejection history
+        public List<IQASignatoryModule.IQAApprovalHistoryDto> ApprovalHistory { get; set; } = new();
+        public IQASignatoryModule.RejectionDetailsDto? LatestRejection { get; set; }
+
+        public string? OfficeName { get; set; }
+
         public AuditScheduleDto() { }
 
         [SetsRequiredMembers]
@@ -44,14 +50,65 @@ namespace IMIS.Application.AuditScheduleModule
             this.AuditPlanEntryId = entity.AuditPlanEntryId;
             this.RowVersion = entity.RowVersion;
 
+            if (entity.AuditableOffices != null && entity.AuditableOffices.Any())
+            {
+                this.OfficeName = entity.AuditableOffices.FirstOrDefault()?.Office?.Name;
+            }
+
             // Callers must load IQASignatories (non-deleted) or this reads as Draft.
             var signatories = IQAApprovalWorkflow.Ordered(entity.IQASignatories);
-            var stateCode = IQAApprovalWorkflow.DeriveStateCode(signatories);
+            var stateCode = IQAApprovalWorkflow.DeriveStateCode(signatories, IQAApprovalWorkflow.EntityTypes.AuditSchedule);
             this.StatusCode = stateCode;
-            this.StatusName = IQAApprovalWorkflow.StateName(stateCode);
+            this.StatusName = IQAApprovalWorkflow.StateName(stateCode, IQAApprovalWorkflow.EntityTypes.AuditSchedule);
             this.Signatories = signatories
                 .Select(s => new IQASignatoryModule.IQASignatoryDto(s))
                 .ToList();
+
+            if (entity.ApprovalHistories != null && entity.ApprovalHistories.Any())
+            {
+                this.ApprovalHistory = entity.ApprovalHistories
+                    .Where(h => !h.IsDeleted)
+                    .OrderBy(h => h.ActionDate)
+                    .Select(h => new IQASignatoryModule.IQAApprovalHistoryDto(h))
+                    .ToList();
+
+                var lastRej = entity.ApprovalHistories
+                    .Where(h => !h.IsDeleted && (h.Action == IQAApprovalWorkflow.Actions.Rejected || h.Status == "Revision Required"))
+                    .OrderByDescending(h => h.ActionDate)
+                    .FirstOrDefault();
+
+                if (lastRej != null)
+                {
+                    this.LatestRejection = new IQASignatoryModule.RejectionDetailsDto
+                    {
+                        RejectedBy = lastRej.User?.UserName,
+                        RejectedByUserId = lastRej.UserId,
+                        RejectedDate = lastRej.ActionDate,
+                        RejectionReason = lastRej.Comments,
+                        OfficeName = lastRej.OfficeName ?? this.OfficeName,
+                        RoleOrPosition = lastRej.RoleOrPosition
+                    };
+                }
+            }
+
+            if (this.LatestRejection == null)
+            {
+                var rejectedSig = signatories.FirstOrDefault(s =>
+                    s.ApprovalStatus == IQAApprovalWorkflow.Decisions.Rejected ||
+                    s.ApprovalStatus == IQAApprovalWorkflow.Decisions.Disapproved);
+                if (rejectedSig != null)
+                {
+                    this.LatestRejection = new IQASignatoryModule.RejectionDetailsDto
+                    {
+                        RejectedBy = rejectedSig.Signatory?.UserName,
+                        RejectedByUserId = rejectedSig.SignatoryId,
+                        RejectedDate = rejectedSig.DateSigned,
+                        RejectionReason = rejectedSig.Remarks,
+                        OfficeName = this.OfficeName,
+                        RoleOrPosition = rejectedSig.IQASignatoryTemplate?.SignatoryLabel
+                    };
+                }
+            }
         }
 
         public override AuditSchedule ToEntity()

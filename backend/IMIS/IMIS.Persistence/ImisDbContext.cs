@@ -96,6 +96,7 @@ namespace IMIS.Persistence
         // IQA Signatory entities
         public DbSet<IQASignatoryTemplate> IQASignatoryTemplates { get; set; }
         public DbSet<IQASignatory> IQASignatories { get; set; }
+        public DbSet<IQAApprovalHistory> IQAApprovalHistories { get; set; }
 
         //Audit Report entities
 
@@ -325,6 +326,31 @@ namespace IMIS.Persistence
                 .HasOne(t => t.DefaultSignatory)
                 .WithMany()
                 .HasForeignKey(t => t.DefaultSignatoryId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // IQAApprovalHistory relationships
+            builder.Entity<IQAApprovalHistory>()
+                .HasOne(h => h.AuditProgramme)
+                .WithMany(p => p.ApprovalHistories)
+                .HasForeignKey(h => h.AuditProgrammeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQAApprovalHistory>()
+                .HasOne(h => h.AuditPlan)
+                .WithMany(p => p.ApprovalHistories)
+                .HasForeignKey(h => h.AuditPlanId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQAApprovalHistory>()
+                .HasOne(h => h.AuditSchedule)
+                .WithMany(s => s.ApprovalHistories)
+                .HasForeignKey(h => h.AuditScheduleId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQAApprovalHistory>()
+                .HasOne(h => h.User)
+                .WithMany()
+                .HasForeignKey(h => h.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             //// ISO Standard configurations

@@ -21,7 +21,18 @@ namespace IMIS.Persistence.AuditPlanModule
             .Include(x => x.IQASignatories.Where(s => !s.IsDeleted))
                 .ThenInclude(s => s.Signatory)
             .Include(x => x.IQASignatories.Where(s => !s.IsDeleted))
-                .ThenInclude(s => s.IQASignatoryTemplate);
+                .ThenInclude(s => s.IQASignatoryTemplate)
+            .Include(x => x.ApprovalHistories.Where(h => !h.IsDeleted))
+                .ThenInclude(h => h.User)
+            .Include(x => x.AuditSchedules.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.IQASignatories.Where(sig => !sig.IsDeleted))
+                    .ThenInclude(sig => sig.Signatory)
+            .Include(x => x.AuditSchedules.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.ApprovalHistories.Where(h => !h.IsDeleted))
+                    .ThenInclude(h => h.User)
+            .Include(x => x.AuditSchedules.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.AuditableOffices!.Where(ao => !ao.IsDeleted))
+                    .ThenInclude(ao => ao.Office);
 
         public override async Task<AuditPlan?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {

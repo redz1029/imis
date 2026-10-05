@@ -37,6 +37,10 @@ namespace IMIS.Application.AuditProgrammeModule
         // Live approval chain, in signing order.
         public List<IQASignatoryDto> Signatories { get; set; } = new();
 
+        // Persistent approval & rejection history
+        public List<IQAApprovalHistoryDto> ApprovalHistory { get; set; } = new();
+        public RejectionDetailsDto? LatestRejection { get; set; }
+
         public List<AuditProgrammeObjectiveDto> Objectives { get; set; } = new();
 
         [JsonPropertyName("combinedObjectivesText")]
@@ -69,10 +73,55 @@ namespace IMIS.Application.AuditProgrammeModule
 
             // Callers must load IQASignatories (non-deleted) or this reads as Draft.
             var signatories = IQAApprovalWorkflow.Ordered(entity.IQASignatories);
-            var stateCode = IQAApprovalWorkflow.DeriveStateCode(signatories);
+            var stateCode = IQAApprovalWorkflow.DeriveStateCode(signatories, IQAApprovalWorkflow.EntityTypes.AuditProgramme);
             StatusCode = stateCode;
-            StatusName = IQAApprovalWorkflow.StateName(stateCode);
+            StatusName = IQAApprovalWorkflow.StateName(stateCode, IQAApprovalWorkflow.EntityTypes.AuditProgramme);
             Signatories = signatories.Select(s => new IQASignatoryDto(s)).ToList();
+
+            if (entity.ApprovalHistories != null && entity.ApprovalHistories.Any())
+            {
+                ApprovalHistory = entity.ApprovalHistories
+                    .Where(h => !h.IsDeleted)
+                    .OrderBy(h => h.ActionDate)
+                    .Select(h => new IQAApprovalHistoryDto(h))
+                    .ToList();
+
+                var lastRej = entity.ApprovalHistories
+                    .Where(h => !h.IsDeleted && (h.Action == IQAApprovalWorkflow.Actions.Rejected || h.Status == "Revision Required"))
+                    .OrderByDescending(h => h.ActionDate)
+                    .FirstOrDefault();
+
+                if (lastRej != null)
+                {
+                    LatestRejection = new RejectionDetailsDto
+                    {
+                        RejectedBy = FullNameOf(lastRej.User),
+                        RejectedByUserId = lastRej.UserId,
+                        RejectedDate = lastRej.ActionDate,
+                        RejectionReason = lastRej.Comments,
+                        OfficeName = lastRej.OfficeName,
+                        RoleOrPosition = lastRej.RoleOrPosition
+                    };
+                }
+            }
+
+            if (LatestRejection == null)
+            {
+                var rejectedSig = signatories.FirstOrDefault(s =>
+                    s.ApprovalStatus == IQAApprovalWorkflow.Decisions.Rejected ||
+                    s.ApprovalStatus == IQAApprovalWorkflow.Decisions.Disapproved);
+                if (rejectedSig != null)
+                {
+                    LatestRejection = new RejectionDetailsDto
+                    {
+                        RejectedBy = FullNameOf(rejectedSig.Signatory),
+                        RejectedByUserId = rejectedSig.SignatoryId,
+                        RejectedDate = rejectedSig.DateSigned,
+                        RejectionReason = rejectedSig.Remarks,
+                        RoleOrPosition = rejectedSig.IQASignatoryTemplate?.SignatoryLabel
+                    };
+                }
+            }
 
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
@@ -95,6 +144,15 @@ namespace IMIS.Application.AuditProgrammeModule
                     .Select(p => new AuditPlanDto(p))
                     .ToList();
             }
+        }
+
+        private static string? FullNameOf(User? user)
+        {
+            if (user == null) return null;
+            var parts = new[] { user.Prefix, user.FirstName, user.MiddleName, user.LastName, user.Suffix }
+                .Where(p => !string.IsNullOrWhiteSpace(p));
+            var full = string.Join(" ", parts);
+            return string.IsNullOrWhiteSpace(full) ? user.UserName : full;
         }
 
         public override AuditProgramme ToEntity()

@@ -14,23 +14,29 @@ namespace IMIS.Persistence.AuditScheduleModule
     {
         public AuditScheduleRepository(ImisDbContext dbContext) : base(dbContext) { }
 
+        private static IQueryable<AuditSchedule> WithSignatories(IQueryable<AuditSchedule> query) => query
+            .Include(x => x.IQASignatories.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.Signatory)
+            .Include(x => x.IQASignatories.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.IQASignatoryTemplate)
+            .Include(x => x.ApprovalHistories.Where(h => !h.IsDeleted))
+                .ThenInclude(h => h.User)
+            .Include(x => x.AuditableOffices!.Where(ao => !ao.IsDeleted))
+                .ThenInclude(ao => ao.Office);
+
         // --- Main entity retrieval ---
         public async Task<AuditSchedule?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await ReadOnlyDbContext.Set<AuditSchedule>()
+            return await WithSignatories(ReadOnlyDbContext.Set<AuditSchedule>())
                 .Include(x => x.Team)
-                .Include(x => x.AuditableOffices)
                 .Include(x => x.AuditSchduleDetails)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
         public async Task<AuditSchedule?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
-            // Note: If AuditableOffices or AuditSchduleDetails had deeper nested children, 
-            // you would add .ThenInclude() here similar to the AuditPlan pattern.
-            return await ReadOnlyDbContext.Set<AuditSchedule>()
+            return await WithSignatories(ReadOnlyDbContext.Set<AuditSchedule>())
                 .Include(x => x.Team)
-                .Include(x => x.AuditableOffices)
                 .Include(x => x.AuditSchduleDetails)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
@@ -43,9 +49,8 @@ namespace IMIS.Persistence.AuditScheduleModule
 
         public async Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken)
         {
-            return await _entities
+            return await WithSignatories(_entities)
                 .Include(x => x.Team)
-                .Include(x => x.AuditableOffices)
                 .Include(x => x.AuditSchduleDetails)
                 .ToListAsync(cancellationToken);
         }
@@ -53,7 +58,7 @@ namespace IMIS.Persistence.AuditScheduleModule
         public async Task<EntityPageList<AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             return await EntityPageList<AuditSchedule, int>
-                .CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken)
+                .CreateAsync(WithSignatories(_entities.AsNoTracking()), page, pageSize, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -90,20 +95,18 @@ namespace IMIS.Persistence.AuditScheduleModule
 
         public async Task<IEnumerable<AuditSchedule>> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken)
         {
-            return await _entities
+            return await WithSignatories(_entities)
                 .Where(x => x.AuditPlanId == auditPlanId && !x.IsDeleted)
                 .Include(x => x.Team)
-                .Include(x => x.AuditableOffices)
                 .Include(x => x.AuditSchduleDetails)
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<AuditSchedule>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken)
         {
-            return await _entities
+            return await WithSignatories(_entities)
                 .Where(x => x.AuditPlanEntryId == auditPlanEntryId && !x.IsDeleted)
                 .Include(x => x.Team)
-                .Include(x => x.AuditableOffices)
                 .Include(x => x.AuditSchduleDetails)
                 .ToListAsync(cancellationToken);
         }

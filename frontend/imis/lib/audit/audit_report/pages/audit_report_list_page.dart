@@ -8,6 +8,7 @@ import 'package:imis/audit/audit_report/model/audit_report.dart';
 import 'package:imis/audit/audit_report/pages/audit_report_page.dart';
 import 'package:imis/audit/audit_report/service/audit_report_service.dart';
 import 'package:imis/audit/iqa_signatory/model/iqa_signatory.dart';
+import 'package:imis/audit/widgets/approval_workflow_widgets.dart';
 import 'package:imis/constant/constant.dart';
 // import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/utils/auth_util.dart';
@@ -72,20 +73,29 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
   int _currentPage = 1;
   final int _pageSize = 15;
   bool _isLoading = false;
+  bool _isAdmin = false;
   final Set<int> _busyReportIds = {};
 
   @override
   void initState() {
     super.initState();
     _fetchReports();
+    AuthUtil.isCurrentUserAdmin().then((val) {
+      if (mounted) setState(() => _isAdmin = val);
+    });
   }
 
   Future<void> _fetchReports() async {
     setState(() => _isLoading = true);
     try {
       final data = await _service.getAllAuditReports();
-      await _loadApprovals(data);
-      if (mounted) setState(() => _allReports = data);
+      if (mounted) {
+        setState(() {
+          _allReports = data;
+          _isLoading = false;
+        });
+      }
+      _loadApprovals(data);
     } catch (e) {
       debugPrint(e.toString());
       if (mounted) {
@@ -405,14 +415,23 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
             if (!approval.isDraft &&
                 !approval.isFullyApproved &&
                 !approval.isDisapproved &&
-                next != null)
+                (next != null || _isAdmin)) ...[
               TextButton(
                 onPressed: () {
                   Navigator.pop(ctx);
-                  _confirmDecision(report, next!);
+                  _recordAdminDecision(report, next, false);
                 },
-                child: const Text('Approve / Disapprove'),
+                child: const Text('Reject', style: TextStyle(color: Colors.redAccent)),
               ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _recordAdminDecision(report, next, true);
+                },
+                child: const Text('Approve', style: TextStyle(color: Colors.white)),
+              ),
+            ],
             if (approval.isDisapproved)
               TextButton(
                 onPressed: () {
@@ -421,10 +440,84 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                 },
                 child: const Text('Reset & Resubmit'),
               ),
+            if (approval.isFullyApproved)
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple.shade700),
+                icon: const Icon(Icons.assignment_late_outlined, size: 16, color: Colors.white),
+                label: const Text('Create NCAR', style: TextStyle(color: Colors.white)),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  final user = await AuthUtil.fetchLoggedUser();
+                  try {
+                    await _service.createNcarFromAuditReport(
+                      auditReportId: report.id,
+                      issuedByAuditorUserId: user?.id ?? '',
+                      acknowledgedByAuditeeUserId: user?.id ?? '',
+                    );
+                    _toastSuccess('NCAR successfully created from Audit Report #${report.id}.');
+                  } catch (e) {
+                    _toastError('Failed to create NCAR: $e');
+                  }
+                },
+              ),
           ],
         );
       },
     );
+  }
+
+  Future<void> _recordAdminDecision(
+    AuditReport report,
+    IQASignatory? nextSignatory,
+    bool approve,
+  ) async {
+    final user = await AuthUtil.fetchLoggedUser();
+    final signatoryId = nextSignatory?.signatoryId ?? user?.id ?? '';
+
+    if (!approve) {
+      final reason = await RejectionDialog.show(
+        context,
+        title: 'Reject Audit Report',
+        subtitle: 'Please provide the reason for rejecting Audit Report #${report.id}.',
+      );
+      if (reason == null) return;
+
+      _setBusy(report.id, true);
+      try {
+        await _service.decide(
+          reportId: report.id,
+          signatoryId: signatoryId,
+          approve: false,
+          remarks: reason,
+        );
+        _toastSuccess('Audit Report rejected with reason.');
+      } catch (e) {
+        _toastError('Failed to reject report: $e');
+      } finally {
+        if (mounted) {
+          _setBusy(report.id, false);
+          _fetchReports();
+        }
+      }
+      return;
+    }
+
+    _setBusy(report.id, true);
+    try {
+      await _service.decide(
+        reportId: report.id,
+        signatoryId: signatoryId,
+        approve: true,
+      );
+      _toastSuccess('Audit Report approved.');
+    } catch (e) {
+      _toastError('Failed to approve report: $e');
+    } finally {
+      if (mounted) {
+        _setBusy(report.id, false);
+        _fetchReports();
+      }
+    }
   }
 
   Widget _statusChip(String? approvalStatus) {
@@ -442,81 +535,6 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
       ),
       child: Text(label, style: TextStyle(fontSize: 11, color: color)),
     );
-  }
-
-  Future<void> _confirmDecision(
-    AuditReport report,
-    IQASignatory signatory,
-  ) async {
-    final remarksController = TextEditingController();
-
-    final decision = await showDialog<bool>(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: Text(
-              signatory.signatoryLabel == null
-                  ? 'Record Decision'
-                  : '${signatory.signatoryLabel} — Decision',
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: remarksController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'REMARKS',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Disapproving resets the rest of the approval chain.',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Disapprove'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Approve'),
-              ),
-            ],
-          ),
-    );
-
-    final remarks = remarksController.text.trim();
-    remarksController.dispose();
-    if (decision == null) return;
-
-    _setBusy(report.id, true);
-    try {
-      await _service.decide(
-        reportId: report.id,
-        signatoryId: signatory.signatoryId ?? '',
-        approve: decision,
-        remarks: remarks.isEmpty ? null : remarks,
-      );
-      _toastSuccess(decision ? 'Approved.' : 'Disapproved.');
-    } catch (e) {
-      _toastError('Failed to record the decision: $e');
-    } finally {
-      if (mounted) {
-        _setBusy(report.id, false);
-        _fetchReports();
-      }
-    }
   }
 
   Widget _approvalBadge(AuditReport report) {

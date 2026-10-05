@@ -1,6 +1,10 @@
 // lib/audit/audit_checklist/pages/audit_checklist_page.dart
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/audit/audit_schedules/services/audit_schedule_service.dart';
 import '../models/audit_checklist.dart';
 import '../models/auditee.dart';
 import '../services/audit_checklist_service.dart';
@@ -20,8 +24,13 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
 
   final AuditChecklistService _service = AuditChecklistService(Dio());
   final AuditeeService _auditeeService = AuditeeService(Dio());
+  final AuditSchedulesService _scheduleService = AuditSchedulesService(Dio());
 
-  late Future<List<AuditChecklist>> _future;
+  int _currentAuditPlanEntryId = 0;
+  List<AuditSchedules> _confirmedSchedules = [];
+  bool _isLoadingSchedules = false;
+
+  Future<List<AuditChecklist>>? _future;
   List<AuditChecklist> _rows = [];
   List<Auditee> _auditeeSuggestions = [];
   final Map<int, TextEditingController> _remarksControllers = {};
@@ -35,12 +44,29 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   @override
   void initState() {
     super.initState();
-    _future = _load();
+    _currentAuditPlanEntryId = widget.auditPlanEntryId;
+    if (_currentAuditPlanEntryId > 0) {
+      _future = _load();
+    } else {
+      _loadConfirmedSchedules();
+    }
     _loadAuditeeSuggestions();
   }
 
+  Future<void> _loadConfirmedSchedules() async {
+    setState(() => _isLoadingSchedules = true);
+    try {
+      final list = await _scheduleService.getConfirmedAuditSchedules();
+      if (mounted) setState(() => _confirmedSchedules = list);
+    } catch (_) {
+      if (mounted) setState(() => _confirmedSchedules = []);
+    } finally {
+      if (mounted) setState(() => _isLoadingSchedules = false);
+    }
+  }
+
   Future<List<AuditChecklist>> _load() async {
-    final rows = await _service.getOrGenerateForAuditPlanEntry(widget.auditPlanEntryId);
+    final rows = await _service.getOrGenerateForAuditPlanEntry(_currentAuditPlanEntryId);
     _rows = rows;
     if (rows.isNotEmpty) {
       _selectedAuditeeId = rows.first.auditeeId;
@@ -108,8 +134,78 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_currentAuditPlanEntryId == 0) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Select Confirmed Audit Schedule')),
+        body: _isLoadingSchedules
+            ? const Center(child: CircularProgressIndicator(color: primaryThemeColor))
+            : _confirmedSchedules.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        'No Confirmed Audit Schedules found.\nAn Audit Schedule must be confirmed by the Department Head (or approved) before a checklist can be filled.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.plusJakartaSans(fontSize: 14, color: Colors.grey.shade700),
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(24),
+                    itemCount: _confirmedSchedules.length,
+                    itemBuilder: (context, index) {
+                      final sched = _confirmedSchedules[index];
+                      final dateRange =
+                          '${DateFormat('MMM d, yyyy').format(sched.startDate)} – ${DateFormat('MMM d, yyyy').format(sched.endDate)}';
+                      final title = sched.officeName != null && sched.officeName!.isNotEmpty
+                          ? sched.officeName!
+                          : (sched.activity.isNotEmpty ? sched.activity : 'Schedule #${sched.id}');
+
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        child: ListTile(
+                          title: Text(
+                            title,
+                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            'Status: ${sched.effectiveStatusName} • $dateRange',
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          ),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: primaryThemeColor),
+                          onTap: () {
+                            setState(() {
+                              _currentAuditPlanEntryId = sched.auditPlanEntryId;
+                              _future = _load();
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Audit Checklist')),
+      appBar: AppBar(
+        title: const Text('Audit Checklist'),
+        leading: widget.auditPlanEntryId == 0
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Back to schedules',
+                onPressed: () {
+                  setState(() {
+                    _currentAuditPlanEntryId = 0;
+                    _rows.clear();
+                    _remarksControllers.clear();
+                    _loadConfirmedSchedules();
+                  });
+                },
+              )
+            : null,
+      ),
       body: FutureBuilder<List<AuditChecklist>>(
         future: _future,
         builder: (context, snapshot) {

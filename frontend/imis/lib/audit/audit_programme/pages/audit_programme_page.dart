@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/audit/audit_programme/models/audit_programme.dart';
+import 'package:imis/audit/widgets/approval_workflow_widgets.dart';
+import 'package:imis/utils/auth_util.dart';
+import 'package:imis/user/models/user_registration.dart';
 
 // =============================================================================
 // 1. DATA MODELS & DTO ADAPTERS MATCHING C# BACKEND
@@ -278,6 +281,10 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   List<IsoStandardDto> _standards = [];
   List<TeamDto> _teams = [];
 
+  AuditProgramme? _loadedProgramme;
+  UserRegistration? _currentUser;
+  bool _isAdmin = false;
+
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -319,6 +326,8 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     });
 
     try {
+      _currentUser = await AuthUtil.fetchLoggedUser();
+      _isAdmin = await AuthUtil.isCurrentUserAdmin();
       await Future.wait([
         _fetchMasterOffices(),
         _fetchMasterIsoStandards(),
@@ -331,6 +340,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
         );
 
         if (programme != null) {
+          _loadedProgramme = programme;
           final jsonMap = programme.toJson();
 
           _existingRowVersion = programme.rowVersion;
@@ -591,6 +601,19 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               ),
             ),
           ),
+          if (_loadedProgramme?.approvalHistory.isNotEmpty == true)
+            TextButton.icon(
+              onPressed: () => ApprovalHistoryDialog.show(
+                context,
+                title: 'Audit Programme',
+                history: _loadedProgramme!.approvalHistory,
+              ),
+              icon: const Icon(Icons.history, color: Colors.white, size: 18),
+              label: const Text(
+                'History',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
           IconButton(
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.close, color: Colors.white),
@@ -601,8 +624,166 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     );
   }
 
+  Widget _buildSignatoriesCard() {
+    final signatories = _loadedProgramme?.signatories ?? [];
+    if (signatories.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.verified_user_outlined, color: primaryThemeColor, size: 18),
+              const SizedBox(width: 8),
+              const Text(
+                'IQA APPROVAL SIGNATORIES',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: primaryThemeColor,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const Spacer(),
+              if (_loadedProgramme?.approvalHistory.isNotEmpty == true)
+                TextButton.icon(
+                  onPressed: () => ApprovalHistoryDialog.show(
+                    context,
+                    title: 'Audit Programme',
+                    history: _loadedProgramme!.approvalHistory,
+                  ),
+                  icon: const Icon(Icons.history, size: 16, color: primaryThemeColor),
+                  label: const Text('View History', style: TextStyle(fontSize: 12, color: primaryThemeColor)),
+                ),
+            ],
+          ),
+          const Divider(height: 16),
+          ...signatories.map((s) {
+            final label = s.signatoryLabel ?? 'Signatory';
+            final name = s.signatoryName ?? 'Unassigned';
+            final status = s.approvalStatus ?? 'Pending';
+            final date = s.dateSigned != null
+                ? DateFormat('MMM d, yyyy h:mm a').format(s.dateSigned!.toLocal())
+                : null;
+
+            Color statusColor;
+            IconData statusIcon;
+            switch (status.toLowerCase()) {
+              case 'approved':
+                statusColor = Colors.green.shade700;
+                statusIcon = Icons.check_circle_outline;
+                break;
+              case 'noted':
+                statusColor = Colors.blue.shade700;
+                statusIcon = Icons.info_outline;
+                break;
+              case 'rejected':
+              case 'disapproved':
+                statusColor = Colors.redAccent;
+                statusIcon = Icons.cancel_outlined;
+                break;
+              default:
+                statusColor = Colors.orange.shade800;
+                statusIcon = Icons.access_time;
+            }
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  Container(
+                    width: 130,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3E9EA),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      label.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: primaryThemeColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                        if (date != null)
+                          Text(
+                            'Signed: $date',
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          ),
+                        if (s.remarks != null && s.remarks!.isNotEmpty)
+                          Text(
+                            '"${s.remarks}"',
+                            style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.grey.shade700),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 14, color: statusColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          status,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFooter() {
     final isEdit = widget.programmeId != null;
+    final status = _loadedProgramme?.effectiveStatusName ?? 'Draft';
+    final hasRejection = _loadedProgramme?.latestRejection != null ||
+        status == 'Revision Required' ||
+        status == 'Rejected';
+
+    final canShowDecisions = isEdit && (_isAdmin || status == 'Pending' || _loadedProgramme?.signatories.isNotEmpty == true);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -611,69 +792,252 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          TextButton(
-            onPressed: _isSaving ? null : () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: primaryThemeColor,
-                fontWeight: FontWeight.w600,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final leftActions = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                onPressed: _isSaving ? null : () => Navigator.pop(context),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: primaryThemeColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (isEdit) ...[
+                OutlinedButton(
+                  onPressed: _isSaving
+                      ? null
+                      : () => _submitProgramme(isDraft: true),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: primaryThemeColor),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: const Text(
+                    'SAVE AS DRAFT',
+                    style: TextStyle(
+                      color: primaryThemeColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _isSaving
+                      ? null
+                      : () => _submitProgramme(isDraft: false),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryThemeColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: Text(
+                    hasRejection
+                        ? 'RESUBMIT FOR APPROVAL'
+                        : 'SUBMIT FOR APPROVAL',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ] else ...[
+                ElevatedButton(
+                  onPressed: _isSaving
+                      ? null
+                      : () => _submitProgramme(isDraft: true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryThemeColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: const Text(
+                    'SAVE AS DRAFT',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          );
+
+          final currentUserId = _currentUser?.id ?? '';
+          final signatories = _loadedProgramme?.signatories ?? [];
+          final matchingSig = signatories.where((s) => s.signatoryId == currentUserId);
+          final sigLabel = matchingSig.isNotEmpty ? (matchingSig.first.signatoryLabel ?? '').toUpperCase() : '';
+
+          final canShowNoted = _isAdmin || sigLabel.contains('NOTE') || sigLabel.contains('QMS');
+          final canShowApproveReject = _isAdmin || sigLabel.contains('APPROV') || sigLabel.contains('QMR');
+
+          final rightActions = canShowDecisions
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (canShowNoted)
+                      OutlinedButton.icon(
+                        onPressed: _isSaving ? null : () => _handleDecide('Noted'),
+                        icon: const Icon(Icons.info_outline, size: 16),
+                        label: const Text('NOTED'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: primaryThemeColor,
+                          side: const BorderSide(color: primaryThemeColor),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                    if (canShowApproveReject) ...[
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: _isSaving ? null : () => _handleReject(),
+                        icon: const Icon(Icons.cancel_outlined, size: 16, color: Colors.white),
+                        label: const Text('REJECT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: _isSaving ? null : () => _handleDecide('Approve'),
+                        icon: const Icon(Icons.check_circle_outline, size: 16, color: Colors.white),
+                        label: const Text('APPROVE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade700,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                )
+              : const SizedBox.shrink();
+
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  leftActions,
+                  rightActions,
+                ],
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          if (isEdit)
-            OutlinedButton(
-              onPressed: _isSaving
-                  ? null
-                  : () => _submitProgramme(isDraft: true),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: primaryThemeColor),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              child: const Text(
-                'SAVE AS DRAFT',
-                style: TextStyle(
-                  color: primaryThemeColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          if (isEdit) const SizedBox(width: 8),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _handleReject() async {
+    if (widget.programmeId == null) return;
+    final reason = await RejectionDialog.show(
+      context,
+      title: 'Reject Audit Programme',
+      subtitle: 'Please provide the reason for rejecting this audit programme.',
+    );
+    if (reason == null) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final user = _currentUser ?? await AuthUtil.fetchLoggedUser();
+      await _service.decideAuditProgramme(
+        widget.programmeId!,
+        approverId: user?.id ?? '',
+        action: 'Reject',
+        comments: reason,
+      );
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: const Text('Audit Programme rejected with comment.'),
+      ).show(context);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed: $e'),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _handleDecide(String action) async {
+    if (widget.programmeId == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Confirm $action'),
+        content: Text('Are you sure you want to mark this Audit Programme as $action?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           ElevatedButton(
-            onPressed: _isSaving
-                ? null
-                : () => _submitProgramme(isDraft: !isEdit),
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryThemeColor,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
+              backgroundColor: action == 'Approve' ? Colors.green.shade700 : primaryThemeColor,
             ),
-            child: Text(
-              isEdit ? 'SUBMIT' : 'SAVE AS DRAFT',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(action, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
+    if (confirmed != true) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final user = _currentUser ?? await AuthUtil.fetchLoggedUser();
+      await _service.decideAuditProgramme(
+        widget.programmeId!,
+        approverId: user?.id ?? '',
+        action: action,
+      );
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Audit Programme $action-d successfully.'),
+      ).show(context);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed: $e'),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   Future<void> _submitProgramme({required bool isDraft}) async {
@@ -761,10 +1125,12 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     setState(() => _isSaving = true);
     try {
       final programme = AuditProgramme.fromJson(payload);
-      await _service.addOrUpdateAuditProgramme(programme);
+      final saved = await _service.addOrUpdateAuditProgramme(programme);
 
-      if (!isDraft && widget.programmeId != null) {
-        await _service.submitAuditProgramme(widget.programmeId!);
+      final targetId = widget.programmeId ?? saved.id;
+      if (!isDraft && targetId > 0) {
+        final user = _currentUser ?? await AuthUtil.fetchLoggedUser();
+        await _service.submitAuditProgramme(targetId, userId: user?.id);
       }
 
       if (!mounted) return;
@@ -824,6 +1190,17 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            if (_loadedProgramme?.latestRejection != null)
+                              RejectionBanner(
+                                rejection: _loadedProgramme!.latestRejection!,
+                                onViewHistory: () => ApprovalHistoryDialog.show(
+                                  context,
+                                  title: 'Audit Programme',
+                                  history: _loadedProgramme!.approvalHistory,
+                                ),
+                              ),
+                            if (_loadedProgramme?.signatories.isNotEmpty == true)
+                              _buildSignatoriesCard(),
                             _buildCard(
                               title: 'PROGRAMME HEADER',
                               child: Column(

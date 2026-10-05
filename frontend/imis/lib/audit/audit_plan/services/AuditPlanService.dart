@@ -253,7 +253,62 @@ class AuditPlanService {
     } catch (e) {
       rethrow;
     }
-    
   }
 
+  /// Extracts error message from response.
+  String _extractErrorMessage(Response response, String fallback) {
+    final data = response.data;
+    if (data is Map && data['error'] != null) return data['error'].toString();
+    return fallback;
+  }
+
+  /// Moves a Draft/Disapproved plan to Pending via
+  /// `PUT /auditPlan/{id}/submit`.
+  Future<void> submitAuditPlan(
+    int id, {
+    String? userId,
+    String? comments,
+  }) async {
+    final url = '$_auditPlanBaseUrl/$id/submit';
+    final response = await AuthenticatedRequest.put(
+      _dio,
+      url,
+      data: {
+        if (userId != null) 'userId': userId,
+        if (comments != null) 'comments': comments,
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to submit audit plan.'),
+      );
+    }
+  }
+
+  /// Approves, notes, or rejects a Pending plan via
+  /// `PUT /auditPlan/{id}/decide`.
+  Future<void> decideAuditPlan(
+    int id, {
+    required String approverId,
+    String? action,
+    bool? approve,
+    String? comments,
+  }) async {
+    final url = '$_auditPlanBaseUrl/$id/decide';
+    final response = await AuthenticatedRequest.put(
+      _dio,
+      url,
+      data: {
+        'approverId': approverId,
+        'action': action ?? ((approve ?? false) ? 'Approve' : 'Reject'),
+        'approve': approve ?? (action?.toLowerCase() != 'reject'),
+        'comments': comments,
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to decide on audit plan.'),
+      );
+    }
+  }
 }

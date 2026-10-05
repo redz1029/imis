@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -7,10 +8,15 @@ import 'package:imis/audit/audit_plan/models/audit_plan.dart';
 import 'package:imis/audit/audit_plan/models/audit_plan_entry.dart';
 import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/audit/audit_schedules/services/audit_schedule_service.dart';
+import 'package:imis/audit/widgets/approval_workflow_widgets.dart';
 import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart'
     show IsoStandardDto, AuditorTeamDto;
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/user/models/user.dart';
+import 'package:imis/user/models/user_registration.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/constant/constant.dart';
 
 /// Fixed boilerplate shown in the ACTIVITY column for every entry — the
@@ -33,8 +39,12 @@ const String _kFixedPurposeText = 'Internal Quality Audit';
 class _OfficeGroup {
   final String officeName;
   final List<AuditPlanEntry> entries;
+  AuditSchedules? schedule;
 
-  _OfficeGroup({required this.officeName, required this.entries});
+  _OfficeGroup({
+    required this.officeName,
+    required this.entries,
+  });
 }
 
 class AuditSchedulePage extends StatefulWidget {
@@ -56,7 +66,10 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
 
   final AuditPlanService _auditPlanService = AuditPlanService(Dio());
   final AuditProgrammeService _programmeService = AuditProgrammeService(Dio());
+  final AuditSchedulesService _scheduleService = AuditSchedulesService(Dio());
 
+  UserRegistration? _currentUser;
+  bool _isAdmin = false;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -153,6 +166,43 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               .toList();
 
       _officeGroups = _buildOfficeGroups(entries);
+
+      _currentUser = await AuthUtil.fetchLoggedUser();
+      _isAdmin = await AuthUtil.isCurrentUserAdmin();
+      final schedules = await _scheduleService.getAuditSchedulesByPlanId(planSummary.id);
+
+      for (final g in _officeGroups) {
+        var matched = schedules.firstWhere(
+          (s) => (s.officeName != null && s.officeName!.trim().toLowerCase() == g.officeName.trim().toLowerCase()) ||
+                 g.entries.any((e) => e.id != 0 && s.auditPlanEntryId == e.id),
+          orElse: () => AuditSchedules(startDate: DateTime(2000), endDate: DateTime(2000)),
+        );
+        if (matched.id > 0) {
+          g.schedule = matched;
+        } else {
+          try {
+            final firstEntry = g.entries.first;
+            final created = await _scheduleService.addAuditSchedule(
+              AuditSchedules(
+                purpose: _kFixedPurposeText,
+                activity: _kFixedActivityText,
+                isActive: true,
+                startDate: planSummary.startDate,
+                endDate: planSummary.endDate,
+                auditPlanId: planSummary.id,
+                auditPlanEntryId: firstEntry.id,
+              ),
+            );
+            if (created.id > 0) {
+              await _scheduleService.submitAuditSchedule(created.id, userId: _currentUser?.id);
+              final refreshed = await _scheduleService.getAuditScheduleById(created.id);
+              g.schedule = refreshed ?? created;
+            }
+          } catch (e) {
+            debugPrint('Auto-schedule creation error: $e');
+          }
+        }
+      }
     } catch (e) {
       _errorMessage = 'Error loading Audit Plan schedule: $e';
       if (mounted) {
@@ -337,6 +387,131 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     ).add(Duration(days: first.dayNumber - 1));
   }
 
+  Future<void> _handleConfirmSchedule(_OfficeGroup group) async {
+    final schedId = group.schedule?.id;
+    if (schedId == null || schedId <= 0) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Schedule'),
+        content: Text(
+          'Are you sure you want to confirm the audit schedule for ${group.officeName}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade700,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Confirm', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final user = _currentUser ?? await AuthUtil.fetchLoggedUser();
+      await _scheduleService.decideAuditSchedule(
+        schedId,
+        approverId: user?.id ?? '',
+        action: 'Confirm',
+        officeName: group.officeName,
+      );
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Audit schedule for ${group.officeName} confirmed.'),
+      ).show(context);
+      await _loadPlanDetail(_plan!);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed: $e'),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleRejectSchedule(_OfficeGroup group) async {
+    final schedId = group.schedule?.id;
+    if (schedId == null || schedId <= 0) return;
+
+    final reason = await RejectionDialog.show(
+      context,
+      title: 'Reject Audit Schedule',
+      subtitle:
+          'Please provide the reason for rejecting the audit schedule for ${group.officeName}.',
+    );
+    if (reason == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final user = _currentUser ?? await AuthUtil.fetchLoggedUser();
+      await _scheduleService.decideAuditSchedule(
+        schedId,
+        approverId: user?.id ?? '',
+        action: 'Reject',
+        comments: reason,
+        officeName: group.officeName,
+      );
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: Text(
+          'Audit schedule for ${group.officeName} rejected with comment.',
+        ),
+      ).show(context);
+      await _loadPlanDetail(_plan!);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed: $e'),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleResubmitSchedule(_OfficeGroup group) async {
+    final schedId = group.schedule?.id;
+    if (schedId == null || schedId <= 0) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final user = _currentUser ?? await AuthUtil.fetchLoggedUser();
+      await _scheduleService.submitAuditSchedule(
+        schedId,
+        userId: user?.id,
+      );
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: Text(
+          'Audit schedule for ${group.officeName} resubmitted for confirmation.',
+        ),
+      ).show(context);
+      await _loadPlanDetail(_plan!);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed: $e'),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -445,26 +620,90 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       itemCount: _officeGroups.length,
       itemBuilder: (context, i) {
         final group = _officeGroups[i];
+        final status =
+            group.schedule?.effectiveStatusName ?? 'Pending Confirmation';
+        final isRejected =
+            group.schedule?.latestRejection != null ||
+            status == 'Revision Required' ||
+            status == 'Rejected';
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: OutlinedButton(
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              side: BorderSide(color: Colors.grey.shade400),
+              padding: const EdgeInsets.symmetric(
+                vertical: 16,
+                horizontal: 16,
+              ),
+              side: BorderSide(
+                color: isRejected ? Colors.red.shade300 : Colors.grey.shade400,
+                width: isRejected ? 1.5 : 1.0,
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(6),
               ),
               foregroundColor: Colors.black87,
+              backgroundColor:
+                  isRejected
+                      ? Colors.red.shade50.withValues(alpha: 0.3)
+                      : Colors.white,
             ),
             onPressed: () => setState(() => _selectedOffice = group),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  group.officeName.toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      group.officeName.toUpperCase(),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Status: $status',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color:
+                            isRejected
+                                ? Colors.red.shade700
+                                : (status == 'Confirmed'
+                                    ? Colors.green.shade700
+                                    : Colors.orange.shade800),
+                      ),
+                    ),
+                  ],
                 ),
-                const Icon(Icons.chevron_right, color: primaryThemeColor),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isRejected)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Needs Revision',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red.shade800,
+                          ),
+                        ),
+                      ),
+                    const Icon(Icons.chevron_right, color: primaryThemeColor),
+                  ],
+                ),
               ],
             ),
           ),
@@ -478,22 +717,73 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     final proposedDate = _proposedDateForGroup(group);
     final sortedEntries = List<AuditPlanEntry>.from(group.entries)
       ..sort((a, b) => a.time.compareTo(b.time));
+    final status =
+        group.schedule?.effectiveStatusName ?? 'Pending Confirmation';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'AUDIT SCHEDULE',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: primaryThemeColor,
-              letterSpacing: 0.5,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'AUDIT SCHEDULE - ${group.officeName.toUpperCase()}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: primaryThemeColor,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Status: $status',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            status == 'Confirmed'
+                                ? Colors.green.shade700
+                                : (status == 'Rejected' ||
+                                        status == 'Revision Required'
+                                    ? Colors.red.shade700
+                                    : Colors.orange.shade800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (group.schedule?.approvalHistory.isNotEmpty == true)
+                TextButton.icon(
+                  onPressed: () => ApprovalHistoryDialog.show(
+                    context,
+                    title: '${group.officeName} Schedule',
+                    history: group.schedule!.approvalHistory,
+                  ),
+                  icon: const Icon(
+                    Icons.history,
+                    color: primaryThemeColor,
+                    size: 18,
+                  ),
+                  label: const Text('View History'),
+                ),
+            ],
           ),
           const SizedBox(height: 12),
+          if (group.schedule?.latestRejection != null)
+            RejectionBanner(
+              rejection: group.schedule!.latestRejection!,
+              onViewHistory: () => ApprovalHistoryDialog.show(
+                context,
+                title: '${group.officeName} Schedule',
+                history: group.schedule!.approvalHistory,
+              ),
+            ),
           Container(
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade400),
@@ -557,6 +847,133 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               ],
             ),
           ),
+          const SizedBox(height: 24),
+          if (status == 'Pending' || status == 'Pending Confirmation' || _isAdmin)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _isAdmin ? 'Admin / Department Head Review' : 'Department Head Confirmation',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          'Please review this schedule and confirm, note, or reject with a reason.',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                    ),
+                    onPressed: () => _handleRejectSchedule(group),
+                    icon: const Icon(
+                      Icons.cancel_outlined,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    label: const Text(
+                      'REJECT',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                    ),
+                    onPressed: () => _handleConfirmSchedule(group),
+                    icon: const Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    label: const Text(
+                      'CONFIRM SCHEDULE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (group.schedule?.latestRejection != null ||
+              status == 'Revision Required' ||
+              status == 'Rejected')
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.shade200),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Schedule was rejected and requires revision.',
+                      style: GoogleFonts.plusJakartaSans(
+                        color: Colors.red.shade800,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryThemeColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                    ),
+                    onPressed: () => _handleResubmitSchedule(group),
+                    icon: const Icon(
+                      Icons.refresh,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    label: const Text(
+                      'RESUBMIT SCHEDULE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

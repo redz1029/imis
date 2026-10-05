@@ -24,8 +24,9 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
   static const List<String> _statusTabs = [
     'All',
     'Pending',
-    'Approved',
-    'Disapproved',
+    'Confirmed',
+    'Revision Required',
+    'Rejected',
   ];
 
   final _service = AuditPlanService(Dio());

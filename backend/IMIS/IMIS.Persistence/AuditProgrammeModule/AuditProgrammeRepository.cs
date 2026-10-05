@@ -75,56 +75,25 @@ namespace IMIS.Persistence.AuditProgrammeModule
                 .ConfigureAwait(false);
         }
         private static IQueryable<AuditProgramme> WithSignatories(IQueryable<AuditProgramme> query) => query
-    .Include(ap => ap.IQASignatories.Where(s => !s.IsDeleted))
-        .ThenInclude(s => s.Signatory)
-    .Include(ap => ap.IQASignatories.Where(s => !s.IsDeleted))
-        .ThenInclude(s => s.IQASignatoryTemplate);
+            .Include(ap => ap.IQASignatories.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.Signatory)
+            .Include(ap => ap.IQASignatories.Where(s => !s.IsDeleted))
+                .ThenInclude(s => s.IQASignatoryTemplate)
+            .Include(ap => ap.ApprovalHistories.Where(h => !h.IsDeleted))
+                .ThenInclude(h => h.User);
         /// <summary>
-        /// Retrieves all Audit Programmes along with their full child entity
-        /// graph. StatusHistory/Approvals are a detail-view concern, not
-        /// needed for a list — Status + Objectives only here.
+        /// Retrieves all Audit Programmes for list views.
+        /// Optimized: Status, Objectives, Signatories, and ApprovalHistories only.
+        /// Deep nested plan/entry graphs are only loaded in GetByIdWithDetailsAsync.
         /// </summary>
         public async Task<IEnumerable<AuditProgramme>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await WithSignatories(_entities
                     .AsNoTracking()
-                    .AsSplitQuery()
                     .Where(x => !x.IsDeleted))
                     .Include(ap => ap.Objectives.Where(o => !o.IsDeleted))
-                    .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.AuditPlanProcesses.Where(app => !app.IsDeleted))
-                            .ThenInclude(app => app.Office)
-                                .ThenInclude(o => o.OfficeType)
-                .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.AuditPlanProcesses.Where(app => !app.IsDeleted))
-                            .ThenInclude(app => app.Office)
-                                .ThenInclude(o => o.ParentOffice)
-                                    .ThenInclude(po => po.OfficeType)
-                .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.IsoAuditProcesses.Where(iap => !iap.IsDeleted))
-                .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.IsoStandardAuditPlans.Where(isap => !isap.IsDeleted))
-                            .ThenInclude(isap => isap.IsoStandard)
-                .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.IsoAuditors.Where(ia => !ia.IsDeleted))
-                            .ThenInclude(ia => ia.Team)
-                .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.IsoAuditors.Where(ia => !ia.IsDeleted))
-                            .ThenInclude(ia => ia.Team!)
-                                .ThenInclude(t => t.AuditorTeams.Where(at => !at.IsDeleted && at.IsActive))
-                                    .ThenInclude(at => at.Auditor)
-                .Include(ap => ap.AuditPlans.Where(p => !p.IsDeleted))
-                    .ThenInclude(p => p.Entries.Where(e => !e.IsDeleted))
-                        .ThenInclude(e => e.IsoAuditors.Where(ia => !ia.IsDeleted))
-                            .ThenInclude((IsoAuditor ia) => ia.IsoAuditors)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
         }
 
         /// <summary>

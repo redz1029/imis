@@ -24,6 +24,12 @@ using IMIS.Application.PgsKeyResultAreaModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
+using IMIS.Application.AuditChecklistModule;
+using IMIS.Application.AuditPlanModule;
+using IMIS.Application.AuditProgrammeModule;
+using IMIS.Application.AuditReportModule;
+using IMIS.Application.AuditScheduleModule;
+using IMIS.Application.NonconformingActionReportModule;
 using IMIS.Application.StrategyReviewModule;
 using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Application.TeamModule;
@@ -62,7 +68,9 @@ namespace IMIS.Infrastructure.Auths
                 new PerformanceValidationToolPeriodPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
-                new ImpactStrategicGoalScoreCardPeriodPermission());
+                new ImpactStrategicGoalScoreCardPeriodPermission(),
+                new AuditSchedulePermission(),
+                new NonconformingActionReportPermission());
 
             // This will seed view only permissions for a role
             await PermissionSeeder.SeedViewOnlyPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
@@ -76,7 +84,10 @@ namespace IMIS.Infrastructure.Auths
                 new StrategyReviewPermission(),
                 new PerformanceValidationToolPermission(),
                 new PerformanceValidationToolPeriodPermission(),
-                new CalendarActivityPermission());
+                new CalendarActivityPermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new NonconformingActionReportPermission());
 
             // This will seed specific permission to disapprove for MCC role
             // This is only a sample implementation, @Wilbur please adjust as needed.
@@ -111,7 +122,13 @@ namespace IMIS.Infrastructure.Auths
                 new PerformanceGovernanceSystemPermission(),
                 new CalendarActivityPermission(),
                 new ImpactStrategicGoalScoreCardPermission(),
-                new ImpactStrategicGoalScoreCardPeriodPermission());
+                new ImpactStrategicGoalScoreCardPeriodPermission(),
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),

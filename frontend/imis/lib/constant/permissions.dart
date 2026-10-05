@@ -159,5 +159,24 @@ class AppPermissions {
   static const String viewAnnouncement = 'View Announcement';
   static const String editAnnouncement = 'Edit Announcement';
 
+  // Audit Management Permissions
+  static const String addAuditProgramme = 'Add Audit Programme';
+  static const String viewAuditProgramme = 'View Audit Programme';
+  static const String editAuditProgramme = 'Edit Audit Programme';
 
+  static const String addAuditPlan = 'Add Audit Plan';
+  static const String viewAuditPlan = 'View Audit Plan';
+  static const String editAuditPlan = 'Edit Audit Plan';
+
+  static const String addAuditChecklist = 'Add Audit Checklist';
+  static const String viewAuditChecklist = 'View Audit Checklist';
+  static const String editAuditChecklist = 'Edit Audit Checklist';
+
+  static const String addAuditReport = 'Add Audit Report';
+  static const String viewAuditReport = 'View Audit Report';
+  static const String editAuditReport = 'Edit Audit Report';
+
+  static const String addNonconformingActionReport = 'Add Nonconforming Action Report';
+  static const String viewNonconformingActionReport = 'View Nonconforming Action Report';
+  static const String editNonconformingActionReport = 'Edit Nonconforming Action Report';
 }

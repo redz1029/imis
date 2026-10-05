@@ -61,6 +61,31 @@ namespace IMIS.Presentation.AuditScheduleModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
+            // GET CONFIRMED ONLY (Workflow Gate for Audit Checklist)
+            app.MapGet("/confirmed", async (
+                IAuditScheduleService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetConfirmedAsync(cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditSchedule)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            // GET BY PLAN ID
+            app.MapGet("/plan/{auditPlanId:int}", async (
+                int auditPlanId,
+                IAuditScheduleService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetByAuditPlanIdAsync(auditPlanId, cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditSchedule)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
             // GET BY ID
             app.MapGet("/{id:int}", async (
                 int id,
@@ -159,25 +184,26 @@ namespace IMIS.Presentation.AuditScheduleModule
             .WithTags(_AuditSchedule)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
 
-            // SUBMIT — Draft/Disapproved -> Pending
+            // SUBMIT — Draft/Disapproved/Rejected -> Pending Confirmation
             app.MapPut("/{id:int}/submit", async (
                 int id,
+                [FromBody] SubmitAuditScheduleRequest? body,
                 IAuditScheduleService service,
                 IOutputCacheStore cache,
                 CancellationToken cancellationToken) =>
             {
-                var (success, error) = await service.SubmitAsync(id, cancellationToken);
+                var (success, error) = await service.SubmitAsync(id, body?.UserId, body?.Comments, cancellationToken);
 
                 if (!success)
                     return Results.BadRequest(new { error });
 
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
-                return Results.Ok(new { message = "Submitted for approval." });
+                return Results.Ok(new { message = "Submitted for confirmation." });
             })
             .WithTags(_AuditSchedule)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
 
-            // DECIDE — Pending -> Approved/Disapproved
+            // DECIDE — Pending -> Confirmed/Rejected
             app.MapPut("/{id:int}/decide", async (
                 int id,
                 [FromBody] DecideAuditScheduleRequest dto,
@@ -188,21 +214,26 @@ namespace IMIS.Presentation.AuditScheduleModule
                 if (dto is null)
                     return Results.BadRequest("Invalid request.");
 
+                string action = !string.IsNullOrWhiteSpace(dto.Action)
+                    ? dto.Action
+                    : ((dto.Approve ?? false) ? "Confirm" : "Reject");
+
                 var (success, error) = await service.DecideAsync(
-                    id, dto.ApproverId, dto.Approve, dto.Comments, cancellationToken
+                    id, dto.ApproverId, action, dto.Comments, dto.OfficeName, cancellationToken
                 );
 
                 if (!success)
                     return Results.BadRequest(new { error });
 
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
-                return Results.Ok(new { message = dto.Approve ? "Approved." : "Disapproved." });
+                return Results.Ok(new { message = action == "Reject" ? "Rejected." : $"{action}ed." });
             })
             .WithTags(_AuditSchedule)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
 
         }
 
-        public record DecideAuditScheduleRequest(string ApproverId, bool Approve, string? Comments);
+        public record SubmitAuditScheduleRequest(string? UserId, string? Comments);
+        public record DecideAuditScheduleRequest(string ApproverId, bool? Approve, string? Action, string? Comments, string? OfficeName);
     }
 }

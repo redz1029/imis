@@ -16,6 +16,8 @@ import 'package:imis/audit/audit_report/pages/audit_report_list_page.dart';
 import 'package:imis/audit/audit_schedules/pages/audit_schedules_list_page.dart';
 import 'package:imis/audit/iqa_signatory/pages/iqa_signatory_template_page.dart';
 import 'package:imis/audit/iso_standard/page/iso_standard_page.dart';
+import 'package:imis/audit/ncar/pages/ncar_list_page.dart';
+import 'package:imis/audit/ncar/pages/ncar_monitoring_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
@@ -1330,6 +1332,8 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 3) return AuditChecklistPage(auditPlanEntryId: 0);
       if (selectedSubPage == 4) return const ClauseLibraryPage();
       if (selectedSubPage == 5) return const AuditReportListPage();
+      if (selectedSubPage == 6) return const NcarListPage();
+      if (selectedSubPage == 7) return const NcarMonitoringPage();
     }
 
     if (selectedPage == 3) {
@@ -1592,8 +1596,10 @@ class SidebarState extends State<Sidebar> {
           _NavChild('Audit Plan', 1),
           _NavChild('Audit Schedule', 2),
           _NavChild('Audit Checklist', 3),
-           _NavChild('Clause Library', 4),
-           _NavChild('Audit Report ', 5),
+          _NavChild('Clause Library', 4),
+          _NavChild('Audit Report ', 5),
+          _NavChild('NCAR', 6),
+          _NavChild('NCAR Monitoring', 7),
         ],
       ),
       _NavGroup(

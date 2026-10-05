@@ -11,6 +11,7 @@ namespace IMIS.Application.AuditProgrammeModule
     public interface IAuditProgrammeService : IService
     {
         Task<List<AuditProgrammeDto>?> GetAllAsync(CancellationToken cancellationToken);
+        Task<List<AuditProgrammeDto>> GetApprovedAsync(CancellationToken cancellationToken);
         Task<AuditProgrammeDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<ReportAuditProgrammeDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> SaveAuditProgrammeAsync(AuditProgrammeDto dto, CancellationToken cancellationToken);
@@ -27,12 +28,20 @@ namespace IMIS.Application.AuditProgrammeModule
 
         /// <summary>Moves a Draft or Disapproved programme to Pending.</summary>
         Task<(bool Success, string? Error)> SubmitAsync(int id, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> SubmitAsync(int id, string? userId, string? comments, CancellationToken cancellationToken);
 
         /// <summary>Approves or rejects a Pending programme.</summary>
         Task<(bool Success, string? Error)> DecideAsync(
             int id,
             string approverId,
             bool approve,
+            string? comments,
+            CancellationToken cancellationToken);
+
+        Task<(bool Success, string? Error)> DecideAsync(
+            int id,
+            string approverId,
+            string action,
             string? comments,
             CancellationToken cancellationToken);
 

@@ -8,13 +8,17 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/audit/audit_plan/models/audit_plan.dart';
 import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
+import 'package:imis/audit/widgets/approval_workflow_widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/user/models/user.dart';
+import 'package:imis/user/models/user_registration.dart';
+import 'package:imis/utils/auth_util.dart';
 
 // =============================================================================
 // 1. DATA MODELS
@@ -467,6 +471,11 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
   List<TeamDto> _teams = [];
   List<AuditorTeamDto> _auditorTeams = [];
 
+  AuditPlan? _loadedPlan;
+  UserRegistration? _currentUser;
+  bool _isAdmin = false;
+  bool _isSaving = false;
+
   @override
   void initState() {
     super.initState();
@@ -509,12 +518,18 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
     });
 
     try {
+      _currentUser = await AuthUtil.fetchLoggedUser();
+      _isAdmin = await AuthUtil.isCurrentUserAdmin();
       await Future.wait([
         _fetchMasterOffices(),
         _fetchMasterIsoStandards(),
         _fetchMasterTeams(),
         _fetchMasterAuditorTeams(),
       ]);
+
+      if (widget.auditPlanId != null) {
+        _loadedPlan = await _auditPlanService.getAuditPlanById(widget.auditPlanId!);
+      }
 
       final programme = await _service.getAuditProgrammeById(
         _resolvedProgrammeId!,
@@ -920,32 +935,14 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
     );
   }
 
-  Future<void> _save() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Save'),
-        content: const Text('Save this Audit Plan?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('No', style: TextStyle(color: primaryThemeColor)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Yes', style: TextStyle(color: primaryThemeColor)),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
-    if (_resolvedProgrammeId == null) return;
+  Future<int?> _save({bool showToast = true}) async {
+    if (_resolvedProgrammeId == null) return null;
 
     final allDates = _dayDates.values.toList()..sort();
     final startDate = allDates.isNotEmpty ? allDates.first : DateTime.now();
     final endDate = allDates.isNotEmpty ? allDates.last : DateTime.now();
 
-        final payload = {
+    final payload = {
       'id': widget.auditPlanId ?? 0,
       'planName': _programmeTitle.isNotEmpty
           ? '$_programmeTitle - Audit Plan'
@@ -963,19 +960,155 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
           .toList(),
     };
 
-        try {
-      await _auditPlanService.saveAuditPlanRaw(payload);
+    setState(() => _isSaving = true);
+    try {
+      final res = await _auditPlanService.saveAuditPlanRaw(payload);
+      final savedId = (res['id'] ?? widget.auditPlanId ?? 0) as int;
+      if (showToast && mounted) {
+        MotionToast.success(
+          toastAlignment: Alignment.topCenter,
+          description: const Text('Audit Plan saved'),
+        ).show(context);
+      }
+      return savedId;
+    } catch (e) {
+      if (mounted) {
+        MotionToast.error(
+          toastAlignment: Alignment.topCenter,
+          description: Text('Failed to save: $e'),
+        ).show(context);
+      }
+      return null;
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _submitPlan() async {
+    final hasRejection = _loadedPlan?.latestRejection != null;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(hasRejection ? 'Confirm Resubmit' : 'Confirm Submit'),
+        content: Text(
+          hasRejection
+              ? 'Are you sure you want to resubmit this Audit Plan for approval?'
+              : 'Are you sure you want to submit this Audit Plan for approval?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: primaryThemeColor),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(hasRejection ? 'Resubmit' : 'Submit', style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final planId = await _save(showToast: false);
+    if (planId == null || planId <= 0) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final user = _currentUser ?? await AuthUtil.fetchLoggedUser();
+      await _auditPlanService.submitAuditPlan(planId, userId: user?.id);
       if (!mounted) return;
       MotionToast.success(
         toastAlignment: Alignment.topCenter,
-        description: const Text('Audit Plan saved'),
+        description: Text(hasRejection ? 'Resubmitted for approval' : 'Submitted for approval'),
       ).show(context);
+      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       MotionToast.error(
         toastAlignment: Alignment.topCenter,
-        description: Text('Failed to save: $e'),
+        description: Text('Failed: $e'),
       ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _handleReject() async {
+    if (widget.auditPlanId == null) return;
+    final reason = await RejectionDialog.show(
+      context,
+      title: 'Reject Audit Plan',
+      subtitle: 'Please provide the reason for rejecting this audit plan.',
+    );
+    if (reason == null) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final user = _currentUser ?? await AuthUtil.fetchLoggedUser();
+      await _auditPlanService.decideAuditPlan(
+        widget.auditPlanId!,
+        approverId: user?.id ?? '',
+        action: 'Reject',
+        comments: reason,
+      );
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: const Text('Audit Plan rejected with comment.'),
+      ).show(context);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed: $e'),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _handleDecide(String action) async {
+    if (widget.auditPlanId == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Confirm $action'),
+        content: Text('Are you sure you want to mark this Audit Plan as $action?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: action == 'Approve' ? Colors.green.shade700 : primaryThemeColor,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(action, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final user = _currentUser ?? await AuthUtil.fetchLoggedUser();
+      await _auditPlanService.decideAuditPlan(
+        widget.auditPlanId!,
+        approverId: user?.id ?? '',
+        action: action,
+      );
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Audit Plan $action-d successfully.'),
+      ).show(context);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text('Failed: $e'),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -988,6 +1121,21 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
           widget.auditPlanId == null ? 'Create Audit Plan' : 'Edit Audit Plan',
         ),
         backgroundColor: mainBgColor,
+        actions: [
+          if (_loadedPlan?.approvalHistory.isNotEmpty == true)
+            TextButton.icon(
+              onPressed: () => ApprovalHistoryDialog.show(
+                context,
+                title: 'Audit Plan',
+                history: _loadedPlan!.approvalHistory,
+              ),
+              icon: const Icon(Icons.history, color: Colors.white, size: 18),
+              label: const Text(
+                'History',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+        ],
         leading: (_resolvedProgrammeId != null && widget.programmeId == null)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -1022,28 +1170,145 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (_loadedPlan?.latestRejection != null)
+                    RejectionBanner(
+                      rejection: _loadedPlan!.latestRejection!,
+                      onViewHistory: () => ApprovalHistoryDialog.show(
+                        context,
+                        title: 'Audit Plan',
+                        history: _loadedPlan!.approvalHistory,
+                      ),
+                    ),
+                  if (_loadedPlan?.signatories.isNotEmpty == true)
+                    _buildSignatoriesCard(),
                   _buildOverviewCard(),
                   const SizedBox(height: 16),
                   _buildScheduleCard(),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    height: 48,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryThemeColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final status = _loadedPlan?.effectiveStatusName ?? 'Draft';
+                      final hasRejection = _loadedPlan?.latestRejection != null ||
+                          status == 'Revision Required' ||
+                          status == 'Rejected';
+                      final canShowDecisions = widget.auditPlanId != null &&
+                          (_isAdmin || status == 'Pending' || _loadedPlan?.signatories.isNotEmpty == true);
+
+                      final leftActions = Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: primaryThemeColor),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            onPressed: _isSaving ? null : () => _save(),
+                            child: const Text(
+                              'SAVE AS DRAFT',
+                              style: TextStyle(
+                                color: primaryThemeColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryThemeColor,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            onPressed: _isSaving ? null : () => _submitPlan(),
+                            child: Text(
+                              hasRejection
+                                  ? 'RESUBMIT FOR APPROVAL'
+                                  : 'SUBMIT FOR APPROVAL',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+
+                      final currentUserId = _currentUser?.id ?? '';
+                      final signatories = _loadedPlan?.signatories ?? [];
+                      final matchingSig = signatories.where((s) => s.signatoryId == currentUserId);
+                      final sigLabel = matchingSig.isNotEmpty ? (matchingSig.first.signatoryLabel ?? '').toUpperCase() : '';
+
+                      final canShowNoted = _isAdmin || sigLabel.contains('NOTE') || sigLabel.contains('QMS');
+                      final canShowApproveReject = _isAdmin || sigLabel.contains('APPROV') || sigLabel.contains('QMR');
+
+                      final rightActions = canShowDecisions
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (canShowNoted)
+                                  OutlinedButton.icon(
+                                    onPressed: _isSaving ? null : () => _handleDecide('Noted'),
+                                    icon: const Icon(Icons.info_outline, size: 16),
+                                    label: const Text('NOTED'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: primaryThemeColor,
+                                      side: const BorderSide(color: primaryThemeColor),
+                                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                    ),
+                                  ),
+                                if (canShowApproveReject) ...[
+                                  const SizedBox(width: 10),
+                                  ElevatedButton.icon(
+                                    onPressed: _isSaving ? null : () => _handleReject(),
+                                    icon: const Icon(Icons.cancel_outlined, size: 16, color: Colors.white),
+                                    label: const Text('REJECT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.redAccent,
+                                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  ElevatedButton.icon(
+                                    onPressed: _isSaving ? null : () => _handleDecide('Approve'),
+                                    icon: const Icon(Icons.check_circle_outline, size: 16, color: Colors.white),
+                                    label: const Text('APPROVE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green.shade700,
+                                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            )
+                          : const SizedBox.shrink();
+
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              leftActions,
+                              rightActions,
+                            ],
+                          ),
                         ),
-                      ),
-                      onPressed: _save,
-                      child: const Text(
-                        'SAVE AUDIT PLAN',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -1117,6 +1382,157 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSignatoriesCard() {
+    final signatories = _loadedPlan?.signatories ?? [];
+    if (signatories.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.verified_user_outlined, color: primaryThemeColor, size: 18),
+              const SizedBox(width: 8),
+              const Text(
+                'IQA APPROVAL SIGNATORIES',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: primaryThemeColor,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const Spacer(),
+              if (_loadedPlan?.approvalHistory.isNotEmpty == true)
+                TextButton.icon(
+                  onPressed: () => ApprovalHistoryDialog.show(
+                    context,
+                    title: 'Audit Plan',
+                    history: _loadedPlan!.approvalHistory,
+                  ),
+                  icon: const Icon(Icons.history, size: 16, color: primaryThemeColor),
+                  label: const Text('View History', style: TextStyle(fontSize: 12, color: primaryThemeColor)),
+                ),
+            ],
+          ),
+          const Divider(height: 16),
+          ...signatories.map((s) {
+            final label = s.signatoryLabel ?? 'Signatory';
+            final name = s.signatoryName ?? 'Unassigned';
+            final status = s.approvalStatus ?? 'Pending';
+            final date = s.dateSigned != null
+                ? DateFormat('MMM d, yyyy h:mm a').format(s.dateSigned!.toLocal())
+                : null;
+
+            Color statusColor;
+            IconData statusIcon;
+            switch (status.toLowerCase()) {
+              case 'approved':
+                statusColor = Colors.green.shade700;
+                statusIcon = Icons.check_circle_outline;
+                break;
+              case 'noted':
+                statusColor = Colors.blue.shade700;
+                statusIcon = Icons.info_outline;
+                break;
+              case 'rejected':
+              case 'disapproved':
+                statusColor = Colors.redAccent;
+                statusIcon = Icons.cancel_outlined;
+                break;
+              default:
+                statusColor = Colors.orange.shade800;
+                statusIcon = Icons.access_time;
+            }
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  Container(
+                    width: 130,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3E9EA),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      label.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: primaryThemeColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                        if (date != null)
+                          Text(
+                            'Signed: $date',
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          ),
+                        if (s.remarks != null && s.remarks!.isNotEmpty)
+                          Text(
+                            '"${s.remarks}"',
+                            style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.grey.shade700),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 14, color: statusColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          status,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 

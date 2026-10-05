@@ -12,6 +12,7 @@ namespace IMIS.Application.AuditScheduleModule
     {
         // --- Retrieval ---
         Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken);
+        Task<List<AuditScheduleDto>> GetConfirmedAsync(CancellationToken cancellationToken);
         Task<AuditScheduleDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken);
         Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken);
@@ -32,7 +33,9 @@ namespace IMIS.Application.AuditScheduleModule
         Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
             where TEntity : Entity<TId>;
         Task<ReportAuditScheduleDto> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
-        Task<(bool success, object error)> DecideAsync(int id, string approverId, bool approve, string comments, CancellationToken cancellationToken);
-        Task<(bool success, object error)> SubmitAsync(int id, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> DecideAsync(int id, string approverId, bool approve, string? comments, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> DecideAsync(int id, string approverId, string action, string? comments, string? officeName, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> SubmitAsync(int id, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> SubmitAsync(int id, string? userId, string? comments, CancellationToken cancellationToken);
     }
 }

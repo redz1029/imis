@@ -3,6 +3,7 @@ using Base.Primitives;
 using IMIS.Application.AuditChecklistModule;
 using IMIS.Application.AuditChecklistQNAModule;
 using IMIS.Application.AuditScheduleModule;
+using IMIS.Application.IQASignatoryModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -48,13 +49,10 @@ namespace IMIS.Persistence.AuditChecklistModule
                 return existing.Select(x => new AuditChecklistDto(x));
             }
 
-            // FIX: AuditChecklist.AuditScheduleId is now required — a
-            // checklist can't be generated until this entry's schedule
-            // exists. If it doesn't, we fail loudly rather than insert
-            // rows with a garbage FK.
+            // Gating Rule: Verify that the Audit Schedule exists and has been Confirmed/Approved
             var schedule = await _dbContext.Set<AuditSchedule>()
-                .Where(s => s.AuditPlanEntryId == auditPlanEntryId)
-                .Select(s => new { s.Id })
+                .Where(s => s.AuditPlanEntryId == auditPlanEntryId && !s.IsDeleted)
+                .Select(s => new { s.Id, s.AuditPlanId })
                 .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -62,7 +60,18 @@ namespace IMIS.Persistence.AuditChecklistModule
             {
                 throw new InvalidOperationException(
                     $"No Audit Schedule exists for Audit Plan Entry {auditPlanEntryId}. " +
-                    "A schedule must be created for this entry before its checklist can be generated.");
+                    "A schedule must be created and confirmed for this entry before its checklist can be generated.");
+            }
+
+            var scheduleState = await IQAApprovalWorkflow.GetStateCodeAsync(
+                _dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, schedule.Id, cancellationToken);
+
+            if (scheduleState != IQAApprovalWorkflow.StateCodes.Confirmed &&
+                scheduleState != IQAApprovalWorkflow.StateCodes.Approved)
+            {
+                throw new InvalidOperationException(
+                    $"Audit Schedule #{schedule.Id} is in status '{IQAApprovalWorkflow.StateName(scheduleState, IQAApprovalWorkflow.EntityTypes.AuditSchedule)}'. " +
+                    "A schedule must be confirmed by the Department Head (or approved) before generating its checklist.");
             }
 
             var entry = await _dbContext.Set<AuditPlanEntry>()

@@ -89,7 +89,7 @@ class IQASignatory {
   /// AuditPlanDto, and AuditScheduleDto's "signatories" field) into a list
   /// of IQASignatory. Used by AuditPlan/AuditSchedules' own fromJson via a
   /// `@JsonKey(fromJson: ...)` hook, since json_serializable can't call
-  /// IQASignatory.fromJson directly on a raw List<dynamic>.
+  /// IQASignatory.fromJson directly on a raw `List<dynamic>`.
   static List<IQASignatory> listFromJson(Object? json) {
     if (json is! List) return const [];
     return json

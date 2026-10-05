@@ -70,6 +70,18 @@ namespace IMIS.Presentation.AuditPlanModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlan), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
+            // GET APPROVED ONLY (Workflow Gate for Audit Schedule)
+            app.MapGet("/approved", async (
+                IAuditPlanService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetApprovedAsync(cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditPlan)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlan), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
             // GET BY ID
             app.MapGet("/{id:int}", async (
                 int id,
@@ -165,6 +177,54 @@ namespace IMIS.Presentation.AuditPlanModule
             })
             .WithTags(_AuditPlan)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+
+            // SUBMIT — Draft/Rejected -> Pending
+            app.MapPut("/{id:int}/submit", async (
+                int id,
+                [FromBody] SubmitAuditPlanRequest? body,
+                IAuditPlanService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                var (success, error) = await service.SubmitAsync(id, body?.UserId, body?.Comments, cancellationToken).ConfigureAwait(false);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(new { message = "Submitted for approval." });
+            })
+            .WithTags(_AuditPlan);
+
+            // DECIDE — Pending -> Approved/Rejected/Noted
+            app.MapPut("/{id:int}/decide", async (
+                int id,
+                [FromBody] DecideAuditPlanRequest dto,
+                IAuditPlanService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                if (dto is null)
+                    return Results.BadRequest("Invalid request.");
+
+                string action = !string.IsNullOrWhiteSpace(dto.Action)
+                    ? dto.Action
+                    : ((dto.Approve ?? false) ? "Approve" : "Reject");
+
+                var (success, error) = await service.DecideAsync(
+                    id, dto.ApproverId, action, dto.Comments, cancellationToken
+                ).ConfigureAwait(false);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(new { message = action == "Reject" ? "Rejected." : $"{action}d." });
+            })
+            .WithTags(_AuditPlan);
         }
+
+        public record SubmitAuditPlanRequest(string? UserId, string? Comments);
+        public record DecideAuditPlanRequest(string ApproverId, bool? Approve, string? Action, string? Comments);
     }
 }

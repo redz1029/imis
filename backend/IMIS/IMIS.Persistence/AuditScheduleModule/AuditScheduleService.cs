@@ -78,6 +78,14 @@ namespace IMIS.Application.AuditScheduleModule
             return entities?.Select(e => new AuditScheduleDto(e)).ToList();
         }
 
+        public async Task<List<AuditScheduleDto>> GetConfirmedAsync(CancellationToken cancellationToken)
+        {
+            var all = await GetAllAsync(cancellationToken);
+            return all?.Where(s => s.StatusCode == IQAApprovalWorkflow.StateCodes.Confirmed ||
+                                   s.StatusCode == IQAApprovalWorkflow.StateCodes.Approved).ToList()
+                   ?? new List<AuditScheduleDto>();
+        }
+
         public async Task<AuditScheduleDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdAsync(id, cancellationToken);
@@ -94,7 +102,20 @@ namespace IMIS.Application.AuditScheduleModule
             if (string.IsNullOrWhiteSpace(dto.Activity))
                 errors.Add("Audit Title is required.");
 
-            return await Task.FromResult(errors);
+            // Gating Rule: Verify the parent Audit Plan is APPROVED
+            if (dto.AuditPlanId > 0)
+            {
+                var dbContext = _repository.GetDbContext();
+                var planState = await IQAApprovalWorkflow.GetStateCodeAsync(
+                    dbContext, IQAApprovalWorkflow.EntityTypes.AuditPlan, dto.AuditPlanId, cancellationToken);
+
+                if (planState != IQAApprovalWorkflow.StateCodes.Approved)
+                {
+                    errors.Add("An Audit Schedule can only be created for an APPROVED Audit Plan.");
+                }
+            }
+
+            return errors;
         }
 
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
@@ -137,6 +158,12 @@ namespace IMIS.Application.AuditScheduleModule
 
         public async Task<(bool Success, string? Error)> SubmitAsync(int id, CancellationToken cancellationToken)
         {
+            return await SubmitAsync(id, null, null, cancellationToken);
+        }
+
+        public async Task<(bool Success, string? Error)> SubmitAsync(
+            int id, string? userId, string? comments, CancellationToken cancellationToken)
+        {
             var dbContext = _repository.GetDbContext();
 
             var entity = await dbContext.Set<AuditSchedule>()
@@ -150,7 +177,7 @@ namespace IMIS.Application.AuditScheduleModule
 
             var result = await IQAApprovalWorkflow.SubmitAsync(
                 dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, entity.Id,
-                "audit schedule", cancellationToken);
+                "audit schedule", userId, comments, cancellationToken);
             if (!result.Success) return result;
 
             return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
@@ -159,20 +186,30 @@ namespace IMIS.Application.AuditScheduleModule
         public async Task<(bool Success, string? Error)> DecideAsync(
             int id, string approverId, bool approve, string? comments, CancellationToken cancellationToken)
         {
+            return await DecideAsync(id, approverId, approve ? "Confirm" : "Reject", comments, null, cancellationToken);
+        }
+
+        public async Task<(bool Success, string? Error)> DecideAsync(
+            int id, string approverId, string action, string? comments, string? officeName, CancellationToken cancellationToken)
+        {
             if (string.IsNullOrWhiteSpace(approverId))
                 return (false, "Approver is required.");
 
             var dbContext = _repository.GetDbContext();
 
             var entity = await dbContext.Set<AuditSchedule>()
+                .Include(s => s.AuditableOffices!)
+                    .ThenInclude(ao => ao.Office)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
             if (entity == null)
                 return (false, "Audit schedule not found.");
 
+            string? resolvedOfficeName = officeName ?? entity.AuditableOffices?.FirstOrDefault()?.Office?.Name;
+
             var result = await IQAApprovalWorkflow.DecideAsync(
                 dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, entity.Id,
-                "audit schedule", approverId, approve, comments, cancellationToken);
+                "audit schedule", approverId, action, comments, resolvedOfficeName, cancellationToken);
 
             if (!result.Success) return result;
 
@@ -191,16 +228,6 @@ namespace IMIS.Application.AuditScheduleModule
             {
                 return (false, "This audit schedule was changed by someone else. Please refresh and try again.");
             }
-        }
-
-        Task<(bool success, object error)> IAuditScheduleService.DecideAsync(int id, string approverId, bool approve, string comments, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<(bool success, object error)> IAuditScheduleService.SubmitAsync(int id, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
         }
     }
 }

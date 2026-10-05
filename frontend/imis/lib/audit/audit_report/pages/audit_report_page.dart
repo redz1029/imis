@@ -292,8 +292,10 @@ class _AuditReportPageState extends State<AuditReportPage> {
   }
 
   Future<void> _loadPlans() async {
-    final plans = await _service.getAllAuditPlans();
+    final all = await _service.getAllAuditPlans();
     if (!mounted) return;
+    // Workflow Gate: Only APPROVED Audit Plans can be consumed by Audit Report
+    final plans = all.where((p) => p.effectiveStatusName == 'Approved').toList();
     setState(() => _plans = plans);
   }
 
@@ -316,7 +318,13 @@ class _AuditReportPageState extends State<AuditReportPage> {
     try {
       final schedules = await _service.getSchedulesForPlanEntry(planEntryId);
       if (!mounted) return;
-      setState(() => _schedules = schedules);
+      // Workflow Gate: Only CONFIRMED or APPROVED schedules can be selected
+      final confirmedSchedules = schedules
+          .where((s) =>
+              s.effectiveStatusName == 'Confirmed' ||
+              s.effectiveStatusName == 'Approved')
+          .toList();
+      setState(() => _schedules = confirmedSchedules.isNotEmpty ? confirmedSchedules : schedules);
     } finally {
       if (mounted) setState(() => _isLoadingLookups = false);
     }
@@ -1034,7 +1042,7 @@ class _AuditReportPageState extends State<AuditReportPage> {
                 SizedBox(
                   width: 140,
                   child: DropdownButtonFormField<int?>(
-                    value: row.auditNcarStatusId,
+                    initialValue: row.auditNcarStatusId,
                     decoration: _dropdownDecoration('STATUS'),
                     isExpanded: true,
                     hint: const Text('Status', style: TextStyle(fontSize: 12)),

@@ -633,6 +633,7 @@ import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
+import 'package:imis/audit/widgets/approval_workflow_widgets.dart';
 
 class AuditPlanListPage extends StatefulWidget {
   const AuditPlanListPage({super.key});
@@ -647,7 +648,8 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
     'Draft',
     'Pending',
     'Approved',
-    'Disapproved',
+    'Revision Required',
+    'Rejected',
   ];
 
   final _service = AuditPlanService(Dio());
@@ -1029,10 +1031,31 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
                                           ),
                                         ),
                                         SizedBox(
-                                          width: 120,
+                                          width: 140,
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
+                                              IconButton(
+                                                tooltip: 'View Approval History',
+                                                padding: EdgeInsets.zero,
+                                                constraints:
+                                                    const BoxConstraints(
+                                                  minWidth: 32,
+                                                  minHeight: 32,
+                                                ),
+                                                icon: const Icon(
+                                                  Icons.history,
+                                                  size: 16,
+                                                  color: Colors.blueGrey,
+                                                ),
+                                                onPressed: () =>
+                                                    ApprovalHistoryDialog.show(
+                                                  context,
+                                                  title: 'Audit Plan',
+                                                  history:
+                                                      plan.approvalHistory,
+                                                ),
+                                              ),
                                               IconButton(
                                                 tooltip: 'Edit',
                                                 padding: EdgeInsets.zero,

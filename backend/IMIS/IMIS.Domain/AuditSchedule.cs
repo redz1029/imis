@@ -31,5 +31,10 @@ namespace IMIS.Domain
         /// IQA Signatory records for this audit schedule (approval workflow)
         /// </summary>
         public ICollection<IQASignatory> IQASignatories { get; set; } = new List<IQASignatory>();
+
+        /// <summary>
+        /// Persistent approval, confirmation, and rejection history for this audit schedule
+        /// </summary>
+        public ICollection<IQAApprovalHistory> ApprovalHistories { get; set; } = new List<IQAApprovalHistory>();
     }
 }

@@ -341,6 +341,15 @@ namespace IMIS.Application.AuditProgrammeModule
             int id,
             CancellationToken cancellationToken)
         {
+            return await SubmitAsync(id, null, null, cancellationToken);
+        }
+
+        public async Task<(bool Success, string? Error)> SubmitAsync(
+            int id,
+            string? userId,
+            string? comments,
+            CancellationToken cancellationToken)
+        {
             var dbContext = _repository.GetDbContext();
 
             var entity = await dbContext.Set<AuditProgramme>()
@@ -356,7 +365,7 @@ namespace IMIS.Application.AuditProgrammeModule
 
             var result = await IQAApprovalWorkflow.SubmitAsync(
                 dbContext, IQAApprovalWorkflow.EntityTypes.AuditProgramme, entity.Id,
-                "audit programme", cancellationToken);
+                "audit programme", userId, comments, cancellationToken);
             if (!result.Success) return result;
 
             entity.LastModifiedDate = DateTime.UtcNow;
@@ -367,6 +376,16 @@ namespace IMIS.Application.AuditProgrammeModule
             int id,
             string approverId,
             bool approve,
+            string? comments,
+            CancellationToken cancellationToken)
+        {
+            return await DecideAsync(id, approverId, approve ? "Approve" : "Reject", comments, cancellationToken);
+        }
+
+        public async Task<(bool Success, string? Error)> DecideAsync(
+            int id,
+            string approverId,
+            string action,
             string? comments,
             CancellationToken cancellationToken)
         {
@@ -383,7 +402,7 @@ namespace IMIS.Application.AuditProgrammeModule
 
             var result = await IQAApprovalWorkflow.DecideAsync(
                 dbContext, IQAApprovalWorkflow.EntityTypes.AuditProgramme, entity.Id,
-                "audit programme", approverId, approve, comments, cancellationToken);
+                "audit programme", approverId, action, comments, null, cancellationToken);
             if (!result.Success) return result;
 
             entity.LastModifiedDate = DateTime.UtcNow;
@@ -573,6 +592,13 @@ namespace IMIS.Application.AuditProgrammeModule
         {
             var entities = await _repository.GetAllAsync(cancellationToken);
             return entities?.Select(e => new AuditProgrammeDto(e)).ToList()
+                   ?? new List<AuditProgrammeDto>();
+        }
+
+        public async Task<List<AuditProgrammeDto>> GetApprovedAsync(CancellationToken cancellationToken)
+        {
+            var all = await GetAllAsync(cancellationToken);
+            return all?.Where(p => p.StatusCode == IQAApprovalWorkflow.StateCodes.Approved).ToList()
                    ?? new List<AuditProgrammeDto>();
         }
 

@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/audit/audit_programme/models/audit_programme.dart';
 import 'package:imis/audit/audit_programme/pages/audit_programme_page.dart';
 import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/audit/widgets/approval_workflow_widgets.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
@@ -28,7 +29,8 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
     'Draft',
     'Pending',
     'Approved',
-    'Disapproved',
+    'Revision Required',
+    'Rejected',
   ];
 
   final _service = AuditProgrammeService(Dio());
@@ -413,6 +415,21 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
+                                              IconButton(
+                                                tooltip: 'View Approval History',
+                                                icon: const Icon(
+                                                  Icons.history,
+                                                  size: 16,
+                                                  color: Colors.blueGrey,
+                                                ),
+                                                onPressed: () =>
+                                                    ApprovalHistoryDialog.show(
+                                                      context,
+                                                      title: 'Audit Programme',
+                                                      history:
+                                                          programme.approvalHistory,
+                                                    ),
+                                              ),
                                               IconButton(
                                                 icon: const Icon(
                                                   Icons.edit_outlined,

@@ -143,6 +143,12 @@ namespace IMIS.Application.AuditPlanModule
 
         public async Task<(bool Success, string? Error)> SubmitAsync(int id, CancellationToken cancellationToken)
         {
+            return await SubmitAsync(id, null, null, cancellationToken);
+        }
+
+        public async Task<(bool Success, string? Error)> SubmitAsync(
+            int id, string? userId, string? comments, CancellationToken cancellationToken)
+        {
             var dbContext = _repository.GetDbContext();
 
             var entity = await dbContext.Set<AuditPlan>()
@@ -159,7 +165,7 @@ namespace IMIS.Application.AuditPlanModule
                 return (false, string.Join(" ", errors));
 
             var result = await IQAApprovalWorkflow.SubmitAsync(
-                dbContext, IQAApprovalWorkflow.EntityTypes.AuditPlan, entity.Id, "audit plan", cancellationToken);
+                dbContext, IQAApprovalWorkflow.EntityTypes.AuditPlan, entity.Id, "audit plan", userId, comments, cancellationToken);
             if (!result.Success)
                 return result;
 
@@ -171,6 +177,12 @@ namespace IMIS.Application.AuditPlanModule
 
         public async Task<(bool Success, string? Error)> DecideAsync(
             int id, string approverId, bool approve, string? comments, CancellationToken cancellationToken)
+        {
+            return await DecideAsync(id, approverId, approve ? "Approve" : "Reject", comments, cancellationToken);
+        }
+
+        public async Task<(bool Success, string? Error)> DecideAsync(
+            int id, string approverId, string action, string? comments, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(approverId))
                 return (false, "Approver is required.");
@@ -185,7 +197,7 @@ namespace IMIS.Application.AuditPlanModule
 
             var result = await IQAApprovalWorkflow.DecideAsync(
                 dbContext, IQAApprovalWorkflow.EntityTypes.AuditPlan, entity.Id, "audit plan",
-                approverId, approve, comments, cancellationToken);
+                approverId, action, comments, null, cancellationToken);
             if (!result.Success)
                 return result;
 
@@ -237,6 +249,13 @@ namespace IMIS.Application.AuditPlanModule
             return entities?.Select(e => new AuditPlanDto(e)).ToList();
         }
 
+        public async Task<List<AuditPlanDto>> GetApprovedAsync(CancellationToken cancellationToken)
+        {
+            var all = await GetAllAsync(cancellationToken);
+            return all?.Where(p => p.StatusCode == IQAApprovalWorkflow.StateCodes.Approved).ToList()
+                   ?? new List<AuditPlanDto>();
+        }
+
         public async Task<AuditPlanDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken);
@@ -273,8 +292,22 @@ namespace IMIS.Application.AuditPlanModule
 
         public async Task<List<string>> GetConflictValidationsAsync(AuditPlanDto dto, CancellationToken cancellationToken)
         {
-            // Status is no longer a field on the plan; it is derived from the signatory rows.
-            return await Task.FromResult(BuildValidationErrors(dto.StartDate, dto.EndDate, dto.Entries?.Count ?? 0));
+            var errors = BuildValidationErrors(dto.StartDate, dto.EndDate, dto.Entries?.Count ?? 0);
+
+            // Gating Rule: Verify the parent Audit Programme is APPROVED
+            if (dto.AuditProgrammeId > 0)
+            {
+                var dbContext = _repository.GetDbContext();
+                var progState = await IQAApprovalWorkflow.GetStateCodeAsync(
+                    dbContext, IQAApprovalWorkflow.EntityTypes.AuditProgramme, dto.AuditProgrammeId, cancellationToken);
+
+                if (progState != IQAApprovalWorkflow.StateCodes.Approved)
+                {
+                    errors.Add("An Audit Plan can only be created or updated for an APPROVED Audit Programme.");
+                }
+            }
+
+            return errors;
         }
 
         private static List<string> BuildValidationErrors(DateTime startDate, DateTime endDate, int entryCount)

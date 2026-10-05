@@ -42,6 +42,10 @@ namespace IMIS.Application.AuditPlanModule
         // Live approval chain, in signing order.
         public List<IQASignatoryDto> Signatories { get; set; } = new();
 
+        // Persistent approval & rejection history
+        public List<IQAApprovalHistoryDto> ApprovalHistory { get; set; } = new();
+        public RejectionDetailsDto? LatestRejection { get; set; }
+
         public AuditPlanDto() { }
 
         [SetsRequiredMembers]
@@ -55,12 +59,80 @@ namespace IMIS.Application.AuditPlanModule
             this.LastModifiedDate = entity.LastModifiedDate;
             this.AuditProgrammeId = entity.AuditProgrammeId;
 
+            this.Entries = entity.Entries != null
+                ? entity.Entries.Select(x => new AuditPlanEntryDto(x)).ToList()
+                : new List<AuditPlanEntryDto>();
+
+            this.AuditSchedules = entity.AuditSchedules != null
+                ? entity.AuditSchedules.Select(x => new AuditScheduleDto(x)).ToList()
+                : new List<AuditScheduleDto>();
+
+            // Check if any child schedule has been rejected or needs revision
+            bool anyScheduleRevisionRequired = this.AuditSchedules.Any(s =>
+                s.StatusCode == IQAApprovalWorkflow.StateCodes.RevisionRequired ||
+                s.StatusCode == IQAApprovalWorkflow.StateCodes.Rejected ||
+                s.StatusCode == IQAApprovalWorkflow.StateCodes.Disapproved);
+
             // Callers must load IQASignatories (non-deleted) or this reads as Draft.
             var signatories = IQAApprovalWorkflow.Ordered(entity.IQASignatories);
-            var stateCode = IQAApprovalWorkflow.DeriveStateCode(signatories);
+            var stateCode = IQAApprovalWorkflow.DeriveStateCode(signatories, IQAApprovalWorkflow.EntityTypes.AuditPlan, anyScheduleRevisionRequired);
             this.StatusCode = stateCode;
-            this.StatusName = IQAApprovalWorkflow.StateName(stateCode);
+            this.StatusName = IQAApprovalWorkflow.StateName(stateCode, IQAApprovalWorkflow.EntityTypes.AuditPlan);
             this.Signatories = signatories.Select(s => new IQASignatoryDto(s)).ToList();
+
+            if (entity.ApprovalHistories != null && entity.ApprovalHistories.Any())
+            {
+                this.ApprovalHistory = entity.ApprovalHistories
+                    .Where(h => !h.IsDeleted)
+                    .OrderBy(h => h.ActionDate)
+                    .Select(h => new IQAApprovalHistoryDto(h))
+                    .ToList();
+
+                var lastRej = entity.ApprovalHistories
+                    .Where(h => !h.IsDeleted && (h.Action == IQAApprovalWorkflow.Actions.Rejected || h.Status == "Revision Required"))
+                    .OrderByDescending(h => h.ActionDate)
+                    .FirstOrDefault();
+
+                if (lastRej != null)
+                {
+                    this.LatestRejection = new RejectionDetailsDto
+                    {
+                        RejectedBy = FullNameOf(lastRej.User),
+                        RejectedByUserId = lastRej.UserId,
+                        RejectedDate = lastRej.ActionDate,
+                        RejectionReason = lastRej.Comments,
+                        OfficeName = lastRej.OfficeName,
+                        RoleOrPosition = lastRej.RoleOrPosition
+                    };
+                }
+            }
+
+            if (this.LatestRejection == null)
+            {
+                var rejectedSig = signatories.FirstOrDefault(s =>
+                    s.ApprovalStatus == IQAApprovalWorkflow.Decisions.Rejected ||
+                    s.ApprovalStatus == IQAApprovalWorkflow.Decisions.Disapproved);
+                if (rejectedSig != null)
+                {
+                    this.LatestRejection = new RejectionDetailsDto
+                    {
+                        RejectedBy = FullNameOf(rejectedSig.Signatory),
+                        RejectedByUserId = rejectedSig.SignatoryId,
+                        RejectedDate = rejectedSig.DateSigned,
+                        RejectionReason = rejectedSig.Remarks,
+                        RoleOrPosition = rejectedSig.IQASignatoryTemplate?.SignatoryLabel
+                    };
+                }
+                else if (anyScheduleRevisionRequired)
+                {
+                    // Surface the rejection from the rejected schedule
+                    var rejectedSched = this.AuditSchedules.FirstOrDefault(s => s.LatestRejection != null);
+                    if (rejectedSched?.LatestRejection != null)
+                    {
+                        this.LatestRejection = rejectedSched.LatestRejection;
+                    }
+                }
+            }
 
             if (entity.Preparer != null)
             {
@@ -73,15 +145,16 @@ namespace IMIS.Application.AuditPlanModule
                 this.PreparerId = null;
             }
 
-            this.Entries = entity.Entries != null
-                ? entity.Entries.Select(x => new AuditPlanEntryDto(x)).ToList()
-                : new List<AuditPlanEntryDto>();
-
-            this.AuditSchedules = entity.AuditSchedules != null
-                ? entity.AuditSchedules.Select(x => new AuditScheduleDto(x)).ToList()
-                : new List<AuditScheduleDto>();
-
             this.RowVersion = entity.RowVersion;
+        }
+
+        private static string? FullNameOf(User? user)
+        {
+            if (user == null) return null;
+            var parts = new[] { user.Prefix, user.FirstName, user.MiddleName, user.LastName, user.Suffix }
+                .Where(p => !string.IsNullOrWhiteSpace(p));
+            var full = string.Join(" ", parts);
+            return string.IsNullOrWhiteSpace(full) ? user.UserName : full;
         }
 
         public override AuditPlan ToEntity()

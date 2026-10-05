@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
@@ -56,6 +57,41 @@ class AuditSchedulesService {
     }
   }
 
+  Future<List<AuditSchedules>> getAuditSchedulesByPlanId(int planId) async {
+    final url = '${ApiEndpoint().auditSchedule}/plan/$planId';
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+      if (response.statusCode == 200 && response.data != null) {
+        final List list = response.data;
+        return list
+            .map((e) => AuditSchedules.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Failed to get schedules by plan id: $e');
+      return [];
+    }
+  }
+
+  /// Fetches only confirmed/approved schedules (Workflow Gate for Checklist/Report).
+  Future<List<AuditSchedules>> getConfirmedAuditSchedules() async {
+    final url = '${ApiEndpoint().auditSchedule}/confirmed';
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+      if (response.statusCode == 200 && response.data != null) {
+        final List list = response.data;
+        return list
+            .map((e) => AuditSchedules.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Failed to get confirmed schedules: $e');
+      return [];
+    }
+  }
+
   /// POST handles both create (id == 0) and update — same save-or-update
   /// pattern as every other service built alongside this one; if the
   /// backend's AuditSchedule endpoint really does expose a separate PUT
@@ -94,6 +130,60 @@ class AuditSchedulesService {
         throw Exception('Audit schedule not found.');
       }
       rethrow;
+    }
+  }
+
+  String _extractErrorMessage(Response response, String fallback) {
+    final data = response.data;
+    if (data is Map && data['error'] != null) return data['error'].toString();
+    return fallback;
+  }
+
+  Future<void> submitAuditSchedule(
+    int id, {
+    String? userId,
+    String? comments,
+  }) async {
+    final url = '${ApiEndpoint().auditSchedule}/$id/submit';
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: {
+        if (userId != null) 'userId': userId,
+        if (comments != null) 'comments': comments,
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to submit audit schedule.'),
+      );
+    }
+  }
+
+  Future<void> decideAuditSchedule(
+    int id, {
+    required String approverId,
+    String? action,
+    bool? approve,
+    String? comments,
+    String? officeName,
+  }) async {
+    final url = '${ApiEndpoint().auditSchedule}/$id/decide';
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: {
+        'approverId': approverId,
+        'action': action ?? ((approve ?? false) ? 'Confirm' : 'Reject'),
+        'approve': approve ?? (action?.toLowerCase() != 'reject'),
+        'comments': comments,
+        'officeName': officeName,
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to decide on audit schedule.'),
+      );
     }
   }
 }

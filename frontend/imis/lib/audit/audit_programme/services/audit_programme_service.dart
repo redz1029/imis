@@ -227,9 +227,20 @@ class AuditProgrammeService {
 
   /// Moves a Draft/Disapproved programme to Pending via
   /// `PUT /auditProgramme/{id}/submit`.
-  Future<void> submitAuditProgramme(int id) async {
+  Future<void> submitAuditProgramme(
+    int id, {
+    String? userId,
+    String? comments,
+  }) async {
     final url = '${ApiEndpoint().auditProgramme}/$id/submit';
-    final response = await AuthenticatedRequest.put(dio, url);
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: {
+        if (userId != null) 'userId': userId,
+        if (comments != null) 'comments': comments,
+      },
+    );
     if (response.statusCode != 200) {
       throw Exception(
         _extractErrorMessage(response, 'Failed to submit audit programme.'),
@@ -237,12 +248,13 @@ class AuditProgrammeService {
     }
   }
 
-  /// Approves or rejects a Pending programme via
+  /// Approves, notes, or rejects a Pending programme via
   /// `PUT /auditProgramme/{id}/decide`.
   Future<void> decideAuditProgramme(
     int id, {
     required String approverId,
-    required bool approve,
+    String? action,
+    bool? approve,
     String? comments,
   }) async {
     final url = '${ApiEndpoint().auditProgramme}/$id/decide';
@@ -251,7 +263,8 @@ class AuditProgrammeService {
       url,
       data: {
         'approverId': approverId,
-        'approve': approve,
+        'action': action ?? ((approve ?? false) ? 'Approve' : 'Reject'),
+        'approve': approve ?? (action?.toLowerCase() != 'reject'),
         'comments': comments,
       },
     );

@@ -266,6 +266,18 @@ class AuditReportService {
     return all.where((s) => s.auditPlanEntryId == auditPlanEntryId).toList();
   }
 
+  /// Creates a linked NonconformingActionReport (NCAR) directly from an Audit Report.
+  Future<dynamic> createNcarFromAuditReport({
+    required int auditReportId,
+    required String issuedByAuditorUserId,
+    required String acknowledgedByAuditeeUserId,
+  }) async {
+    final url =
+        '${ApiEndpoint.baseUrl}/ncar/from-audit-report/$auditReportId?issuedByAuditorUserId=$issuedByAuditorUserId&acknowledgedByAuditeeUserId=$acknowledgedByAuditeeUserId';
+    final response = await AuthenticatedRequest.post(dio, url);
+    return response.data;
+  }
+
   /// Fetches NCAR status options (NC, OFI) for Summary of Findings.
   Future<List<Map<String, dynamic>>> getNcarStatuses() async {
     final url =

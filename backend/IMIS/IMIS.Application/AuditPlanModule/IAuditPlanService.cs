@@ -13,6 +13,7 @@ namespace IMIS.Application.AuditPlanModule
     {
         // --- Retrieval ---
         Task<List<AuditPlanDto>?> GetAllAsync(CancellationToken cancellationToken);
+        Task<List<AuditPlanDto>> GetApprovedAsync(CancellationToken cancellationToken);
         Task<AuditPlanDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
 
         // --- Save / Update ---
@@ -33,5 +34,10 @@ namespace IMIS.Application.AuditPlanModule
         Task<AuditPlanDto?> GetByProgrammeIdAsync(int programmeId, CancellationToken cancellationToken);
 
         Task<ReportAuditPlanDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
+
+        Task<(bool Success, string? Error)> SubmitAsync(int id, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> SubmitAsync(int id, string? userId, string? comments, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> DecideAsync(int id, string approverId, bool approve, string? comments, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> DecideAsync(int id, string approverId, string action, string? comments, CancellationToken cancellationToken);
     }
 }

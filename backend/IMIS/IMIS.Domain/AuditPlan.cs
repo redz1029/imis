@@ -34,6 +34,11 @@ namespace IMIS.Domain
         /// </summary>
         public ICollection<IQASignatory> IQASignatories { get; set; } = new List<IQASignatory>();
 
+        /// <summary>
+        /// Persistent approval and rejection history for this audit plan
+        /// </summary>
+        public ICollection<IQAApprovalHistory> ApprovalHistories { get; set; } = new List<IQAApprovalHistory>();
+
         // Fix: pushes this plan's date range onto every linked schedule.
         // Call this in the save flow before SaveChangesAsync.
         public void SyncScheduleDates()

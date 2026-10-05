@@ -1,4 +1,5 @@
 import 'package:imis/audit/audit_plan/models/audit_plan_entry.dart';
+import 'package:imis/audit/iqa_signatory/model/iqa_approval_history.dart';
 import 'package:imis/audit/iqa_signatory/model/iqa_signatory.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -46,6 +47,18 @@ class AuditPlan {
   )
   final List<IQASignatory> signatories;
 
+  @JsonKey(
+    includeFromJson: false,
+    includeToJson: false,
+  )
+  final List<IQAApprovalHistory> approvalHistory;
+
+  @JsonKey(
+    includeFromJson: false,
+    includeToJson: false,
+  )
+  final RejectionDetails? latestRejection;
+
   const AuditPlan({
     this.id = 0,
     this.isDeleted = false,
@@ -58,10 +71,39 @@ class AuditPlan {
     required this.endDate,
     this.entries = const [],
     this.signatories = const [],
+    this.approvalHistory = const [],
+    this.latestRejection,
   });
 
-  factory AuditPlan.fromJson(Map<String, dynamic> json) =>
-      _$AuditPlanFromJson(json);
+  factory AuditPlan.fromJson(Map<String, dynamic> json) {
+    final base = _$AuditPlanFromJson(json);
+    final history = IQAApprovalHistory.listFromJson(
+      json['approvalHistory'] ?? json['ApprovalHistory'],
+    );
+    RejectionDetails? rej;
+    final rejRaw = json['latestRejection'] ?? json['LatestRejection'];
+    if (rejRaw is Map<String, dynamic>) {
+      rej = RejectionDetails.fromJson(rejRaw);
+    } else if (rejRaw is Map) {
+      rej = RejectionDetails.fromJson(Map<String, dynamic>.from(rejRaw));
+    }
+
+    return AuditPlan(
+      id: base.id,
+      isDeleted: base.isDeleted,
+      rowVersion: base.rowVersion,
+      auditProgrammeId: base.auditProgrammeId,
+      planName: base.planName,
+      statusCode: base.statusCode,
+      statusName: base.statusName,
+      startDate: base.startDate,
+      endDate: base.endDate,
+      entries: base.entries,
+      signatories: base.signatories,
+      approvalHistory: history,
+      latestRejection: rej,
+    );
+  }
 
   get preparer => null;
 

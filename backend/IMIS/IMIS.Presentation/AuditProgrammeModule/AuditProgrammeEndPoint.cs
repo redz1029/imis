@@ -67,6 +67,16 @@ namespace IMIS.Presentation.AuditProgrammeModule
             })
             .WithTags(_AuditProgramme);
 
+            // GET APPROVED ONLY (Workflow Gate for Audit Plan)
+            app.MapGet("/approved", async (
+                IAuditProgrammeService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetApprovedAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditProgramme);
+
             app.MapGet("/{id:int}", async (
                 int id,
                 IAuditProgrammeService service,
@@ -137,11 +147,12 @@ namespace IMIS.Presentation.AuditProgrammeModule
             // SUBMIT
             app.MapPut("/{id:int}/submit", async (
                 int id,
+                [FromBody] SubmitAuditProgrammeRequest? body,
                 IAuditProgrammeService service,
                 IOutputCacheStore cache,
                 CancellationToken cancellationToken) =>
             {
-                var (success, error) = await service.SubmitAsync(id, cancellationToken).ConfigureAwait(false);
+                var (success, error) = await service.SubmitAsync(id, body?.UserId, body?.Comments, cancellationToken).ConfigureAwait(false);
 
                 if (!success)
                     return Results.BadRequest(new { error });
@@ -153,7 +164,7 @@ namespace IMIS.Presentation.AuditProgrammeModule
             })
             .WithTags(_AuditProgramme);
 
-            // DECIDE — Pending -> Approved/Disapproved
+            // DECIDE — Pending -> Approved/Disapproved/Noted
             app.MapPut("/{id:int}/decide", async (
                 int id,
                 [FromBody] DecideAuditProgrammeRequest dto,
@@ -164,8 +175,12 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 if (dto is null)
                     return Results.BadRequest("Invalid request.");
 
+                string action = !string.IsNullOrWhiteSpace(dto.Action)
+                    ? dto.Action
+                    : ((dto.Approve ?? false) ? "Approve" : "Reject");
+
                 var (success, error) = await service.DecideAsync(
-                    id, dto.ApproverId, dto.Approve, dto.Comments, cancellationToken
+                    id, dto.ApproverId, action, dto.Comments, cancellationToken
                 ).ConfigureAwait(false);
 
                 if (!success)
@@ -174,7 +189,7 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 await cache.EvictByTagAsync(_AuditProgramme, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken).ConfigureAwait(false);
-                return Results.Ok(new { message = dto.Approve ? "Approved." : "Disapproved." });
+                return Results.Ok(new { message = action == "Reject" ? "Rejected." : $"{action}d." });
             })
             .WithTags(_AuditProgramme);
 
@@ -212,6 +227,7 @@ namespace IMIS.Presentation.AuditProgrammeModule
             })
             .WithTags(_AuditProgramme);
         }
-        public record DecideAuditProgrammeRequest(string ApproverId, bool Approve, string? Comments);
+        public record SubmitAuditProgrammeRequest(string? UserId, string? Comments);
+        public record DecideAuditProgrammeRequest(string ApproverId, bool? Approve, string? Action, string? Comments);
     }
 }
