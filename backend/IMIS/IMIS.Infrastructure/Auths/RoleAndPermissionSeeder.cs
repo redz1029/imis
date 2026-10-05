@@ -16,7 +16,7 @@ using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OperationReviewProtocolModule;
-using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PerfomanceGovernanceSystemModule;    
 using IMIS.Application.PerformanceValidationToolModule;
 using IMIS.Application.PerformanceValidationToolPeriodModule;
 using IMIS.Application.PermissionSettings;

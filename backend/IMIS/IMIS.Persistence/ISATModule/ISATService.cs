@@ -20,7 +20,7 @@ namespace IMIS.Persistence.ISATModule
         private const string StatusPending = "Pending";
         private const string StatusEmployee = "Prepared By";
         private const string StatusOfficeHead = "Reviewed By";
-
+        
         private readonly IISATRepository _repository;
         private readonly IISATSignatoryTemplateRepository _signatoryTemplateRepository;
         private readonly UserManager<User> _userManager;
@@ -32,6 +32,19 @@ namespace IMIS.Persistence.ISATModule
             _signatoryTemplateRepository = signatoryTemplateRepository;
             _userManager = userManager;
             _roleManager = roleManager;
+        }
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var dto = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (dto == null)
+                return false;
+
+            dto.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
         }
 
         public async Task<List<PgsDeliverableListDto>> GetPgsDeliverablesByOfficeAndPeriodAsync(int officeId, int periodId, CancellationToken cancellationToken)
@@ -88,7 +101,7 @@ namespace IMIS.Persistence.ISATModule
             var candidates = await _repository.GetCandidatesForUserAsync(userId, officeId, cancellationToken);
 
             var visible = new List<(ISAT Entity, List<ISATSignatoryDto> Signatories, bool IsDraft, bool IsNext)>();
-
+        
             foreach (var isat in candidates)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -97,15 +110,25 @@ namespace IMIS.Persistence.ISATModule
 
                 var (signatories, isDraft) = await ProcessSignatoriesAsync(isat, cancellationToken);
 
-                var isNext = signatories.Any(s =>
-                    s.IsNextStatus &&
-                    string.Equals(s.SignatoryId, userId, StringComparison.OrdinalIgnoreCase));
+                if (isDraft)
+                {
+                    if (isOwner)
+                        visible.Add((isat, signatories, isDraft, false));
 
-                var hasSigned = signatories.Any(s =>
-                    s.Status == StatusPrepared &&
-                    string.Equals(s.SignatoryId, userId, StringComparison.OrdinalIgnoreCase));
+                    continue;
+                }
 
-                if (isOwner || isNext || hasSigned)
+                var mine = signatories
+                    .Where(s => string.Equals(s.SignatoryId, userId, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                var isNext = mine.Any(s => s.IsNextStatus);
+
+                var allSigned = signatories.Count > 0 && signatories.All(IsSigned);
+
+                var isSignatoryAndComplete = mine.Count > 0 && allSigned;
+
+                if (isOwner || isNext || isSignatoryAndComplete)
                 {
                     visible.Add((isat, signatories, isDraft, isNext));
                 }
@@ -294,7 +317,7 @@ namespace IMIS.Persistence.ISATModule
             var (signatories, _) = await ProcessSignatoriesAsync(existing, cancellationToken);
 
             var current = signatories.FirstOrDefault(x => x.IsNextStatus)
-                ?? throw new InvalidOperationException("Wala nang pending na signatory.");
+                ?? throw new InvalidOperationException("No pending signatory.");
 
             if (!string.IsNullOrWhiteSpace(current.SignatoryId) &&
                 !string.Equals(current.SignatoryId, userId, StringComparison.OrdinalIgnoreCase))
@@ -312,6 +335,7 @@ namespace IMIS.Persistence.ISATModule
             return (await GetByIdAsync(dto.Id, cancellationToken))!;
         }
 
+        private static bool IsSigned(ISATSignatoryDto s) => s.Status == StatusPrepared;
         private async Task<(List<ISATSignatoryDto> Signatories, bool IsDraft)> ProcessSignatoriesAsync(ISAT isat, CancellationToken cancellationToken)
         {
             var result = new List<ISATSignatoryDto>();

@@ -11,6 +11,11 @@ namespace IMIS.Persistence.ISATModule
         public ISATRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+        public async Task<ISAT?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<ISAT>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
 
         public async Task<List<ISAT>> GetCandidatesForUserAsync(string userId, int? officeId, CancellationToken cancellationToken)
         {

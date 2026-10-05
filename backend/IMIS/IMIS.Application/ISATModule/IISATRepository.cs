@@ -17,5 +17,6 @@ namespace IMIS.Application.ISATModule
         Task<List<PgsDeliverableListDto>> GetPgsDeliverablesByOfficeAndPeriodAsync(int officeId, int periodId, CancellationToken cancellationToken);
         Task<ISAT?> GetWithIncludesAsync(long id, CancellationToken cancellationToken);
         Task<List<ISAT>> GetCandidatesForUserAsync(string userId, int? officeId, CancellationToken cancellationToken);
+        Task<ISAT?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

@@ -41,17 +41,11 @@ namespace IMIS.Application.ISATModule
         public bool IsDraft { get; set; }
         public ISATEmployeeProfileDto? EmployeeProfile { get; set; }
 
-        // ---------------- Signatories (flattened for report template) ----------------
+        // ---------------- Signatories ----------------
 
-        private IEnumerable<ISATSignatoryDto> NonApprovedSignatories =>
-            ISATSignatories?.Where(s => s.Label != PerfomanceGovernanceSystemModule.PgsStatus.ApprovedBy)
-            ?? Enumerable.Empty<ISATSignatoryDto>();
-
-        private ISATSignatoryDto? ApprovedSignatory =>
-            ISATSignatories?.FirstOrDefault(s => s.Label == PerfomanceGovernanceSystemModule.PgsStatus.ApprovedBy);
-
-        private ISATSignatoryDto? GetSignatory(int index) =>
-            NonApprovedSignatories.ElementAtOrDefault(index);
+        private IEnumerable<ISATSignatoryDto> NonApprovedSignatories => ISATSignatories?.Where(s => s.Label != PerfomanceGovernanceSystemModule.PgsStatus.ApprovedBy) ?? Enumerable.Empty<ISATSignatoryDto>();
+        private ISATSignatoryDto? ApprovedSignatory => ISATSignatories?.FirstOrDefault(s => s.Label == PerfomanceGovernanceSystemModule.PgsStatus.ApprovedBy);
+        private ISATSignatoryDto? GetSignatory(int index) => NonApprovedSignatories.ElementAtOrDefault(index);
 
         // Labels
         public string? ISATSignatoryLabel1 => GetSignatory(0)?.Label;
@@ -67,7 +61,15 @@ namespace IMIS.Application.ISATModule
         public string? ISATSignatoryName3 => GetSignatory(2)?.SignatoryName;
         public string? ISATSignatoryName4 => GetSignatory(3)?.SignatoryName;
         public string? ISATSignatoryName5 => ApprovedSignatory?.SignatoryName;
-        
+
+        private static string? FormatDateSigned(ISATSignatoryDto? s) => (s == null || s.DateSigned == default) ? null : s.DateSigned.ToString("MMMM dd, yyyy");  
+
+        public string? ISATSignatoryDateSigned1 => FormatDateSigned(GetSignatory(0));
+        public string? ISATSignatoryDateSigned2 => FormatDateSigned(GetSignatory(1));
+        public string? ISATSignatoryDateSigned3 => FormatDateSigned(GetSignatory(2));
+        public string? ISATSignatoryDateSigned4 => FormatDateSigned(GetSignatory(3));
+        public string? ISATSignatoryDateSigned5 => FormatDateSigned(ApprovedSignatory);
+
         public ReportISATDto()
         {
         }

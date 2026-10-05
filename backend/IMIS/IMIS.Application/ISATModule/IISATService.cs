@@ -14,5 +14,6 @@ namespace IMIS.Application.ISATModule
         Task<ISATEmployeeProfileDto?> GetEmployeeProfileByUserIdAsync(string userid, CancellationToken cancellationToken);
         Task<DtoPageList<ISATDto, ISAT, long>?> GetPaginatedByUserIdAsync(string userId, string roleId, int? officeId, int page, int pageSize, CancellationToken cancellationToken);
         Task<ISATDto> Submit(ISATDto dto, string userId, CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

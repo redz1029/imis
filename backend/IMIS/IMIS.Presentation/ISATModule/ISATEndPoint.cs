@@ -1,6 +1,8 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.ISATModule;
+using IMIS.Application.ISATSignatoryTemplateModule;
+using IMIS.Domain;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -50,12 +52,12 @@ namespace IMIS.Presentation.ISATModule
                 ).ConfigureAwait(false);
 
                 //Force inline rendering in browser with dynamic timestamp filename
-                //var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                //response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
-                //return Results.File(file, "application/pdf");
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
 
-                return Results.File(file, "application/pdf", $"ISATReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
-                //
+                //return Results.File(file, "application/pdf", $"ISATReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
                 //var result = await service.ReportGetByIdAsync(id, cancellationToken);
                 //return result is null ? Results.NotFound() : Results.Ok(result);
             })
@@ -136,6 +138,18 @@ namespace IMIS.Presentation.ISATModule
             })
            .WithTags(_iSAT)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _iSATPermission.Submit));
+
+            app.MapDelete("/{id:int}", async (int id, IISATService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_iSAT, cancellationToken);
+
+                return result ? Results.Ok(new { message = " Deleted successfully." })
+                              : Results.NotFound(new { message = "Template not found." });
+            })
+          .WithTags(_iSAT)
+          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _iSATPermission.Delete));
         }
     }
 }
