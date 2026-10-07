@@ -5,8 +5,7 @@ using IMIS.Application.ISATAnnualPerformanceCommitmentsModule;
 using IMIS.Application.ISATModule;
 using IMIS.Application.ISATSignatoryModule;
 using IMIS.Application.ISATSignatoryTemplateModule;
-using IMIS.Application.ISATStrategicObjectiveSupportedModule;
-using IMIS.Application.ISATStrategyContributionModule;
+using IMIS.Application.OfficeModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
@@ -32,6 +31,11 @@ namespace IMIS.Persistence.ISATModule
             _signatoryTemplateRepository = signatoryTemplateRepository;
             _userManager = userManager;
             _roleManager = roleManager;
+        }
+        public async Task<List<OfficeDto>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+        {
+            var offices = await _repository.GetOfficesByUserIdAsync(userId, cancellationToken);
+            return offices.Select(o => new OfficeDto(o)).ToList();
         }
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
@@ -283,8 +287,6 @@ namespace IMIS.Persistence.ISATModule
                 isatEntity.ServiceId = isatDto.ServiceId;
                 isatEntity.PostingDate = isatDto.PostingDate;
 
-                await SyncStrategicObjectiveSupportedAsync(isatDto.ISATStrategicObjectiveSupported, isatEntity.Id, cancellationToken);
-                await SyncStrategyContributionAsync(isatDto.ISATStrategyContribution, isatEntity.Id, cancellationToken);
                 await SyncAnnualPerformanceCommitmentsAsync(isatDto.ISATAnnualPerformanceCommitments, isatEntity.Id, cancellationToken);
             }
             else
@@ -529,85 +531,7 @@ namespace IMIS.Persistence.ISATModule
 
             return Enumerable.Empty<ISATSignatoryTemplate>();
         }
-
-        // ======================= SYNC HELPERS =======================
-        private async Task SyncStrategicObjectiveSupportedAsync(List<ISATStrategicObjectiveSupportedDto>? dtos, long isatId, CancellationToken cancellationToken)
-        {
-            if (dtos == null)
-                return;
-
-            var db = _repository.GetDbContext();
-
-            var existingRecords = await db.Set<ISATStrategicObjectiveSupported>()
-                .Where(x => x.ISATId == isatId && !x.IsDeleted)
-                .ToListAsync(cancellationToken);
-
-            var incomingIds = dtos.Where(x => x.Id > 0).Select(x => x.Id).ToHashSet();
-
-            foreach (var record in existingRecords.Where(x => !incomingIds.Contains(x.Id)))
-            {
-                record.IsDeleted = true;
-            }
-
-            foreach (var dto in dtos)
-            {
-                dto.ISATId = isatId;
-
-                if (dto.Id == 0)
-                {
-                    db.Set<ISATStrategicObjectiveSupported>().Add(dto.ToEntity());
-                }
-                else
-                {
-                    var existing = existingRecords.FirstOrDefault(x => x.Id == dto.Id);
-                    if (existing != null)
-                    {
-                        existing.KraRoadMapId = dto.KraRoadMapId;
-                        existing.KraRoadMapDeliverableId = dto.KraRoadMapDeliverableId;
-                        existing.PostingDate = dto.PostingDate;
-                    }
-                }
-            }
-        }
-
-        private async Task SyncStrategyContributionAsync(List<ISATStrategyContributionDto>? dtos, long isatId, CancellationToken cancellationToken)
-        {
-            if (dtos == null)
-                return;
-
-            var db = _repository.GetDbContext();
-
-            var existingRecords = await db.Set<ISATStrategyContribution>()
-                .Where(x => x.ISATId == isatId && !x.IsDeleted)
-                .ToListAsync(cancellationToken);
-
-            var incomingIds = dtos.Where(x => x.Id > 0).Select(x => x.Id).ToHashSet();
-
-            foreach (var record in existingRecords.Where(x => !incomingIds.Contains(x.Id)))
-            {
-                record.IsDeleted = true;
-            }
-
-            foreach (var dto in dtos)
-            {
-                dto.ISATId = isatId;
-
-                if (dto.Id == 0)
-                {
-                    db.Set<ISATStrategyContribution>().Add(dto.ToEntity());
-                }
-                else
-                {
-                    var existing = existingRecords.FirstOrDefault(x => x.Id == dto.Id);
-                    if (existing != null)
-                    {
-                        existing.PgsDeliverableId = dto.PgsDeliverableId;
-                        existing.PostingDate = dto.PostingDate;
-                    }
-                }
-            }
-        }
-
+   
         private async Task SyncAnnualPerformanceCommitmentsAsync(List<ISATAnnualPerformanceCommitmentsDto>? dtos, long isatId, CancellationToken cancellationToken)
         {
             if (dtos == null)
@@ -639,10 +563,10 @@ namespace IMIS.Persistence.ISATModule
                     var existing = existingRecords.FirstOrDefault(x => x.Id == dto.Id);
                     if (existing != null)
                     {
+                        existing.PgsDeliverableId = dto.PgsDeliverableId;
+                        existing.KraId = dto.KraId;
                         existing.Deliverable = dto.Deliverable;
                         existing.Target = dto.Target;
-                        existing.TimeLine = dto.TimeLine;
-                        existing.Status = dto.Status;
                         existing.Accomplishment = dto.Accomplishment;
                     }
                 }

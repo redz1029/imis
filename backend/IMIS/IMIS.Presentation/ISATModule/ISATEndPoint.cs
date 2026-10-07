@@ -1,8 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.ISATModule;
-using IMIS.Application.ISATSignatoryTemplateModule;
-using IMIS.Domain;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -51,12 +49,12 @@ namespace IMIS.Presentation.ISATModule
                     cancellationToken
                 ).ConfigureAwait(false);
 
-                //Force inline rendering in browser with dynamic timestamp filename
-                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
-                return Results.File(file, "application/pdf");
+                ////Force inline rendering in browser with dynamic timestamp filename
+                //var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                //response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                //return Results.File(file, "application/pdf");
 
-                //return Results.File(file, "application/pdf", $"ISATReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                return Results.File(file, "application/pdf", $"ISATReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
 
                 //var result = await service.ReportGetByIdAsync(id, cancellationToken);
                 //return result is null ? Results.NotFound() : Results.Ok(result);
@@ -87,6 +85,15 @@ namespace IMIS.Presentation.ISATModule
             {
                 var result = await service.GetPaginatedByUserIdAsync(userId, roleId, officeId, page, pageSize, cancellationToken);
                 return result is null ? Results.NotFound() : Results.Ok(result);
+            })
+            .WithTags(_iSAT)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_iSAT), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _iSATPermission.View));
+
+            app.MapGet("/offices/{userId}", async (string userId, IISATService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetOfficesByUserIdAsync(userId, cancellationToken);
+                return Results.Ok(result);
             })
             .WithTags(_iSAT)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_iSAT), true)

@@ -21,8 +21,6 @@ namespace IMIS.Domain
         public int? ServiceId { get; set; }
         public Office? Service { get; set; }
 
-        public List<ISATStrategicObjectiveSupported>? ISATStrategicObjectiveSupported { get; set; }
-        public List<ISATStrategyContribution>? ISATStrategyContribution { get; set; }
         public List<ISATAnnualPerformanceCommitments>? ISATAnnualPerformanceCommitments { get; set; }
         public List<ISATSignatory>? ISATSignatories { get; set; }
 

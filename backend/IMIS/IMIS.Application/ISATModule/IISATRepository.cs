@@ -18,5 +18,6 @@ namespace IMIS.Application.ISATModule
         Task<ISAT?> GetWithIncludesAsync(long id, CancellationToken cancellationToken);
         Task<List<ISAT>> GetCandidatesForUserAsync(string userId, int? officeId, CancellationToken cancellationToken);
         Task<ISAT?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<List<Office>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default);
     }
 }

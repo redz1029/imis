@@ -11,6 +11,22 @@ namespace IMIS.Persistence.ISATModule
         public ISATRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+        public async Task<List<Office>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+        {
+            var assignedOfficeIds = ReadOnlyDbContext.Set<UserOffices>()
+                .AsNoTracking()
+                .Where(uo => uo.UserId == userId && uo.IsActive)
+                .Select(uo => uo.OfficeId);
+
+            return await ReadOnlyDbContext.Set<Office>()
+                .AsNoTracking()
+                .Where(o => o.IsActive
+                            && !o.IsDeleted
+                            && o.ParentOfficeId != null          
+                            && assignedOfficeIds.Contains(o.Id)) 
+                .OrderBy(o => o.Name)
+                .ToListAsync(cancellationToken);
+        }
         public async Task<ISAT?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<ISAT>()
@@ -26,13 +42,6 @@ namespace IMIS.Persistence.ISATModule
                 .Include(x => x.ISATPeriod)
                 .Include(x => x.EmployeeUser)
                 .Include(x => x.ImmediateSupervisorUser)
-                .Include(x => x.ISATStrategicObjectiveSupported)
-                    .ThenInclude(s => s.KraRoadMap)
-                        .ThenInclude(r => r!.Kra)
-                .Include(x => x.ISATStrategicObjectiveSupported)
-                    .ThenInclude(s => s.KraRoadMapDeliverable)
-                .Include(x => x.ISATStrategyContribution)
-                    .ThenInclude(s => s.PgsDeliverable)
                 .Include(x => x.ISATAnnualPerformanceCommitments)
                 .Include(x => x.ISATSignatories)
                       .ThenInclude(s => s.Signatory)
@@ -51,11 +60,15 @@ namespace IMIS.Persistence.ISATModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-        public async Task<List<PgsDeliverableListDto>> GetPgsDeliverablesByOfficeAndPeriodAsync(int officeId, int periodId, CancellationToken cancellationToken)
+      
+        public async Task<List<PgsDeliverableListDto>> GetPgsDeliverablesByOfficeAndPeriodAsync(int officeId, int periodId,  CancellationToken cancellationToken)
         {
             var pgsId = await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
                 .AsNoTracking()
-                .Where(p => p.OfficeId == officeId && p.PgsPeriod.Id == periodId && !p.IsDeleted)
+                .Where(p =>
+                    p.OfficeId == officeId &&
+                    p.PgsPeriod.Id == periodId &&
+                    !p.IsDeleted)
                 .Select(p => p.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -66,12 +79,20 @@ namespace IMIS.Persistence.ISATModule
 
             return await ReadOnlyDbContext.Set<PgsDeliverable>()
                 .AsNoTracking()
-                .Where(d => d.PerfomanceGovernanceSystemId == pgsId && !d.IsDeleted)
+                .Where(d =>
+                    d.PerfomanceGovernanceSystemId == pgsId &&
+                    !d.IsDeleted)
                 .OrderBy(d => d.SortOrder)
                 .Select(d => new PgsDeliverableListDto
                 {
                     Id = d.Id,
-                    DeliverableName = d.DeliverableName
+                    DeliverableName = d.DeliverableName,
+
+                    KraId = d.KraId,
+                    KraName = ReadOnlyDbContext.Set<KeyResultArea>()
+                        .Where(k => k.Id == d.KraId && !k.IsDeleted)
+                        .Select(k => k.Name)
+                        .FirstOrDefault()
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -123,13 +144,6 @@ namespace IMIS.Persistence.ISATModule
                 .Include(x => x.ISATPeriod)
                 .Include(x => x.EmployeeUser)
                 .Include(x => x.ImmediateSupervisorUser)
-                .Include(x => x.ISATStrategicObjectiveSupported)
-                    .ThenInclude(s => s.KraRoadMap)
-                        .ThenInclude(r => r!.Kra)
-                .Include(x => x.ISATStrategicObjectiveSupported)
-                    .ThenInclude(s => s.KraRoadMapDeliverable)
-                .Include(x => x.ISATStrategyContribution)
-                    .ThenInclude(s => s.PgsDeliverable)
                 .Include(x => x.ISATAnnualPerformanceCommitments)
                 .Include(x => x.ISATSignatories)
                      .ThenInclude(s => s.Signatory)
@@ -182,8 +196,7 @@ namespace IMIS.Persistence.ISATModule
             return await _entities
                 .Include(x => x.ISATSignatories)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-        }
-
+        }    
         public async Task<ISAT?> GetByIsatIdAsync(long id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<ISAT>()
@@ -193,18 +206,13 @@ namespace IMIS.Persistence.ISATModule
                 .Include(x => x.ISATPeriod)
                 .Include(x => x.EmployeeUser)
                 .Include(x => x.ImmediateSupervisorUser)
-                .Include(x => x.ISATStrategicObjectiveSupported)
-                    .ThenInclude(s => s.KraRoadMap)
-                        .ThenInclude(r => r!.Kra)
-                .Include(x => x.ISATStrategicObjectiveSupported)
-                    .ThenInclude(s => s.KraRoadMapDeliverable)
-                .Include(x => x.ISATStrategyContribution)
-                    .ThenInclude(s => s.PgsDeliverable)
                 .Include(x => x.ISATAnnualPerformanceCommitments)
+                    .ThenInclude(a => a.PgsDeliverable)
+                        .ThenInclude(d => d!.Kra)
                 .Include(x => x.ISATSignatories)
-                     .ThenInclude(s => s.Signatory)
+                    .ThenInclude(s => s.Signatory)
                 .AsSplitQuery()
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+                .FirstOrDefaultAsync(x => x.Id == id,  cancellationToken)
                 .ConfigureAwait(false);
         }
     }

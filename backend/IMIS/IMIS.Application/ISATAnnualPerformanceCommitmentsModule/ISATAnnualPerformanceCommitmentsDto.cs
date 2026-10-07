@@ -7,10 +7,12 @@ namespace IMIS.Application.ISATAnnualPerformanceCommitmentsModule
     public class ISATAnnualPerformanceCommitmentsDto : BaseDto<ISATAnnualPerformanceCommitments, long>
     {
         public long ISATId { get; set; }
+        public long? PgsDeliverableId { get; set; }
+        public string? DeliverableMName { get; set; }
+        public int? KraId { get; set; }
+        public string? KraMName { get; set; }
         public string? Deliverable { get; set; }
         public string? Target { get; set; }
-        public string? TimeLine { get; set; }
-        public string? Status { get; set; }
         public string? Accomplishment { get; set; }
 
         public ISATAnnualPerformanceCommitmentsDto()
@@ -18,27 +20,40 @@ namespace IMIS.Application.ISATAnnualPerformanceCommitmentsModule
         }
 
         [SetsRequiredMembers]
-        public ISATAnnualPerformanceCommitmentsDto(ISATAnnualPerformanceCommitments ISATAnnualPerformanceCommitments)
+        public ISATAnnualPerformanceCommitmentsDto(ISATAnnualPerformanceCommitments entity)
         {
-            this.Id = ISATAnnualPerformanceCommitments.Id;
-            this.ISATId = ISATAnnualPerformanceCommitments.ISATId;
-            this.Deliverable = ISATAnnualPerformanceCommitments.Deliverable;
-            this.Target = ISATAnnualPerformanceCommitments.Target;
-            this.TimeLine = ISATAnnualPerformanceCommitments.TimeLine;
-            this.Status = ISATAnnualPerformanceCommitments.Status;
-            this.Accomplishment = ISATAnnualPerformanceCommitments.Accomplishment;
+            Id = entity.Id;
+            ISATId = entity.ISATId;
+            Deliverable = entity.Deliverable;
+            Target = entity.Target;
+            Accomplishment = entity.Accomplishment;
+            PgsDeliverableId = entity.PgsDeliverableId;
+            KraId = entity.KraId;
+
+            if (entity.PgsDeliverable != null)
+            {
+                DeliverableMName = entity.PgsDeliverable.DeliverableName;
+
+                KraId = entity.PgsDeliverable.KraId;
+
+                if (entity.PgsDeliverable.Kra != null)
+                {
+                    KraMName = entity.PgsDeliverable.Kra.Name;
+                }
+            }
         }
+
         public override ISATAnnualPerformanceCommitments ToEntity()
         {
-            return new ISATAnnualPerformanceCommitments()
+            return new ISATAnnualPerformanceCommitments
             {
                 Id = Id,
                 ISATId = ISATId,
+                PgsDeliverableId = PgsDeliverableId,
+                KraId = KraId,
                 Deliverable = Deliverable,
                 Target = Target,
-                TimeLine = TimeLine,
-                Status = Status,
-                Accomplishment = Accomplishment,
+                Accomplishment = Accomplishment
             };
         }
     }

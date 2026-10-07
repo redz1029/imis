@@ -2,8 +2,6 @@
 using Base.Primitives;
 using IMIS.Application.ISATAnnualPerformanceCommitmentsModule;
 using IMIS.Application.ISATSignatoryModule;
-using IMIS.Application.ISATStrategicObjectiveSupportedModule;
-using IMIS.Application.ISATStrategyContributionModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Domain;
@@ -28,11 +26,7 @@ namespace IMIS.Application.ISATModule
 
         public int? ServiceId { get; set; }
         public OfficeDto? Service { get; set; }
-
-        public List<ISATStrategicObjectiveSupportedDto>? ISATStrategicObjectiveSupported { get; set; }
-
-        public List<ISATStrategyContributionDto>? ISATStrategyContribution { get; set; }
-
+        
         public List<ISATAnnualPerformanceCommitmentsDto>? ISATAnnualPerformanceCommitments { get; set; }
 
         public DateTime? PostingDate { get; set; }
@@ -60,8 +54,6 @@ namespace IMIS.Application.ISATModule
             ServiceId = entity.ServiceId;
             Service = entity.Service == null ? null : new OfficeDto(entity.Service);
             PostingDate = entity.PostingDate;
-            ISATStrategicObjectiveSupported = entity.ISATStrategicObjectiveSupported?.Select(x => new ISATStrategicObjectiveSupportedDto(x)).ToList();
-            ISATStrategyContribution = entity.ISATStrategyContribution?.Select(x => new ISATStrategyContributionDto(x)).ToList();
             ISATAnnualPerformanceCommitments = entity.ISATAnnualPerformanceCommitments?.Select(x => new ISATAnnualPerformanceCommitmentsDto(x)).ToList();
             ISATSignatories = entity.ISATSignatories?.Select(x => new ISATSignatoryDto(x)).ToList();
         }
@@ -78,8 +70,6 @@ namespace IMIS.Application.ISATModule
                 Position = Position,
                 ServiceId = ServiceId,
                 PostingDate = PostingDate,
-                ISATStrategicObjectiveSupported = ISATStrategicObjectiveSupported?.Select(x => x.ToEntity()).ToList(),
-                ISATStrategyContribution = ISATStrategyContribution?.Select(x => x.ToEntity()).ToList(),
                 ISATAnnualPerformanceCommitments = ISATAnnualPerformanceCommitments?.Select(x => x.ToEntity()).ToList(),
             };
         }

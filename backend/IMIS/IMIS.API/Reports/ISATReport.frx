@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="09/26/2026 14:13:48" ReportInfo.Modified="10/05/2026 11:10:44" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="09/26/2026 14:13:48" ReportInfo.Modified="10/06/2026 17:42:31" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -104,10 +104,10 @@ namespace FastReport
         <Column Name="PostingDate" DataType="System.DateTime"/>
       </BusinessObjectDataSource>
       <BusinessObjectDataSource Name="ISATAnnualPerformanceCommitments" ReferenceName="ISATAnnualPerformanceCommitments" DataType="System.Int32" Enabled="true">
+        <Column Name="DeliverableMName" DataType="System.String"/>
+        <Column Name="KraMName" DataType="System.String"/>
         <Column Name="Deliverable" DataType="System.String"/>
         <Column Name="Target" DataType="System.String"/>
-        <Column Name="TimeLine" DataType="System.String"/>
-        <Column Name="Status" DataType="System.String"/>
         <Column Name="Accomplishment" DataType="System.String"/>
       </BusinessObjectDataSource>
     </BusinessObjectDataSource>
@@ -119,7 +119,7 @@ namespace FastReport
       <TextObject Name="Text292" Left="16.9" Top="19.8" Width="1015.4" Height="48.7" Text="Department of Health&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt"/>
       <TextObject Name="Text305" Left="16.9" Top="56.5" Width="1015.6" Height="14.8" Text="COTABATO REGIONAL AND MEDICAL CENTER" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt, style=Bold"/>
       <TextObject Name="Text293" Left="17.05" Top="75.6" Width="1015.8" Height="14.8" Text="Sinsuat Avenue, Rosary Heights X, Cotabato City" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 10pt"/>
-      <ChildBand Name="Child3" Top="106.62" Width="1047.06" Height="162.2" CanGrow="true">
+      <ChildBand Name="Child3" Top="107.95" Width="1047.06" Height="162.2" CanGrow="true">
         <TextObject Name="Text306" Left="37.8" Top="20.35" Width="599.8" Height="14.8" Text="Individual Strategic Alignment Tree (ISAT)" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
         <TextObject Name="Text307" Left="37.8" Top="29.8" Width="91.75" Height="28.7" Text="Purpose:" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
         <TextObject Name="Text308" Left="121.3" Top="31.8" Width="885.15" Height="28.8" Text="To align each employee's individual work with the CRMC Strategy Map and Departmental objectives." VertAlign="Center" Font="Times New Roman, 9pt"/>
@@ -136,53 +136,44 @@ namespace FastReport
         <TextObject Name="Text320" Left="660.5" Top="111.85" Width="313.5" Height="23.9" Text="[ReportISATDto.ServiceName]" VertAlign="Center" Font="Times New Roman, 9pt"/>
         <TextObject Name="Text313" Left="37.8" Top="132.1" Width="181.35" Height="27.7" Text="Immediate Supervisor" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
         <TextObject Name="Text318" Left="222.45" Top="133.65" Width="323.85" Height="25.9" Text="[ReportISATDto.ImmediateSupervisorName]" VertAlign="Center" Font="Times New Roman, 9pt"/>
-        <ChildBand Name="Child4" Top="271.48" Width="1047.06" Height="30.15" CanGrow="true">
-          <TextObject Name="Text321" Left="37.8" Top="2.45" Width="360.9" Height="27.7" PrintOn="FirstPage" Text="Strategic Alignment" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-          <ChildBand Name="Child6" Top="304.3" Width="1047.06" Height="24.35" CanGrow="true" CanShrink="true">
-            <SubreportObject Name="StrategicObjective" Left="38.4" Top="0.45" Width="960.2" Height="23.9" GrowToBottom="true" ReportPage="StrategicObjectiveSupport"/>
-            <ChildBand Name="Child8" Top="331.32" Width="1047.06" Height="20.35" CanGrow="true" CanShrink="true">
-              <SubreportObject Name="StrategyContribution" Left="38.25" Top="-0.55" Width="960.45" Height="20.9" ReportPage="Page2"/>
-              <ChildBand Name="Child1" Top="354.33" Width="1047.06" Height="29.5" CanGrow="true">
-                <TextObject Name="Text327" Left="37.8" Top="9.35" Width="360.9" Height="18.7" CanGrow="true" Text="Annual Performance Commitments" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-                <ChildBand Name="Child2" Top="386.5" Width="1047.06" Height="26.7" CanGrow="true">
-                  <ShapeObject Name="Shape4" Left="41.8" Width="960.9" Height="26.7" CanGrow="true" GrowToBottom="true"/>
-                  <LineObject Name="Line11" Left="306.4" Top="1" Height="24.7" CanGrow="true" GrowToBottom="true"/>
-                  <LineObject Name="Line12" Left="495.4" Top="1" Height="24.7" CanGrow="true" GrowToBottom="true"/>
-                  <LineObject Name="Line13" Left="688.85" Top="1" Height="23.9" CanGrow="true" GrowToBottom="true"/>
-                  <TextObject Name="Text328" Left="43.7" Top="2" Width="261.25" Height="21.7" CanGrow="true" GrowToBottom="true" Text="Key Task / Deliverable" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
-                  <TextObject Name="Text329" Left="308.85" Top="2.45" Width="184.25" Height="20.7" CanGrow="true" GrowToBottom="true" Text="Target" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
-                  <TextObject Name="Text330" Left="496.75" Top="2" Width="188.25" Height="20.7" CanGrow="true" GrowToBottom="true" Text="Accomplishment" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
-                  <TextObject Name="Text331" Left="690.75" Top="2" Width="178.25" Height="20.7" CanGrow="true" GrowToBottom="true" Text="Timeline" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
-                  <LineObject Name="Line18" Left="872.85" Top="1" Height="24.9" CanGrow="true" GrowToBottom="true"/>
-                  <TextObject Name="Text346" Left="874.85" Top="2" Width="124.25" Height="20.7" CanGrow="true" GrowToBottom="true" Text="Status" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
-                </ChildBand>
-              </ChildBand>
-            </ChildBand>
+        <ChildBand Name="Child1" Top="274.15" Width="1047.06" Height="29.5" CanGrow="true">
+          <TextObject Name="Text327" Left="37.8" Top="9.35" Width="360.9" Height="18.7" CanGrow="true" Text="Annual Performance Commitments" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
+          <ChildBand Name="Child2" Top="307.65" Width="1047.06" Height="26.7" CanGrow="true">
+            <ShapeObject Name="Shape4" Left="41.8" Width="960.9" Height="26.7" CanGrow="true" GrowToBottom="true"/>
+            <LineObject Name="Line11" Left="306.4" Top="1" Height="24.7" CanGrow="true" GrowToBottom="true"/>
+            <LineObject Name="Line12" Left="495.4" Top="1" Height="24.7" CanGrow="true" GrowToBottom="true"/>
+            <LineObject Name="Line13" Left="688.85" Top="1" Height="23.9" CanGrow="true" GrowToBottom="true"/>
+            <TextObject Name="Text328" Left="43.7" Top="2" Width="261.25" Height="21.7" CanGrow="true" GrowToBottom="true" Text="Key Task / Deliverable" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+            <TextObject Name="Text329" Left="308.85" Top="2.45" Width="184.25" Height="20.7" CanGrow="true" GrowToBottom="true" Text="KRA" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+            <TextObject Name="Text330" Left="496.75" Top="2" Width="188.25" Height="20.7" CanGrow="true" GrowToBottom="true" Text="Contribution" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+            <TextObject Name="Text331" Left="690.75" Top="2" Width="178.25" Height="20.7" CanGrow="true" GrowToBottom="true" Text="Target" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+            <LineObject Name="Line18" Left="872.85" Top="1" Height="24.9" CanGrow="true" GrowToBottom="true"/>
+            <TextObject Name="Text346" Left="874.85" Top="2" Width="124.25" Height="20.7" CanGrow="true" GrowToBottom="true" Text="Accomplishment" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
           </ChildBand>
         </ChildBand>
       </ChildBand>
     </ReportTitleBand>
-    <DataBand Name="Data1" Top="415.87" Width="1047.06" Height="25.7" CanGrow="true" CanShrink="true" DataSource="ISATAnnualPerformanceCommitments">
+    <DataBand Name="Data1" Top="338.35" Width="1047.06" Height="25.7" CanGrow="true" CanShrink="true" DataSource="ISATAnnualPerformanceCommitments">
       <ShapeObject Name="Shape3" Left="41.8" Top="-1" Width="960.9" Height="26.7" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line7" Left="306.5" Top="-1" Height="24.7" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line8" Left="495.4" Height="23.9" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line9" Left="688.85" Height="23.9" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line10" Left="873.05" Height="23.9" CanGrow="true" GrowToBottom="true"/>
-      <TextObject Name="Text340" Left="46.25" Top="2" Width="256.5" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATAnnualPerformanceCommitments.Deliverable]" VertAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="Text341" Left="309.85" Top="2" Width="184.5" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATAnnualPerformanceCommitments.Target]" VertAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="Text347" Left="497.85" Top="2" Width="189.5" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATAnnualPerformanceCommitments.Accomplishment]" VertAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="Text348" Left="691.85" Top="2" Width="178.5" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATAnnualPerformanceCommitments.TimeLine]" VertAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="Text349" Left="875.85" Top="2" Width="122.5" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATAnnualPerformanceCommitments.Status]" VertAlign="Center" Font="Times New Roman, 9pt"/>
+      <TextObject Name="Text340" Left="46.25" Top="2" Width="256.5" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATAnnualPerformanceCommitments.Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+      <TextObject Name="Text341" Left="693.3" Top="2" Width="176.5" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATAnnualPerformanceCommitments.Target]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+      <TextObject Name="Text347" Left="497.85" Top="2" Width="189.5" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATAnnualPerformanceCommitments.Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
       <TextObject Name="Text368" Left="46.25" Top="15.45" Width="256.7" Height="6.9" CanGrow="true" GrowToBottom="true" Text="." HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt" TextFill.Color="White"/>
       <TextObject Name="Text369" Left="309.85" Top="15.45" Width="183.7" Height="6.9" CanGrow="true" GrowToBottom="true" Text=".&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt" TextFill.Color="White"/>
       <TextObject Name="Text370" Left="497.85" Top="15.45" Width="188.7" Height="6.9" CanGrow="true" GrowToBottom="true" Text=".&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt" TextFill.Color="White"/>
       <TextObject Name="Text371" Left="692.3" Top="15.45" Width="177.7" Height="6.9" CanGrow="true" GrowToBottom="true" Text=".&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt" TextFill.Color="White"/>
       <TextObject Name="Text372" Left="876.3" Top="15.45" Width="122.7" Height="6.9" CanGrow="true" GrowToBottom="true" Text=".&#13;&#10;&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text373" Left="875.95" Top="1.25" Width="123.5" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATAnnualPerformanceCommitments.Accomplishment]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
+      <TextObject Name="Text374" Left="308.65" Top="1" Width="184.5" Height="13.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATAnnualPerformanceCommitments.KraMName]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
     </DataBand>
-    <ReportSummaryBand Name="ReportSummary1" Top="444.23" Width="1047.06" Height="75.6" CanGrow="true">
+    <ReportSummaryBand Name="ReportSummary1" Top="368.05" Width="1047.06" Height="75.6" CanGrow="true">
       <TextObject Name="Text350" Left="37.8" Top="9.45" Width="531" Height="27.7" CanGrow="true" Text="Employee Commitment" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
       <TextObject Name="Text351" Left="37.8" Top="36.8" Width="956.25" Height="27.7" CanGrow="true" Text="I understand that the tasks listed above contribute to the achievement of the CRMC Strategic Objectives and commit to accomplishing them during the review period." VertAlign="Center" Font="Times New Roman, 9pt"/>
-      <ChildBand Name="Child5" Top="522.5" Width="1047.06" Height="120.65">
+      <ChildBand Name="Child5" Top="447.65" Width="1047.06" Height="120.65">
         <TextObject Name="Text352" Left="52" Top="5.45" Width="236.25" Height="18.9" Text="[ReportISATDto.ISATSignatoryLabel1]" VertAlign="Center" Font="Times New Roman, 9pt"/>
         <TextObject Name="Text353" Left="52.5" Top="34.8" Width="283.5" Height="18.9" BeforePrintEvent="Text353_BeforePrint" Text="[ReportISATDto.ISATSignatoryName1]" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
         <TextObject Name="TxtSignature1" Left="51.6" Top="54.7" Width="82.3" Height="28.7" Text="Signature:" VertAlign="Center" Font="Times New Roman, 9pt"/>
@@ -206,27 +197,8 @@ namespace FastReport
         <TextObject Name="Text364" Left="751" Top="85.05" Width="182.55" Height="12.9" CanGrow="true" Text="[ReportISATDto.ISATSignatoryDateSigned5]" VertAlign="Center" Font="Times New Roman, 9pt"/>
       </ChildBand>
     </ReportSummaryBand>
-    <PageFooterBand Name="PageFooter1" Top="645.82" Width="1047.06" Height="22.35" Guides="0">
+    <PageFooterBand Name="PageFooter1" Top="572.3" Width="1047.06" Height="22.35" Guides="0">
       <TextObject Name="Text29" Left="9.45" Top="4.55" Width="1030.65" Height="14.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 8pt"/>
     </PageFooterBand>
-  </ReportPage>
-  <ReportPage Name="StrategicObjectiveSupport" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Guides="1039.5,963.9" Watermark.Font="Arial, 60pt">
-    <DataBand Name="Data2" Width="1047.06" Height="25.7" CanGrow="true" CanBreak="true" DataSource="ISATStrategicObjectiveSupported">
-      <ShapeObject Name="Shape5" Left="202.9" Top="-1" Width="762.2" Height="26.7" CanGrow="true" CanShrink="true" GrowToBottom="true" ShiftMode="WhenOverlapped" BeforePrintEvent="Shape1_BeforePrint"/>
-      <TextObject Name="Text323" Left="205.35" Top="2" Width="232.7" Height="12.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATStrategicObjectiveSupported.KraName]" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="Text324" Left="444.15" Top="2" Width="517.95" Height="12.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATStrategicObjectiveSupported.KraRoadMapDeliverableName]" VertAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="Text342" Left="3.9" Top="-1" Width="199.25" Height="25.7" Border.Lines="All" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text342_BeforePrint" Text="Strategic Objective Support" Duplicates="Merge" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-      <LineObject Name="Line17" Left="441.15" Top="-1" Height="25.7" CanGrow="true" GrowToBottom="true"/>
-      <TextObject Name="Text365" Left="205.9" Top="15.45" Width="231.7" Height="6.9" CanGrow="true" GrowToBottom="true" Text="." HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt" TextFill.Color="White"/>
-      <TextObject Name="Text366" Left="444.15" Top="14.9" Width="517.2" Height="7.9" CanGrow="true" GrowToBottom="true" Text="." HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt" TextFill.Color="White"/>
-    </DataBand>
-  </ReportPage>
-  <ReportPage Name="Page2" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt">
-    <DataBand Name="Data3" Width="1047.06" Height="25.7" CanGrow="true" CanBreak="true" DataSource="ISATStrategyContribution">
-      <ShapeObject Name="Shape6" Left="202.9" Top="-1" Width="762.2" Height="26.7" CanGrow="true" CanShrink="true" GrowToBottom="true" ShiftMode="WhenOverlapped" BeforePrintEvent="Shape1_BeforePrint"/>
-      <TextObject Name="Text343" Left="205.35" Top="2" Width="755.45" Height="10.9" CanGrow="true" GrowToBottom="true" Text="[ReportISATDto.ISATStrategyContribution.PgsDeliverableName]" VertAlign="Center" Font="Times New Roman, 9pt"/>
-      <TextObject Name="Text345" Left="3.9" Width="199.25" Height="25.25" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="My Contribution to my Strategy" Duplicates="Merge" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt, style=Bold"/>
-      <TextObject Name="Text367" Left="205.9" Top="13.45" Width="754.45" Height="8.9" CanGrow="true" GrowToBottom="true" Text="." HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 9pt" TextFill.Color="White"/>
-    </DataBand>
   </ReportPage>
 </Report>

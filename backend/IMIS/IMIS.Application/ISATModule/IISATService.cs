@@ -1,5 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.OfficeModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.ISATModule
@@ -15,5 +16,6 @@ namespace IMIS.Application.ISATModule
         Task<DtoPageList<ISATDto, ISAT, long>?> GetPaginatedByUserIdAsync(string userId, string roleId, int? officeId, int page, int pageSize, CancellationToken cancellationToken);
         Task<ISATDto> Submit(ISATDto dto, string userId, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<List<OfficeDto>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default);
     }
 }
