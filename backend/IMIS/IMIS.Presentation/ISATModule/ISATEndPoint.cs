@@ -50,11 +50,11 @@ namespace IMIS.Presentation.ISATModule
                 ).ConfigureAwait(false);
 
                 ////Force inline rendering in browser with dynamic timestamp filename
-                //var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                //response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
-                //return Results.File(file, "application/pdf");
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
 
-                return Results.File(file, "application/pdf", $"ISATReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                //return Results.File(file, "application/pdf", $"ISATReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
 
                 //var result = await service.ReportGetByIdAsync(id, cancellationToken);
                 //return result is null ? Results.NotFound() : Results.Ok(result);
