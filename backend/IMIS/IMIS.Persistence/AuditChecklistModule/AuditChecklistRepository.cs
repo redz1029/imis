@@ -28,6 +28,17 @@ namespace IMIS.Persistence.AuditChecklistModule
             .Include(x => x.AuditPlanEntry)
                 .ThenInclude(e => e!.IsoAuditors)
                     .ThenInclude(a => a.Team)
+            .Include(x => x.AuditPlanEntry)
+                .ThenInclude(e => e!.IsoAuditors)
+                    .ThenInclude(a => a.IsoAuditors)
+            .Include(x => x.AuditPlanEntry)
+                .ThenInclude(e => e!.AuditPlan)
+                    .ThenInclude(p => p!.AuditProgramme)
+            .Include(x => x.AuditSchedule)
+                .ThenInclude(s => s!.Team)
+            .Include(x => x.AuditSchedule)
+                .ThenInclude(s => s!.AuditPlan)
+                    .ThenInclude(p => p!.AuditProgramme)
             .Include(x => x.Auditee);
 
         public async Task<AuditChecklist?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
@@ -79,6 +90,14 @@ namespace IMIS.Persistence.AuditChecklistModule
         }
 
         public async Task<IEnumerable<AuditChecklist>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken)
+        {
+            return await WithDetails(_entities.AsNoTracking())
+                .Where(x => x.AuditScheduleId == auditScheduleId && !x.IsDeleted)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<AuditChecklist>> GetByAuditScheduleIdWithScheduleAsync(int auditScheduleId, CancellationToken cancellationToken)
         {
             return await WithDetails(_entities.AsNoTracking())
                 .Where(x => x.AuditScheduleId == auditScheduleId && !x.IsDeleted)

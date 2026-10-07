@@ -38,6 +38,15 @@ namespace IMIS.Persistence.AuditScheduleModule
             return await WithSignatories(ReadOnlyDbContext.Set<AuditSchedule>())
                 .Include(x => x.Team)
                 .Include(x => x.AuditSchduleDetails)
+                // ISO clauses (CRITERIA) live on the Audit Plan Entry; load the
+                // entry + its linked ISO standards so the schedule payload
+                // carries the criteria for the view and the PDF report.
+                .Include(x => x.AuditPlanEntry!)
+                    .ThenInclude(e => e.AuditPlanProcesses)
+                        .ThenInclude(p => p.Office)
+                .Include(x => x.AuditPlanEntry!)
+                    .ThenInclude(e => e.IsoStandardAuditPlans)
+                        .ThenInclude(s => s.IsoStandard)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 

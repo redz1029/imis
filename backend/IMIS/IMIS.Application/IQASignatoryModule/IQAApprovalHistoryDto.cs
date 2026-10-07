@@ -16,7 +16,8 @@ namespace IMIS.Application.IQASignatoryModule
 
         public required string Action { get; set; }
         public required string Status { get; set; }
-        public required string UserId { get; set; }
+        // Nullable: system-initiated history rows carry no user (FK-safe).
+        public string? UserId { get; set; }
         public string? UserName { get; set; }
         public string? UserFullName { get; set; }
         public DateTime ActionDate { get; set; }

@@ -48,6 +48,37 @@ namespace IMIS.Presentation.AuditChecklistModule
             .WithTags(_auditChecklist)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
 
+            // GET OR GENERATE FROM AUDIT SCHEDULE — the ONLY reliable key for
+            // the checklist flow. Preserves existing rows (never duplicates).
+            app.MapGet("/schedule/{auditScheduleId:int}", async (int auditScheduleId, IAuditChecklistService service, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var result = await service.GetOrGenerateForAuditScheduleAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
+                    return Results.Ok(result);
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.NotFound(new { message = "Audit schedule not found." });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.BadRequest(new { message = ex.Message });
+                }
+            })
+            .WithTags(_auditChecklist)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
+
+            // DYNAMIC CHECKLIST LIST — schedules ordered by schedule Id, each
+            // with team name + office/process. Backs the team-list page.
+            app.MapGet("/schedules", async (IAuditChecklistService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetSchedulesWithChecklistDataAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(result);
+            })
+            .WithTags(_auditChecklist)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
+
             // GET BY ID
             app.MapGet("/{id:int}", async (int id, IAuditChecklistService service, CancellationToken cancellationToken) =>
             {

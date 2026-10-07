@@ -1329,7 +1329,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 0) return const AuditProgrammeListPage();
       if (selectedSubPage == 1) return const AuditPlanListPage();
       if (selectedSubPage == 2) return const AuditScheduleListPage();
-      if (selectedSubPage == 3) return AuditChecklistPage(auditPlanEntryId: 0);
+      if (selectedSubPage == 3) return const AuditChecklistPage();
       if (selectedSubPage == 4) return const ClauseLibraryPage();
       if (selectedSubPage == 5) return const AuditReportListPage();
       if (selectedSubPage == 6) return const NcarListPage();

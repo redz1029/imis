@@ -13,6 +13,7 @@ namespace IMIS.Application.AuditChecklistModule
         Task<IEnumerable<AuditChecklist>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken);
         Task<IEnumerable<AuditChecklist>> GetByAuditeeIdAsync(int auditeeId, CancellationToken cancellationToken);
         Task<IEnumerable<AuditChecklist>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken);
+        Task<IEnumerable<AuditChecklist>> GetByAuditScheduleIdWithScheduleAsync(int auditScheduleId, CancellationToken cancellationToken);
 
         Task<EntityPageList<AuditChecklist, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
 

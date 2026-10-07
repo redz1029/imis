@@ -31,6 +31,7 @@ namespace IMIS.Presentation.AuditScheduleModule
                 [FromBody] AuditScheduleDto dto,
                 IAuditScheduleService service,
                 IOutputCacheStore cache,
+                HttpContext httpContext,
                 CancellationToken cancellationToken) =>
             {
                 if (dto == null)
@@ -40,7 +41,10 @@ namespace IMIS.Presentation.AuditScheduleModule
                 if (conflicts.Count > 0)
                     return Results.BadRequest(new { Errors = conflicts });
 
-                var result = await service.SaveAuditScheduleAsync(dto, cancellationToken);
+                // Actor for the workflow rows (history + signatory slots).
+                // Must be a real AspNetUsers id — placeholders violate the FK.
+                var actorUserId = httpContext.User.FindFirst("UserId")?.Value;
+                var result = await service.SaveAuditScheduleAsync(dto, cancellationToken, actorUserId);
 
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
 

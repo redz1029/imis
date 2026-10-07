@@ -11,6 +11,45 @@ class AuditChecklistService {
 
   AuditChecklistService(this.dio);
 
+  /// Fetches a list of schedules (teams) that actually have checklist data —
+  /// dynamically generated from the Audit Schedule records, in schedule
+  /// order. The team name is display-only; AuditScheduleId is the identity.
+  Future<List<AuditChecklistSummary>> getSchedulesWithChecklistData() async {
+    final url = '${ApiEndpoint().auditChecklist}/schedules';
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+      if (response.statusCode == 200 && response.data != null) {
+        final List list = response.data;
+        return list
+            .map((e) => AuditChecklistSummary.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Fetches the checklist for an audit SCHEDULE, generating it server-side
+  /// from the schedule's ISO standards on first request. The schedule ID is
+  /// the unique key — never the team name.
+  Future<List<AuditChecklist>> getOrGenerateForAuditSchedule(
+      int auditScheduleId) async {
+    final url = '${ApiEndpoint().auditChecklist}/schedule/$auditScheduleId';
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+      if (response.statusCode == 200 && response.data != null) {
+        final List list = response.data;
+        return list
+            .map((e) => AuditChecklist.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Fetches the checklist for an audit plan entry, generating it
   /// server-side from the entry's ISO standards on first request.
   Future<List<AuditChecklist>> getOrGenerateForAuditPlanEntry(

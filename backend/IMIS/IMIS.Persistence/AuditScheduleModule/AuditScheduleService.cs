@@ -21,14 +21,20 @@ namespace IMIS.Application.AuditScheduleModule
             _repository = repository;
         }
 
-        public async Task<bool> SaveAuditScheduleAsync(AuditScheduleDto dto, CancellationToken cancellationToken)
+        public async Task<bool> SaveAuditScheduleAsync(AuditScheduleDto dto, CancellationToken cancellationToken, string? userId = null)
         {
             if (dto == null) return false;
-            await SaveOrUpdateAsync(dto, cancellationToken);
+            await SaveOrUpdateInternalAsync(dto, cancellationToken, userId);
             return true;
         }
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
+            where TEntity : Entity<TId>
+        {
+            await SaveOrUpdateInternalAsync(dto, cancellationToken, userId: null);
+        }
+
+        private async Task SaveOrUpdateInternalAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken, string? userId)
             where TEntity : Entity<TId>
         {
             if (dto is not AuditScheduleDto sDto)
@@ -41,6 +47,23 @@ namespace IMIS.Application.AuditScheduleModule
             if (entity.Id == 0)
             {
                 dbContext.Add(entity);
+                await dbContext.SaveChangesAsync(cancellationToken);
+
+                // Audit Schedule has NO Draft status — immediately initialized as Pending Confirmation.
+                // The actor id (JWT user) is threaded through so the workflow
+                // rows reference a real AspNetUsers row instead of a
+                // placeholder that violates the FK (DbUpdateException 547).
+                await IQAApprovalWorkflow.SubmitAsync(
+                    dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, entity.Id,
+                    "audit schedule", userId, null, cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
+
+                // CRITICAL: surface the EF-generated identity on the DTO so the
+                // caller (POST endpoint / frontend) receives the real Id instead
+                // of 0. Without this the client cannot submit/confirm the new
+                // schedule and the confirmation silently no-ops.
+                sDto.Id = entity.Id;
+                return;
             }
             else
             {

@@ -18,7 +18,9 @@ namespace IMIS.Application.AuditScheduleModule
         Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken);
 
         // --- Save / Update ---
-        Task<bool> SaveAuditScheduleAsync(AuditScheduleDto dto, CancellationToken cancellationToken);
+        // userId: actor recorded on the workflow history/signatory rows.
+        // Falls back to the JWT claim at the endpoint; null = system action.
+        Task<bool> SaveAuditScheduleAsync(AuditScheduleDto dto, CancellationToken cancellationToken, string? userId = null);
 
         // --- Pagination ---
         Task<DtoPageList<AuditScheduleDto, AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);

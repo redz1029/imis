@@ -120,7 +120,7 @@ class AuditSchedules {
 
   Map<String, dynamic> toJson() => _$AuditSchedulesToJson(this);
 
-  String get effectiveStatusName => statusName ?? 'Draft';
+  String get effectiveStatusName => statusName ?? 'Pending Confirmation';
 
   static List<IQASignatory> _signatoriesFromJson(Object? json) =>
       IQASignatory.listFromJson(json);

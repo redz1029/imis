@@ -37,6 +37,15 @@ class AuditPlanEntryRow {
   // (e.g. "4.1, 4.2, 4.3, 5.1, 6.2"), NOT a dropdown / multi-select.
   final TextEditingController standardTextController;
 
+  // Structured ISO-standard ids backing this row. Populated from the Audit
+  // Programme / persisted entry payload on load, and merged with the ids
+  // resolved from the typed STANDARD text on save. The backend (and the
+  // schedule CRITERIA + checklist generation) is driven EXCLUSIVELY by
+  // `isoStandardAuditPlans` — the free text alone is ignored server-side —
+  // so these ids MUST be sent on every save, otherwise saving the plan
+  // silently wipes the entry's assigned clauses.
+  List<int> selectedIsoStandardIds;
+
   int? selectedTeamId;
   List<TextEditingController> responsiblePersonControllers;
 
@@ -51,10 +60,12 @@ class AuditPlanEntryRow {
     this.selectedOfficeId,
     String? officeText,
     String? standardText,
+    List<int>? selectedIsoStandardIds,
     this.selectedTeamId,
     List<String>? responsiblePersons,
     this.sourceProgrammeEntryId,
   }) : time = time ?? const TimeOfDay(hour: 9, minute: 0),
+        selectedIsoStandardIds = selectedIsoStandardIds ?? <int>[],
        officeTextController = TextEditingController(text: officeText ?? ''),
        officeFocusNode = FocusNode(),
        standardTextController = TextEditingController(text: standardText ?? ''),
@@ -125,6 +136,9 @@ class AuditPlanEntryRow {
       selectedOfficeId: pe.officeId,
       officeText: pe.processText,
       standardText: clauseLabels.join(', '),
+      // Keep the programme's structured clause ids so they round-trip back
+      // to the backend on save (the free text alone is not persisted).
+      selectedIsoStandardIds: List<int>.from(pe.standardIds),
       selectedTeamId: pe.teamId,
       sourceProgrammeEntryId: pe.id,
     );
@@ -155,6 +169,23 @@ class AuditPlanEntryRow {
     // fromProgrammeEntry() already does correctly.
     String standardText = (json['standardText'] ?? json['StandardText'] ?? '')
         .toString();
+    // Structured clause ids backing this row — re-sent on every save so a
+    // plan re-save never wipes the entry's assigned ISO clauses.
+    final loadedStandardIds = <int>[];
+    {
+      final standards =
+          json['isoStandardAuditPlans'] ?? json['IsoStandardAuditPlans'];
+      if (standards != null) {
+        for (final item in (standards as List)) {
+          final rawId = item['isoStandardId'] ?? item['IsoStandardId'];
+          if (rawId == null) continue;
+          final parsed = rawId is int ? rawId : int.tryParse(rawId.toString());
+          if (parsed != null && !loadedStandardIds.contains(parsed)) {
+            loadedStandardIds.add(parsed);
+          }
+        }
+      }
+    }
     if (standardText.isEmpty) {
       final standards =
           json['isoStandardAuditPlans'] ?? json['IsoStandardAuditPlans'];
@@ -228,6 +259,7 @@ class AuditPlanEntryRow {
       selectedOfficeId: officeId,
       officeText: officeName,
       standardText: standardText,
+      selectedIsoStandardIds: loadedStandardIds,
       selectedTeamId: teamId,
       responsiblePersons: responsibleNames,
     );
@@ -236,6 +268,7 @@ class AuditPlanEntryRow {
   Map<String, dynamic> toBackendDtoJson(
     int auditPlanId, {
     required DateTime dayDate,
+    required List<IsoStandardDto> allStandards,
   }) {
     final trimmedOfficeText = officeTextController.text.trim();
     final combined = DateTime(
@@ -246,12 +279,35 @@ class AuditPlanEntryRow {
       time.minute,
     );
 
+    // Resolve the free-typed STANDARD text ("4, 4.1, 4.2, ...") into real
+    // ISO standard ids, merged with the ids already backing this row. The
+    // backend ignores `standardText` (no such column) and the schedule
+    // CRITERIA + checklist generation are driven EXCLUSIVELY by
+    // `isoStandardAuditPlans` — without these rows no checklist generates.
+    final resolvedIds = <int>{...selectedIsoStandardIds};
+    if (allStandards.isNotEmpty) {
+      final clauseByLabel = {
+        for (final s in allStandards) s.clause.trim().toLowerCase(): s.id,
+      };
+      final tokens = standardTextController.text
+          .split(RegExp(r'[,;\n]+'))
+          .map((t) => t.trim())
+          .where((t) => t.isNotEmpty);
+      for (final token in tokens) {
+        final matchId = clauseByLabel[token.toLowerCase()];
+        if (matchId != null) resolvedIds.add(matchId);
+      }
+    }
+
     return {
       'id': id ?? 0,
       'auditPlanId': auditPlanId,
       'dayNumber': dayNumber,
       'time': combined.toIso8601String(),
       'standardText': standardTextController.text.trim(),
+      'isoStandardAuditPlans': resolvedIds
+          .map((sid) => {'id': 0, 'isoStandardId': sid})
+          .toList(),
       'auditPlanProcesses': trimmedOfficeText.isNotEmpty
           ? [
               {
@@ -955,6 +1011,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
             (e) => e.toBackendDtoJson(
               widget.auditPlanId ?? 0,
               dayDate: _dayDates[e.dayNumber] ?? DateTime.now(),
+              allStandards: _standards,
             ),
           )
           .toList(),

@@ -14,6 +14,13 @@ namespace IMIS.Application.AuditChecklistModule
 
         Task<IEnumerable<AuditChecklistDto>> GetOrGenerateForAuditPlanEntryAsync(int auditPlanEntryId, CancellationToken cancellationToken);
 
+        Task<IEnumerable<AuditChecklistDto>> GetOrGenerateForAuditScheduleAsync(int auditScheduleId, CancellationToken cancellationToken);
+
+        // Audit Schedule is the source of truth for the checklist list —
+        // returns every schedule (in schedule order) that has ISO clause /
+        // team data, so the frontend never shows a hardcoded team roster.
+        Task<List<AuditChecklistSummaryDto>> GetSchedulesWithChecklistDataAsync(CancellationToken cancellationToken);
+
         Task<IEnumerable<AuditChecklistDto>> GetByAuditeeIdAsync(int auditeeId, CancellationToken cancellationToken);
 
         Task<IEnumerable<AuditChecklistDto>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken);

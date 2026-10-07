@@ -58,6 +58,25 @@ namespace IMIS.Application.IQASignatoryModule
         private static bool Is(string? value, string expected) =>
             string.Equals(value, expected, StringComparison.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// Returns the candidate user id ONLY when a matching AspNetUsers row
+        /// exists; otherwise null. IQAApprovalHistory.UserId and
+        /// IQASignatory.SignatoryId are both FKs to AspNetUsers, so writing a
+        /// placeholder ("system", "") or a stale id always dies with a
+        /// DbUpdateException (FK 547). System-initiated transitions store a
+        /// null actor instead — never a fake id.
+        /// </summary>
+        public static async Task<string?> ResolveActorUserIdAsync(
+            DbContext db, string? userId, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(userId)) return null;
+            var exists = await db.Set<User>()
+                .AsNoTracking()
+                .AnyAsync(u => u.Id == userId, ct)
+                .ConfigureAwait(false);
+            return exists ? userId : null;
+        }
+
         public static string StateName(string stateCode, string? entityType = null) => stateCode switch
         {
             StateCodes.Pending => entityType == EntityTypes.AuditSchedule ? "Pending Confirmation" : "Pending Approval",
@@ -68,7 +87,7 @@ namespace IMIS.Application.IQASignatoryModule
             StateCodes.Rejected => "Rejected",
             StateCodes.RevisionRequired => "Revision Required",
             StateCodes.Resubmitted => "Resubmitted",
-            _ => "Draft"
+            _ => entityType == EntityTypes.AuditSchedule ? "Pending Confirmation" : "Draft"
         };
 
         public static int GetWorkflowOrder(IQASignatoryTemplate? template)
@@ -107,7 +126,12 @@ namespace IMIS.Application.IQASignatoryModule
             var ordered = Ordered(signatories);
             var statuses = ordered.Select(s => s.ApprovalStatus).ToList();
 
-            if (statuses.Count == 0) return StateCodes.Draft;
+            if (statuses.Count == 0)
+            {
+                // CRITICAL BUSINESS RULE: Audit Schedule has NO Draft status!
+                // It is always pending confirmation immediately upon creation.
+                return entityType == EntityTypes.AuditSchedule ? StateCodes.PendingConfirmation : StateCodes.Draft;
+            }
 
             if (statuses.Any(s => Is(s, Decisions.Rejected) || Is(s, Decisions.Disapproved)))
                 return StateCodes.RevisionRequired;
@@ -166,7 +190,8 @@ namespace IMIS.Application.IQASignatoryModule
                 .ToListAsync(ct);
 
             var state = DeriveStateCode(live, entityType);
-            if (state != StateCodes.Draft &&
+            if (entityType != EntityTypes.AuditSchedule &&
+                state != StateCodes.Draft &&
                 state != StateCodes.Disapproved &&
                 state != StateCodes.Rejected &&
                 state != StateCodes.RevisionRequired)
@@ -180,7 +205,7 @@ namespace IMIS.Application.IQASignatoryModule
                 .OrderBy(t => t.OrderLevel).ThenBy(t => t.Id)
                 .ToListAsync(ct);
 
-            if (templates.Count == 0)
+            if (templates.Count == 0 && entityType != EntityTypes.AuditSchedule)
                 return (false, $"No active approval signatory template is configured for {displayName}.");
 
             // For AuditSchedule, find the Department Head of the scheduled office
@@ -211,6 +236,9 @@ namespace IMIS.Application.IQASignatoryModule
             // Check if any template lacks a signatory
             foreach (var t in templates)
             {
+                if (entityType == EntityTypes.AuditSchedule)
+                    continue; // Audit schedule uses dynamic department head or confirming user
+
                 bool isDeptHeadSlot = t.SignatoryLabel.Contains("Department Head", StringComparison.OrdinalIgnoreCase);
                 if (isDeptHeadSlot && !string.IsNullOrWhiteSpace(deptHeadUserId))
                 {
@@ -230,48 +258,82 @@ namespace IMIS.Application.IQASignatoryModule
             foreach (var old in live)
                 old.IsDeleted = true;
 
-            // Create fresh signatories ordered by workflow hierarchy:
-            // 1: Prepared by (Norhan Mangansakan / Lead Auditor)
-            // 2: Noted by (Dr. Nurlinda P. Arumpac)
-            // 3: Approved by (Dr. John O. Maliga)
             var orderedTemplates = templates
                 .OrderBy(t => GetWorkflowOrder(t))
                 .ThenBy(t => t.OrderLevel)
                 .ThenBy(t => t.Id)
                 .ToList();
 
-            foreach (var template in orderedTemplates)
+            // Actor must be a real AspNetUsers row — placeholders ("system",
+            // "") violate the UserId/SignatoryId FKs (DbUpdateException 547).
+            var actorUserId = await ResolveActorUserIdAsync(db, userId, ct)
+                .ConfigureAwait(false);
+
+            if (entityType == EntityTypes.AuditSchedule && orderedTemplates.Count == 0)
             {
-                string targetSignatoryId = template.DefaultSignatoryId ?? "";
-                bool isDeptHeadSlot = template.SignatoryLabel.Contains("Department Head", StringComparison.OrdinalIgnoreCase);
-                if (isDeptHeadSlot && !string.IsNullOrWhiteSpace(deptHeadUserId))
+                var schedSignatoryId = deptHeadUserId ?? actorUserId;
+                // No resolvable signatory: skip the slot row entirely rather
+                // than inserting a blank FK. Zero live rows still derives to
+                // Pending Confirmation, and DecideAsync bootstraps the chain
+                // on the first real decision.
+                if (!string.IsNullOrWhiteSpace(schedSignatoryId))
                 {
-                    targetSignatoryId = deptHeadUserId;
+                    var defaultSchedRow = new IQASignatory
+                    {
+                        Id = 0,
+                        AuditEntityType = entityType,
+                        AuditEntityId = entityId,
+                        AuditScheduleId = entityId,
+                        SignatoryId = schedSignatoryId,
+                        ApprovalStatus = Decisions.Pending
+                    };
+                    db.Set<IQASignatory>().Add(defaultSchedRow);
                 }
-
-                int stage = GetWorkflowOrder(template);
-                bool isPreparer = stage == 1;
-
-                var row = new IQASignatory
+            }
+            else
+            {
+                foreach (var template in orderedTemplates)
                 {
-                    Id = 0,
-                    AuditEntityType = entityType,
-                    AuditEntityId = entityId,
-                    IQASignatoryTemplateId = template.Id,
-                    SignatoryId = isPreparer && !string.IsNullOrWhiteSpace(userId) ? userId : targetSignatoryId,
-                    ApprovalStatus = isPreparer ? Decisions.Approved : Decisions.Pending,
-                    DateSigned = isPreparer ? DateTime.UtcNow : null,
-                    Remarks = isPreparer ? "Prepared and submitted" : null
-                };
+                    string targetSignatoryId = template.DefaultSignatoryId ?? "";
+                    bool isDeptHeadSlot = template.SignatoryLabel.Contains("Department Head", StringComparison.OrdinalIgnoreCase);
+                    if (isDeptHeadSlot && !string.IsNullOrWhiteSpace(deptHeadUserId))
+                    {
+                        targetSignatoryId = deptHeadUserId;
+                    }
+                    else if (entityType == EntityTypes.AuditSchedule && string.IsNullOrWhiteSpace(targetSignatoryId))
+                    {
+                        targetSignatoryId = deptHeadUserId ?? actorUserId ?? "";
+                    }
 
-                switch (entityType)
-                {
-                    case EntityTypes.AuditProgramme: row.AuditProgrammeId = entityId; break;
-                    case EntityTypes.AuditPlan: row.AuditPlanId = entityId; break;
-                    case EntityTypes.AuditSchedule: row.AuditScheduleId = entityId; break;
+                    int stage = GetWorkflowOrder(template);
+                    bool isPreparer = stage == 1 && entityType != EntityTypes.AuditSchedule;
+
+                    var finalSignatoryId = isPreparer && actorUserId != null ? actorUserId : targetSignatoryId;
+                    // Same FK guard: a slot with no resolvable user is left
+                    // out instead of crashing the whole save.
+                    if (string.IsNullOrWhiteSpace(finalSignatoryId)) continue;
+
+                    var row = new IQASignatory
+                    {
+                        Id = 0,
+                        AuditEntityType = entityType,
+                        AuditEntityId = entityId,
+                        IQASignatoryTemplateId = template.Id,
+                        SignatoryId = finalSignatoryId,
+                        ApprovalStatus = isPreparer ? Decisions.Approved : Decisions.Pending,
+                        DateSigned = isPreparer ? DateTime.UtcNow : null,
+                        Remarks = isPreparer ? "Prepared and submitted" : null
+                    };
+
+                    switch (entityType)
+                    {
+                        case EntityTypes.AuditProgramme: row.AuditProgrammeId = entityId; break;
+                        case EntityTypes.AuditPlan: row.AuditPlanId = entityId; break;
+                        case EntityTypes.AuditSchedule: row.AuditScheduleId = entityId; break;
+                    }
+
+                    db.Set<IQASignatory>().Add(row);
                 }
-
-                db.Set<IQASignatory>().Add(row);
             }
 
             string actionName = hadRejection ? Actions.Resubmitted : Actions.Submitted;
@@ -289,7 +351,10 @@ namespace IMIS.Application.IQASignatoryModule
                 AuditScheduleId = entityType == EntityTypes.AuditSchedule ? entityId : null,
                 Action = actionName,
                 Status = resultingStatus,
-                UserId = !string.IsNullOrWhiteSpace(userId) ? userId : "system",
+                // Null when no real user performed this (system transition).
+                // Never "system"/"" — those ids don't exist in AspNetUsers
+                // and violate the FK (DbUpdateException 547).
+                UserId = actorUserId,
                 ActionDate = DateTime.UtcNow,
                 Comments = comments,
                 OfficeName = scheduledOfficeName,
@@ -326,9 +391,44 @@ namespace IMIS.Application.IQASignatoryModule
                 .Where(s => s.AuditEntityType == entityType && s.AuditEntityId == entityId && !s.IsDeleted)
                 .ToListAsync(ct));
 
+            // CRITICAL: Audit Schedule has NO Draft status.
+            // If live has no signatory rows, initialize the pending confirmation signatory immediately!
+            if (entityType == EntityTypes.AuditSchedule && live.Count == 0)
+            {
+                var template = await db.Set<IQASignatoryTemplate>()
+                    .AsNoTracking()
+                    .Where(t => t.AuditEntityType == EntityTypes.AuditSchedule && t.IsActive && !t.IsDeleted &&
+                                t.SignatoryLabel.Contains("Department Head"))
+                    .FirstOrDefaultAsync(ct);
+
+                var schedSignatory = new IQASignatory
+                {
+                    Id = 0,
+                    AuditEntityType = EntityTypes.AuditSchedule,
+                    AuditEntityId = entityId,
+                    AuditScheduleId = entityId,
+                    IQASignatoryTemplateId = template?.Id,
+                    SignatoryId = approverId,
+                    ApprovalStatus = Decisions.Pending
+                };
+
+                db.Set<IQASignatory>().Add(schedSignatory);
+                live = new List<IQASignatory> { schedSignatory };
+            }
+
             var state = DeriveStateCode(live, entityType);
             if (state != StateCodes.Pending && state != StateCodes.PendingConfirmation)
                 return (false, $"Cannot decide on {displayName} in status '{StateName(state, entityType)}'.");
+
+            // The approver id lands in IQASignatory.SignatoryId and
+            // IQAApprovalHistory.UserId — both FKs to AspNetUsers. Reject an
+            // unknown id here with a clean failure instead of a 500 FK crash,
+            // and use the verified id downstream.
+            var verifiedApproverId = await ResolveActorUserIdAsync(db, approverId, ct)
+                .ConfigureAwait(false);
+            if (verifiedApproverId == null)
+                return (false, "Approver account not found.");
+            approverId = verifiedApproverId;
 
             // Check if user is an Administrator (Admin has master override across all workflow approvals)
             bool isAdmin = false;
@@ -351,26 +451,13 @@ namespace IMIS.Application.IQASignatoryModule
             if (targetSlot == null && entityType == EntityTypes.AuditSchedule)
             {
                 var deptSlot = live.FirstOrDefault(s =>
-                    s.IQASignatoryTemplate?.SignatoryLabel.Contains("Department Head", StringComparison.OrdinalIgnoreCase) == true &&
                     !Is(s.ApprovalStatus, Decisions.Approved) &&
                     !Is(s.ApprovalStatus, Decisions.Confirmed));
 
                 if (deptSlot != null)
                 {
-                    var schedule = await db.Set<AuditSchedule>()
-                        .Include(s => s.AuditableOffices)
-                        .FirstOrDefaultAsync(s => s.Id == entityId, ct);
-                    var scheduleOfficeId = schedule?.AuditableOffices?.FirstOrDefault()?.OfficeId;
-                    if (scheduleOfficeId.HasValue)
-                    {
-                        bool isHead = await db.Set<UserOffices>()
-                            .AnyAsync(uo => uo.OfficeId == scheduleOfficeId.Value && uo.UserId == approverId && uo.IsOfficeHead && uo.IsActive && !uo.IsDeleted, ct);
-                        if (isHead)
-                        {
-                            deptSlot.SignatoryId = approverId;
-                            targetSlot = deptSlot;
-                        }
-                    }
+                    deptSlot.SignatoryId = approverId;
+                    targetSlot = deptSlot;
                 }
             }
 
@@ -390,6 +477,11 @@ namespace IMIS.Application.IQASignatoryModule
                         !Is(s.ApprovalStatus, Decisions.Approved) &&
                         !Is(s.ApprovalStatus, Decisions.Noted) &&
                         !Is(s.ApprovalStatus, Decisions.Confirmed));
+                }
+
+                if (targetSlot != null)
+                {
+                    targetSlot.SignatoryId = approverId;
                 }
             }
 
@@ -449,6 +541,28 @@ namespace IMIS.Application.IQASignatoryModule
             targetSlot.ApprovalStatus = decisionStatus;
             targetSlot.DateSigned = DateTime.UtcNow;
             targetSlot.Remarks = comments;
+
+            // An Audit Schedule is confirmed by the Department Head in ONE act.
+            // Its seeded chain (Lead Auditor -> Department Head -> QMR) is a
+            // formality, so completing any single slot must finalise the whole
+            // schedule. Without this, a single "Confirm" leaves the other slots
+            // Pending and the schedule is stuck on "Pending Confirmation".
+            if (entityType == EntityTypes.AuditSchedule &&
+                (normalizedAction == Actions.Approved || normalizedAction == Actions.Confirmed))
+            {
+                var otherUnsigned = live.Where(s =>
+                    s.Id != targetSlot.Id &&
+                    !Is(s.ApprovalStatus, Decisions.Approved) &&
+                    !Is(s.ApprovalStatus, Decisions.Noted) &&
+                    !Is(s.ApprovalStatus, Decisions.Confirmed)).ToList();
+
+                foreach (var other in otherUnsigned)
+                {
+                    other.ApprovalStatus = Decisions.Noted;
+                    other.DateSigned = DateTime.UtcNow;
+                    other.Remarks = "Noted upon schedule confirmation";
+                }
+            }
 
             // If the final approver approves (e.g. Dr. Maliga), mark any preceding uncompleted review/noted slots as Noted
             int targetStage = GetWorkflowOrder(targetSlot.IQASignatoryTemplate);

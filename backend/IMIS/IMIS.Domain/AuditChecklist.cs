@@ -8,6 +8,13 @@ namespace IMIS.Domain
         public bool? Conforming { get; set; }
         public string? FindingAndRemarks { get; set; }
 
+        // AUDITEE/S is a STRING on the CRMC form header (e.g.
+        // "Chief of Hospital, Medical Records Officer, Section Head").
+        // Deliberately NOT modeled as an entity/navigation — the checklist
+        // only needs the auditee text. The existing AuditeeId link below is
+        // kept for backwards compatibility with legacy single-auditee data.
+        public string? Auditees { get; set; }
+
         // Office/Process and Auditors (Team) are fetched through here —
         // never duplicated on this entity.
         public required int AuditPlanEntryId { get; set; }

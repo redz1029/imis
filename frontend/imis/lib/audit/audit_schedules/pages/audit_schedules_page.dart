@@ -308,22 +308,27 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   /// against the master ISO Standard list's clauseRef, joined and sorted —
   /// exactly mirroring the backend's own ReportGetByIdAsync logic.
   String _clauseRefsForEntry(AuditPlanEntry entry) {
-    final ids =
-        (entry.isoStandardAuditPlans ?? const [])
-            .map((s) => s.isoStandardId)
-            .whereType<int>()
-            .toSet();
-    if (ids.isEmpty) return '—';
+    final items = entry.isoStandardAuditPlans ?? const [];
+    if (items.isEmpty) return '—';
 
     final clauseById = {for (final s in _standards) s.id: s.clause};
-    final clauses =
-        ids
-            .map((id) => clauseById[id])
-            .whereType<String>()
-            .where((c) => c.isNotEmpty)
-            .toList()
-          ..sort();
-    return clauses.isEmpty ? '—' : clauses.join(', ');
+    final clauses = <String>[];
+    for (final item in items) {
+      // Prefer the clause reference carried directly on the Audit Plan Entry
+      // payload, then fall back to resolving the id against the master
+      // ISO-standard list. This keeps CRITERIA populated even if the master
+      // list fails to load.
+      final nested = item.isoStandard?.clauseRef;
+      if (nested != null && nested.isNotEmpty) {
+        clauses.add(nested);
+        continue;
+      }
+      final resolved = clauseById[item.isoStandardId];
+      if (resolved != null && resolved.isNotEmpty) clauses.add(resolved);
+    }
+
+    final unique = clauses.toSet().toList()..sort();
+    return unique.isEmpty ? '—' : unique.join(', ');
   }
 
   /// PERSON RESPONSIBLE names for one entry — resolved EXCLUSIVELY from
@@ -388,8 +393,48 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   }
 
   Future<void> _handleConfirmSchedule(_OfficeGroup group) async {
-    final schedId = group.schedule?.id;
-    if (schedId == null || schedId <= 0) return;
+    var schedId = group.schedule?.id;
+    if (schedId == null || schedId <= 0) {
+      try {
+        final firstEntry = group.entries.first;
+        final created = await _scheduleService.addAuditSchedule(
+          AuditSchedules(
+            purpose: _kFixedPurposeText,
+            activity: _kFixedActivityText,
+            isActive: true,
+            startDate: _plan!.startDate,
+            endDate: _plan!.endDate,
+            auditPlanId: _plan!.id,
+            auditPlanEntryId: firstEntry.id,
+          ),
+        );
+        schedId = created.id;
+        group.schedule = created;
+      } catch (e) {
+        debugPrint('Failed to initialize schedule: $e');
+        if (mounted) {
+          MotionToast.error(
+            toastAlignment: Alignment.topCenter,
+            description: Text(
+              'Unable to prepare the audit schedule: '
+              '${e.toString().replaceFirst('Exception: ', '')}',
+            ),
+          ).show(context);
+        }
+        return;
+      }
+    }
+    if (schedId <= 0 || !mounted) {
+      if (mounted) {
+        MotionToast.error(
+          toastAlignment: Alignment.topCenter,
+          description: const Text(
+            'Unable to confirm: the audit schedule has no valid record.',
+          ),
+        ).show(context);
+      }
+      return;
+    }
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -442,8 +487,28 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   }
 
   Future<void> _handleRejectSchedule(_OfficeGroup group) async {
-    final schedId = group.schedule?.id;
-    if (schedId == null || schedId <= 0) return;
+    var schedId = group.schedule?.id;
+    if (schedId == null || schedId <= 0) {
+      try {
+        final firstEntry = group.entries.first;
+        final created = await _scheduleService.addAuditSchedule(
+          AuditSchedules(
+            purpose: _kFixedPurposeText,
+            activity: _kFixedActivityText,
+            isActive: true,
+            startDate: _plan!.startDate,
+            endDate: _plan!.endDate,
+            auditPlanId: _plan!.id,
+            auditPlanEntryId: firstEntry.id,
+          ),
+        );
+        schedId = created.id;
+        group.schedule = created;
+      } catch (e) {
+        debugPrint('Failed to initialize schedule: $e');
+      }
+    }
+    if (schedId == null || schedId <= 0 || !mounted) return;
 
     final reason = await RejectionDialog.show(
       context,

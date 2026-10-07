@@ -39,6 +39,8 @@ namespace IMIS.Persistence.AuditPlanModule
             return await WithSignatories(GetDbContext().Set<AuditPlan>().AsSplitQuery())
                 .Include(x => x.Preparer)
                 .Include(x => x.Entries)
+                    .ThenInclude(e => e.IsoStandardAuditPlans)
+                        .ThenInclude(isap => isap.IsoStandard)
                 .Include(x => x.AuditSchedules)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
@@ -55,6 +57,7 @@ namespace IMIS.Persistence.AuditPlanModule
                     .ThenInclude(e => e.IsoAuditProcesses)
                 .Include(x => x.Entries)
                     .ThenInclude(e => e.IsoStandardAuditPlans)
+                        .ThenInclude(isap => isap.IsoStandard)
                 .Include(x => x.Entries)
                     .ThenInclude(e => e.AuditPlanProcesses)
                         .ThenInclude(app => app.Office)

@@ -54,9 +54,11 @@ namespace IMIS.Domain
         public required string Status { get; set; }
 
         /// <summary>
-        /// User who performed the action
+        /// User who performed the action. NULLABLE by design: system-initiated
+        /// transitions (e.g. auto-created audit schedules) have no real user,
+        /// and the FK to AspNetUsers rejects placeholder ids like "system".
         /// </summary>
-        public required string UserId { get; set; }
+        public string? UserId { get; set; }
         [ForeignKey(nameof(UserId))]
         public virtual User? User { get; set; }
 

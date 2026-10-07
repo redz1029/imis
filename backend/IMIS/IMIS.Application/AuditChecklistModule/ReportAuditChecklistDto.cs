@@ -58,14 +58,31 @@ namespace IMIS.Application.AuditChecklistModule
                     if (entry.IsoAuditors != null && entry.IsoAuditors.Any())
                     {
                         var names = entry.IsoAuditors
-                            .Where(a => a.Team != null)
-                            .Select(a => a.Team!.Name)
-                            .Where(n => !string.IsNullOrEmpty(n));
-                        AuditorNames = string.Join(", ", names);
+                            .Select(a => a.IsoAuditors?.Name)
+                            .Where(n => !string.IsNullOrWhiteSpace(n))
+                            .Select(n => n!)
+                            .Distinct()
+                            .ToList();
+                        if (names.Count > 0)
+                        {
+                            AuditorNames = string.Join(", ", names);
+                        }
+                        else
+                        {
+                            // Fall back to team name(s) if individual
+                            // auditor navigation was not loaded.
+                            var teamNames = entry.IsoAuditors
+                                .Where(a => a.Team != null)
+                                .Select(a => a.Team!.Name)
+                                .Where(n => !string.IsNullOrEmpty(n));
+                            AuditorNames = string.Join(", ", teamNames);
+                        }
                     }
                 }
 
-                AuditeeNames = first.Auditee?.Name ?? string.Empty;
+                AuditeeNames = string.IsNullOrWhiteSpace(first.Auditees)
+                    ? (first.Auditee?.Name ?? string.Empty)
+                    : first.Auditees;
             }
 
             foreach (var e in list)
