@@ -11,6 +11,7 @@ namespace IMIS.Application.OfficeModule
         public bool IsActive { get; set; }
         public int OfficeTypeId { get; set; }       
         public int? ParentOfficeId { get; set; }
+        public string? ParentOfficeName { get; set; }
         public List<AuditorDto>? Auditors { get; set; }
 
         public OfficeDto() { }

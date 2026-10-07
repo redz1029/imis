@@ -1,5 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.OfficeModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.ISATModule
@@ -18,6 +19,6 @@ namespace IMIS.Application.ISATModule
         Task<ISAT?> GetWithIncludesAsync(long id, CancellationToken cancellationToken);
         Task<List<ISAT>> GetCandidatesForUserAsync(string userId, int? officeId, CancellationToken cancellationToken);
         Task<ISAT?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
-        Task<List<Office>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default);
+        Task<List<OfficeDto>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default);
     }
 }

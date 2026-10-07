@@ -1,6 +1,7 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
 using IMIS.Application.ISATModule;
+using IMIS.Application.OfficeModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,23 +11,37 @@ namespace IMIS.Persistence.ISATModule
     {
         public ISATRepository(ImisDbContext dbContext) : base(dbContext)
         {
-        }
-        public async Task<List<Office>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+        }       
+        public async Task<List<OfficeDto>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default)
         {
             var assignedOfficeIds = ReadOnlyDbContext.Set<UserOffices>()
                 .AsNoTracking()
                 .Where(uo => uo.UserId == userId && uo.IsActive)
                 .Select(uo => uo.OfficeId);
 
-            return await ReadOnlyDbContext.Set<Office>()
-                .AsNoTracking()
+            var offices = ReadOnlyDbContext.Set<Office>().AsNoTracking();
+
+            return await offices
                 .Where(o => o.IsActive
                             && !o.IsDeleted
-                            && o.ParentOfficeId != null          
-                            && assignedOfficeIds.Contains(o.Id)) 
+                            && o.ParentOfficeId != null
+                            && assignedOfficeIds.Contains(o.Id))
                 .OrderBy(o => o.Name)
+                .Select(o => new OfficeDto
+                {
+                    Id = o.Id,
+                    Name = o.Name,
+                    IsActive = o.IsActive,
+                    OfficeTypeId = o.OfficeTypeId,
+                    ParentOfficeId = o.ParentOfficeId,
+                    ParentOfficeName = offices
+                        .Where(p => p.Id == o.ParentOfficeId)
+                        .Select(p => p.Name)
+                        .FirstOrDefault()
+                })
                 .ToListAsync(cancellationToken);
         }
+
         public async Task<ISAT?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<ISAT>()

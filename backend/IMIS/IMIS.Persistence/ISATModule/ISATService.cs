@@ -34,8 +34,7 @@ namespace IMIS.Persistence.ISATModule
         }
         public async Task<List<OfficeDto>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default)
         {
-            var offices = await _repository.GetOfficesByUserIdAsync(userId, cancellationToken);
-            return offices.Select(o => new OfficeDto(o)).ToList();
+            return await _repository.GetOfficesByUserIdAsync(userId, cancellationToken);
         }
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
@@ -190,16 +189,7 @@ namespace IMIS.Persistence.ISATModule
             var office = await _repository.GetOfficeWithParentAsync(userOffice.OfficeId, cancellationToken).ConfigureAwait(false);
             if (office == null)
                 return dto;
-
-            dto.OfficeId = office.Id;
-            dto.OfficeName = office.Name;
-
-            if (office.ParentOffice != null)
-            {
-                dto.ParentOfficeId = office.ParentOffice.Id;
-                dto.ParentOfficeName = office.ParentOffice.Name;
-            }
-
+     
             var officeHead = await _repository.GetOfficeHeadAsync(office.Id, cancellationToken).ConfigureAwait(false);
             if (officeHead != null)
             {
