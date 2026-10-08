@@ -84,7 +84,7 @@ namespace IMIS.Presentation.ISATModule
             app.MapGet("/user/{userId}/{roleId}", async (string userId, string roleId, int? officeId, int page, int pageSize, IISATService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetPaginatedByUserIdAsync(userId, roleId, officeId, page, pageSize, cancellationToken);
-                return result is null ? Results.NotFound() : Results.Ok(result);
+                return Results.Ok(result);
             })
             .WithTags(_iSAT)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_iSAT), true)

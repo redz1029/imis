@@ -15,7 +15,7 @@ namespace IMIS.Persistence.ISATModule
 {
     public class ISATService : IISATService
     {
-        private const string StatusPrepared = "Prepared";
+        private const string StatusPrepared = "Prepared"; 
         private const string StatusPending = "Pending";
         private const string StatusEmployee = "Prepared By";
         private const string StatusOfficeHead = "Reviewed By";
@@ -64,13 +64,14 @@ namespace IMIS.Persistence.ISATModule
         {
             return await _repository.GetRoadMapListAsync(cancellationToken);
         }
-        
-        public async Task<DtoPageList<ISATDto, ISAT, long>?> GetPaginatedByUserIdAsync(string userId, string roleId, int? officeId, int page, int pageSize, CancellationToken cancellationToken)
+
+       
+        public async Task<DtoPageList<ISATDto, ISAT, long>> GetPaginatedByUserIdAsync(string userId, string roleId, int? officeId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var role = await _roleManager.FindByIdAsync(roleId);
 
             if (role == null)
-                return null;
+                return DtoPageList<ISATDto, ISAT, long>.Create(new List<ISAT>(), page, pageSize, 0);
 
             if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                 role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
@@ -81,9 +82,6 @@ namespace IMIS.Persistence.ISATModule
                 role.Name.Equals(new MSGC().Name, StringComparison.OrdinalIgnoreCase))
             {
                 var all = await _repository.GetPaginatedAllAsync(officeId, page, pageSize, cancellationToken);
-
-                if (all.TotalCount == 0)
-                    return null;
 
                 var result = DtoPageList<ISATDto, ISAT, long>.Create(all.Items, page, pageSize, all.TotalCount);
 
@@ -104,7 +102,7 @@ namespace IMIS.Persistence.ISATModule
             var candidates = await _repository.GetCandidatesForUserAsync(userId, officeId, cancellationToken);
 
             var visible = new List<(ISAT Entity, List<ISATSignatoryDto> Signatories, bool IsDraft, bool IsNext)>();
-        
+
             foreach (var isat in candidates)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -136,9 +134,6 @@ namespace IMIS.Persistence.ISATModule
                     visible.Add((isat, signatories, isDraft, isNext));
                 }
             }
-
-            if (visible.Count == 0)
-                return null;
 
             var ordered = visible
                 .OrderByDescending(v => v.IsNext)
