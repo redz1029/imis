@@ -416,8 +416,8 @@ class AccomplishmentPgsAuditorDialogState
   }
 
   Widget _buildAttachmentCell(TrackingRowData row) {
-    final hasAttachment = row.attachmentPath != null;
-
+    final hasAttachment =
+        row.attachmentPath != null && row.attachmentPath!.trim().isNotEmpty;
     if (!hasAttachment) {
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -1025,7 +1025,10 @@ Future<void> loadAccomplishments(
                   ? PgsStatusExtension.fromInt(acc.status!)
                   : _deriveStatusFromPercent(percent),
             ),
-            attachmentPath: acc.attachmentPath,
+            attachmentPath:
+                (acc.attachmentPath?.trim().isNotEmpty ?? false)
+                    ? acc.attachmentPath
+                    : null,
             attachmentBytes: null,
             accomplishmentId: acc.id,
             auditorRemarksController: TextEditingController(
