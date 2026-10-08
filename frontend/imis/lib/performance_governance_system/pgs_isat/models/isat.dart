@@ -1,8 +1,6 @@
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_signatory.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_annual_performance_commitments.dart';
-import 'package:imis/performance_governance_system/pgs_isat/models/isat_strategic_contribution.dart';
-import 'package:imis/performance_governance_system/pgs_isat/models/isat_strategic_objective_supported.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -17,8 +15,9 @@ class Isat {
   Office? office;
   String employeeUserId;
   int officeId;
-  List<IsatStrategicObjectiveSupported> isatStrategicObjectiveSupported;
-  List<IsatStrategicContribution> isatStrategyContribution;
+  String? immediateSupervisorUserId;
+  String? position;
+  int serviceId;
   List<IsatAnnualPerformanceCommitments> isatAnnualPerformanceCommitments;
 
   @JsonKey()
@@ -34,9 +33,10 @@ class Isat {
     this.isatPeriodId,
     this.employeeUserId,
     this.officeId,
-    this.isatStrategicObjectiveSupported,
+    this.immediateSupervisorUserId,
+    this.position,
+    this.serviceId,
     this.isatAnnualPerformanceCommitments,
-    this.isatStrategyContribution,
     this.postingDate,
     this.isDraft,
     this.isDeleted,

@@ -10,9 +10,11 @@ class IsatAnnualPerformanceCommitments {
   int isatId;
   String? deliverable;
   String? target;
-  String? timeLine;
-  String? status;
   String? accomplishment;
+  int? kraId;
+  String? kraMName;
+  int? pgsDeliverableId;
+  String? deliverableMName;
 
   @JsonKey()
   @DateTimeConverter()
@@ -23,12 +25,14 @@ class IsatAnnualPerformanceCommitments {
     this.isatId,
     this.deliverable,
     this.target,
-    this.timeLine,
-    this.status,
     this.accomplishment,
     this.isDeleted,
     this.postingDate, {
     this.rowVersion,
+    this.kraId,
+    this.kraMName,
+    this.pgsDeliverableId,
+    this.deliverableMName,
   });
 
   factory IsatAnnualPerformanceCommitments.fromJson(

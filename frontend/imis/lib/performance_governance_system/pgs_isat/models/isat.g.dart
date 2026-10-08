@@ -11,21 +11,15 @@ Isat _$IsatFromJson(Map<String, dynamic> json) => Isat(
   (json['isatPeriodId'] as num).toInt(),
   json['employeeUserId'] as String,
   (json['officeId'] as num).toInt(),
-  (json['isatStrategicObjectiveSupported'] as List<dynamic>)
-      .map(
-        (e) =>
-            IsatStrategicObjectiveSupported.fromJson(e as Map<String, dynamic>),
-      )
-      .toList(),
+  json['immediateSupervisorUserId'] as String?,
+  json['position'] as String?,
+  (json['serviceId'] as num).toInt(),
   (json['isatAnnualPerformanceCommitments'] as List<dynamic>)
       .map(
         (e) => IsatAnnualPerformanceCommitments.fromJson(
           e as Map<String, dynamic>,
         ),
       )
-      .toList(),
-  (json['isatStrategyContribution'] as List<dynamic>)
-      .map((e) => IsatStrategicContribution.fromJson(e as Map<String, dynamic>))
       .toList(),
   _$JsonConverterFromJson<String, DateTime>(
     json['postingDate'],
@@ -54,8 +48,9 @@ Map<String, dynamic> _$IsatToJson(Isat instance) => <String, dynamic>{
   'office': instance.office,
   'employeeUserId': instance.employeeUserId,
   'officeId': instance.officeId,
-  'isatStrategicObjectiveSupported': instance.isatStrategicObjectiveSupported,
-  'isatStrategyContribution': instance.isatStrategyContribution,
+  'immediateSupervisorUserId': instance.immediateSupervisorUserId,
+  'position': instance.position,
+  'serviceId': instance.serviceId,
   'isatAnnualPerformanceCommitments': instance.isatAnnualPerformanceCommitments,
   'postingDate': _$JsonConverterToJson<String, DateTime>(
     instance.postingDate,
