@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-09-21 07:58:10.056997
+// Last synced: 2026-09-30 08:36:35.278027
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -134,6 +134,20 @@ class AppPermissions {
   static const String addIsoStandard = 'Add Iso Standard';
   static const String viewIsoStandard = 'View Iso Standard';
   static const String editIsoStandard = 'Edit Iso Standard';
+  static const String deleteISATSignatoryTemplate = 'Delete I S A T Signatory Template';
+  static const String draftISATSignatoryTemplate = 'Draft I S A T Signatory Template';
+  static const String submitISATSignatoryTemplate = 'Submit I S A T Signatory Template';
+  static const String confirmISATSignatoryTemplate = 'Confirm I S A T Signatory Template';
+  static const String addISATSignatoryTemplate = 'Add I S A T Signatory Template';
+  static const String viewISATSignatoryTemplate = 'View I S A T Signatory Template';
+  static const String editISATSignatoryTemplate = 'Edit I S A T Signatory Template';
+  static const String deleteISAT = 'Delete I S A T';
+  static const String draftISAT = 'Draft I S A T';
+  static const String submitISAT = 'Submit I S A T';
+  static const String confirmISAT = 'Confirm I S A T';
+  static const String addISAT = 'Add I S A T';
+  static const String viewISAT = 'View I S A T';
+  static const String editISAT = 'Edit I S A T';
   static const String addImpactStrategicGoalScoreCardPeriod = 'Add Impact Strategic Goal Score Card Period';
   static const String viewImpactStrategicGoalScoreCardPeriod = 'View Impact Strategic Goal Score Card Period';
   static const String editImpactStrategicGoalScoreCardPeriod = 'Edit Impact Strategic Goal Score Card Period';
