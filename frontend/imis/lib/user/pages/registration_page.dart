@@ -349,6 +349,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                                                 : selectedPosition ?? '',
                                             '',
                                             '',
+                                            null,
                                           ),
                                         );
                                       }
@@ -463,7 +464,7 @@ class RegistrationPageState extends State<RegistrationPage> {
         hint: 'First name',
         textInputAction: TextInputAction.next,
         validator: (value) {
-          if (value == null || value.isEmpty) return "Please enter some text";
+          if (value == null || value.isEmpty) return "required";
           return null;
         },
       ),
@@ -481,7 +482,7 @@ class RegistrationPageState extends State<RegistrationPage> {
         hint: 'Last name',
         textInputAction: TextInputAction.next,
         validator: (value) {
-          if (value == null || value.isEmpty) return "Please enter some text";
+          if (value == null || value.isEmpty) return "required";
           return null;
         },
       ),
@@ -503,7 +504,7 @@ class RegistrationPageState extends State<RegistrationPage> {
         hint: 'Username',
         textInputAction: TextInputAction.next,
         validator: (value) {
-          if (value == null || value.isEmpty) return "Please enter some text";
+          if (value == null || value.isEmpty) return "required";
           return null;
         },
       ),
@@ -566,7 +567,7 @@ class RegistrationPageState extends State<RegistrationPage> {
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return "Please confirm your password";
+            return "required";
           }
           if (value != passwordController.text) return 'Passwords do not match';
           return null;
@@ -574,55 +575,6 @@ class RegistrationPageState extends State<RegistrationPage> {
       ),
       const SizedBox(height: 14),
 
-      // DropdownSearch<String>(
-      //   popupProps: PopupProps.menu(
-      //     showSearchBox: true,
-      //     searchFieldProps: TextFieldProps(
-      //       decoration: InputDecoration(
-      //         hintText: 'Search Position...',
-      //         filled: true,
-      //         fillColor: Colors.white,
-      //         prefixIcon: const Icon(Icons.search),
-      //         border: OutlineInputBorder(
-      //           borderRadius: BorderRadius.circular(10),
-      //           borderSide: const BorderSide(color: kBorder, width: 1.5),
-      //         ),
-      //         focusedBorder: OutlineInputBorder(
-      //           borderRadius: BorderRadius.circular(10),
-      //           borderSide: const BorderSide(color: primaryColor, width: 1.8),
-      //         ),
-      //       ),
-      //     ),
-      //   ),
-      //   items: JobPositions.positions,
-      //   selectedItem: selectedPosition,
-      //   onChanged: (String? value) {
-      //     setState(() {
-      //       selectedPosition = value;
-      //     });
-      //   },
-      //   dropdownDecoratorProps: DropDownDecoratorProps(
-      //     dropdownSearchDecoration: InputDecoration(
-      //       hintText: 'Position',
-      //       hintStyle: const TextStyle(color: kMuted, fontSize: 14),
-      //       contentPadding: const EdgeInsets.symmetric(
-      //         horizontal: 16,
-      //         vertical: 14,
-      //       ),
-      //       filled: true,
-      //       fillColor: Colors.white,
-      //       border: OutlineInputBorder(
-      //         borderRadius: BorderRadius.circular(10),
-      //         borderSide: const BorderSide(color: kBorder, width: 1.5),
-      //       ),
-      //       focusedBorder: OutlineInputBorder(
-      //         borderRadius: BorderRadius.circular(10),
-      //         borderSide: const BorderSide(color: primaryColor, width: 1.8),
-      //       ),
-      //       isDense: true,
-      //     ),
-      //   ),
-      // ),
       Autocomplete<String>(
         initialValue: TextEditingValue(text: positionController.text),
         optionsBuilder: (TextEditingValue textEditingValue) {
@@ -675,6 +627,12 @@ class RegistrationPageState extends State<RegistrationPage> {
               ),
               isDense: true,
             ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "required";
+              }
+              return null;
+            },
           );
         },
         optionsViewBuilder: (context, onSelected, options) {

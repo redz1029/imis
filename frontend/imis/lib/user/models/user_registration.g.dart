@@ -20,6 +20,10 @@ UserRegistration _$UserRegistrationFromJson(Map<String, dynamic> json) =>
       json['position'] as String?,
       json['accessToken'] as String?,
       json['refreshToken'] as String?,
+      _$JsonConverterFromJson<String, DateTime>(
+        json['lockoutEnd'],
+        const DateTimeConverter().fromJson,
+      ),
     );
 
 Map<String, dynamic> _$UserRegistrationToJson(UserRegistration instance) =>
@@ -34,6 +38,20 @@ Map<String, dynamic> _$UserRegistrationToJson(UserRegistration instance) =>
       'prefix': instance.prefix,
       'suffix': instance.suffix,
       'position': instance.position,
+      'lockoutEnd': _$JsonConverterToJson<String, DateTime>(
+        instance.lockoutEnd,
+        const DateTimeConverter().toJson,
+      ),
       'accessToken': instance.accessToken,
       'refreshToken': instance.refreshToken,
     };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) => json == null ? null : fromJson(json as Json);
+
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) => value == null ? null : toJson(value);
