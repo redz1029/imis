@@ -9,6 +9,7 @@ import 'package:imis/audit/audit_programme/models/audit_programme.dart';
 import 'package:imis/audit/widgets/approval_workflow_widgets.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/user/models/user_registration.dart';
+import 'package:imis/audit/audit_programme/pages/audit_programme_print_preview_page.dart';
 
 // =============================================================================
 // 1. DATA MODELS & DTO ADAPTERS MATCHING C# BACKEND
@@ -486,6 +487,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       debugPrint('Failed to load teams: $e');
     }
   }
+  
 
   int get _nextDayNumber => _dayDates.keys.isEmpty
       ? 1
@@ -578,6 +580,19 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
   bool _isSaving = false;
 
+  /// Opens the native print preview for the saved Audit Programme.
+  /// Only available once the programme exists on the server (edit mode).
+    void _openPrintPreview() {
+    final id = widget.programmeId;
+    if (id == null) return;
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => AuditProgrammePrintPreviewPage(programmeId: id),
+      ),
+    );
+  }
+
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
@@ -601,6 +616,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               ),
             ),
           ),
+
           if (_loadedProgramme?.approvalHistory.isNotEmpty == true)
             TextButton.icon(
               onPressed: () => ApprovalHistoryDialog.show(
@@ -613,6 +629,13 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                 'History',
                 style: TextStyle(color: Colors.white, fontSize: 13),
               ),
+            ),
+          if (widget.programmeId != null)
+            IconButton(
+              onPressed: _openPrintPreview,
+              icon: const Icon(Icons.print_outlined, color: Colors.white),
+              tooltip: 'Print Preview',
+              splashRadius: 20,
             ),
           IconButton(
             onPressed: () => Navigator.pop(context),
@@ -809,6 +832,32 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               ),
               const SizedBox(width: 8),
               if (isEdit) ...[
+                OutlinedButton.icon(
+                  onPressed: _isSaving ? null : _openPrintPreview,
+                  icon: const Icon(
+                    Icons.picture_as_pdf_outlined,
+                    size: 16,
+                    color: primaryThemeColor,
+                  ),
+                  label: const Text(
+                    'PRINT PREVIEW',
+                    style: TextStyle(
+                      color: primaryThemeColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: primaryThemeColor),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 OutlinedButton(
                   onPressed: _isSaving
                       ? null

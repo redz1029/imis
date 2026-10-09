@@ -4,7 +4,6 @@ part 'audit_checklist.g.dart';
 
 // Sentinel so copyWithResponse can tell "not provided" apart from
 // "explicitly set to null" (needed to clear the Y/N dropdown).
-const Object _unset = Object();
 
 @JsonSerializable(explicitToJson: true)
 class AuditChecklist {
@@ -81,31 +80,33 @@ class AuditChecklist {
   /// Copy with an updated response — the only two fields a user ever edits.
   /// Pass `conforming: null` to explicitly clear it (matches the dropdown's
   /// blank option); omit the argument entirely to leave it unchanged.
+    /// Copy with an updated response. Pass `clearConforming: true` to explicitly
+  /// reset Y/N to blank (a plain `conforming: null` means "leave unchanged").
   AuditChecklist copyWithResponse({
-    Object? conforming = _unset,
+    bool? conforming,
+    bool clearConforming = false,
     String? findingAndRemarks,
+    String? itemsAndQuestions,
   }) {
     return AuditChecklist(
       id: id,
       isDeleted: isDeleted,
       rowVersion: rowVersion,
-      conforming: identical(conforming, _unset)
-          ? this.conforming
-          : conforming as bool?,
-      findingAndRemarks: findingAndRemarks ?? this.findingAndRemarks,
       auditPlanEntryId: auditPlanEntryId,
       auditChecklistQNAId: auditChecklistQNAId,
       auditScheduleId: auditScheduleId,
       auditeeId: auditeeId,
       auditeeName: auditeeName,
       criteria: criteria,
-      itemsAndQuestions: itemsAndQuestions,
+      itemsAndQuestions: itemsAndQuestions ?? this.itemsAndQuestions,
       officeProcess: officeProcess,
       teamName: teamName,
       teamId: teamId,
       auditorNames: auditorNames,
       auditScope: auditScope,
       auditees: auditees,
+      conforming: clearConforming ? null : (conforming ?? this.conforming),
+      findingAndRemarks: findingAndRemarks ?? this.findingAndRemarks,
     );
   }
 

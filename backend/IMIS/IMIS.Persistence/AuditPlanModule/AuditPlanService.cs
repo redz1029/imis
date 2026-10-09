@@ -413,6 +413,10 @@ namespace IMIS.Application.AuditPlanModule
             var dto = new ReportAuditPlanDto
             {
                 Id = entity.Id,
+                // PlanName is required by the .frx template's [AuditData.PlanName]
+                // expression; without it FastReport throws on Prepare() and the
+                // endpoint returns 500 instead of a PDF.
+                PlanName = entity.PlanName,
                 StartDate = entity.StartDate,
                 EndDate = entity.EndDate,
                 PlanStatus = IQAApprovalWorkflow.StateName(IQAApprovalWorkflow.DeriveStateCode(entity.IQASignatories)),
