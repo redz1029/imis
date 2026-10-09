@@ -32,6 +32,10 @@ namespace IMIS.Persistence.ISATModule
             _userManager = userManager;
             _roleManager = roleManager;
         }
+        public async Task<int> DeleteByISATIdAsync(long isatId, CancellationToken cancellationToken)
+        {
+            return await _repository.DeleteByISATIdAsync(isatId, cancellationToken);
+        }
         public async Task<List<OfficeDto>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default)
         {
             return await _repository.GetOfficesByUserIdAsync(userId, cancellationToken);

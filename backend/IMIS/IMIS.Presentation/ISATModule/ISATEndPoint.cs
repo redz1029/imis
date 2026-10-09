@@ -157,6 +157,18 @@ namespace IMIS.Presentation.ISATModule
             })
           .WithTags(_iSAT)
           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _iSATPermission.Delete));
+
+            app.MapDelete("/{isatId:long}/signatories", async (long isatId, IISATService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var count = await service.DeleteByISATIdAsync(isatId, cancellationToken);
+                await cache.EvictByTagAsync(_iSAT, cancellationToken);
+
+                return count > 0
+                    ? Results.Ok(new { message = $"{count} signatory record(s) deleted successfully." })
+                    : Results.NotFound(new { message = "No signatories found for this ISAT." });
+            })
+           .WithTags(_iSAT)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _iSATPermission.Delete));
         }
     }
 }

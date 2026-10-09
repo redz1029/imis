@@ -11,7 +11,13 @@ namespace IMIS.Persistence.ISATModule
     {
         public ISATRepository(ImisDbContext dbContext) : base(dbContext)
         {
-        }       
+        }
+        public async Task<int> DeleteByISATIdAsync(long isatId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<ISATSignatory>()
+                .Where(x => x.ISATId == isatId)
+                .ExecuteDeleteAsync(cancellationToken);
+        }
         public async Task<List<OfficeDto>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default)
         {
             var assignedOfficeIds = ReadOnlyDbContext.Set<UserOffices>()

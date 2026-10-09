@@ -17,5 +17,6 @@ namespace IMIS.Application.ISATModule
         Task<ISATDto> Submit(ISATDto dto, string userId, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<List<OfficeDto>> GetOfficesByUserIdAsync(string userId, CancellationToken cancellationToken = default);
+        Task<int> DeleteByISATIdAsync(long isatId, CancellationToken cancellationToken);
     }
 }
