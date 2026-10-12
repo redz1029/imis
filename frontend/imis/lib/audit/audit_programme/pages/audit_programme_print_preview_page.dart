@@ -33,8 +33,8 @@ Future<void> openAuditProgrammePrintPreview(
 // =============================================================================
 // Layout constants (points)
 // =============================================================================
-const String _kLogoCrmc = 'assets/images/crmc_logo.png';
-const String _kLogoIso = 'assets/images/iso_tuv_certified.jpg';
+const String _kLogoCrmc = 'assets/crmc_logo.png';
+const String _kLogoIso = 'assets/iso_tuv_certified.jpg';
 const String _kFormCode = 'QP-03-F-04 Rev. 2';
 
 /// The printed form closes every batch with "DAY n / REPORTING". The data has
@@ -47,9 +47,8 @@ const double _kBorderW = 0.8;
 const double _kFont = 10.5;
 const double _kTeamFont = 7.5;
 const double _kBannerH = 19.0;
-const double _kLogoBox = 64.0;
+const double _kLogoBox = 86.0;
 const double _kSideW = 104.0;
-const double _kHeaderBlockH = 83.0;
 const double _kLabelW = 122.0;
 const double _kRomanW = 34.0;
 const int _kClausesPerLine = 5;
@@ -526,11 +525,12 @@ Future<_PdfAssets> _loadAssets() async {
     unicode = false;
   }
 
-  Future<pw.MemoryImage?> logo(String path) async {
+    Future<pw.MemoryImage?> logo(String path) async {
     try {
       final data = await rootBundle.load(path);
       return pw.MemoryImage(data.buffer.asUint8List());
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Programme print preview: cannot load asset "$path": $e');
       return null;
     }
   }
@@ -1138,19 +1138,21 @@ class _ProgrammePdfBuilder {
   }
 
   // ------------------------------------------------------------ letterhead ---
+  // ignore: unused_element
   pw.Widget _side(pw.Widget? child, pw.Alignment alignment) {
     return pw.SizedBox(
       width: _kSideW,
       child: pw.Align(alignment: alignment, child: child),
     );
   }
-
-  pw.Widget _letterhead() {
-    final iso = assets.iso;
+      // ------------------------------------------------------------ letterhead ---
+  /// Same as the scanned form: the CRMC seal sits right against the left of
+  /// the centred three-line heading. No TÜV mark.
+   pw.Widget _letterhead() {
     final crmc = assets.crmc;
+    final iso = assets.iso;
 
-    final left = iso == null ? null : pw.Image(iso, height: 40);
-    final right = crmc == null
+    final seal = crmc == null
         ? null
         : pw.SizedBox(
             width: _kLogoBox,
@@ -1160,47 +1162,50 @@ class _ProgrammePdfBuilder {
             ),
           );
 
-    return pw.SizedBox(
-      height: _kHeaderBlockH,
-      child: pw.Column(
-        mainAxisSize: pw.MainAxisSize.min,
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-        children: [
-          pw.SizedBox(
-            height: _kLogoBox,
-            child: pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.center,
-              children: [
-                _side(left, pw.Alignment.centerLeft),
-                pw.Expanded(
-                  child: pw.Column(
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    crossAxisAlignment: pw.CrossAxisAlignment.center,
-                    children: [
-                      _t('Republic of the Philippines', size: 10),
-                      _t('Department of Health', size: 10),
-                      _t(
-                        'COTABATO REGIONAL AND MEDICAL CENTER',
-                        bold: true,
-                        size: 11,
-                      ),
-                    ],
-                  ),
-                ),
-                _side(right, pw.Alignment.centerRight),
-              ],
+    final tuv = iso == null
+        ? null
+        : pw.SizedBox(
+            width: 104,
+            height: 56,
+            child: pw.Image(
+              iso,
+              fit: pw.BoxFit.contain,
+              alignment: pw.Alignment.centerRight,
             ),
+          );
+
+    return pw.SizedBox(
+      height: _kLogoBox,
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          pw.Expanded(
+            child: pw.Align(alignment: pw.Alignment.centerRight, child: seal),
           ),
-          pw.SizedBox(height: 5),
-          pw.Container(width: _contentW, height: 3, color: PdfColors.black),
-          pw.SizedBox(height: 2),
-          pw.Container(width: _contentW, height: 0.7, color: PdfColors.black),
+          pw.SizedBox(width: 2),
+          pw.Column(
+            mainAxisSize: pw.MainAxisSize.min,
+            mainAxisAlignment: pw.MainAxisAlignment.center,
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              _t('Republic of the Philippines', size: 10),
+              _t('Department of Health', size: 10),
+              _t(
+                'COTABATO REGIONAL AND MEDICAL CENTER',
+                bold: true,
+                size: 11,
+              ),
+            ],
+          ),
+          pw.SizedBox(width: 8),
+          pw.Expanded(
+            child: pw.Align(alignment: pw.Alignment.centerRight, child: tuv),
+          ),
         ],
       ),
     );
   }
-
-  // ------------------------------------------------------------ signatures ---
+  
   pw.Widget _sigColumn(_Sig s, double colW) {
     final dateText = s.date == null ? '' : DateFormat('M/d/yyyy').format(s.date!);
     return pw.Padding(
@@ -1294,8 +1299,8 @@ class _ProgrammePdfBuilder {
   // ------------------------------------------------------------------ body ---
   List<pw.Widget> _body() {
     final w = <pw.Widget>[
-      _letterhead(),
-      pw.SizedBox(height: 6),
+            _letterhead(),
+      pw.SizedBox(height: 16),
       pw.Center(child: _t('AUDIT PROGRAMME', bold: true, size: 12)),
       pw.SizedBox(height: 10),
       _headerTable(),
