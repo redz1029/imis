@@ -302,6 +302,17 @@ Future<void> openStrategicChangeAgenda(
   context: context,
 );
 
+Future<void> openIsatPrintPreview(
+  String isatId,
+  String isat, {
+  BuildContext? context,
+}) => _openPdfPreview(
+  webEndpoint: "${ApiEndpoint().isat}/report/$isatId",
+  id: isatId,
+  name: isat,
+  context: context,
+);
+
 Future<void> openImpactGoalStrategyReportPreview(
   String impactGoalStrategyId,
   String impactGoalStrategyReviewReport, {
