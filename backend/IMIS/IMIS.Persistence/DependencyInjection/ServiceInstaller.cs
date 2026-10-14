@@ -41,6 +41,7 @@ using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
+using IMIS.Application.PolicyAndProcedureModule;
 using IMIS.Application.ServiceHeadOfficesModule;
 using IMIS.Application.StandardVersionModule;
 using IMIS.Application.StrategicChangeAgendaModule;
@@ -96,6 +97,7 @@ using IMIS.Persistence.PGSReadinessRatingCancerCareModule;
 using IMIS.Persistence.PgsSignatoryModule;
 using IMIS.Persistence.PgsSignatoryTemplateModule;
 using IMIS.Persistence.PgsSummaryNarrativeModule;
+using IMIS.Persistence.PolicyAndProcedureModule;
 using IMIS.Persistence.ServiceHeadOfficesModule;
 using IMIS.Persistence.StandardVersionModule;
 using IMIS.Persistence.StrategicChangeAgendaModule;
@@ -277,6 +279,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IISATSignatoryTemplateRepository, ISATSignatoryTemplateRepository>();
             services.AddScoped<IISATSignatoryTemplateService, ISATSignatoryTemplateService>();
+
+            services.AddScoped<IPolicyAndProcedureRepository, PolicyAndProcedureRepository>();
+            services.AddScoped<IPolicyAndProcedureService, PolicyAndProcedureService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

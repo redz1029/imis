@@ -1,10 +1,8 @@
-﻿using System.Reflection.Emit;
-using Base.Abstractions;
+﻿using Base.Abstractions;
 using Base.Auths;
 using Base.Utilities;
 using IMIS.Domain;
 using IMIS.Persistence.SeedConfigurations;
-using IMIS.Persistence.StrategicChangeAgendaModule;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -82,6 +80,7 @@ namespace IMIS.Persistence
         public DbSet<ISAT> ISAT { get; set; }
         public DbSet<ISATSignatoryTemplate> ISATSignatoryTemplate { get; set; }
         public DbSet<ISATSignatory> ISATSignatory { get; set; }
+        public DbSet<PolicyAndProcedure> PolicyAndProcedure { get; set; }
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
