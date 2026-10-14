@@ -9,6 +9,7 @@
         public string? MiddleName { get; set; }
         public string? LastName { get; set; }
         public string? Position { get; set; }
+        public string? Office { get; set; }
         public string? RoleName { get; set; }
         public string? RoleId { get; set; }
     }

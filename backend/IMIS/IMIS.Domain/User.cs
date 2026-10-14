@@ -10,5 +10,6 @@ namespace IMIS.Domain
         public string? Prefix { get; set; }
         public string? Suffix { get; set; }
         public string? Position {  get; set; }         
+        public string? Office {  get; set; }         
     }
 }

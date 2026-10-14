@@ -420,6 +420,7 @@ namespace IMIS.Presentation.UserModule
                 u.Id,
                 FullName = $"{u.Prefix} {u.FirstName} {u.MiddleName} {u.LastName} {u.Suffix}".Trim(),
                 Position = u.Position,
+                Office = u.Office,
 
 
             });
@@ -443,6 +444,7 @@ namespace IMIS.Presentation.UserModule
                             u.MiddleName,
                             u.LastName,
                             u.Position,
+                            u.Office,
                             RoleName = r.Name,
                             RoleId = r.Id
                         };
@@ -473,6 +475,7 @@ namespace IMIS.Presentation.UserModule
                     MiddleName = g.First().MiddleName,
                     LastName = g.First().LastName,
                     Position = g.First().Position,
+                    Office = g.First().Office,
 
                     RoleName = string.Join(", ", g.Select(x => x.RoleName).Distinct())
                 })
@@ -512,6 +515,7 @@ namespace IMIS.Presentation.UserModule
                             u.MiddleName,
                             u.LastName,
                             u.Position,
+                            u.Office,
                             RoleName = r.Name,
                             RoleId = r.Id
                         };
@@ -542,6 +546,7 @@ namespace IMIS.Presentation.UserModule
                     MiddleName = g.First().MiddleName,
                     LastName = g.First().LastName,
                     Position = g.First().Position,
+                    Office = g.First().Office,
                     RoleName = string.Join(", ", g.Select(x => x.RoleName).Distinct())
                 })
                 .OrderBy(x => x.LastName)
@@ -570,6 +575,7 @@ namespace IMIS.Presentation.UserModule
                 x.MiddleName,
                 x.LastName,
                 x.Position,
+                x.Office,
                 x.RoleName,
                 RoleHeader = roleDisplayName
             }).ToList();
@@ -602,6 +608,7 @@ namespace IMIS.Presentation.UserModule
                 Prefix = registration.Prefix,
                 Suffix = registration.Suffix,
                 Position = registration.Position,
+                Office = registration.Office,
                 LockoutEnabled = true,
                 LockoutEnd = PendingApprovalLockoutEnd
             };
@@ -653,6 +660,7 @@ namespace IMIS.Presentation.UserModule
                     u.Prefix,
                     u.Suffix,
                     u.Position,
+                    u.Office,
                     u.LockoutEnabled,
                     u.LockoutEnd,
                     u.AccessFailedCount
@@ -680,6 +688,7 @@ namespace IMIS.Presentation.UserModule
                     u.Prefix,
                     u.Suffix,
                     u.Position,
+                    u.Office,
                     u.LockoutEnabled,
                     u.LockoutEnd,
                     u.AccessFailedCount,
@@ -726,6 +735,7 @@ namespace IMIS.Presentation.UserModule
             user.Prefix = registration.Prefix;
             user.Suffix = registration.Suffix;
             user.Position = registration.Position;
+            user.Office = registration.Office;
 
             var updateResult = await userManager.UpdateAsync(user);
             if (!updateResult.Succeeded)
@@ -863,6 +873,7 @@ namespace IMIS.Presentation.UserModule
                 user.MiddleName,
                 user.LastName,
                 user.Position,
+                user.Office,
                 roles = roleList,
                 offices,
                 accessToken,
@@ -1056,6 +1067,7 @@ namespace IMIS.Presentation.UserModule
                     u.MiddleName,
                     u.LastName,
                     u.Position,
+                    u.Office,
                     u.LockoutEnabled,
                     u.LockoutEnd
                 })
@@ -1072,6 +1084,7 @@ namespace IMIS.Presentation.UserModule
                 u.MiddleName,
                 u.LastName,
                 u.Position,
+                u.Office,
                 u.LockoutEnabled,
                 u.LockoutEnd,
                 IsPendingApproval = u.LockoutEnd == PendingApprovalLockoutEnd
