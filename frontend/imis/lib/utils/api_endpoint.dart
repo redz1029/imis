@@ -98,6 +98,8 @@ class ApiEndpoint {
   late String serviceHeadOffices;
   late String strategicChangeAgenda;
   late String isatPeriod;
+  late String isat;
+  late String iSATSignatoryTemplate;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -199,14 +201,18 @@ class ApiEndpoint {
     serviceHeadOffices = '$baseUrl/serviceHeadOffices';
     strategicChangeAgenda = '$baseUrl/strategicChangeAgenda';
     isatPeriod = '$baseUrl/ISATPeriod';
+    isat = '$baseUrl/ISAT';
+    iSATSignatoryTemplate = '$baseUrl/iSATSignatoryTemplate';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
       baseUrl = 'https://localhost:7273';
-    } else if (kReleaseMode) {
-      baseUrl = 'https://api.cpems.crmc.ph';
-      // baseUrl = 'http://192.168.0.74';
-    } else {
+    }
+    //  else if (kReleaseMode) {
+    //   baseUrl = 'https://api.cpems.crmc.ph';
+    //   // baseUrl = 'http://192.168.0.74';
+    // }
+    else {
       throw Exception("Test base Url is not specified!");
     }
   }

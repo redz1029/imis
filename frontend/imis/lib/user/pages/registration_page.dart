@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/office/models/office.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -29,6 +31,7 @@ class RegistrationPageState extends State<RegistrationPage> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
   final TextEditingController positionController = TextEditingController();
+  final _commonService = CommonService(Dio());
 
   final FocusNode idFocusNode = FocusNode();
   final FocusNode focusFirstName = FocusNode();
@@ -44,6 +47,7 @@ class RegistrationPageState extends State<RegistrationPage> {
   bool _isPasswordVisible = false;
   bool _isPassConfirmVisible = false;
   bool _isRegister = false;
+  List<Office> officeList = [];
 
   final dio = Dio();
 
@@ -146,6 +150,15 @@ class RegistrationPageState extends State<RegistrationPage> {
     focusEmail.addListener(() => setState(() {}));
     focusPassword.addListener(() => setState(() {}));
     focusConfirmPassword.addListener(() => setState(() {}));
+
+    () async {
+      final offices = await _commonService.fetchAlloffices();
+
+      if (!mounted) return;
+      setState(() {
+        officeList = offices;
+      });
+    }();
   }
 
   @override

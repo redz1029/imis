@@ -752,7 +752,6 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                     : null,
                       ),
                       // const SizedBox(height: 12),
-
                       // // Date row
                       // Row(
                       //   children: [
