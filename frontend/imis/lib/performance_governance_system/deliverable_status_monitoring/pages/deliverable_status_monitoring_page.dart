@@ -2065,6 +2065,423 @@ class _DeliverableStatusMonitoringPageState
   }
 }
 
+// Future<bool?> showAccomplishmentFormDialog(
+//   BuildContext context,
+//   Map<String, dynamic> deliverable,
+//   String userId,
+//   List<Map<String, dynamic>> monthlyPeriods,
+// ) {
+//   return showDialog<bool>(
+//     context: context,
+//     barrierDismissible: false,
+//     builder:
+//         (context) => Dialog(
+//           backgroundColor: mainBgColor,
+//           insetPadding: const EdgeInsets.all(20),
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(16),
+//           ),
+//           child: ConstrainedBox(
+//             constraints: const BoxConstraints(maxWidth: 1500),
+//             child: Padding(
+//               padding: const EdgeInsets.all(20),
+//               child: Column(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
+//                   Expanded(
+//                     child: SingleChildScrollView(
+//                       child: Column(
+//                         crossAxisAlignment: CrossAxisAlignment.start,
+//                         children: [
+//                           Row(
+//                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                             children: [
+//                               Expanded(
+//                                 child: Text(
+//                                   "Accomplishment Form — ${deliverable['Start Date']} to ${deliverable['End Date']}",
+//                                   style: const TextStyle(
+//                                     fontSize: 17,
+//                                     fontWeight: FontWeight.bold,
+//                                   ),
+//                                 ),
+//                               ),
+//                               IconButton(
+//                                 icon: const Icon(Icons.close),
+//                                 onPressed: () => Navigator.pop(context),
+//                               ),
+//                             ],
+//                           ),
+//                           const SizedBox(height: 12),
+//                           Container(
+//                             padding: const EdgeInsets.all(14),
+//                             decoration: BoxDecoration(
+//                               color: Colors.grey.shade50,
+//                               borderRadius: BorderRadius.circular(10),
+//                               border: Border.all(color: Colors.grey.shade200),
+//                             ),
+//                             child: Wrap(
+//                               spacing: 24,
+//                               runSpacing: 6,
+//                               children: [
+//                                 Text(
+//                                   "Office: ${deliverable['officeName'] ?? 'N/A'}",
+//                                   style: const TextStyle(fontSize: 13),
+//                                 ),
+//                                 Text(
+//                                   "KRA: ${deliverable['kra'] ?? 'N/A'}",
+//                                   style: const TextStyle(fontSize: 13),
+//                                 ),
+//                                 Text(
+//                                   "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
+//                                   style: const TextStyle(fontSize: 13),
+//                                 ),
+//                                 Text(
+//                                   "Due: ${deliverable['byWhen'] ?? 'N/A'}",
+//                                   style: const TextStyle(fontSize: 13),
+//                                 ),
+//                                 Text(
+//                                   "Periods: ${monthlyPeriods.length} month(s)",
+//                                   style: const TextStyle(
+//                                     fontSize: 13,
+//                                     fontWeight: FontWeight.w600,
+//                                   ),
+//                                 ),
+//                                 Text(
+//                                   "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
+//                                   style: const TextStyle(
+//                                     fontSize: 13,
+//                                     fontWeight: FontWeight.w600,
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           ),
+//                           const SizedBox(height: 20),
+//                           const Row(
+//                             children: [
+//                               Icon(Icons.bar_chart_outlined, size: 18),
+//                               SizedBox(width: 8),
+//                               Text(
+//                                 "Monthly Accomplishment Tracking",
+//                                 style: TextStyle(fontWeight: FontWeight.bold),
+//                               ),
+//                             ],
+//                           ),
+//                           const SizedBox(height: 12),
+//                           Container(
+//                             decoration: BoxDecoration(
+//                               border: Border.all(color: Colors.black12),
+//                               borderRadius: BorderRadius.circular(10),
+//                             ),
+//                             child: Column(
+//                               children: [
+//                                 Container(
+//                                   padding: const EdgeInsets.symmetric(
+//                                     vertical: 10,
+//                                     horizontal: 8,
+//                                   ),
+//                                   decoration: BoxDecoration(
+//                                     color: Colors.grey.shade50,
+//                                     borderRadius: const BorderRadius.vertical(
+//                                       top: Radius.circular(10),
+//                                     ),
+//                                   ),
+//                                   child: Row(
+//                                     children: const [
+//                                       Expanded(
+//                                         flex: 2,
+//                                         child: Center(
+//                                           child: Text(
+//                                             "Period",
+//                                             style: TextStyle(
+//                                               color: grey,
+//                                               fontSize: 12,
+//                                               fontWeight: FontWeight.w600,
+//                                             ),
+//                                           ),
+//                                         ),
+//                                       ),
+//                                       Expanded(
+//                                         flex: 2,
+//                                         child: Center(
+//                                           child: Text(
+//                                             "Status",
+//                                             style: TextStyle(
+//                                               color: grey,
+//                                               fontSize: 12,
+//                                               fontWeight: FontWeight.w600,
+//                                             ),
+//                                           ),
+//                                         ),
+//                                       ),
+//                                       Expanded(
+//                                         flex: 2,
+//                                         child: Center(
+//                                           child: Text(
+//                                             "% Accomplishment",
+//                                             style: TextStyle(
+//                                               color: grey,
+//                                               fontSize: 12,
+//                                               fontWeight: FontWeight.w600,
+//                                             ),
+//                                           ),
+//                                         ),
+//                                       ),
+//                                       Expanded(
+//                                         flex: 3,
+//                                         child: Center(
+//                                           child: Text(
+//                                             "Remarks (Dept Head)",
+//                                             style: TextStyle(
+//                                               color: grey,
+//                                               fontSize: 12,
+//                                               fontWeight: FontWeight.w600,
+//                                             ),
+//                                           ),
+//                                         ),
+//                                       ),
+//                                       Expanded(
+//                                         flex: 2,
+//                                         child: Center(
+//                                           child: Text(
+//                                             "Proof",
+//                                             style: TextStyle(
+//                                               color: grey,
+//                                               fontSize: 12,
+//                                               fontWeight: FontWeight.w600,
+//                                             ),
+//                                           ),
+//                                         ),
+//                                       ),
+//                                       Expanded(
+//                                         flex: 3,
+//                                         child: Center(
+//                                           child: Text(
+//                                             "Remarks (Evaluator)",
+//                                             style: TextStyle(
+//                                               color: grey,
+//                                               fontSize: 12,
+//                                               fontWeight: FontWeight.w600,
+//                                             ),
+//                                           ),
+//                                         ),
+//                                       ),
+//                                     ],
+//                                   ),
+//                                 ),
+//                                 ...monthlyPeriods.asMap().entries.map(
+//                                   (e) => Column(
+//                                     children: [
+//                                       const Divider(height: 1),
+//                                       AccomplishmentPgsAuditorDialog(
+//                                         period: e.value['period'],
+//                                         periodIndex: e.key,
+//                                         totalPeriods: monthlyPeriods.length,
+//                                         deliverableId:
+//                                             deliverable['pgsDeliverableId'],
+//                                         periodMonth: e.value['month'] as int,
+//                                         periodYear: e.value['year'] as int,
+//                                       ),
+//                                     ],
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                     ),
+//                   ),
+//                   const SizedBox(height: 16),
+//                   PermissionWidget(
+//                     allowedRoles: [
+//                       PermissionRoleString.evaluator,
+//                       PermissionRoleString.roleAdmin,
+//                     ],
+//                     child: Row(
+//                       mainAxisAlignment: MainAxisAlignment.end,
+//                       children: [
+//                         TextButton(
+//                           onPressed: () => Navigator.pop(context),
+//                           child: const Text(
+//                             "Cancel",
+//                             style: TextStyle(color: Colors.grey),
+//                           ),
+//                         ),
+//                         const SizedBox(width: 12),
+//                         ElevatedButton(
+//                           style: ElevatedButton.styleFrom(
+//                             backgroundColor: primaryColor,
+//                             shape: RoundedRectangleBorder(
+//                               borderRadius: BorderRadius.circular(8),
+//                             ),
+//                             elevation: 0,
+//                           ),
+//                           onPressed: () async {
+//                             final shouldSave = await showDialog<bool>(
+//                               context: context,
+//                               builder:
+//                                   (ctx) => Dialog(
+//                                     backgroundColor: Colors.transparent,
+//                                     child: Container(
+//                                       width: 380,
+//                                       padding: EdgeInsets.all(24),
+//                                       decoration: BoxDecoration(
+//                                         color: kSurface,
+//                                         borderRadius: BorderRadius.circular(16),
+//                                         boxShadow: [
+//                                           BoxShadow(
+//                                             color: Colors.black.withValues(
+//                                               alpha: 0.12,
+//                                             ),
+//                                             blurRadius: 32,
+//                                             offset: Offset(0, 12),
+//                                           ),
+//                                         ],
+//                                       ),
+//                                       child: Column(
+//                                         mainAxisSize: MainAxisSize.min,
+//                                         children: [
+//                                           Container(
+//                                             width: 56,
+//                                             height: 56,
+//                                             decoration: BoxDecoration(
+//                                               color: kPrimaryBg,
+//                                               borderRadius:
+//                                                   BorderRadius.circular(16),
+//                                             ),
+//                                             child: Icon(
+//                                               Icons.save_outlined,
+//                                               color: primaryColor,
+//                                               size: 28,
+//                                             ),
+//                                           ),
+//                                           gap16px,
+//                                           Text(
+//                                             'Confirm Save',
+//                                             style: GoogleFonts.plusJakartaSans(
+//                                               fontWeight: FontWeight.w700,
+//                                               fontSize: 17,
+//                                               color: kText,
+//                                             ),
+//                                           ),
+//                                           gap8px,
+//                                           Text(
+//                                             'Are you sure you want to save ths accomplishment?',
+//                                             style: GoogleFonts.plusJakartaSans(
+//                                               fontSize: 13,
+//                                               color: kMuted,
+//                                               height: 1.5,
+//                                             ),
+//                                             textAlign: TextAlign.center,
+//                                           ),
+//                                           gap24px,
+//                                           Row(
+//                                             children: [
+//                                               Expanded(
+//                                                 child: OutlinedButton(
+//                                                   onPressed:
+//                                                       () => Navigator.pop(
+//                                                         ctx,
+//                                                         false,
+//                                                       ),
+//                                                   style: OutlinedButton.styleFrom(
+//                                                     side: BorderSide(
+//                                                       color: kBorder,
+//                                                     ),
+//                                                     padding:
+//                                                         EdgeInsets.symmetric(
+//                                                           vertical: 12,
+//                                                         ),
+//                                                     shape: RoundedRectangleBorder(
+//                                                       borderRadius:
+//                                                           BorderRadius.circular(
+//                                                             8,
+//                                                           ),
+//                                                     ),
+//                                                   ),
+//                                                   child: Text(
+//                                                     'Cancel',
+//                                                     style:
+//                                                         GoogleFonts.plusJakartaSans(
+//                                                           color: kMuted,
+//                                                           fontWeight:
+//                                                               FontWeight.w600,
+//                                                         ),
+//                                                   ),
+//                                                 ),
+//                                               ),
+//                                               SizedBox(width: 10),
+//                                               Expanded(
+//                                                 child: ElevatedButton.icon(
+//                                                   onPressed:
+//                                                       () => Navigator.pop(
+//                                                         ctx,
+//                                                         true,
+//                                                       ),
+//                                                   label: Text(
+//                                                     'Save',
+//                                                     style:
+//                                                         GoogleFonts.plusJakartaSans(
+//                                                           color: Colors.white,
+//                                                           fontWeight:
+//                                                               FontWeight.w600,
+//                                                         ),
+//                                                   ),
+//                                                   style: ElevatedButton.styleFrom(
+//                                                     backgroundColor:
+//                                                         primaryColor,
+//                                                     elevation: 0,
+//                                                     padding:
+//                                                         EdgeInsets.symmetric(
+//                                                           vertical: 12,
+//                                                         ),
+//                                                     shape: RoundedRectangleBorder(
+//                                                       borderRadius:
+//                                                           BorderRadius.circular(
+//                                                             8,
+//                                                           ),
+//                                                     ),
+//                                                   ),
+//                                                 ),
+//                                               ),
+//                                             ],
+//                                           ),
+//                                         ],
+//                                       ),
+//                                     ),
+//                                   ),
+//                             );
+//                             if (shouldSave != true) return;
+//                             MotionToast.success(
+//                               description: const Text('Saved Successfully'),
+//                               toastAlignment: Alignment.topCenter,
+//                             ).show(context);
+//                             await saveAccomplishmentData(
+//                               deliverable['pgsDeliverableId'],
+//                               userId,
+//                             );
+//                             Navigator.of(context).pop(true);
+//                           },
+//                           child: const Text(
+//                             "Save Accomplishment",
+//                             style: TextStyle(color: Colors.white),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//         ),
+//   );
+// }
+// Palitan ang buong `showAccomplishmentFormDialog` function sa
+// deliverable_status_monitoring_page.dart ng code na ito.
+// (Walang bagong import na kailangan — GoogleFonts, constants, etc. nandiyan na.)
+
 Future<bool?> showAccomplishmentFormDialog(
   BuildContext context,
   Map<String, dynamic> deliverable,
@@ -2074,408 +2491,385 @@ Future<bool?> showAccomplishmentFormDialog(
   return showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder:
-        (context) => Dialog(
-          backgroundColor: mainBgColor,
-          insetPadding: const EdgeInsets.all(20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+    builder: (dialogContext) {
+      final size = MediaQuery.of(dialogContext).size;
+      final isMobile = size.width < kAccomplishmentMobileBreakpoint;
+
+      Widget headerCell(String text, int flex) => Expanded(
+        flex: flex,
+        child: Center(
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: grey,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1500),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  "Accomplishment Form — ${deliverable['Start Date']} to ${deliverable['End Date']}",
-                                  style: const TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.close),
-                                onPressed: () => Navigator.pop(context),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: Wrap(
-                              spacing: 24,
-                              runSpacing: 6,
+        ),
+      );
+
+      Widget infoText(String text, {bool bold = false}) => Text(
+        text,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
+        ),
+      );
+
+      final periodWidgets =
+          monthlyPeriods.asMap().entries.map((e) {
+            final tile = AccomplishmentPgsAuditorDialog(
+              period: e.value['period'],
+              periodIndex: e.key,
+              totalPeriods: monthlyPeriods.length,
+              deliverableId: deliverable['pgsDeliverableId'],
+              periodMonth: e.value['month'] as int,
+              periodYear: e.value['year'] as int,
+            );
+            return isMobile
+                ? tile
+                : Column(children: [const Divider(height: 1), tile]);
+          }).toList();
+
+      return Dialog(
+        backgroundColor: mainBgColor,
+        insetPadding: isMobile ? EdgeInsets.zero : const EdgeInsets.all(20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(isMobile ? 0 : 16),
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isMobile ? size.width : 1500,
+            maxHeight: isMobile ? size.height : size.height * 0.92,
+          ),
+          child: SizedBox(
+            width: isMobile ? size.width : null,
+            height: isMobile ? size.height : null,
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(isMobile ? 12 : 20),
+                child: Column(
+                  mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  "Office: ${deliverable['officeName'] ?? 'N/A'}",
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                Text(
-                                  "KRA: ${deliverable['kra'] ?? 'N/A'}",
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                Text(
-                                  "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                Text(
-                                  "Due: ${deliverable['byWhen'] ?? 'N/A'}",
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                Text(
-                                  "Periods: ${monthlyPeriods.length} month(s)",
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          const Row(
-                            children: [
-                              Icon(Icons.bar_chart_outlined, size: 18),
-                              SizedBox(width: 8),
-                              Text(
-                                "Monthly Accomplishment Tracking",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black12),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 10,
-                                    horizontal: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(10),
+                                Expanded(
+                                  child: Text(
+                                    "Accomplishment Form — ${deliverable['Start Date']} to ${deliverable['End Date']}",
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 15 : 17,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  child: Row(
-                                    children: const [
-                                      Expanded(
-                                        flex: 2,
-                                        child: Center(
-                                          child: Text(
-                                            "Period",
-                                            style: TextStyle(
-                                              color: grey,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Center(
-                                          child: Text(
-                                            "Status",
-                                            style: TextStyle(
-                                              color: grey,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Center(
-                                          child: Text(
-                                            "% Accomplishment",
-                                            style: TextStyle(
-                                              color: grey,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 3,
-                                        child: Center(
-                                          child: Text(
-                                            "Remarks (Dept Head)",
-                                            style: TextStyle(
-                                              color: grey,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Center(
-                                          child: Text(
-                                            "Proof",
-                                            style: TextStyle(
-                                              color: grey,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 3,
-                                        child: Center(
-                                          child: Text(
-                                            "Remarks (Evaluator)",
-                                            style: TextStyle(
-                                              color: grey,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 ),
-                                ...monthlyPeriods.asMap().entries.map(
-                                  (e) => Column(
-                                    children: [
-                                      const Divider(height: 1),
-                                      AccomplishmentPgsAuditorDialog(
-                                        period: e.value['period'],
-                                        periodIndex: e.key,
-                                        totalPeriods: monthlyPeriods.length,
-                                        deliverableId:
-                                            deliverable['pgsDeliverableId'],
-                                        periodMonth: e.value['month'] as int,
-                                        periodYear: e.value['year'] as int,
-                                      ),
-                                    ],
-                                  ),
+                                IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () => Navigator.pop(dialogContext),
                                 ),
                               ],
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Wrap(
+                                spacing: 24,
+                                runSpacing: 6,
+                                children: [
+                                  infoText(
+                                    "Office: ${deliverable['officeName'] ?? 'N/A'}",
+                                  ),
+                                  infoText(
+                                    "KRA: ${deliverable['kra'] ?? 'N/A'}",
+                                  ),
+                                  infoText(
+                                    "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
+                                  ),
+                                  infoText(
+                                    "Due: ${deliverable['byWhen'] ?? 'N/A'}",
+                                  ),
+                                  infoText(
+                                    "Periods: ${monthlyPeriods.length} month(s)",
+                                    bold: true,
+                                  ),
+                                  SizedBox(
+                                    width: isMobile ? double.infinity : null,
+                                    child: infoText(
+                                      "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
+                                      bold: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            const Row(
+                              children: [
+                                Icon(Icons.bar_chart_outlined, size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  "Monthly Accomplishment Tracking",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            if (isMobile)
+                              // Mobile: stacked cards, walang table header
+                              Column(children: periodWidgets)
+                            else
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.black12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                        horizontal: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade50,
+                                        borderRadius:
+                                            const BorderRadius.vertical(
+                                              top: Radius.circular(10),
+                                            ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          headerCell("Period", 2),
+                                          headerCell("Status", 2),
+                                          headerCell("% Accomplishment", 2),
+                                          headerCell("Remarks (Dept Head)", 3),
+                                          const SizedBox(width: 20),
+                                          headerCell("Proof", 2),
+                                          headerCell("Remarks (Evaluator)", 3),
+                                        ],
+                                      ),
+                                    ),
+                                    ...periodWidgets,
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    PermissionWidget(
+                      allowedRoles: [
+                        PermissionRoleString.evaluator,
+                        PermissionRoleString.roleAdmin,
+                      ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 0,
+                            ),
+                            onPressed: () async {
+                              final shouldSave = await showDialog<bool>(
+                                context: dialogContext,
+                                builder:
+                                    (ctx) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      insetPadding: const EdgeInsets.all(16),
+                                      child: ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 380,
+                                        ),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
+                                                ),
+                                                blurRadius: 32,
+                                                offset: const Offset(0, 12),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 56,
+                                                height: 56,
+                                                decoration: BoxDecoration(
+                                                  color: kPrimaryBg,
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                ),
+                                                child: Icon(
+                                                  Icons.save_outlined,
+                                                  color: primaryColor,
+                                                  size: 28,
+                                                ),
+                                              ),
+                                              gap16px,
+                                              Text(
+                                                'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 17,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              gap8px,
+                                              Text(
+                                                'Are you sure you want to save this accomplishment?',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              gap24px,
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      style: OutlinedButton.styleFrom(
+                                                        side: BorderSide(
+                                                          color: kBorder,
+                                                        ),
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 12,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Cancel',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 12,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Save',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                              );
+                              if (shouldSave != true) return;
+                              MotionToast.success(
+                                description: const Text('Saved Successfully'),
+                                toastAlignment: Alignment.topCenter,
+                              ).show(dialogContext);
+                              await saveAccomplishmentData(
+                                deliverable['pgsDeliverableId'],
+                                userId,
+                              );
+                              Navigator.of(dialogContext).pop(true);
+                            },
+                            child: Text(
+                              isMobile ? "Save" : "Save Accomplishment",
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  PermissionWidget(
-                    allowedRoles: [
-                      PermissionRoleString.evaluator,
-                      PermissionRoleString.roleAdmin,
-                    ],
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: () async {
-                            final shouldSave = await showDialog<bool>(
-                              context: context,
-                              builder:
-                                  (ctx) => Dialog(
-                                    backgroundColor: Colors.transparent,
-                                    child: Container(
-                                      width: 380,
-                                      padding: EdgeInsets.all(24),
-                                      decoration: BoxDecoration(
-                                        color: kSurface,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.12,
-                                            ),
-                                            blurRadius: 32,
-                                            offset: Offset(0, 12),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 56,
-                                            height: 56,
-                                            decoration: BoxDecoration(
-                                              color: kPrimaryBg,
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                            child: Icon(
-                                              Icons.save_outlined,
-                                              color: primaryColor,
-                                              size: 28,
-                                            ),
-                                          ),
-                                          gap16px,
-                                          Text(
-                                            'Confirm Save',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 17,
-                                              color: kText,
-                                            ),
-                                          ),
-                                          gap8px,
-                                          Text(
-                                            'Are you sure you want to save ths accomplishment?',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 13,
-                                              color: kMuted,
-                                              height: 1.5,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          gap24px,
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: OutlinedButton(
-                                                  onPressed:
-                                                      () => Navigator.pop(
-                                                        ctx,
-                                                        false,
-                                                      ),
-                                                  style: OutlinedButton.styleFrom(
-                                                    side: BorderSide(
-                                                      color: kBorder,
-                                                    ),
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          vertical: 12,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    'Cancel',
-                                                    style:
-                                                        GoogleFonts.plusJakartaSans(
-                                                          color: kMuted,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(width: 10),
-                                              Expanded(
-                                                child: ElevatedButton.icon(
-                                                  onPressed:
-                                                      () => Navigator.pop(
-                                                        ctx,
-                                                        true,
-                                                      ),
-                                                  label: Text(
-                                                    'Save',
-                                                    style:
-                                                        GoogleFonts.plusJakartaSans(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        primaryColor,
-                                                    elevation: 0,
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          vertical: 12,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                            );
-                            if (shouldSave != true) return;
-                            MotionToast.success(
-                              description: const Text('Saved Successfully'),
-                              toastAlignment: Alignment.topCenter,
-                            ).show(context);
-                            await saveAccomplishmentData(
-                              deliverable['pgsDeliverableId'],
-                              userId,
-                            );
-                            Navigator.of(context).pop(true);
-                          },
-                          child: const Text(
-                            "Save Accomplishment",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
+      );
+    },
   );
 }
 

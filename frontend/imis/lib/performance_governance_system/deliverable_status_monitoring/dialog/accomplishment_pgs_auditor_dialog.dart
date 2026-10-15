@@ -72,6 +72,9 @@ Color getStatusColor(String status) {
 
 Color getStatusTextColor(String status) => Colors.white;
 
+/// Breakpoint na gamit sa buong accomplishment dialog.
+const double kAccomplishmentMobileBreakpoint = 768;
+
 class AccomplishmentPgsAuditorDialog extends StatefulWidget {
   final String period;
   final int periodIndex;
@@ -103,6 +106,21 @@ class AccomplishmentPgsAuditorDialogState
   OverlayEntry? _overlayEntry;
   bool serverImageFetchAttempted = false;
 
+  static const _statusDescriptions = {
+    PgsStatus.notStarted:
+        "Deliverable has been defined but work has not yet begun",
+    PgsStatus.onGoing:
+        "Deliverable is in progress and may be on hold pending decisions or resources",
+    PgsStatus.completed:
+        "Deliverable has been finished and meets PGS requirements",
+  };
+
+  static const _statusDisplayNames = {
+    PgsStatus.notStarted: "Not Started",
+    PgsStatus.onGoing: "On Going",
+    PgsStatus.completed: "Completed",
+  };
+
   @override
   void initState() {
     super.initState();
@@ -110,6 +128,12 @@ class AccomplishmentPgsAuditorDialogState
       _listenToRefreshTrigger();
       _prefetchServerImage();
     });
+  }
+
+  @override
+  void dispose() {
+    _removeTooltip();
+    super.dispose();
   }
 
   void _listenToRefreshTrigger() {
@@ -246,7 +270,7 @@ class AccomplishmentPgsAuditorDialogState
     } catch (e) {
       debugPrint("File picking failed: $e");
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -591,7 +615,7 @@ class AccomplishmentPgsAuditorDialogState
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 30,
+          width: 34,
           child: TextField(
             controller: percentageController,
             textAlign: TextAlign.center,
@@ -653,7 +677,7 @@ class AccomplishmentPgsAuditorDialogState
     _overlayEntry = OverlayEntry(
       builder:
           (context) => Positioned(
-            left: offset.dx - 20,
+            left: offset.dx.clamp(8.0, double.infinity) - 0,
             top: offset.dy - 40,
             child: Material(
               color: Colors.transparent,
@@ -691,6 +715,334 @@ class AccomplishmentPgsAuditorDialogState
     _overlayEntry = null;
   }
 
+  // ───────────────────────── Shared field builders ─────────────────────────
+
+  Widget _fieldLabel(String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(
+      text,
+      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: grey),
+    ),
+  );
+
+  Widget _buildStatusField(TrackingRowData row) {
+    final selectedStatus = row.status;
+
+    return ValueListenableBuilder<PgsStatus>(
+      valueListenable: selectedStatus,
+      builder: (context, status, _) {
+        final readOnlyStatus = Center(
+          child: Tooltip(
+            message: _statusDescriptions[status] ?? '',
+            child: Text(
+              _statusDisplayNames[status]!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        );
+
+        return PermissionWidget(
+          allowedRoles: [
+            PermissionRoleString.roleAdmin,
+            PermissionRoleString.roleStandardUser,
+          ],
+          fallback: readOnlyStatus,
+          child: DropdownButtonFormField<PgsStatus>(
+            initialValue: status,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.all(8.0),
+              isDense: true,
+            ),
+            onChanged: (newValue) {
+              if (newValue == null) return;
+              final rows = achievementsList[widget.deliverableId]!.rows;
+
+              void applyStatus(int index, PgsStatus s) {
+                final r = rows[index];
+                r.status.value = s;
+                if (s == PgsStatus.completed) {
+                  r.percentageController.text = '100';
+                } else if (s == PgsStatus.notStarted) {
+                  r.percentageController.text = '0';
+                } else if (s == PgsStatus.onGoing &&
+                    (int.tryParse(r.percentageController.text) ?? 0) >= 100) {
+                  r.percentageController.text = '1';
+                }
+              }
+
+              applyStatus(widget.periodIndex, newValue);
+
+              if (newValue == PgsStatus.completed) {
+                for (int i = widget.periodIndex + 1; i < rows.length; i++) {
+                  applyStatus(i, PgsStatus.completed);
+                }
+              }
+            },
+            items:
+                PgsStatus.values.map((value) {
+                  return DropdownMenuItem<PgsStatus>(
+                    value: value,
+                    child: Tooltip(
+                      message: _statusDescriptions[value] ?? '',
+                      child: Text(
+                        _statusDisplayNames[value]!,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  );
+                }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProgressField(TrackingRowData row) {
+    final selectedStatus = row.status;
+    final percentageController = row.percentageController;
+
+    return ValueListenableBuilder<PgsStatus>(
+      valueListenable: selectedStatus,
+      builder: (context, status, _) {
+        if (status == PgsStatus.onGoing && percentageController.text == '0') {
+          percentageController.text = '1';
+        } else if (status == PgsStatus.notStarted &&
+            percentageController.text != '0') {
+          percentageController.text = '0';
+        } else if (status == PgsStatus.completed &&
+            (int.tryParse(percentageController.text) ?? 0) < 100) {
+          percentageController.text = '100';
+        }
+
+        return ValueListenableBuilder<TextEditingValue>(
+          valueListenable: percentageController,
+          builder: (context, value, __) {
+            int progress = int.tryParse(value.text) ?? 0;
+            double progressFraction;
+            Color progressColor;
+
+            if (status == PgsStatus.onGoing && progress == 0) {
+              progressFraction = 0.0;
+              progressColor = Colors.orange;
+            } else if (progress == 100) {
+              progressFraction = 1.0;
+              progressColor = Colors.green;
+            } else if (progress == 0) {
+              progressFraction = 1.0;
+              progressColor = Colors.red;
+            } else {
+              progressFraction = progress / 100.0;
+              progressColor = Colors.orange;
+            }
+
+            final readOnlyPercentage = Text(
+              '${value.text}%',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            );
+
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: CircularProgressIndicator(
+                    value: progressFraction,
+                    strokeWidth: 6,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                  ),
+                ),
+                SizedBox(
+                  width: 44,
+                  height: 40,
+                  child: Center(
+                    child: PermissionWidget(
+                      allowedRoles: [
+                        PermissionRoleString.roleAdmin,
+                        PermissionRoleString.roleStandardUser,
+                      ],
+                      fallback: readOnlyPercentage,
+                      child: _buildEditablePercentage(status),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDeptHeadRemarks(
+    TrackingRowData row, {
+    TextAlign align = TextAlign.center,
+  }) {
+    final text =
+        row.remarksController.text.isEmpty
+            ? "No remarks"
+            : row.remarksController.text;
+    return Text(text, textAlign: align, style: const TextStyle(fontSize: 14));
+  }
+
+  Widget _buildEvaluatorRemarks(
+    TrackingRowData row,
+    bool canEdit, {
+    TextAlign align = TextAlign.center,
+    int minLines = 1,
+  }) {
+    final controller = row.auditorRemarksController;
+    if (canEdit) {
+      return TextField(
+        controller: controller,
+        maxLines: null,
+        minLines: minLines,
+        keyboardType: TextInputType.multiline,
+        style: const TextStyle(fontSize: 14.0),
+        decoration: InputDecoration(
+          border: OutlineInputBorder(borderSide: BorderSide(color: grey)),
+          contentPadding: const EdgeInsets.all(8.0),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: primaryColor),
+          ),
+        ),
+      );
+    }
+    return Text(
+      controller.text.isEmpty ? "No remarks" : controller.text,
+      textAlign: align,
+      style: const TextStyle(fontSize: 14),
+    );
+  }
+
+  // ───────────────────────────── Layouts ─────────────────────────────
+
+  Widget _buildMobileCard(TrackingRowData row, bool canEdit) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.calendar_month, size: 16, color: primaryColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  widget.period,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 20),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [_fieldLabel('Status'), _buildStatusField(row)],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _fieldLabel('% Accomplishment'),
+                  _buildProgressField(row),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _fieldLabel('Remarks (Dept Head)'),
+          _buildDeptHeadRemarks(row, align: TextAlign.start),
+          const SizedBox(height: 14),
+          _fieldLabel('Proof'),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _buildAttachmentCell(row),
+          ),
+          const SizedBox(height: 14),
+          _fieldLabel('Remarks (Evaluator)'),
+          _buildEvaluatorRemarks(
+            row,
+            canEdit,
+            align: TextAlign.start,
+            minLines: 3,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopRow(TrackingRowData row, bool canEdit) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(
+                widget.period,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              child: _buildStatusField(row),
+            ),
+          ),
+          Expanded(flex: 2, child: Center(child: _buildProgressField(row))),
+          Expanded(
+            flex: 3,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 50.0),
+              child: Center(child: _buildDeptHeadRemarks(row)),
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            flex: 2,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              child: _buildAttachmentCell(row),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 50.0),
+              child: Center(child: _buildEvaluatorRemarks(row, canEdit)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     achievementsList.putIfAbsent(
@@ -714,280 +1066,17 @@ class AccomplishmentPgsAuditorDialogState
 
     final row =
         achievementsList[widget.deliverableId]!.rows[widget.periodIndex];
-    final remarksController = row.remarksController;
-    final percentageController = row.percentageController;
-    final selectedStatus = row.status;
-    final remarksControllerAuditor = row.auditorRemarksController;
-
-    final statusDescriptions = {
-      PgsStatus.notStarted:
-          "Deliverable has been defined but work has not yet begun",
-      PgsStatus.onGoing:
-          "Deliverable is in progress and may be on hold pending decisions or resources",
-      PgsStatus.completed:
-          "Deliverable has been finished and meets PGS requirements",
-    };
 
     final canEdit = permissionService.hasPermission(
       AppPermissions.editPgsDeliverableAccomplishment,
     );
 
-    final statusDisplayNames = {
-      PgsStatus.notStarted: "Not Started",
-      PgsStatus.onGoing: "On Going",
-      PgsStatus.completed: "Completed",
-    };
+    final isMobile =
+        MediaQuery.of(context).size.width < kAccomplishmentMobileBreakpoint;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                widget.period,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-
-          Expanded(
-            flex: 2,
-            child: ValueListenableBuilder<PgsStatus>(
-              valueListenable: selectedStatus,
-              builder: (context, status, _) {
-                final readOnlyStatus = Center(
-                  child: Tooltip(
-                    message: statusDescriptions[status] ?? '',
-                    child: Text(
-                      statusDisplayNames[status]!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                );
-
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    PermissionWidget(
-                      allowedRoles: [
-                        PermissionRoleString.roleAdmin,
-                        PermissionRoleString.roleStandardUser,
-                      ],
-                      fallback: readOnlyStatus,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 6),
-                        child: DropdownButtonFormField<PgsStatus>(
-                          initialValue: status,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.all(8.0),
-                          ),
-                          onChanged: (newValue) {
-                            if (newValue == null) return;
-                            final rows =
-                                achievementsList[widget.deliverableId]!.rows;
-
-                            void applyStatus(int index, PgsStatus s) {
-                              final r = rows[index];
-                              r.status.value = s;
-                              if (s == PgsStatus.completed) {
-                                r.percentageController.text = '100';
-                              } else if (s == PgsStatus.notStarted) {
-                                r.percentageController.text = '0';
-                              } else if (s == PgsStatus.onGoing &&
-                                  (int.tryParse(r.percentageController.text) ??
-                                          0) >=
-                                      100) {
-                                r.percentageController.text = '1';
-                              }
-                            }
-
-                            applyStatus(widget.periodIndex, newValue);
-
-                            if (newValue == PgsStatus.completed) {
-                              for (
-                                int i = widget.periodIndex + 1;
-                                i < rows.length;
-                                i++
-                              ) {
-                                applyStatus(i, PgsStatus.completed);
-                              }
-                            }
-                          },
-                          items:
-                              PgsStatus.values.map((value) {
-                                return DropdownMenuItem<PgsStatus>(
-                                  value: value,
-                                  child: Tooltip(
-                                    message: statusDescriptions[value] ?? '',
-                                    child: Text(
-                                      statusDisplayNames[value]!,
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-
-          Expanded(
-            flex: 2,
-            child: ValueListenableBuilder<PgsStatus>(
-              valueListenable: selectedStatus,
-              builder: (context, status, _) {
-                if (status == PgsStatus.onGoing &&
-                    percentageController.text == '0') {
-                  percentageController.text = '1';
-                } else if (status == PgsStatus.notStarted &&
-                    percentageController.text != '0') {
-                  percentageController.text = '0';
-                } else if (status == PgsStatus.completed &&
-                    (int.tryParse(percentageController.text) ?? 0) < 100) {
-                  percentageController.text = '100';
-                }
-
-                return ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: percentageController,
-                  builder: (context, value, __) {
-                    int progress = int.tryParse(value.text) ?? 0;
-                    double progressFraction;
-                    Color progressColor;
-
-                    if (status == PgsStatus.onGoing && progress == 0) {
-                      progressFraction = 0.0;
-                      progressColor = Colors.orange;
-                    } else if (progress == 100) {
-                      progressFraction = 1.0;
-                      progressColor = Colors.green;
-                    } else if (progress == 0) {
-                      progressFraction = 1.0;
-                      progressColor = Colors.red;
-                    } else {
-                      progressFraction = progress / 100.0;
-                      progressColor = Colors.orange;
-                    }
-
-                    final readOnlyPercentage = Text(
-                      '${value.text}%',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: 60,
-                              height: 60,
-                              child: CircularProgressIndicator(
-                                value: progressFraction,
-                                strokeWidth: 6,
-                                backgroundColor: Colors.grey[300],
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  progressColor,
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: Center(
-                                child: PermissionWidget(
-                                  allowedRoles: [
-                                    PermissionRoleString.roleAdmin,
-                                    PermissionRoleString.roleStandardUser,
-                                  ],
-                                  fallback: readOnlyPercentage,
-                                  child: _buildEditablePercentage(status),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-
-          Expanded(
-            flex: 3,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 50.0),
-              child: Center(
-                child: Text(
-                  remarksController.text.isEmpty
-                      ? "No remarks"
-                      : remarksController.text,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 20),
-
-          Expanded(
-            flex: 2,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 6),
-              child: _buildAttachmentCell(row),
-            ),
-          ),
-
-          Expanded(
-            flex: 3,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 50.0),
-              child:
-                  canEdit
-                      ? TextField(
-                        controller: remarksControllerAuditor,
-                        maxLines: null,
-                        keyboardType: TextInputType.multiline,
-                        style: const TextStyle(fontSize: 14.0),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide(color: grey),
-                          ),
-                          contentPadding: const EdgeInsets.all(8.0),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                        ),
-                      )
-                      : Center(
-                        child: Text(
-                          remarksControllerAuditor.text.isEmpty
-                              ? "No remarks"
-                              : remarksControllerAuditor.text,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return isMobile
+        ? _buildMobileCard(row, canEdit)
+        : _buildDesktopRow(row, canEdit);
   }
 }
 
