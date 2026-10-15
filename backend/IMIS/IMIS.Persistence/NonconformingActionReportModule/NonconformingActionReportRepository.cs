@@ -49,13 +49,13 @@ namespace IMIS.Persistence.NonconformingActionReportModule
                 .ConfigureAwait(false);
         }
 
-        public async Task<NonconformingActionReport?> GetByAuditReportIdAsync(int auditReportId, CancellationToken cancellationToken)
+        public async Task<NonconformingActionReport?> GetByAuditReportIdAndTypeAsync(int auditReportId, bool isNonconformity, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<NonconformingActionReport>()
                 .Include(x => x.RootCauses)
                 .Include(x => x.Corrections)
                 .Include(x => x.CorrectiveActions)
-                .FirstOrDefaultAsync(x => x.AuditReportId == auditReportId && !x.IsDeleted, cancellationToken)
+                .FirstOrDefaultAsync(x => x.AuditReportId == auditReportId && x.IsNonconformity == isNonconformity && !x.IsDeleted, cancellationToken)
                 .ConfigureAwait(false);
         }
     }

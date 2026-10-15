@@ -3,8 +3,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:imis/audit/audit_checklist/pages/audit_checklist_print_preview_page.dart';
 import 'package:imis/audit/audit_checklist/models/audit_checklist.dart';
 import 'package:imis/audit/audit_checklist/services/audit_checklist_service.dart';
+import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -12,9 +14,78 @@ import 'package:motion_toast/motion_toast.dart';
 
 enum _RowFilter { all, pending, conforming, nonConforming }
 
+/// One entry of the top-level list ("IQA Checklist · Ref# · Year"). It groups
+/// the team checklists that belong together.
+class _ChecklistBook {
+  _ChecklistBook({
+    required this.key,
+    required this.refNo,
+    required this.year,
+    required this.items,
+  });
+
+  final String key;
+  final String refNo;
+  final int? year;
+  final List<AuditChecklistSummary> items;
+}
+
+// -----------------------------------------------------------------------------
+// Grouping helpers. The schedule summary is read through its JSON form so this
+// page keeps compiling whatever extra fields the model has. They look for a
+// programme/plan reference and a year (or a date to take the year from).
+// -----------------------------------------------------------------------------
+Map<String, dynamic> _summaryJson(AuditChecklistSummary s) {
+  try {
+    final raw = (s as dynamic).toJson();
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+  } catch (_) {
+    // The model has no toJson(): no extra fields are available.
+  }
+  return const <String, dynamic>{};
+}
+
+Object? _pickKey(Map<String, dynamic> json, List<String> keys) {
+  for (final k in keys) {
+    final pascal = k[0].toUpperCase() + k.substring(1);
+    final v = json[k] ?? json[pascal];
+    if (v != null && v.toString().trim().isNotEmpty) return v;
+  }
+  return null;
+}
+
+String? _refFromJson(Map<String, dynamic> json) {
+  final v = _pickKey(json, const [
+    'auditProgrammeId',
+    'programmeId',
+    'auditPlanId',
+    'planId',
+  ]);
+  final text = v?.toString().trim();
+  if (text == null || text.isEmpty || text == '0') return null;
+  return text;
+}
+
+int? _yearFromJson(Map<String, dynamic> json) {
+  final direct = _pickKey(json, const ['year', 'auditYear']);
+  final y = int.tryParse('${direct ?? ''}');
+  if (y != null && y > 1900) return y;
+
+  final date = _pickKey(json, const [
+    'scheduleDate',
+    'scheduledDate',
+    'auditDate',
+    'dateOfAudit',
+    'startDate',
+    'date',
+    'time',
+  ]);
+  return DateTime.tryParse('${date ?? ''}')?.year;
+}
+
 class AuditChecklistPage extends StatefulWidget {
   /// Optional. When provided, the page loads this schedule's checklist
-  /// directly. When null/0, the page shows the schedule (team) list.
+  /// directly. When null/0, the page shows the checklist list.
   final int auditScheduleId;
 
   const AuditChecklistPage({super.key, this.auditScheduleId = 0});
@@ -30,12 +101,32 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   static const String _formCode = 'QP-03-F-05 Rev. 0';
   static const Color _panelBg = Color(0xFFF4F6F8);
 
+  /// Name shown on the top-level list. Change it to "AUDIT Checklist" if you
+  /// prefer that wording.
+  static const String _bookTitle = 'IQA Checklist';
+ void _openPrintPreview(int auditScheduleId, {bool checkDirty = false}) {
+    if (checkDirty && _dirty) {
+      MotionToast.warning(
+        toastAlignment: Alignment.topCenter,
+        description: const Text(
+          'Save the checklist first — the print preview shows the saved version.',
+        ),
+      ).show(context);
+      return;
+    }
+    openAuditChecklistPrintPreview(context, auditScheduleId);
+  }
   final AuditChecklistService _service = AuditChecklistService(Dio());
+  final AuditProgrammeService _programmeService = AuditProgrammeService(Dio());
 
   // List (schedule) mode state.
   bool _isLoadingSchedules = false;
   String? _listError;
   List<AuditChecklistSummary> _schedules = [];
+  List<_ChecklistBook> _books = [];
+  Map<int, int> _programmeYears = {};
+  String? _openBookKey;
+  int _bookPage = 1;
   String _selectedTab = 'All';
   int _currentPage = 1;
   final int _pageSize = 15;
@@ -117,14 +208,96 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     return 'Schedule #${s.auditScheduleId}';
   }
 
+  // ---- books (top-level list) -----------------------------------------------
+  void _rebuildBooks() {
+    final map = <String, _ChecklistBook>{};
+    for (final s in _schedules) {
+      final json = _summaryJson(s);
+      final ref = _refFromJson(json);
+      var year = _yearFromJson(json);
+      final refId = int.tryParse(ref ?? '');
+      if (year == null && refId != null) year = _programmeYears[refId];
+
+      final key = ref != null
+          ? 'ref:$ref'
+          : (year != null ? 'year:$year' : 'all');
+      final book = map.putIfAbsent(
+        key,
+        () => _ChecklistBook(
+          key: key,
+          refNo: ref ?? '—',
+          year: year,
+          items: <AuditChecklistSummary>[],
+        ),
+      );
+      book.items.add(s);
+    }
+    final list = map.values.toList()
+      ..sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
+    _books = list;
+  }
+
+  _ChecklistBook? get _openBook {
+    final key = _openBookKey;
+    if (key == null) return null;
+    for (final b in _books) {
+      if (b.key == key) return b;
+    }
+    return null;
+  }
+
+  List<AuditChecklistSummary> get _currentItems =>
+      _openBook?.items ?? const <AuditChecklistSummary>[];
+
+  String _bookStatus(_ChecklistBook b) =>
+      b.items.isNotEmpty && b.items.every((s) => _statusOf(s) == 'Approved')
+          ? 'Approved'
+          : 'Confirmed';
+
+  String _yearText(_ChecklistBook b) => b.year?.toString() ?? '—';
+
+  List<_ChecklistBook> get _pagedBooks {
+    final start = (_bookPage - 1) * _pageSize;
+    if (start >= _books.length) return [];
+    var end = start + _pageSize;
+    if (end > _books.length) end = _books.length;
+    return _books.sublist(start, end);
+  }
+
+  void _ensureBookPageInRange() {
+    final total = _books.length;
+    final maxPage = total == 0 ? 1 : ((total + _pageSize - 1) ~/ _pageSize);
+    if (_bookPage > maxPage) _bookPage = maxPage;
+    if (_bookPage < 1) _bookPage = 1;
+  }
+
+  void _openBookEntry(_ChecklistBook b) {
+    setState(() {
+      _openBookKey = b.key;
+      _selectedTab = 'All';
+      _currentPage = 1;
+    });
+  }
+
+  void _closeBook() {
+    setState(() {
+      _openBookKey = null;
+      _selectedTab = 'All';
+      _currentPage = 1;
+    });
+  }
+
+  // ---- team checklists (second-level list) ----------------------------------
   int _countFor(String tab) {
-    if (tab == 'All') return _schedules.length;
-    return _schedules.where((s) => _statusOf(s) == tab).length;
+    final items = _currentItems;
+    if (tab == 'All') return items.length;
+    return items.where((s) => _statusOf(s) == tab).length;
   }
 
   List<AuditChecklistSummary> get _filtered {
-    if (_selectedTab == 'All') return _schedules;
-    return _schedules.where((s) => _statusOf(s) == _selectedTab).toList();
+    final items = _currentItems;
+    if (_selectedTab == 'All') return items;
+    return items.where((s) => _statusOf(s) == _selectedTab).toList();
   }
 
   List<AuditChecklistSummary> get _paged {
@@ -206,9 +379,27 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     });
     try {
       final schedules = await _service.getSchedulesWithChecklistData();
+
+      // Best effort: programme years let a book show its year when the
+      // schedule data only carries the programme reference.
+      final years = <int, int>{};
+      try {
+        final programmes = await _programmeService.getAllAuditProgrammes();
+        for (final p in programmes) {
+          final j = p.toJson();
+          final y = int.tryParse('${j['year'] ?? j['Year'] ?? ''}');
+          if (y != null) years[p.id] = y;
+        }
+      } catch (e) {
+        debugPrint('Audit checklist: could not load programme years: $e');
+      }
+
       if (mounted) {
         setState(() {
           _schedules = schedules;
+          _programmeYears = years;
+          _rebuildBooks();
+          _ensureBookPageInRange();
           _ensurePageInRange();
         });
       }
@@ -317,8 +508,8 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     return result ?? false;
   }
 
-  /// Back from the checklist: returns to the schedule list when this page owns
-  /// the list, otherwise pops the route (if there is one to pop).
+  /// Back from the checklist form: returns to the team checklist list when this
+  /// page owns the list, otherwise pops the route (if there is one to pop).
   Future<void> _goBack() async {
     if (_dirty && !await _confirmDiscard()) return;
     if (!mounted) return;
@@ -583,34 +774,61 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     );
   }
 
+  Widget _refreshButton() {
+    return ElevatedButton.icon(
+      onPressed: _isLoadingSchedules ? null : _loadSchedules,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryColor,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+      ),
+      icon: const Icon(Icons.refresh, color: Colors.white),
+      label: const Text('Refresh', style: TextStyle(color: Colors.white)),
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Build
   // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    // Intercept back while a checklist is open and this page owns the list, or
-    // while there are unsaved edits.
+    // Intercept back so it walks up one level at a time:
+    // form -> team checklists -> checklist list.
+    final inTeamList = !_inDetailMode && _openBook != null;
     final interceptBack =
-        _inDetailMode && (widget.auditScheduleId == 0 || _dirty);
+        (_inDetailMode && (widget.auditScheduleId == 0 || _dirty)) ||
+            inTeamList;
+
+    final Widget body;
+    if (_inDetailMode) {
+      body = _buildChecklistBody();
+    } else if (inTeamList) {
+      body = _buildTeamsBody();
+    } else {
+      body = _buildBooksBody();
+    }
 
     return PopScope(
       canPop: !interceptBack,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _goBack();
+        if (didPop) return;
+        if (_inDetailMode) {
+          _goBack();
+        } else {
+          _closeBook();
+        }
       },
-      child: Scaffold(
-        body: _inDetailMode ? _buildChecklistBody() : _buildListBody(),
-      ),
+      child: Scaffold(body: body),
     );
   }
 
   // ===========================================================================
-  // LIST MODE — same layout as the Audit Programme list.
-  // Generated dynamically from confirmed Audit Schedules, nothing hardcoded.
+  // LEVEL 1 — list of checklists ("IQA Checklist · Ref# · Year").
+  // Same layout as the Audit Programme list.
   // ===========================================================================
-  Widget _buildListBody() {
+  Widget _buildBooksBody() {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    final paged = _paged;
+    final paged = _pagedBooks;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -620,26 +838,266 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
           buildPageHeader(
             isMobile: isMobile,
             title: 'Audit Checklist',
-            totalCount: _schedules.length,
+            totalCount: _books.length,
             itemLabel: 'checklist',
             icon: Icons.checklist_rtl,
-            actionButton: ElevatedButton.icon(
-              onPressed: _isLoadingSchedules ? null : _loadSchedules,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
+            actionButton: _refreshButton(),
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 10,
+                    color: Colors.black.withValues(alpha: .05),
+                  ),
+                ],
               ),
-              icon: const Icon(Icons.refresh, color: Colors.white),
-              label: const Text(
-                'Refresh',
-                style: TextStyle(color: Colors.white),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!isMobile) _buildBooksHeaderRow(),
+                  if (!isMobile) const Divider(height: 1, color: kBorder),
+                  Expanded(child: _buildBooksContent(paged, isMobile)),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    color: Theme.of(context).cardColor,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        PaginationInfo(
+                          currentPage: _bookPage,
+                          totalItems: _books.length,
+                          itemsPerPage: _pageSize,
+                        ),
+                        PaginationControls(
+                          currentPage: _bookPage,
+                          totalItems: _books.length,
+                          itemsPerPage: _pageSize,
+                          isLoading: _isLoadingSchedules,
+                          onPageChanged: (page) =>
+                              setState(() => _bookPage = page),
+                        ),
+                        const SizedBox(width: 60),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBooksHeaderRow() {
+    const style = TextStyle(fontWeight: FontWeight.w600, color: kMuted);
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      child: Row(
+        children: [
+          SizedBox(width: 40, child: Text('#', style: style)),
+          Expanded(flex: 3, child: Text('Checklist', style: style)),
+          Expanded(flex: 2, child: Text('Ref #', style: style)),
+          SizedBox(width: 90, child: Text('Year', style: style)),
+          SizedBox(width: 90, child: Text('Teams', style: style)),
+          Expanded(flex: 2, child: Text('Status', style: style)),
+          SizedBox(width: 80, child: Text('Actions', style: style)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBooksContent(List<_ChecklistBook> paged, bool isMobile) {
+    if (_isLoadingSchedules && _schedules.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(color: primaryColor),
+      );
+    }
+    if (_listError != null) {
+      return _MessageView(
+        icon: Icons.error_outline,
+        iconColor: Colors.redAccent,
+        message: _listError!,
+        messageColor: Colors.red,
+        actionLabel: 'RETRY',
+        onAction: _loadSchedules,
+      );
+    }
+    if (paged.isEmpty) {
+      return Center(
+        child: Text(
+          'No confirmed audit checklists found.\nConfirm an Audit Schedule that has ISO clauses assigned to generate its checklist.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.plusJakartaSans(color: kMuted),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: paged.length,
+      separatorBuilder: (context, index) => Divider(
+        height: 1,
+        color: Colors.grey.withValues(alpha: 0.2),
+      ),
+      itemBuilder: (context, index) {
+        final b = paged[index];
+        final rowNumber = (_bookPage - 1) * _pageSize + index + 1;
+        return isMobile
+            ? _buildBookMobileRow(b)
+            : _buildBookDesktopRow(b, rowNumber);
+      },
+    );
+  }
+
+  Widget _buildBookDesktopRow(_ChecklistBook b, int rowNumber) {
+    return InkWell(
+      onTap: () => _openBookEntry(b),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(width: 40, child: Text('$rowNumber')),
+            const Expanded(
+              flex: 3,
+              child: Text(
+                _bookTitle,
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            Expanded(flex: 2, child: Text('Ref# ${b.refNo}')),
+            SizedBox(width: 90, child: Text(_yearText(b))),
+            SizedBox(width: 90, child: Text('${b.items.length}')),
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: _buildStatusChip(_bookStatus(b)),
+              ),
+            ),
+            SizedBox(
+              width: 80,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Open team checklists',
+                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    onPressed: () => _openBookEntry(b),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookMobileRow(_ChecklistBook b) {
+    return InkWell(
+      onTap: () => _openBookEntry(b),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    _bookTitle,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Ref# ${b.refNo} • ${_yearText(b)} • ${b.items.length} team(s)',
+                    style: const TextStyle(fontSize: 12, color: kMuted),
+                  ),
+                  const SizedBox(height: 5),
+                  _buildStatusChip(_bookStatus(b)),
+                ],
+              ),
+            ),
+            PopupMenuButton<String>(
+              color: Theme.of(context).cardColor,
+              icon: Icon(Icons.more_vert, color: Colors.grey.shade500),
+              onSelected: (value) {
+                if (value == 'open') _openBookEntry(b);
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: 'open',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_outlined, size: 18),
+                      SizedBox(width: 8),
+                      Text('Open team checklists'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // LEVEL 2 — the team checklists inside one checklist.
+  // ===========================================================================
+  Widget _buildTeamsBody() {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final book = _openBook!;
+    final paged = _paged;
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          buildPageHeader(
+            isMobile: isMobile,
+            title: '$_bookTitle • Ref# ${book.refNo} • ${_yearText(book)}',
+            totalCount: book.items.length,
+            itemLabel: 'team checklist',
+            icon: Icons.checklist_rtl,
+            actionButton: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _closeBook,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: primaryColor),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    size: 18,
+                    color: primaryColor,
+                  ),
+                  label: const Text(
+                    'Back',
+                    style: TextStyle(color: primaryColor),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _refreshButton(),
+              ],
             ),
           ),
           const SizedBox(height: 6),
@@ -685,8 +1143,15 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
                     padding: const EdgeInsets.all(10),
                     color: Theme.of(context).cardColor,
                     child: Row(
+
+                      
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                                         IconButton(
+                    tooltip: 'Print preview',
+                    icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+                    onPressed: () => _openPrintPreview(_currentAuditScheduleId),
+                  ),                   
                         PaginationInfo(
                           currentPage: _currentPage,
                           totalItems: _filtered.length,
@@ -749,9 +1214,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     if (paged.isEmpty) {
       return Center(
         child: Text(
-          _schedules.isEmpty
-              ? 'No confirmed audit checklists found.\nConfirm an Audit Schedule that has ISO clauses assigned to generate its checklist.'
-              : 'No audit checklists found',
+          'No audit checklists found',
           textAlign: TextAlign.center,
           style: GoogleFonts.plusJakartaSans(color: kMuted),
         ),
@@ -784,7 +1247,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(width: 40, child: Text('$rowNumber')),
+            SizedBox(width: 80, child: Text('$rowNumber')),
             Expanded(
               flex: 3,
               child: Text(
@@ -866,8 +1329,9 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
             PopupMenuButton<String>(
               color: Theme.of(context).cardColor,
               icon: Icon(Icons.more_vert, color: Colors.grey.shade500),
-              onSelected: (value) {
+                            onSelected: (value) {
                 if (value == 'open') _openSchedule(s);
+                if (value == 'print') _openPrintPreview(s.auditScheduleId);
               },
               itemBuilder: (_) => const [
                 PopupMenuItem(
@@ -880,6 +1344,16 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
                     ],
                   ),
                 ),
+                PopupMenuItem(
+                  value: 'print',
+                  child: Row(
+                    children: [
+                      Icon(Icons.picture_as_pdf_outlined, size: 18),
+                      SizedBox(width: 8),
+                      Text('Print preview'),
+                    ],
+                  ),
+                ),
               ],
             ),
           ],
@@ -889,8 +1363,8 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   }
 
   // ===========================================================================
-  // DETAIL MODE — the CRMC Audit Checklist form, in the Audit Programme
-  // form's panel style (maroon header, section cards, footer actions).
+  // LEVEL 3 — the CRMC Audit Checklist form, in the Audit Programme form's
+  // panel style (maroon header, section cards, footer actions).
   // ===========================================================================
   Widget _buildChecklistBody() {
     if (_isLoadingChecklist) return const _LoadingView();
@@ -1004,6 +1478,14 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
               ],
             ),
           ),
+                    IconButton(
+            tooltip: 'Print Preview',
+            onPressed: () =>
+                _openPrintPreview(_currentAuditScheduleId, checkDirty: true),
+            splashRadius: 20,
+            icon: const Icon(Icons.print_outlined, color: Colors.white),
+          ),
+          const SizedBox(width: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(

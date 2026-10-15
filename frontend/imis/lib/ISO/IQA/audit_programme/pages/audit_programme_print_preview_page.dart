@@ -461,6 +461,7 @@ Future<_Data> _loadPrintData(int programmeId) async {
     if (m['isDeleted'] == true) continue;
     plans.add(m);
   }
+  
   DateTime? planStart(Map<String, dynamic> p) =>
       DateTime.tryParse((p['startDate'] ?? p['StartDate'] ?? '').toString());
   plans.sort((a, b) {
@@ -471,7 +472,6 @@ Future<_Data> _loadPrintData(int programmeId) async {
     if (sb == null) return -1;
     return sa.compareTo(sb);
   });
-
   final batches = <_Batch>[];
   for (final plan in plans) {
     final rawEntries =
@@ -485,7 +485,6 @@ Future<_Data> _loadPrintData(int programmeId) async {
       entries: entries,
     ));
   }
-
   return _Data(
     forText: _pick(json, 'for'),
     fromText: _pick(json, 'from'),

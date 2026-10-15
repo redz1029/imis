@@ -27,6 +27,7 @@ namespace IMIS.Persistence.AuditReportModule
                 .Include(x => x.AuditComFindings)
                 .Include(x => x.AuditScope)
                 .Include(x => x.AuditSummaryFIndings)
+                    .ThenInclude(f => f!.NcarStatus)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
                 .ConfigureAwait(false);
         }

@@ -70,6 +70,11 @@ namespace IMIS.Persistence.AuditChecklistModule
                         .ThenInclude(sp => sp.IsoStandard)
                 .Include(s => s.AuditPlan)
                     .ThenInclude(p => p!.AuditProgramme)
+                // Five collection includes on one query would otherwise produce a
+                // cartesian explosion (rows = signatories x offices x processes x
+                // auditors x standards per schedule) and time out as data grows.
+                // Split queries issue one SELECT per collection, keeping it fast.
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 

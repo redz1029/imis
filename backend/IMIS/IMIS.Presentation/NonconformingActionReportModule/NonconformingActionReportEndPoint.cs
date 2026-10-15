@@ -53,11 +53,11 @@ namespace IMIS.Presentation.NonconformingActionReportModule
             })
             .WithTags(_ncarTag);
 
-            // CREATE FROM AUDIT REPORT (auto-fetch findings)
-            app.MapPost("/from-audit-report/{auditReportId:int}", async (int auditReportId, [FromQuery] string issuedByAuditorUserId, [FromQuery] string acknowledgedByAuditeeUserId, INonconformingActionReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            // CREATE FROM AUDIT REPORT (auto-fetch findings for the chosen status)
+            app.MapPost("/from-audit-report/{auditReportId:int}", async (int auditReportId, [FromQuery] string status, [FromQuery] string issuedByAuditorUserId, [FromQuery] string acknowledgedByAuditeeUserId, INonconformingActionReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                var result = await service.CreateFromAuditReportAsync(auditReportId, issuedByAuditorUserId, acknowledgedByAuditeeUserId, cancellationToken).ConfigureAwait(false);
-                if (result is null) return Results.NotFound($"Audit Report with ID {auditReportId} not found.");
+                var result = await service.CreateFromAuditReportAsync(auditReportId, status, issuedByAuditorUserId, acknowledgedByAuditeeUserId, cancellationToken).ConfigureAwait(false);
+                if (result is null) return Results.NotFound($"No findings with status '{status}' to raise an NCAR for audit report {auditReportId}, or the report does not exist.");
 
                 await cache.EvictByTagAsync(_ncarTag, cancellationToken);
                 return Results.Ok(result);

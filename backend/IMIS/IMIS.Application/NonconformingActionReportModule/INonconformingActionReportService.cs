@@ -14,7 +14,9 @@ namespace IMIS.Application.NonconformingActionReportModule
         Task<DtoPageList<NonconformingActionReportDto, NonconformingActionReport, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(long id, CancellationToken cancellationToken);
 
-        // Auto-populates a new NCAR from an Audit Report's findings.
-        Task<NonconformingActionReportDto?> CreateFromAuditReportAsync(int auditReportId, string issuedByAuditorUserId, string acknowledgedByAuditeeUserId, CancellationToken cancellationToken);
+        // Auto-populates a new NCAR from an Audit Report's findings whose NCAR
+        // status matches ncarStatus (e.g. "NC" or "OFI"). Findings of any other
+        // status are excluded.
+        Task<NonconformingActionReportDto?> CreateFromAuditReportAsync(int auditReportId, string ncarStatus, string issuedByAuditorUserId, string acknowledgedByAuditeeUserId, CancellationToken cancellationToken);
     }
 }

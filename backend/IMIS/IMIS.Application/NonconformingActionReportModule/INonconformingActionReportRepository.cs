@@ -11,6 +11,6 @@ namespace IMIS.Application.NonconformingActionReportModule
         Task<NonconformingActionReport?> GetByIdWithDetailsAsync(long id, CancellationToken cancellationToken);
         Task<EntityPageList<NonconformingActionReport, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<NonconformingActionReport?> GetByIdForDeleteAsync(long id, CancellationToken cancellationToken);
-        Task<NonconformingActionReport?> GetByAuditReportIdAsync(int auditReportId, CancellationToken cancellationToken);
+        Task<NonconformingActionReport?> GetByAuditReportIdAndTypeAsync(int auditReportId, bool isNonconformity, CancellationToken cancellationToken);
     }
 }

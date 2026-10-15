@@ -447,14 +447,19 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                 label: const Text('Create NCAR', style: TextStyle(color: Colors.white)),
                 onPressed: () async {
                   Navigator.pop(ctx);
+                  final status = await _chooseNcarStatus();
+                  if (status == null) return;
                   final user = await AuthUtil.fetchLoggedUser();
                   try {
                     await _service.createNcarFromAuditReport(
                       auditReportId: report.id,
+                      status: status,
                       issuedByAuditorUserId: user?.id ?? '',
                       acknowledgedByAuditeeUserId: user?.id ?? '',
                     );
-                    _toastSuccess('NCAR successfully created from Audit Report #${report.id}.');
+                    _toastSuccess(
+                      'NCAR ($status) successfully created from Audit Report #${report.id}.',
+                    );
                   } catch (e) {
                     _toastError('Failed to create NCAR: $e');
                   }
@@ -463,6 +468,35 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
           ],
         );
       },
+    );
+  }
+
+  /// Prompts the user to pick which finding status the NCAR should be raised
+  /// for. Returns "NC" or "OFI", or null if cancelled.
+  Future<String?> _chooseNcarStatus() {
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Create NCAR'),
+        content: const Text(
+          'Which findings should this NCAR be raised for?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          OutlinedButton(
+            onPressed: () => Navigator.pop(ctx, 'OFI'),
+            child: const Text('OFI'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple.shade700),
+            onPressed: () => Navigator.pop(ctx, 'NC'),
+            child: const Text('NC', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 

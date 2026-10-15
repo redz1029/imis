@@ -492,6 +492,17 @@ class _AuditReportPageState extends State<AuditReportPage> {
       _showMessage('Audit purpose is required.');
       return;
     }
+    // Every summary finding must be classified as NC or OFI; the status dropdown
+    // no longer offers a blank "None" choice.
+    for (final row in _summaryRows) {
+      if (row.findingController.text.trim().isNotEmpty &&
+          row.auditNcarStatusId == null) {
+        _showMessage(
+          'Please select NC or OFI for finding ${row.no} in the Summary of Findings.',
+        );
+        return;
+      }
+    }
 
     final auditees =
         _scopeRows
@@ -1045,25 +1056,21 @@ class _AuditReportPageState extends State<AuditReportPage> {
                     initialValue: row.auditNcarStatusId,
                     decoration: _dropdownDecoration('STATUS'),
                     isExpanded: true,
-                    hint: const Text('Status', style: TextStyle(fontSize: 12)),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('None', style: TextStyle(fontSize: 12)),
-                      ),
-                      ..._ncarStatuses.map(
-                        (s) => DropdownMenuItem<int?>(
-                          value: (s['id'] as num?)?.toInt(),
-                          child: Text(
-                            (s['ncarStatus'] ??
-                                    s['NcarStatus'] ??
-                                    'Status ${s['id']}')
-                                .toString(),
-                            style: const TextStyle(fontSize: 12),
+                    hint: const Text('NC / OFI', style: TextStyle(fontSize: 12)),
+                    items: _ncarStatuses
+                        .map(
+                          (s) => DropdownMenuItem<int?>(
+                            value: (s['id'] as num?)?.toInt(),
+                            child: Text(
+                              (s['ncarStatus'] ??
+                                      s['NcarStatus'] ??
+                                      'Status ${s['id']}')
+                                  .toString(),
+                              style: const TextStyle(fontSize: 12),
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
+                        )
+                        .toList(),
                     onChanged: (val) {
                       setState(() => row.auditNcarStatusId = val);
                     },

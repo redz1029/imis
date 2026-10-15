@@ -283,6 +283,9 @@ namespace IMIS.Persistence
             builder.ApplyConfiguration(new StandardVersionConfiguration());
             builder.ApplyConfiguration(new IsoStandardConfigurations());
 
+            // NCAR status lookup (NC, OFI)
+            builder.ApplyConfiguration(new AuditNcarStatusConfiguration());
+
             // Audit Plan configurations
 
             // IQASignatory relationships

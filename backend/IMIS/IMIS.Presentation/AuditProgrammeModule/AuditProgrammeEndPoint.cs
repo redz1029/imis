@@ -90,7 +90,7 @@ namespace IMIS.Presentation.AuditProgrammeModule
             })
             .WithTags(_AuditProgramme)
             .RequireCors("_allowedOrigins")
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditProgramme), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_AuditProgramme), true);
 
             // GENERATE PDF REPORT
             app.MapGet("/PdF/{id:int}", async (
@@ -115,7 +115,7 @@ namespace IMIS.Presentation.AuditProgrammeModule
             })
             .WithTags(_AuditProgramme)
             .RequireCors("_allowedOrigins")
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditProgramme), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_AuditProgramme), true);
 
             // UPDATE
             app.MapPut("/{id:int}", async (

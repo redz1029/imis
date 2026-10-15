@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -100,23 +101,42 @@ namespace IMIS.Persistence.NonconformingActionReportModule
             return true;
         }
 
-        public async Task<NonconformingActionReportDto?> CreateFromAuditReportAsync(int auditReportId, string issuedByAuditorUserId, string acknowledgedByAuditeeUserId, CancellationToken cancellationToken)
+        public async Task<NonconformingActionReportDto?> CreateFromAuditReportAsync(int auditReportId, string ncarStatus, string issuedByAuditorUserId, string acknowledgedByAuditeeUserId, CancellationToken cancellationToken)
         {
-            var existingNcar = await _repository.GetByAuditReportIdAsync(auditReportId, cancellationToken).ConfigureAwait(false);
+            // The caller chooses which finding status this NCAR is raised for
+            // ("NC" or "OFI"). Only findings whose status matches are included;
+            // everything else (including findings left with no status) is skipped.
+            // If no finding matches, there is nothing to report and no NCAR is created.
+            var statusFilter = ncarStatus?.Trim();
+            if (string.IsNullOrEmpty(statusFilter)) return null;
+
+            var isNonconformity = string.Equals(statusFilter, "NC", StringComparison.OrdinalIgnoreCase);
+
+            // NC and OFI are treated as separate NCARs for the same report, so the
+            // duplicate guard is scoped to the requested type: an existing NCAR is
+            // only reused when it is the same kind (IsNonconformity) as the request.
+            var existingNcar = await _repository.GetByAuditReportIdAndTypeAsync(auditReportId, isNonconformity, cancellationToken).ConfigureAwait(false);
             if (existingNcar != null)
                 return new NonconformingActionReportDto(existingNcar);
 
             var auditReport = await _auditReportRepository.GetByIdWithDetailsAsync(auditReportId, cancellationToken).ConfigureAwait(false);
             if (auditReport == null) return null;
 
-            var findingsText = auditReport.AuditSummaryFIndings != null && auditReport.AuditSummaryFIndings.Any()
-                ? string.Join(Environment.NewLine, auditReport.AuditSummaryFIndings.Select(f => f.Findings))
-                : auditReport.AuditConclisions;
+            var matchedFindings = auditReport.AuditSummaryFIndings?
+                .Where(f => string.Equals(f.NcarStatus?.ncarStatus?.Trim(), statusFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList() ?? new List<AuditSummaryFIndings>();
+
+            if (matchedFindings.Count == 0) return null;
+
+            var findingsText = string.Join(Environment.NewLine, matchedFindings.Select(f => f.Findings));
 
             var standardRef = auditReport.AuditStandardISO?.ClauseRef ?? string.Empty;
             var officeName = auditReport.OfficeAudited?.Office?.Name ?? auditReport.OfficeAudited?.ProcessName ?? string.Empty;
 
-            var referenceNumber = $"NCAR-{DateTime.UtcNow:yyyy}-{auditReport.Id:D4}";
+            // Prefix by type so the NCAR and OFI raised from the same report get
+            // distinct reference numbers.
+            var referencePrefix = isNonconformity ? "NCAR" : "OFI";
+            var referenceNumber = $"{referencePrefix}-{DateTime.UtcNow:yyyy}-{auditReport.Id:D4}";
 
             var entity = new NonconformingActionReport
             {
@@ -127,7 +147,7 @@ namespace IMIS.Persistence.NonconformingActionReportModule
                 AuditDate = auditReport.AuditPlanEntry?.Time ?? DateTime.UtcNow,
 
                 IsInternalAudit = true,
-                IsNonconformity = true,
+                IsNonconformity = isNonconformity,
 
                 StandardRequirement = standardRef,
                 LegalOrPolicyReference = string.Empty,
