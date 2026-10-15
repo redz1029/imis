@@ -1,112 +1,243 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AuditScheduleModule;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IMIS.Presentation.AuditScheduleModule
 {
     public class AuditScheduleEndPoints : CarterModule
     {
         private const string _AuditSchedule = "AuditSchedule";
-        public readonly AuditSchedulePermission _auditSchedulePermission = new();
+        // Assuming AuditSchedulePermission exists following your naming convention
+        public readonly AuditSchedulePermission _permission = new();
+
         public AuditScheduleEndPoints() : base("/auditSchedule")
         {
         }
+
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-
-            app.MapPost("/", async ([FromBody] AuditScheduleDto auditScheduleDto, IAuditScheduleService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            // CREATE
+            app.MapPost("/", async (
+                [FromBody] AuditScheduleDto dto,
+                IAuditScheduleService service,
+                IOutputCacheStore cache,
+                HttpContext httpContext,
+                CancellationToken cancellationToken) =>
             {
-                if (auditScheduleDto.AuditSchduleDetails == null || !auditScheduleDto.AuditSchduleDetails.Any())
-                    return Results.BadRequest("No audit schedule details provided.");
+                if (dto == null)
+                    return Results.BadRequest("Invalid request.");
 
-                var overlapErrors = await service.GetOverlappingAuditAsync(auditScheduleDto, cancellationToken);
-                if (overlapErrors.Count > 0)
-                    return Results.BadRequest(new { Errors = overlapErrors });
+                var conflicts = await service.GetConflictValidationsAsync(dto, cancellationToken);
+                if (conflicts.Count > 0)
+                    return Results.BadRequest(new { Errors = conflicts });
 
-                await service.SaveOrUpdateAsync(auditScheduleDto, cancellationToken);
-                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
-
-                return Results.Ok(auditScheduleDto);
-            })
-            .WithTags(_AuditSchedule)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditSchedulePermission.Add));
-
-            app.MapGet("/", async (IAuditScheduleService service, CancellationToken cancellationToken) =>
-            {
-                var auditScheduleDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
-                return Results.Ok(auditScheduleDto);
-            })
-           .WithTags(_AuditSchedule)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditSchedulePermission.View));
-
-            app.MapGet("/{id}", async (int id, IAuditScheduleService service, CancellationToken cancellationToken) =>
-            {
-                var auditScheduleDto = await service.GetByAuditScheduleIdAsync(id, cancellationToken).ConfigureAwait(false);
-                return auditScheduleDto != null ? Results.Ok(auditScheduleDto) : Results.NotFound();
-            })
-           .WithTags(_AuditSchedule)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditSchedulePermission.Edit));
-
-            app.MapPut("/{id:int}", async (int id, [FromBody] AuditScheduleDto auditScheduleDto, IAuditScheduleService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                if (auditScheduleDto.AuditSchduleDetails == null || !auditScheduleDto.AuditSchduleDetails.Any())
-                    return Results.BadRequest("No audit schedule details provided.");
-
-                var overlapErrors = await service.GetOverlappingAuditAsync(auditScheduleDto, cancellationToken);
-                if (overlapErrors.Count > 0)
-                    return Results.BadRequest(new { Errors = overlapErrors });
-
-                auditScheduleDto.Id = id;
-
-                await service.SaveOrUpdateAsync(auditScheduleDto, cancellationToken);
+                // Actor for the workflow rows (history + signatory slots).
+                // Must be a real AspNetUsers id — placeholders violate the FK.
+                var actorUserId = httpContext.User.FindFirst("UserId")?.Value;
+                var result = await service.SaveAuditScheduleAsync(dto, cancellationToken, actorUserId);
 
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
 
-                return Results.Ok(auditScheduleDto);
+                return result ? Results.Ok(dto) : Results.BadRequest("Failed to save Audit Schedule.");
             })
             .WithTags(_AuditSchedule)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditSchedulePermission.Edit));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
-            app.MapGet("/page", async (int page, int pageSize, IAuditScheduleService service, CancellationToken cancellationToken) =>
+            // GET ALL
+            app.MapGet("/", async (
+                IAuditScheduleService service,
+                CancellationToken cancellationToken) =>
             {
-                var paginatedAuditSchedule = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-                return Results.Ok(paginatedAuditSchedule);
+                var result = await service.GetAllAsync(cancellationToken);
+                return Results.Ok(result);
             })
-           .WithTags(_AuditSchedule)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditSchedulePermission.View));
+            .WithTags(_AuditSchedule)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
-            app.MapDelete("/{id:int}", async (int id, IAuditScheduleService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            // GET CONFIRMED ONLY (Workflow Gate for Audit Checklist)
+            app.MapGet("/confirmed", async (
+                IAuditScheduleService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetConfirmedAsync(cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditSchedule)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            // GET BY PLAN ID
+            app.MapGet("/plan/{auditPlanId:int}", async (
+                int auditPlanId,
+                IAuditScheduleService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetByAuditPlanIdAsync(auditPlanId, cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditSchedule)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            // GET BY ID
+            app.MapGet("/{id:int}", async (
+                int id,
+                IAuditScheduleService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetByIdAsync(id, cancellationToken);
+
+                return result != null ? Results.Ok(result) : Results.NotFound();
+            })
+            .WithTags(_AuditSchedule)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            // UPDATE
+            app.MapPut("/{id:int}", async (
+                int id,
+                [FromBody] AuditScheduleDto dto,
+                IAuditScheduleService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                if (dto == null)
+                    return Results.BadRequest("Invalid request.");
+
+                var conflicts = await service.GetConflictValidationsAsync(dto, cancellationToken);
+                if (conflicts.Count > 0)
+                    return Results.BadRequest(new { Errors = conflicts });
+
+                dto.Id = id;
+
+                var result = await service.SaveAuditScheduleAsync(dto, cancellationToken);
+
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
+
+                return result ? Results.Ok(dto) : Results.BadRequest("Failed to update Audit Schedule.");
+            })
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+
+            // PAGINATION
+            app.MapGet("/page", async (
+                int page,
+                int pageSize,
+                IAuditScheduleService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetPaginatedAsync(page, pageSize, cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditSchedule)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+            // GENERATE PDF REPORT
+            app.MapGet("/PdF/{id:int}", async (
+                HttpResponse response,
+                int id,
+                IAuditScheduleService service,
+                CancellationToken cancellationToken) =>
+            {
+                var auditData = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                if (auditData == null)
+                    return Results.NotFound(new { message = $"Audit Schedule with ID {id} was not found." });
+
+                var file = await ReportUtil.GeneratePdfReport<ReportAuditScheduleDto>(
+                    "AuditSchedule",
+                    new List<ReportAuditScheduleDto> { auditData },
+                    "ScheduleData",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                return Results.File(file, "application/pdf", $"AuditSchedule_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+            })
+            .WithTags(_AuditSchedule)
+            .RequireCors("_allowedOrigins")
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+
+            // DELETE (SOFT DELETE)
+            app.MapDelete("/{id:int}", async (
+                int id,
+                IAuditScheduleService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
             {
                 var result = await service.SoftDeleteAsync(id, cancellationToken);
 
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
 
-                return result ? Results.Ok(new { message = "Audit Schedule deleted successfully." })
-                              : Results.NotFound(new { message = "Audit Schedule not found." });
+                return result
+                    ? Results.Ok(new { message = "Audit Schedule deleted successfully." })
+                    : Results.NotFound(new { message = "Audit Schedule not found." });
             })
             .WithTags(_AuditSchedule)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditSchedulePermission.Edit));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
 
-            app.MapDelete("/AuditScheduleDetails{id:int}", async (int id, IAuditScheduleService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            // SUBMIT — Draft/Disapproved/Rejected -> Pending Confirmation
+            app.MapPut("/{id:int}/submit", async (
+                int id,
+                [FromBody] SubmitAuditScheduleRequest? body,
+                IAuditScheduleService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
             {
-                var result = await service.SoftDeleteAuditScheduleDetailsAsync(id, cancellationToken);
+                var (success, error) = await service.SubmitAsync(id, body?.UserId, body?.Comments, cancellationToken);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
 
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
-
-                return result ? Results.Ok(new { message = "Audit Schedule Detail deleted successfully." })
-                              : Results.NotFound(new { message = "Audit Schedule Detail not found." });
+                return Results.Ok(new { message = "Submitted for confirmation." });
             })
-          .WithTags(_AuditSchedule)
-          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditSchedulePermission.Edit));
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+
+            // DECIDE — Pending -> Confirmed/Rejected
+            app.MapPut("/{id:int}/decide", async (
+                int id,
+                [FromBody] DecideAuditScheduleRequest dto,
+                IAuditScheduleService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                if (dto is null)
+                    return Results.BadRequest("Invalid request.");
+
+                string action = !string.IsNullOrWhiteSpace(dto.Action)
+                    ? dto.Action
+                    : ((dto.Approve ?? false) ? "Confirm" : "Reject");
+
+                var (success, error) = await service.DecideAsync(
+                    id, dto.ApproverId, action, dto.Comments, dto.OfficeName, cancellationToken
+                );
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
+                return Results.Ok(new { message = action == "Reject" ? "Rejected." : $"{action}ed." });
+            })
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+
         }
+
+        public record SubmitAuditScheduleRequest(string? UserId, string? Comments);
+        public record DecideAuditScheduleRequest(string ApproverId, bool? Approve, string? Action, string? Comments, string? OfficeName);
     }
 }

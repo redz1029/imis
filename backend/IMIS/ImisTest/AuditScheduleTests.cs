@@ -75,19 +75,17 @@ namespace ImisTest
             int noOfHoursPerAudit = 2;
 
             var auditScheduleFaker = new Faker<AuditScheduleDto>()
-                .RuleFor(a => a.AuditTitle, f => f.Lorem.Text())
-                .RuleFor(a => a.StartDate, startDate)
-                .RuleFor(a => a.EndDate, endDate)
+                .RuleFor(a => a.Activity, f => f.Lorem.Text())
                 .RuleFor(a => a.IsActive, true);
                 //.RuleFor(a => a.Offices, auditableOffices);
 
             var auditSchedule = auditScheduleFaker.Generate();
-            string auditTitle = auditSchedule.AuditTitle;
+            string activity = auditSchedule.Activity;
             await _auditScheduleService.SaveOrUpdateAsync(auditSchedule, CancellationToken.None).ConfigureAwait(false);
 
-            var savedAuditSchedule = await _context.AuditSchedules.FirstOrDefaultAsync(a => a.AuditTitle == auditTitle).ConfigureAwait(false);
+            var savedAuditSchedule = await _context.AuditSchedules.FirstOrDefaultAsync(a => a.Activity == activity).ConfigureAwait(false);
             Assert.NotNull(savedAuditSchedule);
-            Assert.That(savedAuditSchedule.AuditTitle, Is.EqualTo(auditTitle));
+            Assert.That(savedAuditSchedule.Activity, Is.EqualTo(activity));
         }
 
         private async Task<(List<OfficeDto>, int)> GenerateAndGetOffices(int noOfAuditorsAssignedInAnOffice, 
@@ -226,7 +224,6 @@ namespace ImisTest
             {
                 var noOfTeamsToGenerate = noOfTeams - teams?.Count;
                 var teamFaker = new Faker<TeamDto>()
-                    .RuleFor(t => t.Name, f => f.Lorem.Word())
                     .RuleFor(t => t.IsActive, true);
 
                 while(noOfTeamsToGenerate > 0)
@@ -273,7 +270,7 @@ namespace ImisTest
             {
                 var noOfAuditorsToGenerate = noOfAuditors - auditors?.Count;
                 var auditorFaker = new Faker<AuditorDto>()
-                    .RuleFor(a => a.Name, f => f.Person.FullName)
+                    //.RuleFor(a => a.Name, f => f.Person.FullName)
                     .RuleFor(a => a.IsActive, true);
 
                 while(noOfAuditorsToGenerate > 0)
@@ -285,9 +282,10 @@ namespace ImisTest
                     auditors!.Add(new AuditorDto() 
                     { 
                         Id = auditor.Id, 
-                        Name = auditor.Name, 
+                        Name = auditor.Name,
                         IsActive = auditor.IsActive ,
                         UserId = auditor.UserId,
+                        
                     });
                     noOfAuditorsToGenerate--;
                 }

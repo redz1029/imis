@@ -74,7 +74,9 @@ namespace IMIS.Persistence.TeamModule
                         {
                             Id = 0,
                             TeamId = team.Id, 
-                            IsTeamLeader = auditor.IsTeamLeader 
+                            IsTeamLeader = auditor.IsTeamLeader,
+                            ImprovementType = auditor.ImprovementType
+
                         });
                     }
                 }
