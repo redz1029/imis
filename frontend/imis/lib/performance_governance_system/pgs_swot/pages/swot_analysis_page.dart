@@ -1221,7 +1221,6 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
   List<SwotContextEntry> _internal = [];
   List<SwotContextEntry> _external = [];
-  int _currentStep = 0;
 
   bool _loadingLabels = true;
   String? _loadError;
@@ -1914,24 +1913,21 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                   required: true,
                 ),
                 const SizedBox(height: 20),
-                _buildContextStepper(),
-                const SizedBox(height: 16),
-                if (_currentStep == 0)
-                  _SwotContextTable(
-                    title: 'Internal Context',
-                    leftHeader: 'Strengths',
-                    rightHeader: 'Weaknesses',
-                    entries: _internal,
-                    isSmall: isSmall,
-                  )
-                else
-                  _SwotContextTable(
-                    title: 'External Context',
-                    leftHeader: 'Opportunities',
-                    rightHeader: 'Threats',
-                    entries: _external,
-                    isSmall: isSmall,
-                  ),
+                _SwotContextTable(
+                  title: 'Internal Context',
+                  leftHeader: 'Strengths',
+                  rightHeader: 'Weaknesses',
+                  entries: _internal,
+                  isSmall: isSmall,
+                ),
+                const SizedBox(height: 20),
+                _SwotContextTable(
+                  title: 'External Context',
+                  leftHeader: 'Opportunities',
+                  rightHeader: 'Threats',
+                  entries: _external,
+                  isSmall: isSmall,
+                ),
               ],
             ),
           ),
@@ -1944,7 +1940,6 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
   Widget _buildDialogActions() {
     final isEditing = widget.existing != null;
-    final isLastStep = _currentStep == 1;
 
     final String permission =
         widget.isServiceHead
@@ -1960,52 +1955,18 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          if (isLastStep) ...[
-            TextButton.icon(
-              onPressed: () => setState(() => _currentStep -= 1),
-              icon: const Icon(Icons.arrow_back, size: 16),
-              label: const Text('Back'),
-              style: TextButton.styleFrom(foregroundColor: primaryColor),
-            ),
-            const Spacer(),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: TextButton.styleFrom(foregroundColor: primaryColor),
-              child: const Text('Cancel'),
-            ),
-            const SizedBox(width: 8),
-            PermissionWidget(
-              permission: permission,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                onPressed:
-                    (_loadingLabels || _loadError != null || _officeLoading)
-                        ? null
-                        : _saveSwot,
-                child: Text(isEditing ? 'Update' : 'Save'),
-              ),
-            ),
-          ] else
-            ElevatedButton.icon(
-              onPressed: () => setState(() => _currentStep += 1),
-              icon: const Icon(
-                Icons.arrow_forward,
-                size: 16,
-                color: Colors.white,
-              ),
-              label: const Text('Next', style: TextStyle(color: Colors.white)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(foregroundColor: primaryColor),
+            child: const Text('Cancel'),
+          ),
+          const SizedBox(width: 8),
+          PermissionWidget(
+            permission: permission,
+            child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 10,
@@ -2014,7 +1975,13 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                   borderRadius: BorderRadius.circular(6),
                 ),
               ),
+              onPressed:
+                  (_loadingLabels || _loadError != null || _officeLoading)
+                      ? null
+                      : _saveSwot,
+              child: Text(isEditing ? 'Update' : 'Save'),
             ),
+          ),
         ],
       ),
     );
@@ -2164,86 +2131,6 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
     );
   }
 
-  Widget _buildContextStepper() {
-    const steps = ['Internal Context', 'External Context'];
-    const circleSize = 30.0;
-
-    Widget stepColumn(int index) {
-      final isCompleted = _currentStep > index;
-      final isCurrent = _currentStep == index;
-      final active = isCompleted || isCurrent;
-
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          GestureDetector(
-            onTap: () => setState(() => _currentStep = index),
-            child: Container(
-              width: circleSize,
-              height: circleSize,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: active ? primaryColor : Colors.white,
-                border: Border.all(
-                  color: active ? primaryColor : Colors.grey.shade400,
-                  width: 1.5,
-                ),
-              ),
-              child:
-                  isCompleted
-                      ? const Icon(Icons.check, size: 16, color: Colors.white)
-                      : Text(
-                        '${index + 1}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color:
-                              isCurrent ? Colors.white : Colors.grey.shade500,
-                        ),
-                      ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            steps[index],
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-              color: active ? primaryColor : Colors.grey.shade500,
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Center(
-      child: SizedBox(
-        width: 260,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            stepColumn(0),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  top: circleSize / 2 - 1,
-                  left: 8,
-                  right: 8,
-                ),
-                child: Container(
-                  height: 2,
-                  color: _currentStep > 0 ? primaryColor : Colors.grey.shade300,
-                ),
-              ),
-            ),
-            stepColumn(1),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _labeledField(
     String label,
     TextEditingController ctrl, {
@@ -2263,38 +2150,44 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
         const SizedBox(height: 4),
 
-        TextFormField(
-          controller: ctrl,
-          maxLines: null,
-          style: const TextStyle(fontSize: 13),
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 8,
+        ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+          child: TextFormField(
+            controller: ctrl,
+            minLines: 1,
+            maxLines: null,
+            keyboardType: TextInputType.multiline,
+            scrollPhysics: const NeverScrollableScrollPhysics(),
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 8,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: primaryColor),
+              ),
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: primaryColor),
-            ),
-          ),
-          validator:
-              required
-                  ? (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Required';
-                    }
+            validator:
+                required
+                    ? (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Required';
+                      }
 
-                    return null;
-                  }
-                  : null,
+                      return null;
+                    }
+                    : null,
+          ),
         ),
       ],
     );

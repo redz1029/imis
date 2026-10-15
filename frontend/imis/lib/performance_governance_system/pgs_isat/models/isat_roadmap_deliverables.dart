@@ -19,6 +19,8 @@ class IsatRoadmapDeliverables {
 class IsatPgsDeliverables {
   int id;
   String deliverableName;
+  int? kraId;
+  String? kraName;
 
   IsatPgsDeliverables(this.id, this.deliverableName);
 

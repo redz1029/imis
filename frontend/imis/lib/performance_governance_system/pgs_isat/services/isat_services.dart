@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat.dart';
+import 'package:imis/performance_governance_system/pgs_isat/models/isat_employee_office.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_roadmap.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_roadmap_deliverables.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -119,6 +120,27 @@ class IsatServices {
     }
   }
 
+  Future<List<IsatEmployeeOffice>> fetchEmployeeOffices({
+    required String userId,
+  }) async {
+    try {
+      final url = '${ApiEndpoint().isat}/offices/$userId';
+      final response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200 && response.data != null) {
+        final List data = response.data as List;
+        return data
+            .map((e) => IsatEmployeeOffice.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } on DioException catch (_) {
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
   Future<List<IsatPgsDeliverables>> fetchPgsDeliverables({
     required String officeId,
     required String periodId,
@@ -190,5 +212,15 @@ class IsatServices {
     } catch (_) {
       return false;
     }
+  }
+
+  Future<void> deleteIsat(String isatId) async {
+    final url = '${ApiEndpoint().isat}/$isatId';
+    await AuthenticatedRequest.delete(dio, url);
+  }
+
+  Future<void> deleteIsatSignatory(String isatId) async {
+    final url = '${ApiEndpoint().isat}/$isatId/signatories';
+    await AuthenticatedRequest.delete(dio, url);
   }
 }

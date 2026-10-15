@@ -24,13 +24,17 @@ Map<String, dynamic> _$IsatRoadmapDeliverablesToJson(
 
 IsatPgsDeliverables _$IsatPgsDeliverablesFromJson(Map<String, dynamic> json) =>
     IsatPgsDeliverables(
-      (json['id'] as num).toInt(),
-      json['deliverableName'] as String,
-    );
+        (json['id'] as num).toInt(),
+        json['deliverableName'] as String,
+      )
+      ..kraId = (json['kraId'] as num?)?.toInt()
+      ..kraName = json['kraName'] as String?;
 
 Map<String, dynamic> _$IsatPgsDeliverablesToJson(
   IsatPgsDeliverables instance,
 ) => <String, dynamic>{
   'id': instance.id,
   'deliverableName': instance.deliverableName,
+  'kraId': instance.kraId,
+  'kraName': instance.kraName,
 };

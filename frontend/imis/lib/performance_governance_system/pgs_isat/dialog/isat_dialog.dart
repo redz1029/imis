@@ -5,17 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
+import 'package:imis/performance_governance_system/pgs_isat/models/isat_employee_office.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_signatory.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_annual_performance_commitments.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_roadmap.dart';
 import 'package:imis/performance_governance_system/pgs_isat/models/isat_roadmap_deliverables.dart';
-import 'package:imis/performance_governance_system/pgs_isat/models/isat_strategic_contribution.dart';
-import 'package:imis/performance_governance_system/pgs_isat/models/isat_strategic_objective_supported.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
-
 import '../services/isat_services.dart';
 
 class IsatCommitmentRow {
@@ -25,12 +26,21 @@ class IsatCommitmentRow {
   final TextEditingController statusCtrl;
   final TextEditingController accomplishmentCtrl;
 
+  int? kraId;
+  int? pgsDeliverableId;
+  String contributionName;
+  String? kraName;
+
   IsatCommitmentRow({
     String keyTask = '',
     String target = '',
     String timeline = '',
     String status = '',
     String accomplishment = '',
+    this.kraId,
+    this.pgsDeliverableId,
+    this.contributionName = '',
+    this.kraName,
   }) : keyTaskCtrl = TextEditingController(text: keyTask),
        targetCtrl = TextEditingController(text: target),
        timelineCtrl = TextEditingController(text: timeline),
@@ -42,7 +52,8 @@ class IsatCommitmentRow {
       targetCtrl.text.trim().isEmpty &&
       timelineCtrl.text.trim().isEmpty &&
       statusCtrl.text.trim().isEmpty &&
-      accomplishmentCtrl.text.trim().isEmpty;
+      accomplishmentCtrl.text.trim().isEmpty &&
+      pgsDeliverableId == null;
 
   void dispose() {
     keyTaskCtrl.dispose();
@@ -58,7 +69,6 @@ class _RoadmapSelection {
   List<IsatRoadmapDeliverables> deliverables;
   Set<int> selectedDeliverableIds;
 
-  /// Fallback names galing sa saved record (in case wala sa fetched list).
   final Map<int, String> savedNames;
   bool loadingDeliverables;
   String? error;
@@ -99,7 +109,6 @@ class _IsatDialogState extends State<IsatDialog> {
 
   final List<IsatCommitmentRow> _commitmentRows = [];
 
-  bool _employeeCommitted = false;
   final _isatService = IsatServices(Dio());
   bool loadingEmployeeInfo = false;
   final _preparedByCtrl = TextEditingController();
@@ -108,30 +117,35 @@ class _IsatDialogState extends State<IsatDialog> {
   final _reviewedDateCtrl = TextEditingController();
   final _approvedByCtrl = TextEditingController();
   final _approvedDateCtrl = TextEditingController();
-
   bool _submitting = false;
   final _commonService = CommonService(Dio());
   List<PgsPeriod> _periods = [];
   PgsPeriod? _selectedPeriod;
   bool _loadingPeriods = false;
-
-  List<IsatRoadmap> _roadmapItems = [];
+  String? userId;
   final List<_RoadmapSelection> _selectedRoadmaps = [];
-  bool _loadingRoadmap = false;
   List<IsatPgsDeliverables> _pgsDeliverableOptions = [];
   final List<IsatPgsDeliverables> _selectedContributions = [];
   bool _loadingPgsDeliverables = false;
   int? _officeId;
   String? _employeeUserId;
+  String? _supervisorUserId;
+  int? _serviceId;
   String? get _selectedYear => _selectedPeriod?.startDate.year.toString();
   int? _existingId;
-
-  /// Full record galing sa get-by-id (raw JSON).
   Map<String, dynamic>? _existing;
+  bool _initialized = false;
+  bool _isPending = false;
+  bool _isApproved = false;
+  bool get _isLocked => _isPending || _isApproved;
+  bool get _canShowCommitments => _selectedPeriod != null && _officeId != null;
+  List<IsatEmployeeOffice> _offices = [];
+  bool _loadingOffices = false;
 
   @override
   void initState() {
     super.initState();
+    _initialized = widget.existing == null;
     if (_commitmentRows.isEmpty) {
       _commitmentRows.add(IsatCommitmentRow());
     }
@@ -139,67 +153,37 @@ class _IsatDialogState extends State<IsatDialog> {
   }
 
   Future<void> _initData() async {
-    final passed = widget.existing;
-    if (passed != null && passed['id'] != null) {
-      try {
-        _existing = await _isatService.getIsatRawById(
-          int.parse(passed['id'].toString()),
-        );
-      } catch (e) {
-        _existing = passed;
-        if (mounted) {
-          MotionToast.error(
-            description: Text('Failed to load ISAT: ${e.toString()}'),
-          ).show(context);
+    try {
+      final passed = widget.existing;
+      if (passed != null && passed['id'] != null) {
+        try {
+          _existing = await _isatService.getIsatRawById(
+            int.parse(passed['id'].toString()),
+          );
+        } catch (e) {
+          _existing = passed;
+          if (mounted) {
+            MotionToast.error(
+              description: Text('Failed to load ISAT: ${e.toString()}'),
+            ).show(context);
+          }
         }
+      } else {
+        _existing = passed;
       }
-    } else {
-      _existing = passed;
+
+      await _loadPeriods();
+      final e = _existing;
+      if (e != null) {
+        if (mounted) setState(() => _populateFromExisting(e));
+      } else {
+        await _loadEmployeeInfo();
+      }
+      await _loadOffices();
+      await _loadPgsDeliverables();
+    } finally {
+      if (mounted) setState(() => _initialized = true);
     }
-
-    await _loadPeriods();
-    final e = _existing;
-    if (e != null) {
-      if (mounted) setState(() => _populateFromExisting(e));
-      await _loadEmployeeInfo(
-        userId: e['employeeUserId']?.toString(),
-        keepOffice: true,
-      );
-    } else {
-      await _loadEmployeeInfo();
-    }
-    await _loadRoadmap();
-    await _loadPgsDeliverables();
-  }
-
-  List<Map<String, dynamic>> _buildSignatoryPayload() {
-    final existing =
-        ((_existing?['isatSignatories'] as List?) ?? [])
-            .where((s) => s['isDeleted'] != true)
-            .map(
-              (s) =>
-                  Map<String, dynamic>.from(s as Map)
-                    ..['isatId'] = _existingId ?? 0,
-            )
-            .toList();
-    if (existing.isNotEmpty) return existing;
-
-    return [
-      {
-        'isatId': _existingId ?? 0,
-        'isatSignatoryTemplateId': null,
-        'signatoryId': _employeeUserId,
-        'signatoryName': _employeeNameCtrl.text,
-        'dateSigned': DateTime.now(),
-        'label': 'Employee',
-        'status': 'Pending',
-        'orderLevel': 0,
-        'isNextStatus': true,
-        'id': 0,
-        'isDeleted': false,
-        'rowVersion': null,
-      },
-    ];
   }
 
   Future<void> _loadPeriods() async {
@@ -231,53 +215,6 @@ class _IsatDialogState extends State<IsatDialog> {
       }
     } finally {
       if (mounted) setState(() => _loadingPeriods = false);
-    }
-  }
-
-  Future<void> _loadRoadmap() async {
-    setState(() => _loadingRoadmap = true);
-    try {
-      final items = await _isatService.fetchIsatRoadmap();
-      setState(() => _roadmapItems = items);
-
-      final existingSelections =
-          ((_existing?['isatStrategicObjectiveSupported'] as List?) ?? [])
-              .where((r) => r['isDeleted'] != true)
-              .toList();
-
-      if (existingSelections.isNotEmpty) {
-        final byRoadmap = <int, _RoadmapSelection>{};
-        for (final raw in existingSelections) {
-          final roadmapId = raw['kraRoadMapId'] as int;
-          final match = _roadmapItems.firstWhereOrNull(
-            (r) => r.id == roadmapId,
-          );
-          if (match == null) continue;
-          final entry = byRoadmap.putIfAbsent(
-            roadmapId,
-            () => _RoadmapSelection(roadmap: match),
-          );
-          final did = raw['kraRoadMapDeliverableId'] as int;
-          entry.selectedDeliverableIds.add(did);
-          entry.savedNames[did] =
-              raw['kraRoadMapDeliverableName']?.toString() ?? '';
-        }
-        final restored = byRoadmap.values.toList();
-        if (mounted) {
-          setState(() => _selectedRoadmaps.addAll(restored));
-        }
-        for (final entry in restored) {
-          _loadDeliverablesFor(entry);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        MotionToast.error(
-          description: Text('Failed to load roadmap: ${e.toString()}'),
-        ).show(context);
-      }
-    } finally {
-      if (mounted) setState(() => _loadingRoadmap = false);
     }
   }
 
@@ -323,142 +260,26 @@ class _IsatDialogState extends State<IsatDialog> {
     }
   }
 
-  Future<void> _showAddRoadmapSheet() async {
-    if (_selectedPeriod == null) {
-      MotionToast.warning(
-        description: const Text('Please select a Review Period first.'),
-      ).show(context);
-      return;
-    }
-
-    final available =
-        _roadmapItems
-            .where((r) => !_selectedRoadmaps.any((s) => s.roadmap.id == r.id))
-            .toList();
-
-    if (available.isEmpty) {
-      MotionToast.info(
-        description: const Text('All roadmap items have been added.'),
-      ).show(context);
-      return;
-    }
-
-    final picked = await showModalBottomSheet<IsatRoadmap>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (ctx, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Select Roadmap / Strategic Objective',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: primaryColor,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, size: 18),
-                          onPressed: () => Navigator.pop(ctx),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1, color: kBorder),
-                  Expanded(
-                    child: ListView.separated(
-                      controller: scrollController,
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      itemCount: available.length,
-                      separatorBuilder:
-                          (_, __) => const Divider(height: 1, color: kBorder),
-                      itemBuilder: (ctx, i) {
-                        final item = available[i];
-                        return InkWell(
-                          onTap: () => Navigator.pop(ctx, item),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.kraName,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: primaryColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  item.strategicObjective,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    color: kMuted,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    if (picked != null) {
-      final entry = _RoadmapSelection(roadmap: picked);
-      setState(() => _selectedRoadmaps.add(entry));
-      _loadDeliverablesFor(entry);
-    }
-  }
-
-  void _removeRoadmap(_RoadmapSelection entry) {
-    setState(() => _selectedRoadmaps.remove(entry));
-  }
-
   void _populateFromExisting(Map<String, dynamic> v) {
+    final isDraft = v['isDraft'] == true;
+    final sigs = (v['isatSignatories'] as List?) ?? [];
+    final hasSignatories = sigs.isNotEmpty;
+    final hasNext = sigs.any((s) => s['isNextStatus'] == true);
+
+    _isPending = !isDraft && hasSignatories && hasNext;
+    _isApproved = !isDraft && hasSignatories && !hasNext;
+
     _existingId = v['id'] is int ? v['id'] as int : int.tryParse('${v['id']}');
     _officeId = int.tryParse(v['officeId']?.toString() ?? '');
+    _supervisorUserId = v['immediateSupervisorUserId']?.toString();
+    _serviceId = int.tryParse(v['serviceId']?.toString() ?? '');
+    _employeeUserId = v['employeeUserId']?.toString();
+    _employeeNameCtrl.text = v['employeeName']?.toString() ?? '';
+    _departmentUnitCtrl.text = v['office']?['name']?.toString() ?? '';
+    _immediateSupervisorCtrl.text =
+        v['immediateSupervisorName']?.toString() ?? '';
+    _positionCtrl.text = v['position']?.toString() ?? '';
+    _serviceCtrl.text = v['service']?['name']?.toString() ?? '';
 
     _selectedContributions
       ..clear()
@@ -490,6 +311,12 @@ class _IsatDialogState extends State<IsatDialog> {
             timeline: r['timeLine']?.toString() ?? '',
             status: r['status']?.toString() ?? '',
             accomplishment: r['accomplishment']?.toString() ?? '',
+            kraId: int.tryParse(r['kraId']?.toString() ?? ''),
+            pgsDeliverableId: int.tryParse(
+              r['pgsDeliverableId']?.toString() ?? '',
+            ),
+            contributionName: r['deliverableMName']?.toString() ?? '',
+            kraName: r['kraMName']?.toString(),
           ),
         );
       }
@@ -556,6 +383,8 @@ class _IsatDialogState extends State<IsatDialog> {
           _serviceCtrl.text = info.parentOfficeName ?? '';
           if (!keepOffice) {
             _officeId = int.tryParse(info.officeId.toString());
+            _supervisorUserId = info.supervisorUserId.toString();
+            _serviceId = int.tryParse(info.parentOfficeId.toString());
           }
         });
       }
@@ -568,6 +397,88 @@ class _IsatDialogState extends State<IsatDialog> {
     } finally {
       if (mounted) setState(() => loadingEmployeeInfo = false);
     }
+  }
+
+  Future<void> _loadOffices() async {
+    final uid = _employeeUserId;
+    if (uid == null || uid.isEmpty) return;
+    setState(() => _loadingOffices = true);
+    try {
+      final offices = await _isatService.fetchEmployeeOffices(userId: uid);
+      if (!mounted) return;
+      setState(() {
+        _offices = offices;
+        final match = offices.firstWhereOrNull((o) => o.id == _officeId);
+        if (match != null) _departmentUnitCtrl.text = match.name;
+      });
+    } finally {
+      if (mounted) setState(() => _loadingOffices = false);
+    }
+  }
+
+  void _onOfficeSelected(int id) {
+    final o = _offices.firstWhereOrNull((e) => e.id == id);
+    if (o == null) return;
+    setState(() {
+      _officeId = o.id;
+      _departmentUnitCtrl.text = o.name;
+      _serviceId = o.parentOfficeId;
+      _serviceCtrl.text = o.parentOfficeName;
+      _selectedContributions.clear();
+      _pgsDeliverableOptions = [];
+      // clear napiling contribution sa rows kasi iba na ang office
+      for (final r in _commitmentRows) {
+        r.kraId = null;
+        r.pgsDeliverableId = null;
+        r.contributionName = '';
+        r.kraName = null;
+      }
+    });
+    _loadPgsDeliverables();
+  }
+
+  Widget _buildOfficeDropdown() {
+    if (_loadingOffices) {
+      return const LinearProgressIndicator(minHeight: 2, color: primaryColor);
+    }
+    // fallback kung walang nakuhang offices
+    if (_offices.isEmpty) {
+      return _inputField(_departmentUnitCtrl, required: true, readOnly: true);
+    }
+
+    final value = _offices.any((o) => o.id == _officeId) ? _officeId : null;
+
+    return DropdownButtonFormField<int>(
+      dropdownColor: mainBgColor,
+      value: value,
+      isExpanded: true,
+      style: GoogleFonts.plusJakartaSans(fontSize: 12, color: primaryTextColor),
+      hint: Text(
+        'Select department/unit…',
+        style: TextStyle(
+          fontSize: 11,
+          color: Colors.grey.shade400,
+          fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+        ),
+      ),
+      decoration: _inputDeco(),
+      validator: (v) => v == null ? 'Required' : null,
+      items:
+          _offices
+              .map(
+                (o) => DropdownMenuItem<int>(
+                  value: o.id,
+                  child: Text(o.name, overflow: TextOverflow.ellipsis),
+                ),
+              )
+              .toList(),
+      onChanged:
+          _isLocked
+              ? null
+              : (id) {
+                if (id != null) _onOfficeSelected(id);
+              },
+    );
   }
 
   Future<void> _loadPgsDeliverables() async {
@@ -591,153 +502,6 @@ class _IsatDialogState extends State<IsatDialog> {
     } finally {
       if (mounted) setState(() => _loadingPgsDeliverables = false);
     }
-  }
-
-  void _addContribution(IsatPgsDeliverables d) {
-    setState(() => _selectedContributions.add(d));
-  }
-
-  void _removeContribution(IsatPgsDeliverables d) {
-    setState(() => _selectedContributions.removeWhere((e) => e.id == d.id));
-  }
-
-  Future<void> _showAddContributionSheet() async {
-    if (_officeId == null || _selectedPeriod == null) {
-      MotionToast.warning(
-        description: const Text('Please select a Review Period first.'),
-      ).show(context);
-      return;
-    }
-
-    final available =
-        _pgsDeliverableOptions
-            .where((d) => !_selectedContributions.any((s) => s.id == d.id))
-            .toList();
-
-    if (available.isEmpty) {
-      MotionToast.info(
-        description: const Text('No more items to add.'),
-      ).show(context);
-      return;
-    }
-
-    final picked = await showModalBottomSheet<IsatPgsDeliverables>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (ctx, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Select Contribution',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: primaryColor,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, size: 18),
-                          onPressed: () => Navigator.pop(ctx),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1, color: kBorder),
-                  Expanded(
-                    child: ListView.separated(
-                      controller: scrollController,
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      itemCount: available.length,
-                      separatorBuilder:
-                          (_, __) => const Divider(height: 1, color: kBorder),
-                      itemBuilder: (ctx, i) {
-                        final d = available[i];
-                        return InkWell(
-                          onTap: () => Navigator.pop(ctx, d),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            child: Text(
-                              d.deliverableName,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                color: primaryTextColor,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    if (picked != null) {
-      _addContribution(picked);
-    }
-  }
-
-  Future<DateTime?> _pickDate(TextEditingController ctrl) async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: DateTime(now.year - 5),
-      lastDate: DateTime(now.year + 5),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: primaryColor,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      ctrl.text = '${_monthName(picked.month)} ${picked.day}, ${picked.year}';
-    }
-    return picked;
   }
 
   String _monthName(int m) =>
@@ -866,29 +630,151 @@ class _IsatDialogState extends State<IsatDialog> {
     return confirmed == true;
   }
 
+  Future<void> _confirmAndSave({
+    required bool isDraft,
+    String? title,
+    String? message,
+    String? confirmLabel,
+    IconData? icon,
+  }) async {
+    final confirmed = await _showConfirmDialog(
+      title: title ?? (isDraft ? 'Confirm Save as Draft' : 'Confirm Submit'),
+      message:
+          message ??
+          (isDraft
+              ? 'Save this as a draft? You can continue editing it later.'
+              : "Are you sure you want to submit this record? You won't be able to make any changes."),
+      confirmLabel: confirmLabel ?? (isDraft ? 'Save as Draft' : 'Submit'),
+      icon: icon ?? (isDraft ? Icons.drafts_outlined : Icons.send_outlined),
+    );
+    if (confirmed) await _saveIsat(isSubmit: !isDraft);
+  }
+
+  Widget _buildActionsDropdown(bool isMobile) {
+    return PopupMenuButton<String>(
+      enabled: !_submitting,
+      offset: const Offset(0, -100),
+      color: Colors.white,
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      itemBuilder:
+          (context) => [
+            PopupMenuItem<String>(
+              value: 'draft',
+              height: 44,
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.save_outlined,
+                    size: 18,
+                    color: primaryColor,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Save as Draft',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'submit',
+              height: 44,
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle_outline,
+                    size: 18,
+                    color: primaryColor,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Submit',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+      onSelected: (value) => _confirmAndSave(isDraft: value == 'draft'),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          vertical: isMobile ? 8 : 12,
+          horizontal: isMobile ? 16 : 22,
+        ),
+        decoration: BoxDecoration(
+          color: primaryColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _submitting ? 'Saving...' : 'Actions',
+              style: GoogleFonts.plusJakartaSans(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: isMobile ? 11 : 13,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.keyboard_arrow_up, color: Colors.white, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConfirmButton(bool isMobile) {
+    return ElevatedButton.icon(
+      onPressed:
+          _submitting
+              ? null
+              : () => _confirmAndSave(
+                isDraft: false,
+                title: 'Confirm ISAT',
+                message: 'Are you sure you want to confirm this record?',
+                confirmLabel: 'Confirm',
+                icon: Icons.verified_outlined,
+              ),
+      icon: const Icon(Icons.verified_outlined, size: 16, color: Colors.white),
+      label: Text(
+        'Confirm',
+        style: GoogleFonts.plusJakartaSans(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: isMobile ? 11 : 13,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryColor,
+        elevation: 0,
+        padding: EdgeInsets.symmetric(
+          vertical: isMobile ? 8 : 12,
+          horizontal: isMobile ? 16 : 22,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
   Future<void> _saveIsat({required bool isSubmit}) async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedRoadmaps.isEmpty) {
-      MotionToast.error(
-        description: const Text(
-          'Please add at least one roadmap / strategic objective.',
-        ),
-      ).show(context);
-      return;
-    }
-
-    if (isSubmit && !_employeeCommitted) {
-      MotionToast.error(
-        description: const Text(
-          'Please confirm the Employee Commitment before submitting.',
-        ),
-      ).show(context);
-      return;
-    }
-
     if (_selectedPeriod == null ||
         _officeId == null ||
+        _serviceId == null ||
         _employeeUserId == null) {
       MotionToast.error(
         description: const Text(
@@ -901,26 +787,13 @@ class _IsatDialogState extends State<IsatDialog> {
     setState(() => _submitting = true);
 
     try {
-      // I. Strategic alignment (roadmap + selected deliverables)
-      final strategicObjectiveSupportedList =
-          <IsatStrategicObjectiveSupported>[];
-      for (final entry in _selectedRoadmaps) {
-        for (final id in entry.selectedDeliverableIds) {
-          strategicObjectiveSupportedList.add(
-            IsatStrategicObjectiveSupported(
-              0,
-              0,
-              entry.roadmap.id,
-              entry.roadmap.kraName,
-              id,
-              entry.deliverableText(id),
-              entry.roadmap.strategicObjective,
-              DateTime.now(),
-              false,
-            ),
-          );
-        }
+      UserRegistration? user = await AuthUtil.fetchLoggedUser();
+      if (user == null || user.id == null) {
+        if (mounted) setState(() => _submitting = false);
+        return;
       }
+
+      final String userId = user.id!;
 
       final annualPerformanceCommitmentsList =
           _commitmentRows
@@ -931,25 +804,11 @@ class _IsatDialogState extends State<IsatDialog> {
                   0,
                   r.keyTaskCtrl.text.trim(),
                   r.targetCtrl.text.trim(),
-                  r.timelineCtrl.text.trim(),
-                  r.statusCtrl.text.trim(),
                   r.accomplishmentCtrl.text.trim(),
                   false, // isDeleted
                   DateTime.now(),
-                ),
-              )
-              .toList();
-
-      final strategyContributionList =
-          _selectedContributions
-              .map(
-                (d) => IsatStrategicContribution(
-                  0,
-                  false,
-                  0,
-                  d.id,
-                  DateTime.now(),
-                  d.deliverableName,
+                  kraId: r.kraId,
+                  pgsDeliverableId: r.pgsDeliverableId,
                 ),
               )
               .toList();
@@ -961,22 +820,18 @@ class _IsatDialogState extends State<IsatDialog> {
         _selectedPeriod!.id,
         _employeeUserId!,
         _officeId!,
-        strategicObjectiveSupportedList,
+        _supervisorUserId,
+        _positionCtrl.text.trim(),
+        _serviceId!,
         annualPerformanceCommitmentsList,
-        strategyContributionList,
         DateTime.now(),
         !isSubmit,
         false,
         signatoriesList,
       );
-
       final success =
           isSubmit
-              ? await _isatService.submitIsat(
-                isat,
-                _employeeUserId!,
-                signatories: _buildSignatoryPayload(),
-              )
+              ? await _isatService.submitIsat(isat, userId)
               : (_existingId != null
                   ? await _isatService.updateIsat(isat)
                   : await _isatService.saveIsat(isat));
@@ -1198,10 +1053,7 @@ class _IsatDialogState extends State<IsatDialog> {
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _fieldLabel('Department/Unit'),
-              _inputField(_departmentUnitCtrl, required: true, readOnly: true),
-            ],
+            children: [_fieldLabel('Department/Unit'), _buildOfficeDropdown()],
           ),
         ]),
         const SizedBox(height: 10),
@@ -1232,461 +1084,13 @@ class _IsatDialogState extends State<IsatDialog> {
     );
   }
 
-  Widget _buildStrategicAlignment() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(child: _sectionTitle('I. STRATEGIC ALIGNMENT')),
-            TextButton.icon(
-              onPressed: _loadingRoadmap ? null : _showAddRoadmapSheet,
-              icon: const Icon(Icons.add, size: 16, color: primaryColor),
-              label: Text(
-                'Add Roadmap',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: primaryColor,
-                ),
-              ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              ),
-            ),
-          ],
-        ),
-        if (_loadingRoadmap)
-          const LinearProgressIndicator(minHeight: 2, color: primaryColor),
-        if (!_loadingRoadmap && _selectedRoadmaps.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFD),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: kBorder),
-            ),
-            child: Center(
-              child: Text(
-                'No roadmap added yet. Tap "Add Roadmap" to select one.',
-                style: GoogleFonts.plusJakartaSans(fontSize: 11, color: kMuted),
-              ),
-            ),
-          ),
-        ..._selectedRoadmaps.map(
-          (entry) => Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: _buildRoadmapCard(entry),
-          ),
-        ),
-        gap32px,
-        Row(
-          children: [
-            Expanded(child: _fieldLabel('My Contribution to the Strategy')),
-            TextButton.icon(
-              onPressed:
-                  _loadingPgsDeliverables ? null : _showAddContributionSheet,
-              icon: const Icon(Icons.add, size: 14, color: primaryColor),
-              label: Text(
-                'Add',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: primaryColor,
-                ),
-              ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                minimumSize: const Size(0, 0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ),
-          ],
-        ),
-        if (_loadingPgsDeliverables)
-          const LinearProgressIndicator(minHeight: 2, color: primaryColor),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: kBorder),
-          ),
-          child:
-              _selectedContributions.isEmpty
-                  ? Text(
-                    'No contribution added yet. Tap "Add" to select one.',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      color: kMuted,
-                    ),
-                  )
-                  : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children:
-                        _selectedContributions.map((d) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 5,
-                                  height: 5,
-                                  margin: const EdgeInsets.only(
-                                    top: 6,
-                                    right: 8,
-                                  ),
-                                  decoration: const BoxDecoration(
-                                    color: primaryColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    d.deliverableName,
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 11.5,
-                                      color: primaryTextColor,
-                                      height: 1.45,
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: Icon(
-                                    CupertinoIcons.xmark_circle_fill,
-                                    size: 16,
-                                    color: Colors.grey.shade400,
-                                  ),
-                                  onPressed: () => _removeContribution(d),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                  ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRoadmapCard(_RoadmapSelection entry) {
-    // id -> text (fetched list muna, fallback sa saved name)
-    final selectedDeliverables =
-        entry.selectedDeliverableIds
-            .map((id) => MapEntry(id, entry.deliverableText(id)))
-            .toList();
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: kBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: primaryColor.withOpacity(.06),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(8),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        entry.roadmap.kraName,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        entry.roadmap.strategicObjective,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          color: primaryTextColor,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    CupertinoIcons.delete_simple,
-                    size: 16,
-                    color: Colors.red.shade400,
-                  ),
-                  onPressed: () => _removeRoadmap(entry),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Deliverables${_selectedYear != null ? ' ($_selectedYear)' : ''}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: kMuted,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed:
-                          entry.loadingDeliverables
-                              ? null
-                              : () => _showAddDeliverableSheet(entry),
-                      icon: const Icon(
-                        Icons.add,
-                        size: 14,
-                        color: primaryColor,
-                      ),
-                      label: Text(
-                        'Add Deliverable',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: primaryColor,
-                        ),
-                      ),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        minimumSize: const Size(0, 0),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                if (entry.loadingDeliverables)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: LinearProgressIndicator(
-                      minHeight: 2,
-                      color: primaryColor,
-                    ),
-                  )
-                else if (entry.error != null)
-                  Text(
-                    entry.error!,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      color: Colors.redAccent,
-                    ),
-                  )
-                else if (selectedDeliverables.isEmpty)
-                  Text(
-                    'No deliverables added yet. Tap "Add Deliverable" to select one.',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      color: kMuted,
-                    ),
-                  )
-                else
-                  ...selectedDeliverables.map((d) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
-                            margin: const EdgeInsets.only(top: 6, right: 8),
-                            decoration: const BoxDecoration(
-                              color: primaryColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              d.value,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11.5,
-                                color: primaryTextColor,
-                                height: 1.45,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              CupertinoIcons.xmark_circle_fill,
-                              size: 16,
-                              color: Colors.grey.shade400,
-                            ),
-                            onPressed: () => _removeDeliverable(entry, d.key),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _addDeliverable(_RoadmapSelection entry, int deliverableId) {
-    setState(() => entry.selectedDeliverableIds.add(deliverableId));
-  }
-
-  void _removeDeliverable(_RoadmapSelection entry, int deliverableId) {
-    setState(() => entry.selectedDeliverableIds.remove(deliverableId));
-  }
-
-  Future<void> _showAddDeliverableSheet(_RoadmapSelection entry) async {
-    final available =
-        entry.deliverables
-            .where(
-              (d) =>
-                  !entry.selectedDeliverableIds.contains(d.id) &&
-                  d.deliverableDescription.trim().isNotEmpty,
-            )
-            .toList();
-
-    if (available.isEmpty) {
-      MotionToast.info(
-        description: const Text('No more deliverables to add.'),
-      ).show(context);
-      return;
-    }
-
-    final picked = await showModalBottomSheet<IsatRoadmapDeliverables>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (ctx, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Select Deliverable',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: primaryColor,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, size: 18),
-                          onPressed: () => Navigator.pop(ctx),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1, color: kBorder),
-                  Expanded(
-                    child: ListView.separated(
-                      controller: scrollController,
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      itemCount: available.length,
-                      separatorBuilder:
-                          (_, __) => const Divider(height: 1, color: kBorder),
-                      itemBuilder: (ctx, i) {
-                        final d = available[i];
-                        return InkWell(
-                          onTap: () => Navigator.pop(ctx, d),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            child: Text(
-                              d.deliverableDescription,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                color: primaryTextColor,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    if (picked != null) {
-      _addDeliverable(entry, picked.id);
-    }
-  }
-
   Widget _buildCommitmentsTable(bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Expanded(
-              child: _sectionTitle('II. ANNUAL PERFORMANCE COMMITMENTS'),
-            ),
+            Expanded(child: _sectionTitle('I. ANNUAL PERFORMANCE COMMITMENTS')),
             TextButton.icon(
               onPressed: _addRow,
               icon: const Icon(Icons.add, size: 16, color: primaryColor),
@@ -1722,6 +1126,16 @@ class _IsatDialogState extends State<IsatDialog> {
                   isMobile: isMobile,
                   canRemove: _commitmentRows.length > 1,
                   onRemove: () => _removeRow(i),
+                  options: _pgsDeliverableOptions,
+                  loadingOptions: _loadingPgsDeliverables,
+                  onContributionChanged:
+                      (picked) => setState(() {
+                        final r = _commitmentRows[i];
+                        r.kraId = picked.kraId;
+                        r.pgsDeliverableId = picked.id;
+                        r.contributionName = picked.deliverableName;
+                        r.kraName = picked.kraName;
+                      }),
                 );
               }),
             ],
@@ -1731,140 +1145,10 @@ class _IsatDialogState extends State<IsatDialog> {
     );
   }
 
-  Widget _buildEmployeeCommitment() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionTitle('III. EMPLOYEE COMMITMENT'),
-        InkWell(
-          onTap: () => setState(() => _employeeCommitted = !_employeeCommitted),
-          borderRadius: BorderRadius.circular(4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 14,
-                height: 14,
-                margin: const EdgeInsets.only(top: 2),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: _employeeCommitted ? primaryColor : Colors.black,
-                    width: _employeeCommitted ? 1.5 : 1,
-                  ),
-                  color: _employeeCommitted ? primaryColor : Colors.transparent,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                child:
-                    _employeeCommitted
-                        ? const Icon(Icons.check, size: 10, color: Colors.white)
-                        : null,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'I understand that the tasks listed above contribute to '
-                  'the achievement of the CRMC Strategic Objectives and '
-                  'commit to accomplishing them during the review period.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: primaryTextColor,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _signatureBlock({
-    required String sectionLabel,
-    required String nameLabel,
-    required TextEditingController nameCtrl,
-    required TextEditingController dateCtrl,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _fieldLabel(sectionLabel),
-        _inputField(nameCtrl, hint: nameLabel),
-        const SizedBox(height: 8),
-        Container(
-          height: 1,
-          color: kBorder,
-          margin: const EdgeInsets.symmetric(vertical: 4),
-        ),
-        Text(
-          'Signature',
-          style: GoogleFonts.plusJakartaSans(fontSize: 10, color: kMuted),
-        ),
-        const SizedBox(height: 8),
-        _fieldLabel('Date'),
-        _inputField(
-          dateCtrl,
-          hint: 'Pick a date',
-          readOnly: true,
-          onTap: () => _pickDate(dateCtrl).then((_) => setState(() {})),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSignatories(bool isMobile) {
-    final blocks = [
-      _signatureBlock(
-        sectionLabel: 'Prepared by (Employee)',
-        nameLabel: 'Employee name',
-        nameCtrl: _preparedByCtrl,
-        dateCtrl: _preparedDateCtrl,
-      ),
-      _signatureBlock(
-        sectionLabel: 'Reviewed by (Immediate Supervisor)',
-        nameLabel: 'Supervisor name',
-        nameCtrl: _reviewedByCtrl,
-        dateCtrl: _reviewedDateCtrl,
-      ),
-      _signatureBlock(
-        sectionLabel: 'Approved by (Department/Service Head)',
-        nameLabel: 'Department/Service head name',
-        nameCtrl: _approvedByCtrl,
-        dateCtrl: _approvedDateCtrl,
-      ),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionTitle('IV. SIGNATORIES'),
-        isMobile
-            ? Column(
-              children:
-                  blocks
-                      .expand((b) => [b, const SizedBox(height: 16)])
-                      .toList(),
-            )
-            : IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children:
-                    blocks
-                        .expand(
-                          (b) => [
-                            Expanded(child: b),
-                            const SizedBox(width: 16),
-                          ],
-                        )
-                        .toList()
-                      ..removeLast(),
-              ),
-            ),
-      ],
-    );
-  }
-
   Widget _buildFooter(bool isMobile) {
+    final showActions = _initialized && !_isLocked; // draft / new only
+    final showConfirm = _initialized && _isPending; // pending only
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 24,
@@ -1878,6 +1162,23 @@ class _IsatDialogState extends State<IsatDialog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          Expanded(
+            child: Text(
+              !_initialized
+                  ? ''
+                  : _isApproved
+                  ? "This record has been approved and can no longer be edited."
+                  : _isPending
+                  ? "This record is pending approval and can no longer be edited."
+                  : "Note: Once submitted, this record is not editable. Save as Draft if you need to make changes later.",
+              style: GoogleFonts.plusJakartaSans(
+                color: kMuted,
+                fontSize: 10,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
           if (_submitting)
             const Padding(
               padding: EdgeInsets.only(right: 12),
@@ -1890,72 +1191,18 @@ class _IsatDialogState extends State<IsatDialog> {
                 ),
               ),
             ),
-          OutlinedButton(
-            onPressed:
-                _submitting
-                    ? null
-                    : () async {
-                      final confirmed = await _showConfirmDialog(
-                        title: 'Confirm Save',
-                        message: 'Are you sure you want to save this as draft?',
-                        confirmLabel: 'Save',
-                        icon: Icons.save_outlined,
-                      );
-                      if (confirmed) _saveIsat(isSubmit: false);
-                    },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: primaryColor,
-              side: const BorderSide(color: primaryColor),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 14 : 22,
-                vertical: isMobile ? 8 : 12,
-              ),
+          if (showActions)
+            PermissionWidget(
+              permission: AppPermissions.draftISAT,
+              child: _buildActionsDropdown(isMobile),
             ),
-            child: Text(
-              'Save as Draft',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: isMobile ? 11 : 13,
-                fontWeight: FontWeight.w700,
-              ),
+          if (showConfirm) ...[
+            const SizedBox(width: 8),
+            PermissionWidget(
+              permission: AppPermissions.confirmISAT,
+              child: _buildConfirmButton(isMobile),
             ),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed:
-                _submitting
-                    ? null
-                    : () async {
-                      final confirmed = await _showConfirmDialog(
-                        title: 'Confirm Submit',
-                        message: 'Are you sure you want to submit this ISAT?',
-                        confirmLabel: 'Submit',
-                        icon: Icons.send_outlined,
-                      );
-                      if (confirmed) _saveIsat(isSubmit: true);
-                    },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 18 : 28,
-                vertical: isMobile ? 8 : 12,
-              ),
-              elevation: 2,
-            ),
-            child: Text(
-              'Submit',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: isMobile ? 11 : 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );
@@ -2061,12 +1308,18 @@ class _IsatDialogState extends State<IsatDialog> {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
+
+                    // children: [
+                    //   _buildGeneralInfo(isMobile),
+                    //   _buildCommitmentsTable(isMobile),
+                    //   const SizedBox(height: 8),
+                    // ],
                     children: [
                       _buildGeneralInfo(isMobile),
-                      _buildStrategicAlignment(),
-                      _buildCommitmentsTable(isMobile),
-                      _buildEmployeeCommitment(),
-                      _buildSignatories(isMobile),
+                      if (_canShowCommitments)
+                        _buildCommitmentsTable(isMobile)
+                      else
+                        _buildCommitmentsPlaceholder(),
                       const SizedBox(height: 8),
                     ],
                   ),
@@ -2076,6 +1329,33 @@ class _IsatDialogState extends State<IsatDialog> {
             _buildFooter(isMobile),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCommitmentsPlaceholder() {
+    return Container(
+      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFD),
+        border: Border.all(color: kBorder),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.lock_outline, size: 22, color: Colors.grey.shade400),
+          const SizedBox(height: 8),
+          Text(
+            'Select a Review Period and Department/Unit to view the Annual Performance Commitments.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              color: kMuted,
+              height: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2092,6 +1372,8 @@ class _CommitmentsTableHeader extends StatelessWidget {
       fontWeight: FontWeight.w700,
       color: primaryColor,
     );
+    final gap = SizedBox(width: isMobile ? 6 : 8);
+
     return Container(
       color: primaryColor.withOpacity(0.1),
       padding: EdgeInsets.symmetric(
@@ -2106,15 +1388,16 @@ class _CommitmentsTableHeader extends StatelessWidget {
           ),
           Expanded(
             flex: 3,
+            child: Text('Strategic Contribution', style: headerStyle),
+          ),
+          gap,
+          Expanded(
+            flex: 3,
             child: Text('Key Task / Deliverable', style: headerStyle),
           ),
-          SizedBox(width: isMobile ? 6 : 8),
+          gap,
           Expanded(flex: 2, child: Text('Target/Measure', style: headerStyle)),
-          SizedBox(width: isMobile ? 6 : 8),
-          Expanded(flex: 2, child: Text('Timeline', style: headerStyle)),
-          SizedBox(width: isMobile ? 6 : 8),
-          Expanded(flex: 2, child: Text('Status', style: headerStyle)),
-          SizedBox(width: isMobile ? 6 : 8),
+          gap,
           Expanded(flex: 2, child: Text('Accomplishment', style: headerStyle)),
           const SizedBox(width: 32),
         ],
@@ -2129,6 +1412,9 @@ class _CommitmentRow extends StatelessWidget {
   final bool isMobile;
   final bool canRemove;
   final VoidCallback onRemove;
+  final List<IsatPgsDeliverables> options;
+  final bool loadingOptions;
+  final ValueChanged<IsatPgsDeliverables> onContributionChanged;
 
   const _CommitmentRow({
     super.key,
@@ -2137,6 +1423,9 @@ class _CommitmentRow extends StatelessWidget {
     required this.isMobile,
     required this.canRemove,
     required this.onRemove,
+    required this.options,
+    required this.loadingOptions,
+    required this.onContributionChanged,
   });
 
   InputDecoration _cellDeco(String hint) => InputDecoration(
@@ -2167,6 +1456,176 @@ class _CommitmentRow extends StatelessWidget {
     decoration: _cellDeco(hint),
   );
 
+  List<IsatPgsDeliverables> _entries() {
+    final seen = <int>{};
+    return options.where((o) => seen.add(o.id)).toList();
+  }
+
+  Future<void> _pickContribution(BuildContext context) async {
+    final entries = _entries();
+    if (entries.isEmpty) return;
+
+    final picked = await showModalBottomSheet<IsatPgsDeliverables>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (ctx) => DraggableScrollableSheet(
+            initialChildSize: 0.6,
+            minChildSize: 0.4,
+            maxChildSize: 0.9,
+            expand: false,
+            builder:
+                (ctx, scrollController) => Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Select Strategic Contribution',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: primaryColor,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, size: 18),
+                              onPressed: () => Navigator.pop(ctx),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1, color: kBorder),
+                      Expanded(
+                        child: ListView.separated(
+                          controller: scrollController,
+                          itemCount: entries.length,
+                          separatorBuilder:
+                              (_, __) =>
+                                  const Divider(height: 1, color: kBorder),
+                          itemBuilder: (ctx, i) {
+                            final e = entries[i];
+                            return InkWell(
+                              onTap: () => Navigator.pop(ctx, e),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (e.kraName != null &&
+                                        e.kraName!.isNotEmpty)
+                                      Text(
+                                        e.kraName!,
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          color: primaryColor,
+                                          letterSpacing: 0.3,
+                                        ),
+                                      ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      e.deliverableName,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12,
+                                        color: primaryTextColor,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+          ),
+    );
+
+    if (picked != null) onContributionChanged(picked);
+  }
+
+  Widget _contributionDropdown(BuildContext context) {
+    if (loadingOptions) {
+      return const LinearProgressIndicator(minHeight: 2, color: primaryColor);
+    }
+
+    final current = row.contributionName.trim();
+    final kra = row.kraName;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(5),
+      onTap: () => _pickContribution(context),
+      child: InputDecorator(
+        decoration: _cellDeco('Select…').copyWith(
+          suffixIcon: const Icon(Icons.arrow_drop_down, size: 20),
+          suffixIconConstraints: const BoxConstraints(minWidth: 28),
+        ),
+        isEmpty: current.isEmpty,
+        child:
+            current.isEmpty
+                ? Text(
+                  'Select…',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    color: Colors.grey.shade400,
+                  ),
+                )
+                : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (kra != null && kra.isNotEmpty)
+                      Text(
+                        kra,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          color: primaryColor,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    Text(
+                      current,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEven = index.isEven;
@@ -2191,16 +1650,14 @@ class _CommitmentRow extends StatelessWidget {
                 ),
               ),
             ),
+            Expanded(flex: 3, child: _contributionDropdown(context)),
+            SizedBox(width: isMobile ? 6 : 8),
             Expanded(
               flex: 3,
               child: _cell(row.keyTaskCtrl, 'Key task / deliverable…'),
             ),
             SizedBox(width: isMobile ? 6 : 8),
             Expanded(flex: 2, child: _cell(row.targetCtrl, 'Target…')),
-            SizedBox(width: isMobile ? 6 : 8),
-            Expanded(flex: 2, child: _cell(row.timelineCtrl, 'Timeline…')),
-            SizedBox(width: isMobile ? 6 : 8),
-            Expanded(flex: 2, child: _cell(row.statusCtrl, 'Status…')),
             SizedBox(width: isMobile ? 6 : 8),
             Expanded(
               flex: 2,

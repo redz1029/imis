@@ -13,8 +13,6 @@ IsatAnnualPerformanceCommitments _$IsatAnnualPerformanceCommitmentsFromJson(
   (json['isatId'] as num).toInt(),
   json['deliverable'] as String?,
   json['target'] as String?,
-  json['timeLine'] as String?,
-  json['status'] as String?,
   json['accomplishment'] as String?,
   json['isDeleted'] as bool,
   _$JsonConverterFromJson<String, DateTime>(
@@ -22,6 +20,10 @@ IsatAnnualPerformanceCommitments _$IsatAnnualPerformanceCommitmentsFromJson(
     const DateTimeConverter().fromJson,
   ),
   rowVersion: json['rowVersion'] as String?,
+  kraId: (json['kraId'] as num?)?.toInt(),
+  kraMName: json['kraMName'] as String?,
+  pgsDeliverableId: (json['pgsDeliverableId'] as num?)?.toInt(),
+  deliverableMName: json['deliverableMName'] as String?,
 );
 
 Map<String, dynamic> _$IsatAnnualPerformanceCommitmentsToJson(
@@ -33,9 +35,11 @@ Map<String, dynamic> _$IsatAnnualPerformanceCommitmentsToJson(
   'isatId': instance.isatId,
   'deliverable': instance.deliverable,
   'target': instance.target,
-  'timeLine': instance.timeLine,
-  'status': instance.status,
   'accomplishment': instance.accomplishment,
+  'kraId': instance.kraId,
+  'kraMName': instance.kraMName,
+  'pgsDeliverableId': instance.pgsDeliverableId,
+  'deliverableMName': instance.deliverableMName,
   'postingDate': _$JsonConverterToJson<String, DateTime>(
     instance.postingDate,
     const DateTimeConverter().toJson,
