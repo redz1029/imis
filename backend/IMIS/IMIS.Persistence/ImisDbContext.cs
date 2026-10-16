@@ -16,7 +16,7 @@ namespace IMIS.Persistence
         public DbSet<Team> Teams { get; set; }
         public DbSet<AuditorTeams> AuditorTeams { get; set; }
         public DbSet<AuditSchedule> AuditSchedules { get; set; }
-        public DbSet<AuditScheduleDetails> AuditScheduleDetails { get; set; }
+        //public DbSet<AuditScheduleDetails> AuditScheduleDetails { get; set; }
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
         public DbSet<PgsDeliverable> Deliverable { get; set; }  
         public DbSet<KeyResultArea> KeyResultArea { get; set; }
