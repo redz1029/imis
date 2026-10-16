@@ -18,8 +18,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 19,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -28,8 +27,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 34,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -38,8 +36,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 26,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -48,8 +45,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 54,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -58,8 +54,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 15,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -68,8 +63,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 31,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 2 - EFMD - Mechanical Works and Section
@@ -80,8 +74,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 14,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -90,8 +83,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 61,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -100,8 +92,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 41,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -110,8 +101,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 58,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -120,8 +110,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 16,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -130,8 +119,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 8,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 3 - Peritoneal Dialysis Clinic
@@ -142,8 +130,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 17,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -152,8 +139,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 28,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -162,8 +148,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 60,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -172,8 +157,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 11,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -182,8 +166,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 78,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -192,8 +175,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 39,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 4 - Health Emergency Management Staff
@@ -204,8 +186,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 27,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -214,8 +195,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 49,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -224,8 +204,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 69,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -234,8 +213,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 74,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -244,8 +222,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 29,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -254,8 +231,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 57,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 5 - Health Information Management Department
@@ -266,8 +242,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 9,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -276,8 +251,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 53,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -286,8 +260,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 84,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -296,8 +269,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 82,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -306,8 +278,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 40,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -316,8 +287,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 33,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 6 - Mechanical Works Department - Elevator Unit
@@ -328,8 +298,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 20,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -338,8 +307,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 66,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -348,8 +316,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 71,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -358,8 +325,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 75,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -368,8 +334,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 18,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -378,8 +343,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 79,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 7 - Department of Internal Medicine
@@ -390,8 +354,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 30,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -400,8 +363,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 48,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -410,8 +372,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 46,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -420,8 +381,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 47,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -430,8 +390,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 38,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -440,8 +399,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 42,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 8 - Health Information Management Department - Out-Patient Department
@@ -452,8 +410,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 24,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -462,8 +419,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 62,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -472,8 +428,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 76,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -482,8 +437,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 36,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -492,8 +446,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 3,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -502,8 +455,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 72,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 9 - Pay Admitting Unit
@@ -514,8 +466,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 55,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -524,8 +475,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 59,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -534,8 +484,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 37,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -544,8 +493,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 12,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -554,8 +502,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 10,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -564,8 +511,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 68,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 10 - Dental Department
@@ -576,8 +522,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 52,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -586,8 +531,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 65,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -596,8 +540,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 80,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -606,8 +549,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 21,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -616,8 +558,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 43,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -626,8 +567,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 77,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 11 - Emergency Department - Medical/Nursing
@@ -638,8 +578,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 63,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -648,8 +587,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 73,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -658,8 +596,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 6,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -668,8 +605,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 64,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -678,8 +614,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 44,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 12 - Department of Obstetics-Gynecology
@@ -690,8 +625,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 7,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -700,8 +634,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 45,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -710,8 +643,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 56,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -720,8 +652,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 13,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -730,8 +661,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 25,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -740,8 +670,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 23,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 13 - Budget Department
@@ -752,8 +681,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 51,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -762,8 +690,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 50,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -772,8 +699,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 81,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -782,8 +708,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 22,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -792,8 +717,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 70,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -802,8 +726,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 32,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
 
                 // Team 14 - Audit Teams
@@ -814,8 +737,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 2,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -824,8 +746,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 35,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -834,8 +755,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 67,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -844,8 +764,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 83,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -854,8 +773,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 5,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 },
                 new AuditorTeams
                 {
@@ -864,8 +782,7 @@ namespace IMIS.Persistence.SeedConfigurations
                     AuditorId = 4,
                     IsTeamLeader = true,
                     IsActive = true,
-                    IsDeleted = false,
-                    ImprovementType = OrganizationImprovementType.PGS
+                    IsDeleted = false
                 }
             );
         }

@@ -20,11 +20,7 @@ namespace IMIS.Persistence.IsoStandardModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-        public async Task<IsoStandard?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
-        {
-            return await ReadOnlyDbContext.Set<IsoStandard>()
-                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
-        }
+
         public async Task<IEnumerable<IsoStandard>?> FilterByVersionId(int versionId, CancellationToken cancellationToken)
         {
             return await _entities
@@ -46,7 +42,24 @@ namespace IMIS.Persistence.IsoStandardModule
                 .ConfigureAwait(false);
         }
 
+        public async Task<EntityPageList<IsoStandard, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var query = _entities.Include(iso => iso.Version).AsNoTracking();
+            return await EntityPageList<IsoStandard, long>
+                .CreateAsync(query, page, pageSize, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
+        public async Task<EntityPageList<IsoStandard, long>> GetPaginatedByVersionAsync(int versionId, int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var query = _entities
+                .Where(iso => iso.VersionID == versionId)
+                .Include(iso => iso.Version)
+                .AsNoTracking();
+            return await EntityPageList<IsoStandard, long>
+                .CreateAsync(query, page, pageSize, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         public async Task<IsoStandard?> GetByIdWithVersionAsync(long id, CancellationToken cancellationToken)
         {
@@ -54,15 +67,6 @@ namespace IMIS.Persistence.IsoStandardModule
                 .Include(iso => iso.Version)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(iso => iso.Id == id, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        public async Task<IEnumerable<IsoStandard>> GetAllForTreeAsync(int versionId, CancellationToken cancellationToken)
-        {
-            return await _entities
-                .Where(iso => iso.VersionID == versionId && iso.isActive)
-                .AsNoTracking()
-                .OrderBy(iso => iso.ClauseRef)
-                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
     }

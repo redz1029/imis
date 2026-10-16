@@ -20,16 +20,14 @@ namespace IMIS.Presentation.AuditorTeamsModule
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/", async ([FromBody] AuditorTeamsDto dto, IAuditorTeamsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] AuditorTeamsDto auditorTeamsDto, IAuditorTeamsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                await service.SaveOrUpdateAsync(dto, cancellationToken);
-                await cache.EvictByTagAsync("AuditorTeam", cancellationToken);
-                return Results.Ok(dto);
+                await service.SaveOrUpdateAsync(auditorTeamsDto, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditorTeamTag, cancellationToken);
+                return Results.Ok(auditorTeamsDto);
             })
-            .Produces<AuditorTeamsDto>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status400BadRequest)
-             .WithTags("AuditorTeam");
-
+           .WithTags(_AuditorTeamTag)           
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.Add));
 
             app.MapGet("/", async (IAuditorTeamsService service, CancellationToken cancellationToken) =>
             {

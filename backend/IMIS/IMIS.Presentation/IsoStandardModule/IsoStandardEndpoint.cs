@@ -1,13 +1,10 @@
-using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.IsoStandardModule;
-using IMIS.Application.PgsModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
-using System.Text.Json;
 
 namespace IMIS.Presentation.IsoStandardModule
 {
@@ -15,34 +12,25 @@ namespace IMIS.Presentation.IsoStandardModule
     {
         private const string _tag = "IsoStandard";
 
-        public IsoStandardEndpoint() : base("/IsoStandard")
+        public IsoStandardEndpoint() : base("IsoStandard")
         {
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-
-
-            app.MapPost("/", async ([FromBody] List<IsoStandardDto> isoDtos, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            //app.MapPost("/", async ([FromBody] IsoStandardDto dto, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            //{
+            //    await service.SaveOrUpdateAsync(dto, cancellationToken);
+            //    await cache.EvictByTagAsync(_tag, cancellationToken);
+            //    return Results.Ok(dto);
+            //})
+            //.WithTags(_tag);
+            app.MapPost("/", async ([FromBody] IsoStandardDto dto, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                if (isoDtos == null || !isoDtos.Any())
-       
-                {
-                    return Results.BadRequest("ISO data list is required.");
-                }
-
-                var createdIsoList = new List<IsoStandardDto>();
-                foreach (var isoDto in isoDtos)
-                {
-                    await service.SaveOrUpdateAsync(isoDto, cancellationToken);
-                }
-
+                await service.CreateAsync(dto, cancellationToken);
                 await cache.EvictByTagAsync(_tag, cancellationToken);
-
                 return Results.Ok();
-            })
-            .WithTags(_tag);
-
+            });
 
 
             app.MapGet("/", async (IIsoStandardService service, CancellationToken cancellationToken) =>
@@ -81,19 +69,19 @@ namespace IMIS.Presentation.IsoStandardModule
             })
             .WithTags(_tag);
 
-            //app.MapGet("/paginate/{page}/{pageSize}", async (int page, int pageSize, IIsoStandardService service, CancellationToken cancellationToken) =>
-            //{
-            //    var paginatedStandards = await service.GetPaginatedAsync(page, pageSize, cancellationToken);
-            //    return Results.Ok(paginatedStandards);
-            //})
-            //.WithTags(_tag);
+            app.MapGet("/paginate/{page}/{pageSize}", async (int page, int pageSize, IIsoStandardService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedStandards = await service.GetPaginatedAsync(page, pageSize, cancellationToken);
+                return Results.Ok(paginatedStandards);
+            })
+            .WithTags(_tag);
 
-            //app.MapGet("/paginate-version/{versionId}/{page}/{pageSize}", async (int versionId, int page, int pageSize, IIsoStandardService service, CancellationToken cancellationToken) =>
-            //{
-            //    var paginatedStandards = await service.GetPaginatedByVersionAsync(versionId, page, pageSize, cancellationToken);
-            //    return Results.Ok(paginatedStandards);
-            //})
-            //.WithTags(_tag);
+            app.MapGet("/paginate-version/{versionId}/{page}/{pageSize}", async (int versionId, int page, int pageSize, IIsoStandardService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedStandards = await service.GetPaginatedByVersionAsync(versionId, page, pageSize, cancellationToken);
+                return Results.Ok(paginatedStandards);
+            })
+            .WithTags(_tag);
 
             app.MapPut("/{id}", async (long id, [FromBody] IsoStandardDto dto, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -106,26 +94,18 @@ namespace IMIS.Presentation.IsoStandardModule
                 return Results.Ok(dto);
             })
             .WithTags(_tag);
-            app.MapGet("/tree/{versionId:int}", async (int versionId, IIsoStandardService service, CancellationToken cancellationToken) =>
+
+            app.MapDelete("/{id}", async (long id, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                var tree = await service.GetTreeAsync(versionId, cancellationToken);
-                return Results.Ok(tree);
+                var result = await service.DeleteAsync(id, cancellationToken);
+                if (result)
+                {
+                    await cache.EvictByTagAsync(_tag, cancellationToken);
+                    return Results.Ok(new { message = "IsoStandard deleted successfully." });
+                }
+                return Results.NotFound(new { message = "IsoStandard not found." });
             })
             .WithTags(_tag);
-
-            app.MapDelete("/{id:long}", async (int id, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                var result = await service.SoftDeleteAsync(id, cancellationToken);
-
-                await cache.EvictByTagAsync(_tag, cancellationToken);
-
-                return result
-                    ? Results.Ok(new { message = "IsoStandard deleted successfully." })
-                    : Results.NotFound(new { message = "IsoStandard not found." });
-            })
-            .WithTags(_tag);
-
-
         }
     }
 }

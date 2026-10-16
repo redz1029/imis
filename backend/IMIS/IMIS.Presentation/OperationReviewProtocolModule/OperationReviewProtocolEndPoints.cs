@@ -130,7 +130,7 @@ namespace IMIS.Presentation.OperationReviewProtocolModule
 
            
 
-            app.MapGet("/{id:long}", async (long id, IOperationReviewProtocolService service, CancellationToken cancellationToken) =>
+            app.MapGet("/{long}", async (long id, IOperationReviewProtocolService service, CancellationToken cancellationToken) =>
             {
                 var operationReviewProtocol = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 return operationReviewProtocol != null ? Results.Ok(operationReviewProtocol) : Results.NotFound();

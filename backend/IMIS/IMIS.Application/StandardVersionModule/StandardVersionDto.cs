@@ -1,24 +1,31 @@
-using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
+using System.Diagnostics.CodeAnalysis;
 using IMIS.Domain;
+using IMIS.Application.IsoStandardModule;
 
 namespace IMIS.Application.StandardVersionModule
 {
     public class StandardVersionDto : BaseDto<StandardVersion, int>
     {
         public required string VersionName { get; set; }
-        public required bool IsActive { get; set; } // Adjusted casing to follow C# PascalCase conventions
+        public bool IsActive { get; set; }
+        public List<IsoStandardDto>? IsoStandards { get; set; }
 
         public StandardVersionDto() { }
 
         [SetsRequiredMembers]
-        public StandardVersionDto(StandardVersion entity)
+        public StandardVersionDto(StandardVersion version)
         {
-            if (entity != null)
+            this.Id = version.Id;
+            this.VersionName = version.VersionName;
+            this.IsActive = version.isActive;
+            if (version?.IsoStandards != null && version.IsoStandards.Count > 0)
             {
-                Id = entity.Id;
-                VersionName = entity.VersionName;
-                IsActive = entity.isActive;
+                IsoStandards = new List<IsoStandardDto>();
+                foreach (var iso in version.IsoStandards)
+                {
+                    IsoStandards.Add(new IsoStandardDto(iso));
+                }
             }
         }
 
@@ -29,6 +36,7 @@ namespace IMIS.Application.StandardVersionModule
                 Id = Id,
                 VersionName = VersionName,
                 isActive = IsActive
+                //IsoStandards = IsoStandards?.Select(iso => iso.ToEntity()).ToList()
             };
         }
     }

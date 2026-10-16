@@ -29,7 +29,8 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
 
            
         private IEnumerable<ReportPgsSignatoryDto> NonApprovedSignatories => PgsSignatories?.Where(s => s.PgsSignatoryTemplate?.SignatoryLabel != PgsStatus.ApprovedBy) ?? Enumerable.Empty<ReportPgsSignatoryDto>();
-          
+        
+        //Sigantory Label      
         public string? PgsSignatoryLabel1 =>
             NonApprovedSignatories.ElementAtOrDefault(0)?.PgsSignatoryTemplate?.SignatoryLabel;
 
@@ -80,12 +81,11 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
             NonApprovedSignatories.ElementAtOrDefault(2)?.PgsSignatoryTemplate?.Position
             ?? NonApprovedSignatories.ElementAtOrDefault(2)?.User?.Position;
 
-
         public string? PgsSignatoryPosition4 =>
             NonApprovedSignatories.ElementAtOrDefault(3)?.PgsSignatoryTemplate?.Position
             ?? NonApprovedSignatories.ElementAtOrDefault(3)?.User?.Position;
 
-
+        // Approved By: always last
         public string? PgsSignatoryPosition5 =>
             PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == PgsStatus.ApprovedBy)?.PgsSignatoryTemplate?.Position
             ?? PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == PgsStatus.ApprovedBy)?.User?.Position;

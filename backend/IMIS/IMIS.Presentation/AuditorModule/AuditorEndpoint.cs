@@ -26,8 +26,8 @@ namespace IMIS.Presentation.AuditorModule
                 await cache.EvictByTagAsync(_auditorTag, cancellationToken);
                 return Results.Ok(auditor);
             })
-            .WithTags(_auditorTag);
-            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.Add));
+            .WithTags(_auditorTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.Add));
 
             app.MapGet("/", async (IAuditorService service, CancellationToken cancellationToken) =>
             {
@@ -35,7 +35,7 @@ namespace IMIS.Presentation.AuditorModule
                 return Results.Ok(auditors);
             })
             .WithTags(_auditorTag)
-            //.CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_auditorTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_auditorTag), true)            
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.View));
            
             app.MapGet("/filter/{name}", async (string name, int page, int pageSize, IAuditorService service, CancellationToken cancellationToken) =>

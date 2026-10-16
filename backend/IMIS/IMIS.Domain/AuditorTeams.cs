@@ -1,4 +1,4 @@
-﻿ using Base.Primitives;
+﻿using Base.Primitives;
 
 namespace IMIS.Domain
 {
@@ -10,9 +10,6 @@ namespace IMIS.Domain
         public Auditor? Auditor { get; set; }
         public bool IsTeamLeader { get; set; }
         public bool IsActive { get; set; }
-
-        public required OrganizationImprovementType ImprovementType { get; set; }
-        public ICollection<Auditor>? Auditors { get; set; }
     }
 }
 

@@ -1,57 +1,52 @@
 using Base.Primitives;
-using IMIS.Application.StandardVersionModule;
-using IMIS.Domain;
 using System.Diagnostics.CodeAnalysis;
+using IMIS.Domain;
+using IMIS.Application.StandardVersionModule;
 
-public class IsoStandardDto : BaseDto<IsoStandard, long>
+namespace IMIS.Application.IsoStandardModule
 {
-    public required int VersionID { get; set; }
-    public long? ParentID { get; set; }
-    public required string ClauseRef { get; set; }
-    public string? Description { get; set; }
-    public bool IsActive { get; set; }
-    public required string Particulars { get; set; }
-
-    public List<IsoStandardDto> Children { get; set; } = new();
-
-    public StandardVersionDto? Version { get; set; }
-
-    public IsoStandardDto() { }
-
-    [SetsRequiredMembers]
-    public IsoStandardDto(IsoStandard isoStandard )
+    public class IsoStandardDto : BaseDto<IsoStandard, long>
     {
-        Id = isoStandard.Id;
-        VersionID = isoStandard.VersionID;
-        ClauseRef = isoStandard.ClauseRef;
-        Description = isoStandard.Description;
-        IsActive = isoStandard.isActive;
-        ParentID = isoStandard.ParentID;
-        Particulars = isoStandard.Particulars;
-        
+        public required int VersionID { get; set; }
+        public required string ClauseRef { get; set; }
+        public string? Description { get; set; }
+        public bool IsActive { get; set; }
+        public StandardVersionDto? Version { get; set; }
 
-        if (isoStandard.Version != null)
+        public IsoStandardDto() { }
+
+        [SetsRequiredMembers]
+        public IsoStandardDto(IsoStandard isoStandard)
         {
-            Version = new StandardVersionDto
+            this.Id = isoStandard.Id;
+            this.VersionID = isoStandard.VersionID;
+            this.ClauseRef = isoStandard.ClauseRef;
+            this.Description = isoStandard.Description;
+            this.IsActive = isoStandard.isActive;
+            
+            // Only include Version metadata, NOT nested IsoStandards to avoid circular reference
+            if (isoStandard?.Version != null)
             {
-                Id = isoStandard.Version.Id,
-                VersionName = isoStandard.Version.VersionName,
-                IsActive = isoStandard.Version.isActive
+                this.Version = new StandardVersionDto()
+                {
+                    Id = isoStandard.Version.Id,
+                    VersionName = isoStandard.Version.VersionName,
+                    IsActive = isoStandard.Version.isActive,
+                    IsoStandards = null // IMPORTANT: Don't include nested list to prevent circular refs
+                };
+            }
+        }
+
+        public override IsoStandard ToEntity()
+        {
+            return new IsoStandard()
+            {
+                Id = Id,
+                VersionID = VersionID,
+                ClauseRef = ClauseRef,
+                Description = Description,
+                isActive = IsActive
             };
         }
-    }
-
-    public override IsoStandard ToEntity()
-    {
-        return new IsoStandard
-        {
-            Id = Id,
-            VersionID = VersionID,
-            ClauseRef = ClauseRef,
-            Description = Description,
-            isActive = IsActive,
-            ParentID = ParentID,
-            Particulars = Particulars
-        };
     }
 }

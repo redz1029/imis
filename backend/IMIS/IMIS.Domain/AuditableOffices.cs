@@ -1,8 +1,6 @@
-﻿using Base.Primitives;
-
-namespace IMIS.Domain
+﻿namespace IMIS.Domain
 {
-    public class AuditableOffices : Entity<int>
+    public class AuditableOffices
     {
         public required int AuditScheduleId { get; set; }
         public AuditSchedule? AuditSchedule { get; set; }
