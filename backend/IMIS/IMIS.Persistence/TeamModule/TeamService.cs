@@ -8,7 +8,7 @@ namespace IMIS.Persistence.TeamModule
     public class TeamService(ITeamRepository teamRepository) : ITeamService
     {
         private readonly ITeamRepository _teamRepository = teamRepository;
-      
+
         public async Task<DtoPageList<TeamDto, Team, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var team = await _teamRepository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -20,7 +20,7 @@ namespace IMIS.Persistence.TeamModule
         {
             var team = await _teamRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return team != null ? new TeamDto(team) : null;
-        }       
+        }
         public async Task<List<TeamDto>?> FilterByName(string name, int teamNoOfResults, CancellationToken cancellationToken)
         {
             var teams = await _teamRepository.FilterByName(name, teamNoOfResults, cancellationToken).ConfigureAwait(false);
@@ -70,25 +70,26 @@ namespace IMIS.Persistence.TeamModule
                     List<AuditorTeams> auditorTeams = [];
                     foreach (var auditor in teamDto.Auditors)
                     {
-                        auditorTeams.Add(new AuditorTeams() 
+                        auditorTeams.Add(new AuditorTeams()
                         {
                             Id = 0,
-                            TeamId = team.Id, 
+                            TeamId = team.Id,
                             IsTeamLeader = auditor.IsTeamLeader,
                             ImprovementType = auditor.ImprovementType
 
                         });
                     }
                 }
-                if(team.Id == 0)
+                if (team.Id == 0)
                 {
                     _teamRepository.Add(team);
-                } else
+                }
+                else
                 {
                     await _teamRepository.UpdateAsync(team, team.Id, cancellationToken).ConfigureAwait(false);
                 }
                 await _teamRepository.SaveOrUpdateAsync<User>(team, cancellationToken).ConfigureAwait(false);
             }
-        }         
+        }
     }
 }

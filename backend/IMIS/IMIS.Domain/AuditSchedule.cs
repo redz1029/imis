@@ -20,7 +20,6 @@ namespace IMIS.Domain
         public AuditPlan? AuditPlan { get; set; }
 
         public ICollection<AuditableOffices>? AuditableOffices { get; set; }
-        public ICollection<AuditScheduleDetails>? AuditSchduleDetails { get; set; }
         public required int AuditPlanEntryId { get; set; }
         public AuditPlanEntry? AuditPlanEntry { get; set; }
 

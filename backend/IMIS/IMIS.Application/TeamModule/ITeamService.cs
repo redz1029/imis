@@ -8,7 +8,7 @@ namespace IMIS.Application.TeamModule
     {
         public Task<DtoPageList<TeamDto, Team, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<List<TeamDto>?> GetAllAsync(CancellationToken cancellationToken);
-        Task<List<TeamDto>?> GetAllActiveAsync(CancellationToken cancellationToken);      
+        Task<List<TeamDto>?> GetAllActiveAsync(CancellationToken cancellationToken);
         Task<List<TeamDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
         Task<TeamDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
