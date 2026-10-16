@@ -62,7 +62,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditTrails", (string)null);
+                    b.ToTable("AuditTrails");
                 });
 
             modelBuilder.Entity("Base.Auths.UserClaim<string>", b =>
@@ -131,7 +131,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Announcement", (string)null);
+                    b.ToTable("Announcement");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
@@ -165,7 +165,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditSchedules", (string)null);
+                    b.ToTable("AuditSchedules");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditScheduleDetails", b =>
@@ -207,7 +207,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("AuditScheduleDetails", (string)null);
+                    b.ToTable("AuditScheduleDetails");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditableOffices", b =>
@@ -222,7 +222,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("AuditableOffices", (string)null);
+                    b.ToTable("AuditableOffices");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Auditor", b =>
@@ -256,7 +256,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Auditors", (string)null);
+                    b.ToTable("Auditors");
 
                     b.HasData(
                         new
@@ -971,7 +971,7 @@ namespace IMIS.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[PgsPeriodId] IS NOT NULL");
 
-                    b.ToTable("AuditorOffices", (string)null);
+                    b.ToTable("AuditorOffices");
 
                     b.HasData(
                         new
@@ -5197,7 +5197,7 @@ namespace IMIS.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[AuditorId] IS NOT NULL");
 
-                    b.ToTable("AuditorTeams", (string)null);
+                    b.ToTable("AuditorTeams");
 
                     b.HasData(
                         new
@@ -5987,7 +5987,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsDeliverableId");
 
-                    b.ToTable("BreakThroughScoring", (string)null);
+                    b.ToTable("BreakThroughScoring");
                 });
 
             modelBuilder.Entity("IMIS.Domain.CalendarActivity", b =>
@@ -6061,7 +6061,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CalendarActivity", (string)null);
+                    b.ToTable("CalendarActivity");
                 });
 
             modelBuilder.Entity("IMIS.Domain.EvaluatorOffices", b =>
@@ -6092,7 +6092,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("EvaluatorOffices", (string)null);
+                    b.ToTable("EvaluatorOffices");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ISAT", b =>
@@ -6146,7 +6146,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("ISAT", (string)null);
+                    b.ToTable("ISAT");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ISATAnnualPerformanceCommitments", b =>
@@ -6191,7 +6191,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsDeliverableId");
 
-                    b.ToTable("ISATAnnualPerformanceCommitments", (string)null);
+                    b.ToTable("ISATAnnualPerformanceCommitments");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ISATPeriod", b =>
@@ -6224,7 +6224,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ISATPeriod", (string)null);
+                    b.ToTable("ISATPeriod");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ISATSignatory", b =>
@@ -6264,7 +6264,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SignatoryId");
 
-                    b.ToTable("ISATSignatory", (string)null);
+                    b.ToTable("ISATSignatory");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ISATSignatoryTemplate", b =>
@@ -6312,7 +6312,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("ISATSignatoryTemplate", (string)null);
+                    b.ToTable("ISATSignatoryTemplate");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ImpactScoreCard", b =>
@@ -6341,7 +6341,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ImpactStrategicGoalScoreCardId");
 
-                    b.ToTable("ImpactScoreCard", (string)null);
+                    b.ToTable("ImpactScoreCard");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ImpactScoreCardIndicator", b =>
@@ -6370,7 +6370,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ImpactScoreCardId");
 
-                    b.ToTable("ImpactScoreCardIndicator", (string)null);
+                    b.ToTable("ImpactScoreCardIndicator");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ImpactScoreCardTarget", b =>
@@ -6402,7 +6402,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ImpactScoreCardIndicatorId");
 
-                    b.ToTable("ImpactScoreCardTarget", (string)null);
+                    b.ToTable("ImpactScoreCardTarget");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ImpactStrategicGoalScoreCard", b =>
@@ -6428,7 +6428,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ImpactStrategicGoalScoreCardPeriodId");
 
-                    b.ToTable("ImpactStrategicGoalScoreCard", (string)null);
+                    b.ToTable("ImpactStrategicGoalScoreCard");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ImpactStrategicGoalScoreCardPeriod", b =>
@@ -6461,7 +6461,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ImpactStrategicGoalScoreCardPeriod", (string)null);
+                    b.ToTable("ImpactStrategicGoalScoreCardPeriod");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ImpactStrategicScoreCard", b =>
@@ -6490,7 +6490,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ImpactStrategicGoalScoreCardId");
 
-                    b.ToTable("ImpactStrategicScoreCard", (string)null);
+                    b.ToTable("ImpactStrategicScoreCard");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ImpactStrategicScoreCardMeasure", b =>
@@ -6519,7 +6519,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ImpactStrategicScoreCardId");
 
-                    b.ToTable("ImpactStrategicScoreCardMeasure", (string)null);
+                    b.ToTable("ImpactStrategicScoreCardMeasure");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ImpactStrategicScoreCardTarget", b =>
@@ -6551,7 +6551,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ImpactStrategicScoreCardMeasureId");
 
-                    b.ToTable("ImpactStrategicScoreCardTarget", (string)null);
+                    b.ToTable("ImpactStrategicScoreCardTarget");
                 });
 
             modelBuilder.Entity("IMIS.Domain.IsoStandard", b =>
@@ -6587,7 +6587,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("VersionID");
 
-                    b.ToTable("IsoStandards", (string)null);
+                    b.ToTable("IsoStandards");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KeyResultArea", b =>
@@ -6619,7 +6619,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KeyResultArea", (string)null);
+                    b.ToTable("KeyResultArea");
 
                     b.HasData(
                         new
@@ -6734,7 +6734,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("KraRoadMap", (string)null);
+                    b.ToTable("KraRoadMap");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMapDeliverable", b =>
@@ -6772,7 +6772,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("KraRoadMapId");
 
-                    b.ToTable("KraRoadMapDeliverable", (string)null);
+                    b.ToTable("KraRoadMapDeliverable");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMapKpi", b =>
@@ -6815,7 +6815,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("KraRoadmapKpiSequenceId");
 
-                    b.ToTable("KraRoadMapKPI", (string)null);
+                    b.ToTable("KraRoadMapKPI");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMapPeriod", b =>
@@ -6842,7 +6842,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KraRoadMapPeriod", (string)null);
+                    b.ToTable("KraRoadMapPeriod");
 
                     b.HasData(
                         new
@@ -6882,7 +6882,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("KraRoadMapRole", (string)null);
+                    b.ToTable("KraRoadMapRole");
 
                     b.HasData(
                         new
@@ -6991,7 +6991,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("KraRoadmapAccomplishment", (string)null);
+                    b.ToTable("KraRoadmapAccomplishment");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadmapCoreSupportProcess", b =>
@@ -7015,7 +7015,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KraRoadmapCoreSupportProcess", (string)null);
+                    b.ToTable("KraRoadmapCoreSupportProcess");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadmapHistory", b =>
@@ -7059,7 +7059,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("KraRoadmapHistory", (string)null);
+                    b.ToTable("KraRoadmapHistory");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadmapKpiAccomplishment", b =>
@@ -7103,7 +7103,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("KraRoadmapKpiAccomplishment", (string)null);
+                    b.ToTable("KraRoadmapKpiAccomplishment");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadmapKpiSequence", b =>
@@ -7127,7 +7127,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KraRoadmapKpiSequence", (string)null);
+                    b.ToTable("KraRoadmapKpiSequence");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadmapProcessKraAssignment", b =>
@@ -7158,7 +7158,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("KraRoadmapProcessKraAssignment", (string)null);
+                    b.ToTable("KraRoadmapProcessKraAssignment");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Office", b =>
@@ -7196,7 +7196,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ParentOfficeId");
 
-                    b.ToTable("Offices", (string)null);
+                    b.ToTable("Offices");
 
                     b.HasData(
                         new
@@ -8947,7 +8947,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OfficeType", (string)null);
+                    b.ToTable("OfficeType");
 
                     b.HasData(
                         new
@@ -9064,7 +9064,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("OperationReviewProtocol", (string)null);
+                    b.ToTable("OperationReviewProtocol");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PerfomanceGovernanceSystem", b =>
@@ -9109,7 +9109,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsReadinessRatingId");
 
-                    b.ToTable("PerformanceGovernanceSystem", (string)null);
+                    b.ToTable("PerformanceGovernanceSystem");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PerformanceValidationTool", b =>
@@ -9160,7 +9160,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PerformanceValidationToolPeriodId");
 
-                    b.ToTable("PerformanceValidationTool", (string)null);
+                    b.ToTable("PerformanceValidationTool");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PerformanceValidationToolConclusion", b =>
@@ -9202,7 +9202,7 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("PerformanceValidationToolId")
                         .IsUnique();
 
-                    b.ToTable("PerformanceValidationToolConclusion", (string)null);
+                    b.ToTable("PerformanceValidationToolConclusion");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PerformanceValidationToolDeliverableFindings", b =>
@@ -9245,7 +9245,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsDeliverableId");
 
-                    b.ToTable("PerformanceValidationToolDeliverableFindings", (string)null);
+                    b.ToTable("PerformanceValidationToolDeliverableFindings");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PerformanceValidationToolObjectives", b =>
@@ -9290,7 +9290,7 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("PerformanceValidationToolId")
                         .IsUnique();
 
-                    b.ToTable("PerformanceValidationToolObjectives", (string)null);
+                    b.ToTable("PerformanceValidationToolObjectives");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PerformanceValidationToolPeriod", b =>
@@ -9323,7 +9323,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PerformanceValidationToolPeriod", (string)null);
+                    b.ToTable("PerformanceValidationToolPeriod");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PerformanceValidationToolSignatory", b =>
@@ -9363,7 +9363,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SignatoryId");
 
-                    b.ToTable("PerformanceValidationToolSignatory", (string)null);
+                    b.ToTable("PerformanceValidationToolSignatory");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PerformanceValidationToolSignatoryTemplate", b =>
@@ -9411,7 +9411,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("PerformanceValidationToolSignatoryTemplate", (string)null);
+                    b.ToTable("PerformanceValidationToolSignatoryTemplate");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PerformanceValidationToolValidators", b =>
@@ -9445,7 +9445,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PerformanceValidationToolId");
 
-                    b.ToTable("PerformanceValidationToolValidators", (string)null);
+                    b.ToTable("PerformanceValidationToolValidators");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
@@ -9513,7 +9513,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PerfomanceGovernanceSystemId");
 
-                    b.ToTable("Deliverable", (string)null);
+                    b.ToTable("Deliverable");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverableAccomplishment", b =>
@@ -9563,7 +9563,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PgsDeliverableAccomplishment", (string)null);
+                    b.ToTable("PgsDeliverableAccomplishment");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsPeriod", b =>
@@ -9596,7 +9596,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsPeriod", (string)null);
+                    b.ToTable("PgsPeriod");
 
                     b.HasData(
                         new
@@ -9636,7 +9636,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsReadiness", (string)null);
+                    b.ToTable("PgsReadiness");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsSignatory", b =>
@@ -9676,7 +9676,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SignatoryId");
 
-                    b.ToTable("PgsSignatory", (string)null);
+                    b.ToTable("PgsSignatory");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsSignatoryTemplate", b =>
@@ -9724,7 +9724,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("PgsSignatoryTemplate", (string)null);
+                    b.ToTable("PgsSignatoryTemplate");
 
                     b.HasData(
                         new
@@ -10037,7 +10037,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsPeriodId");
 
-                    b.ToTable("PgsSummaryNarrative", (string)null);
+                    b.ToTable("PgsSummaryNarrative");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PolicyAndProcedure", b =>
@@ -10093,7 +10093,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SectionId");
 
-                    b.ToTable("PolicyAndProcedure", (string)null);
+                    b.ToTable("PolicyAndProcedure");
                 });
 
             modelBuilder.Entity("IMIS.Domain.RoadmapGutCheck", b =>
@@ -10135,7 +10135,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RoadmapGutCheck", (string)null);
+                    b.ToTable("RoadmapGutCheck");
                 });
 
             modelBuilder.Entity("IMIS.Domain.SWOTAnalysis", b =>
@@ -10182,7 +10182,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ServiceHeadUserId");
 
-                    b.ToTable("SWOTAnalysis", (string)null);
+                    b.ToTable("SWOTAnalysis");
                 });
 
             modelBuilder.Entity("IMIS.Domain.SWOTAnalysisOTDeliverables", b =>
@@ -10219,7 +10219,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SWOTAnalysisId");
 
-                    b.ToTable("SWOTAnalysisOTDeliverables", (string)null);
+                    b.ToTable("SWOTAnalysisOTDeliverables");
                 });
 
             modelBuilder.Entity("IMIS.Domain.SWOTAnalysisOTDeliverablesServiceHead", b =>
@@ -10256,7 +10256,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SWOTAnalysisServiceHeadId");
 
-                    b.ToTable("SWOTAnalysisOTDeliverablesServiceHead", (string)null);
+                    b.ToTable("SWOTAnalysisOTDeliverablesServiceHead");
                 });
 
             modelBuilder.Entity("IMIS.Domain.SWOTAnalysisOpportunitiesThreatsSettings", b =>
@@ -10280,7 +10280,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SWOTAnalysisOpportunitiesThreatsSettings", (string)null);
+                    b.ToTable("SWOTAnalysisOpportunitiesThreatsSettings");
                 });
 
             modelBuilder.Entity("IMIS.Domain.SWOTAnalysisSWDeliverables", b =>
@@ -10317,7 +10317,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SWOTAnalysisId");
 
-                    b.ToTable("SWOTAnalysisSWDeliverables", (string)null);
+                    b.ToTable("SWOTAnalysisSWDeliverables");
                 });
 
             modelBuilder.Entity("IMIS.Domain.SWOTAnalysisSWDeliverablesServiceHead", b =>
@@ -10354,7 +10354,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SWOTAnalysisServiceHeadId");
 
-                    b.ToTable("SWOTAnalysisSWDeliverablesServiceHead", (string)null);
+                    b.ToTable("SWOTAnalysisSWDeliverablesServiceHead");
                 });
 
             modelBuilder.Entity("IMIS.Domain.SWOTAnalysisServiceHead", b =>
@@ -10396,7 +10396,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ServiceHeadUserId");
 
-                    b.ToTable("SWOTAnalysisServiceHead", (string)null);
+                    b.ToTable("SWOTAnalysisServiceHead");
                 });
 
             modelBuilder.Entity("IMIS.Domain.SWOTAnalysisStrengthWeaknessSettings", b =>
@@ -10420,7 +10420,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SWOTAnalysisStrengthWeaknessSettings", (string)null);
+                    b.ToTable("SWOTAnalysisStrengthWeaknessSettings");
                 });
 
             modelBuilder.Entity("IMIS.Domain.ServiceHeadOffices", b =>
@@ -10451,7 +10451,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ServiceHeadOffices", (string)null);
+                    b.ToTable("ServiceHeadOffices");
                 });
 
             modelBuilder.Entity("IMIS.Domain.StandardVersion", b =>
@@ -10479,7 +10479,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("StandardVersions", (string)null);
+                    b.ToTable("StandardVersions");
                 });
 
             modelBuilder.Entity("IMIS.Domain.StrategicChangeAgenda", b =>
@@ -10506,7 +10506,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("StrategicChangeAgenda", (string)null);
+                    b.ToTable("StrategicChangeAgenda");
                 });
 
             modelBuilder.Entity("IMIS.Domain.StrategicChangeAgendaDeliverable", b =>
@@ -10541,7 +10541,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("StrategicChangeAgendaId");
 
-                    b.ToTable("StrategicChangeAgendaDeliverable", (string)null);
+                    b.ToTable("StrategicChangeAgendaDeliverable");
                 });
 
             modelBuilder.Entity("IMIS.Domain.StrategyReview", b =>
@@ -10589,7 +10589,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("StrategyReviewPeriodId");
 
-                    b.ToTable("StrategyReview", (string)null);
+                    b.ToTable("StrategyReview");
                 });
 
             modelBuilder.Entity("IMIS.Domain.StrategyReviewDeliverable", b =>
@@ -10630,7 +10630,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("StrategyReviewId");
 
-                    b.ToTable("StrategyReviewDeliverable", (string)null);
+                    b.ToTable("StrategyReviewDeliverable");
                 });
 
             modelBuilder.Entity("IMIS.Domain.StrategyReviewDeliverableKpi", b =>
@@ -10671,7 +10671,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("StrategyReviewId");
 
-                    b.ToTable("StrategyReviewDeliverableKpi", (string)null);
+                    b.ToTable("StrategyReviewDeliverableKpi");
                 });
 
             modelBuilder.Entity("IMIS.Domain.StrategyReviewPeriod", b =>
@@ -10704,7 +10704,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("StrategyReviewPeriod", (string)null);
+                    b.ToTable("StrategyReviewPeriod");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Team", b =>
@@ -10732,7 +10732,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teams", (string)null);
+                    b.ToTable("Teams");
 
                     b.HasData(
                         new
@@ -14203,7 +14203,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("UserOffices", (string)null);
+                    b.ToTable("UserOffices");
 
                     b.HasData(
                         new

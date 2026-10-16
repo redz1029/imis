@@ -148,6 +148,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IAuditScheduleRepository, AuditScheduleRepository>();
             services.AddScoped<IAuditScheduleService, AuditScheduleService>();
 
+            services.AddScoped<IAuditScheduleDetailRepository, AuditScheduleDetailRepository>();
+            services.AddScoped<IAuditScheduleDetailService, AuditScheduleDetailService>();
 
             services.AddScoped<IAuditorTeamsRepository, AuditorTeamsRepository>();
             services.AddScoped<IAuditorTeamsService, AuditorTeamsService>();

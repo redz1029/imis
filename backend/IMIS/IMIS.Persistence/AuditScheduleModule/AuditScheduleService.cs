@@ -1,256 +1,394 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
+using IMIS.Application.AuditableOfficesModule;
 using IMIS.Application.AuditScheduleModule;
-using IMIS.Application.IQASignatoryModule;
+using IMIS.Application.TeamModule;
 using IMIS.Domain;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace IMIS.Application.AuditScheduleModule
+namespace IMIS.Persistence.AuditScheduleModule
 {
-    public class AuditScheduleService : IAuditScheduleService
+    public class AuditScheduleService(IAuditScheduleRepository auditScheduleRepository, ITeamRepository teamRepository, IAuditScheduleDetailRepository auditScheduleDetailsRepository) : IAuditScheduleService
     {
-        private readonly IAuditScheduleRepository _repository;
-
-        public AuditScheduleService(IAuditScheduleRepository repository)
+        private readonly IAuditScheduleRepository _auditScheduleRepository = auditScheduleRepository;
+        private readonly IAuditScheduleDetailRepository _auditScheduleDetailsRepository = auditScheduleDetailsRepository;
+        private readonly ITeamRepository _teamRepository = teamRepository;
+        public async Task<AuditScheduleDto?> GenerateAuditScheduleDetail(int auditScheduleId, double noOfHoursPerAudit, CancellationToken cancellationToken)
         {
-            _repository = repository;
+            var auditSchedule = await _auditScheduleRepository.GetByIdAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
+            if (auditSchedule != null)
+            {
+                TimeSpan workingDayStart = new(8, 0, 0);  // 8 AM
+                TimeSpan workingDayEnd = new(17, 0, 0);   // 5 PM
+                TimeSpan lunchBreakStart = new(12, 0, 0); // 12 PM
+                TimeSpan lunchBreakEnd = new(13, 0, 0);   // 1 PM
+
+                int noOfAuditableOffices = auditSchedule.AuditableOffices == null ? 0 : auditSchedule.AuditableOffices.Count();
+                var teams = await _teamRepository.GetAllActiveAsync(cancellationToken).ConfigureAwait(false);
+                int noOfTeams = teams.Count();
+
+                int noOfOfficesToAuditPerTeam = Math.Abs(noOfAuditableOffices / noOfTeams);
+
+                int noOfOfficesToSchedule = 0;
+                double totalAuditHours = CalculateWorkingHours(auditSchedule.StartDate, auditSchedule.EndDate, workingDayStart, workingDayEnd, lunchBreakStart, lunchBreakEnd);
+
+                double totalAvailableAuditorHours = noOfTeams * totalAuditHours;
+                double totalRequiredAuditHours = noOfAuditableOffices * noOfHoursPerAudit;
+                int noOfParallelAudits = (int)Math.Abs(totalRequiredAuditHours / totalAuditHours);
+
+                int noOfParallelAuditsBeingScheduled = 0;
+                List<AuditScheduleDetails> auditScheduleDetails = [];
+                do
+                {
+                    // start the scheduling
+                    DateTime initialAuditEndDate = auditSchedule.StartDate.AddHours(noOfHoursPerAudit);
+
+                    while (noOfParallelAuditsBeingScheduled < noOfParallelAudits)
+                    {
+                        var auditDetail = new AuditScheduleDetails()
+                        {
+                            Id = 0,
+                            AuditScheduleId = auditSchedule.Id,
+                            AuditSchedule = auditSchedule,
+                            StartDateTime = auditSchedule.StartDate,
+                            EndDateTime = initialAuditEndDate,
+                            TeamId = teams.Skip(noOfParallelAuditsBeingScheduled).Take(1).First().Id,
+                            OfficeId = auditSchedule.AuditableOffices!.Skip(noOfParallelAuditsBeingScheduled).Take(1).First().OfficeId,
+                        };
+
+                        auditScheduleDetails.Add(auditDetail);
+
+                        noOfParallelAuditsBeingScheduled++;
+                        noOfOfficesToSchedule++;
+                    }
+                    
+                } while (noOfOfficesToSchedule < noOfAuditableOffices);
+                {
+                    DateTime startDateTime = DateTime.Now;
+                    DateTime endTimeOfPrevSched = auditScheduleDetails.Last().EndDateTime;
+
+                    int noon = 12; // 12pm
+                    int offDuty = 17; // 5pm
+
+                    if(endTimeOfPrevSched.Hour != noon || endTimeOfPrevSched.Hour != offDuty)
+                    {
+                        startDateTime = auditScheduleDetails.Last().EndDateTime.AddHours(noOfHoursPerAudit);
+                    } else
+                    {
+                        if (endTimeOfPrevSched.Hour == noon)
+                        {
+                            startDateTime = endTimeOfPrevSched.Date + lunchBreakEnd;
+                        }
+
+                        if(endTimeOfPrevSched.Hour == offDuty)
+                        {
+                            noOfParallelAuditsBeingScheduled = 0; // Reset here
+                            startDateTime = endTimeOfPrevSched.AddDays(1) + workingDayStart;
+                        }
+
+                    }
+                     
+                    // TODO : checking of Conflicts
+                    DateTime endDateTime = startDateTime.AddHours(noOfHoursPerAudit);
+                    while (noOfParallelAuditsBeingScheduled < noOfParallelAudits)
+                    {
+                        var auditDetail = new AuditScheduleDetails()
+                        {
+                            Id = 0,
+                            AuditScheduleId = auditSchedule.Id,
+                            AuditSchedule = auditSchedule,
+                            StartDateTime = startDateTime,
+                            EndDateTime = endDateTime,
+                            TeamId = teams.Skip(noOfParallelAuditsBeingScheduled).Take(1).First().Id,
+                            OfficeId = auditSchedule.AuditableOffices!.Skip(noOfParallelAuditsBeingScheduled).Take(1).First().OfficeId,
+                        };
+
+                        auditScheduleDetails.Add(auditDetail);
+
+                        noOfParallelAuditsBeingScheduled++;
+                        noOfOfficesToSchedule++;
+                    }
+                }
+
+                auditSchedule.AuditSchduleDetails = auditScheduleDetails;
+
+                if(auditSchedule.Id == 0)
+                    _auditScheduleRepository.Add(auditSchedule);
+
+                await _auditScheduleRepository
+                    .SaveOrUpdateAsync(auditSchedule, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return new AuditScheduleDto()
+                {
+                    Id = auditSchedule.Id,
+                    AuditTitle = auditSchedule.AuditTitle,
+                    StartDate = auditSchedule.StartDate,
+                    EndDate = auditSchedule.EndDate,
+                    IsActive = auditSchedule.IsActive,
+                    AuditSchduleDetails = auditSchedule.AuditSchduleDetails.Select(a => new AuditScheduleDetailDto()
+                    {
+                        Id = a.Id,
+                        AuditScheduleId = a.AuditScheduleId,
+                        OfficeId = a.OfficeId,
+                        OfficeName = a.Office!.Name,
+                        TeamId = a.TeamId,
+                        TeamName = a.Team!.Name,
+                        StartDateTime = a.StartDateTime,
+                        EndDateTime = a.EndDateTime,
+                    }).ToList(),
+                };
+            }
+            return null;
         }
-
-        public async Task<bool> SaveAuditScheduleAsync(AuditScheduleDto dto, CancellationToken cancellationToken, string? userId = null)
+        private static double CalculateWorkingHours(DateTime startDate, DateTime endDate, 
+            TimeSpan workingDayStart, TimeSpan workingDayEnd, TimeSpan lunchBreakStart, TimeSpan lunchBreakEnd)
         {
-            if (dto == null) return false;
-            await SaveOrUpdateInternalAsync(dto, cancellationToken, userId);
+            double totalHours = 0;
+
+            for (DateTime date = startDate; date < endDate; date = date.AddDays(1))
+            {
+                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                    continue; // Skip weekends
+
+                DateTime dayStart = date.Date + workingDayStart;
+                DateTime dayEnd = date.Date + workingDayEnd;
+
+                DateTime currentStart = date > dayStart ? date : dayStart;
+                DateTime currentEnd = date.AddDays(1) < dayEnd ? date.AddDays(1) : dayEnd;
+
+                if (currentStart >= currentEnd)
+                    continue;
+
+                // Subtract lunch break
+                if (currentStart < date.Date + lunchBreakEnd && currentEnd > date.Date + lunchBreakStart)
+                {
+                    DateTime lunchStart = date.Date + lunchBreakStart;
+                    DateTime lunchEnd = date.Date + lunchBreakEnd;
+
+                    if (currentStart < lunchStart)
+                        totalHours += (lunchStart - currentStart).TotalHours;
+
+                    if (currentEnd > lunchEnd)
+                        totalHours += (currentEnd - lunchEnd).TotalHours;
+                }
+                else
+                {
+                    totalHours += (currentEnd - currentStart).TotalHours;
+                }
+            }
+
+            // Handle the last day separately
+            if (endDate.DayOfWeek != DayOfWeek.Saturday && endDate.DayOfWeek != DayOfWeek.Sunday)
+            {
+                DateTime lastDayStart = endDate.Date + workingDayStart;
+                DateTime lastDayEnd = endDate.Date + workingDayEnd;
+
+                DateTime currentStart = startDate > lastDayStart ? startDate : lastDayStart;
+                DateTime currentEnd = endDate < lastDayEnd ? endDate : lastDayEnd;
+
+                if (currentStart < currentEnd)
+                {
+                    // Subtract lunch break
+                    if (currentStart < endDate.Date + lunchBreakEnd && currentEnd > endDate.Date + lunchBreakStart)
+                    {
+                        DateTime lunchStart = endDate.Date + lunchBreakStart;
+                        DateTime lunchEnd = endDate.Date + lunchBreakEnd;
+
+                        if (currentStart < lunchStart)
+                            totalHours += (lunchStart - currentStart).TotalHours;
+
+                        if (currentEnd > lunchEnd)
+                            totalHours += (currentEnd - lunchEnd).TotalHours;
+                    }
+                    else
+                    {
+                        totalHours += (currentEnd - currentStart).TotalHours;
+                    }
+                }
+            }
+
+            return totalHours;
+        }
+        public async Task<List<AuditScheduleDto>?> GetAllActiveAsync(CancellationToken cancellationToken)
+        {
+            var auditSchedules = await _auditScheduleRepository
+                .GetAllActiveAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return auditSchedules?.Select(a => 
+                new AuditScheduleDto() 
+                { 
+                    Id = a.Id, 
+                    AuditTitle = a.AuditTitle, 
+                    StartDate = a.StartDate, 
+                    EndDate = a.EndDate, 
+                    IsActive = a.IsActive }
+                ).ToList();
+        }          
+        public async Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken)
+        {
+            var auditSchedules = await _auditScheduleRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
+
+            return auditSchedules?.Select(a =>
+            {
+                var dto = new AuditScheduleDto(a)
+                {
+                    AuditableOffices = a.AuditableOffices?.Select(detail => new AuditableOfficesDto
+                    {
+                        AuditScheduleId = detail.AuditScheduleId,
+                        OfficeId = detail.OfficeId
+                    }).ToList(),
+
+                    AuditSchduleDetails = a.AuditSchduleDetails?.Select(detail => new AuditScheduleDetailDto
+                    {
+                        Id = detail.Id,
+                        AuditScheduleId = detail.AuditScheduleId,
+                        TeamId = detail.TeamId,
+                        StartDateTime = detail.StartDateTime,
+                        EndDateTime = detail.EndDateTime,
+                        OfficeId = detail.OfficeId
+                    }).ToList()
+                };
+
+                return dto;
+            }).ToList();
+        }
+        public async Task<AuditScheduleDto?> GetByAuditScheduleIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var auditSchedules = await _auditScheduleRepository.GetByAuditScheduleIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return auditSchedules != null ? new AuditScheduleDto(auditSchedules) : null;          
+        }
+        // Soft Delete for Audit Schedule 
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var auditSchedules = await _auditScheduleRepository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (auditSchedules == null)
+                return false;
+
+            auditSchedules.IsDeleted = true;
+
+            var context = _auditScheduleRepository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
             return true;
         }
-
-        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
-            where TEntity : Entity<TId>
+        // Soft Delete for Audit Schedule Details
+        public async Task<bool> SoftDeleteAuditScheduleDetailsAsync(int id, CancellationToken cancellationToken)
         {
-            await SaveOrUpdateInternalAsync(dto, cancellationToken, userId: null);
+            var auditSchedules = await _auditScheduleDetailsRepository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (auditSchedules == null)
+                return false;
+
+            auditSchedules.IsDeleted = true;
+
+            var context = _auditScheduleRepository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
         }
-
-        private async Task SaveOrUpdateInternalAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken, string? userId)
-            where TEntity : Entity<TId>
+        // Check Overlapping for AuditScheduleDetails
+        public async Task<List<string>> GetOverlappingAuditAsync(AuditScheduleDto auditScheduleDto, CancellationToken cancellationToken)
         {
-            if (dto is not AuditScheduleDto sDto)
-                throw new InvalidOperationException("Invalid DTO type.");
+            List<string> overlapErrors = new();
 
-            var entity = sDto.ToEntity();
-            var dbContext = _repository.GetDbContext();
+            foreach (var office in auditScheduleDto.AuditSchduleDetails!)
+            {
+                var overlappingSchedule = await _auditScheduleDetailsRepository
+                    .GetOverlappingAuditAsync(office.OfficeId, office.StartDateTime, office.EndDateTime, auditScheduleDto.Id);
 
-            // 1️⃣ Handle Main Entity Persistence
-            if (entity.Id == 0)
+                if (overlappingSchedule != null)
+                {
+                    string errorMessage = $"Conflict: Office ID {office.OfficeId} has an existing audit from {overlappingSchedule.StartDateTime:yyyy-MM-dd} to {overlappingSchedule.EndDateTime:yyyy-MM-dd}.";
+                    overlapErrors.Add(errorMessage);
+                }
+            }
+            return overlapErrors;
+        }
+        //Check Overlapping for AuditScheduleDetails
+        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
+        {
+            if (dto is not AuditScheduleDto aDto)
+                throw new InvalidOperationException("Invalid DTO type for AuditSchedule saving.");
+
+            var entity = aDto.ToEntity();
+            var isNew = entity.Id == 0;
+
+            if (entity.AuditSchduleDetails != null && entity.AuditSchduleDetails.Any())
+            {
+                var overlapErrors = await GetOverlappingAuditAsync(aDto, cancellationToken);
+                if (overlapErrors.Any())
+                    throw new InvalidOperationException(
+                        $"Audit schedule conflicts detected:\n{string.Join("\n", overlapErrors)}"
+                    );
+            }
+
+            var dbContext = _auditScheduleRepository.GetDbContext();
+
+            if (isNew)
             {
                 dbContext.Add(entity);
                 await dbContext.SaveChangesAsync(cancellationToken);
-
-                // Audit Schedule has NO Draft status — immediately initialized as Pending Confirmation.
-                // The actor id (JWT user) is threaded through so the workflow
-                // rows reference a real AspNetUsers row instead of a
-                // placeholder that violates the FK (DbUpdateException 547).
-                await IQAApprovalWorkflow.SubmitAsync(
-                    dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, entity.Id,
-                    "audit schedule", userId, null, cancellationToken);
-                await dbContext.SaveChangesAsync(cancellationToken);
-
-                // CRITICAL: surface the EF-generated identity on the DTO so the
-                // caller (POST endpoint / frontend) receives the real Id instead
-                // of 0. Without this the client cannot submit/confirm the new
-                // schedule and the confirmation silently no-ops.
-                sDto.Id = entity.Id;
-                return;
             }
             else
             {
-                var existing = await _repository.GetByIdWithDetailsAsync(entity.Id, cancellationToken);
-                if (existing != null)
-                {
-                    // Update main properties on the tracked existing entity
-                    existing.Purpose = entity.Purpose;
-                    existing.Activity = entity.Activity;
-                    existing.IsActive = entity.IsActive;
-
-                    // FIX: was existing.AuditorTeams = entity.AuditorTeams —
-                    // that property no longer exists on AuditSchedule.
-                    existing.TeamId = entity.TeamId;
-
-                    // Remove old children to avoid FK conflicts/duplicates during replacement
-                    if (existing.AuditableOffices?.Any() == true)
-                        dbContext.Set<AuditableOffices>().RemoveRange(existing.AuditableOffices);
-
-                    if (existing.AuditSchduleDetails?.Any() == true)
-                        dbContext.Set<AuditScheduleDetails>().RemoveRange(existing.AuditSchduleDetails);
-
-                    // Re-add new collections from the entity
-                    existing.AuditableOffices = entity.AuditableOffices;
-                    existing.AuditSchduleDetails = entity.AuditSchduleDetails;
-                }
+                await _auditScheduleRepository.UpdateAsync(entity, entity.Id, cancellationToken);
             }
-
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken)
-        {
-            var entities = await _repository.GetAllAsync(cancellationToken);
-            return entities?.Select(e => new AuditScheduleDto(e)).ToList();
-        }
-
-        public async Task<List<AuditScheduleDto>> GetConfirmedAsync(CancellationToken cancellationToken)
-        {
-            var all = await GetAllAsync(cancellationToken);
-            return all?.Where(s => s.StatusCode == IQAApprovalWorkflow.StateCodes.Confirmed ||
-                                   s.StatusCode == IQAApprovalWorkflow.StateCodes.Approved).ToList()
-                   ?? new List<AuditScheduleDto>();
-        }
-
-        public async Task<AuditScheduleDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _repository.GetByIdAsync(id, cancellationToken);
-            return entity != null ? new AuditScheduleDto(entity) : null;
-        }
-
-        public async Task<List<string>> GetConflictValidationsAsync(AuditScheduleDto dto, CancellationToken cancellationToken)
-        {
-            var errors = new List<string>();
-
-            if (string.IsNullOrWhiteSpace(dto.Purpose))
-                errors.Add("Purpose is required.");
-
-            if (string.IsNullOrWhiteSpace(dto.Activity))
-                errors.Add("Audit Title is required.");
-
-            // Gating Rule: Verify the parent Audit Plan is APPROVED
-            if (dto.AuditPlanId > 0)
+         
+            if (entity.AuditableOffices != null && entity.AuditableOffices.Any())
             {
-                var dbContext = _repository.GetDbContext();
-                var planState = await IQAApprovalWorkflow.GetStateCodeAsync(
-                    dbContext, IQAApprovalWorkflow.EntityTypes.AuditPlan, dto.AuditPlanId, cancellationToken);
+      
+                var existingOfficeIds = await _auditScheduleRepository
+                    .GetExistingAuditableOfficeIdsAsync(entity.Id, cancellationToken);
+             
+                var newOffices = entity.AuditableOffices
+                    .Where(o => !existingOfficeIds.Contains(o.OfficeId))
+                    .ToList();
 
-                if (planState != IQAApprovalWorkflow.StateCodes.Approved)
+
+                if (newOffices.Any())
                 {
-                    errors.Add("An Audit Schedule can only be created for an APPROVED Audit Plan.");
+                    newOffices.ForEach(o => o.AuditScheduleId = entity.Id);
+
+                    await _auditScheduleRepository.AddAuditableOfficesAsync(newOffices, cancellationToken);
                 }
             }
 
-            return errors;
+            if (entity.AuditSchduleDetails != null && entity.AuditSchduleDetails.Any())
+            {
+                foreach (var detail in entity.AuditSchduleDetails)
+                {
+                    detail.AuditScheduleId = entity.Id;
+
+                    if (detail.Id == 0)
+                    {
+                        dbContext.Add(detail);
+                    }
+                    else
+                    {
+                        dbContext.Update(detail);
+                    }
+                }
+
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
         }
-
-        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
-            if (entity == null) return false;
-
-            // Assuming AuditSchedule has an IsDeleted property or similar logic
-            // If it uses the IsActive property for soft deletes:
-            entity.IsActive = false;
-
-            await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
-            return true;
-        }
-
         public async Task<DtoPageList<AuditScheduleDto, AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var result = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
-            if (result.TotalCount == 0) return null;
+            var auditSchedule = await _auditScheduleRepository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (auditSchedule.TotalCount == 0)
+                return null;
+            return DtoPageList<AuditScheduleDto, AuditSchedule, int>.Create(auditSchedule.Items, page, pageSize, auditSchedule.TotalCount);
 
-            return DtoPageList<AuditScheduleDto, AuditSchedule, int>.Create(result.Items, page, pageSize, result.TotalCount);
-        }
-
-        public async Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken)
+        }      
+        public async Task SaveAuditableOfficesAsync(List<AuditableOfficesDto> auditableOfficesList, CancellationToken cancellationToken)
         {
-            var entities = await _repository.GetByAuditPlanIdAsync(auditPlanId, cancellationToken);
-            return entities.Select(x => new AuditScheduleDto(x));
-        }
-
-        public async Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken)
-        {
-            var entities = await _repository.GetByAuditPlanEntryIdAsync(auditPlanEntryId, cancellationToken);
-            return entities.Select(x => new AuditScheduleDto(x));
-        }
-        public async Task<ReportAuditScheduleDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
-            return entity != null ? new ReportAuditScheduleDto(entity) : null;
-        }
-
-        public async Task<(bool Success, string? Error)> SubmitAsync(int id, CancellationToken cancellationToken)
-        {
-            return await SubmitAsync(id, null, null, cancellationToken);
-        }
-
-        public async Task<(bool Success, string? Error)> SubmitAsync(
-            int id, string? userId, string? comments, CancellationToken cancellationToken)
-        {
-            var dbContext = _repository.GetDbContext();
-
-            var entity = await dbContext.Set<AuditSchedule>()
-                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive, cancellationToken);
-
-            if (entity == null)
-                return (false, "Audit schedule not found.");
-
-            if (string.IsNullOrWhiteSpace(entity.Purpose) || string.IsNullOrWhiteSpace(entity.Activity))
-                return (false, "Purpose and Activity are required before submitting.");
-
-            var result = await IQAApprovalWorkflow.SubmitAsync(
-                dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, entity.Id,
-                "audit schedule", userId, comments, cancellationToken);
-            if (!result.Success) return result;
-
-            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
-        }
-
-        public async Task<(bool Success, string? Error)> DecideAsync(
-            int id, string approverId, bool approve, string? comments, CancellationToken cancellationToken)
-        {
-            return await DecideAsync(id, approverId, approve ? "Confirm" : "Reject", comments, null, cancellationToken);
-        }
-
-        public async Task<(bool Success, string? Error)> DecideAsync(
-            int id, string approverId, string action, string? comments, string? officeName, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrWhiteSpace(approverId))
-                return (false, "Approver is required.");
-
-            var dbContext = _repository.GetDbContext();
-
-            var entity = await dbContext.Set<AuditSchedule>()
-                .Include(s => s.AuditableOffices!)
-                    .ThenInclude(ao => ao.Office)
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-
-            if (entity == null)
-                return (false, "Audit schedule not found.");
-
-            string? resolvedOfficeName = officeName ?? entity.AuditableOffices?.FirstOrDefault()?.Office?.Name;
-
-            var result = await IQAApprovalWorkflow.DecideAsync(
-                dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, entity.Id,
-                "audit schedule", approverId, action, comments, resolvedOfficeName, cancellationToken);
-
-            if (!result.Success) return result;
-
-            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
-        }
-
-        private static async Task<(bool Success, string? Error)> SaveWorkflowChangesAsync(
-            DbContext dbContext, CancellationToken cancellationToken)
-        {
-            try
+            var entities = auditableOfficesList.Select(dto => new AuditableOffices
             {
-                await dbContext.SaveChangesAsync(cancellationToken);
-                return (true, null);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                return (false, "This audit schedule was changed by someone else. Please refresh and try again.");
-            }
-        }
+                AuditScheduleId = dto.AuditScheduleId,
+                OfficeId = dto.OfficeId
+            }).ToList();
+
+            await _auditScheduleRepository.AddAuditableOfficesAsync(entities, cancellationToken);
+        }        
     }
 }

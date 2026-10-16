@@ -11,8 +11,6 @@ namespace IMIS.Application.AuditorModule
         public bool IsTeamLeader { get; set; }
         public bool IsOfficeHead { get; set; }
         public required string UserId { get; set; }
-        public OrganizationImprovementType ImprovementType { get; set; }
-
         public AuditorDto() { }
         [SetsRequiredMembers]
         public AuditorDto(Auditor auditor)
