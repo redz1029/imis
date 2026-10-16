@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:imis/audit/audit_plan/models/audit_plan.dart';
-import 'package:imis/audit/audit_plan/models/audit_plan_entry.dart';
-import 'package:imis/audit/audit_report/service/audit_report_service.dart';
-import 'package:imis/audit/audit_report/model/audit_report.dart';
-import 'package:imis/audit/audit_report/model/audit_com_findings.dart';
-import 'package:imis/audit/audit_report/model/audit_scope.dart';
-import 'package:imis/audit/audit_report/model/audit_summary_findings.dart';
-import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart';
+import 'package:imis/ISO/IQA/audit_report/service/audit_report_service.dart';
+import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
+import 'package:imis/ISO/IQA/audit_report/model/audit_com_findings.dart';
+import 'package:imis/ISO/IQA/audit_report/model/audit_scope.dart';
+import 'package:imis/ISO/IQA/audit_report/model/audit_summary_findings.dart';
+import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
 
 // =============================================================================
 // UI-only row wrappers — hold a TextEditingController per editable field and

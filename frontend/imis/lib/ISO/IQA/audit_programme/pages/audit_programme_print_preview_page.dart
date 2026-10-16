@@ -12,8 +12,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-import 'package:imis/audit/audit_programme/models/audit_programme.dart';
-import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/audit_programme/models/audit_programme.dart';
+import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 
@@ -1011,9 +1011,7 @@ class _ProgrammePdfBuilder {
 
   pw.Widget _entryRow(_Entry e, _Batch batch) {
     final date = e.date ??
-        (batch.start == null
-            ? null
-            : batch.start!.add(Duration(days: e.dayNumber - 1)));
+        batch.start?.add(Duration(days: e.dayNumber - 1));
     final dateText = date == null ? '' : DateFormat('MMMM d, yyyy').format(date);
 
     final persons = e.persons.isNotEmpty

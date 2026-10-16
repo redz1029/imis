@@ -10,11 +10,11 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-import 'package:imis/audit/audit_plan/models/audit_plan_entry.dart';
-import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
-import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
-import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
-import 'package:imis/audit/audit_schedules/services/audit_schedule_service.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart';
+import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
+import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 

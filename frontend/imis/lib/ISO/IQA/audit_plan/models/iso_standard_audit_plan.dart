@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:imis/audit/iso_standard/models/iso_standard.dart';
-import 'package:imis/audit/audit_plan/models/audit_plan_entry.dart'; // Adjust path if needed
+import 'package:imis/ISO/IQA/iso_standard/models/iso_standard.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart'; // Adjust path if needed
 
 part 'iso_standard_audit_plan.g.dart';
 

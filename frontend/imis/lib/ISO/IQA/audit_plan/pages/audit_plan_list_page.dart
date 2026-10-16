@@ -624,16 +624,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imis/utils/print_preview_util.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:imis/audit/audit_plan/models/audit_plan.dart';
-import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart';
-import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
+import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_page.dart';
+import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
-import 'package:imis/audit/widgets/approval_workflow_widgets.dart';
+import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 
 class AuditPlanListPage extends StatefulWidget {
   const AuditPlanListPage({super.key});
@@ -1071,24 +1070,24 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
                                                 onPressed: () =>
                                                     _openForm(plan: plan),
                                               ),
-                                              IconButton(
-                                                tooltip: 'PDF Preview',
-                                                padding: EdgeInsets.zero,
-                                                constraints:
-                                                    const BoxConstraints(
-                                                  minWidth: 36,
-                                                  minHeight: 36,
-                                                ),
-                                                icon: const Icon(
-                                                  Icons.picture_as_pdf_outlined,
-                                                  size: 16,
-                                                ),
-                                                onPressed: () =>
-                                                    openAuditPlanReportPreview(
-                                                  plan.id,
-                                                  context: context,
-                                                ),
-                                              ),
+                                              // IconButton(
+                                              //   tooltip: 'PDF Preview',
+                                              //   padding: EdgeInsets.zero,
+                                              //   constraints:
+                                              //       const BoxConstraints(
+                                              //     minWidth: 36,
+                                              //     minHeight: 36,
+                                              //   ),
+                                              //   icon: const Icon(
+                                              //     Icons.picture_as_pdf_outlined,
+                                              //     size: 16,
+                                              //   ),
+                                              //   onPressed: () =>
+                                              //       openAuditPlanReportPreview(
+                                              //     plan.id,
+                                              //     context: context,
+                                              //   ),
+                                              // ),
                                               if (plan.effectiveStatusName ==
                                                   'Draft')
                                                 IconButton(
@@ -1158,17 +1157,17 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
                                           Icons.more_vert,
                                           color: Colors.grey.shade500,
                                         ),
-                                        onSelected: (value) {
-                                          if (value == 'edit') {
-                                            _openForm(plan: plan);
-                                          }
-                                          if (value == 'pdf') {
-                                            openAuditPlanReportPreview(
-                                              plan.id,
-                                              context: context,
-                                            );
-                                          }
-                                        },
+                                        // onSelected: (value) {
+                                        //   if (value == 'edit') {
+                                        //     _openForm(plan: plan);
+                                        //   }
+                                        //   if (value == 'pdf') {
+                                        //     openAuditPlanReportPreview(
+                                        //       plan.id,
+                                        //       context: context,
+                                        //     );
+                                        //   }
+                                        // },
                                         itemBuilder: (_) => [
                                           const PopupMenuItem(
                                             value: 'edit',

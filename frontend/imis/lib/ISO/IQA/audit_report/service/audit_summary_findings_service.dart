@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:imis/audit/audit_report/model/audit_summary_findings.dart';
+import 'package:imis/ISO/IQA/audit_report/model/audit_summary_findings.dart';
 
 class AuditSummaryFindingsService {
   final Dio _dio;

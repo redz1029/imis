@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:imis/audit/iso_standard/models/iso_standard.dart';
+import 'package:imis/ISO/IQA/iso_standard/models/iso_standard.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 

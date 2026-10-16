@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';

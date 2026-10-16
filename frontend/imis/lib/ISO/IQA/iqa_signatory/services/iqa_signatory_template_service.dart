@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import 'package:imis/audit/iqa_signatory/model/iqa_signatory_template.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_signatory_template.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 

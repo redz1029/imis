@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imis/audit/iqa_signatory/model/iqa_approval_history.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_approval_history.dart';
 import 'package:imis/constant/constant.dart';
 
 /// Modal dialog requiring a comment/reason when rejecting an item.

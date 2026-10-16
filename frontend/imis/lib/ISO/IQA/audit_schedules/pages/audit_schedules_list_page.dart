@@ -3,11 +3,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imis/audit/audit_schedules/pages/audit_schedules_page.dart';
+import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:imis/audit/audit_plan/models/audit_plan.dart';
-import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
+import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';

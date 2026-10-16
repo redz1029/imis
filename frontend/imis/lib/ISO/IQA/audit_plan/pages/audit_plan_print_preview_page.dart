@@ -12,9 +12,9 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-import 'package:imis/audit/audit_plan/models/audit_plan.dart';
-import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
-import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
+import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
+import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 

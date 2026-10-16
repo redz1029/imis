@@ -12,8 +12,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-import 'package:imis/audit/audit_checklist/models/audit_checklist.dart';
-import 'package:imis/audit/audit_checklist/services/audit_checklist_service.dart';
+import 'package:imis/ISO/IQA/audit_checklist/models/audit_checklist.dart';
+import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
 import 'package:imis/constant/constant.dart';
 
 /// Opens the native (Flutter) print preview of an Audit Checklist.

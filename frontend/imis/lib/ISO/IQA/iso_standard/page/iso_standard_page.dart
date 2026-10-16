@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imis/audit/iso_standard/models/clause_item.dart';
-import 'package:imis/audit/iso_standard/service/iso_standard_service.dart';
+import 'package:imis/ISO/IQA/iso_standard/models/clause_item.dart';
+import 'package:imis/ISO/IQA/iso_standard/service/iso_standard_service.dart';
 
 class ClauseLibraryPage extends StatefulWidget {
   final int? versionId;

@@ -1,4 +1,4 @@
-import 'package:imis/audit/audit_plan/models/audit_plan.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 

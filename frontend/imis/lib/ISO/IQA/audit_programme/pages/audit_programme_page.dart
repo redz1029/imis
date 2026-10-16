@@ -4,12 +4,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
-import 'package:imis/audit/audit_programme/models/audit_programme.dart';
-import 'package:imis/audit/widgets/approval_workflow_widgets.dart';
+import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/audit_programme/models/audit_programme.dart';
+import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/user/models/user_registration.dart';
-import 'package:imis/audit/audit_programme/pages/audit_programme_print_preview_page.dart';
+import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_print_preview_page.dart';
 
 // =============================================================================
 // 1. DATA MODELS & DTO ADAPTERS MATCHING C# BACKEND

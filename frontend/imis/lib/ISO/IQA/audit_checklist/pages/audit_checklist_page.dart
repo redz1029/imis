@@ -3,10 +3,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imis/audit/audit_checklist/pages/audit_checklist_print_preview_page.dart';
-import 'package:imis/audit/audit_checklist/models/audit_checklist.dart';
-import 'package:imis/audit/audit_checklist/services/audit_checklist_service.dart';
-import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/audit_checklist/models/audit_checklist.dart';
+import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_print_preview_page.dart';
+import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
+import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';

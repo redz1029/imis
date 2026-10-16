@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
-import 'package:imis/audit/iqa_signatory/model/iqa_signatory.dart';
-import 'package:imis/audit/iqa_signatory/model/iqa_signatory_template.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_signatory.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_signatory_template.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 
@@ -10,17 +10,9 @@ class IQASignatoryService {
 
   IQASignatoryService(this.dio);
 
-  /// Same host/prefix as the working endpoints: takes the known-good
-  /// `ApiEndpoint().auditProgramme` URL and swaps its last path segment.
-  /// Replace the body with `ApiEndpoint().iqaSignatory` once that getter
-  /// exists in ApiEndpoint.
-  String get _baseUrl {
-    var root = ApiEndpoint().auditProgramme;
-    while (root.endsWith('/')) {
-      root = root.substring(0, root.length - 1);
-    }
-    return Uri.parse(root).resolve('IQASignatory').toString();
-  }
+  /// Base URL of the IQA signatory endpoints, e.g.
+  /// `<host>/IQASignatory`.
+  String get _baseUrl => ApiEndpoint().iqaSignatory;
 
   String _withQuery(String path, Map<String, dynamic> query) {
     final uri = Uri.parse('$_baseUrl$path');

@@ -1,17 +1,17 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imis/audit/audit_schedules/pages/audit_schedule_print_preview_page.dart';
+import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedule_print_preview_page.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:imis/audit/audit_plan/models/audit_plan.dart';
-import 'package:imis/audit/audit_plan/models/audit_plan_entry.dart';
-import 'package:imis/audit/audit_plan/services/AuditPlanService.dart';
-import 'package:imis/audit/audit_programme/services/audit_programme_service.dart';
-import 'package:imis/audit/audit_schedules/models/audit_schedules.dart';
-import 'package:imis/audit/audit_schedules/services/audit_schedule_service.dart';
-import 'package:imis/audit/widgets/approval_workflow_widgets.dart';
-import 'package:imis/audit/audit_plan/pages/audit_plan_page.dart'
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart';
+import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
+import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
+import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
+import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_page.dart'
     show IsoStandardDto, AuditorTeamDto;
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/user/models/user.dart';

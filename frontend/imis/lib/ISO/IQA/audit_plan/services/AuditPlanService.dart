@@ -2,7 +2,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:imis/audit/audit_plan/models/audit_plan.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 

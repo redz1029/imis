@@ -1,6 +1,6 @@
-import 'package:imis/audit/audit_plan/models/audit_plan_entry.dart';
-import 'package:imis/audit/iqa_signatory/model/iqa_approval_history.dart';
-import 'package:imis/audit/iqa_signatory/model/iqa_signatory.dart';
+import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_approval_history.dart';
+import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_signatory.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 

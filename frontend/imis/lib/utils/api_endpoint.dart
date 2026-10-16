@@ -99,6 +99,13 @@ class ApiEndpoint {
   late String auditProgramme;
   late String isoStandard;
   late String strategicChangeAgenda;
+  late String auditChecklist;
+  late String auditee;
+  late String auditPlanEntry;
+  late String auditReport;
+  late String iqaSignatory;
+  late String ncar;
+  late String ncarMonitoring;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -201,6 +208,13 @@ class ApiEndpoint {
     auditProgramme = '$baseUrl/auditProgramme';
     isoStandard = '$baseUrl/isoStandard';
     strategicChangeAgenda = '$baseUrl/strategicChangeAgenda';
+    auditChecklist = '$baseUrl/auditchecklist';
+    auditee = '$baseUrl/auditee';
+    auditPlanEntry = '$baseUrl/auditPlanEntry';
+    auditReport = '$baseUrl/auditreport';
+    iqaSignatory = '$baseUrl/IQASignatory';
+    ncar = '$baseUrl/ncar';
+    ncarMonitoring = '$baseUrl/api/NcarMonitoring';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
