@@ -27,7 +27,7 @@ namespace IMIS.Application.AuditScheduleModule
 
         Task<EntityPageList<AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
 
-        // Child helpers for managing many-to-many or one-to-many relationships
+        // Child helpers for managing many-to-many or one-to-many relationships//
         Task<List<int>> GetExistingAuditableOfficeIdsAsync(int auditScheduleId, CancellationToken cancellationToken);
         Task<List<int>> GetExistingAuditScheduleDetailsIdsAsync(int auditScheduleId, CancellationToken cancellationToken);
 

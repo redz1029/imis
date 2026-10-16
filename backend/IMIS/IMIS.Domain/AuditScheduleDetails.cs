@@ -8,5 +8,6 @@ namespace IMIS.Domain
         public AuditPlanEntry? AuditPlanEntry { get; set; }
         public required int AuditScheduleId { get; set; }
         public AuditSchedule? AuditSchedule { get; set; }
+        //
     }
 }

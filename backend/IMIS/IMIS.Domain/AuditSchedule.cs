@@ -34,7 +34,7 @@ namespace IMIS.Domain
 
         /// <summary>
         /// Persistent approval, confirmation, and rejection history for this audit schedule
-        /// </summary>
+        /// </summary>/
         public ICollection<IQAApprovalHistory> ApprovalHistories { get; set; } = new List<IQAApprovalHistory>();
     }
 }

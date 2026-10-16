@@ -20,7 +20,7 @@ namespace IMIS.Application.AuditScheduleModule
             IsDeleted = entity.IsDeleted;
             RowVersion = entity.RowVersion;
         }
-
+        //
         public override AuditScheduleDetails ToEntity()
         {
             return new AuditScheduleDetails

@@ -26,7 +26,7 @@ namespace IMIS.Persistence.AuditScheduleModule
 
             entity.IsDeleted = true;
 
-            // Using the DbContext from the repository to persist the soft delete change
+            // Using the DbContext from the repository to persist the soft delete change//
             var context = _auditScheduleDetailsRepository.GetDbContext();
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
