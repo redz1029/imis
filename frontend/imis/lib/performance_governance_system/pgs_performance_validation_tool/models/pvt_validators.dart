@@ -8,7 +8,7 @@ class PvtValidators {
   bool? rowVersion;
   bool? isDeleted;
   int performanceValidationToolId;
-  int auditorId;
+  int evaluatorId;
   String? auditorName;
   DateTime postingDate;
 
@@ -16,7 +16,7 @@ class PvtValidators {
     this.id,
     this.isDeleted,
     this.performanceValidationToolId,
-    this.auditorId,
+    this.evaluatorId,
     this.postingDate, {
     this.auditorName,
     this.rowVersion,

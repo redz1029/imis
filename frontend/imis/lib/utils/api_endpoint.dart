@@ -96,9 +96,9 @@ class ApiEndpoint {
   late String oprReport;
   late String sWOTAnalysisServiceHead;
   late String serviceHeadOffices;
+  late String strategicChangeAgenda;
   late String auditProgramme;
   late String isoStandard;
-  late String strategicChangeAgenda;
   late String auditChecklist;
   late String auditee;
   late String auditPlanEntry;
@@ -106,6 +106,9 @@ class ApiEndpoint {
   late String iqaSignatory;
   late String ncar;
   late String ncarMonitoring;
+  late String isatPeriod;
+  late String isat;
+  late String iSATSignatoryTemplate;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -205,9 +208,9 @@ class ApiEndpoint {
     oprReport = '$baseUrl/report-opr-list';
     sWOTAnalysisServiceHead = '$baseUrl/sWOTAnalysisServiceHead';
     serviceHeadOffices = '$baseUrl/serviceHeadOffices';
+    strategicChangeAgenda = '$baseUrl/strategicChangeAgenda';
     auditProgramme = '$baseUrl/auditProgramme';
     isoStandard = '$baseUrl/isoStandard';
-    strategicChangeAgenda = '$baseUrl/strategicChangeAgenda';
     auditChecklist = '$baseUrl/auditchecklist';
     auditee = '$baseUrl/auditee';
     auditPlanEntry = '$baseUrl/auditPlanEntry';
@@ -215,14 +218,19 @@ class ApiEndpoint {
     iqaSignatory = '$baseUrl/IQASignatory';
     ncar = '$baseUrl/ncar';
     ncarMonitoring = '$baseUrl/api/NcarMonitoring';
+    isatPeriod = '$baseUrl/ISATPeriod';
+    isat = '$baseUrl/ISAT';
+    iSATSignatoryTemplate = '$baseUrl/iSATSignatoryTemplate';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
       baseUrl = 'https://localhost:7273';
-    } else if (kReleaseMode) {
-      baseUrl = 'https://api.cpems.crmc.ph';
-      // baseUrl = 'http://192.168.0.74';
-    } else {
+    }
+    //  else if (kReleaseMode) {
+    //   baseUrl = 'https://api.cpems.crmc.ph';
+    //   // baseUrl = 'http://192.168.0.74';
+    // }
+    else {
       throw Exception("Test base Url is not specified!");
     }
   }

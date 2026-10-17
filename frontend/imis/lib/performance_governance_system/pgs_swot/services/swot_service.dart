@@ -15,7 +15,7 @@ class SwotService {
     String? searchQuery,
     required String userId,
     required String roleId,
-    int? officeId,
+    String? officeId,
   }) async {
     final paginationUtil = PaginationUtil(dio);
 

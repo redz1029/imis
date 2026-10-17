@@ -457,14 +457,15 @@ class ImpactStrategyGoalScorecardPageState
                   child: Row(
                     children: [
                       IconButton(
-                        icon: Icon(Icons.edit_outlined, size: 18),
+                        icon: Icon(Icons.edit_outlined, size: 16),
                         onPressed: () => _handleEdit(impactStrategyGoal),
                       ),
                       IconButton(
                         icon: Icon(
                           Icons.description_outlined,
-                          size: 18,
-                          color: Colors.blueAccent,
+                          size: 16,
+
+                          color: blue,
                         ),
                         onPressed: () {
                           openImpactGoalStrategyReportPreview(
@@ -558,7 +559,7 @@ class ImpactStrategyGoalScorecardPageState
                                 Icon(
                                   Icons.description_outlined,
                                   size: 16,
-                                  color: Colors.blueAccent,
+                                  color: blue,
                                 ),
                                 SizedBox(width: 8),
                                 Text('Print preview'),

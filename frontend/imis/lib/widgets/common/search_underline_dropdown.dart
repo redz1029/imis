@@ -205,7 +205,7 @@ class SearchUnderlineDropdownState<T>
                                               color:
                                                   isSelected
                                                       ? primaryColor
-                                                          .withValues(alpha: .08)
+                                                          .withOpacity(0.08)
                                                       : Colors.transparent,
                                               child: Text(
                                                 widget.itemLabel(item),

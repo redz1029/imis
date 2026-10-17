@@ -14,6 +14,7 @@ class OperationReviewProtocolServices {
     String? searchQuery,
     required String roleId,
     String? officeId,
+    String? parentofficeid,
     String? periodId,
   }) async {
     final paginationUtil = PaginationUtil(dio);
@@ -26,6 +27,7 @@ class OperationReviewProtocolServices {
       additionalParams: {
         if (officeId != null) 'officeId': officeId,
         if (periodId != null) 'pgsPeriodId': periodId,
+        if (parentofficeid != null) 'parentofficeid': parentofficeid,
       },
       fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
     );

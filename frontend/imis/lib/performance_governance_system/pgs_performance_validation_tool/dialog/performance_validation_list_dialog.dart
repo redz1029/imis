@@ -106,9 +106,10 @@ class _PerformanceValidationListDialogState
       return;
     }
     setState(() {
-      _filteredValidations = _validations
-          .where((v) => _periodLabel(v).toLowerCase().contains(q))
-          .toList();
+      _filteredValidations =
+          _validations
+              .where((v) => _periodLabel(v).toLowerCase().contains(q))
+              .toList();
     });
   }
 
@@ -127,85 +128,86 @@ class _PerformanceValidationListDialogState
   Future<void> _showNoSignatoryDialog() async {
     await showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 380,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 32,
-                offset: const Offset(0, 12),
+      builder:
+          (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: 380,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 32,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.pending_actions_outlined,
-                  color: Colors.orange.shade700,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Deliverables Not Yet Submitted',
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 17,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'The head of ${widget.pgs.office.name} has not submitted their '
-                'deliverables yet. Performance validation cannot be created '
-                'until the head department has submitted.',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.pending_actions_outlined,
+                      color: Colors.orange.shade700,
+                      size: 28,
                     ),
                   ),
-                  child: Text(
-                    'OK',
+                  const SizedBox(height: 16),
+                  Text(
+                    'Deliverables Not Yet Submitted',
                     style: GoogleFonts.plusJakartaSans(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: Colors.black87,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The head of ${widget.pgs.office.name} has not submitted their '
+                    'deliverables yet. Performance validation cannot be created '
+                    'until the head department has submitted.',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'OK',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -245,8 +247,10 @@ class _PerformanceValidationListDialogState
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) =>
-          const Center(child: CircularProgressIndicator(color: primaryColor)),
+      builder:
+          (_) => const Center(
+            child: CircularProgressIndicator(color: primaryColor),
+          ),
     );
 
     final user = await AuthUtil.fetchLoggedUser();
@@ -273,8 +277,8 @@ class _PerformanceValidationListDialogState
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (_) =>
-          PerformanceValidationDialog(pgs: widget.pgs, existing: data),
+      builder:
+          (_) => PerformanceValidationDialog(pgs: widget.pgs, existing: data),
     ).then((saved) {
       if (saved == true) _loadValidations();
     });
@@ -284,33 +288,34 @@ class _PerformanceValidationListDialogState
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (ctx) => DeleteDialog(
-        title: 'Performance Validation',
-        itemName: 'performance validation',
-        onDelete: () async {
-          Navigator.pop(ctx);
-          try {
-            await _performanceValidationService.deletePerformanceValidation(
-              v.id.toString(),
-            );
-            await _loadValidations();
-            if (mounted) {
-              MotionToast.success(
-                description: Text(
-                  'Performance validation deleted successfully',
-                  style: GoogleFonts.plusJakartaSans(),
-                ),
-              ).show(context);
-            }
-          } catch (_) {
-            MotionToast.error(
-              description: Text(
-                'Failed to deleted performance validation tool',
-              ),
-            ).show(context);
-          }
-        },
-      ),
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Performance Validation',
+            itemName: 'performance validation',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _performanceValidationService.deletePerformanceValidation(
+                  v.id.toString(),
+                );
+                await _loadValidations();
+                if (mounted) {
+                  MotionToast.success(
+                    description: Text(
+                      'Performance validation deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
+                  ).show(context);
+                }
+              } catch (_) {
+                MotionToast.error(
+                  description: Text(
+                    'Failed to deleted performance validation tool',
+                  ),
+                ).show(context);
+              }
+            },
+          ),
     );
   }
 
@@ -319,16 +324,20 @@ class _PerformanceValidationListDialogState
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
-        content: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(color: primaryColor),
-            SizedBox(width: 16),
-            Text('Generating PDF...', style: TextStyle(color: primaryColor)),
-          ],
-        ),
-      ),
+      builder:
+          (_) => const AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: primaryColor),
+                SizedBox(width: 16),
+                Text(
+                  'Generating PDF...',
+                  style: TextStyle(color: primaryColor),
+                ),
+              ],
+            ),
+          ),
     );
 
     try {
@@ -362,9 +371,10 @@ class _PerformanceValidationListDialogState
             debugPrint('OpenFile error: ${result.message}');
           }
         } else {
-          final dir = Platform.isWindows
-              ? await getDownloadsDirectory()
-              : await getApplicationDocumentsDirectory();
+          final dir =
+              Platform.isWindows
+                  ? await getDownloadsDirectory()
+                  : await getApplicationDocumentsDirectory();
           final filePath = '${dir!.path}/performance_validation_${v.id}.pdf';
           await File(filePath).writeAsBytes(bytes);
           final result = await OpenFile.open(filePath);
@@ -396,19 +406,21 @@ class _PerformanceValidationListDialogState
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
 
-    final dialogWidth = isMobile
-        ? screenWidth
-        : isTablet
-        ? screenWidth * 0.92
-        : screenWidth * 0.62;
+    final dialogWidth =
+        isMobile
+            ? screenWidth
+            : isTablet
+            ? screenWidth * 0.92
+            : screenWidth * 0.62;
 
     final dialogHeight = isMobile ? screenHeight : screenHeight * 0.85;
 
-    final horizontalPadding = isMobile
-        ? 0.0
-        : isTablet
-        ? 16.0
-        : 24.0;
+    final horizontalPadding =
+        isMobile
+            ? 0.0
+            : isTablet
+            ? 16.0
+            : 24.0;
     final verticalPadding = isMobile ? 0.0 : 20.0;
 
     return Dialog(
@@ -426,33 +438,34 @@ class _PerformanceValidationListDialogState
         child: Container(
           decoration: BoxDecoration(
             color: mainBgColor,
-            borderRadius: isMobile
-                ? BorderRadius.zero
-                : BorderRadius.circular(16),
-            boxShadow: isMobile
-                ? null
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+            borderRadius:
+                isMobile ? BorderRadius.zero : BorderRadius.circular(16),
+            boxShadow:
+                isMobile
+                    ? null
+                    : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
           ),
           child: Column(
             children: [
               _buildHeader(isMobile, isTablet),
               if (isMobile) _buildMobileSearch(),
               Expanded(
-                child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(color: primaryColor),
-                      )
-                    : _filteredValidations.isEmpty
-                    ? _buildEmptyState()
-                    : isMobile
-                    ? _buildMobileList()
-                    : _buildDesktopTable(),
+                child:
+                    _isLoading
+                        ? const Center(
+                          child: CircularProgressIndicator(color: primaryColor),
+                        )
+                        : _filteredValidations.isEmpty
+                        ? _buildEmptyState()
+                        : isMobile
+                        ? _buildMobileList()
+                        : _buildDesktopTable(),
               ),
               _buildFooter(isMobile),
             ],
@@ -470,9 +483,10 @@ class _PerformanceValidationListDialogState
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: isMobile
-            ? BorderRadius.zero
-            : const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius:
+            isMobile
+                ? BorderRadius.zero
+                : const BorderRadius.vertical(top: Radius.circular(16)),
         border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(
@@ -526,16 +540,17 @@ class _PerformanceValidationListDialogState
               permission: AppPermissions.addPerformanceValidationTool,
               child: TextButton.icon(
                 onPressed: _checkingSignatory ? null : _openNewValidation,
-                icon: _checkingSignatory
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.add, color: Colors.white, size: 18),
+                icon:
+                    _checkingSignatory
+                        ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : const Icon(Icons.add, color: Colors.white, size: 18),
                 label: const Text(
                   'Add New',
                   style: TextStyle(
@@ -582,26 +597,27 @@ class _PerformanceValidationListDialogState
           const SizedBox(width: 8),
           PermissionWidget(
             permission: AppPermissions.addPerformanceValidationTool,
-            child: _checkingSignatory
-                ? const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
+            child:
+                _checkingSignatory
+                    ? const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: primaryColor,
+                        ),
+                      ),
+                    )
+                    : IconButton(
+                      onPressed: _openNewValidation,
+                      icon: const Icon(
+                        Icons.add_circle,
                         color: primaryColor,
+                        size: 30,
                       ),
                     ),
-                  )
-                : IconButton(
-                    onPressed: _openNewValidation,
-                    icon: const Icon(
-                      Icons.add_circle,
-                      color: primaryColor,
-                      size: 30,
-                    ),
-                  ),
           ),
         ],
       ),
@@ -672,23 +688,24 @@ class _PerformanceValidationListDialogState
           DataColumn2(label: Text('Period'), size: ColumnSize.L),
           DataColumn(label: Text('Actions')),
         ],
-        rows: _filteredValidations.asMap().entries.map((entry) {
-          final index = entry.key;
-          final v = entry.value;
+        rows:
+            _filteredValidations.asMap().entries.map((entry) {
+              final index = entry.key;
+              final v = entry.value;
 
-          return DataRow(
-            cells: [
-              DataCell(Text('${index + 1}')),
-              DataCell(
-                Text(
-                  _periodLabel(v),
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-              ),
-              DataCell(_actionButtons(v)),
-            ],
-          );
-        }).toList(),
+              return DataRow(
+                cells: [
+                  DataCell(Text('${index + 1}')),
+                  DataCell(
+                    Text(
+                      _periodLabel(v),
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  DataCell(_actionButtons(v)),
+                ],
+              );
+            }).toList(),
       ),
     );
   }
@@ -802,9 +819,10 @@ class _PerformanceValidationListDialogState
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: isMobile
-            ? BorderRadius.zero
-            : const BorderRadius.vertical(bottom: Radius.circular(16)),
+        borderRadius:
+            isMobile
+                ? BorderRadius.zero
+                : const BorderRadius.vertical(bottom: Radius.circular(16)),
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(

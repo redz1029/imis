@@ -116,7 +116,6 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
   final _commonService = CommonService(Dio());
   final _swotServiceHeadService = SwotServiceHeadService(Dio());
   bool get _isServiceHeadView => _viewMode == SwotViewMode.serviceHead;
-
   String get _viewTitle {
     return _isServiceHeadView ? 'Service Head SWOT' : 'Department Head SWOT';
   }
@@ -224,6 +223,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                 searchQuery: searchQuery,
                 roleId: roleId,
                 userId: _userId!,
+                officeId: _selectedOfficeId,
               );
       if (!mounted) return;
       setState(() {
@@ -572,7 +572,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                     icon: const Icon(
                       Icons.description_outlined,
                       size: 16,
-                      color: Colors.blueAccent,
+                      color: blue,
                     ),
                     onPressed: () {
                       if (_isServiceHeadView) {
@@ -684,7 +684,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                             Icon(
                               Icons.description_outlined,
                               size: 16,
-                              color: Colors.blueAccent,
+                              color: blue,
                             ),
                             SizedBox(width: 8),
                             Text('Print preview'),
@@ -823,7 +823,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                 ),
 
                 Text(
-                  '${filteredList.length} record${filteredList.length != 1 ? 's' : ''} found',
+                  '$totalCount record${totalCount != 1 ? 's' : ''} found',
                   style: TextStyle(
                     fontSize: isMobile ? 10 : 12,
                     color: Colors.grey.shade600,
@@ -837,31 +837,34 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                PermissionWidget(
-                  permission: AppPermissions.addSWOTAnalysis,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _openDialog(isServiceHead: false),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: primaryColor,
-                      side: const BorderSide(color: primaryColor),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 16,
+                if (!_isServiceHeadView) ...[
+                  PermissionWidget(
+                    permission: AppPermissions.addSWOTAnalysis,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openDialog(isServiceHead: false),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                      icon: const Icon(
+                        Icons.add,
+                        size: 16,
+                        color: Colors.white,
                       ),
-                    ),
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text(
-                      'Add New',
-                      style: TextStyle(fontSize: 13),
+                      label: const Text(
+                        'Add New',
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
                     ),
                   ),
-                ),
-
-                const SizedBox(width: 8),
-
+                ],
+                SizedBox(width: 10),
                 PermissionWidget(
                   permission: AppPermissions.addSWOTAnalysisServiceHead,
                   child: ElevatedButton.icon(
@@ -1506,6 +1509,38 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
       return;
     }
 
+    if (!widget.isServiceHead &&
+        (_selectedQmrUserId == null || _selectedQmrUserId!.isEmpty)) {
+      MotionToast.error(
+        title: const Text('QMR Required'),
+        description: const Text(
+          'Please select the Quality Management Representative.',
+        ),
+        toastDuration: const Duration(seconds: 4),
+        toastAlignment: Alignment.topCenter,
+      ).show(context);
+
+      return;
+    }
+
+    if (_selectedServiceHeadUserId == null ||
+        _selectedServiceHeadUserId!.isEmpty) {
+      MotionToast.error(
+        title: Text(
+          widget.isServiceHead ? 'MCC Required' : 'Service Head Required',
+        ),
+        description: Text(
+          widget.isServiceHead
+              ? 'Please select the MCC approver.'
+              : 'Please select the Service Head.',
+        ),
+        toastDuration: const Duration(seconds: 4),
+        toastAlignment: Alignment.topCenter,
+      ).show(context);
+
+      return;
+    }
+
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder:
@@ -1775,7 +1810,6 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
     final isSmall = size.width < 700;
 
     return Dialog(
@@ -1794,11 +1828,8 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildDialogHeader(),
-
             Expanded(child: _buildDialogBody(isSmall)),
-
             const Divider(height: 1),
-
             _buildDialogActions(),
           ],
         ),
@@ -1848,16 +1879,13 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(_loadError!),
-
             const SizedBox(height: 8),
-
             TextButton(
               onPressed: () {
                 setState(() {
                   _loadingLabels = true;
                   _loadError = null;
                 });
-
                 _loadLabels();
               },
               child: const Text('Retry'),
@@ -1867,55 +1895,60 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
       );
     }
 
-    return Form(
-      key: _formKey,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildDepartmentSectionUnitDropdown(),
-
-            const SizedBox(height: 10),
-
-            _labeledField(
-              'Objective Statement',
-              _objectiveCtrl,
-              maxLines: 2,
-              required: true,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildDepartmentSectionUnitDropdown(),
+                const SizedBox(height: 10),
+                _labeledField(
+                  'Objective Statement',
+                  _objectiveCtrl,
+                  required: true,
+                ),
+                const SizedBox(height: 20),
+                _SwotContextTable(
+                  title: 'Internal Context',
+                  leftHeader: 'Strengths',
+                  rightHeader: 'Weaknesses',
+                  entries: _internal,
+                  isSmall: isSmall,
+                ),
+                const SizedBox(height: 20),
+                _SwotContextTable(
+                  title: 'External Context',
+                  leftHeader: 'Opportunities',
+                  rightHeader: 'Threats',
+                  entries: _external,
+                  isSmall: isSmall,
+                ),
+              ],
             ),
-
-            const SizedBox(height: 16),
-
-            _SwotContextTable(
-              title: 'Internal Context',
-              leftHeader: 'Strengths',
-              rightHeader: 'Weaknesses',
-              entries: _internal,
-              isSmall: isSmall,
-            ),
-
-            const SizedBox(height: 20),
-
-            _SwotContextTable(
-              title: 'External Context',
-              leftHeader: 'Opportunities',
-              rightHeader: 'Threats',
-              entries: _external,
-              isSmall: isSmall,
-            ),
-
-            const SizedBox(height: 20),
-
-            _buildSignatureBlock(isSmall),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          _buildSignatureBlock(isSmall),
+        ],
       ),
     );
   }
 
   Widget _buildDialogActions() {
     final isEditing = widget.existing != null;
+
+    final String permission =
+        widget.isServiceHead
+            ? (isEditing
+                ? AppPermissions.editSWOTAnalysisServiceHead
+                : AppPermissions.addSWOTAnalysisServiceHead)
+            : (isEditing
+                ? AppPermissions.editSWOTAnalysis
+                : AppPermissions.addSWOTAnalysis);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1927,14 +1960,9 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
             style: TextButton.styleFrom(foregroundColor: primaryColor),
             child: const Text('Cancel'),
           ),
-
           const SizedBox(width: 8),
-
           PermissionWidget(
-            permission:
-                isEditing
-                    ? AppPermissions.editSWOTAnalysis
-                    : AppPermissions.addSWOTAnalysis,
+            permission: permission,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
@@ -2106,7 +2134,6 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
   Widget _labeledField(
     String label,
     TextEditingController ctrl, {
-    int maxLines = 1,
     bool required = false,
   }) {
     return Column(
@@ -2123,38 +2150,44 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
         const SizedBox(height: 4),
 
-        TextFormField(
-          controller: ctrl,
-          maxLines: maxLines,
-          style: const TextStyle(fontSize: 13),
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 8,
+        ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+          child: TextFormField(
+            controller: ctrl,
+            minLines: 1,
+            maxLines: null,
+            keyboardType: TextInputType.multiline,
+            scrollPhysics: const NeverScrollableScrollPhysics(),
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 8,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: primaryColor),
+              ),
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: primaryColor),
-            ),
-          ),
-          validator:
-              required
-                  ? (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Required';
-                    }
+            validator:
+                required
+                    ? (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Required';
+                      }
 
-                    return null;
-                  }
-                  : null,
+                      return null;
+                    }
+                    : null,
+          ),
         ),
       ],
     );
@@ -2162,7 +2195,11 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
 
   Widget _buildSignatureBlock(bool isSmall) {
     final sig = [
-      _signatureField('Prepared by:', 'Department Chair', _preparedByCtrl),
+      _signatureField(
+        'Prepared by:',
+        widget.isServiceHead ? 'Service Head' : 'Department Chair',
+        _preparedByCtrl,
+      ),
 
       if (!widget.isServiceHead)
         _userDropdownField(
@@ -2173,8 +2210,8 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
         ),
 
       _userDropdownField(
-        label: 'Validated by:',
-        role: 'Service Head',
+        label: widget.isServiceHead ? 'Approved by:' : 'Validated by:',
+        role: widget.isServiceHead ? 'MCC' : 'Service Head',
         selectedUserId: _selectedServiceHeadUserId,
         onChanged:
             (value) => setState(() => _selectedServiceHeadUserId = value),
@@ -2270,6 +2307,11 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
     );
   }
 
+  // FIX: dropdown key is now stable (hindi na dependent sa selectedUserId),
+  // and the `validator` was removed — validation for these two fields is
+  // handled manually in `_saveSwot()` gamit yung _selectedQmrUserId /
+  // _selectedServiceHeadUserId state directly, kasi yung Form-based
+  // validator ay stale/out-of-sync tuwing nagbabago yung value.
   Widget _userDropdownField({
     required String label,
     required String role,
@@ -2289,6 +2331,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
               ),
             )
             : SearchUnderlineDropdown<String>(
+              key: ValueKey('user_dropdown_$label'),
               items: _users.map((u) => u.id).toList(),
               itemLabel: (id) {
                 final match = _users.firstWhere(
@@ -2304,9 +2347,6 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
                       : null,
               hintText: 'Select Name',
               onChanged: onChanged,
-              validator:
-                  (value) =>
-                      (value == null || value.isEmpty) ? 'Required' : null,
               maxPopupHeight: 300,
             ),
 

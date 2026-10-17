@@ -244,46 +244,151 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                     const SizedBox(height: 5),
 
                     Expanded(
-                      child: _isLoading
-                          ? Center(
-                              child: CircularProgressIndicator(
-                                color: primaryColor,
-                              ),
-                            )
-                          : filteredList.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.campaign_outlined,
-                                    size: 50,
-                                    color: Colors.grey.shade400,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    "No announcement available",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey,
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : filteredList.isEmpty
+                              ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.campaign_outlined,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
                                     ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: filteredList.length,
-                              itemBuilder: (context, index) {
-                                final announcement = filteredList[index];
-                                int itemNumber =
-                                    ((_currentPage - 1) * _pageSize) +
-                                    index +
-                                    1;
-                                if (!isMobile) {
+                                    const SizedBox(height: 10),
+                                    const Text(
+                                      "No announcement available",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final announcement = filteredList[index];
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text(
+                                              "$itemNumber",
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              announcement.title,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              announcement.isActive
+                                                  ? 'Active'
+                                                  : 'Inactive',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Tooltip(
+                                                  message: 'Edit',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      size: 16,
+                                                      Icons.edit_outlined,
+                                                    ),
+                                                    onPressed: () {
+                                                      showAnnouncementFormDialog(
+                                                        id:
+                                                            announcement.id
+                                                                .toString(),
+                                                        title:
+                                                            announcement.title,
+                                                        fromDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  announcement
+                                                                      .fromDate,
+                                                                ),
+                                                        endDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  announcement
+                                                                      .toDate,
+                                                                ),
+                                                        description:
+                                                            announcement
+                                                                .description,
+                                                        isActive:
+                                                            announcement
+                                                                .isActive,
+                                                        isRead:
+                                                            announcement
+                                                                .isRead ??
+                                                            false,
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    size: 16,
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        announcement.id
+                                                            .toString(),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 6,
+                                      vertical: 12,
                                     ),
+                                    margin: const EdgeInsets.only(bottom: 12),
                                     decoration: BoxDecoration(
                                       border: Border(
                                         bottom: BorderSide(
@@ -291,199 +396,107 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                         ),
                                       ),
                                     ),
-                                    child: Row(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            "$itemNumber",
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            announcement.title,
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            announcement.isActive
-                                                ? 'Active'
-                                                : 'Inactive',
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                        ),
-
-                                        Expanded(
-                                          flex: 2,
-                                          child: Row(
-                                            children: [
-                                              Tooltip(
-                                                message: 'Edit',
-                                                child: IconButton(
-                                                  icon: const Icon(
-                                                    size: 16,
-                                                    Icons.edit_outlined,
-                                                  ),
-                                                  onPressed: () {
-                                                    showAnnouncementFormDialog(
-                                                      id: announcement.id
-                                                          .toString(),
-                                                      title: announcement.title,
-                                                      fromDate:
-                                                          DateTimeConverter()
-                                                              .toJson(
-                                                                announcement
-                                                                    .fromDate,
-                                                              ),
-                                                      endDate:
-                                                          DateTimeConverter()
-                                                              .toJson(
-                                                                announcement
-                                                                    .toDate,
-                                                              ),
-                                                      description: announcement
-                                                          .description,
-                                                      isActive:
-                                                          announcement.isActive,
-                                                      isRead:
-                                                          announcement.isRead ??
-                                                          false,
-                                                    );
-                                                  },
-                                                ),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
                                               ),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  showAnnouncementFormDialog(
+                                                    id:
+                                                        announcement.id
+                                                            .toString(),
+                                                    title: announcement.title,
+                                                    fromDate:
+                                                        DateTimeConverter()
+                                                            .toJson(
+                                                              announcement
+                                                                  .fromDate,
+                                                            ),
+                                                    endDate: DateTimeConverter()
+                                                        .toJson(
+                                                          announcement.toDate,
+                                                        ),
+                                                    description:
+                                                        announcement
+                                                            .description,
+                                                    isActive:
+                                                        announcement.isActive,
+                                                  );
+                                                }
 
-                                              IconButton(
-                                                icon: const Icon(
-                                                  size: 16,
-                                                  CupertinoIcons.delete_simple,
-                                                  color: Colors.redAccent,
-                                                ),
-                                                onPressed: () =>
-                                                    showDeleteDialog(
-                                                      announcement.id
-                                                          .toString(),
+                                                if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    announcement.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 16,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
                                                     ),
-                                              ),
-                                            ],
-                                          ),
+
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 16,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          announcement.title,
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          announcement.isActive
+                                              ? 'Active'
+                                              : 'Inactive',
+                                          style: TextStyle(fontSize: 12),
                                         ),
                                       ],
                                     ),
                                   );
-                                }
-
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  decoration: BoxDecoration(
-                                    border: Border(
-                                      bottom: BorderSide(
-                                        color: Colors.grey.shade200,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            "$itemNumber",
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          PopupMenuButton<String>(
-                                            color: Theme.of(context).cardColor,
-                                            icon: const Icon(Icons.more_vert),
-                                            onSelected: (value) async {
-                                              if (value == 'edit') {
-                                                showAnnouncementFormDialog(
-                                                  id: announcement.id
-                                                      .toString(),
-                                                  title: announcement.title,
-                                                  fromDate: DateTimeConverter()
-                                                      .toJson(
-                                                        announcement.fromDate,
-                                                      ),
-                                                  endDate: DateTimeConverter()
-                                                      .toJson(
-                                                        announcement.toDate,
-                                                      ),
-                                                  description:
-                                                      announcement.description,
-                                                  isActive:
-                                                      announcement.isActive,
-                                                );
-                                              }
-
-                                              if (value == 'delete') {
-                                                showDeleteDialog(
-                                                  announcement.id.toString(),
-                                                );
-                                              }
-                                            },
-                                            itemBuilder: (_) => [
-                                              PopupMenuItem(
-                                                value: 'edit',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.edit_outlined,
-                                                      size: 16,
-                                                    ),
-                                                    SizedBox(width: 8),
-                                                    Text('Edit'),
-                                                  ],
-                                                ),
-                                              ),
-
-                                              PopupMenuItem(
-                                                value: 'delete',
-
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      CupertinoIcons
-                                                          .delete_simple,
-                                                      color: Colors.red,
-                                                      size: 16,
-                                                    ),
-                                                    SizedBox(width: 8),
-                                                    Text('Delete'),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        announcement.title,
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        announcement.isActive
-                                            ? 'Active'
-                                            : 'Inactive',
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                                },
+                              ),
                     ),
                     Container(
                       padding: const EdgeInsets.all(10),
@@ -501,8 +514,8 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                             totalItems: _totalCount,
                             itemsPerPage: _pageSize,
                             isLoading: _isLoading,
-                            onPageChanged: (page) =>
-                                fetchAnnouncement(page: page),
+                            onPageChanged:
+                                (page) => fetchAnnouncement(page: page),
                           ),
                           const SizedBox(width: 60),
                         ],
@@ -515,13 +528,14 @@ class AnnouncementPageState extends State<AnnouncementPage> {
           ],
         ),
       ),
-      floatingActionButton: isMobile
-          ? FloatingActionButton(
-              backgroundColor: primaryColor,
-              onPressed: () => showAnnouncementFormDialog(),
-              child: Icon(Icons.add, color: Colors.white),
-            )
-          : null,
+      floatingActionButton:
+          isMobile
+              ? FloatingActionButton(
+                backgroundColor: primaryColor,
+                onPressed: () => showAnnouncementFormDialog(),
+                child: Icon(Icons.add, color: Colors.white),
+              )
+              : null,
     );
   }
 
@@ -731,12 +745,13 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                       dialogField(
                         label: 'Title',
                         controller: titleController,
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Please fill out this field'
-                            : null,
+                        validator:
+                            (v) =>
+                                (v == null || v.trim().isEmpty)
+                                    ? 'Please fill out this field'
+                                    : null,
                       ),
                       // const SizedBox(height: 12),
-
                       // // Date row
                       // Row(
                       //   children: [
@@ -773,9 +788,11 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                         label: 'Description',
                         controller: descriptionController,
                         maxLines: 4,
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Please fill out this field'
-                            : null,
+                        validator:
+                            (v) =>
+                                (v == null || v.trim().isEmpty)
+                                    ? 'Please fill out this field'
+                                    : null,
                       ),
                       const SizedBox(height: 12),
                       Container(
@@ -813,9 +830,10 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                             ),
                             Switch(
                               value: activeState,
-                              onChanged: (val) =>
-                                  setStateDialog(() => activeState = val),
-                              activeThumbColor: primaryColor,
+                              onChanged:
+                                  (val) =>
+                                      setStateDialog(() => activeState = val),
+                              activeColor: primaryColor,
                             ),
                           ],
                         ),
@@ -856,9 +874,10 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                             ),
                             Switch(
                               value: readState,
-                              onChanged: (val) =>
-                                  setStateDialog(() => readState = val),
-                              activeThumbColor: primaryColor,
+                              onChanged:
+                                  (val) =>
+                                      setStateDialog(() => readState = val),
+                              activeColor: primaryColor,
                             ),
                           ],
                         ),
@@ -918,136 +937,150 @@ class AnnouncementPageState extends State<AnnouncementPage> {
 
                                 final confirmed = await showDialog<bool>(
                                   context: context,
-                                  builder: (ctx) => Dialog(
-                                    backgroundColor: Colors.transparent,
-                                    child: Container(
-                                      width: 340,
-                                      padding: const EdgeInsets.all(24),
-                                      decoration: BoxDecoration(
-                                        color: kSurface,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.12,
+                                  builder:
+                                      (ctx) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          width: 340,
+                                          padding: const EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
                                             ),
-                                            blurRadius: 32,
-                                            offset: const Offset(0, 12),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 48,
-                                            height: 48,
-                                            decoration: BoxDecoration(
-                                              color: primaryColor.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(14),
-                                            ),
-                                            child: const Icon(
-                                              Icons.help_outline_rounded,
-                                              color: primaryColor,
-                                              size: 26,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 14),
-                                          Text(
-                                            isEdit
-                                                ? 'Confirm Update'
-                                                : 'Confirm Save',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 16,
-                                              color: kText,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            isEdit
-                                                ? 'Are you sure you want to update this announcement?'
-                                                : 'Are you sure you want to save this announcement?',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 13,
-                                              color: kMuted,
-                                              height: 1.5,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          const SizedBox(height: 22),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: OutlinedButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, false),
-                                                  style: OutlinedButton.styleFrom(
-                                                    side: const BorderSide(
-                                                      color: kBorder,
-                                                    ),
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 11,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    'No',
-                                                    style:
-                                                        GoogleFonts.plusJakartaSans(
-                                                          color: kMuted,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
                                                 ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                child: ElevatedButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, true),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        primaryColor,
-                                                    elevation: 0,
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 11,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    'Yes',
-                                                    style:
-                                                        GoogleFonts.plusJakartaSans(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
-                                                ),
+                                                blurRadius: 32,
+                                                offset: const Offset(0, 12),
                                               ),
                                             ],
                                           ),
-                                        ],
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.help_outline_rounded,
+                                                  color: primaryColor,
+                                                  size: 26,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 14),
+                                              Text(
+                                                isEdit
+                                                    ? 'Confirm Update'
+                                                    : 'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                isEdit
+                                                    ? 'Are you sure you want to update this announcement?'
+                                                    : 'Are you sure you want to save this announcement?',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 22),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      style: OutlinedButton.styleFrom(
+                                                        side: const BorderSide(
+                                                          color: kBorder,
+                                                        ),
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'No',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Yes',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
                                 );
 
                                 if (confirmed != true) return;
@@ -1057,8 +1090,8 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                   title: titleController.text.trim(),
                                   fromDate: DateTime.now(),
                                   toDate: DateTime.now(),
-                                  description: descriptionController.text
-                                      .trim(),
+                                  description:
+                                      descriptionController.text.trim(),
                                   isActive: activeState,
                                   isDeleted: false,
                                   isRead: readState,
@@ -1120,34 +1153,35 @@ class AnnouncementPageState extends State<AnnouncementPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (ctx) => DeleteDialog(
-        title: 'Announcement',
-        itemName: 'announcement',
-        onDelete: () async {
-          Navigator.pop(ctx);
-          try {
-            await _announcement.deleteAnnouncement(id);
-            await fetchAnnouncement();
-            if (mounted) {
-              MotionToast.success(
-                toastAlignment: Alignment.topCenter,
-                description: Text(
-                  'Announcement deleted successfully',
-                  style: GoogleFonts.plusJakartaSans(),
-                ),
-              ).show(context);
-            }
-          } catch (_) {
-            MotionToast.error(
-              toastAlignment: Alignment.topCenter,
-              description: Text(
-                'Failed to delete announcement',
-                style: GoogleFonts.plusJakartaSans(),
-              ),
-            );
-          }
-        },
-      ),
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Announcement',
+            itemName: 'announcement',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _announcement.deleteAnnouncement(id);
+                await fetchAnnouncement();
+                if (mounted) {
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text(
+                      'Announcement deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
+                  ).show(context);
+                }
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete announcement',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 }

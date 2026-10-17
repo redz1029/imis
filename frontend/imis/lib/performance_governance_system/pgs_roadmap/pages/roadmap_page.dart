@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/dialog/roadmap_history_dialog.dart';
-import 'package:imis/performance_governance_system/pgs_roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
+import 'package:imis/performance_governance_system/pgs_roadmap/pgs_roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/models/kpi_roadmap.dart';
@@ -39,7 +39,7 @@ _Screen _screenOf(BuildContext ctx) {
 
 const double kActionColW = 72.0;
 const double kEnablerColW = 72.0;
-const double kSeqColW = 44.0; // NEW: width for the sequence dropdown
+const double kSeqColW = 44.0;
 
 class _GutQuestion {
   final String question;
@@ -95,7 +95,7 @@ class _KpiEntry {
 
   final Map<String, TextEditingController> yearTargetCtrls;
 
-  int? sequenceId; // NEW: selected kraRoadmapKpiSequenceId for this KPI
+  int? sequenceId;
 
   _KpiEntry({this.existingKpi, List<String> year = const []})
     : kpiCtrl = TextEditingController(text: existingKpi?.kpiDescription ?? ''),
@@ -108,11 +108,9 @@ class _KpiEntry {
       if (key != null && yearTargetCtrls.containsKey(key)) {
         yearTargetCtrls[key]!.text = item.target ?? '';
       } else if (baselineCtrl.text.isEmpty) {
-        // item's year falls outside the period's year list -> it's the baseline
         baselineCtrl.text = item.target ?? '';
       }
 
-      // NEW: grab the sequence id once (all items of a KPI should share the same one)
       sequenceId ??= item.kraRoadmapKpiSequenceId;
     }
   }
@@ -3055,7 +3053,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                       Icons
                                                           .description_outlined,
                                                       size: 16,
-                                                      color: Colors.blueAccent,
+                                                      color: blue,
                                                     ),
                                                     onPressed: () {
                                                       openRoadmapInNewTab(
@@ -3238,9 +3236,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                             Icons
                                                                 .description_outlined,
                                                             size: 16,
-                                                            color:
-                                                                Colors
-                                                                    .blueAccent,
+                                                            color: blue,
                                                           ),
                                                           SizedBox(width: 8),
                                                           Text('Print preview'),

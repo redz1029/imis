@@ -1,17 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/auditor_team/models/auditor_team.dart';
-import 'package:imis/auditor_team/models/auditor_team_member.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/office/models/office_evaluators.dart';
+import 'package:imis/performance_governance_system/pgs_evaluator_offices/models/evaluator_offices.dart';
+import 'package:imis/performance_governance_system/pgs_isat/isat_period/models/isat_period.dart';
 import 'package:imis/performance_governance_system/pgs_servicehead_office/models/service_head_office.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
-import 'package:imis/performance_governance_system/performance_validation_tool_period/models/performance_validation_tool_period.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/performance_validation_tool_period/models/performance_validation_tool_period.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
-import 'package:imis/performance_governance_system/pgs_roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
+import 'package:imis/performance_governance_system/pgs_roadmap/pgs_roadmap_kpi_sequence/models/roadmap_kpi_sequence.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/impact_strategic_goal_scorecard_period/models/impact_strategic_goal_scorecard_period.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/strategy_review_period/models/strategy_review_period.dart';
@@ -135,7 +136,17 @@ class CommonService {
     (e) => PgsPeriod.fromJson(e),
     'Failed to fetch periods',
   );
-
+  Future<List<PerformanceValidationToolPeriod>>
+  fetchPerformanceValidationToolPeriod() => _fetchList(
+    ApiEndpoint().performanceValidationToolPeriod,
+    (e) => PerformanceValidationToolPeriod.fromJson(e),
+    'Failed to fetch periods',
+  );
+  Future<List<IsatPeriod>> fetchIsatPeriod() => _fetchList(
+    ApiEndpoint().isatPeriod,
+    (e) => IsatPeriod.fromJson(e),
+    'Failed to fetch periods',
+  );
   Future<List<KeyResultArea>> fetchKra() => _fetchList(
     ApiEndpoint().keyresult,
     (e) => KeyResultArea.fromJson(e),
@@ -221,10 +232,10 @@ class CommonService {
     return RoadmapKpiSequence.fromJson(response.data);
   }
 
-  Future<AuditorTeamDetail> fetchAuditorTeamByTeamId(int teamId) =>
-      _fetchSingle(
-        '${ApiEndpoint().auditorteam}/teamid/$teamId',
-        (e) => AuditorTeamDetail.fromJson(e),
+  Future<List<EvaluatorOffices>> fetchEvaluatorOfficeByOfficeId(int officeId) =>
+      _fetchList(
+        '${ApiEndpoint().evaluatorOffices}/office/$officeId',
+        (e) => EvaluatorOffices.fromJson(e),
         'Failed to fetch auditor team members',
       );
 

@@ -100,8 +100,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
   final _recognizeRewardKey = GlobalKey();
   final _frequencyKey = GlobalKey();
 
-  /// True kapag existing record na naka-Submit na (isDraft == false).
-  /// Locked na dapat ang lahat ng fields/dropdown pag ganito.
   bool get _isLocked =>
       widget.existingProtocol != null &&
       widget.existingProtocol!.isDraft == false;
@@ -472,8 +470,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     return false;
   }
 
-  /// Runs required-field validation and updates the *Error flags.
-  /// Returns true if everything is valid.
   bool _validateForSubmit() {
     setState(() {
       _deputyError = _deputyController.text.trim().isEmpty;
@@ -523,8 +519,6 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
     });
   }
 
-  /// Scrolls the form so the first field with a validation error is
-  /// visible — sinusundan yung visual top-to-bottom order ng form.
   void _scrollToFirstError() {
     final fields = <({bool hasError, GlobalKey key})>[
       (hasError: _documenterError, key: _documenterKey),
@@ -591,9 +585,9 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       _frequencyController.text.trim(),
       _minutesDeleted ? '' : (_existingMinutesPath ?? ''),
       widget.month,
-      _minutesDeleted, // removeAttachment (19th positional param)
+      _minutesDeleted,
       divisionId: int.tryParse(_serviceId ?? ''),
-      isDraft: isDraft, // isDraft is a NAMED param sa model, hindi positional
+      isDraft: isDraft,
     );
 
     final accomplishmentUpdates =
@@ -1706,11 +1700,14 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
-        enabled: !_isLocked,
+        readOnly: _isLocked,
+
         onChanged: (_) {
           if (hasError) setState(() {});
         },
+
         style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
+
         decoration: InputDecoration(
           labelText: '$label *',
           labelStyle: GoogleFonts.plusJakartaSans(fontSize: 13, color: kText),
@@ -1722,18 +1719,22 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
           alignLabelWithHint: (maxLines ?? 1) > 1,
           filled: true,
           fillColor: _isLocked ? Colors.grey.shade100 : Colors.grey.shade50,
+
           errorText:
               hasError && controller.text.trim().isEmpty
                   ? '$label is required'
                   : null,
+
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 16,
           ),
+
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
             borderSide: BorderSide(color: Colors.grey.shade300),
           ),
+
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
             borderSide: BorderSide(
@@ -1743,13 +1744,10 @@ class _OperationsReviewDialogState extends State<OperationsReviewDialog> {
                       : Colors.grey.shade300,
             ),
           ),
+
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
             borderSide: BorderSide(color: primaryColor, width: 2),
-          ),
-          disabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: Colors.grey.shade200),
           ),
         ),
       ),

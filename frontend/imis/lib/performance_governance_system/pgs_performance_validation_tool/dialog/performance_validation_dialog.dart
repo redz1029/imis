@@ -1,23 +1,23 @@
+// ignore_for_file: unused_local_variable
 // ignore_for_file: deprecated_member_use
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imis/auditor_team/models/auditor_team_member.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
+import 'package:imis/performance_governance_system/pgs_evaluator_offices/models/evaluator_offices.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/performance_validation_tool.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/pvt_conclusion.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/pvt_deliverable_findings.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/pvt_objectives.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/pvt_validators.dart';
-import 'package:imis/performance_governance_system/performance_validation_tool_period/models/performance_validation_tool_period.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/performance_validation_tool_period/models/performance_validation_tool_period.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/services/performance_validation_services.dart';
-import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
@@ -41,9 +41,8 @@ class _PerformanceValidationDialogState
     extends State<PerformanceValidationDialog> {
   final _formKey = GlobalKey<FormState>();
 
-  AuditorTeamDetail? _currentTeamDetail;
+  List<EvaluatorOffices> _evaluators = [];
   bool _teamLoading = true;
-  bool _membersLoading = false;
   String? _teamLoadError;
 
   List<PerformanceValidationToolPeriod> _periods = [];
@@ -110,7 +109,7 @@ class _PerformanceValidationDialogState
       _populateFromExisting(widget.existing!);
       _loadDeliverablesFromExisting(widget.existing!);
     } else {
-      _loadCurrentUserTeam();
+      _loadTeamMembers(widget.pgs.office.id);
       _loadPeriods();
       _loadSignatory(widget.pgs.id);
       _loadDeliverables(widget.pgs.id);
@@ -215,59 +214,24 @@ class _PerformanceValidationDialogState
     }
   }
 
-  Future<void> _loadCurrentUserTeam() async {
+  Future<void> _loadTeamMembers(int officeId) async {
     setState(() {
       _teamLoading = true;
       _teamLoadError = null;
-      _currentTeamDetail = null;
+      _evaluators = [];
     });
-
     try {
-      UserRegistration? user = await AuthUtil.fetchLoggedUser();
-      if (user == null) {
-        if (mounted) {
-          setState(
-            () => _teamLoadError = 'Unable to determine the logged-in user.',
-          );
-        }
-        return;
-      }
-
-      final userId = user.id ?? "";
-      if (userId.isEmpty) {
-        if (mounted) {
-          setState(
-            () => _teamLoadError = 'Unable to determine the logged-in user.',
-          );
-        }
-        return;
-      }
-
-      final team = await _commonService.fetchTeamByUserId(userId);
-      if (!mounted) return;
-
-      await _loadTeamMembers(team.id);
+      final list = await _commonService.fetchEvaluatorOfficeByOfficeId(
+        officeId,
+      );
+      if (mounted) setState(() => _evaluators = list);
     } catch (e) {
-      debugPrint('Failed to resolve current user team: $e');
+      debugPrint('Failed to load evaluator office: $e');
       if (mounted) {
-        setState(
-          () => _teamLoadError = 'No team found for the logged-in user.',
-        );
+        setState(() => _teamLoadError = 'No evaluators found for this office.');
       }
     } finally {
       if (mounted) setState(() => _teamLoading = false);
-    }
-  }
-
-  Future<void> _loadTeamMembers(int teamId) async {
-    setState(() => _membersLoading = true);
-    try {
-      final detail = await _commonService.fetchAuditorTeamByTeamId(teamId);
-      if (mounted) setState(() => _currentTeamDetail = detail);
-    } catch (e) {
-      if (mounted) setState(() => _currentTeamDetail = null);
-    } finally {
-      if (mounted) setState(() => _membersLoading = false);
     }
   }
 
@@ -460,7 +424,7 @@ class _PerformanceValidationDialogState
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: .1),
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 32,
                     offset: const Offset(0, 12),
                   ),
@@ -576,13 +540,15 @@ class _PerformanceValidationDialogState
     try {
       final postingDate = DateTime.now();
       final validators = <PvtValidators>[];
-      if (_currentTeamDetail != null) {
-        for (final auditor in _currentTeamDetail!.auditors) {
-          validators.add(PvtValidators(0, false, 0, auditor.id, postingDate));
+      if (_evaluators.isNotEmpty) {
+        for (final evaluator in _evaluators) {
+          validators.add(PvtValidators(0, false, 0, evaluator.id, postingDate));
         }
       } else if (_existingValidators.isNotEmpty) {
         for (final v in _existingValidators) {
-          validators.add(PvtValidators(0, false, 0, v.auditorId, postingDate));
+          validators.add(
+            PvtValidators(0, false, 0, v.evaluatorId, postingDate),
+          );
         }
       }
       final objectives = PvtObjectives(
@@ -783,8 +749,8 @@ class _PerformanceValidationDialogState
             ? _existingValidators
                 .map((v) => _ValidatorDisplay(v.auditorName ?? ''))
                 .toList()
-            : (_currentTeamDetail?.auditors ?? [])
-                .map((a) => _ValidatorDisplay(a.name))
+            : _evaluators
+                .map((e) => _ValidatorDisplay(e.userFullName ?? ''))
                 .toList();
 
     return Column(
@@ -840,13 +806,11 @@ class _PerformanceValidationDialogState
                 ],
               ),
             )
-            : _membersLoading
-            ? const _MiniLoader()
             : (validatorNames.isEmpty
                 ? Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    'No validators found for this team.',
+                    'No evaluators found for this office.',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade500,
@@ -857,7 +821,7 @@ class _PerformanceValidationDialogState
                 : AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: _ValidatorGrid(
-                    key: ValueKey(_currentTeamDetail!.id),
+                    key: ValueKey(widget.pgs.office.id),
                     validators: validatorNames,
                   ),
                 )),
@@ -1390,7 +1354,7 @@ class _PerformanceValidationDialogState
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: primaryColor.withValues(alpha: .15),
+              color: primaryColor.withOpacity(.15),
               blurRadius: 40,
               offset: const Offset(0, 8),
             ),
@@ -1433,7 +1397,7 @@ class _PerformanceValidationDialogState
                         Text(
                           'Cotabato Regional and Medical Center',
                           style: GoogleFonts.plusJakartaSans(
-                            color: Colors.white.withValues(alpha: .75),
+                            color: Colors.white.withOpacity(.75),
                             fontSize: isMobile ? 10 : 11,
                           ),
                         ),
@@ -1520,7 +1484,7 @@ class _ValidatorGrid extends StatelessWidget {
             width: 22,
             height: 22,
             decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: .12),
+              color: primaryColor.withOpacity(.12),
               borderRadius: BorderRadius.circular(4),
             ),
             alignment: Alignment.center,

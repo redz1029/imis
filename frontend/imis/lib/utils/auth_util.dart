@@ -8,6 +8,7 @@ import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/permission_role_string.dart';
 import 'package:jwt_decode_full/jwt_decode_full.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constant/constant.dart';
@@ -22,6 +23,7 @@ class AuthUtil {
   static const String selectedOfficeIdKey = "selectedOfficeId";
   static const String isLoggedInKey = "isLoggedIn";
   static const String pgsKey = "pgs";
+  static const String selectedRoleKey = "selectedRole";
 
   static Future<UserRegistration> storeUserAuth(
     Response<dynamic> response,
@@ -120,6 +122,19 @@ class AuthUtil {
   static Future<bool> isLoggedIn() async {
     final sharedPref = await SharedPreferences.getInstance();
     return sharedPref.getBool(isLoggedInKey) ?? false;
+  }
+
+  static Future<bool> isCurrentUserAdmin() async {
+    final sharedPref = await SharedPreferences.getInstance();
+
+    final selectedRole = sharedPref.getString(selectedRoleKey);
+    if (selectedRole != null) {
+      return selectedRole == PermissionRoleString.roleAdmin;
+    }
+
+    final roles = await fetchRoles();
+    if (roles == null || roles.isEmpty) return false;
+    return roles.any((role) => role.name == PermissionRoleString.roleAdmin);
   }
 
   static Future<void> saveSelectedOfficeId(String officeId) async {

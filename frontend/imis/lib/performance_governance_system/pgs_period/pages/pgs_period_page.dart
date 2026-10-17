@@ -107,29 +107,30 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
       }
 
       setState(() {
-        filteredList = pgsPeriodList.where((period) {
-          final periodStart = period.startDate;
-          final periodEnd = period.endDate;
+        filteredList =
+            pgsPeriodList.where((period) {
+              final periodStart = period.startDate;
+              final periodEnd = period.endDate;
 
-          if (selectedStartDate == null && selectedEndDate == null) {
-            return true;
-          }
+              if (selectedStartDate == null && selectedEndDate == null) {
+                return true;
+              }
 
-          if (selectedStartDate != null && selectedEndDate == null) {
-            return (periodStart.isAfter(selectedStartDate!) ||
-                periodStart.isAtSameMomentAs(selectedStartDate!));
-          }
+              if (selectedStartDate != null && selectedEndDate == null) {
+                return (periodStart.isAfter(selectedStartDate!) ||
+                    periodStart.isAtSameMomentAs(selectedStartDate!));
+              }
 
-          if (selectedStartDate == null && selectedEndDate != null) {
-            return (periodEnd.isBefore(selectedEndDate!) ||
-                periodEnd.isAtSameMomentAs(selectedEndDate!));
-          }
+              if (selectedStartDate == null && selectedEndDate != null) {
+                return (periodEnd.isBefore(selectedEndDate!) ||
+                    periodEnd.isAtSameMomentAs(selectedEndDate!));
+              }
 
-          return (periodStart.isAfter(selectedStartDate!) ||
-                  periodStart.isAtSameMomentAs(selectedStartDate!)) &&
-              (periodEnd.isBefore(selectedEndDate!) ||
-                  periodEnd.isAtSameMomentAs(selectedEndDate!));
-        }).toList();
+              return (periodStart.isAfter(selectedStartDate!) ||
+                      periodStart.isAtSameMomentAs(selectedStartDate!)) &&
+                  (periodEnd.isBefore(selectedEndDate!) ||
+                      periodEnd.isAtSameMomentAs(selectedEndDate!));
+            }).toList();
       });
     } catch (e) {
       setState(() {
@@ -142,31 +143,32 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (ctx) => DeleteDialog(
-        title: 'PGS period',
-        itemName: 'PGS period',
-        onDelete: () async {
-          Navigator.pop(ctx);
-          try {
-            await _pgsPeriodService.deletePeriod(id);
-            await fetchPGSPeriods();
-            if (mounted) {
-              MotionToast.success(
-                toastAlignment: Alignment.topCenter,
-                description: Text('PGS period deleted successfully'),
-              ).show(context);
-            }
-          } catch (_) {
-            MotionToast.error(
-              toastAlignment: Alignment.topCenter,
-              description: Text(
-                'Failed to delete PGS period',
-                style: GoogleFonts.plusJakartaSans(),
-              ),
-            );
-          }
-        },
-      ),
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'PGS period',
+            itemName: 'PGS period',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await _pgsPeriodService.deletePeriod(id);
+                await fetchPGSPeriods();
+                if (mounted) {
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('PGS period deleted successfully'),
+                  ).show(context);
+                }
+              } catch (_) {
+                MotionToast.error(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text(
+                    'Failed to delete PGS period',
+                    style: GoogleFonts.plusJakartaSans(),
+                  ),
+                );
+              }
+            },
+          ),
     );
   }
 
@@ -179,12 +181,10 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
     bool isActive = false,
     String? rowVersion,
   }) {
-    DateTime? selectedFromDate = startDate != null
-        ? DateTime.tryParse(startDate)
-        : null;
-    DateTime? selectedEndDate = endDate != null
-        ? DateTime.tryParse(endDate)
-        : null;
+    DateTime? selectedFromDate =
+        startDate != null ? DateTime.tryParse(startDate) : null;
+    DateTime? selectedEndDate =
+        endDate != null ? DateTime.tryParse(endDate) : null;
     TextEditingController remarksController = TextEditingController(
       text: remarkrs,
     );
@@ -202,20 +202,21 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                 initialDate: DateTime.now(),
                 firstDate: DateTime(2000),
                 lastDate: DateTime(2101),
-                builder: (context, child) => Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: ColorScheme.light(
-                      primary: primaryColor,
-                      onPrimary: Colors.white,
-                    ),
-                    textButtonTheme: TextButtonThemeData(
-                      style: TextButton.styleFrom(
-                        foregroundColor: primaryColor,
+                builder:
+                    (context, child) => Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: ColorScheme.light(
+                          primary: primaryColor,
+                          onPrimary: Colors.white,
+                        ),
+                        textButtonTheme: TextButtonThemeData(
+                          style: TextButton.styleFrom(
+                            foregroundColor: primaryColor,
+                          ),
+                        ),
                       ),
+                      child: child!,
                     ),
-                  ),
-                  child: child!,
-                ),
               );
               if (picked == null) return;
               setStateDialog(() {
@@ -376,16 +377,16 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                         label: 'Start Date',
                         value: selectedFromDate,
                         isFrom: true,
-                        validator: (_) =>
-                            selectedFromDate == null ? 'Required' : null,
+                        validator:
+                            (_) => selectedFromDate == null ? 'Required' : null,
                       ),
                       gap12px,
                       dateField(
                         label: 'End Date',
                         value: selectedEndDate,
                         isFrom: false,
-                        validator: (_) =>
-                            selectedEndDate == null ? 'Required' : null,
+                        validator:
+                            (_) => selectedEndDate == null ? 'Required' : null,
                       ),
                       gap12px,
                       dialogField(
@@ -428,9 +429,9 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                             ),
                             Switch(
                               value: isActive,
-                              onChanged: (val) =>
-                                  setStateDialog(() => isActive = val),
-                              activeThumbColor: primaryColor,
+                              onChanged:
+                                  (val) => setStateDialog(() => isActive = val),
+                              activeColor: primaryColor,
                             ),
                           ],
                         ),
@@ -489,136 +490,150 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
 
                                 final confirmed = await showDialog<bool>(
                                   context: context,
-                                  builder: (ctx) => Dialog(
-                                    backgroundColor: Colors.transparent,
-                                    child: Container(
-                                      width: 340,
-                                      padding: const EdgeInsets.all(24),
-                                      decoration: BoxDecoration(
-                                        color: kSurface,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.12,
+                                  builder:
+                                      (ctx) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          width: 340,
+                                          padding: const EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: kSurface,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
                                             ),
-                                            blurRadius: 32,
-                                            offset: const Offset(0, 12),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 48,
-                                            height: 48,
-                                            decoration: BoxDecoration(
-                                              color: primaryColor.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(14),
-                                            ),
-                                            child: const Icon(
-                                              Icons.help_outline_rounded,
-                                              color: primaryColor,
-                                              size: 26,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 14),
-                                          Text(
-                                            isEdit
-                                                ? 'Confirm Update'
-                                                : 'Confirm Save',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 16,
-                                              color: kText,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            isEdit
-                                                ? 'Are you sure you want to update this announcement?'
-                                                : 'Are you sure you want to save this announcement?',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 13,
-                                              color: kMuted,
-                                              height: 1.5,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          const SizedBox(height: 22),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: OutlinedButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, false),
-                                                  style: OutlinedButton.styleFrom(
-                                                    side: const BorderSide(
-                                                      color: kBorder,
-                                                    ),
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 11,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    'No',
-                                                    style:
-                                                        GoogleFonts.plusJakartaSans(
-                                                          color: kMuted,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.12,
                                                 ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                child: ElevatedButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, true),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        primaryColor,
-                                                    elevation: 0,
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 11,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    'Yes',
-                                                    style:
-                                                        GoogleFonts.plusJakartaSans(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
-                                                ),
+                                                blurRadius: 32,
+                                                offset: const Offset(0, 12),
                                               ),
                                             ],
                                           ),
-                                        ],
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.help_outline_rounded,
+                                                  color: primaryColor,
+                                                  size: 26,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 14),
+                                              Text(
+                                                isEdit
+                                                    ? 'Confirm Update'
+                                                    : 'Confirm Save',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                      color: kText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                isEdit
+                                                    ? 'Are you sure you want to update this announcement?'
+                                                    : 'Are you sure you want to save this announcement?',
+                                                style:
+                                                    GoogleFonts.plusJakartaSans(
+                                                      fontSize: 13,
+                                                      color: kMuted,
+                                                      height: 1.5,
+                                                    ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 22),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      style: OutlinedButton.styleFrom(
+                                                        side: const BorderSide(
+                                                          color: kBorder,
+                                                        ),
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'No',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color: kMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            primaryColor,
+                                                        elevation: 0,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 11,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Yes',
+                                                        style:
+                                                            GoogleFonts.plusJakartaSans(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
                                 );
                                 if (confirmed == true) {
                                   final period = PgsPeriod(
@@ -700,24 +715,26 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                           ),
                           filled: true,
                           fillColor: secondaryColor,
-                          suffixIcon: startDateController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: Icon(Icons.close),
-                                  onPressed: () {
-                                    setState(() {
-                                      startDateController.clear();
-                                      selectedStartDate = null;
-                                      filterByDateRange();
-                                    });
-                                    FocusScope.of(context).unfocus();
-                                  },
-                                )
-                              : Icon(
-                                  Icons.calendar_today,
-                                  color: isSearchfocus.hasFocus
-                                      ? primaryColor
-                                      : grey,
-                                ),
+                          suffixIcon:
+                              startDateController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: Icon(Icons.close),
+                                    onPressed: () {
+                                      setState(() {
+                                        startDateController.clear();
+                                        selectedStartDate = null;
+                                        filterByDateRange();
+                                      });
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  )
+                                  : Icon(
+                                    Icons.calendar_today,
+                                    color:
+                                        isSearchfocus.hasFocus
+                                            ? primaryColor
+                                            : grey,
+                                  ),
                         ),
                         readOnly: true,
                         onTap: () async {
@@ -764,24 +781,26 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                           ),
                           filled: true,
                           fillColor: secondaryColor,
-                          suffixIcon: endDateController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: Icon(Icons.close),
-                                  onPressed: () {
-                                    setState(() {
-                                      endDateController.clear();
-                                      selectedEndDate = null;
-                                      filterByDateRange();
-                                    });
-                                    FocusScope.of(context).unfocus();
-                                  },
-                                )
-                              : Icon(
-                                  Icons.calendar_today,
-                                  color: isSearchfocus.hasFocus
-                                      ? primaryColor
-                                      : grey,
-                                ),
+                          suffixIcon:
+                              endDateController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: Icon(Icons.close),
+                                    onPressed: () {
+                                      setState(() {
+                                        endDateController.clear();
+                                        selectedEndDate = null;
+                                        filterByDateRange();
+                                      });
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  )
+                                  : Icon(
+                                    Icons.calendar_today,
+                                    color:
+                                        isSearchfocus.hasFocus
+                                            ? primaryColor
+                                            : grey,
+                                  ),
                         ),
                         readOnly: true,
                         onTap: () async {
@@ -912,25 +931,131 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                     const SizedBox(height: 5),
 
                     Expanded(
-                      child: _isLoading
-                          ? Center(
-                              child: CircularProgressIndicator(
-                                color: primaryColor,
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: filteredList.length,
-                              itemBuilder: (context, index) {
-                                final pgsperiod = filteredList[index];
-                                int itemNumber =
-                                    ((_currentPage - 1) * _pageSize) +
-                                    index +
-                                    1;
-                                if (!isMobile) {
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final pgsperiod = filteredList[index];
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              DateTimeConverter().toJson(
+                                                pgsperiod.startDate,
+                                              ),
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              DateTimeConverter().toJson(
+                                                pgsperiod.endDate,
+                                              ),
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              (pgsperiod.isActive ?? false)
+                                                  ? 'Active'
+                                                  : 'Inactive',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Tooltip(
+                                                  message: 'Edit',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      size: 16,
+                                                      Icons.edit_outlined,
+                                                    ),
+                                                    onPressed: () {
+                                                      showFormDialog(
+                                                        id:
+                                                            pgsperiod.id
+                                                                .toString(),
+                                                        startDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  pgsperiod
+                                                                      .startDate,
+                                                                ),
+                                                        endDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  pgsperiod
+                                                                      .endDate,
+                                                                ),
+                                                        remarkrs:
+                                                            pgsperiod.remarks
+                                                                .toString(),
+                                                        isActive:
+                                                            pgsperiod
+                                                                .isActive ??
+                                                            false,
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    size: 16,
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        pgsperiod.id.toString(),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 6,
+                                      vertical: 12,
                                     ),
+                                    margin: const EdgeInsets.only(bottom: 12),
                                     decoration: BoxDecoration(
                                       border: Border(
                                         bottom: BorderSide(
@@ -938,209 +1063,112 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                                         ),
                                       ),
                                     ),
-                                    child: Row(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text("$itemNumber"),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            DateTimeConverter().toJson(
-                                              pgsperiod.startDate,
-                                            ),
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            DateTimeConverter().toJson(
-                                              pgsperiod.endDate,
-                                            ),
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            (pgsperiod.isActive ?? false)
-                                                ? 'Active'
-                                                : 'Inactive',
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Row(
-                                            children: [
-                                              Tooltip(
-                                                message: 'Edit',
-                                                child: IconButton(
-                                                  icon: const Icon(
-                                                    size: 16,
-                                                    Icons.edit_outlined,
-                                                  ),
-                                                  onPressed: () {
-                                                    showFormDialog(
-                                                      id: pgsperiod.id
-                                                          .toString(),
-                                                      startDate:
-                                                          DateTimeConverter()
-                                                              .toJson(
-                                                                pgsperiod
-                                                                    .startDate,
-                                                              ),
-                                                      endDate:
-                                                          DateTimeConverter()
-                                                              .toJson(
-                                                                pgsperiod
-                                                                    .endDate,
-                                                              ),
-                                                      remarkrs: pgsperiod
-                                                          .remarks
-                                                          .toString(),
-                                                      isActive:
-                                                          pgsperiod.isActive ??
-                                                          false,
-                                                    );
-                                                  },
-                                                ),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
                                               ),
-
-                                              IconButton(
-                                                icon: const Icon(
-                                                  size: 16,
-                                                  CupertinoIcons.delete_simple,
-                                                  color: Colors.redAccent,
-                                                ),
-                                                onPressed: () =>
-                                                    showDeleteDialog(
-                                                      pgsperiod.id.toString(),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  showFormDialog(
+                                                    id: pgsperiod.id.toString(),
+                                                    startDate:
+                                                        DateTimeConverter()
+                                                            .toJson(
+                                                              pgsperiod
+                                                                  .startDate,
+                                                            ),
+                                                    endDate: DateTimeConverter()
+                                                        .toJson(
+                                                          pgsperiod.endDate,
+                                                        ),
+                                                    remarkrs:
+                                                        pgsperiod.remarks
+                                                            .toString(),
+                                                    isActive:
+                                                        pgsperiod.isActive ??
+                                                        false,
+                                                  );
+                                                } else if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    pgsperiod.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 16,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
                                                     ),
-                                              ),
-                                            ],
+
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 16,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          DateTimeConverter().toJson(
+                                            pgsperiod.startDate,
                                           ),
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          DateTimeConverter().toJson(
+                                            pgsperiod.endDate,
+                                          ),
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          (pgsperiod.isActive ?? false)
+                                              ? 'Active'
+                                              : 'Inactive',
+                                          style: TextStyle(fontSize: 12),
                                         ),
                                       ],
                                     ),
                                   );
-                                }
-
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  decoration: BoxDecoration(
-                                    border: Border(
-                                      bottom: BorderSide(
-                                        color: Colors.grey.shade200,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            "$itemNumber",
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          PopupMenuButton<String>(
-                                            color: Theme.of(context).cardColor,
-                                            icon: const Icon(Icons.more_vert),
-                                            onSelected: (value) async {
-                                              if (value == 'edit') {
-                                                showFormDialog(
-                                                  id: pgsperiod.id.toString(),
-                                                  startDate: DateTimeConverter()
-                                                      .toJson(
-                                                        pgsperiod.startDate,
-                                                      ),
-                                                  endDate: DateTimeConverter()
-                                                      .toJson(
-                                                        pgsperiod.endDate,
-                                                      ),
-                                                  remarkrs: pgsperiod.remarks
-                                                      .toString(),
-                                                  isActive:
-                                                      pgsperiod.isActive ??
-                                                      false,
-                                                );
-                                              } else if (value == 'delete') {
-                                                showDeleteDialog(
-                                                  pgsperiod.id.toString(),
-                                                );
-                                              }
-                                            },
-                                            itemBuilder: (_) => [
-                                              PopupMenuItem(
-                                                value: 'edit',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.edit_outlined,
-                                                      size: 16,
-                                                    ),
-                                                    SizedBox(width: 8),
-                                                    Text('Edit'),
-                                                  ],
-                                                ),
-                                              ),
-
-                                              PopupMenuItem(
-                                                value: 'delete',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      CupertinoIcons
-                                                          .delete_simple,
-                                                      color: Colors.red,
-                                                      size: 16,
-                                                    ),
-                                                    SizedBox(width: 8),
-                                                    Text('Delete'),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        DateTimeConverter().toJson(
-                                          pgsperiod.startDate,
-                                        ),
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        DateTimeConverter().toJson(
-                                          pgsperiod.endDate,
-                                        ),
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        (pgsperiod.isActive ?? false)
-                                            ? 'Active'
-                                            : 'Inactive',
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                                },
+                              ),
                     ),
                     Container(
                       padding: const EdgeInsets.all(10),
@@ -1158,8 +1186,8 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                             totalItems: _totalCount,
                             itemsPerPage: _pageSize,
                             isLoading: _isLoading,
-                            onPageChanged: (page) =>
-                                fetchPGSPeriods(page: page),
+                            onPageChanged:
+                                (page) => fetchPGSPeriods(page: page),
                           ),
                           const SizedBox(width: 60),
                         ],
@@ -1172,13 +1200,14 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
           ],
         ),
       ),
-      floatingActionButton: isMobile
-          ? FloatingActionButton(
-              backgroundColor: primaryColor,
-              onPressed: () => showFormDialog(),
-              child: Icon(Icons.add, color: Colors.white),
-            )
-          : null,
+      floatingActionButton:
+          isMobile
+              ? FloatingActionButton(
+                backgroundColor: primaryColor,
+                onPressed: () => showFormDialog(),
+                child: Icon(Icons.add, color: Colors.white),
+              )
+              : null,
     );
   }
 }

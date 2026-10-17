@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/home/announcement_widget.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -21,86 +22,130 @@ class DynamicSideColumn1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Card(
-          color: Theme.of(context).cardColor,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(color: Colors.grey.shade300, width: 1),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Desktop passes a fixed height (matched to the left column), so we
+        // stretch the announcement list to fill it. Mobile has no bounded
+        // height here (it's inside a scrolling Column), so fall back to a
+        // fixed height like before.
+        final bool hasBoundedHeight = constraints.hasBoundedHeight;
+
+        final calendar = TableCalendar(
+          firstDay: DateTime.utc(2020, 1, 1),
+          lastDay: DateTime.utc(2030, 12, 31),
+          focusedDay: focusedDay,
+          calendarFormat: calendarFormat,
+          selectedDayPredicate: (day) => isSameDay(selectedDay, day),
+          onDaySelected: onDaySelected,
+          onFormatChanged: onFormatChanged,
+          rowHeight: 34,
+          daysOfWeekHeight: 24,
+          calendarStyle: CalendarStyle(
+            outsideDaysVisible: true,
+            defaultTextStyle: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF2A2A3C),
+            ),
+            weekendTextStyle: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade500,
+            ),
+            outsideTextStyle: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade300,
+            ),
+            selectedDecoration: const BoxDecoration(
+              color: kAccent,
+              shape: BoxShape.circle,
+            ),
+            selectedTextStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+            todayDecoration: BoxDecoration(
+              color: kAccent.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            todayTextStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: kAccent,
+            ),
+            cellMargin: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Calendar', style: TextStyle(fontSize: 12)),
-                const Divider(height: 8),
-                SizedBox(
-                  width: 220,
-                  height: 250,
-                  child: TableCalendar(
-                    firstDay: DateTime.utc(2020, 1, 1),
-                    lastDay: DateTime.utc(2030, 12, 31),
-                    focusedDay: focusedDay,
-                    calendarFormat: calendarFormat,
-                    selectedDayPredicate: (day) => isSameDay(selectedDay, day),
-                    onDaySelected: onDaySelected,
-                    onFormatChanged: onFormatChanged,
-                    rowHeight: 28,
-                    calendarStyle: CalendarStyle(
-                      defaultTextStyle: const TextStyle(fontSize: 10),
-                      weekendTextStyle: const TextStyle(fontSize: 10),
-                      selectedDecoration: BoxDecoration(
-                        color: primaryTextColor,
-                        shape: BoxShape.circle,
-                      ),
-                      selectedTextStyle: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                      ),
-                      todayDecoration: BoxDecoration(
-                        color: primaryColor,
-                        shape: BoxShape.circle,
-                      ),
-                      todayTextStyle: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                      ),
-                    ),
-                    daysOfWeekStyle: const DaysOfWeekStyle(
-                      weekdayStyle: TextStyle(fontSize: 10),
-                      weekendStyle: TextStyle(fontSize: 10),
-                    ),
-                    headerStyle: const HeaderStyle(
-                      titleTextStyle: TextStyle(
-                        fontSize: 12, // small header
-                        fontWeight: FontWeight.w700,
-                      ),
-                      formatButtonVisible: false,
-                      titleCentered: true,
-                    ),
-                  ),
-                ),
-              ],
+          daysOfWeekStyle: DaysOfWeekStyle(
+            weekdayStyle: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade400,
+            ),
+            weekendStyle: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade400,
             ),
           ),
-        ),
-        // const SizedBox(height: 20),
-        Card(
-          color: Theme.of(context).cardColor,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(color: Colors.grey.shade300, width: 1),
+          headerStyle: HeaderStyle(
+            formatButtonVisible: false,
+            titleCentered: false,
+            leftChevronVisible: true,
+            rightChevronVisible: true,
+            headerPadding: const EdgeInsets.only(bottom: 12),
+            titleTextFormatter:
+                (date, locale) =>
+                    '${DateFormat.MMM(locale).format(date)}, ${date.year}',
+            titleTextStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1A1A2E),
+            ),
+            leftChevronIcon: Icon(
+              Icons.chevron_left,
+              size: 20,
+              color: Colors.grey.shade400,
+            ),
+            rightChevronIcon: Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: Colors.grey.shade400,
+            ),
+            leftChevronPadding: EdgeInsets.zero,
+            rightChevronPadding: EdgeInsets.zero,
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: SizedBox(width: 280, height: 450, child: AnnouncementList()),
+        );
+
+        return Container(
+          width: double.infinity,
+          height: hasBoundedHeight ? double.infinity : null,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ),
-      ],
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize:
+                hasBoundedHeight ? MainAxisSize.max : MainAxisSize.min,
+            children: [
+              calendar,
+              const SizedBox(height: 16),
+              Divider(color: Colors.grey.shade200, height: 1),
+              const SizedBox(height: 16),
+              hasBoundedHeight
+                  ? const Expanded(child: AnnouncementList())
+                  : const SizedBox(height: 420, child: AnnouncementList()),
+            ],
+          ),
+        );
+      },
     );
   }
 

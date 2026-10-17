@@ -12,7 +12,7 @@ Widget statusDropdown({
   return Padding(
     padding: const EdgeInsets.only(bottom: 14),
     child: DropdownButtonFormField<PgsStatus>(
-      initialValue: value,
+      value: value,
       decoration: InputDecoration(
         labelText: label,
         floatingLabelBehavior: FloatingLabelBehavior.auto,
@@ -81,7 +81,7 @@ Widget serviceDropdown({
   return Padding(
     padding: const EdgeInsets.only(bottom: 14),
     child: DropdownButtonFormField<Office>(
-      initialValue: value,
+      value: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: '$label *',

@@ -1,3 +1,4 @@
+import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'user_registration.g.dart';
@@ -14,6 +15,9 @@ class UserRegistration {
   final String? prefix;
   final String? suffix;
   final String? position;
+  @JsonKey()
+  @DateTimeConverter()
+  DateTime? lockoutEnd;
   String? accessToken;
   String? refreshToken;
 
@@ -30,6 +34,7 @@ class UserRegistration {
     this.position,
     this.accessToken,
     this.refreshToken,
+    this.lockoutEnd,
   );
 
   factory UserRegistration.fromJson(Map<String, dynamic> json) =>

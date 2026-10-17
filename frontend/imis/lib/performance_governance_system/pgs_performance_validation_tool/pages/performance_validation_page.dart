@@ -10,9 +10,10 @@ import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
+import 'package:imis/office/models/office_evaluators.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
-import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/performance_validation_tool_period/models/performance_validation_tool_period.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/dialog/performance_validation_dialog.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/models/performance_validation_tool.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/services/performance_validation_services.dart';
@@ -20,6 +21,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/http_util.dart';
+import 'package:imis/utils/permission_role_string.dart';
 import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/button_filter.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -41,7 +43,7 @@ class PerformanceValidationPage extends StatefulWidget {
 
 class PerformanceValidationPageState extends State<PerformanceValidationPage> {
   List<Office> officeList = [];
-  List<Office> serviceList = [];
+  List<OfficeEvaluators> serviceList = [];
   String? _selectedOfficeId;
   String? _selectedServiceId;
   int _currentPage = 1;
@@ -51,13 +53,18 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
   List<PerformanceGovernanceSystem> operationReviewprotocolList = [];
   List<PerformanceGovernanceSystem> filteredList = [];
   String? _selectedPeriodId;
-  List<PgsPeriod> pgsPeriodList = [];
+  List<PerformanceValidationToolPeriod> performanceValidationPeriodList = [];
   final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
     Dio(),
   );
   final _commonService = CommonService(Dio());
   final _performanceValidation = PerformanceValidationServices(Dio());
   bool _mobileFiltersExpanded = false;
+  bool _officeListLoading = false;
+  String? _roleName;
+  bool get _canViewServiceOffice =>
+      _roleName != null && _roleName != PermissionRoleString.roleStandardUser;
+  int _fetchFilterRequestId = 0;
 
   @override
   void initState() {
@@ -65,50 +72,8 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
     _initialize();
   }
 
-  Future<void> fetchPerformanceValidation({
-    int page = 1,
-    String? searchQuery,
-  }) async {
-    if (_isLoading) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final roleId = await _getRoleId();
-
-      if (roleId.isEmpty) {
-        debugPrint('Role ID is empty, aborting fetch.');
-        return;
-      }
-
-      final pageList = await _performanceValidation
-          .getPerformanceValidationPageList(
-            page: page,
-            pageSize: _pageSize,
-            searchQuery: searchQuery,
-            roleId: roleId,
-          );
-
-      if (mounted) {
-        setState(() {
-          _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
-          operationReviewprotocolList = pageList.items;
-          filteredList = List.from(operationReviewprotocolList);
-        });
-      }
-    } catch (e) {
-      debugPrint(e.toString());
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
   Future<void> fetchFilter({int? page, int pageSize = 15}) async {
-    if (_isLoading) return;
-
+    final requestId = ++_fetchFilterRequestId;
     setState(() => _isLoading = true);
 
     try {
@@ -122,7 +87,10 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
             pageSize: pageSize,
             officeId: _selectedOfficeId,
             periodId: _selectedPeriodId,
+            parentOfficeId: _selectedServiceId,
           );
+
+      if (!mounted || requestId != _fetchFilterRequestId) return;
 
       setState(() {
         operationReviewprotocolList = result.items;
@@ -131,7 +99,26 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
         _totalCount = result.totalCount;
       });
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted && requestId == _fetchFilterRequestId) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _loadOfficesForService(String serviceId) async {
+    setState(() {
+      _officeListLoading = true;
+      officeList = [];
+      _selectedOfficeId = null;
+    });
+    try {
+      final offices = await _commonService.fetchOfficesByEvaluatorRole(
+        int.tryParse(serviceId) ?? 0,
+      );
+      if (!mounted) return;
+      setState(() => officeList = offices);
+    } finally {
+      if (mounted) setState(() => _officeListLoading = false);
     }
   }
 
@@ -153,27 +140,47 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
 
   Future<void> _initialize() async {
     setState(() => _isLoading = true);
+    final prefs = await SharedPreferences.getInstance();
+    _roleName = prefs.getString('selectedRole');
     final roleId = await _getRoleId();
-    final offices = await _deliverableStatusMonitoring.fetchOffices(
-      roleId: roleId,
-    );
-    final services = await _commonService.fetchService();
-    final periods = await _commonService.fetchPgsPeriod();
+
+    List<Office> offices = [];
+    List<OfficeEvaluators> services = [];
+    List<PerformanceValidationToolPeriod> periods = [];
+
+    try {
+      offices = await _deliverableStatusMonitoring.fetchOffices(roleId: roleId);
+    } catch (e) {
+      debugPrint('fetchOffices failed');
+    }
+
+    try {
+      services = await _commonService.fetchServiceEvalutors();
+    } catch (e) {
+      debugPrint('fetchServiceEvalutors failed');
+    }
+
+    try {
+      periods = await _commonService.fetchPerformanceValidationToolPeriod();
+    } catch (e) {
+      debugPrint('fetchPerformanceValidationToolPeriod failed');
+    }
 
     if (!mounted) return;
     setState(() {
       officeList = offices;
       serviceList = services;
-      pgsPeriodList = periods;
+      performanceValidationPeriodList = periods;
       _isLoading = false;
     });
     _applyDefaultActivePeriod();
   }
 
   void _applyDefaultActivePeriod() {
-    final activePeriod = pgsPeriodList
-        .where((p) => !p.isDeleted && p.isActive == true)
-        .firstOrNull;
+    final activePeriod =
+        performanceValidationPeriodList
+            .where((p) => !p.isDeleted && p.isActive == true)
+            .firstOrNull;
 
     if (activePeriod != null) {
       setState(() {
@@ -219,46 +226,49 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
                   children: [
                     const SizedBox(height: 5),
                     Expanded(
-                      child: _isLoading
-                          ? Center(
-                              child: CircularProgressIndicator(
-                                color: primaryColor,
-                              ),
-                            )
-                          : filteredList.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.reviews_outlined,
-                                    size: 50,
-                                    color: Colors.grey.shade400,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    "No performance validation available",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey,
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : filteredList.isEmpty
+                              ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.reviews_outlined,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 10),
+                                    const Text(
+                                      "No performance validation available",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              : ListView.builder(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final pgs = filteredList[index];
+                                  return _PgsValidationTile(
+                                    pgs: pgs,
+                                    performanceValidationService:
+                                        _performanceValidation,
+                                    commonService: _commonService,
+                                  );
+                                },
                               ),
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              itemCount: filteredList.length,
-                              itemBuilder: (context, index) {
-                                final pgs = filteredList[index];
-                                return _PgsValidationTile(
-                                  pgs: pgs,
-                                  performanceValidationService:
-                                      _performanceValidation,
-                                  commonService: _commonService,
-                                );
-                              },
-                            ),
                     ),
                     Container(
                       padding: const EdgeInsets.all(10),
@@ -276,8 +286,7 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
                             totalItems: _totalCount,
                             itemsPerPage: _pageSize,
                             isLoading: _isLoading,
-                            onPageChanged: (page) =>
-                                fetchPerformanceValidation(page: page),
+                            onPageChanged: (page) => fetchFilter(page: page),
                           ),
                           const SizedBox(width: 60),
                         ],
@@ -289,6 +298,93 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _serviceDropdown() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: SearchableDropdown(
+          items: ["All Service", ...serviceList.map((s) => s.officeName)],
+          selectedItem:
+              _selectedServiceId == null
+                  ? "Select Service"
+                  : (serviceList
+                          .where(
+                            (s) => s.officeId.toString() == _selectedServiceId,
+                          )
+                          .firstOrNull
+                          ?.officeName ??
+                      "Select Service"),
+          hintText: "Service",
+          searchHint: "Search services...",
+          prefixIcon: Icons.apartment_outlined,
+          onChanged: (value) {
+            final newId =
+                value == "Select Service"
+                    ? null
+                    : serviceList
+                        .firstWhere((s) => s.officeName == value)
+                        .officeId
+                        .toString();
+            setState(() {
+              _selectedServiceId = newId;
+              _selectedOfficeId = null;
+              officeList = [];
+            });
+            if (newId != null) {
+              _loadOfficesForService(newId);
+            }
+            fetchFilter();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _officeDropdown() {
+    final servicesSelected = _selectedServiceId != null;
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: SizedBox(
+        height: 38,
+        child: Opacity(
+          opacity: servicesSelected ? 1 : 0.5,
+          child: IgnorePointer(
+            ignoring: !servicesSelected || _officeListLoading,
+            child: SearchableDropdown(
+              items: ["All Offices", ...officeList.map((o) => o.name)],
+              selectedItem:
+                  _selectedOfficeId == null
+                      ? "All Offices"
+                      : (officeList
+                              .where(
+                                (o) => o.id.toString() == _selectedOfficeId,
+                              )
+                              .firstOrNull
+                              ?.name ??
+                          "All Offices"),
+              hintText: servicesSelected ? 'Office' : 'Select Service first',
+              searchHint: "Search Offices...",
+              prefixIcon: Icons.business_outlined,
+              onChanged: (value) {
+                setState(() {
+                  _selectedOfficeId =
+                      value == "All Offices"
+                          ? null
+                          : officeList
+                              .firstWhere((o) => o.name == value)
+                              .id
+                              .toString();
+                });
+                fetchFilter();
+              },
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -326,11 +422,12 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
                     Text(
                       "Performance Validation Tool",
                       style: TextStyle(
-                        fontSize: isXSmall
-                            ? 12
-                            : isSmall
-                            ? 14
-                            : 16,
+                        fontSize:
+                            isXSmall
+                                ? 12
+                                : isSmall
+                                ? 14
+                                : 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1D23),
                       ),
@@ -364,7 +461,7 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
       _selectedPeriodId = null;
       filteredList = List.from(operationReviewprotocolList);
     });
-    fetchPerformanceValidation();
+    fetchFilter();
   }
 
   Widget _buildFilterBar(bool isMobile) {
@@ -392,13 +489,15 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
               spacing: 10,
               runSpacing: 10,
               children: [
-                // buildDropdown(child: _serviceDropdown()),
-                buildDropdown(
-                  child: PermissionWidget(
-                    permission: AppPermissions.viewOffice,
-                    child: _officeDropdown(),
+                if (_canViewServiceOffice) ...[
+                  buildDropdown(child: _serviceDropdown()),
+                  buildDropdown(
+                    child: PermissionWidget(
+                      permission: AppPermissions.viewOffice,
+                      child: _officeDropdown(),
+                    ),
                   ),
-                ),
+                ],
                 buildDropdown(child: _periodDropdown()),
               ],
             ),
@@ -469,106 +568,89 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
             const Spacer(),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 150),
-              child: _hasActiveFilters
-                  ? TextButton.icon(
-                      key: const ValueKey('clear'),
-                      onPressed: _resetFilters,
-                      icon: Icon(
-                        Icons.refresh,
-                        size: 14,
-                        color: Colors.red.shade400,
-                      ),
-                      label: Text(
-                        'Clear filters',
-                        style: TextStyle(
-                          fontSize: 12,
+              child:
+                  _hasActiveFilters
+                      ? TextButton.icon(
+                        key: const ValueKey('clear'),
+                        onPressed: _resetFilters,
+                        icon: Icon(
+                          Icons.refresh,
+                          size: 14,
                           color: Colors.red.shade400,
                         ),
-                      ),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                        label: Text(
+                          'Clear filters',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.red.shade400,
+                          ),
                         ),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    )
-                  : const SizedBox.shrink(key: ValueKey('empty')),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      )
+                      : const SizedBox.shrink(key: ValueKey('empty')),
             ),
           ],
         ),
         AnimatedSize(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
-          child: _mobileFiltersExpanded
-              ? Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        height: 38,
-                        child: PermissionWidget(
-                          permission: AppPermissions.viewOffice,
-                          child: _officeDropdown(),
+          child:
+              _mobileFiltersExpanded
+                  ? Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_canViewServiceOffice) ...[
+                          SizedBox(
+                            height: 38,
+                            child: PermissionWidget(
+                              permission: AppPermissions.viewOffice,
+                              child: _serviceDropdown(),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 38,
+                            child: PermissionWidget(
+                              permission: AppPermissions.viewOffice,
+                              child: _officeDropdown(),
+                            ),
+                          ),
+                        ],
+
+                        SizedBox(
+                          height: 38,
+                          child: PermissionWidget(
+                            permission: AppPermissions.viewOffice,
+                            child: _periodDropdown(),
+                          ),
                         ),
-                      ),
-                      SizedBox(
-                        height: 38,
-                        child: PermissionWidget(
-                          permission: AppPermissions.viewOffice,
-                          child: _periodDropdown(),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : const SizedBox.shrink(),
+                      ],
+                    ),
+                  )
+                  : const SizedBox.shrink(),
         ),
       ],
     );
   }
 
-  Widget _officeDropdown() {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
-      child: SizedBox(
-        height: 38,
-        child: SearchableDropdown(
-          items: ["All Offices", ...officeList.map((o) => o.name)],
-          selectedItem: _selectedOfficeId == null
-              ? "All Offices"
-              : (officeList
-                        .where((o) => o.id.toString() == _selectedOfficeId)
-                        .firstOrNull
-                        ?.name ??
-                    "All Offices"),
-          hintText: "Office",
-          searchHint: "Search offices...",
-          prefixIcon: Icons.apartment_outlined,
-          onChanged: (value) {
-            setState(() {
-              _selectedOfficeId = value == "All Offices"
-                  ? null
-                  : officeList.firstWhere((o) => o.name == value).id.toString();
-            });
-            fetchFilter();
-          },
-        ),
-      ),
-    );
-  }
-
   Widget _periodDropdown() {
     final converter = LongDateOnlyConverter();
-    final items = pgsPeriodList.where((p) => !p.isDeleted).toList();
+    final items =
+        performanceValidationPeriodList.where((p) => !p.isDeleted).toList();
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
       child: SizedBox(
@@ -581,15 +663,17 @@ class PerformanceValidationPageState extends State<PerformanceValidationPage> {
                   "${converter.toJson(p.startDate)} - ${converter.toJson(p.endDate)}",
             ),
           ],
-          selectedItem: _selectedPeriodId == null
-              ? "All Periods"
-              : (() {
-                  final match = items
-                      .where((p) => p.id.toString() == _selectedPeriodId)
-                      .firstOrNull;
-                  if (match == null) return "All Periods";
-                  return "${converter.toJson(match.startDate)} - ${converter.toJson(match.endDate)}";
-                })(),
+          selectedItem:
+              _selectedPeriodId == null
+                  ? "All Periods"
+                  : (() {
+                    final match =
+                        items
+                            .where((p) => p.id.toString() == _selectedPeriodId)
+                            .firstOrNull;
+                    if (match == null) return "All Periods";
+                    return "${converter.toJson(match.startDate)} - ${converter.toJson(match.endDate)}";
+                  })(),
           hintText: "Period",
           searchHint: "Search periods...",
           prefixIcon: Icons.calendar_today_outlined,
@@ -660,85 +744,86 @@ class _PgsValidationTileState extends State<_PgsValidationTile> {
   Future<void> _showNoSignatoryDialog() async {
     await showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 380,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 32,
-                offset: const Offset(0, 12),
+      builder:
+          (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: 380,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 32,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.pending_actions_outlined,
-                  color: Colors.orange.shade700,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Deliverables Not Yet Submitted',
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 17,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'The head of ${widget.pgs.office.name} has not submitted their '
-                'deliverables yet. Performance validation cannot be created '
-                'until the head department has submitted.',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.pending_actions_outlined,
+                      color: Colors.orange.shade700,
+                      size: 28,
                     ),
                   ),
-                  child: Text(
-                    'OK',
+                  const SizedBox(height: 16),
+                  Text(
+                    'Deliverables Not Yet Submitted',
                     style: GoogleFonts.plusJakartaSans(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: Colors.black87,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The head of ${widget.pgs.office.name} has not submitted their '
+                    'deliverables yet. Performance validation cannot be created '
+                    'until the head department has submitted.',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'OK',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -778,8 +863,10 @@ class _PgsValidationTileState extends State<_PgsValidationTile> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) =>
-          const Center(child: CircularProgressIndicator(color: primaryColor)),
+      builder:
+          (_) => const Center(
+            child: CircularProgressIndicator(color: primaryColor),
+          ),
     );
 
     final user = await AuthUtil.fetchLoggedUser();
@@ -805,8 +892,8 @@ class _PgsValidationTileState extends State<_PgsValidationTile> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (_) =>
-          PerformanceValidationDialog(pgs: widget.pgs, existing: data),
+      builder:
+          (_) => PerformanceValidationDialog(pgs: widget.pgs, existing: data),
     ).then((saved) {
       if (saved == true) _loadValidations();
     });
@@ -816,32 +903,33 @@ class _PgsValidationTileState extends State<_PgsValidationTile> {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (ctx) => DeleteDialog(
-        title: 'Performance Validation',
-        itemName: 'performance validation',
-        onDelete: () async {
-          Navigator.pop(ctx);
-          try {
-            await widget.performanceValidationService
-                .deletePerformanceValidation(v.id.toString());
-            await _loadValidations();
-            if (mounted) {
-              MotionToast.success(
-                description: Text(
-                  'Performance validation deleted successfully',
-                  style: GoogleFonts.plusJakartaSans(),
-                ),
-              ).show(context);
-            }
-          } catch (_) {
-            MotionToast.error(
-              description: Text(
-                'Failed to deleted performance validation tool',
-              ),
-            ).show(context);
-          }
-        },
-      ),
+      builder:
+          (ctx) => DeleteDialog(
+            title: 'Performance Validation',
+            itemName: 'performance validation',
+            onDelete: () async {
+              Navigator.pop(ctx);
+              try {
+                await widget.performanceValidationService
+                    .deletePerformanceValidation(v.id.toString());
+                await _loadValidations();
+                if (mounted) {
+                  MotionToast.success(
+                    description: Text(
+                      'Performance validation deleted successfully',
+                      style: GoogleFonts.plusJakartaSans(),
+                    ),
+                  ).show(context);
+                }
+              } catch (_) {
+                MotionToast.error(
+                  description: Text(
+                    'Failed to deleted performance validation tool',
+                  ),
+                ).show(context);
+              }
+            },
+          ),
     );
   }
 
@@ -850,16 +938,20 @@ class _PgsValidationTileState extends State<_PgsValidationTile> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
-        content: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(color: primaryColor),
-            SizedBox(width: 16),
-            Text('Generating PDF...', style: TextStyle(color: primaryColor)),
-          ],
-        ),
-      ),
+      builder:
+          (_) => const AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: primaryColor),
+                SizedBox(width: 16),
+                Text(
+                  'Generating PDF...',
+                  style: TextStyle(color: primaryColor),
+                ),
+              ],
+            ),
+          ),
     );
 
     try {
@@ -893,9 +985,10 @@ class _PgsValidationTileState extends State<_PgsValidationTile> {
             debugPrint('OpenFile error: ${result.message}');
           }
         } else {
-          final dir = Platform.isWindows
-              ? await getDownloadsDirectory()
-              : await getApplicationDocumentsDirectory();
+          final dir =
+              Platform.isWindows
+                  ? await getDownloadsDirectory()
+                  : await getApplicationDocumentsDirectory();
           final filePath = '${dir!.path}/performance_validation_${v.id}.pdf';
           await File(filePath).writeAsBytes(bytes);
           final result = await OpenFile.open(filePath);
@@ -968,31 +1061,32 @@ class _PgsValidationTileState extends State<_PgsValidationTile> {
             children: [
               PermissionWidget(
                 permission: AppPermissions.addPerformanceValidationTool,
-                child: _checkingSignatory
-                    ? const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: primaryColor,
+                child:
+                    _checkingSignatory
+                        ? const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: primaryColor,
+                            ),
                           ),
+                        )
+                        : IconButton(
+                          tooltip: 'Add performance validation',
+                          icon: const Icon(
+                            Icons.note_add_outlined,
+                            color: primaryColor,
+                            size: 20,
+                          ),
+                          onPressed: () async {
+                            if (!_expanded) setState(() => _expanded = true);
+                            if (!_loaded) await _loadValidations();
+                            await _openNewValidation();
+                          },
                         ),
-                      )
-                    : IconButton(
-                        tooltip: 'Add performance validation',
-                        icon: const Icon(
-                          Icons.note_add_outlined,
-                          color: primaryColor,
-                          size: 20,
-                        ),
-                        onPressed: () async {
-                          if (!_expanded) setState(() => _expanded = true);
-                          if (!_loaded) await _loadValidations();
-                          await _openNewValidation();
-                        },
-                      ),
               ),
               const SizedBox(width: 6),
               const Tooltip(
@@ -1029,8 +1123,9 @@ class _PgsValidationTileState extends State<_PgsValidationTile> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _validations.length,
-                  separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: Colors.grey.shade200),
+                  separatorBuilder:
+                      (_, __) =>
+                          Divider(height: 1, color: Colors.grey.shade200),
                   itemBuilder: (_, i) {
                     final v = _validations[i];
                     return Padding(

@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/office/models/office.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -29,6 +30,8 @@ class RegistrationPageState extends State<RegistrationPage> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+  final TextEditingController positionController = TextEditingController();
+  final _commonService = CommonService(Dio());
 
   final FocusNode idFocusNode = FocusNode();
   final FocusNode focusFirstName = FocusNode();
@@ -44,6 +47,7 @@ class RegistrationPageState extends State<RegistrationPage> {
   bool _isPasswordVisible = false;
   bool _isPassConfirmVisible = false;
   bool _isRegister = false;
+  List<Office> officeList = [];
 
   final dio = Dio();
 
@@ -146,6 +150,15 @@ class RegistrationPageState extends State<RegistrationPage> {
     focusEmail.addListener(() => setState(() {}));
     focusPassword.addListener(() => setState(() {}));
     focusConfirmPassword.addListener(() => setState(() {}));
+
+    () async {
+      final offices = await _commonService.fetchAlloffices();
+
+      if (!mounted) return;
+      setState(() {
+        officeList = offices;
+      });
+    }();
   }
 
   @override
@@ -176,7 +189,6 @@ class RegistrationPageState extends State<RegistrationPage> {
     });
   }
 
-  // Job Position Dropdown
   String? selectedPosition;
 
   @override
@@ -200,10 +212,10 @@ class RegistrationPageState extends State<RegistrationPage> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xFFFCE4EC),
-                Color(0xFFF8BBD0),
-                Color(0xFFEF9A9A),
-                Color(0xFFF48FB1),
+                Color.fromARGB(255, 245, 222, 229),
+                Color.fromARGB(255, 233, 153, 181),
+                Color.fromARGB(255, 240, 134, 134),
+                Color.fromARGB(255, 187, 54, 98),
               ],
               stops: [0.0, 0.35, 0.65, 1.0],
             ),
@@ -345,9 +357,12 @@ class RegistrationPageState extends State<RegistrationPage> {
                                             lastNameController.text,
                                             prefixController.text,
                                             suffixController.text,
-                                            selectedPosition ?? '',
+                                            positionController.text.isNotEmpty
+                                                ? positionController.text
+                                                : selectedPosition ?? '',
                                             '',
                                             '',
+                                            null,
                                           ),
                                         );
                                       }
@@ -462,7 +477,7 @@ class RegistrationPageState extends State<RegistrationPage> {
         hint: 'First name',
         textInputAction: TextInputAction.next,
         validator: (value) {
-          if (value == null || value.isEmpty) return "Please enter some text";
+          if (value == null || value.isEmpty) return "required";
           return null;
         },
       ),
@@ -480,7 +495,7 @@ class RegistrationPageState extends State<RegistrationPage> {
         hint: 'Last name',
         textInputAction: TextInputAction.next,
         validator: (value) {
-          if (value == null || value.isEmpty) return "Please enter some text";
+          if (value == null || value.isEmpty) return "required";
           return null;
         },
       ),
@@ -502,7 +517,7 @@ class RegistrationPageState extends State<RegistrationPage> {
         hint: 'Username',
         textInputAction: TextInputAction.next,
         validator: (value) {
-          if (value == null || value.isEmpty) return "Please enter some text";
+          if (value == null || value.isEmpty) return "required";
           return null;
         },
       ),
@@ -565,23 +580,57 @@ class RegistrationPageState extends State<RegistrationPage> {
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return "Please confirm your password";
+            return "required";
           }
           if (value != passwordController.text) return 'Passwords do not match';
           return null;
         },
       ),
       const SizedBox(height: 14),
-      DropdownSearch<String>(
-        popupProps: PopupProps.menu(
-          showSearchBox: true,
-          searchFieldProps: TextFieldProps(
+
+      Autocomplete<String>(
+        initialValue: TextEditingValue(text: positionController.text),
+        optionsBuilder: (TextEditingValue textEditingValue) {
+          if (textEditingValue.text.isEmpty) {
+            return JobPositions.positions;
+          }
+          return JobPositions.positions.where(
+            (pos) =>
+                pos.toLowerCase().contains(textEditingValue.text.toLowerCase()),
+          );
+        },
+        onSelected: (String selection) {
+          setState(() {
+            positionController.text = selection;
+            selectedPosition = selection;
+          });
+        },
+        fieldViewBuilder: (
+          context,
+          textController,
+          focusNode,
+          onFieldSubmitted,
+        ) {
+          textController.text = positionController.text;
+          textController.addListener(() {
+            positionController.text = textController.text;
+            selectedPosition = textController.text;
+          });
+          return TextFormField(
+            controller: textController,
+            focusNode: focusNode,
+            style: const TextStyle(fontSize: 14, color: kText),
             decoration: InputDecoration(
-              hintText: 'Search Position...',
+              hintText: 'Select or type a position',
+              hintStyle: const TextStyle(color: kMuted, fontSize: 14),
+              suffixIcon: const Icon(Icons.arrow_drop_down, color: kMuted),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
               filled: true,
               fillColor: Colors.white,
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
+              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(color: kBorder, width: 1.5),
               ),
@@ -589,37 +638,53 @@ class RegistrationPageState extends State<RegistrationPage> {
                 borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(color: primaryColor, width: 1.8),
               ),
+              isDense: true,
             ),
-          ),
-        ),
-        items: JobPositions.positions,
-        selectedItem: selectedPosition,
-        onChanged: (String? value) {
-          setState(() {
-            selectedPosition = value;
-          });
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "required";
+              }
+              return null;
+            },
+          );
         },
-        dropdownDecoratorProps: DropDownDecoratorProps(
-          dropdownSearchDecoration: InputDecoration(
-            hintText: 'Position',
-            hintStyle: const TextStyle(color: kMuted, fontSize: 14),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
+        optionsViewBuilder: (context, onSelected, options) {
+          return Align(
+            alignment: Alignment.topLeft,
+            child: Material(
+              color: kSurface,
+              elevation: 6,
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: kBorder, width: 1.5),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 200,
+                  maxWidth: 380,
+                ),
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  shrinkWrap: true,
+                  itemCount: options.length,
+                  itemBuilder: (context, index) {
+                    final option = options.elementAt(index);
+                    return InkWell(
+                      onTap: () => onSelected(option),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        child: Text(
+                          option,
+                          style: const TextStyle(fontSize: 14, color: kText),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: primaryColor, width: 1.8),
-            ),
-            isDense: true,
-          ),
-        ),
+          );
+        },
       ),
     ];
   }

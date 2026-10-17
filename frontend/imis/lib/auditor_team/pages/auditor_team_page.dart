@@ -1328,7 +1328,7 @@ class _AuditorRow extends StatelessWidget {
         ),
         Switch(
           value: auditor.isTeamLeader,
-          activeThumbColor: primaryColor,
+          activeColor: primaryColor,
           onChanged: onToggleLeader,
         ),
         IconBtn(

@@ -431,6 +431,7 @@ class UserProfileState extends State<UserProfilePage> {
                                       : selectedPosition ?? '',
                                   '',
                                   '',
+                                  null,
                                 );
 
                                 if (id == null) {
@@ -919,6 +920,7 @@ class UserProfileState extends State<UserProfilePage> {
                                       : selectedPosition ?? '',
                                   '',
                                   '',
+                                  null,
                                 );
 
                                 if (id == null) {

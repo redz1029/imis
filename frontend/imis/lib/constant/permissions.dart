@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-09-07 14:31:15.033526
+// Last synced: 2026-10-09 11:17:01.158621
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -20,6 +20,10 @@ class AppPermissions {
   static const String addStrategyReview = 'Add Strategy Review';
   static const String viewStrategyReview = 'View Strategy Review';
   static const String editStrategyReview = 'Edit Strategy Review';
+  static const String deleteStrategicChangeAgenda = 'Delete Strategic Change Agenda';
+  static const String addStrategicChangeAgenda = 'Add Strategic Change Agenda';
+  static const String viewStrategicChangeAgenda = 'View Strategic Change Agenda';
+  static const String editStrategicChangeAgenda = 'Edit Strategic Change Agenda';
   static const String addPgsSummaryNarrative = 'Add Pgs Summary Narrative';
   static const String viewPgsSummaryNarrative = 'View Pgs Summary Narrative';
   static const String editPgsSummaryNarrative = 'Edit Pgs Summary Narrative';
@@ -29,9 +33,6 @@ class AppPermissions {
   static const String addCreateViewRoadmapSetting = 'Add Create View Roadmap Setting';
   static const String viewCreateViewRoadmapSetting = 'View Create View Roadmap Setting';
   static const String editCreateViewRoadmapSetting = 'Edit Create View Roadmap Setting';
-  static const String addPGSSetting = 'Add P G S Setting';
-  static const String viewPGSSetting = 'View P G S Setting';
-  static const String editPGSSetting = 'Edit P G S Setting';
   static const String addCreateViewDeliverablesSetting = 'Add Create View Deliverables Setting';
   static const String viewCreateViewDeliverablesSetting = 'View Create View Deliverables Setting';
   static const String editCreateViewDeliverablesSetting = 'Edit Create View Deliverables Setting';
@@ -59,6 +60,9 @@ class AppPermissions {
   static const String addScoreCardSetting = 'Add Score Card Setting';
   static const String viewScoreCardSetting = 'View Score Card Setting';
   static const String editScoreCardSetting = 'Edit Score Card Setting';
+  static const String addStrategicChangeAgendaSettings = 'Add Strategic Change Agenda Settings';
+  static const String viewStrategicChangeAgendaSettings = 'View Strategic Change Agenda Settings';
+  static const String editStrategicChangeAgendaSettings = 'Edit Strategic Change Agenda Settings';
   static const String addPeriod = 'Add Period';
   static const String viewPeriod = 'View Period';
   static const String editPeriod = 'Edit Period';
@@ -130,6 +134,20 @@ class AppPermissions {
   static const String addIsoStandard = 'Add Iso Standard';
   static const String viewIsoStandard = 'View Iso Standard';
   static const String editIsoStandard = 'Edit Iso Standard';
+  static const String deleteISATSignatoryTemplate = 'Delete I S A T Signatory Template';
+  static const String draftISATSignatoryTemplate = 'Draft I S A T Signatory Template';
+  static const String submitISATSignatoryTemplate = 'Submit I S A T Signatory Template';
+  static const String confirmISATSignatoryTemplate = 'Confirm I S A T Signatory Template';
+  static const String addISATSignatoryTemplate = 'Add I S A T Signatory Template';
+  static const String viewISATSignatoryTemplate = 'View I S A T Signatory Template';
+  static const String editISATSignatoryTemplate = 'Edit I S A T Signatory Template';
+  static const String deleteISAT = 'Delete I S A T';
+  static const String draftISAT = 'Draft I S A T';
+  static const String submitISAT = 'Submit I S A T';
+  static const String confirmISAT = 'Confirm I S A T';
+  static const String addISAT = 'Add I S A T';
+  static const String viewISAT = 'View I S A T';
+  static const String editISAT = 'Edit I S A T';
   static const String addImpactStrategicGoalScoreCardPeriod = 'Add Impact Strategic Goal Score Card Period';
   static const String viewImpactStrategicGoalScoreCardPeriod = 'View Impact Strategic Goal Score Card Period';
   static const String editImpactStrategicGoalScoreCardPeriod = 'Edit Impact Strategic Goal Score Card Period';
@@ -158,25 +176,4 @@ class AppPermissions {
   static const String addAnnouncement = 'Add Announcement';
   static const String viewAnnouncement = 'View Announcement';
   static const String editAnnouncement = 'Edit Announcement';
-
-  // Audit Management Permissions
-  static const String addAuditProgramme = 'Add Audit Programme';
-  static const String viewAuditProgramme = 'View Audit Programme';
-  static const String editAuditProgramme = 'Edit Audit Programme';
-
-  static const String addAuditPlan = 'Add Audit Plan';
-  static const String viewAuditPlan = 'View Audit Plan';
-  static const String editAuditPlan = 'Edit Audit Plan';
-
-  static const String addAuditChecklist = 'Add Audit Checklist';
-  static const String viewAuditChecklist = 'View Audit Checklist';
-  static const String editAuditChecklist = 'Edit Audit Checklist';
-
-  static const String addAuditReport = 'Add Audit Report';
-  static const String viewAuditReport = 'View Audit Report';
-  static const String editAuditReport = 'Edit Audit Report';
-
-  static const String addNonconformingActionReport = 'Add Nonconforming Action Report';
-  static const String viewNonconformingActionReport = 'View Nonconforming Action Report';
-  static const String editNonconformingActionReport = 'Edit Nonconforming Action Report';
 }

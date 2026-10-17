@@ -877,7 +877,7 @@ class SummaryValidatedDeliverablesPageState
         label: 'Departments Contributing Deliverables',
         value: '$_totalOffices',
         color: const Color(0xFF1976D2),
-        bg: const Color(0xFF1976D2).withValues(alpha: .08),
+        bg: const Color(0xFF1976D2).withValues(alpha: 0.08),
         icon: Icons.apartment_outlined,
       ),
       _StatData(
@@ -923,7 +923,7 @@ class SummaryValidatedDeliverablesPageState
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -933,7 +933,7 @@ class SummaryValidatedDeliverablesPageState
                 top: Radius.circular(14),
               ),
               border: Border(
-                bottom: BorderSide(color: _border.withValues(alpha: .5)),
+                bottom: BorderSide(color: _border.withValues(alpha: 0.5)),
               ),
             ),
             child: Row(
@@ -1187,7 +1187,7 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: data.bg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: data.color.withValues(alpha: .12)),
+        border: Border.all(color: data.color.withValues(alpha: 0.12)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -1226,7 +1226,7 @@ class _StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: data.color.withValues(alpha: .10),
+              color: data.color.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(data.icon, size: 18, color: data.color),
@@ -1257,7 +1257,7 @@ class _MetaBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: .2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1349,7 +1349,7 @@ class _DepartmentRow extends StatelessWidget {
                     value: pct,
                     backgroundColor: const Color(0xFFE8E8E8),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      progressColor.withValues(alpha: .75),
+                      progressColor.withValues(alpha: 0.75),
                     ),
                   ),
                 ),

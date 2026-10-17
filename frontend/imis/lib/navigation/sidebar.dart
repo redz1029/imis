@@ -6,43 +6,43 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:imis/announcements/models/announcement.dart';
-import 'package:imis/announcements/pages/announcement_page.dart';
-import 'package:imis/announcements/services/announcement_service.dart';
-import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_list_page.dart';
 import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_page.dart';
+import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_list_page.dart';
 import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_list_page.dart';
 import 'package:imis/ISO/IQA/audit_report/pages/audit_report_list_page.dart';
 import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_list_page.dart';
-import 'package:imis/ISO/IQA/iqa_signatory/pages/iqa_signatory_template_page.dart';
 import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
-import 'package:imis/ISO/IQA/ncar/pages/ncar_monitoring_page.dart';
+import 'package:imis/announcements/models/announcement.dart';
+import 'package:imis/announcements/pages/announcement_page.dart';
+import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/dashboard/summary_offices_deliverables.dart';
 import 'package:imis/dashboard/monthly_opr_report_page.dart';
-import 'package:imis/dashboard/strategic_change_template_agenda.dart';
 import 'package:imis/dashboard/strategy_roadmap_page.dart';
 import 'package:imis/dashboard/summary_validated_deliverables_page.dart';
 import 'package:imis/performance_governance_system/pgs_evaluator_offices/pages/evaluator_offices_page.dart';
 import 'package:imis/office/pages/office_page.dart';
+import 'package:imis/performance_governance_system/pgs_isat/isat_signatory_template/pages/isat_signatory_template_page.dart';
+import 'package:imis/performance_governance_system/pgs_isat/pages/isat_page.dart';
 import 'package:imis/performance_governance_system/pgs_operation_review_protocol/pages/operation_review_protocol_page.dart';
 import 'package:imis/osm_calendar_activity/pages/osm_calendar_actvity_page.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/pages/deliverable_status_monitoring_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page..dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/performance_validation_tool_period/pages/performance_validation_tool_period_page.dart';
+import 'package:imis/performance_governance_system/pgs_performance_validation_tool/performance_validation_tool_signatory/pages/performance_validation_tool_signatory_page.dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
-import 'package:imis/performance_governance_system/pgs_reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/performance_governance_system/pgs_servicehead_office/pages/service_head_office_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
-import 'package:imis/performance_governance_system/pgs_strategic_change_agenda/pages/stra_agenda.dart';
+import 'package:imis/performance_governance_system/pgs_strategic_change_agenda/pages/strategic_change_agenda_page.dart';
 import 'package:imis/performance_governance_system/process_core_support/pages/process_core_support_page.dart';
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/pages/performance_validation_page.dart';
-import 'package:imis/performance_governance_system/performance_validation_tool_period/pages/performance_validation_tool_period_page.dart';
-import 'package:imis/performance_governance_system/performance_validation_tool_signatory/pages/performance_validation_tool_signatory_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/pages/roadmap_page.dart';
+import 'package:imis/qms_documents/pages/procedures_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/pages/impact_strategy_goal_scorecard_page.dart';
@@ -55,10 +55,12 @@ import 'package:imis/performance_governance_system/pgs_swot/swot_opportunies_thr
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/change_password_page.dart';
 import 'package:imis/user/pages/login_page.dart';
+import 'package:imis/user/pages/user_management_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
 import 'package:imis/utils/permission_role_string.dart';
+import 'package:imis/widgets/home/dashboard_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constant/constant.dart';
 import '../constant/role_info.dart';
@@ -68,38 +70,6 @@ import '../user/pages/home_page.dart';
 import '../utils/auth_util.dart';
 import '../utils/permission_service.dart';
 import '../widgets/common/circle_text_widget.dart';
-
-class _NavChild {
-  final String title;
-  final int? index;
-  final List<String>? allowedRoles;
-  final List<_NavChild> children;
-  final String Function(String? role)? titleFor;
-  const _NavChild(
-    this.title,
-    this.index, {
-    this.allowedRoles,
-    this.children = const [],
-    this.titleFor,
-  });
-
-  String resolveTitle(String? role) => titleFor?.call(role) ?? title;
-}
-
-class _NavGroup {
-  final IconData icon;
-  final String label;
-  final int pageIndex;
-  final List<_NavChild> children;
-  final List<String>? allowedRoles;
-  const _NavGroup({
-    required this.icon,
-    required this.label,
-    required this.pageIndex,
-    this.children = const [],
-    this.allowedRoles,
-  });
-}
 
 class Sidebar extends StatefulWidget {
   final int? initialScreenIndex;
@@ -133,15 +103,15 @@ class SidebarState extends State<Sidebar> {
   List<Announcement> _unreadAnnouncements = [];
   int selectedPage = 0;
   int selectedSubPage = 0;
-
+  final permissionService = PermissionService();
   bool _isCollapsed = false;
 
   final Set<String> _expandedKeys = {'g0'};
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  static const double _kExpandedWidth = 268;
-  static const double _kCollapsedWidth = 76;
+  static const double _kExpandedWidth = 250;
+  static const double _kCollapsedWidth = 70;
 
   static const double _kActiveHighlightAlpha = 0.35;
 
@@ -176,112 +146,8 @@ class SidebarState extends State<Sidebar> {
     }
   }
 
-  int _firstPermittedSubPage(int page) {
-    if (page == 0) return 0;
-    if (page == 2) return 0; // ISO
-    if (page == 4) return 0; // Settings always starts at 0
-
-    if (page == 1) {
-      final role = selectedRole;
-
-      final canSeeRoadmaps = [
-        PermissionRoleString.roleAdmin,
-        PermissionRoleString.roleStandardUser,
-        PermissionRoleString.mcc,
-        PermissionRoleString.osm,
-        PermissionRoleString.coreTeam,
-        PermissionRoleString.serviceHead,
-        PermissionRoleString.trainingOfficer,
-        PermissionRoleString.hrOfficer,
-        PermissionRoleString.serviceOfficer,
-        PermissionRoleString.financeOfficer,
-        PermissionRoleString.safetyOfficer,
-        PermissionRoleString.facilityOfficer,
-        PermissionRoleString.linkagesOfficer,
-        PermissionRoleString.informationOfficer,
-        PermissionRoleString.researchOfficer,
-        PermissionRoleString.pgsAuditor,
-        PermissionRoleString.headAuditor,
-        PermissionRoleString.twg,
-        PermissionRoleString.evaluator,
-      ].contains(role);
-      if (canSeeRoadmaps) return 0;
-
-      final canSeeDeliverables = [
-        PermissionRoleString.roleAdmin,
-        PermissionRoleString.roleStandardUser,
-        PermissionRoleString.serviceHead,
-        PermissionRoleString.mcc,
-        PermissionRoleString.coreTeam,
-        PermissionRoleString.osm,
-        PermissionRoleString.twg,
-      ].contains(role);
-      if (canSeeDeliverables) return 1;
-
-      final canseeSwot = [
-        PermissionRoleString.roleAdmin,
-        PermissionRoleString.roleStandardUser,
-        PermissionRoleString.serviceHead,
-        PermissionRoleString.mcc,
-        PermissionRoleString.coreTeam,
-        PermissionRoleString.osm,
-        PermissionRoleString.twg,
-      ].contains(role);
-      if (canseeSwot) return 2;
-
-      final canSeeMonitoring = [
-        PermissionRoleString.roleAdmin,
-        PermissionRoleString.serviceHead,
-        PermissionRoleString.mcc,
-        PermissionRoleString.osm,
-        PermissionRoleString.pgsAuditor,
-        PermissionRoleString.pgsHead,
-        PermissionRoleString.coreTeam,
-        PermissionRoleString.twg,
-        PermissionRoleString.headAuditor,
-        PermissionRoleString.evaluator,
-      ].contains(role);
-      if (canSeeMonitoring) return 3;
-
-      final canSeeScorecard = [
-        PermissionRoleString.roleAdmin,
-        PermissionRoleString.trainingOfficer,
-        PermissionRoleString.hrOfficer,
-        PermissionRoleString.serviceOfficer,
-        PermissionRoleString.financeOfficer,
-        PermissionRoleString.safetyOfficer,
-        PermissionRoleString.facilityOfficer,
-        PermissionRoleString.linkagesOfficer,
-        PermissionRoleString.informationOfficer,
-        PermissionRoleString.researchOfficer,
-        PermissionRoleString.coreTeam,
-        PermissionRoleString.mcc,
-        PermissionRoleString.osm,
-        PermissionRoleString.pgsAuditor,
-        PermissionRoleString.headAuditor,
-        PermissionRoleString.serviceHead,
-        PermissionRoleString.twg,
-        PermissionRoleString.evaluator,
-      ].contains(role);
-      if (canSeeScorecard) return 4;
-
-      final canSeeAuditorReport = [
-        PermissionRoleString.headAuditor,
-        PermissionRoleString.roleAdmin,
-        PermissionRoleString.twg,
-      ].contains(role);
-      if (canSeeAuditorReport) return 5;
-
-      final canSeeOperationReviewProtocol = [
-        PermissionRoleString.pgsAuditor,
-        PermissionRoleString.roleAdmin,
-        PermissionRoleString.twg,
-        PermissionRoleString.evaluator,
-      ].contains(role);
-      if (canSeeOperationReviewProtocol) return 8;
-    }
-
-    return 0;
+  bool _hasPermission(String permission) {
+    return permissionService.hasPermission(permission);
   }
 
   Future<void> _loadUserName() async {
@@ -448,8 +314,7 @@ class SidebarState extends State<Sidebar> {
                                                   selectedRole = role;
                                                   isSwitchingRole = false;
                                                   selectedSubPage =
-                                                      _firstPermittedSubPage(0);
-                                                  selectedPage = 0;
+                                                      selectedPage = 0;
                                                   selectedScreen = HomePage();
                                                 });
                                               },
@@ -872,10 +737,7 @@ class SidebarState extends State<Sidebar> {
                                                       isSwitchingRole = false;
                                                       selectedScreen =
                                                           HomePage();
-                                                      selectedSubPage =
-                                                          _firstPermittedSubPage(
-                                                            0,
-                                                          );
+
                                                       selectedPage = 0;
                                                     });
                                                   },
@@ -1302,27 +1164,27 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 0) return HomePage();
       if (selectedSubPage == 1) return OsmCalendarActvityPage();
       if (selectedSubPage == 2) return StrategyRoadmapPage();
-      if (selectedSubPage == 3) return const StrategicChangeTemplateAgenda();
     }
     if (selectedPage == 1) {
-      if (selectedSubPage == 0) return const RoadmapPage();
-      if (selectedSubPage == 1) return const PerformanceGovernanceSystemPage();
-      if (selectedSubPage == 2) return const SwotAnalysisPage();
-      if (selectedSubPage == 3) return const DeliverableStatusMonitoringPage();
-      if (selectedSubPage == 4) return const StrategyReviewReportPage();
-      if (selectedSubPage == 5) {
+      if (selectedSubPage == 0) return StrategicChangeAgendaPage();
+      if (selectedSubPage == 1) return const RoadmapPage();
+      if (selectedSubPage == 2) return const PerformanceGovernanceSystemPage();
+      if (selectedSubPage == 3) return const SwotAnalysisPage();
+      if (selectedSubPage == 4) return const DeliverableStatusMonitoringPage();
+      if (selectedSubPage == 5) return const StrategyReviewReportPage();
+      if (selectedSubPage == 6) {
         return const ImpactStrategyGoalScorecardPage();
       }
-      if (selectedSubPage == 6) return const ScoreCardReportPage();
-      if (selectedSubPage == 7) return const OperationReviewProtocolPage();
-      if (selectedSubPage == 8) return const PerformanceValidationPage();
-      if (selectedSubPage == 9) return const ViewSummaryNarrativeReportPage();
+      if (selectedSubPage == 7) return const ScoreCardReportPage();
+      if (selectedSubPage == 8) return const OperationReviewProtocolPage();
+      if (selectedSubPage == 9) return const PerformanceValidationPage();
+      // if (selectedSubPage == 9) return const ViewSummaryNarrativeReportPage();
       if (selectedSubPage == 10) {
         return const SummaryValidatedDeliverablesPage();
       }
       if (selectedSubPage == 11) return SummaryOfficesDeliverables();
       if (selectedSubPage == 12) return MonthlyOprReportPage();
-      if (selectedSubPage == 13) return StrategicChangeAgendaPage();
+      if (selectedSubPage == 13) return IsatPage();
     }
 
     if (selectedPage == 2) {
@@ -1330,13 +1192,15 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 1) return const AuditPlanListPage();
       if (selectedSubPage == 2) return const AuditScheduleListPage();
       if (selectedSubPage == 3) return const AuditChecklistPage();
-      if (selectedSubPage == 4) return const ClauseLibraryPage();
-      if (selectedSubPage == 5) return const AuditReportListPage();
-      if (selectedSubPage == 6) return const NcarListPage();
-      if (selectedSubPage == 7) return const NcarMonitoringPage();
+      if (selectedSubPage == 4) return const AuditReportListPage();
+      if (selectedSubPage == 5) return const NcarListPage();
+      if (selectedSubPage == 6) return const ClauseLibraryPage();
     }
 
     if (selectedPage == 3) {
+      if (selectedSubPage == 0) return const ProceduresPage();
+    }
+    if (selectedPage == 4) {
       if (selectedSubPage == 0) return const AnnouncementPage();
       if (selectedSubPage == 2) return const AuditorPage();
       if (selectedSubPage == 3) return const AuditorOfficesPage();
@@ -1352,7 +1216,6 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 13) return const UserOfficePage();
       if (selectedSubPage == 14) return const UserRolePage();
       if (selectedSubPage == 15) return const StrategyReviewPeriodPage();
-      if (selectedSubPage == 23) return const IQASignatoryTemplatePage();
       if (selectedSubPage == 16) {
         return const PerformanceValidationToolPeriodPage();
       }
@@ -1374,263 +1237,178 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 22) {
         return const ServiceHeadOfficePage();
       }
-      
+      if (selectedSubPage == 23) {
+        return const UserManagementPage();
+      }
+      if (selectedSubPage == 24) {
+        return const IsatSignatoryTemplatePage();
+      }
     }
     return HomePage();
   }
 
-  List<_NavGroup> _buildNavGroups() {
-    const pgsRoles = [
-      PermissionRoleString.roleAdmin,
-      PermissionRoleString.roleStandardUser,
-      PermissionRoleString.mcc,
-      PermissionRoleString.osm,
-      PermissionRoleString.coreTeam,
-      PermissionRoleString.serviceHead,
-      PermissionRoleString.trainingOfficer,
-      PermissionRoleString.hrOfficer,
-      PermissionRoleString.serviceOfficer,
-      PermissionRoleString.financeOfficer,
-      PermissionRoleString.safetyOfficer,
-      PermissionRoleString.facilityOfficer,
-      PermissionRoleString.linkagesOfficer,
-      PermissionRoleString.informationOfficer,
-      PermissionRoleString.researchOfficer,
-      PermissionRoleString.pgsAuditor,
-      PermissionRoleString.headAuditor,
-      PermissionRoleString.twg,
-      PermissionRoleString.msgc,
-      PermissionRoleString.evaluator,
-    ];
-
-    const officerRoles = [
-      PermissionRoleString.trainingOfficer,
-      PermissionRoleString.hrOfficer,
-      PermissionRoleString.serviceOfficer,
-      PermissionRoleString.financeOfficer,
-      PermissionRoleString.safetyOfficer,
-      PermissionRoleString.facilityOfficer,
-      PermissionRoleString.linkagesOfficer,
-      PermissionRoleString.informationOfficer,
-      PermissionRoleString.researchOfficer,
-    ];
-
+  List<NavGroup> _buildNavGroups() {
     return [
-      _NavGroup(
+      NavGroup(
         icon: Icons.dashboard_outlined,
         label: 'Dashboard',
         pageIndex: 0,
         children: const [
-          _NavChild('Overview', 0),
-          _NavChild('Calendar of Activities', 1),
-          _NavChild('Strategy Map', 2),
-          _NavChild('Strategic Change Agenda', 3),
+          NavChild('Overview', 0),
+          NavChild('Calendar of Activities', 1),
+          NavChild('Strategy Map', 2),
         ],
       ),
-      _NavGroup(
+      NavGroup(
         icon: Icons.timeline_outlined,
         label: 'PGS',
         pageIndex: 1,
         children: [
-          _NavChild(
+          const NavChild('Strategic Change Agenda', 0),
+          NavChild(
             'Roadmaps',
-            0,
-            allowedRoles: pgsRoles,
-            titleFor: (role) {
-              if (role == PermissionRoleString.roleAdmin) {
-                return 'Create/View Roadmaps';
-              }
-              if (officerRoles.contains(role)) return 'Create Roadmaps';
-              return 'View Roadmaps';
-            },
-          ),
-          _NavChild(
-            'Deliverables',
             1,
-            allowedRoles: [
-              PermissionRoleString.roleAdmin,
-              PermissionRoleString.roleStandardUser,
-              PermissionRoleString.serviceHead,
-              PermissionRoleString.mcc,
-              PermissionRoleString.coreTeam,
-              PermissionRoleString.osm,
-              PermissionRoleString.twg,
-            ],
-            titleFor: (role) {
-              if (role == PermissionRoleString.roleAdmin) {
-                return 'Create/View Deliverables';
-              }
-              if (role == PermissionRoleString.roleStandardUser) {
-                return 'Create Deliverables';
-              }
-              return 'View Deliverables';
-            },
+            addPerm: AppPermissions.addCreateViewRoadmapSetting,
+            viewPerm: AppPermissions.viewCreateViewRoadmapSetting,
+            permLabel: 'Roadmap',
           ),
-          _NavChild(
-            'SWOT',
+          NavChild(
+            'Deliverables',
             2,
-            allowedRoles: [
-              PermissionRoleString.roleAdmin,
-              PermissionRoleString.roleStandardUser,
-              PermissionRoleString.serviceHead,
-              PermissionRoleString.mcc,
-              PermissionRoleString.coreTeam,
-              PermissionRoleString.osm,
-              PermissionRoleString.twg,
-            ],
-            titleFor: (role) {
-              if (role == PermissionRoleString.roleAdmin ||
-                  role == PermissionRoleString.serviceHead) {
-                return 'Create/View SWOT';
-              }
-              if (role == PermissionRoleString.roleStandardUser) {
-                return 'Create SWOT';
-              }
-              return 'View SWOT';
-            },
+            addPerm: AppPermissions.addPgsSetting,
+            viewPerm: AppPermissions.viewPgsSetting,
+            permLabel: 'Deliverables',
           ),
-          _NavChild(
-            'Deliverable Status Monitoring',
+          NavChild(
+            'SWOT',
             3,
-            allowedRoles: [
-              PermissionRoleString.roleAdmin,
-              PermissionRoleString.serviceHead,
-              PermissionRoleString.mcc,
-              PermissionRoleString.osm,
-              PermissionRoleString.pgsAuditor,
-              PermissionRoleString.pgsHead,
-              PermissionRoleString.coreTeam,
-              PermissionRoleString.twg,
-              PermissionRoleString.headAuditor,
-              PermissionRoleString.msgc,
-              PermissionRoleString.evaluator,
-            ],
+            addPerm: AppPermissions.addCreateViewSwotSetting,
+            viewPerm: AppPermissions.viewCreateViewSwotSetting,
+            permLabel: 'SWOT',
           ),
-          _NavChild(
-            'Strategy Review Report',
+          NavChild(
+            'Deliverable Status Monitoring',
             4,
-            allowedRoles: pgsRoles,
-            titleFor: (role) {
-              if (role == PermissionRoleString.roleAdmin) {
-                return 'Create/View Strategy Review Report';
-              }
-              if (officerRoles.contains(role)) {
-                return 'Create Strategy Review Report';
-              }
-              return 'View Strategy Review Report';
-            },
+            viewPerm: AppPermissions.viewDeliverableStatusMonitoringSetting,
+            permLabel: 'Deliverable Status Monitoring',
+            prefixTitle: false,
           ),
-          // ---- nested sub-group: Scorecard ----
-          const _NavChild(
+          NavChild(
+            'Strategy Review Report',
+            5,
+            addPerm: AppPermissions.addCreateViewStrategyReviewReportSetting,
+            viewPerm: AppPermissions.viewCreateViewStrategyReviewReportSetting,
+            permLabel: 'Strategy Review Report',
+          ),
+          NavChild(
             'Scorecard',
             null,
-            children: [
-              _NavChild('Impact and Strategic Goal', 5),
-              _NavChild('Core & Support Processes', 6),
+            children: const [
+              NavChild('Impact and Strategic Goal', 6),
+              NavChild('Core & Support Processes', 7),
             ],
           ),
-          _NavChild(
+          NavChild(
             'Operation Review Protocol',
-            7,
-            allowedRoles: [
-              PermissionRoleString.roleAdmin,
-              PermissionRoleString.mcc,
-              PermissionRoleString.osm,
-              PermissionRoleString.coreTeam,
-              PermissionRoleString.serviceHead,
-              PermissionRoleString.pgsAuditor,
-              PermissionRoleString.headAuditor,
-              PermissionRoleString.twg,
-              PermissionRoleString.evaluator,
-            ],
-            titleFor: (role) {
-              if (role == PermissionRoleString.roleAdmin) {
-                return 'Create/View Operation Review Protocol';
-              }
-              return 'View Operation Review Protocol';
-            },
-          ),
-          _NavChild(
-            'Performance Validation Tool',
             8,
-            allowedRoles: [
-              PermissionRoleString.pgsAuditor,
-              PermissionRoleString.roleAdmin,
-              PermissionRoleString.twg,
-              PermissionRoleString.osm,
-              PermissionRoleString.headAuditor,
-              PermissionRoleString.roleStandardUser,
-              PermissionRoleString.serviceHead,
-              PermissionRoleString.coreTeam,
-              PermissionRoleString.evaluator,
-            ],
+            addPerm: AppPermissions.addCreateViewOperationReviewProtocolSetting,
+            viewPerm:
+                AppPermissions.viewCreateViewOperationReviewProtocolSetting,
+            permLabel: 'Operation Review Protocol',
           ),
-          _NavChild(
-            'PGS Auditor Report',
-            9,
-            allowedRoles: [
-              PermissionRoleString.headAuditor,
-              PermissionRoleString.roleAdmin,
-              PermissionRoleString.twg,
-            ],
-          ),
-          const _NavChild(
+
+          NavChild('Performance Validation Tool', 9),
+          NavChild(
             'PGS Reports',
             null,
-            children: [
-              _NavChild('Summary Validated Deliverables', 10),
-              _NavChild('Summary of Offices with Deliverables', 11),
-              _NavChild('Summary of Offices — Monthly ORP', 12),
+            prefixTitle: false,
+            children: const [
+              NavChild('Summary Validated Deliverables', 10),
+              NavChild('Summary of Offices with Deliverables', 11),
+              NavChild('Summary of Offices — Monthly ORP', 12),
             ],
           ),
-          const _NavChild('Strategic Change Agenda', 13),
+          const NavChild('ISPAM', 13),
         ],
       ),
 
-      _NavGroup(
+      NavGroup(
         icon: Icons.fact_check_outlined,
         label: 'ISO',
         pageIndex: 2,
         children: const [
-          _NavChild('Audit Programme', 0),
-          _NavChild('Audit Plan', 1),
-          _NavChild('Audit Schedule', 2),
-          _NavChild('Audit Checklist', 3),
-          _NavChild('Clause Library', 4),
-          _NavChild('Audit Report ', 5),
-          _NavChild('NCAR', 6),
-          _NavChild('NCAR Monitoring', 7),
+          
+         
+          NavChild('Audit Programme', 0),
+          NavChild('Audit Plan', 1),
+          NavChild('Audit Schedules', 2),
+          NavChild('Audit Checklist', 3),
+          NavChild('Audit Report', 4),
+          NavChild('NCAR', 5),
+           NavChild('Clause Library', 6),
         ],
       ),
-      _NavGroup(
+      NavGroup(
+        icon: Icons.fact_check_outlined,
+        label: 'QMS Documents',
+        pageIndex: 3,
+        children: const [
+          NavChild('Procedures', 0),
+          // NavChild('Auditor Offices', 1),
+          // NavChild('Auditor Team', 2),
+          // NavChild('ISO Announcements', 3),
+        ],
+      ),
+      NavGroup(
         icon: Icons.settings_outlined,
         label: 'Settings',
-        pageIndex: 3,
+        pageIndex: 4,
         allowedRoles: [PermissionRoleString.roleAdmin],
         children: const [
-          _NavChild('Announcement', 0),
-          _NavChild('Auditor', 2),
-          _NavChild('Auditor Offices', 3),
-          _NavChild('Auditor Team', 4),
-          _NavChild('Process Core & Support', 5),
-          _NavChild('KRA Roadmap Period', 6),
-          _NavChild('Office', 7),
-          _NavChild('PGS Signatory', 8),
-          _NavChild('PGS Period', 9),
-          _NavChild('Role', 10),
-          _NavChild('Team', 11),
-          _NavChild('User', 12),
-          _NavChild('User Office', 13),
-          _NavChild('User Role', 14),
-          _NavChild('Strategy Review Period', 15),
-          _NavChild('Performance Validation Tool Period', 16),
-          _NavChild('Performance Validation Tool Signatory', 17),
-          _NavChild('Impact & Strategic Goal Period', 18),
-          _NavChild('SWOT — Strength & Weakness', 19),
-          _NavChild('SWOT — Opportunities & Threats', 20),
-          _NavChild('Evaluator Offices', 21),
-          _NavChild('Service Head Office', 22),
-          _NavChild('Audit IQA Signatory', 23),                                       
+          NavChild('Announcement', 0),
+          NavChild('Auditor', 2),
+          NavChild('Auditor Offices', 3),
+          NavChild('Auditor Team', 4),
+          NavChild('Office', 7),
+          NavChild('Role', 10),
+          NavChild('Team', 11),
+
+          NavChild(
+            'User Management',
+            null,
+            prefixTitle: false,
+            children: [
+              NavChild('User', 12),
+              NavChild('User Office', 13),
+              NavChild('User Role', 14),
+              NavChild('User Accounts', 23),
+            ],
+          ),
+          NavChild(
+            'PGS Modules',
+            null,
+            prefixTitle: false,
+            children: [
+              NavChild('Process Core & Support', 5),
+              NavChild('PGS Signatory', 8),
+              NavChild('PGS Period', 9),
+              NavChild('KRA Roadmap Period', 6),
+              NavChild('Strategy Review Period', 15),
+              NavChild('Performance Validation Tool Period', 16),
+              NavChild('Performance Validation Tool Signatory', 17),
+              NavChild('Impact & Strategic Goal Period', 18),
+              NavChild('SWOT — Strength & Weakness', 19),
+              NavChild('SWOT — Opportunities & Threats', 20),
+              NavChild('Evaluator Offices', 21),
+              NavChild('Service Head Office', 22),
+            ],
+          ),
+          NavChild(
+            'ISPAM Modules',
+            null,
+            prefixTitle: false,
+            children: [NavChild('ISPAM Signatory Template', 24)],
+          ),
         ],
       ),
     ];
@@ -1641,20 +1419,28 @@ class SidebarState extends State<Sidebar> {
     return allowedRoles.contains(selectedRole);
   }
 
-  List<_NavChild> _filterChildren(List<_NavChild> children) {
-    final out = <_NavChild>[];
+  List<NavChild> _filterChildren(List<NavChild> children) {
+    final out = <NavChild>[];
     for (final c in children) {
-      if (!_roleAllowed(c.allowedRoles)) continue;
+      if (c.usesPermissions) {
+        if (!c.isVisible(_hasPermission)) continue;
+      } else if (!_roleAllowed(c.allowedRoles)) {
+        continue;
+      }
       if (c.children.isNotEmpty) {
         final filtered = _filterChildren(c.children);
         if (filtered.isEmpty) continue;
         out.add(
-          _NavChild(
+          NavChild(
             c.title,
             c.index,
             allowedRoles: c.allowedRoles,
             children: filtered,
             titleFor: c.titleFor,
+            addPerm: c.addPerm,
+            viewPerm: c.viewPerm,
+            permLabel: c.permLabel,
+            prefixTitle: c.prefixTitle,
           ),
         );
       } else {
@@ -1664,7 +1450,7 @@ class SidebarState extends State<Sidebar> {
     return out;
   }
 
-  bool _containsActive(List<_NavChild> children, int pageIndex) {
+  bool _containsActive(List<NavChild> children, int pageIndex) {
     for (final c in children) {
       if (c.children.isNotEmpty) {
         if (_containsActive(c.children, pageIndex)) return true;
@@ -1675,7 +1461,7 @@ class SidebarState extends State<Sidebar> {
     return false;
   }
 
-  void _collectLeaves(List<_NavChild> children, List<_NavChild> out) {
+  void _collectLeaves(List<NavChild> children, List<NavChild> out) {
     for (final c in children) {
       if (c.children.isNotEmpty) {
         _collectLeaves(c.children, out);
@@ -1715,7 +1501,7 @@ class SidebarState extends State<Sidebar> {
               children: [
                 Container(
                   color: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 3),
                   child: Row(
                     children: [
                       if (isMobile)
@@ -1746,7 +1532,7 @@ class SidebarState extends State<Sidebar> {
                             icon: Icon(
                               Icons.notifications_outlined,
                               color: Colors.grey[700],
-                              size: 32,
+                              size: 28,
                             ),
                             onPressed: () => _showNotificationMenu(context),
                           ),
@@ -1970,13 +1756,13 @@ class SidebarState extends State<Sidebar> {
     final collapsed = forceExpanded ? false : _isCollapsed;
     final groups = _buildNavGroups().where((g) => _roleAllowed(g.allowedRoles));
 
-    List<MapEntry<_NavGroup, _NavChild>> searchResults = [];
+    List<MapEntry<NavGroup, NavChild>> searchResults = [];
     if (_searchQuery.isNotEmpty) {
       for (final g in groups) {
-        final leaves = <_NavChild>[];
+        final leaves = <NavChild>[];
         _collectLeaves(_filterChildren(g.children), leaves);
         for (final c in leaves) {
-          final resolvedTitle = c.resolveTitle(selectedRole);
+          final resolvedTitle = c.resolveTitle(selectedRole, _hasPermission);
           if (resolvedTitle.toLowerCase().contains(
             _searchQuery.toLowerCase(),
           )) {
@@ -1987,7 +1773,7 @@ class SidebarState extends State<Sidebar> {
     }
 
     return Container(
-      color: primaryColor,
+      color: kSidebarBg,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2049,7 +1835,7 @@ class SidebarState extends State<Sidebar> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(9),
                     borderSide: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: primaryColor.withValues(alpha: 0.8),
                       width: 1.2,
                     ),
                   ),
@@ -2115,7 +1901,7 @@ class SidebarState extends State<Sidebar> {
     );
   }
 
-  Widget _buildSearchResults(List<MapEntry<_NavGroup, _NavChild>> results) {
+  Widget _buildSearchResults(List<MapEntry<NavGroup, NavChild>> results) {
     if (results.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2134,7 +1920,7 @@ class SidebarState extends State<Sidebar> {
           results.map((entry) {
             final g = entry.key;
             final c = entry.value;
-            final resolvedTitle = c.resolveTitle(selectedRole);
+            final resolvedTitle = c.resolveTitle(selectedRole, _hasPermission);
             final active =
                 selectedPage == g.pageIndex && selectedSubPage == c.index;
             return Container(
@@ -2142,7 +1928,7 @@ class SidebarState extends State<Sidebar> {
               decoration: BoxDecoration(
                 color:
                     active
-                        ? Colors.white.withValues(alpha: _kActiveHighlightAlpha)
+                        ? primaryColor.withValues(alpha: _kActiveHighlightAlpha)
                         : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -2205,7 +1991,7 @@ class SidebarState extends State<Sidebar> {
     );
   }
 
-  Widget _navGroupTile(_NavGroup g, {required bool collapsed}) {
+  Widget _navGroupTile(NavGroup g, {required bool collapsed}) {
     final isActive = selectedPage == g.pageIndex;
     final key = 'g${g.pageIndex}';
     final expanded = _expandedKeys.contains(key);
@@ -2221,7 +2007,6 @@ class SidebarState extends State<Sidebar> {
           onTap:
               () => setState(() {
                 selectedPage = g.pageIndex;
-                selectedSubPage = _firstPermittedSubPage(g.pageIndex);
               }),
           borderRadius: BorderRadius.circular(12),
           child: Container(
@@ -2230,7 +2015,7 @@ class SidebarState extends State<Sidebar> {
             decoration: BoxDecoration(
               color:
                   isActive
-                      ? Colors.white.withValues(alpha: _kActiveHighlightAlpha)
+                      ? primaryColor.withValues(alpha: _kActiveHighlightAlpha)
                       : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
@@ -2248,7 +2033,7 @@ class SidebarState extends State<Sidebar> {
           decoration: BoxDecoration(
             color:
                 leafActive
-                    ? Colors.white.withValues(alpha: _kActiveHighlightAlpha)
+                    ? primaryColor.withValues(alpha: _kActiveHighlightAlpha)
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
@@ -2257,7 +2042,7 @@ class SidebarState extends State<Sidebar> {
             onTap: () {
               setState(() {
                 selectedPage = g.pageIndex;
-                selectedSubPage = _firstPermittedSubPage(g.pageIndex);
+
                 if (visibleChildren.isNotEmpty) {
                   expanded ? _expandedKeys.remove(key) : _expandedKeys.add(key);
                 }
@@ -2318,7 +2103,7 @@ class SidebarState extends State<Sidebar> {
   }
 
   Widget _childrenBlock(
-    List<_NavChild> children,
+    List<NavChild> children,
     int pageIndex,
     String parentKey, {
     double leftMargin = 26,
@@ -2331,7 +2116,7 @@ class SidebarState extends State<Sidebar> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: List.generate(children.length, (i) {
           final c = children[i];
-          final resolvedTitle = c.resolveTitle(selectedRole);
+          final resolvedTitle = c.resolveTitle(selectedRole, _hasPermission);
           final isFirst = i == 0;
           final isLast = i == children.length - 1;
           final hasSubChildren = c.children.isNotEmpty;
@@ -2428,12 +2213,7 @@ class SidebarState extends State<Sidebar> {
                   vertical: 8.5,
                 ),
                 decoration: BoxDecoration(
-                  color:
-                      active
-                          ? Colors.white.withValues(
-                            alpha: _kActiveHighlightAlpha,
-                          )
-                          : Colors.transparent,
+                  color: active ? primaryColor : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -2462,7 +2242,7 @@ class SidebarState extends State<Sidebar> {
                     SizedBox(
                       width: 16,
                       child: CustomPaint(
-                        painter: _RootConnectorPainter(
+                        painter: RootConnectorPainter(
                           isFirst: isFirst,
                           isLast: isLast,
                           color: Colors.white38,
@@ -2528,50 +2308,5 @@ class SidebarState extends State<Sidebar> {
         ),
       ),
     );
-  }
-}
-
-class _RootConnectorPainter extends CustomPainter {
-  final bool isFirst;
-  final bool isLast;
-  final Color color;
-
-  _RootConnectorPainter({
-    required this.isFirst,
-    required this.isLast,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = color
-          ..strokeWidth = 1.4
-          ..style = PaintingStyle.stroke;
-
-    final double midY = size.height / 2;
-    const double curve = 8.0;
-
-    if (!isFirst) {
-      canvas.drawLine(const Offset(0, 0), Offset(0, midY - curve), paint);
-    }
-    if (!isLast) {
-      canvas.drawLine(Offset(0, midY), Offset(0, size.height), paint);
-    }
-
-    final path =
-        Path()
-          ..moveTo(0, midY - curve)
-          ..quadraticBezierTo(0, midY, curve, midY)
-          ..lineTo(size.width, midY);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _RootConnectorPainter oldDelegate) {
-    return oldDelegate.isFirst != isFirst ||
-        oldDelegate.isLast != isLast ||
-        oldDelegate.color != color;
   }
 }
