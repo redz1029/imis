@@ -10,6 +10,7 @@ namespace IMIS.Application.TeamModule
         public required string Name { get; set; }
         public required bool IsActive { get; set; }
         public List<AuditorDto>? Auditors { get; set; }
+        public OrganizationImprovementType ImprovementType { get; set; }
         public TeamDto() { }     
         [SetsRequiredMembers]
         public TeamDto(Team team)
@@ -17,21 +18,25 @@ namespace IMIS.Application.TeamModule
             this.Id = team.Id;
             this.Name = team.Name;
             this.IsActive = team.IsActive;
+            this.ImprovementType = team.ImprovementType;
             this.Auditors = team.AuditorTeams?.Select(a => new AuditorDto()
             {
+                Name = a.Auditor!.Name,
                 Id = a.AuditorId ?? 0,
                 IsActive = a.Auditor!.IsActive,
-                Name = a.Auditor!.Name,
-                UserId = a.Auditor!.UserId,
+                UserId = a.Auditor!.UserId
+                
+                
             }).ToList();
         }
         public override Team ToEntity()
         {
             return new Team()
-            { 
-              Id = Id, 
-              Name = Name, 
-              IsActive = IsActive
+            {
+                Id = Id,
+                IsActive = IsActive,
+                Name  = Name,
+                ImprovementType = ImprovementType
             };
         }
     }

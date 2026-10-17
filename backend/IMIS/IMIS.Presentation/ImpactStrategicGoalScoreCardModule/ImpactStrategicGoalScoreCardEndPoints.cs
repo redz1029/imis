@@ -72,7 +72,7 @@ namespace IMIS.Presentation.ImpactStrategicGoalScoreCardModule
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _impactStrategicGoalScoreCardPermission.Edit));
 
 
-            app.MapGet("/page/period/{id}", async (long? periodId, int page, int pageSize, IImpactStrategicGoalScoreCardService service, CancellationToken cancellationToken) =>
+            app.MapGet("/page/period/{periodId:long}", async (long? periodId, int page, int pageSize, IImpactStrategicGoalScoreCardService service, CancellationToken cancellationToken) =>
             {
                 var paginatedimpactStrategicGoalScoreCardDto = await service.GetPaginatedAsync(periodId, page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedimpactStrategicGoalScoreCardDto);

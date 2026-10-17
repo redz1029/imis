@@ -17,13 +17,14 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     NormalizedName = "ADMINISTRATOR",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                 },
+
+
                 new IdentityRole
                 {
                     Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
                     Name = new PgsManagerRole().Name,
                     NormalizedName = "PGS CORE TEAM",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
-                   
                 },
                 new IdentityRole
                 {
@@ -108,7 +109,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     Name = new FacilitiesOfficer().Name,
                     NormalizedName = "FACILITIES OFFICER",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
-                },               
+                },
                 new IdentityRole
                 {
                     Id = "5c2e8b9f-6a1d-4e73-9f0b-1c7a4d3e8b52",
@@ -129,7 +130,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     Name = new HROfficer().Name,
                     NormalizedName = "HR OFFICER",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
-                },               
+                },            
                 new IdentityRole
                 {   
                     Id = "6b7f1c2e-8a4d-4f90-9e53-0d3a5c2b718f",
@@ -157,7 +158,36 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     Name = new PgsEvaluatorRole().Name,
                     NormalizedName = "EVALUATOR",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e604ff",
+                    Name = new QMR().Name,
+                    NormalizedName = "QMR",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e634ff",
+                    Name = new LeadAuditor().Name  ,
+                    NormalizedName = "LEAD AUDITOR",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e634hh",
+                    Name = new AuditorTeamLeader().Name,
+                    NormalizedName = "AUDITOR TEAM LEADER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e634ii",
+                    Name = new DepartmentHead().Name,
+                    NormalizedName = "DEPARTMENT HEAD",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
                 }
+
         );
     }
 }

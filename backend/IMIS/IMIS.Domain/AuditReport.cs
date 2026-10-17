@@ -1,0 +1,29 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Base.Primitives;
+
+
+namespace IMIS.Domain
+{
+    public class AuditReport : Entity<int>
+    {
+        public required string AuditPurpose { get; set; }
+        public required string AuditConclisions { get; set; }
+        public AuditPlanProcess? OfficeAudited { get; set; }
+        public IsoStandard? AuditStandardISO { get; set; }
+        public AuditPlan? DateofAudit { get; set; }
+        public Auditee? Auditee { get; set; }
+        public int? AuditPlanEntryId { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; }
+        public required int AuditScheduleId { get; set; }
+        public AuditSchedule? AuditSchedule { get; set; }
+
+
+        public ICollection<AuditComFindings>? AuditComFindings { get; set; }
+        public ICollection<AuditScope>? AuditScope { get; set; }
+        public ICollection<AuditSummaryFIndings>? AuditSummaryFIndings { get; set; }
+        
+
+    }
+}

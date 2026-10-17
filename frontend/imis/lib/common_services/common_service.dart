@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:imis/auditor/models/auditor.dart';
+import 'package:imis/auditor_team/models/auditor_team.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/office/models/office_evaluators.dart';
@@ -110,6 +111,12 @@ class CommonService {
   Future<List<Auditor>> fetchAuditors() => _fetchList(
     ApiEndpoint().auditor,
     (e) => Auditor.fromJson(e),
+    'Failed to fetch auditors',
+  );
+
+  Future<List<AuditorTeam>> fetchAuditorTeam() => _fetchList(
+    ApiEndpoint().auditorteam,
+    (e) => AuditorTeam.fromJson(e),
     'Failed to fetch auditors',
   );
   Future<List<OfficeEvaluators>> fetchServiceEvalutors() => _fetchList(
