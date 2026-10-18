@@ -6,5 +6,6 @@ namespace IMIS.Application.AuditScheduleModule
     {
         public override string ModuleName => "AuditSchedule";
         public override string PermissionGroup => PermissionGrouper.Setting;
+        //
     }
 }

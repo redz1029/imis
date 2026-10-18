@@ -86,7 +86,8 @@ namespace IMIS.Persistence.OfficeModule
                         Name = a.Auditor!.Name,
                         IsActive = a.Auditor.IsActive,
                         UserId = a.Auditor.UserId,
-                        IsOfficeHead = a.IsOfficeHead
+                        IsOfficeHead = a.IsOfficeHead,
+                        
                     }).ToList()
             };
         }

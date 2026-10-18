@@ -85,6 +85,42 @@ namespace IMIS.Persistence
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
         public DbSet<IsoStandard> IsoStandards { get; set; }
+        public DbSet<ImprovementType> ImprovementType { get; set; }
+        public DbSet<IsoAuditProcess> IsoAuditProcess { get; set; }
+        public DbSet<AuditPlanEntry> AuditPlanEntries { get; set; }
+        public DbSet<AuditProgramme> AuditProgramme { get; set; }
+        public DbSet<AuditChecklist> AuditChecklist { get; set; }
+        public DbSet<AuditChecklistQNA> AuditChecklistQNA { get; set; }
+
+
+        // Audit Plan entities
+        public DbSet<AuditPlan> AuditPlans { get; set; }
+        public DbSet<AuditPlanProcess> AuditPlanProcesses { get; set; }
+        public DbSet<AuditPlanPersonResponsible> AuditPlanPersonResponsibles { get; set; }
+        public DbSet<IsoAuditor> IsoAuditors { get; set; }
+        public DbSet<IsoStandardAuditPlan> IsoStandardAuditPlans { get; set; }
+
+        // IQA Signatory entities
+        public DbSet<IQASignatoryTemplate> IQASignatoryTemplates { get; set; }
+        public DbSet<IQASignatory> IQASignatories { get; set; }
+        public DbSet<IQAApprovalHistory> IQAApprovalHistories { get; set; }
+
+        //Audit Report entities
+
+        public DbSet<AuditReport> AuditReports { get; set; }
+        public DbSet<AuditComFindings> AuditComFindings { get; set; }
+        public DbSet<AuditScope> AuditScope { get; set; }
+        public DbSet<AuditSummaryFIndings> AuditSummaryFIndings { get; set; }
+        public DbSet<AuditNcarStatus> AuditNcarStatus { get; set; }
+
+        public DbSet<Auditee> Auditees { get; set; }
+
+        // Nonconforming Action Report entities
+        public DbSet<NonconformingActionReport> NonconformingActionReports { get; set; }
+        public DbSet<NcarRootCause> NcarRootCauses { get; set; }
+        public DbSet<NcarCorrectionAction> NcarCorrectionActions { get; set; }
+        public DbSet<NcarCorrectiveAction> NcarCorrectiveActions { get; set; }
+        public DbSet<NcarMonitoringLog> NcarMonitoringLogs { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
@@ -92,25 +128,25 @@ namespace IMIS.Persistence
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
-           
             base.OnModelCreating(builder);
-        
+
             builder.Entity<User>().ToTable("AspNetUsers");
-           
+
             builder.Entity<AuditorOffices>(ao =>
-            {                
+            {
                 ao.HasKey(x => x.Id);
-                
+
                 ao.HasIndex(x => new { x.AuditorId, x.OfficeId, x.PgsPeriodId })
                   .IsUnique();
-                
+
                 ao.HasOne(x => x.Auditor)
                   .WithMany(a => a.AuditorOffices)
                   .HasForeignKey(x => x.AuditorId);
 
                 ao.HasOne(x => x.Office)
                   .WithMany(o => o.AuditorOffices)
-                  .HasForeignKey(x => x.OfficeId);             
+                  .HasForeignKey(x => x.OfficeId);
+
             });
 
             builder.Entity<StrategyReview>(entity =>
@@ -180,11 +216,11 @@ namespace IMIS.Persistence
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<AuditorTeams>()
-                .HasKey(at => at.Id);
+                    .HasKey(at => at.Id);
 
             builder.Entity<AuditorTeams>()
                 .HasIndex(at => new { at.AuditorId, at.TeamId })
-                .IsUnique(); 
+                .IsUnique();
 
             builder.Entity<AuditorTeams>()
                 .HasOne(t => t.Team)
@@ -233,41 +269,203 @@ namespace IMIS.Persistence
                 .HasForeignKey(x => x.OfficeId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<UserOffices>()
+            builder.Entity<UserOffices>() 
                 .HasOne<Office>()
                 .WithMany(o => o.UserOffices)
                 .HasForeignKey(x => x.OfficeId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+
             // Configure ISO Standard relationships
-            builder.Entity<IsoStandard>()
-                .HasOne(iso => iso.Version)
-                .WithMany(sv => sv.IsoStandards)
-                .HasForeignKey(iso => iso.VersionID)
-                .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<StandardVersion>()
+                .Property(x => x.Id)
+                .HasColumnName("Id");
+
+            builder.Entity<AuditSchedule>()
+    .HasOne(s => s.AuditPlan)
+    .WithMany(p => p.AuditSchedules)
+    .HasForeignKey(s => s.AuditPlanId)
+    .OnDelete(DeleteBehavior.Restrict); // Fix: avoid multiple cascade paths error
+
+            builder.Entity<AuditSchedule>()
+    .HasOne(s => s.AuditPlanEntry)
+    .WithMany(e => e.AuditSchedules)
+    .HasForeignKey(s => s.AuditPlanEntryId)
+    .OnDelete(DeleteBehavior.NoAction); // Fix: avoid multiple cascade paths on AuditSchedules
 
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());
-            builder.ApplyConfiguration(new UserConfiguration());
-            builder.ApplyConfiguration(new UserRoleConfiguration());
-            builder.ApplyConfiguration(new OfficeTypeConfiguration());
-            builder.ApplyConfiguration(new OfficeConfiguration());
-            builder.ApplyConfiguration(new KeyResultAreaConfiguration());
-            builder.ApplyConfiguration(new PgsSignatoryTemplateConfiguration());
-            builder.ApplyConfiguration(new UserOfficeConfiguration());
-            builder.ApplyConfiguration(new TeamConfiguration());
-            builder.ApplyConfiguration(new AuditorConfiguration());
-            builder.ApplyConfiguration(new PgsPeriodConfiguration());
-            builder.ApplyConfiguration(new AuditorOfficeConfiguration());
-            builder.ApplyConfiguration(new AuditorTeamsConfiguration());
-            builder.ApplyConfiguration(new KraRoadMapRoleConfiguration());
-            builder.ApplyConfiguration(new KraRoadMapPeriodConfiguration());
+                builder.ApplyConfiguration(new UserConfiguration());
+                builder.ApplyConfiguration(new UserRoleConfiguration());
+                builder.ApplyConfiguration(new OfficeTypeConfiguration());
+                builder.ApplyConfiguration(new OfficeConfiguration());
+                builder.ApplyConfiguration(new KeyResultAreaConfiguration());
+                builder.ApplyConfiguration(new PgsSignatoryTemplateConfiguration());
+                builder.ApplyConfiguration(new UserOfficeConfiguration());
+                builder.ApplyConfiguration(new TeamConfiguration());
+                builder.ApplyConfiguration(new AuditorConfiguration());
+                builder.ApplyConfiguration(new PgsPeriodConfiguration());
+                builder.ApplyConfiguration(new AuditorOfficeConfiguration());
+                builder.ApplyConfiguration(new AuditorTeamsConfiguration());
+                builder.ApplyConfiguration(new KraRoadMapRoleConfiguration());
+                builder.ApplyConfiguration(new KraRoadMapPeriodConfiguration());
+            builder.ApplyConfiguration(new AuditChecklistQNAConfiguration());
 
-            // Apply global query filter for soft deletion
-            // This will ensure that all entities implementing ISoftDeletable are filtered by IsDeleted = false
-            // Use IgnoreQueryFilters() if you want to bypass this filter in specific queries
-            builder.ApplySoftDeleteQueryFilter();
-        }
+            // IQA Signatory configurations
+            builder.ApplyConfiguration(new IQASignatoryTemplateConfiguration());
+
+            // ISO Standard configurations
+            builder.ApplyConfiguration(new StandardVersionConfiguration());
+            builder.ApplyConfiguration(new IsoStandardConfigurations());
+
+            // NCAR status lookup (NC, OFI)
+            builder.ApplyConfiguration(new AuditNcarStatusConfiguration());
+
+            // Audit Plan configurations
+
+            // IQASignatory relationships
+            builder.Entity<IQASignatory>()
+                .HasOne(s => s.AuditProgramme)
+                .WithMany(p => p.IQASignatories)
+                .HasForeignKey(s => s.AuditProgrammeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQASignatory>()
+                .HasOne(s => s.AuditPlan)
+                .WithMany(p => p.IQASignatories)
+                .HasForeignKey(s => s.AuditPlanId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQASignatory>()
+                .HasOne(s => s.AuditSchedule)
+                .WithMany(sc => sc.IQASignatories)
+                .HasForeignKey(s => s.AuditScheduleId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQASignatory>()
+                .HasOne(s => s.IQASignatoryTemplate)
+                .WithMany()
+                .HasForeignKey(s => s.IQASignatoryTemplateId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQASignatory>()
+                .HasOne(s => s.Signatory)
+                .WithMany()
+                .HasForeignKey(s => s.SignatoryId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQASignatoryTemplate>()
+                .HasOne(t => t.Office)
+                .WithMany()
+                .HasForeignKey(t => t.OfficeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQASignatoryTemplate>()
+                .HasOne(t => t.DefaultSignatory)
+                .WithMany()
+                .HasForeignKey(t => t.DefaultSignatoryId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // IQAApprovalHistory relationships
+            builder.Entity<IQAApprovalHistory>()
+                .HasOne(h => h.AuditProgramme)
+                .WithMany(p => p.ApprovalHistories)
+                .HasForeignKey(h => h.AuditProgrammeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQAApprovalHistory>()
+                .HasOne(h => h.AuditPlan)
+                .WithMany(p => p.ApprovalHistories)
+                .HasForeignKey(h => h.AuditPlanId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQAApprovalHistory>()
+                .HasOne(h => h.AuditSchedule)
+                .WithMany(s => s.ApprovalHistories)
+                .HasForeignKey(h => h.AuditScheduleId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IQAApprovalHistory>()
+                .HasOne(h => h.User)
+                .WithMany()
+                .HasForeignKey(h => h.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            //// ISO Standard configurations
+            //builder.ApplyConfiguration(new IsoStandardConfigurations());
+
+            // Nonconforming Action Report (NCAR) relationships
+            builder.Entity<NonconformingActionReport>()
+                .HasOne(n => n.AuditReport)
+                .WithMany()
+                .HasForeignKey(n => n.AuditReportId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<NonconformingActionReport>()
+                .HasOne(n => n.IssuedByAuditor)
+                .WithMany()
+                .HasForeignKey(n => n.IssuedByAuditorUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<NonconformingActionReport>()
+                .HasOne(n => n.AcknowledgedByAuditee)
+                .WithMany()
+                .HasForeignKey(n => n.AcknowledgedByAuditeeUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<NonconformingActionReport>()
+                .HasOne(n => n.ProposedByAuditee)
+                .WithMany()
+                .HasForeignKey(n => n.ProposedByAuditeeUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<NonconformingActionReport>()
+                .HasOne(n => n.ApprovedByHead)
+                .WithMany()
+                .HasForeignKey(n => n.ApprovedByHeadUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<NonconformingActionReport>()
+                .HasOne(n => n.VerifiedByAuditor)
+                .WithMany()
+                .HasForeignKey(n => n.VerifiedByAuditorUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<NonconformingActionReport>()
+                .HasOne(n => n.ValidatedByLeadAuditor)
+                .WithMany()
+                .HasForeignKey(n => n.ValidatedByLeadAuditorUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<NcarRootCause>()
+                .HasOne(r => r.NonconformingActionReport)
+                .WithMany(n => n.RootCauses)
+                .HasForeignKey(r => r.NonconformingActionReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<NcarCorrectionAction>()
+                .HasOne(c => c.NonconformingActionReport)
+                .WithMany(n => n.Corrections)
+                .HasForeignKey(c => c.NonconformingActionReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<NcarCorrectiveAction>()
+                .HasOne(c => c.NonconformingActionReport)
+                .WithMany(n => n.CorrectiveActions)
+                .HasForeignKey(c => c.NonconformingActionReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<NcarMonitoringLog>()
+                .HasOne(m => m.NonconformingActionReport)
+                .WithMany()
+                .HasForeignKey(m => m.NonconformingActionReportId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+                // Apply global query filter for soft deletion
+                // This will ensure that all entities implementing ISoftDeletable are filtered by IsDeleted = false
+                // Use IgnoreQueryFilters() if you want to bypass this filter in specific queries
+                builder.ApplySoftDeleteQueryFilter();
+            }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder
