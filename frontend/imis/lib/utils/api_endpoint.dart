@@ -207,12 +207,10 @@ class ApiEndpoint {
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
       baseUrl = 'https://localhost:7273';
-    }
-    //  else if (kReleaseMode) {
-    //   baseUrl = 'https://api.cpems.crmc.ph';
-    //   // baseUrl = 'http://192.168.0.74';
-    // }
-    else {
+    } else if (kReleaseMode) {
+      baseUrl = 'https://api.cpems.crmc.ph';
+      // baseUrl = 'http://192.168.0.74';
+    } else {
       throw Exception("Test base Url is not specified!");
     }
   }

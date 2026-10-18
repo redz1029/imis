@@ -1177,7 +1177,7 @@ class SidebarState extends State<Sidebar> {
       }
       if (selectedSubPage == 11) return SummaryOfficesDeliverables();
       if (selectedSubPage == 12) return MonthlyOprReportPage();
-      if (selectedSubPage == 13) return IsatPage();
+      // if (selectedSubPage == 13) return IsatPage();
     }
 
     // if (selectedPage == 2) {
@@ -1187,9 +1187,9 @@ class SidebarState extends State<Sidebar> {
     //   if (selectedSubPage == 3) return const AnnouncementPage();
     // }
 
-    if (selectedPage == 3) {
-      if (selectedSubPage == 0) return const ProceduresPage();
-    }
+    // if (selectedPage == 3) {
+    //   if (selectedSubPage == 0) return const ProceduresPage();
+    // }
     if (selectedPage == 4) {
       if (selectedSubPage == 0) return const AnnouncementPage();
       if (selectedSubPage == 2) return const AuditorPage();
