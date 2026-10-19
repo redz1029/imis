@@ -2,6 +2,8 @@
 using Base.Primitives;
 using IMIS.Application.IsoStandardModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths.Roles;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.IsoStandardModule
@@ -9,19 +11,35 @@ namespace IMIS.Persistence.IsoStandardModule
     public class IsoStandardService : IIsoStandardService
     {
         private readonly IIsoStandardRepository _repository;
+        private readonly ImisDbContext _dbContext;
 
-        public IsoStandardService(IIsoStandardRepository repository)
+
+        public IsoStandardService(IIsoStandardRepository repository, ImisDbContext dbContext)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _repository = repository;
+            _dbContext = dbContext;
         }
 
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var standard = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (standard == null)
+                return false;
+
+            standard.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         public async Task<List<IsoStandardDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
-            var standards = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            if (standards == null || !standards.Any())
+            var standard = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            if (standard == null || !standard.Any())
                 return null;
 
-            return standards.Select(s => new IsoStandardDto(s)).ToList();
+            return standard.Select(s =>  new IsoStandardDto(s)).ToList();
         }
 
         public async Task<IsoStandardDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
@@ -47,104 +65,45 @@ namespace IMIS.Persistence.IsoStandardModule
             var standards = await _repository.FilterByClauseRef(clauseRef, noOfResults, cancellationToken).ConfigureAwait(false);
             return standards != null && standards.Any() ? standards.Select(s => new IsoStandardDto(s)).ToList() : null;
         }
-
-        public async Task<DtoPageList<IsoStandardDto, Domain.IsoStandard, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-            var standards = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (standards.TotalCount == 0)
-                return null;
-            return DtoPageList<IsoStandardDto, Domain.IsoStandard, long>.Create(standards.Items, page, pageSize, standards.TotalCount);
-        }
+            var ODto = dto as IsoStandardDto;
+            var IsoStandardDto = ODto!.ToEntity();
 
-        public async Task<DtoPageList<IsoStandardDto, Domain.IsoStandard, long>> GetPaginatedByVersionAsync(int versionId, int page, int pageSize, CancellationToken cancellationToken)
-        {
-            var standards = await _repository.GetPaginatedByVersionAsync(versionId, page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (standards.TotalCount == 0)
-                return null;
-            return DtoPageList<IsoStandardDto, Domain.IsoStandard, long>.Create(standards.Items, page, pageSize, standards.TotalCount);
-        }
-
-        //public async Task SaveOrUpdateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
-        //{
-        //    if (dto == null)
-        //        throw new ArgumentNullException(nameof(dto));
-
-        //    var entity = dto.ToEntity();
-
-        //    if (entity.Id == 0)
-        //        _repository.Add(entity);
-        //    else
-        //        await _repository.UpdateAsync(entity, entity.Id, cancellationToken).ConfigureAwait(false);
-
-        //    var context = _repository.GetDbContext();
-        //    await context.SaveChangesAsync(cancellationToken);
-        //}
-
-        public async Task SaveOrUpdateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
-        {
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto));
-
-            var context = _repository.GetDbContext();
-
-            if (dto.Id == 0)
-            {
-                // CREATE (this part is fine)
-                var entity = dto.ToEntity();
-                _repository.Add(entity);
-            }
+            if (IsoStandardDto.Id == 0)
+                _repository.Add(IsoStandardDto);
             else
+                await _repository.UpdateAsync(IsoStandardDto, IsoStandardDto.Id, cancellationToken).ConfigureAwait(false);
+
+            await _repository.SaveOrUpdateAsync(IsoStandardDto, cancellationToken).ConfigureAwait(false);
+        }
+        public async Task<List<IsoStandardDto>> GetTreeAsync(int versionId, CancellationToken cancellationToken)
+        {
+            var flat = (await _repository.GetAllForTreeAsync(versionId, cancellationToken).ConfigureAwait(false)).ToList();
+
+            // Build every node as a DTO first, keyed by Id, so children can be
+            // attached to their parent's Children list regardless of load order.
+            var byId = flat.ToDictionary(s => s.Id, s => new IsoStandardDto(s));
+
+            var roots = new List<IsoStandardDto>();
+            foreach (var standard in flat)
             {
-                // ✅ UPDATE — LOAD TRACKED ENTITY
-                var entity = await context.Set<IsoStandard>()
-                    .FirstOrDefaultAsync(x => x.Id == dto.Id, cancellationToken);
-
-                if (entity == null)
-                    throw new Exception("IsoStandard not found.");
-
-                // ✅ UPDATE PROPERTIES ONLY
-                entity.VersionID = dto.VersionID;
-                entity.ClauseRef = dto.ClauseRef;
-                entity.Description = dto.Description;
-                entity.isActive = dto.IsActive;
-
-                // ❌ DO NOT call Update()
-                // ❌ DO NOT touch entity.Version
+                var node = byId[standard.Id];
+                if (standard.ParentID.HasValue && byId.TryGetValue(standard.ParentID.Value, out var parent))
+                {
+                    parent.Children.Add(node);
+                }
+                else
+                {
+                    roots.Add(node);
+                }
             }
 
-            await context.SaveChangesAsync(cancellationToken);
+            return roots;
         }
 
-        public async Task<bool> DeleteAsync(long id, CancellationToken cancellationToken)
-        {
-            var standard = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            if (standard == null)
-                return false;
 
-            var context = _repository.GetDbContext();
-            context.Set<Domain.IsoStandard>().Remove(standard);
-            await context.SaveChangesAsync(cancellationToken);
 
-            return true;
-        }
 
-        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
-            where TEntity : Entity<TId>
-        {
-            if (dto is IsoStandardDto isoDto)
-            {
-                await SaveOrUpdateAsync(isoDto, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        public Task CreateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateAsync(long id, IsoStandardDto dto, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

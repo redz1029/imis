@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Application.AuditorTeamsModule
 {
-    public class AuditorTeamsService : IAuditorTeamsService 
+    public class AuditorTeamsService : IAuditorTeamsService
     {
         private readonly IAuditorTeamsRepository _repository;
         private readonly UserManager<User> _userManager;
@@ -15,12 +15,12 @@ namespace IMIS.Application.AuditorTeamsModule
             _userManager = userManager;
         }
         public async Task<bool> SoftDeleteAsync(int teamId, CancellationToken cancellationToken)
-        {           
+        {
             var teamMembers = await _repository.GetByTeamIdAsync(teamId, cancellationToken).ConfigureAwait(false);
 
             if (!teamMembers.Any())
                 return false;
-            
+
             foreach (var member in teamMembers)
             {
                 member.IsDeleted = true;
@@ -104,10 +104,11 @@ namespace IMIS.Application.AuditorTeamsModule
                         .Select(at => new AuditorDto
                         {
                             Id = at.Auditor!.Id,
-                            Name = at.Auditor.Name,
+                            Name = at.Auditor!.Name,
                             IsTeamLeader = at.IsTeamLeader,
                             IsActive = at.Auditor.IsActive,
                             UserId = at.Auditor.UserId,
+                            ImprovementType = at.ImprovementType
                         })
                         .ToList(),
                     IsActive = group.FirstOrDefault()?.IsActive ?? false
@@ -165,16 +166,16 @@ namespace IMIS.Application.AuditorTeamsModule
                 throw new ArgumentException("Invalid DTO type. Expected AuditorTeamsDto.");
 
             var context = _repository.GetDbContext();
-          
+
             var auditorTeamEntity = oDto.ToEntity();
-          
+
             var existingTeams = await _repository.GetByTeamIdAsync(auditorTeamEntity.TeamId, cancellationToken).ConfigureAwait(false);
 
             if (existingTeams.Any())
             {
                 context.RemoveRange(existingTeams);
             }
-           
+
             if (oDto.Auditors != null && oDto.Auditors.Any())
             {
                 foreach (var auditorDto in oDto.Auditors)
@@ -182,10 +183,11 @@ namespace IMIS.Application.AuditorTeamsModule
                     var newTeam = new AuditorTeams
                     {
                         Id = 0,
-                        TeamId = auditorTeamEntity.TeamId,       
-                        AuditorId = auditorDto.Id,               
+                        TeamId = auditorTeamEntity.TeamId,
+                        AuditorId = auditorDto.Id,
                         IsTeamLeader = auditorDto.IsTeamLeader,
-                        IsActive = auditorTeamEntity.IsActive
+                        IsActive = auditorTeamEntity.IsActive,
+                        ImprovementType = auditorTeamEntity.ImprovementType
                     };
 
                     await context.AddAsync(newTeam, cancellationToken).ConfigureAwait(false);

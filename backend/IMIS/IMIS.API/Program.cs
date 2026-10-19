@@ -134,11 +134,13 @@ AppContext.SetSwitch("System.Drawing.EnableUnixSupport", true);
 
 var app = builder.Build();
 
-app.UseCors(allowedOrigins);
-
 if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
+
 app.UseRouting();
+
+app.UseCors(allowedOrigins);
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
@@ -156,6 +158,8 @@ using (var scope = app.Services.CreateScope())
     var seeder = scope.ServiceProvider.GetRequiredService<IRoleAndPermissionSeeder>();
     await seeder.SeedAsync();
 }
+
+app.MapGet("/ping", () => "pong");
 
 ServiceResolver.Init(app.Services);
 app.Run();

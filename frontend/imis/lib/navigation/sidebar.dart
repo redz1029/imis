@@ -6,6 +6,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_page.dart';
+import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_list_page.dart';
+import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_list_page.dart';
+import 'package:imis/ISO/IQA/audit_report/pages/audit_report_list_page.dart';
+import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_list_page.dart';
+import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
+import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
@@ -1177,7 +1184,17 @@ class SidebarState extends State<Sidebar> {
       }
       if (selectedSubPage == 11) return SummaryOfficesDeliverables();
       if (selectedSubPage == 12) return MonthlyOprReportPage();
-      if (selectedSubPage == 13) return IsatPage();
+      // if (selectedSubPage == 13) return IsatPage();
+    }
+
+    if (selectedPage == 2) {
+      if (selectedSubPage == 0) return const AuditProgrammeListPage();
+      if (selectedSubPage == 1) return const AuditPlanListPage();
+      if (selectedSubPage == 2) return const AuditScheduleListPage();
+      if (selectedSubPage == 3) return const AuditChecklistPage();
+      if (selectedSubPage == 4) return const AuditReportListPage();
+      if (selectedSubPage == 5) return const NcarListPage();
+      if (selectedSubPage == 6) return const ClauseLibraryPage();
     }
 
     // if (selectedPage == 2) {
@@ -1187,9 +1204,9 @@ class SidebarState extends State<Sidebar> {
     //   if (selectedSubPage == 3) return const AnnouncementPage();
     // }
 
-    if (selectedPage == 3) {
-      if (selectedSubPage == 0) return const ProceduresPage();
-    }
+    // if (selectedPage == 3) {
+    //   if (selectedSubPage == 0) return const ProceduresPage();
+    // }
     if (selectedPage == 4) {
       if (selectedSubPage == 0) return const AnnouncementPage();
       if (selectedSubPage == 2) return const AuditorPage();
@@ -1327,10 +1344,13 @@ class SidebarState extends State<Sidebar> {
         label: 'ISO',
         pageIndex: 2,
         children: const [
-          // NavChild('Auditor', 0),
-          // NavChild('Auditor Offices', 1),
-          // NavChild('Auditor Team', 2),
-          // NavChild('ISO Announcements', 3),
+          NavChild('Audit Programme', 0),
+          NavChild('Audit Plan', 1),
+          NavChild('Audit Schedules', 2),
+          NavChild('Audit Checklist', 3),
+          NavChild('Audit Report', 4),
+          NavChild('NCAR', 5),
+          NavChild('Clause Library', 6),
         ],
       ),
       NavGroup(

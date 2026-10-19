@@ -1,8 +1,20 @@
 ﻿using IMIS.Application.AnnouncementModule;
+using IMIS.Application.AuditChecklistModule;
+using IMIS.Application.AuditChecklistQNAModule;
+using IMIS.Application.AuditComFindingsModule;
+using IMIS.Application.AuditNcarStatusModule;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.AuditorOfficesModule;
 using IMIS.Application.AuditorTeamsModule;
+using IMIS.Application.AuditPlanEntryModule;
+using IMIS.Application.AuditPlanModule;
+using IMIS.Application.AuditPlanPersonResponsibleModule;
+using IMIS.Application.AuditPlanProcessModule;
+using IMIS.Application.AuditProgrammeModule;
+using IMIS.Application.AuditReportModule;
 using IMIS.Application.AuditScheduleModule;
+using IMIS.Application.AuditScopeModule;
+using IMIS.Application.AuditSummaryFindingsModule;
 using IMIS.Application.BreakThroughScoringModule;
 using IMIS.Application.CalendarActivityModule;
 using IMIS.Application.EvaluatorOfficesModule;
@@ -11,7 +23,13 @@ using IMIS.Application.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Application.IndividualStrategicAlignmentTreePeriodModule;
 using IMIS.Application.ISATModule;
 using IMIS.Application.ISATSignatoryTemplateModule;
+using IMIS.Application.ImprovementTypeModule;
+using IMIS.Application.IsoAuditorModule;
+using IMIS.Application.IsoAuditProcessModule;
+using IMIS.Application.IsoStandardAuditPlanModule;
 using IMIS.Application.IsoStandardModule;
+using IMIS.Application.IQASignatoryTemplateModule;
+using IMIS.Application.IQASignatoryModule;
 using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadmapCoreSupportProcessModule;
 using IMIS.Application.KraRoadMapDeliverableModule;
@@ -23,6 +41,8 @@ using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.KraRoadmapProcessKraAssignmentModule;
 using IMIS.Application.KraRoadMapRoleAssignmentModule;
+using IMIS.Application.NcarMonitoringLogModule;
+using IMIS.Application.NonconformingActionReportModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
 using IMIS.Application.OperationReviewProtocolModule;
@@ -54,10 +74,23 @@ using IMIS.Application.SWOTAnalysisStrengthWeaknessModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Persistence.AnnouncementModule;
+using IMIS.Persistence.AuditChecklistModule;
+using IMIS.Persistence.AuditChecklistQNAModule;
+using IMIS.Persistence.AuditComFindingsModule;
+using IMIS.Persistence.AuditNcarStatusModule;
 using IMIS.Persistence.AuditorModule;
 using IMIS.Persistence.AuditorOfficesModule;
 using IMIS.Persistence.AuditorTeamsModule;
+using IMIS.Persistence.AuditPlanEntryModule;
+using IMIS.Persistence.AuditPlanModule;
+using IMIS.Persistence.AuditPlanPersonResponsibleModule;
+using IMIS.Persistence.AuditPlanProcessModule;
+using IMIS.Persistence.AuditProgrammeModule;
+using IMIS.Persistence.AuditReportModule;
 using IMIS.Persistence.AuditScheduleModule;
+using IMIS.Persistence.AuditScopeModule;
+using IMIS.Persistence.AuditSummaryFindingsModule;
+using IMIS.Persistence.AuditeeModule;
 using IMIS.Persistence.BreakThroughScoringModule;
 using IMIS.Persistence.CalendarActivityModule;
 using IMIS.Persistence.EvaluatorOfficesModule;
@@ -66,7 +99,13 @@ using IMIS.Persistence.ImpactStrategicGoalScoreCardPeriodModule;
 using IMIS.Persistence.ISATModule;
 using IMIS.Persistence.ISATPeriodModule;
 using IMIS.Persistence.ISATSignatoryTemplateModule;
+using IMIS.Persistence.ImprovementTypeModule;
+using IMIS.Persistence.IsoAuditorModule;
+using IMIS.Persistence.IsoAuditProcessModule;
+using IMIS.Persistence.IsoStandardAuditPlanModule;
 using IMIS.Persistence.IsoStandardModule;
+using IMIS.Persistence.IQASignatoryTemplateModule;
+using IMIS.Persistence.IQASignatoryModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.KraRoadMapAccomplishmentModule;
 using IMIS.Persistence.KraRoadmapCoreSupportProcessModule;
@@ -79,6 +118,8 @@ using IMIS.Persistence.KraRoadMapModule;
 using IMIS.Persistence.KraRoadMapPeriodModule;
 using IMIS.Persistence.KraRoadmapProcessKraAssignmentModule;
 using IMIS.Persistence.KraRoadMapRoleModule;
+using IMIS.Persistence.NcarMonitoringLogModule;
+using IMIS.Persistence.NonconformingActionReportModule;
 using IMIS.Persistence.OfficeModule;
 using IMIS.Persistence.OfficeTypeModule;
 using IMIS.Persistence.OperationReviewProtocolModule;
@@ -111,6 +152,7 @@ using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using IMIS.Application.AuditeeModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -148,8 +190,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IAuditScheduleRepository, AuditScheduleRepository>();
             services.AddScoped<IAuditScheduleService, AuditScheduleService>();
 
-            services.AddScoped<IAuditScheduleDetailRepository, AuditScheduleDetailRepository>();
-            services.AddScoped<IAuditScheduleDetailService, AuditScheduleDetailService>();
+            services.AddScoped<IAuditScheduleDetailsRepository, AuditScheduleDetailsRepository>();
+            services.AddScoped<IAuditScheduleDetailsService, AuditScheduleDetailsService>();
 
             services.AddScoped<IAuditorTeamsRepository, AuditorTeamsRepository>();
             services.AddScoped<IAuditorTeamsService, AuditorTeamsService>();
@@ -159,6 +201,9 @@ namespace IMIS.Persistence.DependencyInjection
         
             services.AddScoped<IOfficeTypeRepository, OfficeTypeRepository>();
             services.AddScoped<IOfficeTypeService, OfficeTypeService>();
+
+            services.AddScoped<IImprovementTypeRepository, ImprovementTypeRepository>();
+            services.AddScoped<IImprovementTypeService, ImprovementTypeService>();
 
             services.AddScoped<IAuditorOfficesRepository, AuditorOfficesRepository>();
             services.AddScoped<IAuditorOfficesService, AuditorOfficesService>();
@@ -237,7 +282,12 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IPgsSignatoryRepository, PgsSignatoryRepository>();
             services.AddScoped<IPgsSignatoryService, PgsSignatoryService>();
-            
+
+            // IQA Signatory Template and Signatory registrations
+            services.AddScoped<IIQASignatoryTemplateRepository, IQASignatoryTemplateRepository>();
+            services.AddScoped<IIQASignatoryRepository, IQASignatoryRepository>();
+            services.AddScoped<IIQAAuditSignatoryService, IQAAuditSignatoryService>();
+
             services.AddScoped<ICalendarActivityRepository, CalendarActivityRepository>();
             services.AddScoped<ICalendarActivityService, CalendarActivityService>();
 
@@ -286,8 +336,88 @@ namespace IMIS.Persistence.DependencyInjection
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();
             services.AddScoped<IStandardVersionService, StandardVersionService>();
+
             services.AddScoped<IIsoStandardRepository, IsoStandardRepository>();
             services.AddScoped<IIsoStandardService, IsoStandardService>();
+
+
+            services.AddScoped<IAuditPlanRepository, AuditPlanRepository>();
+            services.AddScoped<IAuditPlanService, AuditPlanService>();
+
+            services.AddScoped<IAuditPlanEntryRepository, AuditPlanEntryRepository>();
+            services.AddScoped<IAuditPlanEntryService, AuditPlanEntryService>();
+
+            services.AddScoped<IAuditScheduleDetailsRepository, AuditScheduleDetailsRepository>();
+            services.AddScoped<IAuditScheduleDetailsService, AuditScheduleDetailsService>();
+
+            services.AddScoped<IAuditPlanPersonResponsibleRepository, AuditPlanPersonResponsibleRepository>();
+            services.AddScoped<IAuditPlanPersonResponsibleService, AuditPlanPersonResponsibleService>();
+
+            services.AddScoped<IAuditPlanProcessRepository, AuditPlanProcessRepository>();
+            services.AddScoped<IAuditPlanProcessService, AuditPlanProcessService>();
+            services.AddScoped<IIsoAuditProcessRepository,IsoAuditProcessRepository>();
+            services.AddScoped<IIsoAuditProcessService, IsoAuditProcessService>();
+            // Inside your Program.cs or Service registration method
+            // You MUST add these registrations
+            services.AddScoped<IIsoAuditorService, IsoAuditorService>();
+            services.AddScoped<IIsoAuditorRepository, IsoAuditorRepository>();
+
+            services.AddScoped<IIsoStandardAuditPlanService, IsoStandardAuditPlanService>();
+            services.AddScoped<IIsoStandardAuditPlanRepository, IsoStandardAuditPlanRepository>();
+
+
+            services.AddScoped<IAuditProgrammeService, AuditProgrammeService>();
+            services.AddScoped<IAuditProgrammeRepository, AuditProgrammeRepository>();
+
+
+            //checklist module registrations
+
+            services.AddScoped<IAuditChecklistService, AuditChecklistService>();
+            services.AddScoped<IAuditChecklistRepository, AuditChecklistRepository>();
+
+            services.AddScoped<IAuditChecklistQNAService, AuditChecklistQNAService>();
+            services.AddScoped<IAuditChecklistQNARepository, AuditChecklistQNARepository>();
+
+            //audit report module registrations
+            services.AddScoped<IAuditReportService, AuditReportService>();
+            services.AddScoped<IAuditReportRepository, AuditReportRepository>();
+
+            services.AddScoped<IAuditScopeService, AuditScopeService>();
+            services.AddScoped<IAuditScopeRepository, AuditScopeRepository>();
+
+            services.AddScoped<IAuditComFindingsService, AuditComFindingsService>();
+            services.AddScoped<IAuditComFindingsRepository, AuditComFindingsRepository>();
+
+            services.AddScoped<IAuditSummaryFindingsService, AuditSummaryFindingsService>();
+            services.AddScoped<IAuditSummaryFindingsRepository, AuditSummaryFindingsRepository>();
+
+            services.AddScoped<IAuditNcarStatusService, AuditNcarStatusService>();
+            services.AddScoped<IAuditNcarStatusRepository, AuditNcarStatusRepository>();
+
+            //nonconforming action report (NCAR) module registrations
+            services.AddScoped<INonconformingActionReportService, NonconformingActionReportService>();
+            services.AddScoped<INonconformingActionReportRepository, NonconformingActionReportRepository>();
+
+            services.AddScoped<INcarRootCauseService, NcarRootCauseService>();
+            services.AddScoped<INcarRootCauseRepository, NcarRootCauseRepository>();
+
+            services.AddScoped<INcarCorrectionActionService, NcarCorrectionActionService>();
+            services.AddScoped<INcarCorrectionActionRepository, NcarCorrectionActionRepository>();
+
+            services.AddScoped<INcarCorrectiveActionService, NcarCorrectiveActionService>();
+            services.AddScoped<INcarCorrectiveActionRepository, NcarCorrectiveActionRepository>();
+
+            services.AddScoped<INcarMonitoringLogService, NcarMonitoringLogService>();
+            services.AddScoped<INcarMonitoringLogRepository, NcarMonitoringLogRepository>();
+
+            //AuditeeModule
+
+            services.AddScoped<IAuditeeService, AuditeeService>();
+            services.AddScoped<IAuditeeRepository, AuditeeRepository>();
+            services.AddScoped<IIQASignatoryTemplateService, IQASignatoryTemplateService>();
+            services.AddScoped<IIQASignatoryTemplateRepository, IQASignatoryTemplateRepository>();
+
+
 
             return services;
         }

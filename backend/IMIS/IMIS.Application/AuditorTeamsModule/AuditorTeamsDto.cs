@@ -10,6 +10,7 @@ namespace IMIS.Application.AuditorTeamsModule
         public required int TeamId { get; set; }
         public List<AuditorDto>? Auditors { get; set; }       
         public bool IsActive { get; set; }
+        public OrganizationImprovementType ImprovementType { get; set; }
 
         public AuditorTeamsDto() { }
         [SetsRequiredMembers]
@@ -33,6 +34,7 @@ namespace IMIS.Application.AuditorTeamsModule
                 Id = Id,
                 TeamId = TeamId,              
                 IsActive = IsActive,
+                ImprovementType = ImprovementType,
                 Auditor = Auditors?.FirstOrDefault()?.ToEntity()
             };
         }

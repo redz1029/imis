@@ -13,6 +13,6 @@ namespace IMIS.Domain
 
         public required bool isActive { get; set; }
 
-        public List<IsoStandard>? IsoStandards { get; set; }
+        public ICollection<IsoStandard> IsoStandards { get; set; } = new List<IsoStandard>();
     }
 }
