@@ -31,8 +31,8 @@ Future<void> openAuditPlanPrintPreview(BuildContext context, int auditPlanId) {
 // =============================================================================
 // Layout constants (points)
 // =============================================================================
-const String _kLogoCrmc = 'assets/images/crmc_logo.png';
-const String _kLogoIso = 'assets/images/iso_tuv_certified.jpg';
+const String _kLogoCrmc = 'assets/CRMCLogo.png';
+const String _kLogoIso = 'assets/TR-Testmark.jpg';
 const String _kFormCode = 'QP-03-F-02 Rev.1';
 
 const double _kML = 48, _kMR = 48, _kMT = 30, _kMB = 30;
@@ -43,15 +43,27 @@ const double _kFooterH = 20.0;
 const double _kBorderW = 0.8;
 const double _kPadX = 4.0;
 const double _kFont = 10.0;
-const double _kLogoBox = 64.0;
-const double _kSideW = 104.0;
-const double _kHeaderBlockH = 83.0;
+const double _kLogoBox = 86.0;
+const double _kHeaderBlockH = _kLogoBox + 12.0;
 const double _kTitleH = 30.0;
 const double _kObjGap = 8.0;
 const double _kLabelW = 104.0;
 const double _kSigGap = 16.0;
 const double _kSigSpace = 26.0;
 const List<double> _kColFr = [0.13, 0.29, 0.30, 0.28];
+
+/// Attendees of the Opening Meeting (same list as the plan form).
+const List<String> _kMeetingAttendees = [
+  'Top Management',
+  'ISO Core Team',
+  'QMR',
+  'DQMRs',
+  'IQA Lead Auditor',
+  'IQA Members',
+  'Department / Section / Unit Heads Concerned',
+  'Consultants Concerned',
+  'Chief Residents Concerned',
+];
 
 // =============================================================================
 // Data
@@ -125,6 +137,36 @@ int? _intOrNull(dynamic v) {
   if (v is int) return v;
   if (v is num) return v.toInt();
   return int.tryParse(v.toString());
+}
+
+/// 1 -> I, 2 -> II ... (the original form prints "DAY I", "DAY II").
+String _roman(int n) {
+  if (n <= 0 || n >= 4000) return '$n';
+  const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+  const symbols = [
+    'M',
+    'CM',
+    'D',
+    'CD',
+    'C',
+    'XC',
+    'L',
+    'XL',
+    'X',
+    'IX',
+    'V',
+    'IV',
+    'I',
+  ];
+  var remaining = n;
+  final sb = StringBuffer();
+  for (var i = 0; i < values.length; i++) {
+    while (remaining >= values[i]) {
+      sb.write(symbols[i]);
+      remaining -= values[i];
+    }
+  }
+  return sb.toString();
 }
 
 int _compareClause(String a, String b) {
@@ -282,20 +324,24 @@ Future<_PrintData> _loadPrintData(int planId) async {
   final scope =
       (jsonMap['scopeOfAudit'] ?? jsonMap['ScopeOfAudit'] ?? '').toString().trim();
 
-  final plans =
-      (jsonMap['auditPlan'] as List? ?? jsonMap['AuditPlans'] as List? ?? []);
-  Map<String, dynamic>? planJson;
-  for (final p in plans) {
-    if (p is Map && _intOrNull(p['id'] ?? p['Id']) == planId) {
-      planJson = Map<String, dynamic>.from(p);
-      break;
+  // Entries of this plan: the plan's own record is the source of truth; the
+  // copy embedded in the programme response is only a fallback.
+  List<dynamic> rawEntries = plan.entries.map((e) {
+    final m = e.toJson();
+    // Always take the time from the typed field, never from the serializer.
+    m['time'] = e.time.toIso8601String();
+    return m;
+  }).toList();
+  if (rawEntries.isEmpty) {
+    final plans =
+        (jsonMap['auditPlan'] as List? ?? jsonMap['AuditPlans'] as List? ?? []);
+    for (final p in plans) {
+      if (p is Map && _intOrNull(p['id'] ?? p['Id']) == planId) {
+        rawEntries = (p['entries'] as List? ?? p['Entries'] as List? ?? []);
+        break;
+      }
     }
   }
-  if (planJson == null) {
-    throw Exception('The entries of this Audit Plan were not found.');
-  }
-  final rawEntries =
-      (planJson['entries'] as List? ?? planJson['Entries'] as List? ?? []);
 
   final entries = <_PlanEntry>[];
   var order = 0;
@@ -360,8 +406,9 @@ Future<_PrintData> _loadPrintData(int planId) async {
     if (rawTime != null) {
       final parsed = DateTime.tryParse(rawTime.toString());
       if (parsed != null) {
-        date = DateTime(parsed.year, parsed.month, parsed.day);
+        // Date and time must come from the same (local) instant.
         final local = parsed.toLocal();
+        date = DateTime(local.year, local.month, local.day);
         minutes = local.hour * 60 + local.minute;
       }
     }
@@ -369,6 +416,8 @@ Future<_PrintData> _loadPrintData(int planId) async {
     if (office.isEmpty && persons.isEmpty && standards.isEmpty && teamId == null) {
       continue;
     }
+    // The form has no Closing Meeting; skip one saved by an earlier version.
+    if (office.trim().toLowerCase() == 'closing meeting') continue;
 
     entries.add(_PlanEntry(
       dayNumber: _intOrNull(e['dayNumber'] ?? e['DayNumber']) ?? 1,
@@ -380,6 +429,41 @@ Future<_PrintData> _loadPrintData(int planId) async {
       standards: standards,
       order: order++,
     ));
+  }
+
+  // Rows saved without a time of day (12:00 AM) or meetings saved without
+  // attendees: apply the same defaults as the plan form.
+  if (entries.isNotEmpty) {
+    final firstDay = entries.map((e) => e.dayNumber).reduce(math.min);
+    for (var i = 0; i < entries.length; i++) {
+      final e = entries[i];
+      final lower = e.office.toLowerCase();
+      final isOpening = lower.contains('opening meeting');
+
+      var minutes = e.minutes;
+      if (minutes == 0) {
+        minutes = isOpening
+            ? 9 * 60
+            : (e.dayNumber == firstDay ? 10 * 60 : 9 * 60);
+      }
+      var persons = e.persons;
+      if (isOpening && persons.isEmpty && e.teamId == null) {
+        persons = List<String>.of(_kMeetingAttendees);
+      }
+
+      if (minutes != e.minutes || !identical(persons, e.persons)) {
+        entries[i] = _PlanEntry(
+          dayNumber: e.dayNumber,
+          date: e.date,
+          minutes: minutes,
+          office: e.office,
+          teamId: e.teamId,
+          persons: persons,
+          standards: e.standards,
+          order: e.order,
+        );
+      }
+    }
   }
 
   return _PrintData(
@@ -667,7 +751,6 @@ class _PlanPdfBuilder {
   }
 
   double _w(String s, {bool bold = false, double size = _kFont}) {
-    
     // Convert string length into approximate point width safely across fonts
     // 0.55 is the average character aspect-ratio for Times/Tinos family
     return s.length * size * 0.55;
@@ -803,9 +886,10 @@ class _PlanPdfBuilder {
       final date = list
           .map((e) => e.date)
           .firstWhere((d) => d != null, orElse: () => null);
+      final dayLabel = 'DAY ${_roman(day)}';
       final banner = date == null
-          ? 'DAY $day'
-          : 'DAY $day $dash ${DateFormat('MMMM d, yyyy').format(date).toUpperCase()}';
+          ? dayLabel
+          : '$dayLabel $dash ${DateFormat('MMMM d, yyyy').format(date).toUpperCase()}';
       items.add(_BannerItem(_s(banner)));
 
       String? prevTime;
@@ -945,25 +1029,29 @@ class _PlanPdfBuilder {
     );
   }
 
-  pw.Widget _side(pw.Widget? child, pw.Alignment alignment) {
-    return pw.SizedBox(
-      width: _kSideW,
-      child: pw.Align(alignment: alignment, child: child),
-    );
-  }
-
   pw.Widget _letterhead() {
-    final iso = assets.iso;
     final crmc = assets.crmc;
+    final iso = assets.iso;
 
-    final left = iso == null ? null : pw.Image(iso, height: 40);
-    final right = crmc == null
+    final seal = crmc == null
         ? null
         : pw.SizedBox(
             width: _kLogoBox,
             height: _kLogoBox,
             child: pw.ClipRect(
               child: pw.Image(crmc, fit: pw.BoxFit.cover),
+            ),
+          );
+
+    final tuv = iso == null
+        ? null
+        : pw.SizedBox(
+            width: 104,
+            height: 56,
+            child: pw.Image(
+              iso,
+              fit: pw.BoxFit.contain,
+              alignment: pw.Alignment.centerRight,
             ),
           );
 
@@ -978,23 +1066,35 @@ class _PlanPdfBuilder {
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
-                _side(left, pw.Alignment.centerLeft),
+                // CRMC seal hugs the left edge of the centred heading.
                 pw.Expanded(
-                  child: pw.Column(
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    crossAxisAlignment: pw.CrossAxisAlignment.center,
-                    children: [
-                      pw.Text('Republic of the Philippines',
-                          style: _st(size: 10)),
-                      pw.Text('Department of Health', style: _st(size: 10)),
-                      pw.Text(
-                        'COTABATO REGIONAL AND MEDICAL CENTER',
-                        style: _st(bold: true, size: 11),
-                      ),
-                    ],
+                  child: pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: seal,
                   ),
                 ),
-                _side(right, pw.Alignment.centerRight),
+                pw.SizedBox(width: 2),
+                pw.Column(
+                  mainAxisSize: pw.MainAxisSize.min,
+                  mainAxisAlignment: pw.MainAxisAlignment.center,
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
+                  children: [
+                    pw.Text('Republic of the Philippines',
+                        style: _st(size: 10)),
+                    pw.Text('Department of Health', style: _st(size: 10)),
+                    pw.Text(
+                      'COTABATO REGIONAL AND MEDICAL CENTER',
+                      style: _st(bold: true, size: 11),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(width: 8),
+                pw.Expanded(
+                  child: pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: tuv,
+                  ),
+                ),
               ],
             ),
           ),

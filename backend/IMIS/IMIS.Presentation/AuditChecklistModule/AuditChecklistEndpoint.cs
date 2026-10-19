@@ -87,7 +87,7 @@ namespace IMIS.Presentation.AuditChecklistModule
             })
             .WithTags(_auditChecklist)
 
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_auditChecklist), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
 
             // GET BY PROCESS ID
             app.MapGet("/process/{processId:int}", async (int processId, IAuditChecklistService service, CancellationToken cancellationToken) =>

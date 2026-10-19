@@ -33,9 +33,9 @@ Future<void> openAuditProgrammePrintPreview(
 // =============================================================================
 // Layout constants (points)
 // =============================================================================
-const String _kLogoCrmc = 'assets/crmc_logo.png';
-const String _kLogoIso = 'assets/iso_tuv_certified.jpg';
-const String _kFormCode = 'QP-03-F-04 Rev. 2';
+const String _kLogoCrmc = 'assets/CRMCLogo.png';
+const String _kLogoIso = 'assets/TR-Testmark.jpg';
+const String _kFormCode = 'QP-03-F-02 Rev.1';
 
 /// The printed form closes every batch with "DAY n / REPORTING". The data has
 /// no such entry, so it is appended after the last audit day of each batch.
