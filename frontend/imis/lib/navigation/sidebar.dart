@@ -42,6 +42,7 @@ import 'package:imis/performance_governance_system/process_core_support/pages/pr
 import 'package:imis/performance_governance_system/pgs_performance_validation_tool/pages/performance_validation_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/pages/roadmap_page.dart';
+import 'package:imis/qms_documents/pages/procedures_list_page.dart';
 import 'package:imis/qms_documents/pages/procedures_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
@@ -1184,7 +1185,7 @@ class SidebarState extends State<Sidebar> {
       }
       if (selectedSubPage == 11) return SummaryOfficesDeliverables();
       if (selectedSubPage == 12) return MonthlyOprReportPage();
-      // if (selectedSubPage == 13) return IsatPage();
+      if (selectedSubPage == 13) return IsatPage();
     }
 
     if (selectedPage == 2) {
@@ -1204,9 +1205,9 @@ class SidebarState extends State<Sidebar> {
     //   if (selectedSubPage == 3) return const AnnouncementPage();
     // }
 
-    // if (selectedPage == 3) {
-    //   if (selectedSubPage == 0) return const ProceduresPage();
-    // }
+    if (selectedPage == 3) {
+      if (selectedSubPage == 0) return const ProceduresListPage();
+    }
     if (selectedPage == 4) {
       if (selectedSubPage == 0) return const AnnouncementPage();
       if (selectedSubPage == 2) return const AuditorPage();
