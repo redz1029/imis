@@ -25,4 +25,8 @@
     <ProjectReference Include="..\IMIS.Persistence\IMIS.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="PolicyAndProcedureSignatoryTemplateModule\" />
+  </ItemGroup>
+
 </Project>

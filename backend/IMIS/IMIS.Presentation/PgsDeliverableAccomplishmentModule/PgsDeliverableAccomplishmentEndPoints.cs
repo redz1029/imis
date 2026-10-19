@@ -331,6 +331,39 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
+            
+            app.MapGet("/filter-accomplishment-report", async (HttpResponse response, int? periodId, int? officeId, long? pgsId, IPgsDeliverableAcomplishmentService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetByFilterAsync(periodId, officeId, pgsId, cancellationToken).ConfigureAwait(false);
+
+                if (result == null ||
+                    !result.PgsDeliverableAccomplishmenItem.Any())
+                {
+                    return Results.NotFound();
+                }
+
+                var file = await ReportUtil.GeneratePdfReport<PgsDeliverableAccomplishmentFilterDto>(
+                    "PgsAccomplishmentReport",
+                    new[] { result },
+                    "PgsDeliverableAccomplishmentFilterDto",
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                //     // FORCE INLINE PDF VIEW IN BROWSER
+                var fileName = $"PerformanceValidationToolReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers.ContentDisposition = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"accomplishmentReport_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                //var result = await service
+                //  .GetByFilterAsync(periodId, officeId, pgsId, cancellationToken)
+                //  .ConfigureAwait(false);
+
+                //return Results.Ok(result);
+            })
+          .WithTags(_pgsDeliverableAccomplishmentTag)
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true);           
         }
     }
 }

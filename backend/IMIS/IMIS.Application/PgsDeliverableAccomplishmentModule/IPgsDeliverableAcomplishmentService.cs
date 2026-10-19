@@ -14,5 +14,7 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
         public Task<DtoPageList<PgsDeliverableAccomplishmentDto, PgsDeliverableAccomplishment, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<bool> UpdateAccomplishmentsAsync(List<ORPPgsDeliverableAccomplishmentDto> request, CancellationToken cancellationToken);
         Task<int> GetAttachmentCountByDeliverableIdAsync(long deliverableId, CancellationToken cancellationToken);
+
+        Task<PgsDeliverableAccomplishmentFilterDto> GetByFilterAsync(int? periodId, int? officeId, long? pgsId, CancellationToken cancellationToken);
     }
 }

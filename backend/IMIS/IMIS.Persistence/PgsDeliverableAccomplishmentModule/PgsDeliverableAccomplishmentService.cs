@@ -23,7 +23,16 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
             _breakThroughrepository = breakThrough ?? throw new ArgumentNullException(nameof(breakThrough));
             _deliverablerepository = deliverablerepository ?? throw new ArgumentNullException(nameof(deliverablerepository));
         }
-
+        public async Task<PgsDeliverableAccomplishmentFilterDto> GetByFilterAsync(
+      int? periodId,
+      int? officeId,
+      long? pgsId,
+      CancellationToken cancellationToken)
+        {
+            return await _repository
+                .GetByFilterAsync(periodId, officeId, pgsId, cancellationToken)
+                .ConfigureAwait(false);
+        }
         public async Task<int> GetAttachmentCountByDeliverableIdAsync(long deliverableId, CancellationToken cancellationToken)
         {
             return await _repository.GetAttachmentCountByDeliverableIdAsync(deliverableId, cancellationToken).ConfigureAwait(false);
