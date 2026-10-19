@@ -351,7 +351,7 @@ class _DeliverableStatusMonitoringPageState
                     minHeight: 18,
                   ),
                   decoration: const BoxDecoration(
-                    color: blue,
+                    color: kSuccess,
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -572,60 +572,6 @@ class _DeliverableStatusMonitoringPageState
       ),
     );
   }
-
-  // Widget _buildHeaderActions() {
-  //   return Row(
-  //     children: [
-  //       PermissionWidget(
-  //         allowedRoles: [
-  //           PermissionRoleString.pgsAuditor,
-  //           PermissionRoleString.roleAdmin,
-  //         ],
-  //         child: OutlinedButton.icon(
-  //           onPressed:
-  //               () => showDialog(
-  //                 context: context,
-  //                 barrierDismissible: true,
-  //                 builder: (_) => const ManageSummaryNarrativeDialog(),
-  //               ),
-  //           icon: const Icon(Icons.description_outlined, size: 16),
-  //           label: const Text('Manage Reports', style: TextStyle(fontSize: 13)),
-  //           style: OutlinedButton.styleFrom(
-  //             foregroundColor: const Color(0xFF1A1D23),
-  //             side: BorderSide(color: Colors.grey.shade300),
-  //             shape: RoundedRectangleBorder(
-  //               borderRadius: BorderRadius.circular(4),
-  //             ),
-  //             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-  //           ),
-  //         ),
-  //       ),
-  //       const SizedBox(width: 10),
-  //       PermissionWidget(
-  //         allowedRoles: [
-  //           PermissionRoleString.pgsAuditor,
-  //           PermissionRoleString.roleAdmin,
-  //         ],
-  //         child: ElevatedButton.icon(
-  //           onPressed: showReportDialog,
-  //           icon: const Icon(Icons.add, size: 16, color: Colors.white),
-  //           label: const Text(
-  //             'Create Report',
-  //             style: TextStyle(color: Colors.white, fontSize: 13),
-  //           ),
-  //           style: ElevatedButton.styleFrom(
-  //             backgroundColor: primaryColor,
-  //             shape: RoundedRectangleBorder(
-  //               borderRadius: BorderRadius.circular(4),
-  //             ),
-  //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-  //             elevation: 0,
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
 
   Widget _buildFilterBar(bool isMobile) {
     return Container(
