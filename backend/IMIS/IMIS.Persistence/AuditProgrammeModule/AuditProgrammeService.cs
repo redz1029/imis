@@ -334,7 +334,344 @@ namespace IMIS.Application.AuditProgrammeModule
             if (dto.Objectives == null || !dto.Objectives.Any())
                 errors.Add("An audit programme must have at least one objective.");
 
-            return await Task.FromResult(errors);
+            errors.AddRange(await GetSelfAuditErrorsAsync(dto, cancellationToken));
+
+            return errors;
+        }
+
+        /// <summary>
+        /// Builds the team -> home-offices map once, so the client can detect
+        /// self-audits inline without a round trip per change. Three queries
+        /// total, independent of how many teams/offices exist.
+        /// </summary>
+        public async Task<TeamOfficeConflictMapDto> GetTeamOfficeConflictMapAsync(CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            // 1. Team rosters (active members only).
+            var teamAuditorRows = await dbContext.Set<AuditorTeams>()
+                .AsNoTracking()
+                .Where(at => !at.IsDeleted && at.IsActive && at.AuditorId != null)
+                .Select(at => new { at.TeamId, at.AuditorId })
+                .ToListAsync(cancellationToken);
+
+            var auditorIdsByTeamId = teamAuditorRows
+                .Where(r => r.AuditorId != null)
+                .GroupBy(r => r.TeamId)
+                .ToDictionary(g => g.Key, g => g.Select(r => r.AuditorId!.Value).ToHashSet());
+
+            var allAuditorIds = auditorIdsByTeamId.Values.SelectMany(v => v).ToHashSet();
+
+            var result = new TeamOfficeConflictMapDto();
+
+            if (allAuditorIds.Count == 0)
+                return result;
+
+            // 2. Each auditor's home offices, resolved through UserOffices:
+            //    Auditor.UserId -> UserOffices. Auditors without any UserOffices
+            //    row fall back to AuditorOffices so no member is missed.
+            var auditors = await dbContext.Set<Auditor>()
+                .AsNoTracking()
+                .Where(a => allAuditorIds.Contains(a.Id))
+                .Select(a => new { a.Id, a.UserId })
+                .ToListAsync(cancellationToken);
+
+            var auditorIdsByUserId = auditors
+                .Where(a => !string.IsNullOrWhiteSpace(a.UserId))
+                .ToDictionary(a => a.UserId, a => a.Id);
+
+            var officeIdsByAuditorId = new Dictionary<int, HashSet<int>>();
+
+            void AddOffice(int auditorId, int officeId)
+            {
+                if (!officeIdsByAuditorId.TryGetValue(auditorId, out var set))
+                {
+                    set = new HashSet<int>();
+                    officeIdsByAuditorId[auditorId] = set;
+                }
+                set.Add(officeId);
+            }
+
+            var userIds = auditorIdsByUserId.Keys.ToList();
+            if (userIds.Count > 0)
+            {
+                var userOfficeRows = await dbContext.Set<UserOffices>()
+                    .AsNoTracking()
+                    .Where(uo => userIds.Contains(uo.UserId) && !uo.IsDeleted && uo.IsActive)
+                    .Select(uo => new { uo.UserId, uo.OfficeId })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var row in userOfficeRows)
+                {
+                    if (auditorIdsByUserId.TryGetValue(row.UserId, out var auditorId))
+                        AddOffice(auditorId, row.OfficeId);
+                }
+            }
+
+            // Fallback for auditors with no UserOffices row at all.
+            var auditorIdsWithoutUserOffice = allAuditorIds
+                .Where(id => !officeIdsByAuditorId.ContainsKey(id))
+                .ToHashSet();
+
+            if (auditorIdsWithoutUserOffice.Count > 0)
+            {
+                var fallbackRows = await dbContext.Set<AuditorOffices>()
+                    .AsNoTracking()
+                    .Where(ao => !ao.IsDeleted && auditorIdsWithoutUserOffice.Contains(ao.AuditorId))
+                    .Select(ao => new { ao.AuditorId, ao.OfficeId })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var row in fallbackRows)
+                    AddOffice(row.AuditorId, row.OfficeId);
+            }
+
+            // Fold auditor homes up into each team.
+            foreach (var (teamId, auditorIds) in auditorIdsByTeamId)
+            {
+                var teamOfficeIds = new HashSet<int>();
+                foreach (var auditorId in auditorIds)
+                {
+                    if (officeIdsByAuditorId.TryGetValue(auditorId, out var auditorOfficeIds))
+                        teamOfficeIds.UnionWith(auditorOfficeIds);
+                }
+
+                if (teamOfficeIds.Count > 0)
+                    result.TeamOfficeIds[teamId] = teamOfficeIds.ToList();
+            }
+
+            // 3. Names for readable messages (only what the map references).
+            var referencedOfficeIds = result.TeamOfficeIds.Values.SelectMany(v => v).ToHashSet();
+            var officeNames = referencedOfficeIds.Count == 0
+                ? new List<Office>()
+                : await dbContext.Set<Office>()
+                    .AsNoTracking()
+                    .Where(o => referencedOfficeIds.Contains(o.Id))
+                    .ToListAsync(cancellationToken);
+
+            result.OfficeNames = officeNames.ToDictionary(o => o.Id, o => o.Name);
+
+            var teamIds = result.TeamOfficeIds.Keys.ToHashSet();
+            var teamNames = teamIds.Count == 0
+                ? new List<Team>()
+                : await dbContext.Set<Team>()
+                    .AsNoTracking()
+                    .Where(t => teamIds.Contains(t.Id))
+                    .ToListAsync(cancellationToken);
+
+            result.TeamNames = teamNames.ToDictionary(t => t.Id, t => t.Name);
+
+            return result;
+        }
+
+        /// <summary>
+        /// NO SELF-AUDIT: an auditor may never be scheduled to audit the office
+        /// they belong to (cross-posting / independence rule).
+        ///
+        /// Offices and teams come from the incoming payload, then office
+        /// membership is resolved live from AuditorOffices - never against the
+        /// document being saved, which is the stale copy the client handed us.
+        /// Every plan entry is checked (new and edited), because all of them are
+        /// written by this same save. Five queries total, no matter how many
+        /// entries the programme carries.
+        /// </summary>
+        private async Task<List<string>> GetSelfAuditErrorsAsync(
+            AuditProgrammeDto dto, CancellationToken cancellationToken)
+        {
+            if (dto.AuditPlans == null || dto.AuditPlans.Count == 0)
+                return new List<string>();
+
+            var dbContext = _repository.GetDbContext();
+
+            // --- 1. Office per entry, and the distinct offices/teams ----------
+            var officeIdsByEntry = new Dictionary<int, HashSet<int>>();
+            var officeIds = new HashSet<int>();
+            var teamIds = new HashSet<int>();
+
+            foreach (var plan in dto.AuditPlans)
+            {
+                if (plan.Entries == null) continue;
+
+                foreach (var entry in plan.Entries)
+                {
+                    // OfficeId is the real office; ProcessName alone is free
+                    // text typed by the user and cannot be validated.
+                    if (entry.AuditPlanProcesses != null)
+                    {
+                        var entryOfficeIds = entry.AuditPlanProcesses
+                            .Where(p => p.OfficeId != null && p.OfficeId.Value != 0)
+                            .Select(p => p.OfficeId!.Value)
+                            .ToList();
+
+                        if (entryOfficeIds.Count > 0)
+                        {
+                            var key = entry.Id != 0 ? entry.Id : entry.DayNumber;
+                            if (!officeIdsByEntry.TryGetValue(key, out var set))
+                            {
+                                set = new HashSet<int>();
+                                officeIdsByEntry[key] = set;
+                            }
+                            set.UnionWith(entryOfficeIds);
+                            officeIds.UnionWith(entryOfficeIds);
+                        }
+                    }
+
+                    if (entry.IsoAuditors == null) continue;
+                    foreach (var isoAuditor in entry.IsoAuditors)
+                    {
+                        if (isoAuditor.TeamId != null && isoAuditor.TeamId.Value != 0)
+                            teamIds.Add(isoAuditor.TeamId.Value);
+                    }
+                }
+            }
+
+            if (officeIds.Count == 0 || teamIds.Count == 0) return new List<string>();
+
+            // --- 2. Live team roster: Auditor -> its UserId ------------------
+            var teamRoster = await dbContext.Set<AuditorTeams>()
+                .AsNoTracking()
+                .Where(t => teamIds.Contains(t.TeamId) && !t.IsDeleted)
+                .Select(t => new { t.TeamId, t.AuditorId })
+                .ToListAsync(cancellationToken);
+
+            if (teamRoster.Count == 0) return new List<string>();
+
+            var auditorIdsByTeamId = teamRoster
+                .Where(t => t.AuditorId != null)
+                .GroupBy(t => t.TeamId)
+                .ToDictionary(g => g.Key, g => g.Select(t => t.AuditorId!.Value).ToHashSet());
+
+            var allAuditorIds = auditorIdsByTeamId.Values.SelectMany(v => v).ToHashSet();
+            if (allAuditorIds.Count == 0) return new List<string>();
+
+            var auditors = await dbContext.Set<Auditor>()
+                .AsNoTracking()
+                .Where(a => allAuditorIds.Contains(a.Id))
+                .Select(a => new { a.Id, a.Name, a.UserId })
+                .ToListAsync(cancellationToken);
+
+            if (auditors.Count == 0) return new List<string>();
+
+            var auditorById = auditors.ToDictionary(a => a.Id);
+
+            // --- 3. Live office membership from UserOffices ------------------
+            // Auditors are users, so their office membership is resolved
+            // through Auditor.UserId -> UserOffices (the user-facing office
+            // assignments). A small fallback to AuditorOffices covers auditors
+            // that still have no UserOffices row, so no member is ever missed.
+            var auditorIdsByUserId = auditors
+                .Where(a => !string.IsNullOrWhiteSpace(a.UserId))
+                .ToDictionary(a => a.UserId, a => a.Id);
+
+            var userIds = auditorIdsByUserId.Keys.ToList();
+
+            var officesByAuditorId = new Dictionary<int, HashSet<int>>();
+
+            void AddOffice(int auditorId, int officeId)
+            {
+                if (!officesByAuditorId.TryGetValue(auditorId, out var set))
+                {
+                    set = new HashSet<int>();
+                    officesByAuditorId[auditorId] = set;
+                }
+                set.Add(officeId);
+            }
+
+            if (userIds.Count > 0)
+            {
+                var userOfficeRows = await dbContext.Set<UserOffices>()
+                    .AsNoTracking()
+                    .Where(uo => userIds.Contains(uo.UserId)
+                                 && officeIds.Contains(uo.OfficeId)
+                                 && !uo.IsDeleted && uo.IsActive)
+                    .Select(uo => new { uo.UserId, uo.OfficeId })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var row in userOfficeRows)
+                {
+                    if (auditorIdsByUserId.TryGetValue(row.UserId, out var auditorId))
+                        AddOffice(auditorId, row.OfficeId);
+                }
+            }
+
+            // Fallback for auditors with no UserOffices row at all.
+            var auditorIdsWithoutUserOffice = allAuditorIds
+                .Where(id => !officesByAuditorId.ContainsKey(id))
+                .ToHashSet();
+
+            if (auditorIdsWithoutUserOffice.Count > 0)
+            {
+                var fallbackRows = await dbContext.Set<AuditorOffices>()
+                    .AsNoTracking()
+                    .Where(ao => auditorIdsWithoutUserOffice.Contains(ao.AuditorId)
+                                 && officeIds.Contains(ao.OfficeId)
+                                 && !ao.IsDeleted)
+                    .Select(ao => new { ao.AuditorId, ao.OfficeId })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var row in fallbackRows)
+                    AddOffice(row.AuditorId, row.OfficeId);
+            }
+
+            if (officesByAuditorId.Count == 0) return new List<string>();
+
+            var officeNames = await dbContext.Set<Office>()
+                .AsNoTracking()
+                .Where(o => officeIds.Contains(o.Id))
+                .Select(o => new { o.Id, o.Name })
+                .ToListAsync(cancellationToken);
+
+            var officeNameById = officeNames.ToDictionary(o => o.Id, o => o.Name);
+
+            // --- 4. Match: an office's own member on the auditing team -------
+            var errors = new List<string>();
+            var seen = new HashSet<string>();
+
+            foreach (var plan in dto.AuditPlans)
+            {
+                if (plan.Entries == null) continue;
+
+                foreach (var entry in plan.Entries)
+                {
+                    if (entry.IsoAuditors == null || entry.IsoAuditors.Count == 0) continue;
+
+                    var entryKey = entry.Id != 0 ? entry.Id : entry.DayNumber;
+                    if (!officeIdsByEntry.TryGetValue(entryKey, out var entryOfficeIds)) continue;
+
+                    foreach (var isoAuditor in entry.IsoAuditors)
+                    {
+                        if (isoAuditor.TeamId == null || isoAuditor.TeamId.Value == 0) continue;
+
+                        var teamId = isoAuditor.TeamId.Value;
+                        if (!auditorIdsByTeamId.TryGetValue(teamId, out var teamAuditorIds)) continue;
+
+                        foreach (var teamAuditorId in teamAuditorIds)
+                        {
+                            if (!auditorById.TryGetValue(teamAuditorId, out var auditor))
+                                continue; // team member no longer exists
+                            if (!officesByAuditorId.TryGetValue(teamAuditorId, out var memberOfficeIds)) continue;
+
+                            foreach (var officeId in entryOfficeIds)
+                            {
+                                if (!memberOfficeIds.Contains(officeId)) continue;
+
+                                var officeName = officeNameById.TryGetValue(officeId, out var n)
+                                                 && !string.IsNullOrWhiteSpace(n)
+                                        ? n
+                                        : $"Office {officeId}";
+
+                                var message =
+                                    $"No self-audit allowed: {auditor.Name} belongs to {officeName} " +
+                                    $"and cannot audit it as part of Team {teamId}.";
+
+                                if (seen.Add(message))
+                                    errors.Add(message);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return errors;
         }
 
         public async Task<(bool Success, string? Error)> SubmitAsync(
@@ -617,6 +954,81 @@ namespace IMIS.Application.AuditProgrammeModule
             entity.IsDeleted = true;
             await dbContext.SaveChangesAsync(cancellationToken);
             return true;
+        }
+        /// <summary>
+        /// Resolves each auditor's home offices as the UNION of
+        /// UserOffices (Auditor.UserId -> UserOffices) and AuditorOffices.
+        /// Union, not fallback: an auditor with a UserOffices row for one office
+        /// may still belong to another office through AuditorOffices.
+        /// </summary>
+        private static async Task<Dictionary<int, HashSet<int>>> ResolveAuditorOfficesAsync(
+            DbContext dbContext,
+            List<(int AuditorId, string? UserId)> auditors,
+            HashSet<int>? officeIdFilter,
+            CancellationToken cancellationToken)
+        {
+            var result = new Dictionary<int, HashSet<int>>();
+
+            void AddOffice(int auditorId, int officeId)
+            {
+                if (!result.TryGetValue(auditorId, out var set))
+                {
+                    set = new HashSet<int>();
+                    result[auditorId] = set;
+                }
+                set.Add(officeId);
+            }
+
+            if (auditors.Count == 0) return result;
+
+            // --- A. UserOffices via Auditor.UserId ---------------------------------
+            var auditorIdsByUserId = auditors
+                .Where(a => !string.IsNullOrWhiteSpace(a.UserId))
+                .GroupBy(a => a.UserId!, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(a => a.AuditorId).ToList(),
+                    StringComparer.OrdinalIgnoreCase);
+
+            var userIds = auditorIdsByUserId.Keys.ToList();
+            if (userIds.Count > 0)
+            {
+                var userOfficeQuery = dbContext.Set<UserOffices>()
+                    .AsNoTracking()
+                    .Where(uo => userIds.Contains(uo.UserId) && !uo.IsDeleted && uo.IsActive);
+
+                if (officeIdFilter != null)
+                    userOfficeQuery = userOfficeQuery.Where(uo => officeIdFilter.Contains(uo.OfficeId));
+
+                var userOfficeRows = await userOfficeQuery
+                    .Select(uo => new { uo.UserId, uo.OfficeId })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var row in userOfficeRows)
+                {
+                    if (auditorIdsByUserId.TryGetValue(row.UserId, out var ids))
+                        foreach (var id in ids) AddOffice(id, row.OfficeId);
+                }
+            }
+
+            // --- B. AuditorOffices, ALWAYS merged (not a fallback) -----------------
+            var allAuditorIds = auditors.Select(a => a.AuditorId).ToHashSet();
+
+            var auditorOfficeQuery = dbContext.Set<AuditorOffices>()
+                .AsNoTracking()
+                .Where(ao => !ao.IsDeleted && allAuditorIds.Contains(ao.AuditorId));
+
+            if (officeIdFilter != null)
+                auditorOfficeQuery = auditorOfficeQuery.Where(ao => officeIdFilter.Contains(ao.OfficeId));
+
+            var auditorOfficeRows = await auditorOfficeQuery
+                .Select(ao => new { ao.AuditorId, ao.OfficeId })
+                .ToListAsync(cancellationToken);
+
+            foreach (var row in auditorOfficeRows)
+                AddOffice(row.AuditorId, row.OfficeId);
+
+            return result;
         }
 
         private string FormatBatchDateRange(DateTime start, DateTime end)

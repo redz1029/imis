@@ -18,6 +18,12 @@ namespace IMIS.Application.AuditProgrammeModule
         Task<DtoPageList<AuditProgrammeDto, AuditProgramme, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<List<string>> GetConflictValidationsAsync(AuditProgrammeDto dto, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Team -> home-offices map used by the client to detect self-audits
+        /// inline. Read-only; no per-team round trips.
+        /// </summary>
+        Task<TeamOfficeConflictMapDto> GetTeamOfficeConflictMapAsync(CancellationToken cancellationToken);
         Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
             where TEntity : Entity<TId>;
 

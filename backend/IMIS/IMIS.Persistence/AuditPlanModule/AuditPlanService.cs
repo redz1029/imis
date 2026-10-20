@@ -307,6 +307,198 @@ namespace IMIS.Application.AuditPlanModule
                 }
             }
 
+            // Gating Rule: NO SELF-AUDIT — a team member may not audit an office
+            // they belong to (AuditorOffices). Team membership is read live from
+            // AuditorTeams, office membership live from AuditorOffices.
+            errors.AddRange(await GetSelfAuditErrorsAsync(dto, cancellationToken));
+
+            return errors;
+        }
+
+        /// <summary>
+        /// NO SELF-AUDIT for the Audit Plan: every entry that pairs an office
+        /// (auditPlanProcesses[].OfficeId) with an audit team
+        /// (isoAuditors[].TeamId) is rejected when any member of that team is
+        /// also assigned to that office.
+        ///
+        /// Membership is resolved live from AuditorOffices, the complete
+        /// auditor-to-office roster, so a team member can never be scheduled
+        /// onto their own office.
+        /// </summary>
+        private async Task<List<string>> GetSelfAuditErrorsAsync(AuditPlanDto dto, CancellationToken cancellationToken)
+        {
+            if (dto.Entries == null || dto.Entries.Count == 0)
+                return new List<string>();
+
+            var dbContext = _repository.GetDbContext();
+
+            // --- 1. OfficeIds and TeamIds carried by each entry --------------
+            var entryPairs = new List<(int EntryKey, HashSet<int> OfficeIds, HashSet<int> TeamIds)>();
+
+            var allOfficeIds = new HashSet<int>();
+            var allTeamIds = new HashSet<int>();
+
+            foreach (var entry in dto.Entries)
+            {
+                var officeIds = new HashSet<int>();
+                if (entry.AuditPlanProcesses != null)
+                {
+                    foreach (var p in entry.AuditPlanProcesses)
+                    {
+                        if (p.OfficeId != null && p.OfficeId.Value != 0)
+                            officeIds.Add(p.OfficeId.Value);
+                    }
+                }
+
+                var teamIds = new HashSet<int>();
+                if (entry.IsoAuditors != null)
+                {
+                    foreach (var isoAuditor in entry.IsoAuditors)
+                    {
+                        if (isoAuditor.TeamId != null && isoAuditor.TeamId.Value != 0)
+                            teamIds.Add(isoAuditor.TeamId.Value);
+                    }
+                }
+
+                if (officeIds.Count == 0 || teamIds.Count == 0) continue;
+
+                var entryKey = entry.Id;
+                entryPairs.Add((entryKey, officeIds, teamIds));
+                allOfficeIds.UnionWith(officeIds);
+                allTeamIds.UnionWith(teamIds);
+            }
+
+            if (entryPairs.Count == 0) return new List<string>();
+
+            // --- 2. Live team roster: AuditorId members of each team ---------
+            var teamAuditorRows = await dbContext.Set<AuditorTeams>()
+                .AsNoTracking()
+                .Where(at => allTeamIds.Contains(at.TeamId) && !at.IsDeleted)
+                .Select(at => new { at.TeamId, at.AuditorId })
+                .ToListAsync(cancellationToken);
+
+            var teamAuditorIds = teamAuditorRows
+                .Where(r => r.AuditorId != null)
+                .GroupBy(r => r.TeamId)
+                .ToDictionary(g => g.Key, g => g.Select(r => r.AuditorId!.Value).ToHashSet());
+
+            var allAuditorIds = teamAuditorIds.Values.SelectMany(v => v).ToHashSet();
+            if (allAuditorIds.Count == 0) return new List<string>();
+
+            var auditors = await dbContext.Set<Auditor>()
+                .AsNoTracking()
+                .Where(a => allAuditorIds.Contains(a.Id))
+                .Select(a => new { a.Id, a.Name, a.UserId })
+                .ToListAsync(cancellationToken);
+
+            if (auditors.Count == 0) return new List<string>();
+
+            var auditorById = auditors.ToDictionary(a => a.Id);
+
+            // --- 3. Live office membership from UserOffices ------------------
+            // Auditors are users, so office membership is resolved through
+            // Auditor.UserId -> UserOffices (the user-facing assignments).
+            // Auditors with no UserOffices row fall back to AuditorOffices so
+            // no member is ever missed.
+            var auditorIdsByUserId = auditors
+                .Where(a => !string.IsNullOrWhiteSpace(a.UserId))
+                .ToDictionary(a => a.UserId, a => a.Id);
+
+            var userIds = auditorIdsByUserId.Keys.ToList();
+
+            var officesByAuditorId = new Dictionary<int, HashSet<int>>();
+
+            void AddOffice(int auditorId, int officeId)
+            {
+                if (!officesByAuditorId.TryGetValue(auditorId, out var set))
+                {
+                    set = new HashSet<int>();
+                    officesByAuditorId[auditorId] = set;
+                }
+                set.Add(officeId);
+            }
+
+            if (userIds.Count > 0)
+            {
+                var userOfficeRows = await dbContext.Set<UserOffices>()
+                    .AsNoTracking()
+                    .Where(uo => userIds.Contains(uo.UserId)
+                                 && allOfficeIds.Contains(uo.OfficeId)
+                                 && !uo.IsDeleted && uo.IsActive)
+                    .Select(uo => new { uo.UserId, uo.OfficeId })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var row in userOfficeRows)
+                {
+                    if (auditorIdsByUserId.TryGetValue(row.UserId, out var auditorId))
+                        AddOffice(auditorId, row.OfficeId);
+                }
+            }
+
+            // Fallback for auditors with no UserOffices row at all.
+            var auditorIdsWithoutUserOffice = allAuditorIds
+                .Where(id => !officesByAuditorId.ContainsKey(id))
+                .ToHashSet();
+
+            if (auditorIdsWithoutUserOffice.Count > 0)
+            {
+                var fallbackRows = await dbContext.Set<AuditorOffices>()
+                    .AsNoTracking()
+                    .Where(ao => auditorIdsWithoutUserOffice.Contains(ao.AuditorId)
+                                 && allOfficeIds.Contains(ao.OfficeId)
+                                 && !ao.IsDeleted)
+                    .Select(ao => new { ao.AuditorId, ao.OfficeId })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var row in fallbackRows)
+                    AddOffice(row.AuditorId, row.OfficeId);
+            }
+
+            if (officesByAuditorId.Count == 0) return new List<string>();
+
+            var officeNames = await dbContext.Set<Office>()
+                .AsNoTracking()
+                .Where(o => allOfficeIds.Contains(o.Id))
+                .Select(o => new { o.Id, o.Name })
+                .ToListAsync(cancellationToken);
+
+            var officeNameById = officeNames.ToDictionary(o => o.Id, o => o.Name);
+
+            // --- 4. Match each entry's team against each entry's office ------
+            var errors = new List<string>();
+            var seen = new HashSet<string>();
+
+            foreach (var (entryKey, entryOfficeIds, entryTeamIds) in entryPairs)
+            {
+                foreach (var teamId in entryTeamIds)
+                {
+                    if (!teamAuditorIds.TryGetValue(teamId, out var roster)) continue;
+
+                    foreach (var auditorId in roster)
+                    {
+                        if (!auditorById.TryGetValue(auditorId, out var auditor)) continue;
+                        if (!officesByAuditorId.TryGetValue(auditorId, out var memberOfficeIds)) continue;
+
+                        foreach (var officeId in entryOfficeIds)
+                        {
+                            if (!memberOfficeIds.Contains(officeId)) continue;
+
+                            var officeName = officeNameById.TryGetValue(officeId, out var n)
+                                             && !string.IsNullOrWhiteSpace(n)
+                                    ? n
+                                    : $"Office {officeId}";
+
+                            var message =
+                                $"No self-audit allowed: {auditor.Name} belongs to {officeName} " +
+                                $"and cannot audit it as part of Team {teamId}.";
+
+                            if (seen.Add(message))
+                                errors.Add(message);
+                        }
+                    }
+                }
+            }
+
             return errors;
         }
 

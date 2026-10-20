@@ -282,6 +282,9 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   List<IsoStandardDto> _standards = [];
   List<TeamDto> _teams = [];
 
+  /// Team -> home-offices map for inline self-audit detection (one fetch).
+  TeamOfficeConflictMap _conflictMap = TeamOfficeConflictMap.empty();
+
   AuditProgramme? _loadedProgramme;
   UserRegistration? _currentUser;
   bool _isAdmin = false;
@@ -333,6 +336,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
         _fetchMasterOffices(),
         _fetchMasterIsoStandards(),
         _fetchMasterTeams(),
+        _fetchConflictMap(),
       ]);
 
       if (widget.programmeId != null) {
@@ -485,6 +489,14 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
           .toList();
     } catch (e) {
       debugPrint('Failed to load teams: $e');
+    }
+  }
+
+  Future<void> _fetchConflictMap() async {
+    try {
+      _conflictMap = await _service.getTeamOfficeConflictMap();
+    } catch (e) {
+      debugPrint('Failed to load team-office map: $e');
     }
   }
   
@@ -1089,7 +1101,37 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     }
   }
 
+  /// Every entry that pairs a team with one of that team's own offices.
+  /// The authoritative copy of this rule lives on the backend; this mirrors it
+  /// so the user gets the error inline, before a round trip.
+  List<String> _selfAuditConflicts() {
+    final messages = <String>[];
+    for (final entry in _entries) {
+      final teamId = entry.selectedTeamId;
+      final officeId = entry.selectedOfficeId;
+      if (teamId == null || officeId == null) continue;
+      if (_conflictMap.isSelfAudit(teamId: teamId, officeId: officeId)) {
+        messages.add(
+          _conflictMap.conflictMessage(teamId: teamId, officeId: officeId),
+        );
+      }
+    }
+    return messages;
+  }
+
   Future<void> _submitProgramme({required bool isDraft}) async {
+    // Block the save outright on any self-audit, before asking to confirm.
+    final conflicts = _selfAuditConflicts();
+    if (conflicts.isNotEmpty) {
+      if (mounted) {
+        MotionToast.error(
+          toastAlignment: Alignment.topCenter,
+          description: Text(conflicts.first),
+        ).show(context);
+      }
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -1325,6 +1367,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                               offices: _offices,
                               standards: _standards,
                               teams: _teams,
+                              conflictMap: _conflictMap,
                               onAddDay: _addDay,
                               onAddRowToDay: _addRowToDay,
                               onRemoveEntry: _removeEntry,
@@ -1453,6 +1496,7 @@ class AuditPlanEntriesSection extends StatefulWidget {
   final List<OfficeDto> offices;
   final List<IsoStandardDto> standards;
   final List<TeamDto> teams;
+  final TeamOfficeConflictMap conflictMap;
   final VoidCallback onAddDay;
   final void Function(int day) onAddRowToDay;
   final void Function(AuditPlanEntryRow entry) onRemoveEntry;
@@ -1469,6 +1513,7 @@ class AuditPlanEntriesSection extends StatefulWidget {
     required this.offices,
     required this.standards,
     required this.teams,
+    required this.conflictMap,
     required this.onAddDay,
     required this.onAddRowToDay,
     required this.onRemoveEntry,
@@ -1597,7 +1642,7 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
     }
   }
 
-  Widget _buildOfficeCombo(AuditPlanEntryRow entry) {
+  Widget _buildOfficeCombo(AuditPlanEntryRow entry, {String? errorText}) {
     return RawAutocomplete<OfficeDto>(
       textEditingController: entry.officeTextController,
       focusNode: entry.officeFocusNode,
@@ -1624,15 +1669,19 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
               .copyWith(
                 hintText: 'Select or type office/process',
                 hintStyle: const TextStyle(fontSize: 12),
+                errorText: errorText,
+                errorMaxLines: 4,
                 suffixIcon: const Icon(
                   Icons.arrow_drop_down,
                   color: primaryThemeColor,
                 ),
               ),
           onChanged: (val) {
-            entry.officeText = val;
-            final match = widget.offices.where((o) => o.name == val);
-            entry.selectedOfficeId = match.isNotEmpty ? match.first.id : null;
+            setState(() {
+              entry.officeText = val;
+              final match = widget.offices.where((o) => o.name == val);
+              entry.selectedOfficeId = match.isNotEmpty ? match.first.id : null;
+            });
           },
         );
       },
@@ -1872,18 +1921,37 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
         ? entry.selectedTeamId
         : null;
 
+    // Inline self-audit detection: both fields chosen + a team member whose
+    // home office is the selected organizational unit.
+    final selfAudit =
+        entry.selectedTeamId != null &&
+        entry.selectedOfficeId != null &&
+        widget.conflictMap.isSelfAudit(
+          teamId: entry.selectedTeamId,
+          officeId: entry.selectedOfficeId,
+        );
+    final selfAuditMessage = selfAudit
+        ? widget.conflictMap.conflictMessage(
+            teamId: entry.selectedTeamId!,
+            officeId: entry.selectedOfficeId!,
+          )
+        : null;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border.all(color: Colors.grey.shade300),
+        color: selfAudit ? const Color(0xFFFDECEA) : Colors.grey.shade50,
+        border: Border.all(
+          color: selfAudit ? Colors.red.shade400 : Colors.grey.shade300,
+          width: selfAudit ? 1.5 : 1,
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           bool isWide = constraints.maxWidth > 800;
 
-          Widget officeCombo = _buildOfficeCombo(entry);
+          Widget officeCombo = _buildOfficeCombo(entry, errorText: selfAuditMessage);
 
           Widget standardMultiSelect = InkWell(
             borderRadius: BorderRadius.circular(6),
@@ -1932,7 +2000,10 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
             initialValue: safeTeamValue,
             isExpanded: true,
             hint: const Text('Select Team', style: TextStyle(fontSize: 12)),
-            decoration: _dropdownDecoration('AUDITORS'),
+            decoration: _dropdownDecoration('AUDITORS').copyWith(
+              errorText: selfAuditMessage,
+              errorMaxLines: 4,
+            ),
             items: widget.teams.isEmpty
                 ? [
                     const DropdownMenuItem<int>(
