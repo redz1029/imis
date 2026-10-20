@@ -68,7 +68,7 @@ namespace IMIS.Persistence.Migrations
                         column: x => x.KraRoadMapDeliverableId,
                         principalTable: "KraRoadMapDeliverable",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.UpdateData(

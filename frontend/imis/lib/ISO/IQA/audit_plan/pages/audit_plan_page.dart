@@ -25,19 +25,6 @@ import 'package:imis/widgets/common/pagination_controls.dart';
 // =============================================================================
 
 class AuditPlanEntryRow {
-  /// Attendees of the Opening Meeting (same as the original form).
-  static const List<String> meetingAttendees = [
-    'Top Management',
-    'ISO Core Team',
-    'QMR',
-    'DQMRs',
-    'IQA Lead Auditor',
-    'IQA Members',
-    'Department / Section / Unit Heads Concerned',
-    'Consultants Concerned',
-    'Chief Residents Concerned',
-  ];
-
   int? id;
   int dayNumber;
   TimeOfDay time;
@@ -75,21 +62,6 @@ class AuditPlanEntryRow {
             .map((n) => TextEditingController(text: n))
             .toList();
 
-  /// A meeting row (the Opening Meeting) — these exist only in
-  /// the Audit Plan, never in the Audit Programme.
-  factory AuditPlanEntryRow.meeting({
-    required int dayNumber,
-    required TimeOfDay time,
-    required String title,
-  }) {
-    return AuditPlanEntryRow(
-      dayNumber: dayNumber,
-      time: time,
-      officeText: title,
-      responsiblePersons: List<String>.of(meetingAttendees),
-    );
-  }
-
   void addResponsiblePerson([String text = '']) {
     responsiblePersonControllers.add(TextEditingController(text: text));
   }
@@ -97,9 +69,6 @@ class AuditPlanEntryRow {
   void removeResponsiblePersonAt(int index) {
     responsiblePersonControllers.removeAt(index).dispose();
   }
-
-  bool get hasResponsiblePersons =>
-      responsiblePersonControllers.any((c) => c.text.trim().isNotEmpty);
 
   void populateResponsiblePersonsFromTeam(
     List<AuditorTeamDto> allAuditorTeams,
@@ -1084,9 +1053,6 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
   static const Color primaryThemeColor = Color(0xFF883942);
   static const Color headerFillColor = Color(0xFFF3E9EA);
 
-  /// The Opening Meeting always starts the first day of the plan.
-  static const TimeOfDay _openingMeetingTime = TimeOfDay(hour: 9, minute: 0);
-
   final AuditProgrammeService _service = AuditProgrammeService(Dio());
   final AuditPlanService _auditPlanService = AuditPlanService(Dio());
 
@@ -1180,26 +1146,10 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
 
       final loadedObjectives =
           jsonMap['objectives'] as List? ?? jsonMap['Objectives'] as List? ?? [];
-      // Same source as the printed form: the plan objective when the programme
-      // has one, otherwise the programme's objectives.
-      final planObjective =
-          (jsonMap['auditPlanObjective'] ?? jsonMap['AuditPlanObjective'] ?? '')
-              .toString()
-              .trim();
-      _programmeObjectives = planObjective.isNotEmpty
-          ? planObjective
-          : loadedObjectives
-              .map((o) => (o['description'] ?? o['Description'] ?? '').toString())
-              .where((s) => s.isNotEmpty)
-              .join('\n');
-
-      // Start from a clean slate. The spinner is showing at this point, so
-      // nothing in the widget tree is bound to the old controllers.
-      for (final e in _entries) {
-        e.dispose();
-      }
-      _entries.clear();
-      _dayDates.clear();
+      _programmeObjectives = loadedObjectives
+          .map((o) => (o['description'] ?? o['Description'] ?? '').toString())
+          .where((s) => s.isNotEmpty)
+          .join('\n');
 
       final sourcePlans =
           (jsonMap['auditPlan'] as List? ?? jsonMap['AuditPlans'] as List? ?? []);
@@ -1216,23 +1166,108 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
         }
       }
 
-      // Meetings only exist in the plan; never treat a stray one as programme data.
-      final cleanProgrammeEntries = programmeEntries
-          .where((e) => !_isMeetingText(e.processText))
-          .toList();
-
-      // Editing an existing plan: show what was saved.
       if (widget.auditPlanId != null) {
-        _loadSavedPlanEntries(jsonMap);
+        final plans =
+            (jsonMap['auditPlan'] as List? ?? jsonMap['AuditPlans'] as List? ?? []);
+        final match = plans.cast<Map<String, dynamic>>().where(
+              (p) => (p['id'] ?? p['Id']) == widget.auditPlanId,
+            );
+        if (match.isNotEmpty) {
+          final plan = match.first;
+          final entriesList =
+              (plan['entries'] as List? ?? plan['Entries'] as List? ?? []);
+          for (final e in entriesList) {
+            final row = AuditPlanEntryRow.fromJson(
+              e as Map<String, dynamic>,
+              allStandards: _standards,
+            );
+            _entries.add(row);
+            _dayDates.putIfAbsent(row.dayNumber, () {
+              final rawTime = e['time'] ?? e['Time'];
+              final parsed = rawTime != null
+                  ? DateTime.tryParse(rawTime.toString())
+                  : null;
+              return parsed != null
+                  ? DateTime(parsed.year, parsed.month, parsed.day)
+                  : DateTime.now();
+            });
+          }
+        }
       }
 
       if (_entries.isEmpty) {
-        // New plan: fetch the Audit Programme schedule and add the
-        // Opening Meeting row the programme does not have.
-        _seedNewPlanEntries(cleanProgrammeEntries);
-      } else {
-        // Plan saved earlier (e.g. before meetings existed): complete it.
-        _completeSavedPlan();
+        if (programmeEntries.isEmpty) {
+          _dayDates[1] = DateTime.now();
+          _entries.add(
+            AuditPlanEntryRow(
+              dayNumber: 1,
+              time: const TimeOfDay(hour: 9, minute: 0),
+              officeText: 'Opening Meeting',
+              responsiblePersons: const [
+                'Top Management',
+                'ISO Core Team',
+                'QMR',
+                'DQMRs',
+                'IQA Lead Auditor',
+                'IQA Members',
+                'Department / Section / Unit Heads Concerned',
+                'Consultants Concerned',
+                'Chief Residents Concerned',
+              ],
+            ),
+          );
+        } else {
+          final days = programmeEntries.map((e) => e.dayNumber).toSet().toList()
+            ..sort();
+
+          for (final day in days) {
+            final dayEntries =
+                programmeEntries.where((e) => e.dayNumber == day).toList()
+                  ..sort(
+                    (a, b) => (a.time.hour * 60 + a.time.minute).compareTo(
+                      b.time.hour * 60 + b.time.minute,
+                    ),
+                  );
+
+            _dayDates[day] = dayEntries
+                    .firstWhere(
+                      (e) => e.date != null,
+                      orElse: () => dayEntries.first,
+                    )
+                    .date ??
+                DateTime.now();
+
+            if (day == 1) {
+              _entries.add(
+                AuditPlanEntryRow(
+                  dayNumber: 1,
+                  time: const TimeOfDay(hour: 9, minute: 0),
+                  officeText: 'Opening Meeting',
+                  responsiblePersons: const [
+                    'Top Management',
+                    'ISO Core Team',
+                    'QMR',
+                    'DQMRs',
+                    'IQA Lead Auditor',
+                    'IQA Members',
+                    'Department / Section / Unit Heads Concerned',
+                    'Consultants Concerned',
+                    'Chief Residents Concerned',
+                  ],
+                ),
+              );
+            }
+
+            for (final pe in dayEntries) {
+              final row = AuditPlanEntryRow.fromProgrammeEntry(
+                pe,
+                allStandards: _standards,
+              );
+              row.populateResponsiblePersonsFromTeam(_auditorTeams);
+              _entries.add(row);
+            }
+          }
+        }
       }
     } catch (e) {
       _errorMessage = 'Error loading Audit Plan: $e';
@@ -1240,192 +1275,6 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-
-  /// Date part of an entry's `time` field, in local time.
-  DateTime? _dateFromEntryJson(Map<String, dynamic> e) {
-    final rawTime = e['time'] ?? e['Time'];
-    if (rawTime == null) return null;
-    final parsed = DateTime.tryParse(rawTime.toString());
-    if (parsed == null) return null;
-    final local = parsed.toLocal();
-    return DateTime(local.year, local.month, local.day);
-  }
-
-  /// Loads the rows of the saved plan from the plan's own record (the
-  /// programme response only serves as a fallback), so an existing plan never
-  /// gets silently replaced by programme data.
-  void _loadSavedPlanEntries(Map<String, dynamic> programmeJson) {
-    final rawEntries = <Map<String, dynamic>>[];
-
-    if (_loadedPlan != null) {
-      for (final e in _loadedPlan!.entries) {
-        final m = e.toJson();
-        // Take the time from the typed field, never from the serializer.
-        m['time'] = e.time.toIso8601String();
-        rawEntries.add(m);
-      }
-    }
-
-    if (rawEntries.isEmpty) {
-      final plans = (programmeJson['auditPlan'] as List? ??
-          programmeJson['AuditPlans'] as List? ??
-          []);
-      for (final p in plans) {
-        if (p is! Map) continue;
-        final pid = p['id'] ?? p['Id'];
-        if (pid != widget.auditPlanId) continue;
-        final list = (p['entries'] as List? ?? p['Entries'] as List? ?? []);
-        for (final e in list) {
-          if (e is Map) rawEntries.add(Map<String, dynamic>.from(e));
-        }
-      }
-    }
-
-    for (final e in rawEntries) {
-      final row = AuditPlanEntryRow.fromJson(e, allStandards: _standards);
-      _entries.add(row);
-      _dayDates.putIfAbsent(
-        row.dayNumber,
-        () => _dateFromEntryJson(e) ?? DateTime.now(),
-      );
-    }
-  }
-
-  static const TimeOfDay _firstDayEntryTime = TimeOfDay(hour: 10, minute: 0);
-  static const TimeOfDay _otherDayEntryTime = TimeOfDay(hour: 9, minute: 0);
-
-  /// Meeting rows exist only in the plan; never programme data.
-  bool _isMeetingText(String text) {
-    final t = text.trim().toLowerCase();
-    return t.contains('opening meeting') || t.contains('closing meeting');
-  }
-
-  /// The Audit Programme has no time of day, so fetched rows arrive as
-  /// 12:00 AM. Treat that as "not set yet".
-  bool _isUnsetTime(TimeOfDay t) => t.hour == 0 && t.minute == 0;
-
-  TimeOfDay _defaultEntryTime(bool isFirstDay) =>
-      isFirstDay ? _firstDayEntryTime : _otherDayEntryTime;
-
-  /// Opening Meeting on the first day, followed by the programme's entries
-  /// of each day.
-  void _seedNewPlanEntries(List<ProgrammeEntrySummary> programmeEntries) {
-    if (programmeEntries.isEmpty) {
-      _dayDates[1] = DateTime.now();
-      _entries.add(
-        AuditPlanEntryRow.meeting(
-          dayNumber: 1,
-          time: _openingMeetingTime,
-          title: 'Opening Meeting',
-        ),
-      );
-      return;
-    }
-
-    final days = programmeEntries.map((e) => e.dayNumber).toSet().toList()
-      ..sort();
-    final firstDay = days.first;
-
-    int minutesOf(ProgrammeEntrySummary e) => e.time.hour * 60 + e.time.minute;
-
-    for (final day in days) {
-      // Sort by time but keep the programme's own order for equal times.
-      final indexed = programmeEntries
-          .asMap()
-          .entries
-          .where((e) => e.value.dayNumber == day)
-          .toList()
-        ..sort((a, b) {
-          final c = minutesOf(a.value).compareTo(minutesOf(b.value));
-          return c != 0 ? c : a.key.compareTo(b.key);
-        });
-      final dayItems = indexed.map((e) => e.value).toList();
-
-      _dayDates[day] = dayItems
-              .firstWhere(
-                (e) => e.date != null,
-                orElse: () => dayItems.first,
-              )
-              .date ??
-          DateTime.now();
-
-      if (day == firstDay) {
-        _entries.add(
-          AuditPlanEntryRow.meeting(
-            dayNumber: day,
-            time: _openingMeetingTime,
-            title: 'Opening Meeting',
-          ),
-        );
-      }
-
-      for (final pe in dayItems) {
-        final row = AuditPlanEntryRow.fromProgrammeEntry(
-          pe,
-          allStandards: _standards,
-        );
-        if (_isUnsetTime(row.time)) {
-          row.time = _defaultEntryTime(day == firstDay);
-        }
-        row.populateResponsiblePersonsFromTeam(_auditorTeams);
-        _entries.add(row);
-      }
-    }
-  }
-
-  /// A plan saved before the Opening Meeting existed (still editable): fix
-  /// unset times, fill empty responsible persons from the team roster, add the
-  /// missing Opening Meeting and drop a stray "Closing Meeting" row (the form
-  /// has none). Nothing is stored until the user saves.
-  void _completeSavedPlan() {
-    if (_entries.isEmpty) return;
-    final status = _loadedPlan?.effectiveStatusName ?? 'Draft';
-    if (status == 'Approved' || status == 'Pending') return;
-
-    final strays = _entries
-        .where((e) => _isClosingMeetingRow(e.officeTextController.text))
-        .toList();
-    for (final e in strays) {
-      e.dispose();
-      _entries.remove(e);
-    }
-    if (_entries.isEmpty) return;
-
-    final days = _entries.map((e) => e.dayNumber).toSet().toList()..sort();
-    final firstDay = days.first;
-
-    for (final e in _entries) {
-      if (_isUnsetTime(e.time)) {
-        e.time = _isOpeningMeetingRow(e.officeTextController.text)
-            ? _openingMeetingTime
-            : _defaultEntryTime(e.dayNumber == firstDay);
-      }
-      if (e.selectedTeamId != null && !e.hasResponsiblePersons) {
-        e.populateResponsiblePersonsFromTeam(_auditorTeams);
-      }
-    }
-
-    final hasOpening = _entries.any(
-      (e) => _isOpeningMeetingRow(e.officeTextController.text),
-    );
-    if (!hasOpening) {
-      final idx = _entries.indexWhere((e) => e.dayNumber == firstDay);
-      _entries.insert(
-        idx < 0 ? 0 : idx,
-        AuditPlanEntryRow.meeting(
-          dayNumber: firstDay,
-          time: _openingMeetingTime,
-          title: 'Opening Meeting',
-        ),
-      );
-    }
-  }
-
-  bool _isOpeningMeetingRow(String text) =>
-      text.trim().toLowerCase() == 'opening meeting';
-
-  bool _isClosingMeetingRow(String text) =>
-      text.trim().toLowerCase() == 'closing meeting';
 
   Future<void> _fetchMasterOffices() async {
     try {
@@ -1536,18 +1385,11 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
   }
 
   Future<void> _pickDayDate(int day) async {
-    final current = _dayDates[day] ?? DateTime.now();
-    final firstDate = DateTime(2020);
-    final lastDate = DateTime(2100);
-    final initial = current.isBefore(firstDate)
-        ? firstDate
-        : (current.isAfter(lastDate) ? lastDate : current);
-
     final picked = await showDatePicker(
       context: context,
-      initialDate: initial,
-      firstDate: firstDate,
-      lastDate: lastDate,
+      initialDate: _dayDates[day] ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -1743,15 +1585,6 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
     }
   }
 
-  /// "Save as Draft". A brand-new plan closes the dialog after saving so that
-  /// pressing the button again can never create a duplicate plan; the list
-  /// refreshes and the draft can be reopened from there.
-  Future<void> _saveDraft() async {
-    final savedId = await _save();
-    if (savedId == null || !mounted) return;
-    if (widget.auditPlanId == null) Navigator.pop(context, true);
-  }
-
   Future<void> _submitPlan() async {
     final hasRejection = _loadedPlan?.latestRejection != null;
     final confirmed = await showDialog<bool>(
@@ -1796,18 +1629,10 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      final wasNewPlan = widget.auditPlanId == null;
       MotionToast.error(
         toastAlignment: Alignment.topCenter,
-        description: Text(
-          wasNewPlan
-              ? 'Plan was saved as a draft but submission failed: $e'
-              : 'Failed: $e',
-        ),
+        description: Text('Failed: $e'),
       ).show(context);
-      // The plan now exists on the server; close so a retry cannot create a
-      // duplicate. It can be reopened and submitted from the list.
-      if (wasNewPlan) Navigator.pop(context, true);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -1882,10 +1707,9 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
         action: action,
       );
       if (!mounted) return;
-      final pastTense = action == 'Approve' ? 'approved' : action.toLowerCase();
       MotionToast.success(
         toastAlignment: Alignment.topCenter,
-        description: Text('Audit Plan $pastTense successfully.'),
+        description: Text('Audit Plan $action-d successfully.'),
       ).show(context);
       Navigator.pop(context, true);
     } catch (e) {
@@ -2104,7 +1928,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
                 const SizedBox(width: 8),
               ],
               OutlinedButton(
-                onPressed: _isSaving ? null : () => _saveDraft(),
+                onPressed: _isSaving ? null : () => _save(),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: primaryThemeColor),
                   padding: const EdgeInsets.symmetric(
@@ -2613,12 +2437,12 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
 
   Widget _buildDayGroup(int day, List<int> indices) {
     final date = _dayDates[day] ?? DateTime.now();
-    final fromProgramme = _entries.any(
-      (e) => e.dayNumber == day && e.sourceProgrammeEntryId != null,
-    );
+    final fromProgramme = day == 1 &&
+        _entries.any(
+          (e) => e.dayNumber == 1 && e.sourceProgrammeEntryId != null,
+        );
 
     return Padding(
-      key: ValueKey('plan-day-$day'),
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2717,9 +2541,6 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
         );
 
     return Container(
-      // Keyed by the row object so removing a row never leaves another row
-      // showing a stale Audit Team dropdown value.
-      key: ObjectKey(entry),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
@@ -2864,13 +2685,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
                   .toList(),
           onChanged: _teams.isEmpty
               ? null
-              : (val) => setState(() {
-                    entry.selectedTeamId = val;
-                    // Pick a team on an empty row → fill the roster for them.
-                    if (!entry.hasResponsiblePersons) {
-                      entry.populateResponsiblePersonsFromTeam(_auditorTeams);
-                    }
-                  }),
+              : (val) => setState(() => entry.selectedTeamId = val),
         ),
         const SizedBox(height: 8),
         Row(
