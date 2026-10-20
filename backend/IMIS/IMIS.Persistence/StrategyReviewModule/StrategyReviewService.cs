@@ -34,7 +34,8 @@ namespace IMIS.Persistence.StrategyReviewModule
             _userManager = userManager;
             _roleManager = roleManager;
         }
-        public async Task<List<StrategyReviewOfficeDeliverableDto>> GetOfficeDeliverablesAsync(long strategyReviewId, CancellationToken cancellationToken)
+     
+        public async Task<StrategyReviewOfficeDeliverableDto?> GetOfficeDeliverablesAsync(long strategyReviewId, CancellationToken cancellationToken)
         {
             return await _repository
                 .GetOfficeDeliverablesByStrategyReviewIdAsync(strategyReviewId, cancellationToken)

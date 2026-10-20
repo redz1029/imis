@@ -6,7 +6,7 @@ namespace IMIS.Application.StrategyReviewModule
 {
     public interface IStrategyReviewService : IService
     {
-        Task<List<StrategyReviewOfficeDeliverableDto>> GetOfficeDeliverablesAsync(long strategyReviewId, CancellationToken cancellationToken);
+        Task<StrategyReviewOfficeDeliverableDto?> GetOfficeDeliverablesAsync(long strategyReviewId, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<StrategyReviewDto?> GetByIdAsync(long id, CancellationToken cancellationToken);
         Task<ReportStrategyReviewDto?> ReportGetByIdAsync(long id, CancellationToken cancellationToken);    

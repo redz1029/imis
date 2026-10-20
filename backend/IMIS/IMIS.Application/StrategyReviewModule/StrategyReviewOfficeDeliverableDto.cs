@@ -2,7 +2,14 @@
 
 namespace IMIS.Application.StrategyReviewModule
 {
+
     public class StrategyReviewOfficeDeliverableDto
+    {
+        public string RoadmapName { get; set; } = string.Empty;
+        public List<StrategyReviewOfficeDeliverableItemDto> Deliverables { get; set; } = new();
+    }
+
+    public class StrategyReviewOfficeDeliverableItemDto
     {
         public string OfficeName { get; set; } = string.Empty;
         public List<StrategyReviewDeliverableItemDto> Deliverables { get; set; } = new();

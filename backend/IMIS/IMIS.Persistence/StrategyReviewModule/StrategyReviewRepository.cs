@@ -11,7 +11,10 @@ namespace IMIS.Persistence.StrategyReviewModule
         {
         }
 
-        public async Task<List<StrategyReviewOfficeDeliverableDto>> GetOfficeDeliverablesByStrategyReviewIdAsync(long strategyReviewId, CancellationToken cancellationToken)
+      
+
+
+        public async Task<StrategyReviewOfficeDeliverableDto?> GetOfficeDeliverablesByStrategyReviewIdAsync(long strategyReviewId, CancellationToken cancellationToken)
         {
             var db = GetDbContext();
 
@@ -19,10 +22,19 @@ namespace IMIS.Persistence.StrategyReviewModule
                 .AsNoTracking()
                 .Include(x => x.StrategyReviewPeriod)
                 .Include(x => x.KraRoadMap)
+                    .ThenInclude(x => x!.Kra)
                 .FirstOrDefaultAsync(x => x.Id == strategyReviewId, cancellationToken);
 
-            if (review?.KraRoadMap?.KraId == null || review.StrategyReviewPeriod == null)
-                return new List<StrategyReviewOfficeDeliverableDto>();
+            if (review == null)
+                return null;
+
+            var result = new StrategyReviewOfficeDeliverableDto
+            {
+                RoadmapName = review.KraRoadMap?.Kra?.Name ?? string.Empty
+            };
+
+            if (review.KraRoadMap?.KraId == null || review.StrategyReviewPeriod == null)
+                return result;
 
             var kraId = review.KraRoadMap.KraId.Value;
             var startDate = review.StrategyReviewPeriod.StartDate;
@@ -34,7 +46,7 @@ namespace IMIS.Persistence.StrategyReviewModule
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (matchingPeriodId == null)
-                return new List<StrategyReviewOfficeDeliverableDto>();
+                return result;
 
             var rows = await (
                 from d in db.Set<PgsDeliverable>()
@@ -59,8 +71,7 @@ namespace IMIS.Persistence.StrategyReviewModule
 
             var deliverableIds = rows.Select(r => r.DeliverableId).Distinct().ToList();
 
-          
-            var cutoff = endDate.ToDateTime(TimeOnly.MaxValue);  
+            var cutoff = endDate.ToDateTime(TimeOnly.MaxValue);
 
             var latestList = await db.Set<PgsDeliverableAccomplishment>()
                 .AsNoTracking()
@@ -79,10 +90,10 @@ namespace IMIS.Persistence.StrategyReviewModule
 
             var latestByDeliverable = latestList.ToDictionary(a => a.PgsDeliverableId);
 
-            return rows
+            result.Deliverables = rows
                 .GroupBy(x => x.OfficeName)
                 .OrderBy(g => g.Key)
-                .Select(g => new StrategyReviewOfficeDeliverableDto
+                .Select(g => new StrategyReviewOfficeDeliverableItemDto
                 {
                     OfficeName = g.Key,
                     Deliverables = g
@@ -110,6 +121,8 @@ namespace IMIS.Persistence.StrategyReviewModule
                         .ToList()
                 })
                 .ToList();
+
+            return result;
         }
 
         public async Task<StrategyReview?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
