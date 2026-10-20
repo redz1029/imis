@@ -30,7 +30,7 @@ namespace IMIS.Presentation.StrategyReviewModule
             })
            .WithTags(_strategyReview)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.Add));
-            
+
             app.MapGet("/{id:long}", async (long id, IStrategyReviewService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetByIdAsync(id, cancellationToken);
@@ -124,6 +124,16 @@ namespace IMIS.Presentation.StrategyReviewModule
             })
            .WithTags(_strategyReview)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.Delete));
+
+            app.MapGet("/{id:long}/offices", async (long id, IStrategyReviewService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetOfficeDeliverablesAsync(id, cancellationToken);
+
+                return Results.Ok(result);
+            })
+            .WithTags(_strategyReview)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReview), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.View));
         }
     }
 }

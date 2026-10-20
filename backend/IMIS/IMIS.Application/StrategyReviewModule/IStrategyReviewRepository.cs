@@ -10,5 +10,6 @@ namespace IMIS.Application.StrategyReviewModule
         Task<List<StrategyReview>> GetAll(CancellationToken cancellationToken);
         Task<List<StrategyReview>> GetAllForRoleAsync(string roleId, CancellationToken cancellationToken);
         Task<StrategyReview?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<List<StrategyReviewOfficeDeliverableDto>> GetOfficeDeliverablesByStrategyReviewIdAsync(long strategyReviewId, CancellationToken cancellationToken);
     }
 }

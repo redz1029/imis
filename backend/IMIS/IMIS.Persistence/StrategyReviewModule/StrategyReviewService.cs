@@ -34,6 +34,12 @@ namespace IMIS.Persistence.StrategyReviewModule
             _userManager = userManager;
             _roleManager = roleManager;
         }
+        public async Task<List<StrategyReviewOfficeDeliverableDto>> GetOfficeDeliverablesAsync(long strategyReviewId, CancellationToken cancellationToken)
+        {
+            return await _repository
+                .GetOfficeDeliverablesByStrategyReviewIdAsync(strategyReviewId, cancellationToken)
+                .ConfigureAwait(false);
+        }
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var SoftDelete = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
