@@ -77,17 +77,18 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .DisableAntiforgery()
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.Add));
-
-            app.MapGet("/{deliverableId:long}",
-            async (long deliverableId, IPgsDeliverableAcomplishmentService service, CancellationToken cancellationToken) =>
+            
+            app.MapGet("/deliverable/{deliverableId:long}", async (long deliverableId, IPgsDeliverableAcomplishmentService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.GetByDeliverableIdAsync(deliverableId, cancellationToken);
+
                 return Results.Ok(result);
             })
             .WithTags(_pgsDeliverableAccomplishmentTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsDeliverableAccomplishmentTag), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0))
+            .Tag(_pgsDeliverableAccomplishmentTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
-         
+
             app.MapPut("/pgsDeliverableAccomplishment/{id:int}", async (int id, [FromForm] PgsDeliverableAccomplishmentForm form, IPgsDeliverableAcomplishmentService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (form == null)
