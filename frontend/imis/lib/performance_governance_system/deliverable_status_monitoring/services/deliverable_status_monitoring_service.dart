@@ -77,7 +77,7 @@ class DeliverableStatusMonitoringService {
   Future<List<PgsDeliverableAccomplishment>> fetchAccomplishments(
     int deliverableId,
   ) async {
-    final url = "${ApiEndpoint.baseUrl}/$deliverableId";
+    final url = "${ApiEndpoint().deliverable}/$deliverableId";
     final response = await AuthenticatedRequest.get(dio, url);
 
     if (response.statusCode == 200) {
