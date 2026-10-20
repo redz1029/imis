@@ -147,9 +147,29 @@ class _PageSpec {
   });
 }
 
+String _clean(String s) {
+  return s
+      // iba't ibang uri ng space -> normal space
+      .replaceAll(RegExp(r'[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]'), ' ')
+      // zero-width / invisible chars -> remove
+      .replaceAll(RegExp(r'[\u200B-\u200D\u2060\uFEFF\u00AD]'), '')
+      // tab -> space
+      .replaceAll('\t', ' ')
+      // smart quotes / dashes / ellipsis -> plain (Times Latin-1 safe)
+      .replaceAll(RegExp(r'[\u2018\u2019\u201B]'), "'")
+      .replaceAll(RegExp(r'[\u201C\u201D\u201F]'), '"')
+      .replaceAll(RegExp(r'[\u2013\u2014\u2212]'), '-')
+      .replaceAll('\u2026', '...')
+      // anumang natitirang control chars
+      .replaceAll(
+        RegExp(r'[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]'),
+        '',
+      );
+}
+
 List<String> _wrap(String text, int maxChars) {
   final out = <String>[];
-  for (final raw in text.split(RegExp(r'\r?\n'))) {
+  for (final raw in _clean(text).split(RegExp(r'\r?\n'))) {
     final t = raw.trim();
     if (t.isEmpty) continue;
     var cur = '';

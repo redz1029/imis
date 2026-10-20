@@ -110,6 +110,7 @@ class ApiEndpoint {
   late String isat;
   late String iSATSignatoryTemplate;
   late String filterAccomplishmentReport;
+  late String deliverable;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -118,6 +119,7 @@ class ApiEndpoint {
     auditor = '$baseUrl/auditors';
     pgsperiod = '$baseUrl/PgsPeriod';
     deliverables = '$baseUrl/deliverables';
+    deliverable = '$baseUrl/deliverable';
     performancegovernancesystem = '$baseUrl/pgs';
     office = '$baseUrl/Office';
     team = '$baseUrl/Team';
