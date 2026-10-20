@@ -109,6 +109,7 @@ class ApiEndpoint {
   late String isatPeriod;
   late String isat;
   late String iSATSignatoryTemplate;
+  late String filterAccomplishmentReport;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -221,14 +222,17 @@ class ApiEndpoint {
     isatPeriod = '$baseUrl/ISATPeriod';
     isat = '$baseUrl/ISAT';
     iSATSignatoryTemplate = '$baseUrl/iSATSignatoryTemplate';
+    filterAccomplishmentReport = '$baseUrl/filter-accomplishment-report';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
       baseUrl = 'https://localhost:7273';
-    } else if (kReleaseMode) {
-      baseUrl = 'https://api.cpems.crmc.ph';
-      // baseUrl = 'http://192.168.0.74';
-    } else {
+    }
+    // else if (kReleaseMode) {
+    //   baseUrl = 'https://api.cpems.crmc.ph';
+    //   // baseUrl = 'http://192.168.0.74';
+    // }
+    else {
       throw Exception("Test base Url is not specified!");
     }
   }

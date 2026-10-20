@@ -16,11 +16,18 @@ class ProceduresPage extends StatefulWidget {
 
   final Future<void> Function(String html)? onSave;
 
+  final Future<void> Function(Map<String, String> header, String html)?
+  onSaveDocument;
+
+  final VoidCallback? onClose;
+
   const ProceduresPage({
     super.key,
     this.initialHtml,
     this.initialHeader,
     this.onSave,
+    this.onSaveDocument,
+    this.onClose,
   });
 
   @override
@@ -31,8 +38,10 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   final HtmlEditorController _controller = HtmlEditorController(
     processInputHtml: false,
   );
+  final _formKey = GlobalKey<FormState>();
+
   bool _saving = false;
-  bool _headerOpen = true;
+  int _step = 0;
 
   static const _headerKeys = [
     'title',
@@ -43,6 +52,31 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     'reference',
     'pages',
     'effectivity',
+  ];
+
+  static const _months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  static const _steps = [
+    (
+      'Document Header',
+      'Provide key details to define the document.',
+      Icons.description_outlined,
+    ),
+    ('Procedure', 'Write the procedure content.', Icons.edit_note_rounded),
+    ('Review', 'Check everything and save.', Icons.fact_check_outlined),
   ];
 
   late final Map<String, TextEditingController> _hdr = {
@@ -58,20 +92,32 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     super.dispose();
   }
 
+  void _close() {
+    if (widget.onClose != null) {
+      widget.onClose!();
+    } else {
+      Navigator.maybePop(context);
+    }
+  }
+
   void _syncListMarkers() {
     _controller.evaluateJavascriptWeb('syncListMarkers');
   }
 
-  Future<void> _save() async {
+  Future<void> _save({bool close = false}) async {
     if (_saving) return;
     setState(() => _saving = true);
     try {
       final htmlText = await _controller.getText();
       await widget.onSave?.call(htmlText);
+      await widget.onSaveDocument?.call({
+        for (final k in _headerKeys) k: _hdr[k]!.text.trim(),
+      }, htmlText);
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Saved successfully')));
+      if (close) _close();
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -141,340 +187,632 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     );
   }
 
+  Future<void> _pickDate() async {
+    final d = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (d == null) return;
+    _hdr['effectivity']!.text = '${_months[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
+  bool _headerValid() => _formKey.currentState?.validate() ?? true;
+
+  void _goTo(int i) {
+    if (i == _step) return;
+    if (i > _step && !_headerValid()) return;
+    setState(() => _step = i);
+  }
+
+  void _next() {
+    if (_step < _steps.length - 1) {
+      _goTo(_step + 1);
+    } else {
+      _save(close: true);
+    }
+  }
+
+  void _back() {
+    if (_step > 0) setState(() => _step--);
+  }
+
+  // ───────────────────────── build ─────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final isSmall = MediaQuery.of(context).size.width < 700;
+    final isLast = _step == _steps.length - 1;
 
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: const Text('Procedures'),
         backgroundColor: Colors.white,
-        actions: [
-          IconButton(
-            tooltip: 'Print Preview',
-            icon: const Icon(Icons.preview_outlined),
-            onPressed: _openPreview,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: IconButton(
+            tooltip: 'Close',
+            icon: const Icon(Icons.close, size: 18),
+            style: IconButton.styleFrom(
+              side: BorderSide(color: Colors.grey.shade300),
+            ),
+            onPressed: _close,
           ),
-          _saving
-              ? const Padding(
-                padding: EdgeInsets.all(14),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              )
-              : IconButton(
-                tooltip: 'Save',
-                icon: const Icon(Icons.save_outlined),
-                onPressed: _save,
-              ),
-        ],
+        ),
+        title: Text(
+          'Procedures',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
+      bottomNavigationBar: _buildFooter(isLast),
       body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: const EdgeInsets.all(16),
+        child:
+            isSmall
+                ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildStepperHorizontal(),
+                    const SizedBox(height: 12),
+                    Expanded(child: _buildContent()),
+                  ],
+                )
+                : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(width: 260, child: _buildStepperVertical()),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildContent()),
+                  ],
+                ),
+      ),
+    );
+  }
+
+  Widget _buildFooter(bool isLast) {
+    return SafeArea(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        ),
+        child: Wrap(
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            _buildHeaderCard(isSmall),
-            const SizedBox(height: 12),
-            Expanded(child: _buildEditorCard()),
+            if (_step > 0) _outlineBtn('Back', _back),
+            _outlineBtn('Preview', _openPreview),
+            _outlineBtn('Save as Draft', _saving ? null : _save),
+            ElevatedButton(
+              onPressed: _saving ? null : _next,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child:
+                  _saving
+                      ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                      : Text(isLast ? 'Save' : 'Next'),
+            ),
           ],
         ),
       ),
     );
   }
 
-  BoxDecoration get _cardDecoration => BoxDecoration(
-    border: Border.all(color: Colors.grey.shade300),
-    borderRadius: BorderRadius.circular(8),
-    color: Colors.white,
-  );
+  Widget _outlineBtn(String label, VoidCallback? onTap) {
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.black87,
+        side: BorderSide(color: Colors.grey.shade300),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Text(label, style: const TextStyle(fontSize: 12)),
+    );
+  }
 
-  Widget _titleBar(String title, {Widget? trailing}) {
+  // ───────────────────────── stepper ─────────────────────────
+
+  Widget _stepIcon(int i, {double size = 34}) {
+    final done = i < _step;
+    final active = i == _step;
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: primaryColor,
-        borderRadius: BorderRadius.vertical(
-          top: const Radius.circular(8),
-          bottom: Radius.circular(trailing == null ? 0 : 0),
+        shape: BoxShape.circle,
+        color: active || done ? Colors.white : Colors.grey.shade100,
+        border: Border.all(
+          color: active || done ? primaryColor : Colors.grey.shade300,
         ),
+      ),
+      child: Icon(
+        done ? Icons.check : _steps[i].$3,
+        size: size * 0.5,
+        color: active || done ? primaryColor : Colors.grey,
+      ),
+    );
+  }
+
+  Widget _buildStepperVertical() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          for (int i = 0; i < _steps.length; i++) ...[
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => _goTo(i),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  gradient:
+                      i == _step
+                          ? LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              primaryColor.withAlpha(55),
+                              primaryColor.withAlpha(8),
+                            ],
+                          )
+                          : null,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _stepIcon(i),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'STEP ${i + 1}',
+                            style: const TextStyle(
+                              fontSize: 9,
+                              color: Colors.grey,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _steps[i].$1,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight:
+                                  i == _step
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                            ),
+                          ),
+                          if (i == _step) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              _steps[i].$2,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (i != _steps.length - 1)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  margin: const EdgeInsets.only(left: 28),
+                  width: 1,
+                  height: 14,
+                  color: Colors.grey.shade300,
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepperHorizontal() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
+          for (int i = 0; i < _steps.length; i++) ...[
+            InkWell(
+              onTap: () => _goTo(i),
+              child: Row(
+                children: [
+                  _stepIcon(i, size: 28),
+                  if (i == _step) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      _steps[i].$1,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ),
-          if (trailing != null) trailing,
+            if (i != _steps.length - 1)
+              Expanded(
+                child: Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  color: Colors.grey.shade300,
+                ),
+              ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildHeaderCard(bool isSmall) {
-    final border = BorderSide(color: Colors.grey.shade300);
+  // ───────────────────────── content ─────────────────────────
 
-    Widget cell(String key, String label, {bool last = false, int lines = 1}) {
-      return Container(
-        constraints: const BoxConstraints(minHeight: 58),
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-        decoration: BoxDecoration(
-          border: Border(right: last || isSmall ? BorderSide.none : border),
+  Widget _buildContent() {
+    // IndexedStack para hindi ma-destroy yung editor kapag nag-switch ng step
+    return IndexedStack(
+      index: _step,
+      children: [_buildHeaderStep(), _buildEditorStep(), _buildReviewStep()],
+    );
+  }
+
+  Widget _card({required Widget child, EdgeInsets? padding}) {
+    return Container(
+      width: double.infinity,
+      padding: padding ?? const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _sectionTitle(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 14),
+    child: Text(
+      t,
+      style: GoogleFonts.plusJakartaSans(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+  );
+
+  Widget _divider() => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 18),
+    child: Divider(height: 1, color: Colors.grey.shade200),
+  );
+
+  Widget _field(
+    String key,
+    String label, {
+    String? hint,
+    bool required = false,
+    Widget? suffix,
+    bool readOnly = false,
+    VoidCallback? onTap,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          required ? '$label *' : label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: _hdr[key],
+          readOnly: readOnly,
+          onTap: onTap,
+          minLines: 1,
+          maxLines: readOnly ? 1 : null,
+          keyboardType: TextInputType.multiline,
+          style: GoogleFonts.plusJakartaSans(fontSize: 12),
+          validator:
+              required
+                  ? (v) =>
+                      (v == null || v.trim().isEmpty)
+                          ? '$label is required'
+                          : null
+                  : null,
+          decoration: InputDecoration(
+            hintText: hint ?? 'Enter ${label.toLowerCase()}',
+            hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+            isDense: true,
+            suffixIcon: suffix,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
             ),
-            const SizedBox(height: 3),
-            TextField(
-              controller: _hdr[key],
-              minLines: 1,
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
-              style: GoogleFonts.plusJakartaSans(fontSize: 12),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
+            border: _outline(Colors.grey.shade300),
+            enabledBorder: _outline(Colors.grey.shade300),
+            focusedBorder: _outline(primaryColor),
+            errorBorder: _outline(Colors.red.shade300),
+            focusedErrorBorder: _outline(Colors.red.shade400),
+          ),
+        ),
+      ],
+    );
+  }
+
+  OutlineInputBorder _outline(Color c) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(8),
+    borderSide: BorderSide(color: c),
+  );
+
+  Widget _cols(List<Widget> children) {
+    final isSmall = MediaQuery.of(context).size.width < 700;
+    if (isSmall) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (int i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i != children.length - 1) const SizedBox(height: 14),
           ],
-        ),
+        ],
       );
     }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < children.length; i++) ...[
+          Expanded(child: children[i]),
+          if (i != children.length - 1) const SizedBox(width: 16),
+        ],
+      ],
+    );
+  }
 
-    Widget row(List<(int, Widget)> cells, {bool last = false}) {
-      final decoration = BoxDecoration(
-        border: last ? null : Border(bottom: border),
-      );
-      if (isSmall) {
-        return Container(
-          decoration: decoration,
+  // STEP 1 — Document Header
+  Widget _buildHeaderStep() {
+    return SingleChildScrollView(
+      child: _card(
+        child: Form(
+          key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (int i = 0; i < cells.length; i++) ...[
-                cells[i].$2,
-                if (i != cells.length - 1)
-                  Divider(height: 1, color: Colors.grey.shade200),
-              ],
-            ],
-          ),
-        );
-      }
-      return Container(
-        decoration: decoration,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final c in cells) Expanded(flex: c.$1, child: c.$2),
+              _sectionTitle('Document Detail'),
+              _field(
+                'title',
+                'Title',
+                hint: 'Enter document title',
+                required: true,
+              ),
+              const SizedBox(height: 14),
+              _cols([
+                _field('section', 'Section'),
+                _field('owner', 'Process Owner'),
+              ]),
+              const SizedBox(height: 14),
+              _cols([
+                _field(
+                  'docCode',
+                  'Doc. Code',
+                  hint: 'e.g. CRMC-QMS-001',
+                  required: true,
+                ),
+                _field('revision', 'Revision', hint: 'e.g. 00'),
+              ]),
+              _divider(),
+              _sectionTitle('Reference & Validity'),
+              _field(
+                'reference',
+                'Regulatory/Standard Reference(s)',
+                hint: 'Enter regulatory or standard reference(s)',
+              ),
+              const SizedBox(height: 14),
+              _cols([
+                _field('pages', 'Pages', hint: 'e.g. 1 of 6'),
+                _field(
+                  'effectivity',
+                  'Effectivity Date',
+                  hint: 'Select Date',
+                  readOnly: true,
+                  onTap: _pickDate,
+                  suffix: IconButton(
+                    icon: const Icon(Icons.calendar_today_outlined, size: 16),
+                    onPressed: _pickDate,
+                  ),
+                ),
+              ]),
             ],
           ),
         ),
-      );
-    }
-
-    return Container(
-      decoration: _cardDecoration,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InkWell(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            onTap: () => setState(() => _headerOpen = !_headerOpen),
-            child: _titleBar(
-              'Document Header',
-              trailing: AnimatedRotation(
-                turns: _headerOpen ? 0.5 : 0,
-                duration: const Duration(milliseconds: 200),
-                child: const Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 18,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            child:
-                _headerOpen
-                    ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        row([
-                          (3, cell('title', 'Title')),
-                          (2, cell('section', 'Section', last: true)),
-                        ]),
-                        row([
-                          (3, cell('owner', 'Process Owner')),
-                          (1, cell('docCode', 'Doc. Code')),
-                          (1, cell('revision', 'Revision', last: true)),
-                        ]),
-                        row([
-                          (
-                            3,
-                            cell(
-                              'reference',
-                              'Regulatory/Standard Reference(s)',
-                            ),
-                          ),
-                          (1, cell('pages', 'Pages (e.g. 1 of 6)')),
-                          (
-                            1,
-                            cell('effectivity', 'Effectivity Date', last: true),
-                          ),
-                        ], last: true),
-                      ],
-                    )
-                    : const SizedBox(width: double.infinity),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildEditorCard() {
+  // STEP 2 — Procedure editor
+  Widget _buildEditorStep() {
     return Container(
-      decoration: _cardDecoration,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _titleBar('Procedure'),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: LayoutBuilder(
+          builder: (context, c) {
+            return HtmlEditor(
+              controller: _controller,
+              callbacks: Callbacks(
+                onInit: _syncListMarkers,
+                onChangeContent: (_) => _syncListMarkers(),
+                onChangeSelection: (_) => _syncListMarkers(),
               ),
-              child: LayoutBuilder(
-                builder: (context, c) {
-                  return HtmlEditor(
-                    controller: _controller,
-                    callbacks: Callbacks(
-                      onInit: _syncListMarkers,
-                      onChangeContent: (_) => _syncListMarkers(),
-                      onChangeSelection: (_) => _syncListMarkers(),
-                    ),
-                    htmlEditorOptions: HtmlEditorOptions(
-                      hint: 'Type here...',
-                      initialText: widget.initialHtml,
-                      autoAdjustHeight: false,
-                      webInitialScripts: UnmodifiableListView([
-                        WebScript(
-                          name: 'syncListMarkers',
-                          script: syncListScript,
-                        ),
-                        ...paragraphScripts,
-                      ]),
-                    ),
-                    htmlToolbarOptions: HtmlToolbarOptions(
-                      toolbarType: ToolbarType.nativeGrid,
-                      defaultToolbarButtons: [
-                        StyleButtons(),
-                        FontSettingButtons(),
-                        FontButtons(),
-                        ColorButtons(),
-                        ListButtons(),
-                        ParagraphButtons(
-                          textDirection: false,
-                          caseConverter: false,
-                          lineHeight: false,
-                        ),
-                        InsertButtons(
-                          audio: false,
-                          video: false,
-                          otherFile: false,
-                        ),
-                        OtherButtons(),
-                      ],
-                      customToolbarButtons: [
-                        IconButton(
-                          tooltip: 'Checkbox list',
-                          icon: const Icon(
-                            Icons.check_box_outline_blank,
-                            size: 20,
-                          ),
-                          onPressed: _insertBoxList,
-                        ),
-                        PopupMenuButton<String>(
-                          tooltip: 'Line spacing',
-                          icon: const Icon(Icons.format_line_spacing, size: 20),
-                          onSelected:
-                              (name) => _controller.evaluateJavascriptWeb(name),
-                          itemBuilder:
-                              (_) => const [
-                                PopupMenuItem(
-                                  value: 'lsp10',
-                                  child: Text('1.0'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'lsp115',
-                                  child: Text('1.15'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'lsp15',
-                                  child: Text('1.5'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'lsp20',
-                                  child: Text('2.0'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'lsp25',
-                                  child: Text('2.5'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'lsp30',
-                                  child: Text('3.0'),
-                                ),
-                              ],
-                        ),
-                        IconButton(
-                          tooltip: 'Remove space after paragraph',
-                          icon: const Icon(
-                            Icons.vertical_align_center,
-                            size: 20,
-                          ),
-                          onPressed:
-                              () => _controller.evaluateJavascriptWeb(
-                                'spaceRemove',
-                              ),
-                        ),
-                        IconButton(
-                          tooltip: 'Add space after paragraph',
-                          icon: const Icon(Icons.space_bar, size: 20),
-                          onPressed:
-                              () =>
-                                  _controller.evaluateJavascriptWeb('spaceAdd'),
-                        ),
-                      ],
-                    ),
-                    otherOptions: OtherOptions(height: c.maxHeight),
-                  );
-                },
+              htmlEditorOptions: HtmlEditorOptions(
+                hint: 'Type here...',
+                initialText: widget.initialHtml,
+                autoAdjustHeight: false,
+                webInitialScripts: UnmodifiableListView([
+                  WebScript(name: 'syncListMarkers', script: syncListScript),
+                  ...paragraphScripts,
+                ]),
               ),
-            ),
-          ),
-        ],
+              htmlToolbarOptions: HtmlToolbarOptions(
+                toolbarType: ToolbarType.nativeGrid,
+                defaultToolbarButtons: [
+                  StyleButtons(),
+                  FontSettingButtons(),
+                  FontButtons(),
+                  ColorButtons(),
+                  ListButtons(),
+                  ParagraphButtons(
+                    textDirection: false,
+                    caseConverter: false,
+                    lineHeight: false,
+                  ),
+                  InsertButtons(audio: false, video: false, otherFile: false),
+                  OtherButtons(),
+                ],
+                customToolbarButtons: [
+                  IconButton(
+                    tooltip: 'Checkbox list',
+                    icon: const Icon(Icons.check_box_outline_blank, size: 20),
+                    onPressed: _insertBoxList,
+                  ),
+                  PopupMenuButton<String>(
+                    tooltip: 'Line spacing',
+                    icon: const Icon(Icons.format_line_spacing, size: 20),
+                    onSelected:
+                        (name) => _controller.evaluateJavascriptWeb(name),
+                    itemBuilder:
+                        (_) => const [
+                          PopupMenuItem(value: 'lsp10', child: Text('1.0')),
+                          PopupMenuItem(value: 'lsp115', child: Text('1.15')),
+                          PopupMenuItem(value: 'lsp15', child: Text('1.5')),
+                          PopupMenuItem(value: 'lsp20', child: Text('2.0')),
+                          PopupMenuItem(value: 'lsp25', child: Text('2.5')),
+                          PopupMenuItem(value: 'lsp30', child: Text('3.0')),
+                        ],
+                  ),
+                  IconButton(
+                    tooltip: 'Remove space after paragraph',
+                    icon: const Icon(Icons.vertical_align_center, size: 20),
+                    onPressed:
+                        () => _controller.evaluateJavascriptWeb('spaceRemove'),
+                  ),
+                  IconButton(
+                    tooltip: 'Add space after paragraph',
+                    icon: const Icon(Icons.space_bar, size: 20),
+                    onPressed:
+                        () => _controller.evaluateJavascriptWeb('spaceAdd'),
+                  ),
+                ],
+              ),
+              otherOptions: OtherOptions(height: c.maxHeight),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // STEP 3 — Review
+  Widget _buildReviewStep() {
+    const rows = [
+      ('title', 'Title'),
+      ('section', 'Section'),
+      ('owner', 'Process Owner'),
+      ('docCode', 'Doc. Code'),
+      ('revision', 'Revision'),
+      ('reference', 'Regulatory/Standard Reference(s)'),
+      ('pages', 'Pages'),
+      ('effectivity', 'Effectivity Date'),
+    ];
+
+    return SingleChildScrollView(
+      child: _card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _sectionTitle('Review Document Header'),
+            for (final r in rows)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 200,
+                      child: Text(
+                        r.$2,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        _hdr[r.$1]!.text.trim().isEmpty
+                            ? '—'
+                            : _hdr[r.$1]!.text.trim(),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

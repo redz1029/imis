@@ -77,6 +77,18 @@ namespace IMIS.Presentation.AuditProgrammeModule
             })
             .WithTags(_AuditProgramme);
 
+            // TEAM -> HOME-OFFICES MAP (client-side inline self-audit detection)
+            app.MapGet("/team-office-map", async (
+                IAuditProgrammeService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetTeamOfficeConflictMapAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditProgramme)
+            .RequireCors("_allowedOrigins")
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag("TeamOfficeMap"), true);
+
             app.MapGet("/{id:int}", async (
                 int id,
                 IAuditProgrammeService service,

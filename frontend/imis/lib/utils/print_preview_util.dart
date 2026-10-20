@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/performance_governance_system/pgs_swot/print_preview/show_swot_print_preview.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_html/html.dart' as html;
@@ -267,6 +268,18 @@ Future<void> viewAuditorSummaryNarrativeReport(
   context: context,
 );
 
+Future<void> openPgsDeliverableAccomplishmentReport({
+  required int periodId,
+  required int officeId,
+  required int pgsId,
+  BuildContext? context,
+}) => _openPdfPreviewWithParams(
+  endpoint:
+      '${ApiEndpoint().filterAccomplishmentReport}/?periodId=$periodId&officeId=$officeId&pgsId=$pgsId',
+  reportName: 'PGS_Deliverable_Accomplishment_Report',
+  context: context,
+);
+
 Future<void> openProcessCoreSupportPrintPreview(
   String processCoreId,
   String processCoreSupport, {
@@ -383,4 +396,51 @@ Future<void> openPendingAuditsReportPreviewByService({
     reportName: 'Pending_Audits_Report',
     context: context,
   );
+}
+
+Future<void> openSwotPrintPreview(
+  BuildContext context,
+  SwotPrintData data,
+) async {
+  try {
+    await Future.delayed(const Duration(milliseconds: 150));
+
+    final bytes = await buildSwotPdf(data);
+
+    if (kIsWeb) {
+      final blob = html.Blob([bytes], 'application/pdf');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      html.window.open(url, "_blank");
+      Future.delayed(
+        const Duration(seconds: 15),
+        () => html.Url.revokeObjectUrl(url),
+      );
+    } else {
+      final Directory dir;
+      if (Platform.isAndroid || Platform.isIOS) {
+        dir = await getTemporaryDirectory();
+      } else if (Platform.isWindows) {
+        dir = (await getDownloadsDirectory())!;
+      } else {
+        dir = await getApplicationDocumentsDirectory();
+      }
+
+      final sanitized = data.department.replaceAll(RegExp(r'[^\w\s]'), '_');
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${dir.path}/SWOT_${sanitized}_$timestamp.pdf';
+      await File(filePath).writeAsBytes(bytes);
+
+      final result = await OpenFile.open(filePath);
+      if (result.type != ResultType.done) {
+        debugPrint("OpenFile error: ${result.message}");
+      }
+    }
+  } catch (e) {
+    debugPrint("Error opening SWOT PDF: $e");
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to open PDF. Please try again.")),
+      );
+    }
+  }
 }

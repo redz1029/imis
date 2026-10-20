@@ -11,6 +11,65 @@ import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';
 import 'package:imis/utils/pagination_util.dart';
 
+/// Team -> home-offices map returned by `/auditProgramme/team-office-map`.
+/// Lets the form detect self-audits instantly, with no round trip per change.
+class TeamOfficeConflictMap {
+  /// TeamId -> OfficeIds that at least one of its members belongs to.
+  final Map<int, Set<int>> teamOfficeIds;
+
+  /// OfficeId -> office name.
+  final Map<int, String> officeNames;
+
+  /// TeamId -> team name.
+  final Map<int, String> teamNames;
+
+  TeamOfficeConflictMap({
+    required this.teamOfficeIds,
+    required this.officeNames,
+    required this.teamNames,
+  });
+
+  factory TeamOfficeConflictMap.empty() => TeamOfficeConflictMap(
+    teamOfficeIds: const {},
+    officeNames: const {},
+    teamNames: const {},
+  );
+
+  factory TeamOfficeConflictMap.fromJson(Map<String, dynamic> json) {
+    final rawTeams = json['teamOfficeIds'] ?? json['TeamOfficeIds'] ?? {};
+    final rawOffices = json['officeNames'] ?? json['OfficeNames'] ?? {};
+    final rawTeamNames = json['teamNames'] ?? json['TeamNames'] ?? {};
+
+    return TeamOfficeConflictMap(
+      teamOfficeIds: (rawTeams as Map).map(
+        (k, v) => MapEntry(
+          int.parse(k.toString()),
+          (v as List).map((e) => int.parse(e.toString())).toSet(),
+        ),
+      ),
+      officeNames: (rawOffices as Map).map(
+        (k, v) => MapEntry(int.parse(k.toString()), v.toString()),
+      ),
+      teamNames: (rawTeamNames as Map).map(
+        (k, v) => MapEntry(int.parse(k.toString()), v.toString()),
+      ),
+    );
+  }
+
+  /// True when [teamId] has a member whose home office is [officeId].
+  bool isSelfAudit({int? teamId, int? officeId}) {
+    if (teamId == null || officeId == null) return false;
+    return teamOfficeIds[teamId]?.contains(officeId) ?? false;
+  }
+
+  String teamName(int teamId) => teamNames[teamId] ?? 'Team $teamId';
+  String officeName(int officeId) => officeNames[officeId] ?? 'Office $officeId';
+
+  String conflictMessage({required int teamId, required int officeId}) =>
+      'Self-audit detected: Members of ${teamName(teamId)} belong to '
+      '${officeName(officeId)}. Please assign a different audit team.';
+}
+
 class AuditProgrammeService {
   final Dio dio;
 
@@ -73,6 +132,19 @@ class AuditProgrammeService {
     } catch (e) {
       rethrow;
     }
+  }
+
+  /// Team -> home-offices map, used for inline self-audit detection.
+  /// One request; the result is cached in memory by the caller.
+  Future<TeamOfficeConflictMap> getTeamOfficeConflictMap() async {
+    final url = '${ApiEndpoint().auditProgramme}/team-office-map';
+    final response = await AuthenticatedRequest.get(dio, url);
+    if (response.statusCode == 200 && response.data != null) {
+      return TeamOfficeConflictMap.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+    }
+    return TeamOfficeConflictMap.empty();
   }
 
   // ===========================================================================

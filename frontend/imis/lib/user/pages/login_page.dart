@@ -187,19 +187,43 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ],
         ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 12,
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: EdgeInsets.only(
+                right: (MediaQuery.of(context).size.width * 0.48) / 2 - 190,
+              ),
+              child: const _CopyrightText(),
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Widget _mobileLayout() {
-    return _FormPanel(
-      emailController: _usernameController,
-      passwordController: _passwordController,
-      obscure: _obscure,
-      onToggleObscure: () => setState(() => _obscure = !_obscure),
-      isLoading: _isLoggingIn,
-      onLogin: _handleLogin,
-      mobile: true,
+    return Stack(
+      children: [
+        _FormPanel(
+          emailController: _usernameController,
+          passwordController: _passwordController,
+          obscure: _obscure,
+          onToggleObscure: () => setState(() => _obscure = !_obscure),
+          isLoading: _isLoggingIn,
+          onLogin: _handleLogin,
+          mobile: true,
+        ),
+        const Positioned(
+          left: 16,
+          right: 16,
+          bottom: 12,
+          child: Center(child: _CopyrightText()),
+        ),
+      ],
     );
   }
 }
@@ -539,6 +563,19 @@ class _FormPanel extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _CopyrightText extends StatelessWidget {
+  const _CopyrightText();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '© ${DateTime.now().year} Cotabato Regional and Medical Center. All rights reserved.',
+      textAlign: TextAlign.center,
+      style: const TextStyle(fontSize: 10, color: kHint),
     );
   }
 }

@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/office/models/office.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -19,44 +17,45 @@ class RegistrationPage extends StatefulWidget {
 
 class RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController idController = TextEditingController();
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController middleNameController = TextEditingController();
-  final TextEditingController lastNameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController userNameController = TextEditingController();
-  final TextEditingController prefixController = TextEditingController();
-  final TextEditingController suffixController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
-  final TextEditingController positionController = TextEditingController();
-  final _commonService = CommonService(Dio());
-
-  final FocusNode idFocusNode = FocusNode();
-  final FocusNode focusFirstName = FocusNode();
-  final FocusNode focusLastName = FocusNode();
-  final FocusNode focusMiddleName = FocusNode();
-  final FocusNode focusUsername = FocusNode();
-  final FocusNode focusEmail = FocusNode();
-  final FocusNode focusPrefix = FocusNode();
-  final FocusNode focusSuffix = FocusNode();
-  final FocusNode focusPassword = FocusNode();
-  final FocusNode focusConfirmPassword = FocusNode();
+  final idController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final middleNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final userNameController = TextEditingController();
+  final prefixController = TextEditingController();
+  final suffixController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final positionController = TextEditingController();
+  final officeController = TextEditingController();
+  final dio = Dio();
 
   bool _isPasswordVisible = false;
   bool _isPassConfirmVisible = false;
   bool _isRegister = false;
-  List<Office> officeList = [];
+  String? selectedPosition;
 
-  final dio = Dio();
+  @override
+  void dispose() {
+    idController.dispose();
+    firstNameController.dispose();
+    middleNameController.dispose();
+    lastNameController.dispose();
+    emailController.dispose();
+    userNameController.dispose();
+    prefixController.dispose();
+    suffixController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    positionController.dispose();
+    officeController.dispose();
+    super.dispose();
+  }
 
   Future<void> register(BuildContext context, UserRegistration user) async {
     final String url = ApiEndpoint().register;
-
-    setState(() {
-      _isRegister = true;
-    });
+    setState(() => _isRegister = true);
 
     try {
       final response = await dio.post(
@@ -67,22 +66,17 @@ class RegistrationPageState extends State<RegistrationPage> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (!context.mounted) return;
-
         MotionToast.success(
           description: const Text("Registration successful!"),
           toastAlignment: Alignment.topCenter,
         ).show(context);
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginPage()),
         );
       } else {
-        final errorData = response.data;
-        final errorMessage = errorData['title'] ?? "Registration failed";
-
+        final errorMessage = response.data['title'] ?? "Registration failed";
         if (!context.mounted) return;
-
         MotionToast.error(
           description: Text("Error: $errorMessage"),
           toastAlignment: Alignment.topCenter,
@@ -107,7 +101,6 @@ class RegistrationPageState extends State<RegistrationPage> {
       final errorData = e.response?.data;
       if (errorData is Map<String, dynamic>) {
         final errors = errorData['errors'] as Map<String, dynamic>?;
-
         if (errors != null && errors.containsKey('DuplicateUserName')) {
           MotionToast.warning(
             title: const Text("User Already Exists"),
@@ -116,7 +109,6 @@ class RegistrationPageState extends State<RegistrationPage> {
           ).show(context);
           return;
         }
-
         final title = errorData['title'] ?? "Registration failed";
         MotionToast.error(
           description: Text("Error: $title"),
@@ -129,637 +121,608 @@ class RegistrationPageState extends State<RegistrationPage> {
         ).show(context);
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isRegister = false;
-        });
-      }
+      if (mounted) setState(() => _isRegister = false);
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
 
-    focusUsername.addListener(() => setState(() {}));
-    focusMiddleName.addListener(() => setState(() {}));
-    focusLastName.addListener(() => setState(() {}));
-    focusFirstName.addListener(() => setState(() {}));
-    focusSuffix.addListener(() => setState(() {}));
-    focusPrefix.addListener(() => setState(() {}));
-    focusEmail.addListener(() => setState(() {}));
-    focusPassword.addListener(() => setState(() {}));
-    focusConfirmPassword.addListener(() => setState(() {}));
-
-    () async {
-      final offices = await _commonService.fetchAlloffices();
-
-      if (!mounted) return;
-      setState(() {
-        officeList = offices;
-      });
-    }();
+    // officeController.text -> office na tinype ng user
+    // (ilagay sa tamang param ng UserRegistration kung meron)
+    register(
+      context,
+      UserRegistration(
+        idController.text,
+        userNameController.text,
+        emailController.text,
+        passwordController.text,
+        firstNameController.text,
+        middleNameController.text,
+        lastNameController.text,
+        prefixController.text,
+        suffixController.text,
+        positionController.text.isNotEmpty
+            ? positionController.text
+            : selectedPosition ?? '',
+        '',
+        '',
+        null,
+      ),
+    );
   }
-
-  @override
-  void dispose() {
-    focusFirstName.dispose();
-    focusMiddleName.dispose();
-    focusLastName.dispose();
-    focusSuffix.dispose();
-    focusPrefix.dispose();
-    focusPassword.dispose();
-    focusEmail.dispose();
-    focusConfirmPassword.dispose();
-    focusUsername.dispose();
-    super.dispose();
-  }
-
-  // carousel indicator
-  int _currentStep = 0;
-  void _nextStep() {
-    setState(() {
-      if (_currentStep < 1) _currentStep++;
-    });
-  }
-
-  void _prevStep() {
-    setState(() {
-      if (_currentStep > 0) _currentStep--;
-    });
-  }
-
-  String? selectedPosition;
 
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final isMobile = w < 700;
+    final isWide = w >= 900;
 
     return Scaffold(
-      backgroundColor: kBackground,
-      body: isMobile ? _mobileLayout() : _desktopLayout(),
-    );
-  }
-
-  Widget _desktopLayout() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color.fromARGB(255, 245, 222, 229),
-                Color.fromARGB(255, 233, 153, 181),
-                Color.fromARGB(255, 240, 134, 134),
-                Color.fromARGB(255, 187, 54, 98),
-              ],
-              stops: [0.0, 0.35, 0.65, 1.0],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.fromARGB(255, 245, 222, 229),
+              Color.fromARGB(255, 233, 153, 181),
+              Color.fromARGB(255, 240, 134, 134),
+              Color.fromARGB(255, 187, 54, 98),
+            ],
+            stops: [0.0, 0.35, 0.65, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(isMobile ? 12 : 24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1040),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 40,
+                        offset: const Offset(0, 16),
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child:
+                      isWide
+                          ? Stack(
+                            children: [
+                              Positioned.fill(
+                                child: Row(
+                                  children: const [
+                                    Expanded(flex: 4, child: _BrandPanel()),
+                                    Expanded(flex: 7, child: SizedBox.shrink()),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  const Expanded(
+                                    flex: 4,
+                                    child: SizedBox.shrink(),
+                                  ),
+                                  Expanded(
+                                    flex: 7,
+                                    child: Container(
+                                      color: Colors.white,
+                                      child: _buildForm(isMobile, isWide),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          )
+                          : _buildForm(isMobile, isWide),
+                ),
+              ),
             ),
           ),
         ),
-        Positioned.fill(child: CustomPaint(painter: _DiagonalPanelPainter())),
-        Row(
-          children: [
-            Expanded(flex: 52, child: const _WelcomePanel()),
-            Expanded(flex: 48, child: _buildRegistrationForm()),
-          ],
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _mobileLayout() {
-    return _buildRegistrationForm(mobile: true);
-  }
+  Widget _buildForm(bool isMobile, bool isWide) {
+    final twoCols = !isMobile;
 
-  Widget _buildRegistrationForm({bool mobile = false}) {
-    return Container(
-      color: Colors.transparent,
-      child: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: mobile ? 28 : 48,
-            vertical: mobile ? 40 : 0,
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 20 : 40,
+        vertical: isMobile ? 28 : 36,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isWide) ...[
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: primaryColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Center(
+                  child: Text(
+                    'CP',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+            RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  color: kText,
+                  height: 1.2,
+                ),
                 children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: primaryColor,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'CP',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 16,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
+                  TextSpan(text: 'Register for '),
+                  TextSpan(
+                    text: 'CPeMS',
+                    style: TextStyle(color: primaryColor),
                   ),
-                  const SizedBox(height: 28),
-                  RichText(
-                    text: const TextSpan(
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: kText,
-                        height: 1.2,
-                      ),
-                      children: [
-                        TextSpan(text: 'Register for '),
-                        TextSpan(
-                          text: 'CPeMS',
-                          style: TextStyle(color: primaryColor),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Create your account to get started.',
-                    style: TextStyle(fontSize: 13, color: kMuted, height: 1.5),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.circle,
-                        size: 10,
-                        color: _currentStep == 0 ? primaryColor : lightGrey,
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.circle,
-                        size: 10,
-                        color: _currentStep == 1 ? primaryColor : lightGrey,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  if (_currentStep == 0) ..._buildStepOne(),
-                  if (_currentStep == 1) ..._buildStepTwo(),
-
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (_currentStep == 1)
-                        TextButton(
-                          onPressed: _prevStep,
-                          child: const Text(
-                            "Back",
-                            style: TextStyle(
-                              color: primaryTextColor,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      const Spacer(),
-                      SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed:
-                              _isRegister
-                                  ? null
-                                  : () {
-                                    if (_currentStep == 1) {
-                                      if (_formKey.currentState!.validate()) {
-                                        register(
-                                          context,
-                                          UserRegistration(
-                                            idController.text,
-                                            userNameController.text,
-                                            emailController.text,
-                                            passwordController.text,
-                                            firstNameController.text,
-                                            middleNameController.text,
-                                            lastNameController.text,
-                                            prefixController.text,
-                                            suffixController.text,
-                                            positionController.text.isNotEmpty
-                                                ? positionController.text
-                                                : selectedPosition ?? '',
-                                            '',
-                                            '',
-                                            null,
-                                          ),
-                                        );
-                                      }
-                                    } else {
-                                      _nextStep();
-                                    }
-                                  },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor: primaryColor.withValues(
-                              alpha: 0.6,
-                            ),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          child:
-                              _isRegister
-                                  ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                  : Text(
-                                    _currentStep == 1 ? "Register" : "Next",
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Already have an account?",
-                        style: TextStyle(fontSize: 13, color: kMuted),
-                      ),
-                      const SizedBox(width: 4),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LoginPage(),
-                            ),
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: kText,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
                 ],
               ),
             ),
-          ),
+            const SizedBox(height: 8),
+            const Text(
+              'Create your account to get started.',
+              style: TextStyle(fontSize: 13, color: kMuted),
+            ),
+            const SizedBox(height: 28),
+
+            _sectionTitle('Personal Information'),
+            _grid(twoCols, [
+              _DropdownField(
+                label: 'Prefix',
+                value:
+                    prefixController.text.isNotEmpty
+                        ? prefixController.text
+                        : null,
+                items: const [
+                  'Mr.',
+                  'Ms.',
+                  'Mrs.',
+                  'Dr.',
+                  'Prof.',
+                  'Engr.',
+                  'Atty.',
+                  'Gen.',
+                ],
+                onChanged:
+                    (v) => setState(() => prefixController.text = v ?? ''),
+              ),
+              _InputField(
+                controller: firstNameController,
+                hint: 'First name',
+                textInputAction: TextInputAction.next,
+                validator: _required,
+              ),
+              _InputField(
+                controller: middleNameController,
+                hint: 'Middle name',
+                textInputAction: TextInputAction.next,
+              ),
+              _InputField(
+                controller: lastNameController,
+                hint: 'Last name',
+                textInputAction: TextInputAction.next,
+                validator: _required,
+              ),
+              _InputField(
+                controller: suffixController,
+                hint: 'Suffix (optional)',
+                textInputAction: TextInputAction.next,
+              ),
+            ]),
+
+            const SizedBox(height: 24),
+            _sectionTitle('Account'),
+            _grid(twoCols, [
+              _InputField(
+                controller: userNameController,
+                hint: 'Username',
+                textInputAction: TextInputAction.next,
+                validator: _required,
+              ),
+              _InputField(
+                controller: emailController,
+                hint: 'Email',
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                validator: FormValidator.validateEmail,
+              ),
+              _InputField(
+                controller: passwordController,
+                hint: 'Password',
+                obscure: !_isPasswordVisible,
+                textInputAction: TextInputAction.next,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: kMuted,
+                    size: 20,
+                  ),
+                  onPressed:
+                      () => setState(
+                        () => _isPasswordVisible = !_isPasswordVisible,
+                      ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return validatePassword(value);
+                  }
+                  if (value.length < 6) return validatePassword(value);
+                  if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                    return validatePassword(value);
+                  }
+                  if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+                    return validatePassword(value);
+                  }
+                  return null;
+                },
+              ),
+              _InputField(
+                controller: confirmPasswordController,
+                hint: 'Confirm Password',
+                obscure: !_isPassConfirmVisible,
+                textInputAction: TextInputAction.next,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPassConfirmVisible
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: kMuted,
+                    size: 20,
+                  ),
+                  onPressed:
+                      () => setState(
+                        () => _isPassConfirmVisible = !_isPassConfirmVisible,
+                      ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return "required";
+                  if (value != passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ),
+            ]),
+
+            const SizedBox(height: 24),
+            _sectionTitle('Work Information'),
+            _grid(twoCols, [
+              _InputField(
+                controller: officeController,
+                hint: 'Office',
+                textInputAction: TextInputAction.next,
+                validator: _required,
+              ),
+              _buildPositionField(),
+            ]),
+
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isRegister ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: primaryColor.withValues(alpha: 0.6),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child:
+                    _isRegister
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : const Text(
+                          "Register",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  const Text(
+                    "Already have an account?",
+                    style: TextStyle(fontSize: 13, color: kMuted),
+                  ),
+                  TextButton(
+                    onPressed:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                        ),
+                    child: const Text(
+                      'Login',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            gap32px,
+            Align(
+              alignment: Alignment.center,
+              child: Text(
+                '© ${DateTime.now().year} Cotabato Regional and Medical Center. All rights reserved.',
+                style: const TextStyle(fontSize: 10, color: kHint),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  List<Widget> _buildStepOne() {
-    return [
-      _DropdownField(
-        label: 'Prefix',
-        value: prefixController.text.isNotEmpty ? prefixController.text : null,
-        items: const [
-          'Mr.',
-          'Ms.',
-          'Mrs.',
-          'Dr.',
-          'Prof.',
-          'Engr.',
-          'Atty.',
-          'Gen.',
+  String? _required(String? v) => (v == null || v.isEmpty) ? 'required' : null;
+
+  Widget _sectionTitle(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              color: primaryColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: kText,
+            ),
+          ),
         ],
-        onChanged: (value) {
-          setState(() {
-            prefixController.text = value ?? '';
-          });
-        },
       ),
-      const SizedBox(height: 14),
-      _InputField(
-        controller: firstNameController,
-        focusNode: focusFirstName,
-        hint: 'First name',
-        textInputAction: TextInputAction.next,
-        validator: (value) {
-          if (value == null || value.isEmpty) return "required";
-          return null;
-        },
-      ),
-      const SizedBox(height: 14),
-      _InputField(
-        controller: middleNameController,
-        focusNode: focusMiddleName,
-        hint: 'Middle name',
-        textInputAction: TextInputAction.next,
-      ),
-      const SizedBox(height: 14),
-      _InputField(
-        controller: lastNameController,
-        focusNode: focusLastName,
-        hint: 'Last name',
-        textInputAction: TextInputAction.next,
-        validator: (value) {
-          if (value == null || value.isEmpty) return "required";
-          return null;
-        },
-      ),
-      const SizedBox(height: 14),
-      _InputField(
-        controller: suffixController,
-        focusNode: focusSuffix,
-        hint: 'Suffix',
-        textInputAction: TextInputAction.next,
-      ),
-    ];
+    );
   }
 
-  List<Widget> _buildStepTwo() {
-    return [
-      _InputField(
-        controller: userNameController,
-        focusNode: focusUsername,
-        hint: 'Username',
-        textInputAction: TextInputAction.next,
-        validator: (value) {
-          if (value == null || value.isEmpty) return "required";
-          return null;
-        },
-      ),
-      const SizedBox(height: 14),
-      _InputField(
-        controller: emailController,
-        focusNode: focusEmail,
-        hint: 'Email',
-        keyboardType: TextInputType.emailAddress,
-        textInputAction: TextInputAction.next,
-        validator: FormValidator.validateEmail,
-      ),
-      const SizedBox(height: 14),
-      _InputField(
-        controller: passwordController,
-        focusNode: focusPassword,
-        hint: 'Password',
-        obscure: !_isPasswordVisible,
-        textInputAction: TextInputAction.next,
-        suffixIcon: IconButton(
-          icon: Icon(
-            _isPasswordVisible
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-            color: kMuted,
-            size: 20,
-          ),
-          onPressed:
-              () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) return validatePassword(value);
-          if (value.length < 6) return validatePassword(value);
-          if (!RegExp(r'[A-Z]').hasMatch(value)) return validatePassword(value);
-          if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
-            return validatePassword(value);
-          }
-          return null;
-        },
-      ),
-      const SizedBox(height: 14),
-      _InputField(
-        controller: confirmPasswordController,
-        focusNode: focusConfirmPassword,
-        hint: 'Confirm Password',
-        obscure: !_isPassConfirmVisible,
-        textInputAction: TextInputAction.done,
-        suffixIcon: IconButton(
-          icon: Icon(
-            _isPassConfirmVisible
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-            color: kMuted,
-            size: 20,
-          ),
-          onPressed:
-              () => setState(
-                () => _isPassConfirmVisible = !_isPassConfirmVisible,
-              ),
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return "required";
-          }
-          if (value != passwordController.text) return 'Passwords do not match';
-          return null;
-        },
-      ),
-      const SizedBox(height: 14),
+  /// 2 columns sa desktop/tablet, 1 column sa mobile
+  Widget _grid(bool twoCols, List<Widget> children) {
+    if (!twoCols) {
+      return Column(
+        children: [
+          for (int i = 0; i < children.length; i++) ...[
+            if (i > 0) const SizedBox(height: 14),
+            children[i],
+          ],
+        ],
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, c) {
+        const gap = 14.0;
+        final itemWidth = (c.maxWidth - gap) / 2;
+        return Wrap(
+          spacing: gap,
+          runSpacing: 14,
+          children: [
+            for (final child in children)
+              SizedBox(width: itemWidth, child: child),
+          ],
+        );
+      },
+    );
+  }
 
-      Autocomplete<String>(
-        initialValue: TextEditingValue(text: positionController.text),
-        optionsBuilder: (TextEditingValue textEditingValue) {
-          if (textEditingValue.text.isEmpty) {
-            return JobPositions.positions;
-          }
-          return JobPositions.positions.where(
-            (pos) =>
-                pos.toLowerCase().contains(textEditingValue.text.toLowerCase()),
-          );
-        },
-        onSelected: (String selection) {
-          setState(() {
+  Widget _buildPositionField() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Autocomplete<String>(
+          initialValue: TextEditingValue(text: positionController.text),
+          optionsBuilder: (TextEditingValue v) {
+            if (v.text.isEmpty) return JobPositions.positions;
+            return JobPositions.positions.where(
+              (pos) => pos.toLowerCase().contains(v.text.toLowerCase()),
+            );
+          },
+          onSelected: (String selection) {
             positionController.text = selection;
             selectedPosition = selection;
-          });
-        },
-        fieldViewBuilder: (
-          context,
-          textController,
-          focusNode,
-          onFieldSubmitted,
-        ) {
-          textController.text = positionController.text;
-          textController.addListener(() {
-            positionController.text = textController.text;
-            selectedPosition = textController.text;
-          });
-          return TextFormField(
-            controller: textController,
-            focusNode: focusNode,
-            style: const TextStyle(fontSize: 14, color: kText),
-            decoration: InputDecoration(
-              hintText: 'Select or type a position',
-              hintStyle: const TextStyle(color: kMuted, fontSize: 14),
-              suffixIcon: const Icon(Icons.arrow_drop_down, color: kMuted),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
+          },
+          fieldViewBuilder: (context, textController, focusNode, _) {
+            return TextFormField(
+              controller: textController,
+              focusNode: focusNode,
+              onChanged: (v) {
+                positionController.text = v;
+                selectedPosition = v;
+              },
+              style: const TextStyle(fontSize: 14, color: kText),
+              decoration: _decoration(
+                'Select or type a position',
+                suffixIcon: const Icon(Icons.arrow_drop_down, color: kMuted),
               ),
-              filled: true,
-              fillColor: Colors.white,
-              enabledBorder: OutlineInputBorder(
+              validator: _required,
+            );
+          },
+          optionsViewBuilder: (context, onSelected, options) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                color: kSurface,
+                elevation: 6,
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: kBorder, width: 1.5),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: primaryColor, width: 1.8),
-              ),
-              isDense: true,
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "required";
-              }
-              return null;
-            },
-          );
-        },
-        optionsViewBuilder: (context, onSelected, options) {
-          return Align(
-            alignment: Alignment.topLeft,
-            child: Material(
-              color: kSurface,
-              elevation: 6,
-              borderRadius: BorderRadius.circular(10),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxHeight: 200,
-                  maxWidth: 380,
-                ),
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  shrinkWrap: true,
-                  itemCount: options.length,
-                  itemBuilder: (context, index) {
-                    final option = options.elementAt(index);
-                    return InkWell(
-                      onTap: () => onSelected(option),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: 220,
+                    maxWidth: constraints.maxWidth,
+                  ),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final option = options.elementAt(index);
+                      return InkWell(
+                        onTap: () => onSelected(option),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          child: Text(
+                            option,
+                            style: const TextStyle(fontSize: 14, color: kText),
+                          ),
                         ),
-                        child: Text(
-                          option,
-                          style: const TextStyle(fontSize: 14, color: kText),
-                        ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      ),
-    ];
+            );
+          },
+        );
+      },
+    );
   }
 }
 
-class _DiagonalPanelPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.fill;
+// ───────────────────────── Shared decoration ─────────────────────────
 
-    final double panelStart = size.width * 0.46;
-    final double slantOffset = size.width * 0.06;
-
-    final path = Path();
-    path.moveTo(panelStart, 0);
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width, size.height);
-    path.lineTo(panelStart - 0, size.height);
-    path.lineTo(panelStart - slantOffset, size.height * 0.5);
-    path.lineTo(panelStart, 0);
-    path.close();
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+InputDecoration _decoration(
+  String hint, {
+  Widget? suffixIcon,
+  Widget? prefixIcon,
+}) {
+  return InputDecoration(
+    hintText: hint,
+    hintStyle: const TextStyle(color: kMuted, fontSize: 14),
+    suffixIcon: suffixIcon,
+    prefixIcon: prefixIcon,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    filled: true,
+    fillColor: Colors.white,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: kBorder, width: 1.5),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: kBorder, width: 1.5),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: primaryColor, width: 1.8),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: kDanger, width: 1.5),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: kDanger, width: 1.8),
+    ),
+    isDense: true,
+  );
 }
 
-class _WelcomePanel extends StatelessWidget {
-  const _WelcomePanel();
+// ───────────────────────── Left brand panel ─────────────────────────
+
+class _BrandPanel extends StatelessWidget {
+  const _BrandPanel();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 40, right: 60, top: 40, bottom: 40),
+    return Container(
+      padding: const EdgeInsets.all(36),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.fromARGB(255, 245, 222, 229),
+            Color.fromARGB(255, 233, 153, 181),
+            Color.fromARGB(255, 240, 134, 134),
+          ],
+        ),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Image.asset(
-                'assets/logo.png',
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const _FallbackIllustration(),
-              ),
+          SizedBox(
+            height: 150,
+            child: Image.asset(
+              'assets/logo.png',
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const _FallbackIllustration(),
             ),
           ),
+          const SizedBox(height: 28),
           const Text(
             "Join us and help keep\nCPeMS on track!",
             style: TextStyle(
               fontFamily: 'Georgia',
-              fontSize: 32,
+              fontSize: 28,
               fontWeight: FontWeight.w700,
               color: Color(0xFF7B2D42),
               height: 1.25,
-              letterSpacing: 0.3,
             ),
           ),
           const SizedBox(height: 14),
           Text(
-            'A centralized system for tracking, managing,\nand ensuring compliance with PGS.',
+            'A centralized system for tracking, managing, and ensuring compliance with PGS.',
             style: TextStyle(
               fontSize: 13.5,
-              color: const Color(0xFF8B3A52).withValues(alpha: 0.75),
+              color: const Color(0xFF8B3A52).withValues(alpha: 0.85),
               height: 1.65,
-              letterSpacing: 0.2,
             ),
           ),
-          const SizedBox(height: 28),
         ],
       ),
     );
@@ -796,25 +759,23 @@ class _FallbackIllustration extends StatelessWidget {
   }
 }
 
+// ───────────────────────── Form fields ─────────────────────────
+
 class _InputField extends StatelessWidget {
   final TextEditingController controller;
-  final FocusNode? focusNode;
   final String hint;
   final bool obscure;
   final TextInputType? keyboardType;
   final Widget? suffixIcon;
-  final VoidCallback? onSubmitted;
   final TextInputAction? textInputAction;
   final String? Function(String?)? validator;
 
   const _InputField({
     required this.controller,
     required this.hint,
-    this.focusNode,
     this.obscure = false,
     this.keyboardType,
     this.suffixIcon,
-    this.onSubmitted,
     this.textInputAction,
     this.validator,
   });
@@ -823,37 +784,12 @@ class _InputField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
-      focusNode: focusNode,
       obscureText: obscure,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       validator: validator,
-      onFieldSubmitted: (_) => onSubmitted?.call(),
       style: const TextStyle(fontSize: 14, color: kText),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: kMuted, fontSize: 14),
-        suffixIcon: suffixIcon,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: kBorder, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: primaryColor, width: 1.8),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: kDanger, width: 1.5),
-        ),
-        isDense: true,
-      ),
+      decoration: _decoration(hint, suffixIcon: suffixIcon),
     );
   }
 }
@@ -881,29 +817,7 @@ class _DropdownField extends StatelessWidget {
         ...items.map((e) => DropdownMenuItem(value: e, child: Text(e))),
       ],
       style: const TextStyle(fontSize: 14, color: kText),
-      decoration: InputDecoration(
-        hintText: label,
-        hintStyle: const TextStyle(color: kMuted, fontSize: 14),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: kBorder, width: 1.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: kBorder, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: primaryColor, width: 1.8),
-        ),
-        isDense: true,
-      ),
+      decoration: _decoration(label),
     );
   }
 }

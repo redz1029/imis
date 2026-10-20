@@ -1,5 +1,4 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +13,7 @@ import 'package:imis/performance_governance_system/pgs_swot/models/swot_ot_deliv
 import 'package:imis/performance_governance_system/pgs_swot/models/swot_service_head.dart';
 import 'package:imis/performance_governance_system/pgs_swot/models/swot_sw_deliverable.dart';
 import 'package:imis/performance_governance_system/pgs_swot/models/swot_sw_deliverable_service_head.dart';
+import 'package:imis/performance_governance_system/pgs_swot/print_preview/show_swot_print_preview.dart';
 import 'package:imis/performance_governance_system/pgs_swot/services/swot_service.dart';
 import 'package:imis/performance_governance_system/pgs_swot/services/swot_service_head_service.dart';
 import 'package:imis/performance_governance_system/pgs_swot/swot_analysis_strength_weakness/services/swot_analysis_strength_weakness_service.dart';
@@ -242,6 +242,108 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _openPrintPreview(Swot swot) async {
+    if (swot.id == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => const AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: primaryColor),
+                SizedBox(width: 16),
+                Text(
+                  "Generating PDF...",
+                  style: TextStyle(color: primaryColor),
+                ),
+              ],
+            ),
+          ),
+    );
+
+    try {
+      final id = swot.id.toString();
+      late SwotPrintData data;
+
+      if (_isServiceHeadView) {
+        final full = await _swotServiceHeadService.getSwotById(id);
+        data = SwotPrintData(
+          isServiceHead: true,
+          department: full.departmentName ?? '',
+          objective: full.objectiveStatement ?? '',
+          preparedBy: full.departmentChairUserFullName ?? '',
+          validatedBy: full.serviceHeadUserFullName ?? '',
+          internal:
+              (full.swotAnalysisSWDeliverablesServiceHead ?? [])
+                  .map(
+                    (d) => SwotPrintEntry(
+                      label: d.internalContext ?? '',
+                      left: d.strength ?? '',
+                      right: d.weaknesses ?? '',
+                    ),
+                  )
+                  .toList(),
+          external:
+              (full.swotAnalysisOTDeliverablesServiceHead ?? [])
+                  .map(
+                    (d) => SwotPrintEntry(
+                      label: d.externalContext ?? '',
+                      left: d.opportunities ?? '',
+                      right: d.threats ?? '',
+                    ),
+                  )
+                  .toList(),
+        );
+      } else {
+        final full = await _swotService.getSwotById(id);
+        data = SwotPrintData(
+          department: full.departmentName ?? '',
+          objective: full.objectiveStatement ?? '',
+          preparedBy: full.departmentChairUserFullName ?? '',
+          reviewedBy: full.qmrUserFullName ?? '',
+          validatedBy: full.serviceHeadUserFullName ?? '',
+          internal:
+              (full.swotAnalysisSWDeliverables ?? [])
+                  .map(
+                    (d) => SwotPrintEntry(
+                      label: d.internalContext ?? '',
+                      left: d.strength ?? '',
+                      right: d.weaknesses ?? '',
+                    ),
+                  )
+                  .toList(),
+          external:
+              (full.swotAnalysisOTDeliverables ?? [])
+                  .map(
+                    (d) => SwotPrintEntry(
+                      label: d.externalContext ?? '',
+                      left: d.opportunities ?? '',
+                      right: d.threats ?? '',
+                    ),
+                  )
+                  .toList(),
+        );
+      }
+
+      if (!mounted) return;
+      await openSwotPrintPreview(context, data);
+    } catch (e) {
+      debugPrint('Failed to open print preview: $e');
+      if (mounted) {
+        MotionToast.error(
+          title: const Text('Preview Failed'),
+          description: const Text('Unable to load SWOT for print preview.'),
+          toastAlignment: Alignment.topCenter,
+        ).show(context);
+      }
+    } finally {
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
     }
   }
 
@@ -574,21 +676,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                       size: 16,
                       color: blue,
                     ),
-                    onPressed: () {
-                      if (_isServiceHeadView) {
-                        openSwotServiceHeadReport(
-                          swot.id.toString(),
-                          swot.departmentName ?? '',
-                          context: context,
-                        );
-                      } else {
-                        openSwotReport(
-                          swot.id.toString(),
-                          swot.departmentName ?? '',
-                          context: context,
-                        );
-                      }
-                    },
+                    onPressed: () => _openPrintPreview(swot),
                   ),
                 ),
 
@@ -643,17 +731,9 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
 
                   if (value == 'preview') {
                     if (_isServiceHeadView) {
-                      openSwotServiceHeadReport(
-                        swot.id.toString(),
-                        swot.departmentName ?? '',
-                        context: context,
-                      );
+                      await _openPrintPreview(swot);
                     } else {
-                      openSwotReport(
-                        swot.id.toString(),
-                        swot.departmentName ?? '',
-                        context: context,
-                      );
+                      await _openPrintPreview(swot);
                     }
                   }
 
@@ -1266,7 +1346,7 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
     } else {
       _loadLabels();
     }
-
+    preloadSwotPdfAssets();
     _loadSelectedOffice();
     _loadCurrentUser();
     _loadUsers();

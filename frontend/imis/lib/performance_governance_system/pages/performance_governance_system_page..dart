@@ -2546,13 +2546,6 @@ class _PerformanceGovernanceSystemPageState
                             color: blue,
                           ),
                           onSelected: (value) async {
-                            if (value == 'AllCombinedView') {
-                              await openAllCombinedPGSPreview(
-                                pgs.id.toString(),
-                                officeName,
-                                context: context,
-                              );
-                            }
                             if (value == 'DeliverablesOnly') {
                               await openDeliverablesOnlyPreview(
                                 pgs.id.toString(),
@@ -2574,13 +2567,32 @@ class _PerformanceGovernanceSystemPageState
                                 context: context,
                               );
                             }
+                            if (value == 'AllCombinedView') {
+                              await openAllCombinedPGSPreview(
+                                pgs.id.toString(),
+                                officeName,
+                                context: context,
+                              );
+                            }
+                            if (value == 'AccomplishmentReport') {
+                              await openPgsDeliverableAccomplishmentReport(
+                                periodId: pgs.pgsPeriod.id,
+                                officeId: pgs.office.id,
+                                pgsId: pgs.id,
+                                context: context,
+                              );
+                            }
+                            if (value == 'AccomplishmentReport') {
+                              await openPgsDeliverableAccomplishmentReport(
+                                periodId: pgs.pgsPeriod.id,
+                                officeId: pgs.office.id,
+                                pgsId: pgs.id,
+                                context: context,
+                              );
+                            }
                           },
                           itemBuilder:
                               (_) => [
-                                const PopupMenuItem(
-                                  value: 'AllCombinedView',
-                                  child: Text('All Combined View'),
-                                ),
                                 PopupMenuItem(
                                   value: 'DeliverablesOnly',
                                   child: Text('Deliverables Only'),
@@ -2592,6 +2604,14 @@ class _PerformanceGovernanceSystemPageState
                                 const PopupMenuItem(
                                   value: 'PGSDeliverablesStatus',
                                   child: Text('PGS Deliverables Status'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'AllCombinedView',
+                                  child: Text('All Combined View'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'AccomplishmentReport',
+                                  child: Text('PGS Accomplishment Report'),
                                 ),
                               ],
                         ),
@@ -2771,6 +2791,7 @@ class _PerformanceGovernanceSystemPageState
                                       value: 'ReadinessRating',
                                       child: Text('Readiness Rating'),
                                     ),
+
                                     PopupMenuItem(
                                       value: 'PGSDeliverablesStatus',
                                       child: Text('PGS Deliverables Status'),
@@ -2778,6 +2799,10 @@ class _PerformanceGovernanceSystemPageState
                                     PopupMenuItem(
                                       value: 'AllCombinedView',
                                       child: Text('All Combined View'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'AccomplishmentReport',
+                                      child: Text('PGS Accomplishment Report'),
                                     ),
                                   ],
                               child: Padding(
