@@ -219,6 +219,11 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   final TextEditingController _planNameController = TextEditingController(
     text: 'ISO Internal Quality Audit Plan',
   );
+  // The closing activity printed as the last line of the schedule
+  // (e.g. "Reporting", "Closing Meeting"). The user can type any wording;
+  // blank = no closing line is printed.
+  final TextEditingController _closingActivityController =
+      TextEditingController(text: 'Reporting');
   final TextEditingController
   _internalAuditSchedController = TextEditingController(
     text:
@@ -305,6 +310,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     _purposeController.dispose();
     // FIX: was missing — leaked this controller on every close.
     _planNameController.dispose();
+    _closingActivityController.dispose();
     _internalAuditSchedController.dispose();
     _auditPlanObjectiveController.dispose();
     _scopeOfAuditController.dispose();
@@ -321,6 +327,42 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       entry.dispose();
     }
     super.dispose();
+  }
+
+  /// A free-text activity: typed text only — no office from the list,
+  /// no clause and no team. The closing activity is saved this way.
+  bool _isFreeTextActivity(AuditPlanEntryRow e) =>
+      e.selectedOfficeId == null &&
+      e.selectedTeamId == null &&
+      e.selectedIsoStandardIds.isEmpty &&
+      e.officeText.trim().isNotEmpty;
+
+  /// The closing activity is saved as the last line of the last day. When a
+  /// programme is loaded, that line is moved out of the day rows and into
+  /// the dedicated closing input, so it is edited in one place.
+  void _extractClosingActivity() {
+    _closingActivityController.text = '';
+    if (_entries.isEmpty) return;
+
+    final lastDay = _entries
+        .map((e) => e.dayNumber)
+        .reduce((a, b) => a > b ? a : b);
+
+    AuditPlanEntryRow? candidate;
+    for (final e in _entries) {
+      if (e.dayNumber == lastDay) candidate = e;
+    }
+    if (candidate == null || !_isFreeTextActivity(candidate)) return;
+
+    _closingActivityController.text = candidate.officeText.trim();
+    _entries.remove(candidate);
+    candidate.dispose();
+
+    // The closing line was alone on its day (e.g. an old "Day 2 – Reporting"):
+    // that day has no rows left, so drop it.
+    if (!_entries.any((e) => e.dayNumber == lastDay)) {
+      _dayDates.remove(lastDay);
+    }
   }
 
   Future<void> _loadAllFormData() async {
@@ -437,10 +479,14 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               }
             }
           }
+
+          // Pull the closing line out of the day rows into its own input.
+          _extractClosingActivity();
         }
       }
 
       if (_entries.isEmpty) {
+        _dayDates.clear();
         _dayDates[1] = DateTime.now();
         _entries.add(AuditPlanEntryRow(dayNumber: 1));
       }
@@ -499,7 +545,6 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       debugPrint('Failed to load team-office map: $e');
     }
   }
-  
 
   int get _nextDayNumber => _dayDates.keys.isEmpty
       ? 1
@@ -594,7 +639,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
   /// Opens the native print preview for the saved Audit Programme.
   /// Only available once the programme exists on the server (edit mode).
-    void _openPrintPreview() {
+  void _openPrintPreview() {
     final id = widget.programmeId;
     if (id == null) return;
     Navigator.of(context).push<void>(
@@ -682,7 +727,11 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.verified_user_outlined, color: primaryThemeColor, size: 18),
+              const Icon(
+                Icons.verified_user_outlined,
+                color: primaryThemeColor,
+                size: 18,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'IQA APPROVAL SIGNATORIES',
@@ -701,8 +750,15 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                     title: 'Audit Programme',
                     history: _loadedProgramme!.approvalHistory,
                   ),
-                  icon: const Icon(Icons.history, size: 16, color: primaryThemeColor),
-                  label: const Text('View History', style: TextStyle(fontSize: 12, color: primaryThemeColor)),
+                  icon: const Icon(
+                    Icons.history,
+                    size: 16,
+                    color: primaryThemeColor,
+                  ),
+                  label: const Text(
+                    'View History',
+                    style: TextStyle(fontSize: 12, color: primaryThemeColor),
+                  ),
                 ),
             ],
           ),
@@ -712,7 +768,9 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
             final name = s.signatoryName ?? 'Unassigned';
             final status = s.approvalStatus ?? 'Pending';
             final date = s.dateSigned != null
-                ? DateFormat('MMM d, yyyy h:mm a').format(s.dateSigned!.toLocal())
+                ? DateFormat(
+                    'MMM d, yyyy h:mm a',
+                  ).format(s.dateSigned!.toLocal())
                 : null;
 
             Color statusColor;
@@ -742,7 +800,10 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                 children: [
                   Container(
                     width: 130,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3E9EA),
                       borderRadius: BorderRadius.circular(4),
@@ -763,27 +824,42 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                       children: [
                         Text(
                           name,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                         if (date != null)
                           Text(
                             'Signed: $date',
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
                           ),
                         if (s.remarks != null && s.remarks!.isNotEmpty)
                           Text(
                             '"${s.remarks}"',
-                            style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.grey.shade700),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.grey.shade700,
+                            ),
                           ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -813,11 +889,16 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   Widget _buildFooter() {
     final isEdit = widget.programmeId != null;
     final status = _loadedProgramme?.effectiveStatusName ?? 'Draft';
-    final hasRejection = _loadedProgramme?.latestRejection != null ||
+    final hasRejection =
+        _loadedProgramme?.latestRejection != null ||
         status == 'Revision Required' ||
         status == 'Rejected';
 
-    final canShowDecisions = isEdit && (_isAdmin || status == 'Pending' || _loadedProgramme?.signatories.isNotEmpty == true);
+    final canShowDecisions =
+        isEdit &&
+        (_isAdmin ||
+            status == 'Pending' ||
+            _loadedProgramme?.signatories.isNotEmpty == true);
 
     return Container(
       width: double.infinity,
@@ -946,11 +1027,19 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
           final currentUserId = _currentUser?.id ?? '';
           final signatories = _loadedProgramme?.signatories ?? [];
-          final matchingSig = signatories.where((s) => s.signatoryId == currentUserId);
-          final sigLabel = matchingSig.isNotEmpty ? (matchingSig.first.signatoryLabel ?? '').toUpperCase() : '';
+          final matchingSig = signatories.where(
+            (s) => s.signatoryId == currentUserId,
+          );
+          final sigLabel = matchingSig.isNotEmpty
+              ? (matchingSig.first.signatoryLabel ?? '').toUpperCase()
+              : '';
 
-          final canShowNoted = _isAdmin || sigLabel.contains('NOTE') || sigLabel.contains('QMS');
-          final canShowApproveReject = _isAdmin || sigLabel.contains('APPROV') || sigLabel.contains('QMR');
+          final canShowNoted =
+              _isAdmin || sigLabel.contains('NOTE') || sigLabel.contains('QMS');
+          final canShowApproveReject =
+              _isAdmin ||
+              sigLabel.contains('APPROV') ||
+              sigLabel.contains('QMR');
 
           final rightActions = canShowDecisions
               ? Row(
@@ -958,13 +1047,18 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                   children: [
                     if (canShowNoted)
                       OutlinedButton.icon(
-                        onPressed: _isSaving ? null : () => _handleDecide('Noted'),
+                        onPressed: _isSaving
+                            ? null
+                            : () => _handleDecide('Noted'),
                         icon: const Icon(Icons.info_outline, size: 16),
                         label: const Text('NOTED'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: primaryThemeColor,
                           side: const BorderSide(color: primaryThemeColor),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -974,11 +1068,24 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
                         onPressed: _isSaving ? null : () => _handleReject(),
-                        icon: const Icon(Icons.cancel_outlined, size: 16, color: Colors.white),
-                        label: const Text('REJECT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        icon: const Icon(
+                          Icons.cancel_outlined,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'REJECT',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.redAccent,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -986,12 +1093,27 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
-                        onPressed: _isSaving ? null : () => _handleDecide('Approve'),
-                        icon: const Icon(Icons.check_circle_outline, size: 16, color: Colors.white),
-                        label: const Text('APPROVE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        onPressed: _isSaving
+                            ? null
+                            : () => _handleDecide('Approve'),
+                        icon: const Icon(
+                          Icons.check_circle_outline,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'APPROVE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade700,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -1008,10 +1130,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               constraints: BoxConstraints(minWidth: constraints.maxWidth),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  leftActions,
-                  rightActions,
-                ],
+                children: [leftActions, rightActions],
               ),
             ),
           );
@@ -1061,12 +1180,19 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Confirm $action'),
-        content: Text('Are you sure you want to mark this Audit Programme as $action?'),
+        content: Text(
+          'Are you sure you want to mark this Audit Programme as $action?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: action == 'Approve' ? Colors.green.shade700 : primaryThemeColor,
+              backgroundColor: action == 'Approve'
+                  ? Colors.green.shade700
+                  : primaryThemeColor,
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(action, style: const TextStyle(color: Colors.white)),
@@ -1117,6 +1243,49 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       }
     }
     return messages;
+  }
+
+  /// The entries sent to the backend: every day row, plus the closing
+  /// activity (if any) as the last line of the last day. It is always sent as
+  /// a new line (id 0) so it stays the newest entry and therefore the last
+  /// one when the programme is loaded back.
+  List<Map<String, dynamic>> _buildEntriesPayload() {
+    final planId = _existingAuditPlanId ?? 0;
+
+    final entriesJson = <Map<String, dynamic>>[
+      for (final e in _entries)
+        e.toBackendDtoJson(
+          planId,
+          dayDate: _dayDates[e.dayNumber] ?? DateTime.now(),
+        ),
+    ];
+
+    final closingText = _closingActivityController.text.trim();
+    if (closingText.isNotEmpty) {
+      final lastDay = _entries.isEmpty
+          ? 1
+          : _entries.map((e) => e.dayNumber).reduce((a, b) => a > b ? a : b);
+      final d = _dayDates[lastDay] ?? DateTime.now();
+      final dateOnly = DateTime(d.year, d.month, d.day);
+
+      entriesJson.add({
+        'id': 0,
+        'auditPlanId': planId,
+        'dayNumber': lastDay,
+        'time': dateOnly.toIso8601String(),
+        'auditPlanProcesses': [
+          {
+            'id': 0,
+            'officeId': null,
+            'processName': closingText,
+            'auditPlanEntryId': 0,
+          },
+        ],
+        'isoStandardAuditPlans': [],
+        'isoAuditors': [],
+      });
+    }
+    return entriesJson;
   }
 
   Future<void> _submitProgramme({required bool isDraft}) async {
@@ -1201,14 +1370,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
           'planName': _planNameController.text,
           'startDate': startDate.toIso8601String(),
           'endDate': endDate.toIso8601String(),
-          'entries': _entries
-              .map(
-                (e) => e.toBackendDtoJson(
-                  _existingAuditPlanId ?? 0,
-                  dayDate: _dayDates[e.dayNumber] ?? DateTime.now(),
-                ),
-              )
-              .toList(),
+          'entries': _buildEntriesPayload(),
         },
       ],
     };
@@ -1290,7 +1452,8 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                                   history: _loadedProgramme!.approvalHistory,
                                 ),
                               ),
-                            if (_loadedProgramme?.signatories.isNotEmpty == true)
+                            if (_loadedProgramme?.signatories.isNotEmpty ==
+                                true)
                               _buildSignatoriesCard(),
                             _buildCard(
                               title: 'PROGRAMME HEADER',
@@ -1362,6 +1525,8 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                               auditPlanObjectiveController:
                                   _auditPlanObjectiveController,
                               scopeOfAuditController: _scopeOfAuditController,
+                              closingActivityController:
+                                  _closingActivityController,
                               entries: _entries,
                               dayDates: _dayDates,
                               offices: _offices,
@@ -1491,6 +1656,7 @@ class AuditPlanEntriesSection extends StatefulWidget {
   final TextEditingController internalAuditSchedController;
   final TextEditingController auditPlanObjectiveController;
   final TextEditingController scopeOfAuditController;
+  final TextEditingController closingActivityController;
   final List<AuditPlanEntryRow> entries;
   final Map<int, DateTime> dayDates;
   final List<OfficeDto> offices;
@@ -1508,6 +1674,7 @@ class AuditPlanEntriesSection extends StatefulWidget {
     required this.internalAuditSchedController,
     required this.auditPlanObjectiveController,
     required this.scopeOfAuditController,
+    required this.closingActivityController,
     required this.entries,
     required this.dayDates,
     required this.offices,
@@ -1831,6 +1998,64 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
           const Divider(height: 20),
 
           for (final day in sortedDays) _buildDayGroup(day, grouped[day]!),
+
+          _buildClosingActivity(sortedDays),
+        ],
+      ),
+    );
+  }
+
+  /// The closing activity of the schedule (printed as the last line of the
+  /// last day). Free text, so it can be renamed to whatever the audit uses.
+  Widget _buildClosingActivity(List<int> sortedDays) {
+    final lastDay = sortedDays.isEmpty ? 1 : sortedDays.last;
+    const suggestions = ['Reporting', 'Closing Meeting'];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F5F5),
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            controller: widget.closingActivityController,
+            style: const TextStyle(fontSize: 12),
+            decoration: _dropdownDecoration('REPORTING / CLOSING ACTIVITY')
+                .copyWith(
+                  filled: true,
+                  fillColor: Colors.white,
+                  hintText: 'e.g. Reporting, Closing Meeting',
+                  hintStyle: const TextStyle(fontSize: 12),
+                  helperText:
+                      'Printed as the last line of Day $lastDay. Leave blank to print none.',
+                  helperMaxLines: 2,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const Text(
+                'Quick pick:',
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+              for (final s in suggestions)
+                ActionChip(
+                  label: Text(s, style: const TextStyle(fontSize: 11)),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  backgroundColor: primaryThemeColor.withValues(alpha: .08),
+                  labelStyle: const TextStyle(color: primaryThemeColor),
+                  onPressed: () => widget.closingActivityController.text = s,
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -1951,7 +2176,10 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
         builder: (context, constraints) {
           bool isWide = constraints.maxWidth > 800;
 
-          Widget officeCombo = _buildOfficeCombo(entry, errorText: selfAuditMessage);
+          Widget officeCombo = _buildOfficeCombo(
+            entry,
+            errorText: selfAuditMessage,
+          );
 
           Widget standardMultiSelect = InkWell(
             borderRadius: BorderRadius.circular(6),
@@ -1988,7 +2216,9 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                               MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          backgroundColor: primaryThemeColor.withValues(alpha: .08),
+                          backgroundColor: primaryThemeColor.withValues(
+                            alpha: .08,
+                          ),
                           labelStyle: const TextStyle(color: primaryThemeColor),
                         );
                       }).toList(),
@@ -2000,10 +2230,9 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
             initialValue: safeTeamValue,
             isExpanded: true,
             hint: const Text('Select Team', style: TextStyle(fontSize: 12)),
-            decoration: _dropdownDecoration('AUDITORS').copyWith(
-              errorText: selfAuditMessage,
-              errorMaxLines: 4,
-            ),
+            decoration: _dropdownDecoration(
+              'AUDITORS',
+            ).copyWith(errorText: selfAuditMessage, errorMaxLines: 4),
             items: widget.teams.isEmpty
                 ? [
                     const DropdownMenuItem<int>(

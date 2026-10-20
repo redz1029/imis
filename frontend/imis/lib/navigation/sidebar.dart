@@ -6,7 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_page.dart';
+import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_list_page.dart';
 import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_list_page.dart';
 import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_list_page.dart';
 import 'package:imis/ISO/IQA/audit_report/pages/audit_report_list_page.dart';
@@ -1192,7 +1192,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 0) return const AuditProgrammeListPage();
       if (selectedSubPage == 1) return const AuditPlanListPage();
       if (selectedSubPage == 2) return const AuditScheduleListPage();
-      if (selectedSubPage == 3) return const AuditChecklistPage();
+      if (selectedSubPage == 3) return const AuditChecklistListPage();
       if (selectedSubPage == 4) return const AuditReportListPage();
       if (selectedSubPage == 5) return const NcarListPage();
       if (selectedSubPage == 6) return const ClauseLibraryPage();

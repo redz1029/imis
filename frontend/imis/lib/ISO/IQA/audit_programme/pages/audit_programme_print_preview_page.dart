@@ -37,11 +37,6 @@ const String _kLogoCrmc = 'assets/crmc_logo.png';
 const String _kLogoIso = 'assets/iso_tuv_certified.jpg';
 const String _kFormCode = 'QP-03-F-04 Rev. 2';
 
-/// The printed form closes every batch with "DAY n / REPORTING". The data has
-/// no such entry, so it is appended after the last audit day of each batch.
-/// Set to false to print only the days that actually have entries.
-const bool _kAppendReportingDay = true;
-
 const double _kML = 48, _kMR = 48, _kMT = 30, _kMB = 30;
 const double _kBorderW = 0.8;
 const double _kFont = 10.5;
@@ -69,6 +64,7 @@ class _Entry {
     required this.persons,
     required this.standards,
     required this.order,
+    required this.hasOfficeId,
   });
 
   final int dayNumber;
@@ -80,7 +76,17 @@ class _Entry {
   final String standards;
   final int order;
 
-  bool get isReporting => office.trim().toLowerCase() == 'reporting';
+  /// True when the activity points at a real office from the master list.
+  final bool hasOfficeId;
+
+  /// A free-text activity: typed text only, no office, clause or team.
+  /// The last such line of a batch's last day is its closing activity.
+  bool get isFreeText =>
+      !hasOfficeId &&
+      office.trim().isNotEmpty &&
+      standards.trim().isEmpty &&
+      teamId == null &&
+      persons.isEmpty;
 }
 
 class _Batch {
@@ -294,6 +300,7 @@ List<_Entry> _parseEntries(
     if (e['isDeleted'] == true) continue;
 
     var office = '';
+    var hasOfficeId = false;
     final processes = e['auditPlanProcesses'] ?? e['AuditPlanProcesses'];
     if (processes is List && processes.isNotEmpty && processes[0] is Map) {
       final item = processes[0] as Map;
@@ -302,6 +309,12 @@ List<_Entry> _parseEntries(
           item['ProcessName'] ??
           (officeObj is Map ? officeObj['name'] : null);
       office = (rawName ?? '').toString().trim();
+      final oid = _intOrNull(
+        item['officeId'] ??
+            item['OfficeId'] ??
+            (officeObj is Map ? officeObj['id'] : null),
+      );
+      hasOfficeId = oid != null && oid != 0;
     }
 
     int? teamId;
@@ -357,7 +370,10 @@ List<_Entry> _parseEntries(
       }
     }
 
-    if (office.isEmpty && persons.isEmpty && standards.isEmpty && teamId == null) {
+    if (office.isEmpty &&
+        persons.isEmpty &&
+        standards.isEmpty &&
+        teamId == null) {
       continue;
     }
 
@@ -366,6 +382,7 @@ List<_Entry> _parseEntries(
       date: date,
       minutes: minutes,
       office: office,
+      hasOfficeId: hasOfficeId,
       teamId: teamId,
       persons: persons,
       standards: standards,
@@ -461,7 +478,7 @@ Future<_Data> _loadPrintData(int programmeId) async {
     if (m['isDeleted'] == true) continue;
     plans.add(m);
   }
-  
+
   DateTime? planStart(Map<String, dynamic> p) =>
       DateTime.tryParse((p['startDate'] ?? p['StartDate'] ?? '').toString());
   plans.sort((a, b) {
@@ -481,7 +498,8 @@ Future<_Data> _loadPrintData(int programmeId) async {
     final start = planStart(plan);
     batches.add(_Batch(
       number: batches.length + 1,
-      start: start == null ? null : DateTime(start.year, start.month, start.day),
+      start:
+          start == null ? null : DateTime(start.year, start.month, start.day),
       entries: entries,
     ));
   }
@@ -524,7 +542,7 @@ Future<_PdfAssets> _loadAssets() async {
     unicode = false;
   }
 
-    Future<pw.MemoryImage?> logo(String path) async {
+  Future<pw.MemoryImage?> logo(String path) async {
     try {
       final data = await rootBundle.load(path);
       return pw.MemoryImage(data.buffer.asUint8List());
@@ -985,9 +1003,28 @@ class _ProgrammePdfBuilder {
     return _banner(_t('DAY $day OF DAY $total', bold: true, size: 11));
   }
 
-  pw.Widget _reportingBanner() {
-    return _banner(_t('REPORTING', bold: true, size: 11), height: 28);
+  /// Banner row for the closing activity: it shows the text the user typed
+  /// (e.g. "Closing Meeting"), nothing static.
+  pw.Widget _closingBanner(String text) {
+    return pw.Container(
+      width: _contentW,
+      alignment: pw.Alignment.center,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      decoration: pw.BoxDecoration(
+        border: pw.Border(left: _bs, right: _bs, bottom: _bs),
+      ),
+      child: _t(
+        text.trim().toUpperCase(),
+        bold: true,
+        size: 11,
+        align: pw.TextAlign.center,
+      ),
+    );
   }
+
+  /// A normal activity row, or the banner when it is the closing activity.
+  pw.Widget _rowFor(_Entry e, _Batch batch, {required bool closing}) =>
+      closing ? _closingBanner(e.office) : _entryRow(e, batch);
 
   // ---------------------------------------------------------------- rows ---
   List<String> _standardLines(String raw) {
@@ -1004,14 +1041,15 @@ class _ProgrammePdfBuilder {
         i,
         math.min(i + _kClausesPerLine, tokens.length),
       );
-      lines.add(chunk.join(', ') + (i + _kClausesPerLine < tokens.length ? ',' : ''));
+      lines.add(
+        chunk.join(', ') + (i + _kClausesPerLine < tokens.length ? ',' : ''),
+      );
     }
     return lines;
   }
 
   pw.Widget _entryRow(_Entry e, _Batch batch) {
-    final date = e.date ??
-        batch.start?.add(Duration(days: e.dayNumber - 1));
+    final date = e.date ?? batch.start?.add(Duration(days: e.dayNumber - 1));
     final dateText = date == null ? '' : DateFormat('MMMM d, yyyy').format(date);
 
     final persons = e.persons.isNotEmpty
@@ -1031,7 +1069,12 @@ class _ProgrammePdfBuilder {
       columnWidths: {
         for (var i = 0; i < 4; i++) i: pw.FixedColumnWidth(_colW[i]),
       },
-      border: pw.TableBorder(left: _bs, right: _bs, bottom: _bs, verticalInside: _bs),
+      border: pw.TableBorder(
+        left: _bs,
+        right: _bs,
+        bottom: _bs,
+        verticalInside: _bs,
+      ),
       defaultVerticalAlignment: pw.TableCellVerticalAlignment.top,
       children: [
         pw.TableRow(
@@ -1076,35 +1119,37 @@ class _ProgrammePdfBuilder {
     );
   }
 
+  List<_Entry> _sortedDay(List<_Entry> list) {
+    final copy = List<_Entry>.of(list);
+    copy.sort((a, c) {
+      final m = a.minutes.compareTo(c.minutes);
+      return m != 0 ? m : a.order.compareTo(c.order);
+    });
+    return copy;
+  }
+
   List<pw.Widget> _batchWidgets(_Batch b, {required bool first}) {
     final out = <pw.Widget>[];
     if (!first) out.add(pw.SizedBox(height: 14));
 
-    final audit = b.entries.where((e) => !e.isReporting).toList();
-    final reporting = b.entries.where((e) => e.isReporting).toList();
-
     final byDay = <int, List<_Entry>>{};
-    for (final e in audit) {
+    for (final e in b.entries) {
       byDay.putIfAbsent(e.dayNumber, () => <_Entry>[]).add(e);
     }
     final days = byDay.keys.toList()..sort();
+    if (days.isEmpty) return out;
+    final total = days.last;
 
-    int? reportingDay;
-    if (reporting.isNotEmpty) {
-      reportingDay = reporting.map((e) => e.dayNumber).reduce(math.min);
-    } else if (_kAppendReportingDay) {
-      reportingDay = (days.isEmpty ? 0 : days.last) + 1;
-    }
-    final total = reportingDay ?? (days.isEmpty ? 1 : days.last);
+    // The closing activity is whatever the user entered as the batch's
+    // closing line (any wording): the last free-text line of the last day.
+    final lastDayList = _sortedDay(byDay[days.last]!);
+    final _Entry? closingEntry =
+        lastDayList.last.isFreeText ? lastDayList.last : null;
 
     var pendingBatchBanner = true;
 
     for (final day in days) {
-      final list = byDay[day]!
-        ..sort((a, c) {
-          final m = a.minutes.compareTo(c.minutes);
-          return m != 0 ? m : a.order.compareTo(c.order);
-        });
+      final list = day == days.last ? lastDayList : _sortedDay(byDay[day]!);
 
       // A group that opens with a batch banner for a non-first batch already
       // draws its own top edge; every other group needs the page-top rule.
@@ -1112,24 +1157,16 @@ class _ProgrammePdfBuilder {
       final head = <pw.Widget>[
         if (pendingBatchBanner) _batchBanner(b.number, top: !first),
         _dayBanner(day, total),
-        _entryRow(list.first, b),
+        _rowFor(list.first, b, closing: identical(list.first, closingEntry)),
       ];
       pendingBatchBanner = false;
       out.add(ownTop ? _group(head) : _ruled(_group(head)));
 
       for (var i = 1; i < list.length; i++) {
-        out.add(_ruled(_entryRow(list[i], b)));
+        out.add(_ruled(
+          _rowFor(list[i], b, closing: identical(list[i], closingEntry)),
+        ));
       }
-    }
-
-    if (reportingDay != null) {
-      final ownTop = pendingBatchBanner && !first;
-      final tail = _group([
-        if (pendingBatchBanner) _batchBanner(b.number, top: !first),
-        _dayBanner(reportingDay, total),
-        _reportingBanner(),
-      ]);
-      out.add(ownTop ? tail : _ruled(tail));
     }
     return out;
   }
@@ -1142,10 +1179,10 @@ class _ProgrammePdfBuilder {
       child: pw.Align(alignment: alignment, child: child),
     );
   }
-      // ------------------------------------------------------------ letterhead ---
-  /// Same as the scanned form: the CRMC seal sits right against the left of
-  /// the centred three-line heading. No TÜV mark.
-   pw.Widget _letterhead() {
+
+  /// The CRMC seal sits right against the left of the centred three-line
+  /// heading; the TÜV mark is on the right.
+  pw.Widget _letterhead() {
     final crmc = assets.crmc;
     final iso = assets.iso;
 
@@ -1202,9 +1239,10 @@ class _ProgrammePdfBuilder {
       ),
     );
   }
-  
+
   pw.Widget _sigColumn(_Sig s, double colW) {
-    final dateText = s.date == null ? '' : DateFormat('M/d/yyyy').format(s.date!);
+    final dateText =
+        s.date == null ? '' : DateFormat('M/d/yyyy').format(s.date!);
     return pw.Padding(
       padding: const pw.EdgeInsets.only(left: 22, right: 16),
       child: pw.Column(
@@ -1296,14 +1334,22 @@ class _ProgrammePdfBuilder {
   // ------------------------------------------------------------------ body ---
   List<pw.Widget> _body() {
     final w = <pw.Widget>[
-            _letterhead(),
+      _letterhead(),
       pw.SizedBox(height: 16),
       pw.Center(child: _t('AUDIT PROGRAMME', bold: true, size: 12)),
       pw.SizedBox(height: 10),
       _headerTable(),
       _purposeBox(),
-      _section('I.', 'Objectives', _paragraphs(data.objectives.join('\n'), renumber: true)),
-      _section('II.', 'Scope and Frequency of Audit', _paragraphs(data.scopeFreq)),
+      _section(
+        'I.',
+        'Objectives',
+        _paragraphs(data.objectives.join('\n'), renumber: true),
+      ),
+      _section(
+        'II.',
+        'Scope and Frequency of Audit',
+        _paragraphs(data.scopeFreq),
+      ),
       _section('III.', 'Internal Audit Schedule', _paragraphs(data.schedule)),
       _labelBox('Audit Plan Objective:', data.planObjective),
       _labelBox('Scope of Audit:', data.scope),
@@ -1317,7 +1363,12 @@ class _ProgrammePdfBuilder {
     if (hasBatches) w.add(pw.SizedBox(height: 16));
 
     w.addAll([
-      _section('IV.', 'Audit Criteria', _paragraphs(data.criteria), top: hasBatches),
+      _section(
+        'IV.',
+        'Audit Criteria',
+        _paragraphs(data.criteria),
+        top: hasBatches,
+      ),
       _section('V.', 'Audit Methodology', _paragraphs(data.methodology)),
       _section(
         'VI.',

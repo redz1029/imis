@@ -6,135 +6,39 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/ISO/IQA/audit_checklist/models/audit_checklist.dart';
 import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_print_preview_page.dart';
 import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
-import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/widgets/common/build_page_header.dart';
-import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 enum _RowFilter { all, pending, conforming, nonConforming }
 
-/// One entry of the top-level list ("IQA Checklist · Ref# · Year"). It groups
-/// the team checklists that belong together.
-class _ChecklistBook {
-  _ChecklistBook({
-    required this.key,
-    required this.refNo,
-    required this.year,
-    required this.items,
-  });
-
-  final String key;
-  final String refNo;
-  final int? year;
-  final List<AuditChecklistSummary> items;
-}
-
-// -----------------------------------------------------------------------------
-// Grouping helpers. The schedule summary is read through its JSON form so this
-// page keeps compiling whatever extra fields the model has. They look for a
-// programme/plan reference and a year (or a date to take the year from).
-// -----------------------------------------------------------------------------
-Map<String, dynamic> _summaryJson(AuditChecklistSummary s) {
-  try {
-    final raw = (s as dynamic).toJson();
-    if (raw is Map) return Map<String, dynamic>.from(raw);
-  } catch (_) {
-    // The model has no toJson(): no extra fields are available.
-  }
-  return const <String, dynamic>{};
-}
-
-Object? _pickKey(Map<String, dynamic> json, List<String> keys) {
-  for (final k in keys) {
-    final pascal = k[0].toUpperCase() + k.substring(1);
-    final v = json[k] ?? json[pascal];
-    if (v != null && v.toString().trim().isNotEmpty) return v;
-  }
-  return null;
-}
-
-String? _refFromJson(Map<String, dynamic> json) {
-  final v = _pickKey(json, const [
-    'auditProgrammeId',
-    'programmeId',
-    'auditPlanId',
-    'planId',
-  ]);
-  final text = v?.toString().trim();
-  if (text == null || text.isEmpty || text == '0') return null;
-  return text;
-}
-
-int? _yearFromJson(Map<String, dynamic> json) {
-  final direct = _pickKey(json, const ['year', 'auditYear']);
-  final y = int.tryParse('${direct ?? ''}');
-  if (y != null && y > 1900) return y;
-
-  final date = _pickKey(json, const [
-    'scheduleDate',
-    'scheduledDate',
-    'auditDate',
-    'dateOfAudit',
-    'startDate',
-    'date',
-    'time',
-  ]);
-  return DateTime.tryParse('${date ?? ''}')?.year;
-}
-
+/// The Audit Checklist form. Opened as a dialog from
+/// [AuditChecklistListPage] (same pattern as AuditProgrammePage).
+/// Pops with `true` when something was saved.
 class AuditChecklistPage extends StatefulWidget {
-  /// Optional. When provided, the page loads this schedule's checklist
-  /// directly. When null/0, the page shows the checklist list.
   final int auditScheduleId;
 
-  const AuditChecklistPage({super.key, this.auditScheduleId = 0});
+  /// Optional list summary, used as a fallback for the header fields.
+  final AuditChecklistSummary? summary;
+
+  const AuditChecklistPage({
+    super.key,
+    required this.auditScheduleId,
+    this.summary,
+  });
 
   @override
   State<AuditChecklistPage> createState() => _AuditChecklistPageState();
 }
 
 class _AuditChecklistPageState extends State<AuditChecklistPage> {
-  static const List<String> _statusTabs = ['All', 'Confirmed', 'Approved'];
   static const double _wideBreakpoint = 860;
-  static const double _panelMaxWidth = 1100;
   static const String _formCode = 'QP-03-F-05 Rev. 0';
   static const Color _panelBg = Color(0xFFF4F6F8);
 
-  /// Name shown on the top-level list. Change it to "AUDIT Checklist" if you
-  /// prefer that wording.
-  static const String _bookTitle = 'IQA Checklist';
- void _openPrintPreview(int auditScheduleId, {bool checkDirty = false}) {
-    if (checkDirty && _dirty) {
-      MotionToast.warning(
-        toastAlignment: Alignment.topCenter,
-        description: const Text(
-          'Save the checklist first — the print preview shows the saved version.',
-        ),
-      ).show(context);
-      return;
-    }
-    openAuditChecklistPrintPreview(context, auditScheduleId);
-  }
   final AuditChecklistService _service = AuditChecklistService(Dio());
-  final AuditProgrammeService _programmeService = AuditProgrammeService(Dio());
 
-  // List (schedule) mode state.
-  bool _isLoadingSchedules = false;
-  String? _listError;
-  List<AuditChecklistSummary> _schedules = [];
-  List<_ChecklistBook> _books = [];
-  Map<int, int> _programmeYears = {};
-  String? _openBookKey;
-  int _bookPage = 1;
-  String _selectedTab = 'All';
-  int _currentPage = 1;
-  final int _pageSize = 15;
-
-  // Detail (checklist) mode state.
-  int _currentAuditScheduleId = 0;
   AuditChecklistSummary? _summary;
-  bool _isLoadingChecklist = false;
+  bool _isLoadingChecklist = true;
   String? _checklistError;
   bool _noClauses = false;
   List<AuditChecklist> _rows = [];
@@ -143,15 +47,15 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   final TextEditingController _auditeeTextController = TextEditingController();
   bool _isSaving = false;
   bool _dirty = false;
+  bool _saved = false;
   _RowFilter _filter = _RowFilter.all;
-
-  bool get _inDetailMode => _currentAuditScheduleId > 0;
 
   // ---------------------------------------------------------------------------
   // Derived values
   // ---------------------------------------------------------------------------
   int get _conformingCount => _rows.where((r) => r.conforming == true).length;
-  int get _nonConformingCount => _rows.where((r) => r.conforming == false).length;
+  int get _nonConformingCount =>
+      _rows.where((r) => r.conforming == false).length;
   int get _pendingCount => _rows.where((r) => r.conforming == null).length;
   int get _answeredCount => _rows.length - _pendingCount;
 
@@ -170,157 +74,26 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     return result;
   }
 
+  AuditChecklist? get _head => _rows.isEmpty ? null : _rows.first;
+
   String get _officeProcessText {
-    final h = _rows.first;
-    return (h.officeProcess?.isNotEmpty ?? false)
-        ? h.officeProcess!
-        : (_summary?.officeProcess ?? '');
+    final v = _head?.officeProcess;
+    if (v != null && v.isNotEmpty) return v;
+    return _summary?.officeProcess ?? '';
   }
 
   String get _scopeText {
-    final h = _rows.first;
-    return (h.auditScope?.isNotEmpty ?? false)
-        ? h.auditScope!
-        : (_summary?.auditScope ?? '');
+    final v = _head?.auditScope;
+    if (v != null && v.isNotEmpty) return v;
+    return _summary?.auditScope ?? '';
   }
 
   // The checklist row can come back without auditors; the schedule list
   // summary resolves the team from the schedule itself, so fall back to it.
   String get _auditorsText {
-    final fromRow = (_rows.first.auditorNames ?? '').trim();
+    final fromRow = (_head?.auditorNames ?? '').trim();
     if (fromRow.isNotEmpty) return fromRow;
     return (_summary?.auditorNames ?? '').trim();
-  }
-
-  bool get _canGoBack =>
-      widget.auditScheduleId == 0 || Navigator.of(context).canPop();
-
-  String _statusOf(AuditChecklistSummary s) =>
-      (s.statusName?.isNotEmpty ?? false) ? s.statusName! : 'Confirmed';
-
-  String _titleOf(AuditChecklistSummary s) {
-    final process = (s.officeProcess?.isNotEmpty ?? false) ? s.officeProcess! : '';
-    final teamName = (s.teamName?.isNotEmpty ?? false) ? s.teamName! : '';
-    // The department/office is the human-friendly identity of a confirmed
-    // checklist; fall back to the team, then the schedule id.
-    if (process.isNotEmpty) return process;
-    if (teamName.isNotEmpty) return teamName;
-    return 'Schedule #${s.auditScheduleId}';
-  }
-
-  // ---- books (top-level list) -----------------------------------------------
-  void _rebuildBooks() {
-    final map = <String, _ChecklistBook>{};
-    for (final s in _schedules) {
-      final json = _summaryJson(s);
-      final ref = _refFromJson(json);
-      var year = _yearFromJson(json);
-      final refId = int.tryParse(ref ?? '');
-      if (year == null && refId != null) year = _programmeYears[refId];
-
-      final key = ref != null
-          ? 'ref:$ref'
-          : (year != null ? 'year:$year' : 'all');
-      final book = map.putIfAbsent(
-        key,
-        () => _ChecklistBook(
-          key: key,
-          refNo: ref ?? '—',
-          year: year,
-          items: <AuditChecklistSummary>[],
-        ),
-      );
-      book.items.add(s);
-    }
-    final list = map.values.toList()
-      ..sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
-    _books = list;
-  }
-
-  _ChecklistBook? get _openBook {
-    final key = _openBookKey;
-    if (key == null) return null;
-    for (final b in _books) {
-      if (b.key == key) return b;
-    }
-    return null;
-  }
-
-  List<AuditChecklistSummary> get _currentItems =>
-      _openBook?.items ?? const <AuditChecklistSummary>[];
-
-  String _bookStatus(_ChecklistBook b) =>
-      b.items.isNotEmpty && b.items.every((s) => _statusOf(s) == 'Approved')
-          ? 'Approved'
-          : 'Confirmed';
-
-  String _yearText(_ChecklistBook b) => b.year?.toString() ?? '—';
-
-  List<_ChecklistBook> get _pagedBooks {
-    final start = (_bookPage - 1) * _pageSize;
-    if (start >= _books.length) return [];
-    var end = start + _pageSize;
-    if (end > _books.length) end = _books.length;
-    return _books.sublist(start, end);
-  }
-
-  void _ensureBookPageInRange() {
-    final total = _books.length;
-    final maxPage = total == 0 ? 1 : ((total + _pageSize - 1) ~/ _pageSize);
-    if (_bookPage > maxPage) _bookPage = maxPage;
-    if (_bookPage < 1) _bookPage = 1;
-  }
-
-  void _openBookEntry(_ChecklistBook b) {
-    setState(() {
-      _openBookKey = b.key;
-      _selectedTab = 'All';
-      _currentPage = 1;
-    });
-  }
-
-  void _closeBook() {
-    setState(() {
-      _openBookKey = null;
-      _selectedTab = 'All';
-      _currentPage = 1;
-    });
-  }
-
-  // ---- team checklists (second-level list) ----------------------------------
-  int _countFor(String tab) {
-    final items = _currentItems;
-    if (tab == 'All') return items.length;
-    return items.where((s) => _statusOf(s) == tab).length;
-  }
-
-  List<AuditChecklistSummary> get _filtered {
-    final items = _currentItems;
-    if (_selectedTab == 'All') return items;
-    return items.where((s) => _statusOf(s) == _selectedTab).toList();
-  }
-
-  List<AuditChecklistSummary> get _paged {
-    final filtered = _filtered;
-    final start = (_currentPage - 1) * _pageSize;
-    if (start >= filtered.length) return [];
-    var end = start + _pageSize;
-    if (end > filtered.length) end = filtered.length;
-    return filtered.sublist(start, end);
-  }
-
-  void _ensurePageInRange() {
-    final total = _filtered.length;
-    final maxPage = total == 0 ? 1 : ((total + _pageSize - 1) ~/ _pageSize);
-    if (_currentPage > maxPage) _currentPage = maxPage;
-    if (_currentPage < 1) _currentPage = 1;
-  }
-
-  void _selectTab(String tab) {
-    setState(() {
-      _selectedTab = tab;
-      _currentPage = 1;
-    });
   }
 
   // ---------------------------------------------------------------------------
@@ -329,12 +102,8 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   @override
   void initState() {
     super.initState();
-    _currentAuditScheduleId = widget.auditScheduleId;
-    if (_currentAuditScheduleId > 0) {
-      _loadChecklist(_currentAuditScheduleId);
-    } else {
-      _loadSchedules();
-    }
+    _summary = widget.summary;
+    _loadChecklist(widget.auditScheduleId);
   }
 
   @override
@@ -349,22 +118,6 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     super.dispose();
   }
 
-  // Disposes controllers after the next frame so TextFields that are still
-  // attached for one more frame never touch a disposed controller.
-  void _disposeControllersLater() {
-    final old = [
-      ..._remarksControllers.values,
-      ..._itemsControllers.values,
-    ];
-    _remarksControllers.clear();
-    _itemsControllers.clear();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      for (final c in old) {
-        c.dispose();
-      }
-    });
-  }
-
   void _markDirty() {
     if (!_dirty) setState(() => _dirty = true);
   }
@@ -372,47 +125,6 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   // ---------------------------------------------------------------------------
   // Data loading
   // ---------------------------------------------------------------------------
-  Future<void> _loadSchedules() async {
-    setState(() {
-      _isLoadingSchedules = true;
-      _listError = null;
-    });
-    try {
-      final schedules = await _service.getSchedulesWithChecklistData();
-
-      // Best effort: programme years let a book show its year when the
-      // schedule data only carries the programme reference.
-      final years = <int, int>{};
-      try {
-        final programmes = await _programmeService.getAllAuditProgrammes();
-        for (final p in programmes) {
-          final j = p.toJson();
-          final y = int.tryParse('${j['year'] ?? j['Year'] ?? ''}');
-          if (y != null) years[p.id] = y;
-        }
-      } catch (e) {
-        debugPrint('Audit checklist: could not load programme years: $e');
-      }
-
-      if (mounted) {
-        setState(() {
-          _schedules = schedules;
-          _programmeYears = years;
-          _rebuildBooks();
-          _ensureBookPageInRange();
-          _ensurePageInRange();
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _listError =
-            'Unable to load audit checklist. ${e.toString().replaceFirst('Exception: ', '')}');
-      }
-    } finally {
-      if (mounted) setState(() => _isLoadingSchedules = false);
-    }
-  }
-
   Future<void> _loadChecklist(int auditScheduleId) async {
     setState(() {
       _isLoadingChecklist = true;
@@ -420,11 +132,10 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
       _noClauses = false;
       _dirty = false;
       _filter = _RowFilter.all;
-      _rows = [];
-      _disposeControllersLater();
     });
     try {
-      final rows = await _service.getOrGenerateForAuditSchedule(auditScheduleId);
+      final rows =
+          await _service.getOrGenerateForAuditSchedule(auditScheduleId);
       if (!mounted) return;
 
       final remarks = <int, TextEditingController>{
@@ -437,6 +148,12 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
       };
 
       setState(() {
+        for (final c in _remarksControllers.values) {
+          c.dispose();
+        }
+        for (final c in _itemsControllers.values) {
+          c.dispose();
+        }
         _remarksControllers
           ..clear()
           ..addAll(remarks);
@@ -452,8 +169,8 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
         }
       });
 
-      // Opened directly by schedule id: no list summary yet, so quietly load
-      // it for the auditors / office / scope fallbacks.
+      // No list summary supplied: quietly load it for the
+      // auditors / office / scope fallbacks.
       if (_summary == null && rows.isNotEmpty) {
         try {
           final all = await _service.getSchedulesWithChecklistData();
@@ -467,8 +184,10 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _checklistError =
-            'Unable to load audit checklist. ${e.toString().replaceFirst('Exception: ', '')}');
+        setState(() {
+          _checklistError =
+              'Unable to load audit checklist. ${e.toString().replaceFirst('Exception: ', '')}';
+        });
       }
     } finally {
       if (mounted) setState(() => _isLoadingChecklist = false);
@@ -478,14 +197,6 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   // ---------------------------------------------------------------------------
   // Actions
   // ---------------------------------------------------------------------------
-  void _openSchedule(AuditChecklistSummary s) {
-    setState(() {
-      _summary = s;
-      _currentAuditScheduleId = s.auditScheduleId;
-    });
-    _loadChecklist(s.auditScheduleId);
-  }
-
   Future<bool> _confirmDiscard() async {
     final result = await showDialog<bool>(
       context: context,
@@ -508,23 +219,23 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     return result ?? false;
   }
 
-  /// Back from the checklist form: returns to the team checklist list when this
-  /// page owns the list, otherwise pops the route (if there is one to pop).
-  Future<void> _goBack() async {
+  Future<void> _close() async {
     if (_dirty && !await _confirmDiscard()) return;
     if (!mounted) return;
-    if (widget.auditScheduleId == 0) {
-      setState(() {
-        _currentAuditScheduleId = 0;
-        _rows = [];
-        _summary = null;
-        _dirty = false;
-        _disposeControllersLater();
-      });
-      _loadSchedules();
-    } else if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
+    Navigator.pop(context, _saved);
+  }
+
+  void _openPrintPreview() {
+    if (_dirty) {
+      MotionToast.warning(
+        toastAlignment: Alignment.topCenter,
+        description: const Text(
+          'Save the checklist first — the print preview shows the saved version.',
+        ),
+      ).show(context);
+      return;
     }
+    openAuditChecklistPrintPreview(context, widget.auditScheduleId);
   }
 
   void _setConforming(int index, bool? value) {
@@ -569,7 +280,10 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
       }
 
       if (!mounted) return;
-      setState(() => _dirty = false);
+      setState(() {
+        _dirty = false;
+        _saved = true;
+      });
       if (itemsNotStored > 0) {
         MotionToast.warning(
           toastAlignment: Alignment.topCenter,
@@ -596,7 +310,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   }
 
   // ---------------------------------------------------------------------------
-  // Shared styling (copied from the Audit Programme form)
+  // Shared styling (same as the Audit Programme form)
   // ---------------------------------------------------------------------------
   InputDecoration _inputDecoration(
     String? label, {
@@ -691,40 +405,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     );
   }
 
-  Color _statusColor(String status) =>
-      status == 'Approved' ? Colors.green.shade700 : Colors.blue.shade700;
-
-  IconData _statusIcon(String status) => status == 'Approved'
-      ? Icons.check_circle_outline
-      : Icons.verified_outlined;
-
-  Widget _buildStatusChip(String status) {
-    final color = _statusColor(status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(_statusIcon(status), size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            status,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Rounded pill with a count badge (same look as the Audit Programme tabs).
+  /// Rounded pill with a count badge (same look as the list tabs).
   Widget _buildPill({
     required String label,
     required int count,
@@ -774,687 +455,150 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     );
   }
 
-  Widget _refreshButton() {
-    return ElevatedButton.icon(
-      onPressed: _isLoadingSchedules ? null : _loadSchedules,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+  Widget _messageView({
+    required IconData icon,
+    required String message,
+    Color? iconColor,
+    Color? messageColor,
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 44, color: iconColor ?? kMuted),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: messageColor ?? kMuted),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onAction,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: Text(
+                  actionLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
-      icon: const Icon(Icons.refresh, color: Colors.white),
-      label: const Text('Refresh', style: TextStyle(color: Colors.white)),
     );
   }
 
   // ---------------------------------------------------------------------------
-  // Build
+  // Build — dialog shell identical to AuditProgrammePage
   // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    // Intercept back so it walks up one level at a time:
-    // form -> team checklists -> checklist list.
-    final inTeamList = !_inDetailMode && _openBook != null;
-    final interceptBack =
-        (_inDetailMode && (widget.auditScheduleId == 0 || _dirty)) ||
-            inTeamList;
-
-    final Widget body;
-    if (_inDetailMode) {
-      body = _buildChecklistBody();
-    } else if (inTeamList) {
-      body = _buildTeamsBody();
-    } else {
-      body = _buildBooksBody();
-    }
-
     return PopScope(
-      canPop: !interceptBack,
-      onPopInvokedWithResult: (didPop, _) {
+      canPop: !_dirty,
+      onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        if (_inDetailMode) {
-          _goBack();
-        } else {
-          _closeBook();
-        }
+        await _close();
       },
-      child: Scaffold(body: body),
-    );
-  }
-
-  // ===========================================================================
-  // LEVEL 1 — list of checklists ("IQA Checklist · Ref# · Year").
-  // Same layout as the Audit Programme list.
-  // ===========================================================================
-  Widget _buildBooksBody() {
-    final isMobile = MediaQuery.of(context).size.width < 600;
-    final paged = _pagedBooks;
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildPageHeader(
-            isMobile: isMobile,
-            title: 'Audit Checklist',
-            totalCount: _books.length,
-            itemLabel: 'checklist',
-            icon: Icons.checklist_rtl,
-            actionButton: _refreshButton(),
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 960,
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
           ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 10,
-                    color: Colors.black.withValues(alpha: .05),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!isMobile) _buildBooksHeaderRow(),
-                  if (!isMobile) const Divider(height: 1, color: kBorder),
-                  Expanded(child: _buildBooksContent(paged, isMobile)),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    color: Theme.of(context).cardColor,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        PaginationInfo(
-                          currentPage: _bookPage,
-                          totalItems: _books.length,
-                          itemsPerPage: _pageSize,
-                        ),
-                        PaginationControls(
-                          currentPage: _bookPage,
-                          totalItems: _books.length,
-                          itemsPerPage: _pageSize,
-                          isLoading: _isLoadingSchedules,
-                          onPageChanged: (page) =>
-                              setState(() => _bookPage = page),
-                        ),
-                        const SizedBox(width: 60),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: _panelBg,
+              borderRadius: BorderRadius.circular(8),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBooksHeaderRow() {
-    const style = TextStyle(fontWeight: FontWeight.w600, color: kMuted);
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      child: Row(
-        children: [
-          SizedBox(width: 40, child: Text('#', style: style)),
-          Expanded(flex: 3, child: Text('Checklist', style: style)),
-          Expanded(flex: 2, child: Text('Ref #', style: style)),
-          SizedBox(width: 90, child: Text('Year', style: style)),
-          SizedBox(width: 90, child: Text('Teams', style: style)),
-          Expanded(flex: 2, child: Text('Status', style: style)),
-          SizedBox(width: 80, child: Text('Actions', style: style)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBooksContent(List<_ChecklistBook> paged, bool isMobile) {
-    if (_isLoadingSchedules && _schedules.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(color: primaryColor),
-      );
-    }
-    if (_listError != null) {
-      return _MessageView(
-        icon: Icons.error_outline,
-        iconColor: Colors.redAccent,
-        message: _listError!,
-        messageColor: Colors.red,
-        actionLabel: 'RETRY',
-        onAction: _loadSchedules,
-      );
-    }
-    if (paged.isEmpty) {
-      return Center(
-        child: Text(
-          'No confirmed audit checklists found.\nConfirm an Audit Schedule that has ISO clauses assigned to generate its checklist.',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(color: kMuted),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      itemCount: paged.length,
-      separatorBuilder: (context, index) => Divider(
-        height: 1,
-        color: Colors.grey.withValues(alpha: 0.2),
-      ),
-      itemBuilder: (context, index) {
-        final b = paged[index];
-        final rowNumber = (_bookPage - 1) * _pageSize + index + 1;
-        return isMobile
-            ? _buildBookMobileRow(b)
-            : _buildBookDesktopRow(b, rowNumber);
-      },
-    );
-  }
-
-  Widget _buildBookDesktopRow(_ChecklistBook b, int rowNumber) {
-    return InkWell(
-      onTap: () => _openBookEntry(b),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(width: 40, child: Text('$rowNumber')),
-            const Expanded(
-              flex: 3,
-              child: Text(
-                _bookTitle,
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            Expanded(flex: 2, child: Text('Ref# ${b.refNo}')),
-            SizedBox(width: 90, child: Text(_yearText(b))),
-            SizedBox(width: 90, child: Text('${b.items.length}')),
-            Expanded(
-              flex: 2,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: _buildStatusChip(_bookStatus(b)),
-              ),
-            ),
-            SizedBox(
-              width: 80,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    tooltip: 'Open team checklists',
-                    icon: const Icon(Icons.edit_outlined, size: 16),
-                    onPressed: () => _openBookEntry(b),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBookMobileRow(_ChecklistBook b) {
-    return InkWell(
-      onTap: () => _openBookEntry(b),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    _bookTitle,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Ref# ${b.refNo} • ${_yearText(b)} • ${b.items.length} team(s)',
-                    style: const TextStyle(fontSize: 12, color: kMuted),
-                  ),
-                  const SizedBox(height: 5),
-                  _buildStatusChip(_bookStatus(b)),
-                ],
-              ),
-            ),
-            PopupMenuButton<String>(
-              color: Theme.of(context).cardColor,
-              icon: Icon(Icons.more_vert, color: Colors.grey.shade500),
-              onSelected: (value) {
-                if (value == 'open') _openBookEntry(b);
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: 'open',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit_outlined, size: 18),
-                      SizedBox(width: 8),
-                      Text('Open team checklists'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ===========================================================================
-  // LEVEL 2 — the team checklists inside one checklist.
-  // ===========================================================================
-  Widget _buildTeamsBody() {
-    final isMobile = MediaQuery.of(context).size.width < 600;
-    final book = _openBook!;
-    final paged = _paged;
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildPageHeader(
-            isMobile: isMobile,
-            title: '$_bookTitle • Ref# ${book.refNo} • ${_yearText(book)}',
-            totalCount: book.items.length,
-            itemLabel: 'team checklist',
-            icon: Icons.checklist_rtl,
-            actionButton: Row(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                OutlinedButton.icon(
-                  onPressed: _closeBook,
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: primaryColor),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    size: 18,
-                    color: primaryColor,
-                  ),
-                  label: const Text(
-                    'Back',
-                    style: TextStyle(color: primaryColor),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _refreshButton(),
+                _buildHeader(),
+                Expanded(child: _buildContent()),
+                _buildFooter(),
               ],
             ),
           ),
-          const SizedBox(height: 6),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: _statusTabs
-                  .map(
-                    (tab) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _buildPill(
-                        label: tab,
-                        count: _countFor(tab),
-                        isActive: tab == _selectedTab,
-                        onTap: () => _selectTab(tab),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 10,
-                    color: Colors.black.withValues(alpha: .05),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!isMobile) _buildListHeaderRow(),
-                  if (!isMobile) const Divider(height: 1, color: kBorder),
-                  Expanded(child: _buildListContent(paged, isMobile)),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    color: Theme.of(context).cardColor,
-                    child: Row(
-
-                      
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                                         IconButton(
-                    tooltip: 'Print preview',
-                    icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
-                    onPressed: () => _openPrintPreview(_currentAuditScheduleId),
-                  ),                   
-                        PaginationInfo(
-                          currentPage: _currentPage,
-                          totalItems: _filtered.length,
-                          itemsPerPage: _pageSize,
-                        ),
-                        PaginationControls(
-                          currentPage: _currentPage,
-                          totalItems: _filtered.length,
-                          itemsPerPage: _pageSize,
-                          isLoading: _isLoadingSchedules,
-                          onPageChanged: (page) =>
-                              setState(() => _currentPage = page),
-                        ),
-                        const SizedBox(width: 60),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildListHeaderRow() {
-    const style = TextStyle(fontWeight: FontWeight.w600, color: kMuted);
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      child: Row(
-        children: [
-          SizedBox(width: 40, child: Text('#', style: style)),
-          Expanded(flex: 3, child: Text('Office / Process', style: style)),
-          Expanded(flex: 2, child: Text('Team', style: style)),
-          SizedBox(width: 80, child: Text('Clauses', style: style)),
-          Expanded(flex: 2, child: Text('Status', style: style)),
-          SizedBox(width: 80, child: Text('Actions', style: style)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildListContent(List<AuditChecklistSummary> paged, bool isMobile) {
-    if (_isLoadingSchedules && _schedules.isEmpty) {
+  Widget _buildContent() {
+    if (_isLoadingChecklist) {
       return const Center(
         child: CircularProgressIndicator(color: primaryColor),
       );
     }
-    if (_listError != null) {
-      return _MessageView(
-        icon: Icons.error_outline,
-        iconColor: Colors.redAccent,
-        message: _listError!,
-        messageColor: Colors.red,
-        actionLabel: 'RETRY',
-        onAction: _loadSchedules,
-      );
-    }
-    if (paged.isEmpty) {
-      return Center(
-        child: Text(
-          'No audit checklists found',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(color: kMuted),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      itemCount: paged.length,
-      separatorBuilder: (context, index) => Divider(
-        height: 1,
-        color: Colors.grey.withValues(alpha: 0.2),
-      ),
-      itemBuilder: (context, index) {
-        final s = paged[index];
-        final rowNumber = (_currentPage - 1) * _pageSize + index + 1;
-        return isMobile
-            ? _buildMobileRow(s)
-            : _buildDesktopRow(s, rowNumber);
-      },
-    );
-  }
-
-  Widget _buildDesktopRow(AuditChecklistSummary s, int rowNumber) {
-    final teamName = (s.teamName?.isNotEmpty ?? false) ? s.teamName! : '—';
-
-    return InkWell(
-      onTap: () => _openSchedule(s),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(width: 80, child: Text('$rowNumber')),
-            Expanded(
-              flex: 3,
-              child: Text(
-                _titleOf(s),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Text(
-                teamName,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            SizedBox(width: 80, child: Text('${s.clauseCount}')),
-            Expanded(
-              flex: 2,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: _buildStatusChip(_statusOf(s)),
-              ),
-            ),
-            SizedBox(
-              width: 80,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    tooltip: 'Open checklist',
-                    icon: const Icon(Icons.edit_outlined, size: 16),
-                    onPressed: () => _openSchedule(s),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMobileRow(AuditChecklistSummary s) {
-    final teamName = (s.teamName?.isNotEmpty ?? false) ? s.teamName! : '';
-    final subtitle = <String>[
-      if (teamName.isNotEmpty && teamName != _titleOf(s)) teamName,
-      if (s.clauseCount > 0) '${s.clauseCount} clause(s)',
-    ].join(' • ');
-
-    return InkWell(
-      onTap: () => _openSchedule(s),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _titleOf(s),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  if (subtitle.isNotEmpty) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(fontSize: 12, color: kMuted),
-                    ),
-                  ],
-                  const SizedBox(height: 5),
-                  _buildStatusChip(_statusOf(s)),
-                ],
-              ),
-            ),
-            PopupMenuButton<String>(
-              color: Theme.of(context).cardColor,
-              icon: Icon(Icons.more_vert, color: Colors.grey.shade500),
-                            onSelected: (value) {
-                if (value == 'open') _openSchedule(s);
-                if (value == 'print') _openPrintPreview(s.auditScheduleId);
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: 'open',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit_outlined, size: 18),
-                      SizedBox(width: 8),
-                      Text('Open checklist'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'print',
-                  child: Row(
-                    children: [
-                      Icon(Icons.picture_as_pdf_outlined, size: 18),
-                      SizedBox(width: 8),
-                      Text('Print preview'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ===========================================================================
-  // LEVEL 3 — the CRMC Audit Checklist form, in the Audit Programme form's
-  // panel style (maroon header, section cards, footer actions).
-  // ===========================================================================
-  Widget _buildChecklistBody() {
-    if (_isLoadingChecklist) return const _LoadingView();
     if (_checklistError != null) {
-      return _MessageView(
+      return _messageView(
         icon: Icons.error_outline,
         iconColor: Colors.redAccent,
         message: _checklistError!,
         messageColor: Colors.red,
         actionLabel: 'RETRY',
-        onAction: () => _loadChecklist(_currentAuditScheduleId),
+        onAction: () => _loadChecklist(widget.auditScheduleId),
       );
     }
     if (_noClauses) {
-      return _MessageView(
+      return _messageView(
         icon: Icons.rule_folder_outlined,
         message: 'No ISO clauses are assigned to this audit schedule.',
-        actionLabel: _canGoBack ? 'BACK' : null,
-        onAction: _canGoBack ? _goBack : null,
       );
     }
     if (_rows.isEmpty) {
-      return const _MessageView(
+      return _messageView(
         icon: Icons.info_outline,
         message: 'Unable to load audit checklist.',
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: _panelMaxWidth),
-          child: Container(
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: _panelBg,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 10,
-                  color: Colors.black.withValues(alpha: .05),
-                ),
-              ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= _wideBreakpoint;
+        return ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            _buildCard(
+              title: 'CHECKLIST HEADER',
+              child: _buildHeaderFields(),
             ),
-            child: Column(
-              children: [
-                _buildPanelHeader(),
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final wide = constraints.maxWidth >= _wideBreakpoint;
-                      return ListView(
-                        padding: const EdgeInsets.all(24),
-                        children: [
-                          _buildCard(
-                            title: 'CHECKLIST HEADER',
-                            child: _buildHeaderFields(),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildItemsCard(wide),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                _buildPanelFooter(),
-              ],
-            ),
-          ),
-        ),
-      ),
+            const SizedBox(height: 16),
+            _buildItemsCard(wide),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildPanelHeader() {
+  Widget _buildHeader() {
     final office = _officeProcessText;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(_canGoBack ? 8 : 20, 12, 20, 12),
-      color: primaryColor,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: const BoxDecoration(
+        color: primaryColor,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+      ),
       child: Row(
         children: [
-          if (_canGoBack)
-            IconButton(
-              tooltip: 'Back',
-              onPressed: _goBack,
-              splashRadius: 20,
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-            ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1478,13 +622,13 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
               ],
             ),
           ),
-                    IconButton(
-            tooltip: 'Print Preview',
-            onPressed: () =>
-                _openPrintPreview(_currentAuditScheduleId, checkDirty: true),
-            splashRadius: 20,
-            icon: const Icon(Icons.print_outlined, color: Colors.white),
-          ),
+          if (_rows.isNotEmpty)
+            IconButton(
+              tooltip: 'Print Preview',
+              onPressed: _openPrintPreview,
+              splashRadius: 20,
+              icon: const Icon(Icons.print_outlined, color: Colors.white),
+            ),
           const SizedBox(width: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -1500,6 +644,12 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
                 fontWeight: FontWeight.w700,
               ),
             ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            onPressed: _close,
+            icon: const Icon(Icons.close, color: Colors.white),
+            splashRadius: 20,
           ),
         ],
       ),
@@ -1896,31 +1046,31 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   }
 
   // ---- Footer (same structure as the Audit Programme form footer) -----------
-  Widget _buildPanelFooter() {
+  Widget _buildFooter() {
+    final canSave = !_isSaving && !_isLoadingChecklist && _rows.isNotEmpty;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
       ),
       child: Row(
         children: [
-          if (_canGoBack) ...[
-            TextButton(
-              onPressed: _isSaving ? null : _goBack,
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.w600,
-                ),
+          TextButton(
+            onPressed: _isSaving ? null : _close,
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(width: 8),
-          ],
+          ),
+          const SizedBox(width: 8),
           ElevatedButton(
-            onPressed: _isSaving ? null : _saveAll,
+            onPressed: canSave ? _saveAll : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
@@ -1949,109 +1099,36 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
           Expanded(
             child: Align(
               alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _dirty ? Icons.edit_note : Icons.check_circle_outline,
-                    size: 16,
-                    color:
-                        _dirty ? Colors.orange.shade800 : Colors.green.shade700,
-                  ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      _dirty ? 'Unsaved changes' : 'All changes saved',
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: _dirty
-                            ? Colors.orange.shade800
-                            : Colors.green.shade700,
-                      ),
+              child: _rows.isEmpty
+                  ? const SizedBox.shrink()
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _dirty ? Icons.edit_note : Icons.check_circle_outline,
+                          size: 16,
+                          color: _dirty
+                              ? Colors.orange.shade800
+                              : Colors.green.shade700,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            _dirty ? 'Unsaved changes' : 'All changes saved',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _dirty
+                                  ? Colors.orange.shade800
+                                  : Colors.green.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// Small reusable widgets
-// =============================================================================
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(color: primaryColor),
-    );
-  }
-}
-
-class _MessageView extends StatelessWidget {
-  final IconData icon;
-  final Color? iconColor;
-  final String message;
-  final Color? messageColor;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  const _MessageView({
-    required this.icon,
-    required this.message,
-    this.iconColor,
-    this.messageColor,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 44, color: iconColor ?? kMuted),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: messageColor ?? kMuted),
-            ),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: onAction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                child: Text(
-                  actionLabel!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }
