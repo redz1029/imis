@@ -33,8 +33,38 @@ namespace IMIS.Persistence.StrategyReviewModule
             _kraRoadMapDeliverableRepository = kraRoadMapDeliverableRepository;
             _userManager = userManager;
             _roleManager = roleManager;
-        }        
+        }
+        public async Task<StrategyReviewOfficeDeliverableDto?> GetOfficeDeliverablesByKraRoadMapIdAsync(long kraRoadMapId, int? strategyReviewPeriodId, CancellationToken cancellationToken)
+        {
+            var kraRoadMap = await _kraRoadMapRepository
+                .GetByIdAsync(kraRoadMapId, cancellationToken)
+                .ConfigureAwait(false);
 
+            if (kraRoadMap == null)
+                return null;
+
+            var period = await _repository
+                .GetPeriodAsync(strategyReviewPeriodId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (period == null)
+                return null;
+
+            if (!kraRoadMap.KraId.HasValue)
+                return new StrategyReviewOfficeDeliverableDto();
+
+            var kra = await _kraRepository
+                .GetByIdAsync(kraRoadMap.KraId.Value, cancellationToken)
+                .ConfigureAwait(false);
+
+            var result = await _repository
+                .GetOfficeDeliverablesByKraIdAsync(kraRoadMap.KraId.Value, period.StartDate, period.EndDate, cancellationToken)
+                .ConfigureAwait(false);
+
+            result.RoadmapName = kra?.Name ?? string.Empty;
+
+            return result;
+        }
         public async Task<StrategyReviewOfficesDto?> GetOfficesByKraRoadMapIdAsync(long kraRoadMapId, int? strategyReviewPeriodId, CancellationToken cancellationToken)
         {
             var kraRoadMap = await _kraRoadMapRepository
