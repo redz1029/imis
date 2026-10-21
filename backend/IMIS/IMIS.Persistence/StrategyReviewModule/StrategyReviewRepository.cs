@@ -11,8 +11,22 @@ namespace IMIS.Persistence.StrategyReviewModule
         {
         }
 
-      
 
+        public async Task<StrategyReview?> GetLatestByKraRoadMapIdAsync(long kraRoadMapId, int? strategyReviewPeriodId, CancellationToken cancellationToken)
+        {
+            var query = ReadOnlyDbContext.Set<StrategyReview>()
+                .AsNoTracking()
+                .Include(x => x.StrategyReviewPeriod)
+                .Where(x => x.KraRoadMapId == kraRoadMapId);
+
+            if (strategyReviewPeriodId.HasValue)
+                query = query.Where(x => x.StrategyReviewPeriodId == strategyReviewPeriodId.Value);
+
+            return await query
+                .OrderByDescending(x => x.PostingDate)
+                .ThenByDescending(x => x.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
 
         public async Task<StrategyReviewOfficeDeliverableDto?> GetOfficeDeliverablesByStrategyReviewIdAsync(long strategyReviewId, CancellationToken cancellationToken)
         {

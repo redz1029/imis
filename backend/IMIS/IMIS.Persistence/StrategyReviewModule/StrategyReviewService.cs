@@ -34,7 +34,40 @@ namespace IMIS.Persistence.StrategyReviewModule
             _userManager = userManager;
             _roleManager = roleManager;
         }
-     
+        public async Task<StrategyReviewOfficesDto?> GetOfficesByKraRoadMapIdAsync(long kraRoadMapId, int? strategyReviewPeriodId, CancellationToken cancellationToken)
+        {
+            var review = await _repository
+                .GetLatestByKraRoadMapIdAsync(kraRoadMapId, strategyReviewPeriodId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (review == null || review.StrategyReviewPeriod == null)
+                return null;
+
+            var kraRoadMap = await _kraRoadMapRepository
+                .GetByIdAsync(kraRoadMapId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (kraRoadMap == null)
+                return null;
+
+            var dto = new StrategyReviewOfficesDto
+            {
+                StrategyReviewId = review.Id,
+                KraRoadMapId = kraRoadMapId
+            };
+
+            if (kraRoadMap.KraId.HasValue)
+            {
+                var kra = await _kraRepository.GetByIdAsync(kraRoadMap.KraId.Value, cancellationToken).ConfigureAwait(false);
+
+                dto.StrategicObjective = kra?.StrategicObjective;
+                dto.OfficeNames = await _repository.GetOfficeNamesByKraIdAsync(kraRoadMap.KraId.Value, review.StrategyReviewPeriod.StartDate,  review.StrategyReviewPeriod.EndDate,  cancellationToken).ConfigureAwait(false);
+                dto.OfficeNames.Sort(StringComparer.OrdinalIgnoreCase);
+            }
+
+            return dto;
+        }
+
         public async Task<StrategyReviewOfficeDeliverableDto?> GetOfficeDeliverablesAsync(long strategyReviewId, CancellationToken cancellationToken)
         {
             return await _repository
