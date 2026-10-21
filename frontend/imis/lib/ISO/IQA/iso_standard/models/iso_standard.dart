@@ -7,9 +7,9 @@ class IsoStandard {
   final int id;
   final int versionID;
   final int? parentID;
-  final String clauseRef;
+  final String? clauseRef;
   final String? description;
-  final String particulars;
+  final String? particulars;
   final bool isActive;
 
   @JsonKey(defaultValue: <IsoStandard>[])
@@ -19,10 +19,10 @@ class IsoStandard {
     required this.id,
     required this.versionID,
     this.parentID,
-    required this.clauseRef,
+    this.clauseRef = '',
     this.description,
-    required this.particulars,
-    required this.isActive,
+    this.particulars = '',
+    this.isActive = true,
     this.children = const <IsoStandard>[],
   });
 

@@ -33,8 +33,8 @@ Future<void> openAuditProgrammePrintPreview(
 // =============================================================================
 // Layout constants (points)
 // =============================================================================
-const String _kLogoCrmc = 'assets/crmc_logo.png';
-const String _kLogoIso = 'assets/iso_tuv_certified.jpg';
+const String _kLogoCrmc = 'assets/CRMCLogo.png';
+const String _kLogoIso = 'assets/TR-Testmark.jpg';
 const String _kFormCode = 'QP-03-F-04 Rev. 2';
 
 const double _kML = 48, _kMR = 48, _kMT = 30, _kMB = 30;
@@ -80,13 +80,23 @@ class _Entry {
   final bool hasOfficeId;
 
   /// A free-text activity: typed text only, no office, clause or team.
-  /// The last such line of a batch's last day is its closing activity.
   bool get isFreeText =>
       !hasOfficeId &&
       office.trim().isNotEmpty &&
       standards.trim().isEmpty &&
       teamId == null &&
       persons.isEmpty;
+}
+
+/// One printed day: its number, date and rows.
+class _DayGroup {
+  _DayGroup(this.number, this.date, this.rows);
+  final int number;
+  final DateTime? date;
+  final List<_Entry> rows;
+
+  /// Input-only day: every line is typed text (e.g. "Reporting").
+  bool get textOnly => rows.isNotEmpty && rows.every((e) => e.isFreeText);
 }
 
 class _Batch {
@@ -999,12 +1009,19 @@ class _ProgrammePdfBuilder {
     );
   }
 
-  pw.Widget _dayBanner(int day, int total) {
-    return _banner(_t('DAY $day OF DAY $total', bold: true, size: 11));
+  /// "DAY n OF DAY total" for audit days; plain "DAY n" for an input-only day.
+  pw.Widget _dayBanner(int day, int total, {bool showTotal = true}) {
+    return _banner(
+      _t(
+        showTotal ? 'DAY $day OF DAY $total' : 'DAY $day',
+        bold: true,
+        size: 11,
+      ),
+    );
   }
 
-  /// Banner row for the closing activity: it shows the text the user typed
-  /// (e.g. "Closing Meeting"), nothing static.
+  /// Row for an input-only day (e.g. "Reporting"): just the typed text,
+  /// no date.
   pw.Widget _closingBanner(String text) {
     return pw.Container(
       width: _contentW,
@@ -1021,10 +1038,6 @@ class _ProgrammePdfBuilder {
       ),
     );
   }
-
-  /// A normal activity row, or the banner when it is the closing activity.
-  pw.Widget _rowFor(_Entry e, _Batch batch, {required bool closing}) =>
-      closing ? _closingBanner(e.office) : _entryRow(e, batch);
 
   // ---------------------------------------------------------------- rows ---
   List<String> _standardLines(String raw) {
@@ -1128,44 +1141,79 @@ class _ProgrammePdfBuilder {
     return copy;
   }
 
-  List<pw.Widget> _batchWidgets(_Batch b, {required bool first}) {
-    final out = <pw.Widget>[];
-    if (!first) out.add(pw.SizedBox(height: 14));
-
+  /// Splits a batch into printed days. Older programmes stored the closing
+  /// line (e.g. "Reporting") as the last line of the last audit day; that line
+  /// is moved onto a day of its own, as in the form.
+  List<_DayGroup> _dayGroups(_Batch b) {
     final byDay = <int, List<_Entry>>{};
     for (final e in b.entries) {
       byDay.putIfAbsent(e.dayNumber, () => <_Entry>[]).add(e);
     }
     final days = byDay.keys.toList()..sort();
-    if (days.isEmpty) return out;
-    final total = days.last;
 
-    // The closing activity is whatever the user entered as the batch's
-    // closing line (any wording): the last free-text line of the last day.
-    final lastDayList = _sortedDay(byDay[days.last]!);
-    final _Entry? closingEntry =
-        lastDayList.last.isFreeText ? lastDayList.last : null;
+    final groups = <_DayGroup>[];
+    for (final d in days) {
+      final rows = _sortedDay(byDay[d]!);
+      DateTime? date;
+      for (final e in rows) {
+        if (e.date != null) {
+          date = e.date;
+          break;
+        }
+      }
+      date ??= b.start?.add(Duration(days: d - 1));
+      groups.add(_DayGroup(d, date, rows));
+    }
+
+    if (groups.isNotEmpty) {
+      final last = groups.last;
+      if (last.rows.length > 1 &&
+          !last.textOnly &&
+          last.rows.last.isFreeText) {
+        final closing = last.rows.removeLast();
+        final d = last.date;
+        groups.add(_DayGroup(
+          last.number + 1,
+          d == null ? null : DateTime(d.year, d.month, d.day + 1),
+          <_Entry>[closing],
+        ));
+      }
+    }
+    return groups;
+  }
+
+  List<pw.Widget> _batchWidgets(_Batch b, {required bool first}) {
+    final out = <pw.Widget>[];
+    if (!first) out.add(pw.SizedBox(height: 14));
+
+    final groups = _dayGroups(b);
+    if (groups.isEmpty) return out;
+
+    // "DAY n OF DAY total" counts only real audit days, not input-only days.
+    final auditDays = groups.where((g) => !g.textOnly).toList();
+    final total =
+        auditDays.isNotEmpty ? auditDays.last.number : groups.last.number;
 
     var pendingBatchBanner = true;
 
-    for (final day in days) {
-      final list = day == days.last ? lastDayList : _sortedDay(byDay[day]!);
+    for (final g in groups) {
+      // An input-only day (e.g. Reporting): plain "DAY n" banner, no date.
+      pw.Widget rowFor(_Entry e) =>
+          g.textOnly ? _closingBanner(e.office) : _entryRow(e, b);
 
       // A group that opens with a batch banner for a non-first batch already
       // draws its own top edge; every other group needs the page-top rule.
       final ownTop = pendingBatchBanner && !first;
       final head = <pw.Widget>[
         if (pendingBatchBanner) _batchBanner(b.number, top: !first),
-        _dayBanner(day, total),
-        _rowFor(list.first, b, closing: identical(list.first, closingEntry)),
+        _dayBanner(g.number, total, showTotal: !g.textOnly),
+        rowFor(g.rows.first),
       ];
       pendingBatchBanner = false;
       out.add(ownTop ? _group(head) : _ruled(_group(head)));
 
-      for (var i = 1; i < list.length; i++) {
-        out.add(_ruled(
-          _rowFor(list[i], b, closing: identical(list[i], closingEntry)),
-        ));
+      for (var i = 1; i < g.rows.length; i++) {
+        out.add(_ruled(rowFor(g.rows[i])));
       }
     }
     return out;

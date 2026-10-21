@@ -44,7 +44,9 @@ class _ClauseLibraryPageState extends State<ClauseLibraryPage> {
       final backendStandards = await _service.getAll();
       if (backendStandards.isNotEmpty) {
         for (var std in backendStandards) {
-          final idx = items.indexWhere((c) => c.clause == std.clauseRef);
+          final idx = items.indexWhere(
+            (c) => c.clause == (std.clauseRef ?? ''),
+          );
           if (idx != -1) {
             items[idx] = items[idx].copyWith(id: std.id);
           }

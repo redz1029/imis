@@ -52,14 +52,14 @@ namespace IMIS.Presentation.IsoStandardModule
             })
             .WithTags(_tag);
 
-            app.MapGet("/{id}", async (long id, IIsoStandardService service, CancellationToken cancellationToken) =>
+            app.MapGet("/{id:long}", async (long id, IIsoStandardService service, CancellationToken cancellationToken) =>
             {
                 var standard = await service.GetByIdAsync(id, cancellationToken);
                 return standard != null ? Results.Ok(standard) : Results.NotFound();
             })
             .WithTags(_tag);
 
-            app.MapGet("/{id}/with-version", async (long id, IIsoStandardService service, CancellationToken cancellationToken) =>
+            app.MapGet("/{id:long}/with-version", async (long id, IIsoStandardService service, CancellationToken cancellationToken) =>
             {
                 var standard = await service.GetByIdWithVersionAsync(id, cancellationToken);
                 return standard != null ? Results.Ok(standard) : Results.NotFound();
@@ -95,7 +95,7 @@ namespace IMIS.Presentation.IsoStandardModule
             //})
             //.WithTags(_tag);
 
-            app.MapPut("/{id}", async (long id, [FromBody] IsoStandardDto dto, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPut("/{id:long}", async (long id, [FromBody] IsoStandardDto dto, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var existing = await service.GetByIdAsync(id, cancellationToken);
                 if (existing == null)

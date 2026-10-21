@@ -1112,6 +1112,82 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
     }
   }
 
+  /// The Opening Meeting row of the original Audit Plan form: Day 1, 9:00 AM,
+  /// with the standard list of persons.
+  AuditPlanEntryRow _newOpeningMeetingRow() {
+    return AuditPlanEntryRow(
+      dayNumber: 1,
+      time: const TimeOfDay(hour: 9, minute: 0),
+      officeText: kOpeningMeetingLabel,
+      responsiblePersons: kOpeningMeetingPersons,
+    );
+  }
+
+  bool _isOpening(AuditPlanEntryRow e) =>
+      e.officeTextController.text.trim().toLowerCase().startsWith('opening');
+
+  /// A programme row with only typed text: no office from the list, no clause
+  /// and no team (e.g. "Reporting").
+  bool _isProgrammeTextOnly(ProgrammeEntrySummary pe) {
+    final text = pe.processText.trim();
+    return (pe.officeId == null || pe.officeId == 0) &&
+        pe.standardIds.isEmpty &&
+        pe.teamId == null &&
+        text.isNotEmpty &&
+        text != 'Untitled Process';
+  }
+
+  /// Key that identifies a programme typed-text row (e.g. "Reporting").
+  String _textOnlyKey(int dayNumber, String text) =>
+      '$dayNumber|${text.trim().toLowerCase()}';
+
+  /// Makes the schedule match the original form:
+  ///  1. Day 1 opens with the Opening Meeting.
+  ///  2. Rows saved without a time (00:00) get sensible times — the Opening
+  ///     Meeting 9:00 AM, then one row per hour from 10:00 AM on Day 1
+  ///     (9:00 AM on the other days). Rows with a real time keep it.
+  ///  3. Rows are kept in day / time order.
+  void _normalizeSchedule() {
+    if (_entries.isEmpty) return;
+
+    final firstDay1 = _entries.indexWhere((e) => e.dayNumber == 1);
+    if (firstDay1 != -1 &&
+        !_entries.any((e) => e.dayNumber == 1 && _isOpening(e))) {
+      _entries.insert(firstDay1, _newOpeningMeetingRow());
+    }
+
+    final days = _entries.map((e) => e.dayNumber).toSet().toList()..sort();
+    for (final day in days) {
+      var cursor = day == 1 ? 10 * 60 : 9 * 60;
+      for (final e in _entries.where((e) => e.dayNumber == day)) {
+        final m = e.time.hour * 60 + e.time.minute;
+        if (m != 0) {
+          if (m + 60 > cursor) cursor = m + 60;
+          continue;
+        }
+        if (_isOpening(e)) {
+          e.time = const TimeOfDay(hour: 9, minute: 0);
+          continue;
+        }
+        e.time = TimeOfDay(hour: cursor ~/ 60, minute: cursor % 60);
+        cursor += 60;
+      }
+    }
+
+    final indexed = _entries.asMap().entries.toList()
+      ..sort((a, b) {
+        final d = a.value.dayNumber.compareTo(b.value.dayNumber);
+        if (d != 0) return d;
+        final t = (a.value.time.hour * 60 + a.value.time.minute)
+            .compareTo(b.value.time.hour * 60 + b.value.time.minute);
+        return t != 0 ? t : a.key.compareTo(b.key);
+      });
+    final sorted = indexed.map((e) => e.value).toList();
+    _entries
+      ..clear()
+      ..addAll(sorted);
+  }
+
   Future<void> _load() async {
     setState(() {
       _isLoading = true;
@@ -1166,6 +1242,17 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
         }
       }
 
+      // Typed-text rows of the programme (e.g. "Reporting") are not part of
+      // the Audit Plan: they are never fetched into it.
+      final programmeTextOnlyKeys = <String>{};
+      programmeEntries.removeWhere((pe) {
+        if (_isProgrammeTextOnly(pe)) {
+          programmeTextOnlyKeys.add(_textOnlyKey(pe.dayNumber, pe.processText));
+          return true;
+        }
+        return false;
+      });
+
       if (widget.auditPlanId != null) {
         final plans =
             (jsonMap['auditPlan'] as List? ?? jsonMap['AuditPlans'] as List? ?? []);
@@ -1181,6 +1268,24 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
               e as Map<String, dynamic>,
               allStandards: _standards,
             );
+
+            // A row that was fetched earlier from a programme typed-text row
+            // (e.g. "Reporting") is dropped; saving the plan removes it.
+            final isFetchedTextOnly = row.selectedOfficeId == null &&
+                row.selectedTeamId == null &&
+                row.selectedIsoStandardIds.isEmpty &&
+                row.standardTextController.text.trim().isEmpty &&
+                programmeTextOnlyKeys.contains(
+                  _textOnlyKey(
+                    row.dayNumber,
+                    row.officeTextController.text,
+                  ),
+                );
+            if (isFetchedTextOnly) {
+              row.dispose();
+              continue;
+            }
+
             _entries.add(row);
             _dayDates.putIfAbsent(row.dayNumber, () {
               final rawTime = e['time'] ?? e['Time'];
@@ -1198,24 +1303,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
       if (_entries.isEmpty) {
         if (programmeEntries.isEmpty) {
           _dayDates[1] = DateTime.now();
-          _entries.add(
-            AuditPlanEntryRow(
-              dayNumber: 1,
-              time: const TimeOfDay(hour: 9, minute: 0),
-              officeText: 'Opening Meeting',
-              responsiblePersons: const [
-                'Top Management',
-                'ISO Core Team',
-                'QMR',
-                'DQMRs',
-                'IQA Lead Auditor',
-                'IQA Members',
-                'Department / Section / Unit Heads Concerned',
-                'Consultants Concerned',
-                'Chief Residents Concerned',
-              ],
-            ),
-          );
+          _entries.add(_newOpeningMeetingRow());
         } else {
           final days = programmeEntries.map((e) => e.dayNumber).toSet().toList()
             ..sort();
@@ -1238,24 +1326,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
                 DateTime.now();
 
             if (day == 1) {
-              _entries.add(
-                AuditPlanEntryRow(
-                  dayNumber: 1,
-                  time: const TimeOfDay(hour: 9, minute: 0),
-                  officeText: 'Opening Meeting',
-                  responsiblePersons: const [
-                    'Top Management',
-                    'ISO Core Team',
-                    'QMR',
-                    'DQMRs',
-                    'IQA Lead Auditor',
-                    'IQA Members',
-                    'Department / Section / Unit Heads Concerned',
-                    'Consultants Concerned',
-                    'Chief Residents Concerned',
-                  ],
-                ),
-              );
+              _entries.add(_newOpeningMeetingRow());
             }
 
             for (final pe in dayEntries) {
@@ -1269,6 +1340,8 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
           }
         }
       }
+
+      _normalizeSchedule();
     } catch (e) {
       _errorMessage = 'Error loading Audit Plan: $e';
     } finally {

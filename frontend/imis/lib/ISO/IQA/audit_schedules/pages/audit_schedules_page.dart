@@ -46,6 +46,17 @@ class _OfficeGroup {
   });
 }
 
+/// The Opening Meeting (Day 1 of the Audit Plan) is not an office, so it has
+/// no audit schedule of its own and is never fetched into the Audit Schedule.
+/// A "Closing Meeting" row saved by an earlier version is skipped as well.
+bool _isMeetingRow(AuditPlanEntry e) {
+  final processes = e.auditPlanProcesses;
+  if (processes == null || processes.isEmpty) return false;
+  final name = (processes.first.processName ?? '').trim().toLowerCase();
+  return name.startsWith('opening meeting') ||
+      name.startsWith('closing meeting');
+}
+
 class AuditSchedulePage extends StatefulWidget {
   final int? auditPlanId;
 
@@ -280,11 +291,16 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   /// Groups entries by office (auditPlanProcesses[0].processName), in
   /// chronological (day, then time) order — matching how a printed audit
   /// schedule is naturally read, not alphabetically.
+  ///
+  /// The Audit Plan's Opening Meeting is not an office, so it is skipped:
+  /// only the offices' schedules are fetched into the Audit Schedule.
   List<_OfficeGroup> _buildOfficeGroups(List<AuditPlanEntry> entries) {
     final Map<String, _OfficeGroup> map = {};
     final List<String> orderedKeys = [];
 
     for (final e in entries) {
+      if (_isMeetingRow(e)) continue;
+
       final processes = e.auditPlanProcesses;
       String officeName = 'Unspecified Office';
       if (processes != null && processes.isNotEmpty) {

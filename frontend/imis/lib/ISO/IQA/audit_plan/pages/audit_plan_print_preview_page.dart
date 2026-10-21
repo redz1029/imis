@@ -29,15 +29,36 @@ Future<void> openAuditPlanPrintPreview(BuildContext context, int auditPlanId) {
 }
 
 // =============================================================================
+// Opening Meeting (Day 1 of every Audit Plan, as on the original form).
+// Public so the Audit Plan form uses exactly the same defaults.
+// =============================================================================
+const String kOpeningMeetingLabel = 'Opening Meeting';
+
+const List<String> kOpeningMeetingPersons = <String>[
+  'Top Management',
+  'ISO Core Team',
+  'QMR',
+  'DQMRs',
+  'IQA Lead Auditor',
+  'IQA Members',
+  'Department / Section / Unit Heads Concerned',
+  'Consultants Concerned',
+  'Chief Residents Concerned',
+];
+
+// =============================================================================
 // Layout constants (points)
 // =============================================================================
-const String _kLogoCrmc = 'assets/images/crmc_logo.png';
-const String _kLogoIso = 'assets/images/iso_tuv_certified.jpg';
+const String _kLogoCrmc = 'assets/CRMCLogo.png';
+const String _kLogoIso = 'assets/TR-Testmark.jpg';
 const String _kFormCode = 'QP-03-F-02 Rev.1';
 
 const double _kML = 48, _kMR = 48, _kMT = 30, _kMB = 30;
 const double _kLineH = 12.6;
 const double _kSpacerH = 7.0;
+
+/// Extra room above the first line of a new time slot (under its separator).
+const double _kTopGap = 3.0;
 const double _kBannerH = 17.0;
 const double _kFooterH = 20.0;
 const double _kBorderW = 0.8;
@@ -45,7 +66,10 @@ const double _kPadX = 4.0;
 const double _kFont = 10.0;
 const double _kLogoBox = 64.0;
 const double _kSideW = 104.0;
-const double _kHeaderBlockH = 83.0;
+
+/// Letterhead block: logo row + double rule + a clear gap before whatever
+/// follows (the original form leaves a gap between the rule and the table).
+const double _kHeaderBlockH = 92.0;
 const double _kTitleH = 30.0;
 const double _kObjGap = 8.0;
 const double _kLabelW = 104.0;
@@ -76,6 +100,19 @@ class _PlanEntry {
   final List<String> persons;
   final String standards;
   final int order;
+
+  bool get isOpening => office.trim().toLowerCase().startsWith('opening');
+
+  _PlanEntry withMinutes(int m) => _PlanEntry(
+        dayNumber: dayNumber,
+        date: date,
+        minutes: m,
+        office: office,
+        teamId: teamId,
+        persons: persons,
+        standards: standards,
+        order: order,
+      );
 }
 
 class _Sig {
@@ -200,6 +237,105 @@ List<_Sig> _buildSignatories(AuditPlan plan) {
   return [...prepared, ...noted, ...approved];
 }
 
+/// Day 1 always opens with the Opening Meeting (as on the original form).
+/// If the saved plan has none yet, it is added here with the standard list.
+List<_PlanEntry> _withOpeningMeeting(List<_PlanEntry> entries) {
+  final day1 = entries.where((e) => e.dayNumber == 1).toList();
+  if (day1.isEmpty || day1.any((e) => e.isOpening)) return entries;
+
+  final date =
+      day1.map((e) => e.date).firstWhere((d) => d != null, orElse: () => null);
+
+  return [
+    _PlanEntry(
+      dayNumber: 1,
+      date: date,
+      minutes: 9 * 60,
+      office: kOpeningMeetingLabel,
+      teamId: null,
+      persons: List<String>.from(kOpeningMeetingPersons),
+      standards: '',
+      order: -1,
+    ),
+    ...entries,
+  ];
+}
+
+/// Rows saved without a time of day (00:00) get sensible times instead of
+/// "12:00 AM": the Opening Meeting at 9:00 AM, then one row per hour starting
+/// 10:00 AM on Day 1 (9:00 AM on the other days). Rows with a real time keep it.
+List<_PlanEntry> _withDefaultTimes(List<_PlanEntry> entries) {
+  final byDay = <int, List<_PlanEntry>>{};
+  for (final e in entries) {
+    byDay.putIfAbsent(e.dayNumber, () => <_PlanEntry>[]).add(e);
+  }
+
+  final minutesOf = <_PlanEntry, int>{};
+  for (final day in byDay.keys) {
+    final list = [...byDay[day]!]..sort((a, b) => a.order.compareTo(b.order));
+    var cursor = day == 1 ? 10 * 60 : 9 * 60;
+    for (final e in list) {
+      if (e.minutes != 0) {
+        minutesOf[e] = e.minutes;
+        if (e.minutes + 60 > cursor) cursor = e.minutes + 60;
+        continue;
+      }
+      if (e.isOpening) {
+        minutesOf[e] = 9 * 60;
+        continue;
+      }
+      minutesOf[e] = cursor;
+      cursor += 60;
+    }
+  }
+
+  return [for (final e in entries) e.withMinutes(minutesOf[e] ?? e.minutes)];
+}
+
+/// The typed text of an entry that holds only typed text: no office from the
+/// list, no clause, no team and no persons (e.g. the programme's "Reporting"
+/// day). Returns null for any other entry.
+String? _textOnlyEntryText(Map<String, dynamic> e) {
+  if (e['isDeleted'] == true) return null;
+
+  var office = '';
+  int? officeId;
+  final processes = e['auditPlanProcesses'] ?? e['AuditPlanProcesses'];
+  if (processes is List && processes.isNotEmpty && processes[0] is Map) {
+    final item = processes[0] as Map;
+    final officeObj = item['office'];
+    final rawName = item['processName'] ??
+        item['ProcessName'] ??
+        (officeObj is Map ? officeObj['name'] : null);
+    office = (rawName ?? '').toString().trim();
+    officeId = _intOrNull(
+      item['officeId'] ??
+          item['OfficeId'] ??
+          (officeObj is Map ? officeObj['id'] : null),
+    );
+  }
+  if (office.isEmpty) return null;
+  if (officeId != null && officeId != 0) return null;
+
+  final standardList = e['isoStandardAuditPlans'] ?? e['IsoStandardAuditPlans'];
+  if (standardList is List && standardList.isNotEmpty) return null;
+
+  final standardText =
+      (e['standardText'] ?? e['StandardText'] ?? '').toString().trim();
+  if (standardText.isNotEmpty) return null;
+
+  final auditors = e['isoAuditors'] ?? e['IsoAuditors'];
+  if (auditors is List && auditors.isNotEmpty) return null;
+
+  final responsible = e['responsiblePersons'] ?? e['ResponsiblePersons'];
+  if (responsible is List && responsible.isNotEmpty) return null;
+
+  return office;
+}
+
+String _textOnlyKey(int dayNumber, String text) =>
+    '$dayNumber|${text.trim().toLowerCase()}';
+
 Future<_PrintData> _loadPrintData(int planId) async {
   final planService = AuditPlanService(Dio());
   final programmeService = AuditProgrammeService(Dio());
@@ -297,11 +433,37 @@ Future<_PrintData> _loadPrintData(int planId) async {
   final rawEntries =
       (planJson['entries'] as List? ?? planJson['Entries'] as List? ?? []);
 
+  // Typed-text rows of the Audit Programme (e.g. "Reporting") are not part of
+  // the Audit Plan, so they are never printed on it.
+  final programmeTextOnlyKeys = <String>{};
+  for (final p in plans) {
+    if (p is! Map) continue;
+    final list = p['entries'] as List? ?? p['Entries'] as List? ?? [];
+    for (final raw in list) {
+      if (raw is! Map) continue;
+      final m = Map<String, dynamic>.from(raw);
+      final text = _textOnlyEntryText(m);
+      if (text == null) continue;
+      programmeTextOnlyKeys.add(
+        _textOnlyKey(_intOrNull(m['dayNumber'] ?? m['DayNumber']) ?? 1, text),
+      );
+    }
+  }
+
   final entries = <_PlanEntry>[];
   var order = 0;
   for (final raw in rawEntries) {
     if (raw is! Map) continue;
     final e = Map<String, dynamic>.from(raw);
+
+    // Skip a row that came from a programme typed-text row (e.g. "Reporting").
+    final textOnly = _textOnlyEntryText(e);
+    if (textOnly != null &&
+        programmeTextOnlyKeys.contains(
+          _textOnlyKey(_intOrNull(e['dayNumber'] ?? e['DayNumber']) ?? 1, textOnly),
+        )) {
+      continue;
+    }
 
     var office = '';
     final processes = e['auditPlanProcesses'] ?? e['AuditPlanProcesses'];
@@ -382,10 +544,12 @@ Future<_PrintData> _loadPrintData(int planId) async {
     ));
   }
 
+  final finalEntries = _withDefaultTimes(_withOpeningMeeting(entries));
+
   return _PrintData(
     objective: objective,
     scope: scope,
-    entries: entries,
+    entries: finalEntries,
     teamNames: teamNames,
     rosters: rosters,
     signatories: _buildSignatories(plan),
@@ -413,7 +577,9 @@ Future<_PdfAssets> _loadAssets() async {
     try {
       final data = await rootBundle.load(path);
       return pw.MemoryImage(data.buffer.asUint8List());
-    } catch (_) {
+    } catch (e) {
+      // Usually: the file is missing or not listed under `assets:` in pubspec.yaml.
+      debugPrint('Audit Plan print preview: cannot load asset "$path": $e');
       return null;
     }
   }
@@ -580,16 +746,21 @@ class _CellLine {
 class _LineItem extends _Item {
   const _LineItem({
     required this.time,
+    this.topLine = false,
     this.office,
     this.team,
     this.std,
   });
   final String time;
+
+  /// First line of a new time slot on the same day: a separator line is drawn
+  /// above it (entries that share a time slot are not separated).
+  final bool topLine;
   final _CellLine? office;
   final _CellLine? team;
   final _CellLine? std;
   @override
-  double get h => _kLineH;
+  double get h => _kLineH + (topLine ? _kTopGap : 0);
 }
 
 class _PageSpec {
@@ -666,10 +837,9 @@ class _PlanPdfBuilder {
     );
   }
 
+  /// Approximate text width in points (0.55 is the average character
+  /// width ratio of the Times/Tinos family).
   double _w(String s, {bool bold = false, double size = _kFont}) {
-    
-    // Convert string length into approximate point width safely across fonts
-    // 0.55 is the average character aspect-ratio for Times/Tinos family
     return s.length * size * 0.55;
   }
 
@@ -732,6 +902,9 @@ class _PlanPdfBuilder {
     return lines;
   }
 
+  /// Person-responsible lines. A team prints its name in bold followed by its
+  /// members; free-text persons/roles (e.g. the Opening Meeting list) print as
+  /// bullets, with a hanging indent for wrapped lines.
   List<_CellLine> _teamLines(_PlanEntry e) {
     final w = _inner(2);
     final lines = <_CellLine>[];
@@ -813,6 +986,10 @@ class _PlanPdfBuilder {
         final timeText = DateFormat('h:mm a')
             .format(DateTime(2000, 1, 1, e.minutes ~/ 60, e.minutes % 60));
         final showTime = timeText != prevTime;
+        // A separator line only where the time changes within the same day.
+        // The first entry of a day sits right under the day banner (which has
+        // its own bottom border), and entries sharing a time stay together.
+        final startsNewTimeSlot = showTime && prevTime != null;
         prevTime = timeText;
 
         final officeLines = e.office.isEmpty
@@ -828,6 +1005,7 @@ class _PlanPdfBuilder {
         for (var i = 0; i < n; i++) {
           items.add(_LineItem(
             time: (i == 0 && showTime) ? timeText : '',
+            topLine: i == 0 && startsNewTimeSlot,
             office: i < officeLines.length ? _CellLine(officeLines[i]) : null,
             team: i < teamLines.length ? teamLines[i] : null,
             std: i < stdLines.length ? _CellLine(stdLines[i]) : null,
@@ -945,6 +1123,7 @@ class _PlanPdfBuilder {
     );
   }
 
+  // ignore: unused_element
   pw.Widget _side(pw.Widget? child, pw.Alignment alignment) {
     return pw.SizedBox(
       width: _kSideW,
@@ -952,18 +1131,34 @@ class _PlanPdfBuilder {
     );
   }
 
+  /// Same letterhead as the original form: the CRMC seal sits against the
+  /// left of the centred three-line heading, the TÜV certification mark on the
+  /// right, and the double rule (thick over thin) closes the block. The block
+  /// is taller than its content so a clear gap separates the rule from the
+  /// table that follows on continuation pages.
   pw.Widget _letterhead() {
-    final iso = assets.iso;
     final crmc = assets.crmc;
+    final iso = assets.iso;
 
-    final left = iso == null ? null : pw.Image(iso, height: 40);
-    final right = crmc == null
+    final seal = crmc == null
         ? null
         : pw.SizedBox(
             width: _kLogoBox,
             height: _kLogoBox,
             child: pw.ClipRect(
               child: pw.Image(crmc, fit: pw.BoxFit.cover),
+            ),
+          );
+
+    final tuv = iso == null
+        ? null
+        : pw.SizedBox(
+            width: _kSideW,
+            height: 50,
+            child: pw.Image(
+              iso,
+              fit: pw.BoxFit.contain,
+              alignment: pw.Alignment.centerRight,
             ),
           );
 
@@ -978,23 +1173,33 @@ class _PlanPdfBuilder {
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
-                _side(left, pw.Alignment.centerLeft),
                 pw.Expanded(
-                  child: pw.Column(
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    crossAxisAlignment: pw.CrossAxisAlignment.center,
-                    children: [
-                      pw.Text('Republic of the Philippines',
-                          style: _st(size: 10)),
-                      pw.Text('Department of Health', style: _st(size: 10)),
-                      pw.Text(
-                        'COTABATO REGIONAL AND MEDICAL CENTER',
-                        style: _st(bold: true, size: 11),
-                      ),
-                    ],
+                  child: pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: seal,
                   ),
                 ),
-                _side(right, pw.Alignment.centerRight),
+                pw.SizedBox(width: 4),
+                pw.Column(
+                  mainAxisSize: pw.MainAxisSize.min,
+                  mainAxisAlignment: pw.MainAxisAlignment.center,
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
+                  children: [
+                    pw.Text('Republic of the Philippines', style: _st(size: 10)),
+                    pw.Text('Department of Health', style: _st(size: 10)),
+                    pw.Text(
+                      'COTABATO REGIONAL AND MEDICAL CENTER',
+                      style: _st(bold: true, size: 11),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(width: 8),
+                pw.Expanded(
+                  child: pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: tuv,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1113,22 +1318,35 @@ class _PlanPdfBuilder {
   pw.Widget _itemWidget(_Item it, {required bool isFirst}) {
     if (it is _BannerItem) return _banner(it, suppressTop: isFirst);
     if (it is _LineItem) {
-      return _rowOf(_kLineH, (col) => _lineCell(it, col));
+      // The table box already draws a top edge, so a separator is not drawn
+      // for the first item on a page (that would double the line).
+      return _rowOf(
+        it.h,
+        (col) => _lineCell(it, col),
+        topBorder: it.topLine && !isFirst,
+        topPad: it.topLine ? _kTopGap : 0,
+      );
     }
     return _rowOf(_kSpacerH, (col) => null);
   }
 
-  pw.Widget _rowOf(double h, pw.Widget? Function(int col) content) {
+  pw.Widget _rowOf(
+    double h,
+    pw.Widget? Function(int col) content, {
+    bool topBorder = false,
+    double topPad = 0,
+  }) {
     return pw.Row(
       children: [
         for (var i = 0; i < 4; i++)
           pw.Container(
             width: _colW[i],
             height: h,
-            padding: const pw.EdgeInsets.symmetric(horizontal: _kPadX),
+            padding: pw.EdgeInsets.fromLTRB(_kPadX, topPad, _kPadX, 0),
             alignment: pw.Alignment.centerLeft,
             decoration: pw.BoxDecoration(
               border: pw.Border(
+                top: topBorder ? _bs : pw.BorderSide.none,
                 left: _bs,
                 right: i == 3 ? _bs : pw.BorderSide.none,
               ),

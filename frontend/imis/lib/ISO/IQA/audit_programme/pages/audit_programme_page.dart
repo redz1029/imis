@@ -219,11 +219,6 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   final TextEditingController _planNameController = TextEditingController(
     text: 'ISO Internal Quality Audit Plan',
   );
-  // The closing activity printed as the last line of the schedule
-  // (e.g. "Reporting", "Closing Meeting"). The user can type any wording;
-  // blank = no closing line is printed.
-  final TextEditingController _closingActivityController =
-      TextEditingController(text: 'Reporting');
   final TextEditingController
   _internalAuditSchedController = TextEditingController(
     text:
@@ -277,6 +272,11 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
   final List<AuditPlanEntryRow> _entries = [];
 
+  /// Days that hold a single typed line (e.g. "Reporting") instead of
+  /// office / clause / team rows. On the original form Reporting is a day of
+  /// its own, so it is added from the "Add Day" menu as an input-only day.
+  final Set<int> _textOnlyDays = <int>{};
+
   int? _existingAuditPlanId;
   String _existingRowVersion = '';
   bool _existingIsDeleted = false;
@@ -310,7 +310,6 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     _purposeController.dispose();
     // FIX: was missing — leaked this controller on every close.
     _planNameController.dispose();
-    _closingActivityController.dispose();
     _internalAuditSchedController.dispose();
     _auditPlanObjectiveController.dispose();
     _scopeOfAuditController.dispose();
@@ -330,38 +329,49 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   }
 
   /// A free-text activity: typed text only — no office from the list,
-  /// no clause and no team. The closing activity is saved this way.
+  /// no clause and no team. An input-only day (e.g. "Reporting") is saved
+  /// this way.
   bool _isFreeTextActivity(AuditPlanEntryRow e) =>
       e.selectedOfficeId == null &&
       e.selectedTeamId == null &&
       e.selectedIsoStandardIds.isEmpty &&
       e.officeText.trim().isNotEmpty;
 
-  /// The closing activity is saved as the last line of the last day. When a
-  /// programme is loaded, that line is moved out of the day rows and into
-  /// the dedicated closing input, so it is edited in one place.
-  void _extractClosingActivity() {
-    _closingActivityController.text = '';
+  /// Works out which loaded days are input-only days.
+  ///
+  /// * A day whose only line is a typed activity is an input-only day.
+  /// * Older programmes stored the closing line ("Reporting") as the last line
+  ///   of the last audit day. That line is moved onto a day of its own, as on
+  ///   the original form, so it is edited in one place.
+  void _classifyDays() {
+    _textOnlyDays.clear();
     if (_entries.isEmpty) return;
 
-    final lastDay = _entries
-        .map((e) => e.dayNumber)
-        .reduce((a, b) => a > b ? a : b);
-
-    AuditPlanEntryRow? candidate;
+    final byDay = <int, List<AuditPlanEntryRow>>{};
     for (final e in _entries) {
-      if (e.dayNumber == lastDay) candidate = e;
+      byDay.putIfAbsent(e.dayNumber, () => <AuditPlanEntryRow>[]).add(e);
     }
-    if (candidate == null || !_isFreeTextActivity(candidate)) return;
 
-    _closingActivityController.text = candidate.officeText.trim();
-    _entries.remove(candidate);
-    candidate.dispose();
+    for (final day in byDay.keys) {
+      final rows = byDay[day]!;
+      if (rows.length == 1 && _isFreeTextActivity(rows.first)) {
+        _textOnlyDays.add(day);
+      }
+    }
 
-    // The closing line was alone on its day (e.g. an old "Day 2 – Reporting"):
-    // that day has no rows left, so drop it.
-    if (!_entries.any((e) => e.dayNumber == lastDay)) {
-      _dayDates.remove(lastDay);
+    final lastDay = byDay.keys.reduce((a, b) => a > b ? a : b);
+    if (_textOnlyDays.contains(lastDay)) return;
+
+    final rows = byDay[lastDay]!;
+    final candidate = rows.last;
+    final hasRealRow = rows.any((e) => !_isFreeTextActivity(e));
+    if (rows.length > 1 && hasRealRow && _isFreeTextActivity(candidate)) {
+      final newDay = lastDay + 1;
+      candidate.dayNumber = newDay;
+      _dayDates[newDay] = (_dayDates[lastDay] ?? DateTime.now()).add(
+        const Duration(days: 1),
+      );
+      _textOnlyDays.add(newDay);
     }
   }
 
@@ -480,13 +490,14 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
             }
           }
 
-          // Pull the closing line out of the day rows into its own input.
-          _extractClosingActivity();
+          // Mark the input-only days (e.g. Reporting) among the loaded days.
+          _classifyDays();
         }
       }
 
       if (_entries.isEmpty) {
         _dayDates.clear();
+        _textOnlyDays.clear();
         _dayDates[1] = DateTime.now();
         _entries.add(AuditPlanEntryRow(dayNumber: 1));
       }
@@ -550,14 +561,22 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       ? 1
       : (_dayDates.keys.reduce((a, b) => a > b ? a : b) + 1);
 
-  void _addDay() {
+  /// Adds a day. A normal day starts with one schedule row (office, clauses,
+  /// team). An input-only day ([textOnly]) holds a single typed line such as
+  /// "Reporting", as the original form shows it.
+  void _addDay(bool textOnly) {
     setState(() {
       final day = _nextDayNumber;
       final lastDate = _dayDates.values.isEmpty
           ? DateTime.now()
           : _dayDates.values.reduce((a, b) => a.isAfter(b) ? a : b);
       _dayDates[day] = lastDate.add(const Duration(days: 1));
-      _entries.add(AuditPlanEntryRow(dayNumber: day));
+      if (textOnly) {
+        _textOnlyDays.add(day);
+        _entries.add(AuditPlanEntryRow(dayNumber: day, officeText: 'Reporting'));
+      } else {
+        _entries.add(AuditPlanEntryRow(dayNumber: day));
+      }
     });
   }
 
@@ -582,6 +601,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       }
       _entries.removeWhere((e) => e.dayNumber == day);
       _dayDates.remove(day);
+      _textOnlyDays.remove(day);
     });
   }
 
@@ -1245,47 +1265,36 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
     return messages;
   }
 
-  /// The entries sent to the backend: every day row, plus the closing
-  /// activity (if any) as the last line of the last day. It is always sent as
-  /// a new line (id 0) so it stays the newest entry and therefore the last
-  /// one when the programme is loaded back.
+  /// The first input-only day left without text, or null when all are filled.
+  int? _emptyTextOnlyDay() {
+    final days = _textOnlyDays.toList()..sort();
+    for (final day in days) {
+      final rows = _entries.where((e) => e.dayNumber == day);
+      if (rows.any((e) => e.officeText.trim().isEmpty)) return day;
+    }
+    return null;
+  }
+
+  /// The entries sent to the backend. An input-only day (e.g. Reporting) is
+  /// saved as a single typed line: no office, no clause and no team.
   List<Map<String, dynamic>> _buildEntriesPayload() {
     final planId = _existingAuditPlanId ?? 0;
 
-    final entriesJson = <Map<String, dynamic>>[
+    for (final e in _entries) {
+      if (_textOnlyDays.contains(e.dayNumber)) {
+        e.selectedOfficeId = null;
+        e.selectedTeamId = null;
+        e.selectedIsoStandardIds = <int>[];
+      }
+    }
+
+    return <Map<String, dynamic>>[
       for (final e in _entries)
         e.toBackendDtoJson(
           planId,
           dayDate: _dayDates[e.dayNumber] ?? DateTime.now(),
         ),
     ];
-
-    final closingText = _closingActivityController.text.trim();
-    if (closingText.isNotEmpty) {
-      final lastDay = _entries.isEmpty
-          ? 1
-          : _entries.map((e) => e.dayNumber).reduce((a, b) => a > b ? a : b);
-      final d = _dayDates[lastDay] ?? DateTime.now();
-      final dateOnly = DateTime(d.year, d.month, d.day);
-
-      entriesJson.add({
-        'id': 0,
-        'auditPlanId': planId,
-        'dayNumber': lastDay,
-        'time': dateOnly.toIso8601String(),
-        'auditPlanProcesses': [
-          {
-            'id': 0,
-            'officeId': null,
-            'processName': closingText,
-            'auditPlanEntryId': 0,
-          },
-        ],
-        'isoStandardAuditPlans': [],
-        'isoAuditors': [],
-      });
-    }
-    return entriesJson;
   }
 
   Future<void> _submitProgramme({required bool isDraft}) async {
@@ -1296,6 +1305,20 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
         MotionToast.error(
           toastAlignment: Alignment.topCenter,
           description: Text(conflicts.first),
+        ).show(context);
+      }
+      return;
+    }
+
+    // An input-only day must have its text (e.g. "Reporting").
+    final emptyDay = _emptyTextOnlyDay();
+    if (emptyDay != null) {
+      if (mounted) {
+        MotionToast.error(
+          toastAlignment: Alignment.topCenter,
+          description: Text(
+            'Day $emptyDay: enter its text (e.g. Reporting) or remove the day.',
+          ),
         ).show(context);
       }
       return;
@@ -1525,10 +1548,9 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                               auditPlanObjectiveController:
                                   _auditPlanObjectiveController,
                               scopeOfAuditController: _scopeOfAuditController,
-                              closingActivityController:
-                                  _closingActivityController,
                               entries: _entries,
                               dayDates: _dayDates,
+                              textOnlyDays: _textOnlyDays,
                               offices: _offices,
                               standards: _standards,
                               teams: _teams,
@@ -1656,14 +1678,19 @@ class AuditPlanEntriesSection extends StatefulWidget {
   final TextEditingController internalAuditSchedController;
   final TextEditingController auditPlanObjectiveController;
   final TextEditingController scopeOfAuditController;
-  final TextEditingController closingActivityController;
   final List<AuditPlanEntryRow> entries;
   final Map<int, DateTime> dayDates;
+
+  /// Days that show a single input instead of office / clause / team rows.
+  final Set<int> textOnlyDays;
   final List<OfficeDto> offices;
   final List<IsoStandardDto> standards;
   final List<TeamDto> teams;
   final TeamOfficeConflictMap conflictMap;
-  final VoidCallback onAddDay;
+
+  /// Called with `true` to add an input-only day (e.g. Reporting) and with
+  /// `false` to add a normal day with schedule rows.
+  final void Function(bool textOnly) onAddDay;
   final void Function(int day) onAddRowToDay;
   final void Function(AuditPlanEntryRow entry) onRemoveEntry;
   final void Function(int day) onRemoveDay;
@@ -1674,9 +1701,9 @@ class AuditPlanEntriesSection extends StatefulWidget {
     required this.internalAuditSchedController,
     required this.auditPlanObjectiveController,
     required this.scopeOfAuditController,
-    required this.closingActivityController,
     required this.entries,
     required this.dayDates,
+    required this.textOnlyDays,
     required this.offices,
     required this.standards,
     required this.teams,
@@ -1896,6 +1923,50 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
     );
   }
 
+  /// "Add Day" with a choice: a normal day (schedule rows) or an input-only
+  /// day such as Reporting.
+  Widget _buildAddDayMenu() {
+    return PopupMenuButton<bool>(
+      tooltip: 'Add Day',
+      onSelected: widget.onAddDay,
+      itemBuilder: (context) => const [
+        PopupMenuItem<bool>(
+          value: false,
+          child: Text(
+            'Day with schedule rows',
+            style: TextStyle(fontSize: 12),
+          ),
+        ),
+        PopupMenuItem<bool>(
+          value: true,
+          child: Text(
+            'Input-only day (e.g. Reporting)',
+            style: TextStyle(fontSize: 12),
+          ),
+        ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: primaryThemeColor,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.calendar_month, size: 16, color: Colors.white),
+            SizedBox(width: 6),
+            Text(
+              'Add Day',
+              style: TextStyle(color: Colors.white, fontSize: 12),
+            ),
+            Icon(Icons.arrow_drop_down, size: 18, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final Map<int, List<AuditPlanEntryRow>> grouped = {};
@@ -1971,98 +2042,48 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                   letterSpacing: 0.5,
                 ),
               ),
-              ElevatedButton.icon(
-                onPressed: widget.onAddDay,
-                icon: const Icon(
-                  Icons.calendar_month,
-                  size: 16,
-                  color: Colors.white,
-                ),
-                label: const Text(
-                  'Add Day',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryThemeColor,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-              ),
+              _buildAddDayMenu(),
             ],
           ),
           const Divider(height: 20),
 
           for (final day in sortedDays) _buildDayGroup(day, grouped[day]!),
-
-          _buildClosingActivity(sortedDays),
         ],
       ),
     );
   }
 
-  /// The closing activity of the schedule (printed as the last line of the
-  /// last day). Free text, so it can be renamed to whatever the audit uses.
-  Widget _buildClosingActivity(List<int> sortedDays) {
-    final lastDay = sortedDays.isEmpty ? 1 : sortedDays.last;
-    const suggestions = ['Reporting', 'Closing Meeting'];
-
+  /// The single input of an input-only day (e.g. "Reporting").
+  Widget _buildTextOnlyRow(AuditPlanEntryRow entry) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F5F5),
+        color: Colors.grey.shade50,
         border: Border.all(color: Colors.grey.shade300),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextFormField(
-            controller: widget.closingActivityController,
-            style: const TextStyle(fontSize: 12),
-            decoration: _dropdownDecoration('REPORTING / CLOSING ACTIVITY')
-                .copyWith(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: 'e.g. Reporting, Closing Meeting',
-                  hintStyle: const TextStyle(fontSize: 12),
-                  helperText:
-                      'Printed as the last line of Day $lastDay. Leave blank to print none.',
-                  helperMaxLines: 2,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              const Text(
-                'Quick pick:',
-                style: TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-              for (final s in suggestions)
-                ActionChip(
-                  label: Text(s, style: const TextStyle(fontSize: 11)),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  backgroundColor: primaryThemeColor.withValues(alpha: .08),
-                  labelStyle: const TextStyle(color: primaryThemeColor),
-                  onPressed: () => widget.closingActivityController.text = s,
-                ),
-            ],
-          ),
-        ],
+      child: TextFormField(
+        controller: entry.officeTextController,
+        style: const TextStyle(fontSize: 12),
+        decoration: _dropdownDecoration('REPORTING / ACTIVITY').copyWith(
+          filled: true,
+          fillColor: Colors.white,
+          hintText: 'e.g. Reporting',
+          hintStyle: const TextStyle(fontSize: 12),
+          helperText: 'Printed as this day\'s only line.',
+        ),
+        onChanged: (val) {
+          entry.officeText = val;
+          entry.selectedOfficeId = null;
+        },
       ),
     );
   }
 
   Widget _buildDayGroup(int day, List<AuditPlanEntryRow> dayEntries) {
     final date = widget.dayDates[day] ?? DateTime.now();
+    final isTextOnly =
+        widget.textOnlyDays.contains(day) && dayEntries.length == 1;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
@@ -2115,27 +2136,34 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
           ),
           const SizedBox(height: 10),
 
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: dayEntries.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, i) =>
-                _buildEntryRow(dayEntries[i], dayEntries.length),
-          ),
+          if (isTextOnly)
+            _buildTextOnlyRow(dayEntries.first)
+          else ...[
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: dayEntries.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, i) =>
+                  _buildEntryRow(dayEntries[i], dayEntries.length),
+            ),
 
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () => widget.onAddRowToDay(day),
-              icon: const Icon(Icons.add, size: 16, color: primaryThemeColor),
-              label: Text(
-                'Add Row to Day $day',
-                style: const TextStyle(fontSize: 12, color: primaryThemeColor),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => widget.onAddRowToDay(day),
+                icon: const Icon(Icons.add, size: 16, color: primaryThemeColor),
+                label: Text(
+                  'Add Row to Day $day',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: primaryThemeColor,
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

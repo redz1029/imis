@@ -154,10 +154,23 @@ String _fmtTime(DateTime t) {
   return '$h:$m ${t.hour < 12 ? 'A.M.' : 'P.M.'}';
 }
 
+/// The Opening Meeting (Day 1 of the Audit Plan) is not an office, so it has
+/// no audit schedule of its own and is never printed in the Audit Schedule.
+/// A "Closing Meeting" row saved by an earlier version is skipped as well.
+bool _isMeetingRow(AuditPlanEntry e) {
+  final processes = e.auditPlanProcesses;
+  if (processes == null || processes.isEmpty) return false;
+  final name = (processes.first.processName ?? '').trim().toLowerCase();
+  return name.startsWith('opening meeting') ||
+      name.startsWith('closing meeting');
+}
+
 List<_Group> _groupByOffice(List<AuditPlanEntry> entries) {
   final map = <String, _Group>{};
   final order = <String>[];
   for (final e in entries) {
+    if (_isMeetingRow(e)) continue;
+
     var office = 'Unspecified Office';
     final processes = e.auditPlanProcesses;
     if (processes != null && processes.isNotEmpty) {

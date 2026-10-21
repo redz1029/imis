@@ -7,13 +7,13 @@ part of 'iso_standard.dart';
 // **************************************************************************
 
 IsoStandard _$IsoStandardFromJson(Map<String, dynamic> json) => IsoStandard(
-  id: (json['id'] as num).toInt(),
-  versionID: (json['versionID'] as num).toInt(),
+  id: (json['id'] as num?)?.toInt() ?? 0,
+  versionID: (json['versionID'] as num?)?.toInt() ?? 0,
   parentID: (json['parentID'] as num?)?.toInt(),
-  clauseRef: json['clauseRef'] as String,
+  clauseRef: json['clauseRef'] as String? ?? '',
   description: json['description'] as String?,
-  particulars: json['particulars'] as String,
-  isActive: json['isActive'] as bool,
+  particulars: json['particulars'] as String? ?? '',
+  isActive: json['isActive'] as bool? ?? true,
   children:
       (json['children'] as List<dynamic>?)
           ?.map((e) => IsoStandard.fromJson(e as Map<String, dynamic>))
