@@ -43,7 +43,6 @@ import 'package:imis/performance_governance_system/pgs_performance_validation_to
 import 'package:imis/performance_governance_system/pgs_roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/pages/roadmap_page.dart';
 import 'package:imis/qms_documents/pages/procedures_list_page.dart';
-import 'package:imis/qms_documents/pages/procedures_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/pages/impact_strategy_goal_scorecard_page.dart';
@@ -1283,8 +1282,8 @@ class SidebarState extends State<Sidebar> {
           NavChild(
             'Deliverables',
             2,
-            addPerm: AppPermissions.addPgsSetting,
-            viewPerm: AppPermissions.viewPgsSetting,
+            addPerm: AppPermissions.addCreateViewDeliverablesSetting,
+            viewPerm: AppPermissions.viewCreateViewDeliverablesSetting,
             permLabel: 'Deliverables',
           ),
           NavChild(
