@@ -5,6 +5,7 @@ namespace IMIS.Application.StrategyReviewModule
 {
     public interface IStrategyReviewRepository : IRepository<StrategyReview, long>
     {
+        Task<StrategyReviewOfficeDeliverableDto> GetOfficeDeliverablesByKraIdAsync(long kraId, DateOnly startDate, DateOnly endDate, CancellationToken cancellationToken);
         Task<StrategyReview?> GetByIdWithChildrenAsync(long id,  CancellationToken cancellationToken);
         Task<List<string>> GetOfficeNamesByKraIdAsync(long kraId, DateOnly reviewStartDate, DateOnly reviewEndDate, CancellationToken cancellationToken);
         Task<List<StrategyReview>> GetAll(CancellationToken cancellationToken);
