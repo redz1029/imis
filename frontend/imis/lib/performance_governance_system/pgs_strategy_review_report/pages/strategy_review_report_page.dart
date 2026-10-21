@@ -1,8 +1,11 @@
 // ignore_for_file: unused_element_parameter, use_build_context_synchronously
 
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -26,7 +29,10 @@ import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/dialog/strategy_review_report_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:universal_html/html.dart' as html;
 import '../../../common_services/common_service.dart';
 import '../../../utils/auth_util.dart';
 
@@ -1257,6 +1263,7 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
               children: [_buildRoadmapFilter(), _periodDropdown()],
             ),
             Spacer(),
+            _viewGuide(),
             if (_hasActiveFilters) ...[
               const SizedBox(width: 10),
 
@@ -1407,6 +1414,42 @@ class RoadmapDialogPageState extends State<StrategyReviewReportPage> {
                   : const SizedBox.shrink(),
         ),
       ],
+    );
+  }
+
+  Widget _viewGuide() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
+      child: TextButton.icon(
+        onPressed: () async {
+          final byteData = await rootBundle.load(
+            'assets/strategy-review-guide.pdf',
+          );
+          final bytes = byteData.buffer.asUint8List();
+          if (kIsWeb) {
+            final blob = html.Blob([bytes], 'application/pdf');
+            final url = html.Url.createObjectUrlFromBlob(blob);
+            html.window.open(url, '_blank');
+            Future.delayed(const Duration(seconds: 15), () {
+              html.Url.revokeObjectUrl(url);
+            });
+          } else {
+            final tempDir = await getTemporaryDirectory();
+            final file = File('${tempDir.path}/strategy-review-guide.pdf');
+            await file.writeAsBytes(bytes);
+            await OpenFile.open(file.path);
+          }
+        },
+        icon: const Icon(
+          Icons.menu_book_outlined,
+          size: 16,
+          color: primaryColor,
+        ),
+        label: Text(
+          'View Guide',
+          style: TextStyle(color: primaryColor, fontWeight: FontWeight.w600),
+        ),
+      ),
     );
   }
 
