@@ -11,7 +11,7 @@ namespace IMIS.Application.StrategyReviewModule
         Task<List<StrategyReview>> GetAllForRoleAsync(string roleId, CancellationToken cancellationToken);
         Task<StrategyReview?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<StrategyReviewOfficeDeliverableDto?> GetOfficeDeliverablesByStrategyReviewIdAsync(long strategyReviewId, CancellationToken cancellationToken);
-        Task<StrategyReview?> GetLatestByKraRoadMapIdAsync(long kraRoadMapId, int? strategyReviewPeriodId, CancellationToken cancellationToken);
+        Task<StrategyReviewPeriod?> GetPeriodAsync(int? strategyReviewPeriodId, CancellationToken cancellationToken);
 
     }
 }

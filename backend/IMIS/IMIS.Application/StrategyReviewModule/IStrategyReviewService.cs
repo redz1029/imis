@@ -10,7 +10,7 @@ namespace IMIS.Application.StrategyReviewModule
         Task<StrategyReviewOfficeDeliverableDto?> GetOfficeDeliverablesAsync(long strategyReviewId, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<StrategyReviewDto?> GetByIdAsync(long id, CancellationToken cancellationToken);
-        Task<ReportStrategyReviewDto?> ReportGetByIdAsync(long id, CancellationToken cancellationToken);    
+        Task<ReportStrategyReviewDto?> ReportGetByIdAsync(long id, CancellationToken cancellationToken);
         Task<DtoPageList<StrategyReviewDto, StrategyReview, long>> GetAllRoleIdAsync(string roleId, string? KraRoadmapName, int? strategyReviewPeriodId, int page, int pageSize, CancellationToken cancellationToken);
     }
 }

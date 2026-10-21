@@ -134,8 +134,12 @@ namespace IMIS.Presentation.StrategyReviewModule
             .WithTags(_strategyReview)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_strategyReview), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _strategyReviewPermission.View));
-
-            app.MapGet("/roadmap/{kraRoadMapId:long}/offices", async (long kraRoadMapId, int? strategyReviewPeriodId, IStrategyReviewService service, CancellationToken cancellationToken) =>
+          
+            app.MapGet("/roadmap/{kraRoadMapId:long}/offices", async (
+            long kraRoadMapId,
+            int? strategyReviewPeriodId,
+            IStrategyReviewService service,
+            CancellationToken cancellationToken) =>
             {
                 var result = await service.GetOfficesByKraRoadMapIdAsync(kraRoadMapId, strategyReviewPeriodId, cancellationToken);
 

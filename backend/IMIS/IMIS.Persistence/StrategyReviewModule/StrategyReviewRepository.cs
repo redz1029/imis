@@ -12,19 +12,16 @@ namespace IMIS.Persistence.StrategyReviewModule
         }
 
 
-        public async Task<StrategyReview?> GetLatestByKraRoadMapIdAsync(long kraRoadMapId, int? strategyReviewPeriodId, CancellationToken cancellationToken)
+
+        public async Task<StrategyReviewPeriod?> GetPeriodAsync(int? strategyReviewPeriodId, CancellationToken cancellationToken)
         {
-            var query = ReadOnlyDbContext.Set<StrategyReview>()
-                .AsNoTracking()
-                .Include(x => x.StrategyReviewPeriod)
-                .Where(x => x.KraRoadMapId == kraRoadMapId);
+            var query = ReadOnlyDbContext.Set<StrategyReviewPeriod>().AsNoTracking();
 
             if (strategyReviewPeriodId.HasValue)
-                query = query.Where(x => x.StrategyReviewPeriodId == strategyReviewPeriodId.Value);
+                return await query.FirstOrDefaultAsync(p => p.Id == strategyReviewPeriodId.Value, cancellationToken);
 
             return await query
-                .OrderByDescending(x => x.PostingDate)
-                .ThenByDescending(x => x.Id)
+                .OrderByDescending(p => p.StartDate)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
