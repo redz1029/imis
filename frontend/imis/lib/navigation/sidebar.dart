@@ -1282,8 +1282,8 @@ class SidebarState extends State<Sidebar> {
           NavChild(
             'Deliverables',
             2,
-            addPerm: AppPermissions.addCreateViewDeliverablesSetting,
-            viewPerm: AppPermissions.viewCreateViewDeliverablesSetting,
+            addPerm: AppPermissions.addPgsSetting,
+            viewPerm: AppPermissions.viewPgsSetting,
             permLabel: 'Deliverables',
           ),
           NavChild(
@@ -1335,7 +1335,7 @@ class SidebarState extends State<Sidebar> {
               NavChild('Summary of Offices — Monthly ORP', 12),
             ],
           ),
-          const NavChild('ISPAM', 13),
+          const NavChild('SPAM', 13),
         ],
       ),
 
