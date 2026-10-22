@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +11,7 @@ import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_deliverable.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_kpi.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_report.dart';
+import 'package:imis/performance_governance_system/pgs_strategy_review_report/pages/direct_contributing_units.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/services/strategy_review_report_services.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/strategy_review_period/models/strategy_review_period.dart';
 import 'package:imis/utils/auth_util.dart';
@@ -151,6 +151,27 @@ class StrategyReviewReportDialogState
     }
   }
 
+  Future<void> _loadContributingUnits() async {
+    // existing: galing sa saved officeNames
+    if (widget.existingReview != null) return;
+
+    final periodId = _selectedPeriod?.id;
+    if (periodId == null) {
+      if (mounted) setState(() => _contributingUnitsCtrl.text = '');
+      return;
+    }
+    try {
+      final units = await _service.getContributingUnits(
+        widget.kraRoadMapId,
+        periodId,
+      );
+      if (!mounted) return;
+      setState(() => _contributingUnitsCtrl.text = units.join(', '));
+    } catch (e) {
+      debugPrint('Contributing units error: $e');
+    }
+  }
+
   Future<void> _fetchData() async {
     try {
       final existing = widget.existingReview;
@@ -260,7 +281,7 @@ class StrategyReviewReportDialogState
 
       setState(() {
         _periods = periods;
-        _selectedPeriod = periods.isNotEmpty ? periods.first : null;
+        _selectedPeriod = null; // required: dapat pumili muna ang user
 
         _deliverableItems = deliverablesResponse?.deliverables ?? [];
         _kpiItems = kpisResponse?.kpiDeliverable ?? [];
@@ -284,6 +305,7 @@ class StrategyReviewReportDialogState
 
         _isLoading = false;
       });
+      _loadContributingUnits();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -497,10 +519,6 @@ class StrategyReviewReportDialogState
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  widget.kraName,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
               ],
             ),
           ),
@@ -516,17 +534,29 @@ class StrategyReviewReportDialogState
   }
 
   Widget _buildPeriodDropdown() {
+    final isLocked =
+        widget.existingReview != null; // naka-save na = di na pwede palitan
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('Quarter'),
+        _sectionLabel('Quarter *'),
         const SizedBox(height: 8),
         DropdownButtonFormField<StrategyReviewPeriod>(
           value: _selectedPeriod,
           isExpanded: true,
-          style: const TextStyle(fontSize: 13, color: Colors.black87),
+          hint: Text(
+            'Select quarter',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+          ),
+          style: TextStyle(
+            fontSize: 13,
+            color: isLocked ? Colors.grey.shade700 : Colors.black87,
+          ),
           decoration: InputDecoration(
             isDense: true,
+            filled: isLocked,
+            fillColor: Colors.grey.shade100,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 10,
               vertical: 10,
@@ -536,6 +566,10 @@ class StrategyReviewReportDialogState
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(4),
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
@@ -554,7 +588,13 @@ class StrategyReviewReportDialogState
                   ),
                 );
               }).toList(),
-          onChanged: (val) => setState(() => _selectedPeriod = val),
+          onChanged:
+              isLocked
+                  ? null
+                  : (val) {
+                    setState(() => _selectedPeriod = val);
+                    _loadContributingUnits();
+                  },
           validator: (val) => val == null ? 'Please select a quarter' : null,
         ),
       ],
@@ -607,7 +647,8 @@ class StrategyReviewReportDialogState
                 _readOnlyField(
                   'Contributing Units',
                   _contributingUnitsCtrl.text,
-                  emptyText: 'This will display after saving',
+                  emptyText: 'Select a quarter to display contributing units',
+                  action: _dcuPrintButton(),
                 ),
               ],
             )
@@ -622,7 +663,8 @@ class StrategyReviewReportDialogState
                   child: _readOnlyField(
                     'Contributing Units',
                     _contributingUnitsCtrl.text,
-                    emptyText: 'This will display after saving',
+                    emptyText: 'Select a quarter to display contributing units',
+                    action: _dcuPrintButton(),
                   ),
                 ),
               ],
@@ -1190,13 +1232,28 @@ class StrategyReviewReportDialogState
     );
   }
 
-  Widget _readOnlyField(String label, String value, {String emptyText = '—'}) {
+  Widget _readOnlyField(
+    String label,
+    String value, {
+    String emptyText = '—',
+    Widget? action,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            if (action != null) action,
+          ],
         ),
         const SizedBox(height: 4),
         Container(
@@ -1217,6 +1274,60 @@ class StrategyReviewReportDialogState
           ),
         ),
       ],
+    );
+  }
+
+  Widget _dcuPrintButton() {
+    final reviewId = widget.existingReview?.id;
+    final isExisting = reviewId != null && reviewId != 0;
+    final canPrint = isExisting || _selectedPeriod?.id != null;
+
+    return TextButton.icon(
+      onPressed:
+          canPrint
+              ? () async {
+                try {
+                  final result =
+                      isExisting
+                          ? await _service.getStrategyReviewOffices(reviewId)
+                          : await _service.getOfficeDeliverablesByRoadmap(
+                            widget.kraRoadMapId,
+                            _selectedPeriod!.id,
+                          );
+                  await openOfficesPreviewTab(
+                    result.deliverables,
+                    roadmapName: result.roadmapName,
+                    kraName: widget.kraName,
+                    periodLabel: _selectedPeriod?.quarter ?? '',
+                  );
+                } catch (e) {
+                  debugPrint('Print preview error: $e');
+                  if (!mounted) return;
+                  MotionToast.error(
+                    toastAlignment: Alignment.topCenter,
+                    description: const Text('Failed to load print preview.'),
+                  ).show(context);
+                }
+              }
+              : null,
+      icon: Icon(
+        Icons.assessment_outlined,
+        size: 16,
+        color: canPrint ? primaryColor : Colors.grey,
+      ),
+      label: Text(
+        'View Report',
+        style: TextStyle(
+          fontSize: 12,
+          color: canPrint ? primaryColor : Colors.grey,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
     );
   }
 

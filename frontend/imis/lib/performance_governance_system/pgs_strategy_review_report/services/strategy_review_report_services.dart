@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/models/kra_roadmap_role.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_deliverable.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_kpi.dart';
+import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_office.dart';
 import 'package:imis/performance_governance_system/pgs_strategy_review_report/models/strategy_review_report.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
@@ -51,19 +52,32 @@ class StrategyReviewReportServices {
     int year,
   ) async {
     final url =
-        '${ApiEndpoint.baseUrl}/strategyReview/deliverables/$kraRoadMapId/$year';
+        '${ApiEndpoint().strategyReview}/deliverables/$kraRoadMapId/$year';
     final response = await AuthenticatedRequest.get(dio, url);
     final List data = response.data as List;
     if (data.isEmpty) return null;
     return StrategyReviewDeliverableItem.fromJson(data.first);
   }
 
+  Future<List<String>> getContributingUnits(
+    int kraRoadMapId,
+    int strategyReviewPeriodId,
+  ) async {
+    final url =
+        '${ApiEndpoint().strategyReview}/roadmap/$kraRoadMapId/offices?strategyReviewPeriodId=$strategyReviewPeriodId';
+    final response = await AuthenticatedRequest.get(dio, url);
+    final data = response.data;
+    if (data is Map && data['officeNames'] is List) {
+      return (data['officeNames'] as List).map((e) => e.toString()).toList();
+    }
+    return [];
+  }
+
   Future<StrategyReviewKpiItem?> getStrategyReviewKpis(
     int kraRoadMapId,
     int year,
   ) async {
-    final url =
-        '${ApiEndpoint.baseUrl}/strategyReview/kpis/$kraRoadMapId/$year';
+    final url = '${ApiEndpoint().strategyReview}/kpis/$kraRoadMapId/$year';
     final response = await AuthenticatedRequest.get(dio, url);
     final List data = response.data as List;
     if (data.isEmpty) return null;
@@ -71,7 +85,7 @@ class StrategyReviewReportServices {
   }
 
   Future<void> saveStrategyReview(StrategyReviewSaveRequest request) async {
-    final url = '${ApiEndpoint.baseUrl}/strategyReview';
+    final url = ApiEndpoint().strategyReview;
     final response = await AuthenticatedRequest.post(
       dio,
       url,
@@ -83,7 +97,7 @@ class StrategyReviewReportServices {
   }
 
   Future<void> updateStrategyReview(StrategyReviewSaveRequest request) async {
-    final url = '${ApiEndpoint.baseUrl}/strategyReview/update';
+    final url = '${ApiEndpoint().strategyReview}/update';
     final response = await AuthenticatedRequest.put(
       dio,
       url,
@@ -98,14 +112,14 @@ class StrategyReviewReportServices {
   Future<List<StrategyReviewReport>> getStrategyReviews({
     String? roleId,
   }) async {
-    final url = '${ApiEndpoint.baseUrl}/strategyReview/roleid/$roleId';
+    final url = '${ApiEndpoint().strategyReview}/roleid/$roleId';
     final response = await AuthenticatedRequest.get(dio, url);
     final List data = response.data as List;
     return data.map((e) => StrategyReviewReport.fromJson(e)).toList();
   }
 
   Future<StrategyReviewReport> getStrategyReviewById(int id) async {
-    final url = '${ApiEndpoint.baseUrl}/strategyReview/$id';
+    final url = '${ApiEndpoint().strategyReview}/$id';
     final response = await AuthenticatedRequest.get(dio, url);
     return StrategyReviewReport.fromJson(response.data);
   }
@@ -113,5 +127,25 @@ class StrategyReviewReportServices {
   Future<void> deleteStrategyReview(String id) async {
     final url = '${ApiEndpoint().strategyReview}/$id';
     await AuthenticatedRequest.delete(dio, url);
+  }
+
+  Future<StrategyReviewOfficeResponse> getStrategyReviewOffices(int id) async {
+    final url = '${ApiEndpoint().strategyReview}/$id/offices';
+    final response = await AuthenticatedRequest.get(dio, url);
+    return StrategyReviewOfficeResponse.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+  }
+
+  Future<StrategyReviewOfficeResponse> getOfficeDeliverablesByRoadmap(
+    int kraRoadMapId,
+    int strategyReviewPeriodId,
+  ) async {
+    final url =
+        '${ApiEndpoint().strategyReview}/roadmap/$kraRoadMapId/office-deliverables?strategyReviewPeriodId=$strategyReviewPeriodId';
+    final response = await AuthenticatedRequest.get(dio, url);
+    return StrategyReviewOfficeResponse.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
   }
 }
