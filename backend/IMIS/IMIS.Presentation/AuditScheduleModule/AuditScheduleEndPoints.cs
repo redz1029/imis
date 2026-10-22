@@ -19,6 +19,7 @@ namespace IMIS.Presentation.AuditScheduleModule
         private const string _AuditSchedule = "AuditSchedule";
         // Assuming AuditSchedulePermission exists following your naming convention
         public readonly AuditSchedulePermission _permission = new();
+        public readonly AuditScheduleWorkflowPermission _workflowPermission = new();
 
         public AuditScheduleEndPoints() : base("/auditSchedule")
         {
@@ -188,7 +189,7 @@ namespace IMIS.Presentation.AuditScheduleModule
             .WithTags(_AuditSchedule)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
 
-            // SUBMIT — Draft/Disapproved/Rejected -> Pending Confirmation
+            // SUBMIT — Draft/Rejected -> Pending Confirmation (Auditor Team Leader)
             app.MapPut("/{id:int}/submit", async (
                 int id,
                 [FromBody] SubmitAuditScheduleRequest? body,
@@ -205,9 +206,9 @@ namespace IMIS.Presentation.AuditScheduleModule
                 return Results.Ok(new { message = "Submitted for confirmation." });
             })
             .WithTags(_AuditSchedule)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanSubmit));
 
-            // DECIDE — Pending -> Confirmed/Rejected
+            // DECIDE — Pending -> Confirmed/Rejected (Department Head)
             app.MapPut("/{id:int}/decide", async (
                 int id,
                 [FromBody] DecideAuditScheduleRequest dto,
@@ -233,7 +234,9 @@ namespace IMIS.Presentation.AuditScheduleModule
                 return Results.Ok(new { message = action == "Reject" ? "Rejected." : $"{action}ed." });
             })
             .WithTags(_AuditSchedule)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+            .RequireAuthorization(e => e.RequireAssertion(ctx =>
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanConfirm) ||
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanReject)));
 
         }
 

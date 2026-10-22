@@ -737,6 +737,122 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission());
 
+            // -----------------------------------------------------------------
+            // QMS Audit Module roles
+            // QMR / QMS are read-only across the IQA module: QMR additionally
+            // approves or rejects submissions, QMS only adds notes.
+            // -----------------------------------------------------------------
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<QMR, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission());
+
+            await PermissionSeeder.SeedSpecificPermssionsToRole<QMR, IdentityRole>(_roleManager,
+                new AuditProgrammeWorkflowPermission().CanApprove,
+                new AuditProgrammeWorkflowPermission().CanReject,
+                new AuditPlanWorkflowPermission().CanApprove,
+                new AuditPlanWorkflowPermission().CanReject,
+                new AuditReportWorkflowPermission().CanApprove,
+                new AuditReportWorkflowPermission().CanReject,
+                new NonconformingActionReportWorkflowPermission().CanValidateAndClose);
+
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<QMS, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission());
+
+            await PermissionSeeder.SeedSpecificPermssionsToRole<QMS, IdentityRole>(_roleManager,
+                new AuditProgrammeWorkflowPermission().CanNote,
+                new AuditPlanWorkflowPermission().CanNote,
+                new AuditScheduleWorkflowPermission().CanNote,
+                new AuditChecklistWorkflowPermission().CanNote,
+                new AuditReportWorkflowPermission().CanNote);
+
+            // Lead Auditor owns the Programme/Plan and closes NCARs.
+            await PermissionSeeder.SeedPermissionForRole<LeadAuditor, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission());
+
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<LeadAuditor, IdentityRole>(_roleManager,
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission());
+
+            await PermissionSeeder.SeedSpecificPermssionsToRole<LeadAuditor, IdentityRole>(_roleManager,
+                new AuditProgrammeWorkflowPermission().CanSubmitForApproval,
+                new AuditProgrammeWorkflowPermission().CanReject,
+                new AuditProgrammeWorkflowPermission().CanNote,
+                new AuditPlanWorkflowPermission().CanSubmitForApproval,
+                new AuditPlanWorkflowPermission().CanApprove,
+                new AuditPlanWorkflowPermission().CanReject,
+                new AuditPlanWorkflowPermission().CanNote,
+                new NonconformingActionReportWorkflowPermission().CanRespond,
+                new NonconformingActionReportWorkflowPermission().CanVerify,
+                new NonconformingActionReportWorkflowPermission().CanValidateAndClose);
+
+            // Auditor Team Leader creates/submits schedules, checklists/reports
+            // and verifies NCARs.
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<AuditorTeamLeader, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission());
+
+            await PermissionSeeder.SeedSpecificPermssionsToRole<AuditorTeamLeader, IdentityRole>(_roleManager,
+                new AuditSchedulePermission().Add,
+                new AuditSchedulePermission().Edit,
+                new AuditScheduleWorkflowPermission().CanSubmit,
+                new AuditChecklistPermission().Add,
+                new AuditChecklistPermission().Edit,
+                new AuditChecklistWorkflowPermission().CanSubmit,
+                new AuditReportPermission().Add,
+                new AuditReportPermission().Edit,
+                new AuditReportWorkflowPermission().CanSubmit,
+                new NonconformingActionReportPermission().Add,
+                new NonconformingActionReportPermission().Edit,
+                new NonconformingActionReportWorkflowPermission().CanAcknowledge,
+                new NonconformingActionReportWorkflowPermission().CanVerify);
+
+            // Department Head confirms or rejects the submitted schedule.
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<DepartmentHead, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission());
+
+            await PermissionSeeder.SeedSpecificPermssionsToRole<DepartmentHead, IdentityRole>(_roleManager,
+                new AuditScheduleWorkflowPermission().CanConfirm,
+                new AuditScheduleWorkflowPermission().CanReject,
+                new AuditScheduleWorkflowPermission().CanNote,
+                new NonconformingActionReportWorkflowPermission().CanAcknowledge,
+                new NonconformingActionReportWorkflowPermission().CanValidateAndClose);
+
+            // Auditor works on checklists/NCARs/report drafts.
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager);
+
+            await PermissionSeeder.SeedSpecificPermssionsToRole<PgsAuditorRole, IdentityRole>(_roleManager,
+                new AuditChecklistPermission().Add,
+                new AuditChecklistPermission().Edit,
+                new AuditChecklistWorkflowPermission().CanSubmit,
+                new AuditReportPermission().Add,
+                new AuditReportPermission().Edit,
+                new AuditReportWorkflowPermission().CanSubmit,
+                new NonconformingActionReportPermission().Add,
+                new NonconformingActionReportPermission().Edit,
+                new NonconformingActionReportWorkflowPermission().CanAcknowledge,
+                new NonconformingActionReportWorkflowPermission().CanVerify);
+
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
                  _roleManager, _userManager, "castillano.mrb", "rama.emg");

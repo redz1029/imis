@@ -170,5 +170,43 @@ namespace IMIS.Persistence.NonconformingActionReportModule
 
             return new NonconformingActionReportDto(entity);
         }
+
+        public async Task<(bool Success, string? Error)> ChangeStatusAsync(long id, string status, string? comments, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
+            if (entity == null) return (false, "Nonconforming action report not found.");
+
+            var target = status?.Trim();
+            if (string.IsNullOrEmpty(target)) return (false, "Status is required.");
+
+            var current = entity.IsClosed
+                ? NonconformingActionReportWorkflowPermission.StatusClosed
+                : entity.IsActive
+                    ? NonconformingActionReportWorkflowPermission.StatusActive
+                    : NonconformingActionReportWorkflowPermission.StatusPendingVerification;
+
+            bool valid = (current, target.ToUpperInvariant()) switch
+            {
+                (NonconformingActionReportWorkflowPermission.StatusPendingVerification, NonconformingActionReportWorkflowPermission.StatusActive) => true,
+                (NonconformingActionReportWorkflowPermission.StatusActive, NonconformingActionReportWorkflowPermission.StatusClosed) => true,
+                _ => false
+            };
+
+            if (!valid)
+                return (false, $"Cannot change NCAR status from {current} to {target}.");
+
+            entity.IsActive = !string.Equals(target, NonconformingActionReportWorkflowPermission.StatusClosed, StringComparison.OrdinalIgnoreCase);
+            entity.IsClosed = string.Equals(target, NonconformingActionReportWorkflowPermission.StatusClosed, StringComparison.OrdinalIgnoreCase);
+
+            if (entity.IsClosed)
+            {
+                entity.ValidatedDate = DateTime.UtcNow;
+                if (!string.IsNullOrWhiteSpace(comments))
+                    entity.VerificationDetails = comments;
+            }
+
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return (true, null);
+        }
     }
 }

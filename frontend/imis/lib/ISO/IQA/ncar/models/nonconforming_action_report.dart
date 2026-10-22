@@ -169,4 +169,19 @@ class NonconformingActionReport {
     if (acknowledgedDate != null) return 'Acknowledged / Under Review';
     return 'Open / Issued';
   }
+
+  /// The NCAR lifecycle status used by the backend's /status endpoint.
+  /// PENDING_VERIFICATION -> ACTIVE -> CLOSED.
+  String get lifecycleStatus {
+    if (isClosed) return NcarStatus.closed;
+    if (isActive) return NcarStatus.active;
+    return NcarStatus.pendingVerification;
+  }
+}
+
+/// The NCAR lifecycle statuses accepted by the backend.
+class NcarStatus {
+  static const String pendingVerification = 'PENDING_VERIFICATION';
+  static const String active = 'ACTIVE';
+  static const String closed = 'CLOSED';
 }

@@ -7,6 +7,8 @@ import 'package:imis/ISO/IQA/audit_checklist/models/audit_checklist.dart';
 import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_print_preview_page.dart';
 import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
+import 'package:imis/utils/permission_service.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 enum _RowFilter { all, pending, conforming, nonConforming }
@@ -1047,7 +1049,14 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
 
   // ---- Footer (same structure as the Audit Programme form footer) -----------
   Widget _buildFooter() {
-    final canSave = !_isSaving && !_isLoadingChecklist && _rows.isNotEmpty;
+    // Only a role that may edit checklists can save one. Read-only roles
+    // (QMR, QMS, Department Head) still see the form, just not the save.
+    final canEdit = permissionService.hasPermission(
+          AppPermissions.editAuditChecklist,
+        ) ||
+        permissionService.hasPermission(AppPermissions.addAuditChecklist);
+    final canSave =
+        canEdit && !_isSaving && !_isLoadingChecklist && _rows.isNotEmpty;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),

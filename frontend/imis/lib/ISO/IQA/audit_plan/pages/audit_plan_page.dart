@@ -14,9 +14,11 @@ import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.da
 import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 
@@ -1079,6 +1081,13 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
   bool _isAdmin = false;
   bool _isSaving = false;
 
+  /// True when the signed-in role holds [permission] (Administrators always
+  /// pass). Used to gate the workflow actions shown on this page.
+  bool _hasPermission(String permission) {
+    if (_isAdmin) return true;
+    return permissionService.hasPermission(permission);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1948,6 +1957,35 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
             status == 'Pending' ||
             _loadedPlan?.signatories.isNotEmpty == true);
 
+    final currentUserId = _currentUser?.id ?? '';
+    final signatories = _loadedPlan?.signatories ?? [];
+    final matchingSig =
+        signatories.where((s) => s.signatoryId == currentUserId);
+    final sigLabel = matchingSig.isNotEmpty
+        ? (matchingSig.first.signatoryLabel ?? '').toUpperCase()
+        : '';
+
+    // The workflow actions are permission-driven. The signatory label
+    // is only a fallback for signers that were configured before the
+    // permissions existed (it carries the role name of the approver).
+    final canShowNoted =
+        _isAdmin ||
+        _hasPermission(AppPermissions.noteAuditPlan) ||
+        sigLabel.contains('NOTE') ||
+        sigLabel.contains('QMS');
+    final canShowApproveReject =
+        _isAdmin ||
+        _hasPermission(AppPermissions.approveAuditPlan) ||
+        _hasPermission(AppPermissions.rejectAuditPlan) ||
+        sigLabel.contains('APPROV') ||
+        sigLabel.contains('QMR');
+
+    final canSubmitForApproval =
+        _isAdmin ||
+        _hasPermission(AppPermissions.submitAuditPlanForApproval) ||
+        sigLabel.contains('SUBMIT');
+    final canSaveDraft = _isAdmin || _hasPermission(AppPermissions.addAuditPlan);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -2000,65 +2038,54 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
                 ),
                 const SizedBox(width: 8),
               ],
-              OutlinedButton(
-                onPressed: _isSaving ? null : () => _save(),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: primaryThemeColor),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
+              if (canSaveDraft) ...[
+                OutlinedButton(
+                  onPressed: _isSaving ? null : () => _save(),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: primaryThemeColor),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                child: const Text(
-                  'SAVE AS DRAFT',
-                  style: TextStyle(
-                    color: primaryThemeColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _isSaving ? null : () => _submitPlan(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryThemeColor,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
+                  child: const Text(
+                    'SAVE AS DRAFT',
+                    style: TextStyle(
+                      color: primaryThemeColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                child: Text(
-                  hasRejection
-                      ? 'RESUBMIT FOR APPROVAL'
-                      : 'SUBMIT FOR APPROVAL',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 8),
+              ],
+              if (canSubmitForApproval)
+                ElevatedButton(
+                  onPressed: _isSaving ? null : () => _submitPlan(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryThemeColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: Text(
+                    hasRejection
+                        ? 'RESUBMIT FOR APPROVAL'
+                        : 'SUBMIT FOR APPROVAL',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
             ],
           );
-
-          final currentUserId = _currentUser?.id ?? '';
-          final signatories = _loadedPlan?.signatories ?? [];
-          final matchingSig =
-              signatories.where((s) => s.signatoryId == currentUserId);
-          final sigLabel = matchingSig.isNotEmpty
-              ? (matchingSig.first.signatoryLabel ?? '').toUpperCase()
-              : '';
-
-          final canShowNoted =
-              _isAdmin || sigLabel.contains('NOTE') || sigLabel.contains('QMS');
-          final canShowApproveReject = _isAdmin ||
-              sigLabel.contains('APPROV') ||
-              sigLabel.contains('QMR');
 
           final rightActions = canShowDecisions
               ? Row(

@@ -6,8 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
-import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
+import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -23,15 +23,15 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
   // An Audit Schedule has no Draft stage — it starts at Pending.
   static const List<String> _statusTabs = [
     'All',
-    'Pending',
+    'Pending Confirmation',
     'Confirmed',
     'Revision Required',
     'Rejected',
   ];
 
-  final _service = AuditPlanService(Dio());
+  final _service = AuditSchedulesService(Dio());
 
-  List<AuditPlan> _allPlans = [];
+  List<AuditSchedules> _allSchedules = [];
   String _selectedTab = 'All';
   int _currentPage = 1;
   final int _pageSize = 15;
@@ -40,14 +40,14 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
   @override
   void initState() {
     super.initState();
-    _fetchPlans();
+    _fetchSchedules();
   }
 
-  Future<void> _fetchPlans() async {
+  Future<void> _fetchSchedules() async {
     setState(() => _isLoading = true);
     try {
-      final data = await _service.getAllAuditPlans();
-      if (mounted) setState(() => _allPlans = data);
+      final data = await _service.getAuditSchedules();
+      if (mounted) setState(() => _allSchedules = data);
     } catch (e) {
       debugPrint(e.toString());
       if (mounted) {
@@ -63,24 +63,35 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
     }
   }
 
-  /// Plans that have reached the schedule stage. Plans still in Draft are
-  /// not shown, since a schedule starts directly at Pending.
-  List<AuditPlan> get _schedulePlans =>
-      _allPlans.where((p) => p.effectiveStatusName != 'Draft').toList();
+  /// Schedules are ordered by their audit plan, then by their start date, so
+  /// the list reads like the printed schedule.
+  List<AuditSchedules> get _sortedSchedules {
+    final list = [..._allSchedules];
+    list.sort((a, b) {
+      final planCompare = a.auditPlanId.compareTo(b.auditPlanId);
+      if (planCompare != 0) return planCompare;
+      final startCompare = a.startDate.compareTo(b.startDate);
+      if (startCompare != 0) return startCompare;
+      return (a.officeName ?? '').compareTo(b.officeName ?? '');
+    });
+    return list;
+  }
 
   int _countFor(String tab) {
-    final plans = _schedulePlans;
-    if (tab == 'All') return plans.length;
-    return plans.where((p) => p.effectiveStatusName == tab).length;
+    final schedules = _sortedSchedules;
+    if (tab == 'All') return schedules.length;
+    return schedules.where((s) => s.effectiveStatusName == tab).length;
   }
 
-  List<AuditPlan> get _filtered {
-    final plans = _schedulePlans;
-    if (_selectedTab == 'All') return plans;
-    return plans.where((p) => p.effectiveStatusName == _selectedTab).toList();
+  List<AuditSchedules> get _filtered {
+    final schedules = _sortedSchedules;
+    if (_selectedTab == 'All') return schedules;
+    return schedules
+        .where((s) => s.effectiveStatusName == _selectedTab)
+        .toList();
   }
 
-  List<AuditPlan> get _paged {
+  List<AuditSchedules> get _paged {
     final filtered = _filtered;
     final start = (_currentPage - 1) * _pageSize;
     if (start >= filtered.length) return [];
@@ -95,13 +106,15 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
     });
   }
 
-  /// Opens the read-only schedule viewer for one Audit Plan, in a modal
-  /// dialog — same navigation style as AuditPlanListPage._openForm.
-  Future<void> _openSchedule(AuditPlan plan) async {
+  /// Opens the read-only schedule viewer for the plan the schedule belongs
+  /// to, in a modal dialog — same navigation style as
+  /// AuditPlanListPage._openForm.
+  Future<void> _openSchedule(AuditSchedules schedule) async {
+    if (schedule.auditPlanId <= 0) return;
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AuditSchedulePage(auditPlanId: plan.id),
+      builder: (_) => AuditSchedulePage(auditPlanId: schedule.auditPlanId),
     );
   }
 
@@ -199,11 +212,11 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
             buildPageHeader(
               isMobile: isMobile,
               title: 'Audit Schedule',
-              totalCount: _schedulePlans.length,
+              totalCount: _sortedSchedules.length,
               itemLabel: 'schedule',
               icon: Icons.calendar_month_outlined,
               actionButton: ElevatedButton.icon(
-                onPressed: _isLoading ? null : _fetchPlans,
+                onPressed: _isLoading ? null : _fetchSchedules,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
                   padding: const EdgeInsets.symmetric(
@@ -257,6 +270,16 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                               width: 40,
                               child: Text(
                                 '#',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ),
+                            const Expanded(
+                              flex: 2,
+                              child: Text(
+                                'Office',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: kMuted,
@@ -330,12 +353,16 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                 color: Colors.grey.withValues(alpha: 0.2),
                               ),
                               itemBuilder: (context, index) {
-                                final plan = paged[index];
+                                final schedule = paged[index];
                                 final rowNumber =
                                     (_currentPage - 1) * _pageSize + index + 1;
                                 final dateRange =
-                                    '${DateFormat('MMM d, yyyy').format(plan.startDate)} – '
-                                    '${DateFormat('MMM d, yyyy').format(plan.endDate)}';
+                                    '${DateFormat('MMM d, yyyy').format(schedule.startDate)} – '
+                                    '${DateFormat('MMM d, yyyy').format(schedule.endDate)}';
+                                final officeName =
+                                    schedule.officeName?.trim().isNotEmpty == true
+                                    ? schedule.officeName!.trim()
+                                    : 'Unspecified Office';
 
                                 if (!isMobile) {
                                   return Padding(
@@ -354,10 +381,16 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            'Audit Plan #${plan.id}',
+                                            officeName,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                             ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            'Audit Plan #${schedule.auditPlanId}',
                                           ),
                                         ),
                                         Expanded(
@@ -369,7 +402,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                           child: Align(
                                             alignment: Alignment.centerLeft,
                                             child: _buildStatusChip(
-                                              plan.effectiveStatusName,
+                                              schedule.effectiveStatusName,
                                             ),
                                           ),
                                         ),
@@ -391,7 +424,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                                   size: 16,
                                                 ),
                                                 onPressed: () =>
-                                                    _openSchedule(plan),
+                                                    _openSchedule(schedule),
                                               ),
                                             ],
                                           ),
@@ -416,12 +449,19 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              'Audit Plan #${plan.id}',
+                                              officeName,
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                             const SizedBox(height: 4),
+                                            Text(
+                                              'Audit Plan #${schedule.auditPlanId}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
                                             Text(
                                               dateRange,
                                               style: TextStyle(
@@ -431,7 +471,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                             ),
                                             const SizedBox(height: 5),
                                             _buildStatusChip(
-                                              plan.effectiveStatusName,
+                                              schedule.effectiveStatusName,
                                             ),
                                           ],
                                         ),
@@ -442,7 +482,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                           Icons.visibility_outlined,
                                           color: Colors.grey.shade500,
                                         ),
-                                        onPressed: () => _openSchedule(plan),
+                                        onPressed: () => _openSchedule(schedule),
                                       ),
                                     ],
                                   ),

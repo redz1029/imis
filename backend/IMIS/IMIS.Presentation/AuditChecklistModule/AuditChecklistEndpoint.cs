@@ -15,6 +15,7 @@ namespace IMIS.Presentation.AuditChecklistModule
     public class AuditChecklistEndPoints : CarterModule
     {
         private const string _auditChecklist = "Audit Checklist";
+        public readonly AuditChecklistPermission _permission = new();
 
         public AuditChecklistEndPoints() : base("/auditchecklist")
         {
@@ -29,7 +30,8 @@ namespace IMIS.Presentation.AuditChecklistModule
                 await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
                 return Results.Ok(dto);
             })
-            .WithTags(_auditChecklist);
+            .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
             // UPDATE (Matches POST logic in your template)
             app.MapPut("/", async ([FromBody] AuditChecklistDto dto, IAuditChecklistService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -38,7 +40,8 @@ namespace IMIS.Presentation.AuditChecklistModule
                 await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
                 return Results.Ok(dto);
             })
-            .WithTags(_auditChecklist);
+            .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
             // GET OR GENERATE FROM AUDIT PLAN ENTRY
             app.MapGet("/planentry/{auditPlanEntryId:int}", async (int auditPlanEntryId, IAuditChecklistService service, CancellationToken cancellationToken) =>
             {
@@ -46,6 +49,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 return Results.Ok(result);
             })
             .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
 
             // GET OR GENERATE FROM AUDIT SCHEDULE — the ONLY reliable key for
@@ -67,6 +71,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 }
             })
             .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
 
             // DYNAMIC CHECKLIST LIST — schedules ordered by schedule Id, each
@@ -77,6 +82,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 return Results.Ok(result);
             })
             .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
 
             // GET BY ID
@@ -86,6 +92,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 return result is not null ? Results.Ok(result) : Results.NotFound();
             })
             .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
 
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_auditChecklist), true);
 
@@ -96,6 +103,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 return Results.Ok(result);
             })
             .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
 
             // PAGINATED
@@ -105,6 +113,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 return Results.Ok(result);
             })
             .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
 
             // DELETE
@@ -116,7 +125,8 @@ namespace IMIS.Presentation.AuditChecklistModule
                 await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
                 return Results.Ok(new { Message = "Deleted Successfully" });
             })
-            .WithTags(_auditChecklist);
+            .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
             // GENERATE PDF REPORT — one PDF per AuditSchedule (all its checklist rows)
             app.MapGet("/PdF/schedule/{auditScheduleId:int}", async (
                 HttpResponse response,
@@ -139,6 +149,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 return Results.File(file, "application/pdf", $"AuditChecklist_{DateTime.Now:yyyyMMddHHmmss}.pdf");
             })
             .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
             // GET BY AUDITEE ID
             app.MapGet("/auditee/{auditeeId:int}", async (int auditeeId, IAuditChecklistService service, CancellationToken cancellationToken) =>
@@ -147,6 +158,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 return Results.Ok(result);
             })
             .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
         }
     }

@@ -10,6 +10,8 @@ import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_print_preview_page.dart';
+import 'package:imis/constant/permissions.dart';
+import 'package:imis/utils/permission_service.dart';
 
 // =============================================================================
 // 1. DATA MODELS & DTO ADAPTERS MATCHING C# BACKEND
@@ -296,6 +298,13 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
   bool _isLoading = true;
   String? _errorMessage;
+
+  /// True when the signed-in role holds [permission] (Administrators always
+  /// pass). Used to gate the workflow actions shown on this page.
+  bool _hasPermission(String permission) {
+    if (_isAdmin) return true;
+    return permissionService.hasPermission(permission);
+  }
 
   @override
   void initState() {
@@ -1054,10 +1063,18 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               ? (matchingSig.first.signatoryLabel ?? '').toUpperCase()
               : '';
 
+          // The workflow actions are permission-driven. The signatory label
+          // is only a fallback for signers that were configured before the
+          // permissions existed (it carries the role name of the approver).
           final canShowNoted =
-              _isAdmin || sigLabel.contains('NOTE') || sigLabel.contains('QMS');
+              _isAdmin ||
+              _hasPermission(AppPermissions.noteAuditProgramme) ||
+              sigLabel.contains('NOTE') ||
+              sigLabel.contains('QMS');
           final canShowApproveReject =
               _isAdmin ||
+              _hasPermission(AppPermissions.approveAuditProgramme) ||
+              _hasPermission(AppPermissions.rejectAuditProgramme) ||
               sigLabel.contains('APPROV') ||
               sigLabel.contains('QMR');
 
