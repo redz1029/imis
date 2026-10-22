@@ -417,7 +417,7 @@ class PerformanceGovernanceSystemService {
 
       final response = await AuthenticatedRequest.get(
         dio,
-        "${ApiEndpoint().operationReviewProtocol}?id=$id",
+        "${ApiEndpoint.baseUrl}/$id",
       );
 
       if (response.statusCode == 200 && response.data != null) {

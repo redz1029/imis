@@ -216,87 +216,11 @@ class _PerformanceGovernanceSystemPageState
     },
   );
 
-  // void _onSort() {
-  //   _sortActive = true;
-  //   fetchPgsFilter(page: 1);
-  // }
   void _onSort() {
     _sortActive = true;
     fetchPgsFilter(page: 1, refetch: false);
   }
-  // Future<void> fetchPgsFilter({int? page, int pageSize = 15}) async {
-  //   if (!mounted) return;
-  //   setState(() => _isLoading = true);
-  //   final targetPage = page ?? _currentPage;
 
-  //   String filterKey() =>
-  //       '$selectedStartPeriod|$selectedEndDate|${_getOfficeOrServiceId()}|$_statusFilter|$_sortActive';
-  //   final myKey = filterKey();
-  //   bool stale = false;
-
-  //   try {
-  //     UserRegistration? user = await AuthUtil.fetchLoggedUser();
-  //     if (user == null) return;
-  //     if (!mounted) return;
-  //     setState(() => userId = user.id ?? "");
-
-  //     final roleIdParam = await _getRoleId();
-  //     final officeOrServiceId = _getOfficeOrServiceId();
-
-  //     final result = await _pgsService.fetchFilteredPgsWithCounts(
-  //       roleId: roleIdParam,
-  //       page: _sortActive ? 1 : targetPage,
-  //       pageSize: _sortActive ? 80 : pageSize,
-  //       fromDate:
-  //           selectedStartPeriod != null
-  //               ? DateFormat(
-  //                 'yyyy-MM-dd',
-  //               ).format(DateTime.parse(selectedStartPeriod!))
-  //               : null,
-  //       toDate:
-  //           selectedEndDate != null
-  //               ? DateFormat(
-  //                 'yyyy-MM-dd',
-  //               ).format(DateTime.parse(selectedEndDate!))
-  //               : null,
-  //       officeId: officeOrServiceId,
-  //       statusFilter: _statusFilter,
-  //     );
-
-  //     if (!mounted || myKey != filterKey()) {
-  //       stale = true;
-  //       return;
-  //     }
-
-  //     final all = List<PerformanceGovernanceSystem>.from(result['items']);
-  //     List<PerformanceGovernanceSystem> pageItems = all;
-  //     int total = result['totalCount'];
-  //     int pageNo = result['page'];
-
-  //     if (_sortActive) {
-  //       _sorter.apply(all);
-  //       final start = (targetPage - 1) * pageSize;
-  //       final end = (start + pageSize).clamp(0, all.length);
-  //       pageItems = start >= all.length ? [] : all.sublist(start, end);
-  //       total = all.length;
-  //       pageNo = targetPage;
-  //     }
-
-  //     setState(() {
-  //       deliverableLists = pageItems;
-  //       filteredList = pageItems;
-  //       _currentPage = pageNo;
-  //       _totalCount = total;
-  //       _statusCounts = result['statusCounts'];
-  //     });
-  //   } on DioException {
-  //     debugPrint("Dio error");
-  //   } catch (e) {
-  //     debugPrint("Unexpected error");
-  //   } finally {
-  //     if (mounted && !stale) setState(() => _isLoading = false);
-  //   }
-  // }
   Future<void> fetchPgsFilter({int? page, bool refetch = true}) async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -2777,6 +2701,14 @@ class _PerformanceGovernanceSystemPageState
                                   await openAllCombinedPGSPreview(
                                     pgs.id.toString(),
                                     officeName,
+                                    context: context,
+                                  );
+                                }
+                                if (value == 'AccomplishmentReport') {
+                                  await openPgsDeliverableAccomplishmentReport(
+                                    periodId: pgs.pgsPeriod.id,
+                                    officeId: pgs.office.id,
+                                    pgsId: pgs.id,
                                     context: context,
                                   );
                                 }
