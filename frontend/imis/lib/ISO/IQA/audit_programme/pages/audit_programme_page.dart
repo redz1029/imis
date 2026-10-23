@@ -1068,13 +1068,13 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
           // permissions existed (it carries the role name of the approver).
           final canShowNoted =
               _isAdmin ||
-              _hasPermission(AppPermissions.noteAuditProgramme) ||
+              _hasPermission(AppPermissions.auditProgrammeNote) ||
               sigLabel.contains('NOTE') ||
               sigLabel.contains('QMS');
           final canShowApproveReject =
               _isAdmin ||
-              _hasPermission(AppPermissions.approveAuditProgramme) ||
-              _hasPermission(AppPermissions.rejectAuditProgramme) ||
+              _hasPermission(AppPermissions.auditProgrammeApprove) ||
+              _hasPermission(AppPermissions.auditProgrammeReject) ||
               sigLabel.contains('APPROV') ||
               sigLabel.contains('QMR');
 
