@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-10-09 11:17:01.158621
+// Last synced: 2026-10-23 08:43:59.415231
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -24,6 +24,14 @@ class AppPermissions {
   static const String addStrategicChangeAgenda = 'Add Strategic Change Agenda';
   static const String viewStrategicChangeAgenda = 'View Strategic Change Agenda';
   static const String editStrategicChangeAgenda = 'Edit Strategic Change Agenda';
+  static const String disapprovePolicyAndProcedure = 'Disapprove Policy And Procedure';
+  static const String submitPolicyAndProcedure = 'Submit Policy And Procedure';
+  static const String confirmPolicyAndProcedure = 'Confirm Policy And Procedure';
+  static const String draftPolicyAndProcedure = 'Draft Policy And Procedure';
+  static const String deletePolicyAndProcedure = 'Delete Policy And Procedure';
+  static const String addPolicyAndProcedure = 'Add Policy And Procedure';
+  static const String viewPolicyAndProcedure = 'View Policy And Procedure';
+  static const String editPolicyAndProcedure = 'Edit Policy And Procedure';
   static const String addPgsSummaryNarrative = 'Add Pgs Summary Narrative';
   static const String viewPgsSummaryNarrative = 'View Pgs Summary Narrative';
   static const String editPgsSummaryNarrative = 'Edit Pgs Summary Narrative';
@@ -115,6 +123,13 @@ class AppPermissions {
   static const String addOffice = 'Add Office';
   static const String viewOffice = 'View Office';
   static const String editOffice = 'Edit Office';
+  static const String addNonconformingActionReport = 'Add Nonconforming Action Report';
+  static const String viewNonconformingActionReport = 'View Nonconforming Action Report';
+  static const String editNonconformingActionReport = 'Edit Nonconforming Action Report';
+  static const String nonconformingActionReportAcknowledge = 'Nonconforming Action Report Acknowledge';
+  static const String nonconformingActionReportRespond = 'Nonconforming Action Report Respond';
+  static const String nonconformingActionReportVerify = 'Nonconforming Action Report Verify';
+  static const String nonconformingActionReportValidateAndClose = 'Nonconforming Action Report Validate And Close';
   static const String addKraRoadMapPeriod = 'Add Kra Road Map Period';
   static const String viewKraRoadMapPeriod = 'View Kra Road Map Period';
   static const String editKraRoadMapPeriod = 'Edit Kra Road Map Period';
@@ -164,6 +179,43 @@ class AppPermissions {
   static const String addAuditSchedule = 'Add Audit Schedule';
   static const String viewAuditSchedule = 'View Audit Schedule';
   static const String editAuditSchedule = 'Edit Audit Schedule';
+  static const String auditScheduleSubmit = 'Audit Schedule Submit';
+  static const String auditScheduleConfirm = 'Audit Schedule Confirm';
+  static const String auditScheduleReject = 'Audit Schedule Reject';
+  static const String auditScheduleNote = 'Audit Schedule Note';
+  static const String addAuditReport = 'Add Audit Report';
+  static const String viewAuditReport = 'View Audit Report';
+  static const String editAuditReport = 'Edit Audit Report';
+  static const String auditReportSubmit = 'Audit Report Submit';
+  static const String auditReportApprove = 'Audit Report Approve';
+  static const String auditReportReject = 'Audit Report Reject';
+  static const String auditReportNote = 'Audit Report Note';
+  static const String addAuditProgramme = 'Add Audit Programme';
+  static const String viewAuditProgramme = 'View Audit Programme';
+  static const String editAuditProgramme = 'Edit Audit Programme';
+  static const String auditProgrammeSubmitForApproval = 'Audit Programme Submit For Approval';
+  static const String auditProgrammeNote = 'Audit Programme Note';
+  static const String auditProgrammeApprove = 'Audit Programme Approve';
+  static const String auditProgrammeReject = 'Audit Programme Reject';
+  static const String auditProgrammeViewAll = 'Audit Programme View All';
+  static const String addAuditPlanProcess = 'Add Audit Plan Process';
+  static const String viewAuditPlanProcess = 'View Audit Plan Process';
+  static const String editAuditPlanProcess = 'Edit Audit Plan Process';
+  static const String addAuditPlanPersonResponsible = 'Add Audit Plan Person Responsible';
+  static const String viewAuditPlanPersonResponsible = 'View Audit Plan Person Responsible';
+  static const String editAuditPlanPersonResponsible = 'Edit Audit Plan Person Responsible';
+  static const String addAuditPlan = 'Add Audit Plan';
+  static const String viewAuditPlan = 'View Audit Plan';
+  static const String editAuditPlan = 'Edit Audit Plan';
+  static const String auditPlanSubmitForApproval = 'Audit Plan Submit For Approval';
+  static const String auditPlanApprove = 'Audit Plan Approve';
+  static const String auditPlanReject = 'Audit Plan Reject';
+  static const String auditPlanNote = 'Audit Plan Note';
+  static const String auditPlanViewAll = 'Audit Plan View All';
+  static const String auditPlanViewOwn = 'Audit Plan View Own';
+  static const String addAuditPlanEntry = 'Add Audit Plan Entry';
+  static const String viewAuditPlanEntry = 'View Audit Plan Entry';
+  static const String editAuditPlanEntry = 'Edit Audit Plan Entry';
   static const String addAuditorTeam = 'Add Auditor Team';
   static const String viewAuditorTeam = 'View Auditor Team';
   static const String editAuditorTeam = 'Edit Auditor Team';
@@ -173,6 +225,11 @@ class AppPermissions {
   static const String addAuditor = 'Add Auditor';
   static const String viewAuditor = 'View Auditor';
   static const String editAuditor = 'Edit Auditor';
+  static const String addAuditChecklist = 'Add Audit Checklist';
+  static const String viewAuditChecklist = 'View Audit Checklist';
+  static const String editAuditChecklist = 'Edit Audit Checklist';
+  static const String auditChecklistSubmit = 'Audit Checklist Submit';
+  static const String auditChecklistNote = 'Audit Checklist Note';
   static const String addAnnouncement = 'Add Announcement';
   static const String viewAnnouncement = 'View Announcement';
   static const String editAnnouncement = 'Edit Announcement';

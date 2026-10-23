@@ -1970,19 +1970,19 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
     // permissions existed (it carries the role name of the approver).
     final canShowNoted =
         _isAdmin ||
-        _hasPermission(AppPermissions.noteAuditPlan) ||
+        _hasPermission(AppPermissions.auditPlanNote) ||
         sigLabel.contains('NOTE') ||
         sigLabel.contains('QMS');
     final canShowApproveReject =
         _isAdmin ||
-        _hasPermission(AppPermissions.approveAuditPlan) ||
-        _hasPermission(AppPermissions.rejectAuditPlan) ||
+        _hasPermission(AppPermissions.auditPlanApprove) ||
+        _hasPermission(AppPermissions.auditPlanReject) ||
         sigLabel.contains('APPROV') ||
         sigLabel.contains('QMR');
 
     final canSubmitForApproval =
         _isAdmin ||
-        _hasPermission(AppPermissions.submitAuditPlanForApproval) ||
+        _hasPermission(AppPermissions.auditPlanSubmitForApproval) ||
         sigLabel.contains('SUBMIT');
     final canSaveDraft = _isAdmin || _hasPermission(AppPermissions.addAuditPlan);
 

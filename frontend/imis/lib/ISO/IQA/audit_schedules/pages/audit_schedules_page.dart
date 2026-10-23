@@ -228,7 +228,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               ),
             );
             if (created.id > 0) {
-              if (_hasPermission(AppPermissions.submitAuditSchedule)) {
+              if (_hasPermission(AppPermissions.auditScheduleSubmit)) {
                 await _scheduleService.submitAuditSchedule(created.id, userId: _currentUser?.id);
               }
               final refreshed = await _scheduleService.getAuditScheduleById(created.id);
@@ -1000,9 +1000,9 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     // holds the "Audit Schedule Confirm" / "Audit Schedule Reject"
     // permissions. Administrators keep the previous always-visible
     // behaviour, so the page stays usable for support staff.
-    final canConfirm = _isAdmin || _hasPermission(AppPermissions.confirmAuditSchedule);
-    final canReject = _isAdmin || _hasPermission(AppPermissions.rejectAuditSchedule);
-    final canSubmit = _isAdmin || _hasPermission(AppPermissions.submitAuditSchedule);
+    final canConfirm = _isAdmin || _hasPermission(AppPermissions.auditScheduleConfirm);
+    final canReject = _isAdmin || _hasPermission(AppPermissions.auditScheduleReject);
+    final canSubmit = _isAdmin || _hasPermission(AppPermissions.auditScheduleSubmit);
 
     final showDecision =
         status == 'Pending' ||

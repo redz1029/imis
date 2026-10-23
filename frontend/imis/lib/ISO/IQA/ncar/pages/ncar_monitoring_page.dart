@@ -230,7 +230,7 @@ class _NcarMonitoringPageState extends State<NcarMonitoringPage> {
                                         ] else if (log.dateVerified == null) ...[
                                           if (_hasPermission(
                                             AppPermissions
-                                                .verifyNonconformingActionReport,
+                                                .nonconformingActionReportVerify,
                                           ))
                                             ElevatedButton.icon(
                                               style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
@@ -248,7 +248,7 @@ class _NcarMonitoringPageState extends State<NcarMonitoringPage> {
                                           ),
                                           if (_hasPermission(
                                             AppPermissions
-                                                .validateAndCloseNonconformingActionReport,
+                                                .nonconformingActionReportValidateAndClose,
                                           ))
                                             ElevatedButton.icon(
                                               style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
