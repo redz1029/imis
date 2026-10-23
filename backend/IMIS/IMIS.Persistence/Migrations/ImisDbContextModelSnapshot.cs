@@ -22779,6 +22779,13 @@ namespace IMIS.Persistence.Migrations
                         },
                         new
                         {
+                            Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e634eg",
+                            ConcurrencyStamp = "6f2b8c31-4d5a-4f7e-9c81-2a7b3d6e9f04",
+                            Name = "QMS",
+                            NormalizedName = "QMS"
+                        },
+                        new
+                        {
                             Id = "7f3c91a2-6e45-4b8d-a127-93d5c8e634ff",
                             ConcurrencyStamp = "300d1177-8fe8-4c79-bd64-413fb7fbd09e",
                             Name = "Lead Auditor",

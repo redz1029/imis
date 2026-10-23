@@ -70,6 +70,27 @@ class NcarService {
     return response.statusCode == 200 || response.statusCode == 204;
   }
 
+  /// Moves an NCAR through its lifecycle: PENDING_VERIFICATION -> ACTIVE ->
+  /// CLOSED. The backend rejects any other transition.
+  Future<void> changeNcarStatus(
+    int id, {
+    required String status,
+    String? comments,
+  }) async {
+    final url = '${ApiEndpoint().ncar}/$id/status';
+    final response = await AuthenticatedRequest.put(dio, url, data: {
+      'status': status,
+      if (comments != null) 'comments': comments,
+    });
+    if (response.statusCode != 200) {
+      final data = response.data;
+      final message = (data is Map && data['error'] != null)
+          ? data['error'].toString()
+          : 'Failed to change NCAR status.';
+      throw Exception(message);
+    }
+  }
+
   // ===========================================================================
   // NCAR Monitoring Log Methods
   // ===========================================================================

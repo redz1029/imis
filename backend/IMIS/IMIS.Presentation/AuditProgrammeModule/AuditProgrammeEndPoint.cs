@@ -14,6 +14,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
     public class AuditProgrammeEndPoints : CarterModule
     {
         private const string _AuditProgramme = "AuditProgramme";
+        public readonly AuditProgrammePermission _permission = new();
+        public readonly AuditProgrammeWorkflowPermission _workflowPermission = new();
 
         // NEW — must match the exact tag strings used by AuditPlanEndPoints.cs
         // and AuditSchedulesEndPoints.cs's own .CacheOutput(...).Tag(...) calls.
@@ -55,7 +57,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
 
                 return result ? Results.Ok(dto) : Results.BadRequest("Failed to save Audit Programme.");
             })
-            .WithTags(_AuditProgramme);
+            .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
             // GET ALL
             app.MapGet("/", async (
@@ -65,7 +68,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 var result = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return result != null ? Results.Ok(result) : Results.Ok(new List<AuditProgrammeDto>());
             })
-            .WithTags(_AuditProgramme);
+            .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             // GET APPROVED ONLY (Workflow Gate for Audit Plan)
             app.MapGet("/approved", async (
@@ -75,7 +79,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 var result = await service.GetApprovedAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(result);
             })
-            .WithTags(_AuditProgramme);
+            .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             // TEAM -> HOME-OFFICES MAP (client-side inline self-audit detection)
             app.MapGet("/team-office-map", async (
@@ -86,6 +91,7 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 return Results.Ok(result);
             })
             .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .RequireCors("_allowedOrigins")
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag("TeamOfficeMap"), true);
 
@@ -101,6 +107,7 @@ namespace IMIS.Presentation.AuditProgrammeModule
                     : Results.NotFound(new { message = $"Audit Programme with ID {id} was not found." });
             })
             .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .RequireCors("_allowedOrigins")
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_AuditProgramme), true);
 
@@ -126,6 +133,7 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 return Results.File(file, "application/pdf", $"AuditProgramme_{DateTime.Now:yyyyMMddHHmmss}.pdf");
             })
             .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .RequireCors("_allowedOrigins")
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_AuditProgramme), true);
 
@@ -154,7 +162,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
 
                 return result ? Results.Ok(dto) : Results.BadRequest("Failed to update Audit Programme.");
             })
-            .WithTags(_AuditProgramme);
+            .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
 
             // SUBMIT
             app.MapPut("/{id:int}/submit", async (
@@ -174,7 +183,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(new { message = "Submitted for approval." });
             })
-            .WithTags(_AuditProgramme);
+            .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanSubmitForApproval));
 
             // DECIDE — Pending -> Approved/Disapproved/Noted
             app.MapPut("/{id:int}/decide", async (
@@ -203,7 +213,11 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(new { message = action == "Reject" ? "Rejected." : $"{action}d." });
             })
-            .WithTags(_AuditProgramme);
+            .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireAssertion(ctx =>
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanApprove) ||
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanReject) ||
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanNote)));
 
             // PAGINATION
             app.MapGet("/page", async (
@@ -218,7 +232,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 var result = await service.GetPaginatedAsync(pageIndex, size, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(result);
             })
-            .WithTags(_AuditProgramme);
+            .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             // DELETE
             app.MapDelete("/{id:int}", async (
@@ -237,7 +252,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                     ? Results.Ok(new { message = "Audit Programme deleted successfully." })
                     : Results.NotFound(new { message = "Audit Programme not found." });
             })
-            .WithTags(_AuditProgramme);
+            .WithTags(_AuditProgramme)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
         }
         public record SubmitAuditProgrammeRequest(string? UserId, string? Comments);
         public record DecideAuditProgrammeRequest(string ApproverId, bool? Approve, string? Action, string? Comments);

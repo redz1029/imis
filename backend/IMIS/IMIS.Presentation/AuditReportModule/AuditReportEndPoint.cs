@@ -14,6 +14,7 @@ namespace IMIS.Presentation.AuditReportModule
     public class AuditReportEndPoints : CarterModule
     {
         private const string _auditReport = "Audit Report";
+        public readonly AuditReportPermission _permission = new();
 
         public AuditReportEndPoints() : base("/auditreport")
         {
@@ -28,7 +29,8 @@ namespace IMIS.Presentation.AuditReportModule
                 await cache.EvictByTagAsync(_auditReport, cancellationToken);
                 return Results.Ok(dto);
             })
-            .WithTags(_auditReport);
+            .WithTags(_auditReport)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
             // UPDATE
             app.MapPut("/", async ([FromBody] AuditReportDto dto, IAuditReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -37,7 +39,8 @@ namespace IMIS.Presentation.AuditReportModule
                 await cache.EvictByTagAsync(_auditReport, cancellationToken);
                 return Results.Ok(dto);
             })
-            .WithTags(_auditReport);
+            .WithTags(_auditReport)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
 
             // GET BY ID
             app.MapGet("/{id:int}", async (int id, IAuditReportService service, CancellationToken cancellationToken) =>
@@ -45,7 +48,8 @@ namespace IMIS.Presentation.AuditReportModule
                 var result = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 return result is not null ? Results.Ok(result) : Results.NotFound();
             })
-            .WithTags(_auditReport);
+            .WithTags(_auditReport)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             // GET PAGINATED
             app.MapGet("/page", async (int page, int pageSize, IAuditReportService service, CancellationToken cancellationToken) =>
@@ -53,7 +57,8 @@ namespace IMIS.Presentation.AuditReportModule
                 var result = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(result);
             })
-            .WithTags(_auditReport);
+            .WithTags(_auditReport)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             // SOFT DELETE
             app.MapDelete("/{id:int}", async (int id, IAuditReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -64,7 +69,8 @@ namespace IMIS.Presentation.AuditReportModule
                 await cache.EvictByTagAsync(_auditReport, cancellationToken);
                 return Results.Ok(new { Message = "Deleted Successfully" });
             })
-            .WithTags(_auditReport);
+            .WithTags(_auditReport)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
         }
     }
 }

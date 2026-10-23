@@ -8,6 +8,8 @@ import 'package:imis/ISO/IQA/audit_report/model/audit_com_findings.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_scope.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_summary_findings.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/constant/permissions.dart';
+import 'package:imis/utils/permission_service.dart';
 
 // =============================================================================
 // UI-only row wrappers — hold a TextEditingController per editable field and
@@ -150,6 +152,12 @@ class _AuditReportPageState extends State<AuditReportPage> {
   bool _isLoading = true;
   bool _isSaving = false;
   String? _error;
+
+  /// Only a role that may edit reports can save one. Read-only roles
+  /// (QMR, QMS, Department Head) still see the report, just not the save.
+  bool get _canEdit =>
+      permissionService.hasPermission(AppPermissions.editAuditReport) ||
+      permissionService.hasPermission(AppPermissions.addAuditReport);
 
   @override
   void initState() {
@@ -1198,16 +1206,17 @@ class _AuditReportPageState extends State<AuditReportPage> {
                       child: const Text('Cancel'),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _isSaving ? null : _save,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryThemeColor,
+                    if (_canEdit)
+                      ElevatedButton(
+                        onPressed: _isSaving ? null : _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryThemeColor,
+                        ),
+                        child: const Text(
+                          'SAVE',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
-                      child: const Text(
-                        'SAVE',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
                   ],
                 ),
               ),

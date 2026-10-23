@@ -1,4 +1,4 @@
-using Base.Auths.Permissions;
+﻿using Base.Auths.Permissions;
 
 namespace IMIS.Application.NonconformingActionReportModule
 {
@@ -6,10 +6,22 @@ namespace IMIS.Application.NonconformingActionReportModule
     {
         public override string ModuleName => "NonconformingActionReport";
         public override string PermissionGroup => PermissionGrouper.IQAManagement;
+    }
 
-        public const string CanAcknowledge = "NonconformingActionReport.Acknowledge";
-        public const string CanRespond = "NonconformingActionReport.Respond";
-        public const string CanVerify = "NonconformingActionReport.Verify";
-        public const string CanValidateAndClose = "NonconformingActionReport.ValidateAndClose";
+    /// Workflow actions for a Nonconforming Action Report.
+    public class NonconformingActionReportWorkflowPermission : BasePermission
+    {
+        public override string ModuleName => "NonconformingActionReportWorkflow";
+        public override string PermissionGroup => PermissionGrouper.IQAManagement;
+
+        public string CanAcknowledge => "NonconformingActionReportAcknowledge";
+        public string CanRespond => "NonconformingActionReportRespond";
+        public string CanVerify => "NonconformingActionReportVerify";
+        public string CanValidateAndClose => "NonconformingActionReportValidateAndClose";
+
+        // Workflow statuses for the NCAR lifecycle.
+        public const string StatusPendingVerification = "PENDING_VERIFICATION";
+        public const string StatusActive = "ACTIVE";
+        public const string StatusClosed = "CLOSED";
     }
 }

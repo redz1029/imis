@@ -18,5 +18,8 @@ namespace IMIS.Application.NonconformingActionReportModule
         // status matches ncarStatus (e.g. "NC" or "OFI"). Findings of any other
         // status are excluded.
         Task<NonconformingActionReportDto?> CreateFromAuditReportAsync(int auditReportId, string ncarStatus, string issuedByAuditorUserId, string acknowledgedByAuditeeUserId, CancellationToken cancellationToken);
+
+        // Moves an NCAR through PENDING_VERIFICATION -> ACTIVE -> CLOSED.
+        Task<(bool Success, string? Error)> ChangeStatusAsync(long id, string status, string? comments, CancellationToken cancellationToken);
     }
 }

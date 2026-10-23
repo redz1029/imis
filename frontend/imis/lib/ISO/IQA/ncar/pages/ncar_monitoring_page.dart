@@ -6,8 +6,10 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:imis/ISO/IQA/ncar/models/ncar_monitoring_log.dart';
 import 'package:imis/ISO/IQA/ncar/services/ncar_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 
 class NcarMonitoringPage extends StatefulWidget {
@@ -24,6 +26,13 @@ class _NcarMonitoringPageState extends State<NcarMonitoringPage> {
   bool _isLoading = true;
   UserRegistration? _currentUser;
   bool isAdmin = false;
+
+  /// True when the signed-in role holds [permission] (Administrators always
+  /// pass).
+  bool _hasPermission(String permission) {
+    if (isAdmin) return true;
+    return permissionService.hasPermission(permission);
+  }
 
   @override
   void initState() {
@@ -213,14 +222,23 @@ class _NcarMonitoringPageState extends State<NcarMonitoringPage> {
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
-                                        if (log.dateVerified == null) ...[
-                                          ElevatedButton.icon(
-                                            style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-                                            onPressed: () => _verifyLog(log),
-                                            icon: const Icon(Icons.rule, size: 16, color: Colors.white),
-                                            label: const Text('Verify Action', style: TextStyle(color: Colors.white)),
+                                        if (isClosed) ...[
+                                          Text(
+                                            'Closed: ${log.dateValidated != null ? DateFormat('MMM d, yyyy').format(log.dateValidated!) : 'Yes'}',
+                                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
                                           ),
-                                        ] else if (!isClosed) ...[
+                                        ] else if (log.dateVerified == null) ...[
+                                          if (_hasPermission(
+                                            AppPermissions
+                                                .verifyNonconformingActionReport,
+                                          ))
+                                            ElevatedButton.icon(
+                                              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+                                              onPressed: () => _verifyLog(log),
+                                              icon: const Icon(Icons.rule, size: 16, color: Colors.white),
+                                              label: const Text('Verify Action', style: TextStyle(color: Colors.white)),
+                                            ),
+                                        ] else ...[
                                           Padding(
                                             padding: const EdgeInsets.only(right: 12),
                                             child: Text(
@@ -228,17 +246,16 @@ class _NcarMonitoringPageState extends State<NcarMonitoringPage> {
                                               style: TextStyle(fontSize: 12, color: Colors.green.shade700, fontWeight: FontWeight.w600),
                                             ),
                                           ),
-                                          ElevatedButton.icon(
-                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
-                                            onPressed: () => _validateAndCloseLog(log),
-                                            icon: const Icon(Icons.check_circle, size: 16, color: Colors.white),
-                                            label: const Text('Validate & Close', style: TextStyle(color: Colors.white)),
-                                          ),
-                                        ] else ...[
-                                          Text(
-                                            'Closed: ${log.dateValidated != null ? DateFormat('MMM d, yyyy').format(log.dateValidated!) : 'Yes'}',
-                                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
-                                          ),
+                                          if (_hasPermission(
+                                            AppPermissions
+                                                .validateAndCloseNonconformingActionReport,
+                                          ))
+                                            ElevatedButton.icon(
+                                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
+                                              onPressed: () => _validateAndCloseLog(log),
+                                              icon: const Icon(Icons.check_circle, size: 16, color: Colors.white),
+                                              label: const Text('Validate & Close', style: TextStyle(color: Colors.white)),
+                                            ),
                                         ],
                                       ],
                                     ),

@@ -21,4 +21,11 @@ class PermissionRoleString {
   static const String twg = 'TWG';
   static const String msgc = 'Multi-Sector Governance Council Officer';
   static const String evaluator = 'Evaluator';
+
+  // QMS Audit Module roles
+  static const String roleQmr = 'QMR';
+  static const String roleQms = 'QMS';
+  static const String leadAuditor = 'Lead Auditor';
+  static const String auditorTeamLeader = 'Auditor Team Leader';
+  static const String departmentHead = 'Department Head';
 }

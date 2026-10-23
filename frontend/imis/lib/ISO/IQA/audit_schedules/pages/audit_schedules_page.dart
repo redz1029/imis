@@ -14,9 +14,11 @@ import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_page.dart'
     show IsoStandardDto, AuditorTeamDto;
 import 'package:imis/common_services/common_service.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_service.dart';
 
 /// Fixed boilerplate shown in the ACTIVITY column for every entry — the
 /// backend has no per-entry "activity" text field. Typed only, never
@@ -81,6 +83,13 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   bool _isAdmin = false;
   bool _isLoading = true;
   String? _errorMessage;
+
+  /// True when the signed-in role holds [permission] (Administrators always
+  /// pass). Used to gate the workflow actions shown on this page.
+  bool _hasPermission(String permission) {
+    if (_isAdmin) return true;
+    return permissionService.hasPermission(permission);
+  }
 
   // Step 0 state.
   int? _resolvedAuditPlanId;
@@ -201,7 +210,10 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         );
         if (matched.id > 0) {
           g.schedule = matched;
-        } else {
+        } else if (_hasPermission(AppPermissions.addAuditSchedule)) {
+          // Only a role that may create schedules materialises the missing
+          // one. Read-only roles (QMR, QMS, Department Head) must not create
+          // rows as a side effect of opening the page.
           try {
             final firstEntry = g.entries.first;
             final created = await _scheduleService.addAuditSchedule(
@@ -216,7 +228,9 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               ),
             );
             if (created.id > 0) {
-              await _scheduleService.submitAuditSchedule(created.id, userId: _currentUser?.id);
+              if (_hasPermission(AppPermissions.submitAuditSchedule)) {
+                await _scheduleService.submitAuditSchedule(created.id, userId: _currentUser?.id);
+              }
               final refreshed = await _scheduleService.getAuditScheduleById(created.id);
               g.schedule = refreshed ?? created;
             }
@@ -981,8 +995,19 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         group.schedule?.latestRejection != null ||
         status == 'Revision Required' ||
         status == 'Rejected';
+
+    // The decision (Confirm / Reject) belongs to the Department Head, who
+    // holds the "Audit Schedule Confirm" / "Audit Schedule Reject"
+    // permissions. Administrators keep the previous always-visible
+    // behaviour, so the page stays usable for support staff.
+    final canConfirm = _isAdmin || _hasPermission(AppPermissions.confirmAuditSchedule);
+    final canReject = _isAdmin || _hasPermission(AppPermissions.rejectAuditSchedule);
+    final canSubmit = _isAdmin || _hasPermission(AppPermissions.submitAuditSchedule);
+
     final showDecision =
-        status == 'Pending' || status == 'Pending Confirmation' || _isAdmin;
+        status == 'Pending' ||
+        status == 'Pending Confirmation' ||
+        (canConfirm || canReject);
 
     return Container(
       width: double.infinity,
@@ -1047,60 +1072,62 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             rightActions = Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ElevatedButton.icon(
-                  onPressed: () => _handleRejectSchedule(group),
-                  icon: const Icon(
-                    Icons.cancel_outlined,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                  label: const Text(
-                    'REJECT',
-                    style: TextStyle(
+                if (canReject)
+                  ElevatedButton.icon(
+                    onPressed: () => _handleRejectSchedule(group),
+                    icon: const Icon(
+                      Icons.cancel_outlined,
+                      size: 16,
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    ),
+                    label: const Text(
+                      'REJECT',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: () => _handleConfirmSchedule(group),
-                  icon: const Icon(
-                    Icons.check_circle_outline,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                  label: const Text(
-                    'CONFIRM SCHEDULE',
-                    style: TextStyle(
+                if (canReject && canConfirm) const SizedBox(width: 8),
+                if (canConfirm)
+                  ElevatedButton.icon(
+                    onPressed: () => _handleConfirmSchedule(group),
+                    icon: const Icon(
+                      Icons.check_circle_outline,
+                      size: 16,
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    ),
+                    label: const Text(
+                      'CONFIRM SCHEDULE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade700,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
               ],
             );
-          } else if (isRejected) {
+          } else if (isRejected && canSubmit) {
             rightActions = ElevatedButton.icon(
               onPressed: () => _handleResubmitSchedule(group),
               icon: const Icon(Icons.refresh, size: 16, color: Colors.white),

@@ -17,6 +17,7 @@ namespace IMIS.Presentation.AuditPlanModule
     {
         private const string _AuditPlan = "AuditPlan";
         public readonly AuditPlanPermission _permission = new();
+        public readonly AuditPlanWorkflowPermission _workflowPermission = new();
 
         public AuditPlanEndPoints() : base("/auditPlan")
         {
@@ -44,7 +45,8 @@ namespace IMIS.Presentation.AuditPlanModule
 
                 return result ? Results.Ok(dto) : Results.BadRequest("Failed to save Audit Plan.");
             })
-            .WithTags(_AuditPlan);//.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
+            .WithTags(_AuditPlan)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
             // GET BY PROGRAMME ID
             app.MapGet("/programme/{programmeId:int}", async (
@@ -157,6 +159,7 @@ namespace IMIS.Presentation.AuditPlanModule
                 return Results.File(file, "application/pdf", $"AuditPlan_{DateTime.Now:yyyyMMddHHmmss}.pdf");
             })
             .WithTags(_AuditPlan)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
             .RequireCors("_allowedOrigins")
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlan), true);
 
@@ -194,7 +197,8 @@ namespace IMIS.Presentation.AuditPlanModule
                 await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(new { message = "Submitted for approval." });
             })
-            .WithTags(_AuditPlan);
+            .WithTags(_AuditPlan)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanSubmitForApproval));
 
             // DECIDE — Pending -> Approved/Rejected/Noted
             app.MapPut("/{id:int}/decide", async (
@@ -221,7 +225,11 @@ namespace IMIS.Presentation.AuditPlanModule
                 await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(new { message = action == "Reject" ? "Rejected." : $"{action}d." });
             })
-            .WithTags(_AuditPlan);
+            .WithTags(_AuditPlan)
+            .RequireAuthorization(e => e.RequireAssertion(ctx =>
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanApprove) ||
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanReject) ||
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanNote)));
         }
 
         public record SubmitAuditPlanRequest(string? UserId, string? Comments);
