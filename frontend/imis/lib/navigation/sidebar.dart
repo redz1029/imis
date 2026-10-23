@@ -13,6 +13,13 @@ import 'package:imis/ISO/IQA/audit_report/pages/audit_report_list_page.dart';
 import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_list_page.dart';
 import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
+// import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_list_page.dart';
+// import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_list_page.dart';
+// import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_list_page.dart';
+// import 'package:imis/ISO/IQA/audit_report/pages/audit_report_list_page.dart';
+// import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_list_page.dart';
+// import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
+// import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
@@ -1197,12 +1204,12 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 6) return const ClauseLibraryPage();
     }
 
-    // if (selectedPage == 2) {
-    //   if (selectedSubPage == 0) return const AuditorPage();
-    //   if (selectedSubPage == 1) return const AuditorOfficesPage();
-    //   if (selectedSubPage == 2) return const AuditorTeamPage();
-    //   if (selectedSubPage == 3) return const AnnouncementPage();
-    // }
+    if (selectedPage == 2) {
+      if (selectedSubPage == 0) return const AuditorPage();
+      if (selectedSubPage == 1) return const AuditorOfficesPage();
+      if (selectedSubPage == 2) return const AuditorTeamPage();
+      if (selectedSubPage == 3) return const AnnouncementPage();
+    }
 
     if (selectedPage == 3) {
       if (selectedSubPage == 0) return const ProceduresListPage();
