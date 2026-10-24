@@ -153,6 +153,8 @@ using IMIS.Persistence.UserOfficeModule;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using IMIS.Application.AuditeeModule;
+using IMIS.Application.PolicyAndProcedureSignatoryTemplateModule;
+using IMIS.Persistence.PolicyAndProcedureSignatoryTemplateModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -332,6 +334,10 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IPolicyAndProcedureRepository, PolicyAndProcedureRepository>();
             services.AddScoped<IPolicyAndProcedureService, PolicyAndProcedureService>();
+
+
+            services.AddScoped<IPolicyAndProcedureSignatoryTemplateRepository, PolicyAndProcedureSignatoryTemplateRepository>();
+            services.AddScoped<IPolicyAndProcedureSignatoryTemplateService, PolicyAndProcedureSignatoryTemplateService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

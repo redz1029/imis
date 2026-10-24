@@ -1,9 +1,6 @@
 ﻿using Base.Utilities;
 using Carter;
-using IMIS.Application.OperationReviewProtocolModule;
-using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PolicyAndProcedureModule;
-using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

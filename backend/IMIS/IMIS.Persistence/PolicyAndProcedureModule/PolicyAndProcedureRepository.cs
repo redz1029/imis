@@ -11,6 +11,13 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
         public PolicyAndProcedureRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+        public async Task<PolicyAndProcedure?> GetByIdAsync(long id, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .Include(p => p.Section)
+                .FirstOrDefaultAsync(p => p.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+        }
         public async Task<PolicyAndProcedure?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<PolicyAndProcedure>().FirstOrDefaultAsync(d => d.Id == id, cancellationToken);

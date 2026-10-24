@@ -11,6 +11,7 @@ namespace IMIS.Application.PolicyAndProcedureModule
         public string? RegulatoryStandard { get; set; }
         public DateTime EffectiveDate { get; set; }
         public int? SectionId { get; set; }
+        public string? OfficeName { get; set; }
         public string? DocumentCode { get; set; }
         public string? Revision { get; set; }
         public string? Content { get; set; }
@@ -29,6 +30,7 @@ namespace IMIS.Application.PolicyAndProcedureModule
             this.RegulatoryStandard = policyAndProcedure.RegulatoryStandard;
             this.EffectiveDate = policyAndProcedure.EffectiveDate;
             this.SectionId = policyAndProcedure.SectionId;
+            this.OfficeName = policyAndProcedure.Section?.Name;
             this.DocumentCode = policyAndProcedure.DocumentCode;
             this.Revision = policyAndProcedure.Revision;
             this.Content = policyAndProcedure.Content;         

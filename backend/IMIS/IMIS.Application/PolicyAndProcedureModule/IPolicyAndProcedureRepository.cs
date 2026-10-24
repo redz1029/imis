@@ -8,5 +8,6 @@ namespace IMIS.Application.PolicyAndProcedureModule
     {
         Task<PolicyAndProcedure?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<EntityPageList<PolicyAndProcedure, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        Task<PolicyAndProcedure?> GetByIdAsync(long id, CancellationToken cancellationToken);
     }
 }

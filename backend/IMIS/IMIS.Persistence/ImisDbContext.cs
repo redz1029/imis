@@ -16,7 +16,6 @@ namespace IMIS.Persistence
         public DbSet<Team> Teams { get; set; }
         public DbSet<AuditorTeams> AuditorTeams { get; set; }
         public DbSet<AuditSchedule> AuditSchedules { get; set; }
-        //public DbSet<AuditScheduleDetails> AuditScheduleDetails { get; set; }
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
         public DbSet<PgsDeliverable> Deliverable { get; set; }  
         public DbSet<KeyResultArea> KeyResultArea { get; set; }
@@ -81,6 +80,8 @@ namespace IMIS.Persistence
         public DbSet<ISATSignatoryTemplate> ISATSignatoryTemplate { get; set; }
         public DbSet<ISATSignatory> ISATSignatory { get; set; }
         public DbSet<PolicyAndProcedure> PolicyAndProcedure { get; set; }
+        public DbSet<PolicyAndProcedureSignatoryTemplate> PolicyAndProcedureSignatoryTemplate { get; set; }
+        public DbSet<PolicyAndProcedureSignatory> PolicyAndProcedureSignatory { get; set; }
 
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
