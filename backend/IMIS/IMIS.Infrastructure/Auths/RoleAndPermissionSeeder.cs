@@ -156,13 +156,7 @@ namespace IMIS.Infrastructure.Auths
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
                 new StrategicChangeAgendaPermissionSetting(),
-                new StrategicChangeAgendaPermission(),
-                new AuditProgrammePermission(),
-                new AuditPlanPermission(),
-                new AuditSchedulePermission(),
-                new AuditChecklistPermission(),
-                new AuditReportPermission(),
-                new NonconformingActionReportPermission());
+                new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -839,7 +833,13 @@ namespace IMIS.Infrastructure.Auths
                 new NonconformingActionReportWorkflowPermission().CanValidateAndClose);
 
             // Auditor works on checklists/NCARs/report drafts.
-            await PermissionSeeder.SeedViewOnlyPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission());
 
             await PermissionSeeder.SeedSpecificPermssionsToRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 new AuditChecklistPermission().Add,
@@ -853,10 +853,37 @@ namespace IMIS.Infrastructure.Auths
                 new NonconformingActionReportWorkflowPermission().CanAcknowledge,
                 new NonconformingActionReportWorkflowPermission().CanVerify);
 
+            // The Auditor role only works on checklists, reports and NCARs.
+            // Remove programme/plan/schedule write access that older seed runs
+            // may have granted so the role matches its documented workflow.
+            await RemovePermissionsFromRole(
+                new PgsAuditorRole().Name,
+                new AuditProgrammePermission().Add,
+                new AuditProgrammePermission().Edit,
+                new AuditPlanPermission().Add,
+                new AuditPlanPermission().Edit,
+                new AuditSchedulePermission().Add,
+                new AuditSchedulePermission().Edit);
+
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
                  _roleManager, _userManager, "castillano.mrb", "rama.emg");
                 
+        }
+
+        private async Task RemovePermissionsFromRole(string roleName, params string[] permissionValues)
+        {
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role == null)
+                return;
+
+            var existingClaims = await _roleManager.GetClaimsAsync(role);
+            foreach (var claim in existingClaims.Where(c =>
+                c.Type == PermissionClaimType.Claim &&
+                permissionValues.Contains(c.Value, StringComparer.OrdinalIgnoreCase)))
+            {
+                await _roleManager.RemoveClaimAsync(role, claim);
+            }
         }
     }
 }

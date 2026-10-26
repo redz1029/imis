@@ -25,6 +25,17 @@ namespace IMIS.Presentation.UserModule
         private const string IdentityGroup = "Users";
         private const string RoleGroup = "Roles";
         private const string UserRoleGroup = "User Roles";
+        private const string AdministratorRoleName = "Administrator";
+        private const string PermissionOverrideClaimType = "permission_override";
+        private static readonly HashSet<string> IqaManagementRoles = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "QMR",
+            "QMS",
+            "Department Head",
+            "Auditor",
+            "Lead Auditor",
+            "Auditor Team Leader"
+        };
 
         public static IEndpointConventionBuilder MapCustomIdentityApi<TUser>(this IEndpointRouteBuilder endpoints)
         where TUser : User, new()
@@ -124,6 +135,7 @@ namespace IMIS.Presentation.UserModule
                     .Where(rc => rc.RoleId == roleId &&
                                  rc.ClaimType == PermissionClaimType.Claim)
                     .Select(rc => rc.ClaimValue!)
+                    .Distinct()
                     .ToListAsync();
 
                 var userClaims = await db.Set<UserClaim<string>>()
@@ -131,14 +143,32 @@ namespace IMIS.Presentation.UserModule
                                 c.ClaimType == PermissionClaimType.Claim &&
                                 c.RoleId == roleId)
                     .Select(c => c.ClaimValue!)
+                    .Distinct()
                     .ToListAsync();
+
+                var hasPermissionOverride = await db.Set<UserClaim<string>>()
+                    .AnyAsync(c => c.UserId == userId &&
+                                   c.RoleId == roleId &&
+                                   c.ClaimType == PermissionOverrideClaimType);
+
+                // Role permissions are the default. IQA roles stay on the role
+                // defaults until an administrator explicitly customizes them.
+                // Administrator always keeps every permission granted to the
+                // Administrator role.
+                var useRoleDefaults = role.Name == AdministratorRoleName ||
+                    (!hasPermissionOverride &&
+                        (IqaManagementRoles.Contains(role.Name!) || userClaims.Count == 0));
+
+                var assignedPermissions = useRoleDefaults
+                    ? roleClaims.ToHashSet(StringComparer.OrdinalIgnoreCase)
+                    : userClaims.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
                 var permissions = roleClaims
                     .Select(p => new
                     {
                         OriginalPermission = p,
                         Permission = System.Text.RegularExpressions.Regex.Replace(p, "(\\B[A-Z])", " $1"),
-                        IsAssigned = userClaims.Contains(p)
+                        IsAssigned = assignedPermissions.Contains(p)
                     });
 
                 if (!string.IsNullOrWhiteSpace(search))
@@ -189,12 +219,13 @@ namespace IMIS.Presentation.UserModule
 
                     if (!roleClaims.Contains(normalized)) continue;
 
-                    var existingClaim = currentClaims.FirstOrDefault(c =>
-                        c.ClaimValue!.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+                    var existingClaims = currentClaims
+                        .Where(c => c.ClaimValue!.Equals(normalized, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
 
                     if (permission.IsAssigned)
                     {
-                        if (existingClaim == null)
+                        if (existingClaims.Count == 0)
                         {
                             var claim = new UserClaim<string>
                             {
@@ -208,11 +239,27 @@ namespace IMIS.Presentation.UserModule
                     }
                     else
                     {
-                        if (existingClaim != null)
+                        foreach (var existingClaim in existingClaims)
                         {
                             db.Set<UserClaim<string>>().Remove(existingClaim);
                         }
                     }
+                }
+
+                var hasPermissionOverride = await db.Set<UserClaim<string>>()
+                    .AnyAsync(c => c.UserId == userId &&
+                                   c.RoleId == roleId &&
+                                   c.ClaimType == PermissionOverrideClaimType);
+
+                if (!hasPermissionOverride)
+                {
+                    db.Set<UserClaim<string>>().Add(new UserClaim<string>
+                    {
+                        UserId = userId,
+                        RoleId = roleId,
+                        ClaimType = PermissionOverrideClaimType,
+                        ClaimValue = roleId
+                    });
                 }
 
                 await db.SaveChangesAsync();
@@ -843,19 +890,11 @@ namespace IMIS.Presentation.UserModule
             .Distinct()
             .ToList();
 
-            var roleIds = roleList.Select(r => (string)r.GetType().GetProperty("id")!.GetValue(r)!).ToList();
-
-            var roleClaims = await dbContext.Set<IdentityRoleClaim<string>>()
-                .Where(rc => roleIds.Contains(rc.RoleId) && rc.ClaimType == PermissionClaimType.Claim)
-                .Select(rc => rc.ClaimValue!)
-                .ToListAsync();
-
-            var userClaims = await dbContext.Set<UserClaim<string>>()
-                .Where(c => c.UserId == user.Id && c.ClaimType == PermissionClaimType.Claim)
-                .Select(c => c.ClaimValue!)
-                .ToListAsync();
-
-            var effectivePermissions = userClaims.Any() ? userClaims : roleClaims;
+            var effectivePermissions = await GetEffectivePermissionsAsync(
+                dbContext,
+                userManager,
+                roleManager,
+                user);
 
             var accessToken = await TokenUtils.GenerateAccessTokenAsync(user, roles, userManager, roleManager, effectivePermissions);
             var refreshToken = TokenUtils.GenerateRefreshToken();
@@ -927,17 +966,11 @@ namespace IMIS.Presentation.UserModule
 
             var roles = await userManager.GetRolesAsync(user);
 
-            var roleClaims = await dbContext.Set<IdentityRoleClaim<string>>()
-                .Where(rc => roles.Contains(rc.RoleId) && rc.ClaimType == PermissionClaimType.Claim)
-                .Select(rc => rc.ClaimValue!)
-                .ToListAsync();
-
-            var userClaims = await dbContext.Set<UserClaim<string>>()
-                .Where(c => c.UserId == user.Id && c.ClaimType == PermissionClaimType.Claim)
-                .Select(c => c.ClaimValue!)
-                .ToListAsync();
-
-            var effectivePermissions = userClaims.Any() ? userClaims : roleClaims;
+            var effectivePermissions = await GetEffectivePermissionsAsync(
+                dbContext,
+                userManager,
+                roleManager,
+                user);
 
             var accessToken = await TokenUtils.GenerateAccessTokenAsync(
                 user,
@@ -961,6 +994,117 @@ namespace IMIS.Presentation.UserModule
                 accessToken,
                 refreshToken = newRefreshToken
             });
+        }
+
+        private static bool IsIqaPermission(string permission) =>
+            permission.Contains("AuditProgramme", StringComparison.OrdinalIgnoreCase) ||
+            permission.Contains("AuditPlan", StringComparison.OrdinalIgnoreCase) ||
+            permission.Contains("AuditSchedule", StringComparison.OrdinalIgnoreCase) ||
+            permission.Contains("AuditChecklist", StringComparison.OrdinalIgnoreCase) ||
+            permission.Contains("AuditReport", StringComparison.OrdinalIgnoreCase) ||
+            permission.Contains("NonconformingActionReport", StringComparison.OrdinalIgnoreCase);
+
+        private static async Task<List<string>> GetEffectivePermissionsAsync<TUser>(
+            ImisDbContext dbContext,
+            UserManager<TUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            TUser user) where TUser : User
+        {
+            var roleNames = await userManager.GetRolesAsync(user);
+            var roles = new List<IdentityRole>();
+
+            foreach (var roleName in roleNames)
+            {
+                var role = await roleManager.FindByNameAsync(roleName);
+                if (role != null)
+                {
+                    roles.Add(role);
+                }
+            }
+
+            var roleIds = roles.Select(r => r.Id).ToList();
+
+            var roleClaims = await dbContext.Set<IdentityRoleClaim<string>>()
+                .Where(rc => roleIds.Contains(rc.RoleId) && rc.ClaimType == PermissionClaimType.Claim)
+                .Select(rc => new { rc.RoleId, rc.ClaimValue })
+                .ToListAsync();
+
+            var userClaims = await dbContext.Set<UserClaim<string>>()
+                .Where(c => c.UserId == user.Id && c.ClaimType == PermissionClaimType.Claim)
+                .Select(c => new { c.RoleId, c.ClaimValue })
+                .ToListAsync();
+
+            var overrideRoleIds = (await dbContext.Set<UserClaim<string>>()
+                    .Where(c => c.UserId == user.Id && c.ClaimType == PermissionOverrideClaimType)
+                    .Select(c => c.ClaimValue)
+                    .ToListAsync())
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(v => v!)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var effectivePermissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var hasIqaRole = roles.Any(r => IqaManagementRoles.Contains(r.Name ?? string.Empty));
+            var allRolePermissions = roleClaims
+                .Select(rc => rc.ClaimValue!)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var role in roles)
+            {
+                var roleName = role.Name ?? string.Empty;
+
+                var rolePermissions = roleClaims
+                    .Where(rc => rc.RoleId == role.Id)
+                    .Select(rc => rc.ClaimValue!)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                var explicitPermissions = userClaims
+                    .Where(uc => uc.RoleId == role.Id)
+                    .Select(uc => uc.ClaimValue!)
+                    .Where(p => !IqaManagementRoles.Contains(roleName) ||
+                                !IsIqaPermission(p) ||
+                                rolePermissions.Contains(p, StringComparer.OrdinalIgnoreCase))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                // Role permissions are the default. IQA roles stay on the role
+                // defaults until an administrator explicitly customizes them.
+                // Administrator always keeps every permission granted to the
+                // Administrator role.
+                var hasOverride = overrideRoleIds.Contains(role.Id);
+                var useRoleDefaults = roleName == AdministratorRoleName ||
+                    (!hasOverride &&
+                        (IqaManagementRoles.Contains(roleName) || explicitPermissions.Count == 0));
+
+                foreach (var permission in useRoleDefaults ? rolePermissions : explicitPermissions)
+                {
+                    effectivePermissions.Add(permission);
+                }
+
+                foreach (var permission in explicitPermissions)
+                {
+                    effectivePermissions.Add(permission);
+                }
+            }
+
+            foreach (var permission in userClaims
+                .Where(uc => string.IsNullOrEmpty(uc.RoleId))
+                .Select(uc => uc.ClaimValue!))
+            {
+                // Legacy claims are only honoured when one of the user's IQA
+                // roles actually allows the permission. Otherwise a leftover
+                // claim could re-grant access that was removed from the role.
+                if (hasIqaRole &&
+                    IsIqaPermission(permission) &&
+                    !allRolePermissions.Contains(permission))
+                {
+                    continue;
+                }
+
+                effectivePermissions.Add(permission);
+            }
+
+            return effectivePermissions.ToList();
         }
 
         // Revoke Refresh Token method
