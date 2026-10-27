@@ -76,11 +76,115 @@ const String syncListScript = r'''
       '  overflow-wrap: anywhere !important; word-break: break-word !important;' +
       '  white-space: normal !important;' +
       '}' +
-      '.note-editable img { max-width: 100% !important; height: auto !important; }' +
-      '.note-editable pre { white-space: pre-wrap !important; }';
+      '.note-editable img { max-width: 100% !important; height: auto !important; cursor: pointer; }' +
+      '.note-editable pre { white-space: pre-wrap !important; }' +
+      '.note-editor .note-placeholder {' +
+      '  padding: 16px 24px !important; box-sizing: border-box !important;' +
+      '}' +
+      '.note-editable > p:first-child { margin-top: 0 !important; }';
   } catch (e) {}
 })();
 ''';
+
+// ───────────────────────── IMAGE HANDLING ─────────────────────────
+
+/// - Dina-downscale at nirere-compress ang mga naka-attach na image (base64)
+///   para gumaan ang HTML na sine-save.
+/// - Nilalagyan ng default na lapad (400px) para hindi full-width.
+/// - Tine-track ang huling na-click na image para sa size/align buttons.
+const String imageFixScript = r'''
+(function () {
+  var ed = document.querySelector('.note-editable');
+  if (!ed) return;
+
+  var MAX_W = 1000, DEFAULT_W = 400, QUALITY = 0.82;
+  window.__imgDone = window.__imgDone || new WeakSet();
+
+  // tandaan kung aling image ang huling na-click
+  if (!ed.__imgBound) {
+    ed.__imgBound = true;
+    ed.addEventListener('click', function (e) {
+      window.__selImg = (e.target && e.target.tagName === 'IMG') ? e.target : null;
+    });
+  }
+
+  ed.querySelectorAll('img').forEach(function (img) {
+    if (window.__imgDone.has(img)) return;
+
+    function run() {
+      if (window.__imgDone.has(img)) return;
+      window.__imgDone.add(img);
+      var nw = img.naturalWidth, nh = img.naturalHeight;
+      if (!nw) return;
+
+      var src = img.getAttribute('src') || '';
+      var isRaster = src.indexOf('data:image') === 0 &&
+                     !/^data:image\/(svg|gif)/.test(src);
+
+      // downscale + recompress (para gumaan ang base64)
+      if (isRaster && (nw > MAX_W || src.length > 300000)) {
+        try {
+          var s = Math.min(1, MAX_W / nw);
+          var c = document.createElement('canvas');
+          c.width = Math.round(nw * s);
+          c.height = Math.round(nh * s);
+          var ctx = c.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, c.width, c.height);
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          img.src = c.toDataURL('image/jpeg', QUALITY);
+        } catch (e) {}
+      }
+
+      // default size
+      if (!img.style.width) img.style.width = Math.min(nw, DEFAULT_W) + 'px';
+      img.style.height = 'auto';
+      img.style.maxWidth = '100%';
+    }
+
+    if (img.complete && img.naturalWidth) run();
+    else img.addEventListener('load', run, { once: true });
+  });
+})();
+''';
+
+String imageApplyScript(String apply) => '''
+(function () {
+  var img = window.__selImg;
+  if (!img) return;
+  $apply
+})();
+''';
+
+final List<WebScript> imageScripts = [
+  for (final p in const [25, 50, 75, 100])
+    WebScript(
+      name: 'imgW$p',
+      script: imageApplyScript(
+        "img.style.width = '$p%'; img.style.height = 'auto';",
+      ),
+    ),
+  WebScript(
+    name: 'imgLeft',
+    script: imageApplyScript(
+      "img.style.display = 'block'; img.style.margin = '6px auto 6px 0';",
+    ),
+  ),
+  WebScript(
+    name: 'imgCenter',
+    script: imageApplyScript(
+      "img.style.display = 'block'; img.style.margin = '6px auto';",
+    ),
+  ),
+  WebScript(
+    name: 'imgRight',
+    script: imageApplyScript(
+      "img.style.display = 'block'; img.style.margin = '6px 0 6px auto';",
+    ),
+  ),
+];
+
+// ───────────────────────── PARAGRAPH / BLOCK ─────────────────────────
 
 String blockScript(String apply) => '''
 (function () {
@@ -118,6 +222,8 @@ final List<WebScript> paragraphScripts = [
     script: blockScript("b.style.marginBottom = '10pt';"),
   ),
 ];
+
+// ───────────────────────── SANITIZE + PREVIEW ─────────────────────────
 
 String sanitize(String s) => s
     .replaceAll(RegExp(r'<script[\s\S]*?</script>', caseSensitive: false), '')
@@ -164,7 +270,7 @@ String buildPreviewDocument(String header, String body) => '''<!DOCTYPE html>
   .sheet p { margin: 0 0 6pt 0; }
   .sheet table { border-collapse: collapse; width: 100%; }
   .sheet td, .sheet th { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
-  .sheet img { max-width: 100%; }
+  .sheet img { max-width: 100%; height: auto; page-break-inside: avoid; break-inside: avoid; }
   .sheet { overflow-wrap: anywhere; word-break: break-word; }
   .sheet table { table-layout: auto; }
 

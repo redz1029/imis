@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/qms_documents/models/procedures.dart';
+import 'package:imis/qms_documents/services.dart/procedures_service.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -37,69 +41,131 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
   final _searchCtrl = TextEditingController();
   final int _pageSize = 15;
 
-  // Palitan ng service call yung _items / _upsert / _remove (API fetch, save, delete).
-  final List<ProcedureDoc> _items = [];
-  int _nextId = 1;
+  late final ProceduresService _service = ProceduresService(Dio());
 
-  final bool _isLoading = false;
+  List<ProcedureDoc> _items = [];
+  int _totalItems = 0;
+  bool _isLoading = false;
   int _currentPage = 1;
   String _query = '';
+  Timer? _debounce;
+
+  bool _editing = false;
+  ProcedureDoc? _editingDoc;
+  int _editorSeed = 0;
+
+  static const _months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchCtrl.dispose();
     super.dispose();
   }
 
-  List<ProcedureDoc> get _filtered {
-    final q = _query.trim().toLowerCase();
-    if (q.isEmpty) return _items;
-    return _items.where((d) {
-      return d.title.toLowerCase().contains(q) ||
-          d.docCode.toLowerCase().contains(q) ||
-          d.section.toLowerCase().contains(q) ||
-          d.owner.toLowerCase().contains(q);
-    }).toList();
+  // ───────────────────────── data ─────────────────────────
+
+  String _fmtDate(DateTime? d) {
+    if (d == null || d.year < 2000) return '';
+    return '${_months[d.month - 1]} ${d.day}, ${d.year}';
   }
 
-  List<ProcedureDoc> get _paged {
-    final all = _filtered;
-    final start = (_currentPage - 1) * _pageSize;
-    if (start >= all.length) return [];
-    final end = (start + _pageSize).clamp(0, all.length);
-    return all.sublist(start, end);
+  ProcedureDoc _toDoc(Procedures p) => ProcedureDoc(
+    id: p.id ?? 0,
+    html: p.content ?? '',
+    header: {
+      'title': p.title ?? '',
+      'section': p.sectionId?.toString() ?? '',
+      'owner': p.processOwner ?? '',
+      'docCode': p.documentCode ?? '',
+      'revision': p.revision ?? '',
+      'reference': p.regulatoryStandard ?? '',
+      'effectivity': _fmtDate(p.effectiveDate),
+    },
+  );
+
+  void _toast(String msg, {bool error = false}) {
+    if (!mounted) return;
+    final t = error ? MotionToast.error : MotionToast.success;
+    t(
+      toastAlignment: Alignment.topCenter,
+      description: Text(msg, style: GoogleFonts.plusJakartaSans()),
+    ).show(context);
   }
 
-  void _upsert(ProcedureDoc doc) {
-    final i = _items.indexWhere((e) => e.id == doc.id);
+  Future<void> _load() async {
+    setState(() => _isLoading = true);
+    try {
+      final result = await _service.getProceduresList(
+        page: _currentPage,
+        pageSize: _pageSize,
+        searchQuery: _query.trim().isEmpty ? null : _query.trim(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _items = result.items.map(_toDoc).toList();
+        _totalItems = result.totalCount;
+      });
+    } catch (e) {
+      _toast('$e', error: true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _onSearchChanged(String v) {
     setState(() {
-      if (i == -1) {
-        _items.insert(0, doc);
-      } else {
-        _items[i] = doc;
-      }
+      _query = v;
+      _currentPage = 1;
     });
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), _load);
   }
 
-  void _remove(int id) => setState(() => _items.removeWhere((e) => e.id == id));
-
-  // Editor is shown inside this page (same shell/sidebar), not a new route.
-  bool _editing = false;
-  ProcedureDoc? _editingDoc;
-  int _editingId = 0;
-  int _editorSeed = 0;
+  // ───────────────────────── editor ─────────────────────────
 
   void _openEditor({ProcedureDoc? doc}) {
     setState(() {
       _editingDoc = doc;
-      _editingId = doc?.id ?? _nextId++;
       _editorSeed++;
       _editing = true;
     });
   }
 
+  /// Fetch the full record (incl. content) before editing.
+  Future<void> _openEditorById(int id) async {
+    try {
+      final p = await _service.getById(id);
+      if (!mounted) return;
+      _openEditor(doc: _toDoc(p));
+    } catch (e) {
+      _toast('$e', error: true);
+    }
+  }
+
   void _closeEditor() {
-    if (mounted) setState(() => _editing = false);
+    if (!mounted) return;
+    setState(() => _editing = false);
+    _load(); // refresh list after save/close
   }
 
   void _confirmDelete(ProcedureDoc doc) {
@@ -112,36 +178,38 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
             itemName: 'procedure',
             onDelete: () async {
               Navigator.pop(ctx);
-              _remove(doc.id);
-              if (!mounted) return;
-              MotionToast.success(
-                toastAlignment: Alignment.topCenter,
-                description: Text(
-                  'Procedure deleted successfully',
-                  style: GoogleFonts.plusJakartaSans(),
-                ),
-              ).show(context);
+              try {
+                // await _service.delete(doc.id);
+                _toast('Procedure deleted successfully');
+                // go back a page if we just deleted the last row on this page
+                if (_items.length == 1 && _currentPage > 1) _currentPage--;
+                await _load();
+              } catch (e) {
+                _toast('$e', error: true);
+              }
             },
           ),
     );
   }
+
+  // ───────────────────────── build ─────────────────────────
 
   @override
   Widget build(BuildContext context) {
     if (_editing) {
       return ProceduresPage(
         key: ValueKey(_editorSeed),
+        service: _service,
+        id: _editingDoc?.id,
+        sectionId: int.tryParse(_editingDoc?.section ?? ''),
         initialHtml: _editingDoc?.html,
         initialHeader: _editingDoc?.header,
         onClose: _closeEditor,
-        onSaveDocument: (header, html) async {
-          _upsert(ProcedureDoc(id: _editingId, header: header, html: html));
-        },
       );
     }
 
     final isMobile = MediaQuery.of(context).size.width < 600;
-    final rows = _paged;
+    final rows = _items;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
@@ -214,16 +282,18 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                         children: [
                           PaginationInfo(
                             currentPage: _currentPage,
-                            totalItems: _filtered.length,
+                            totalItems: _totalItems,
                             itemsPerPage: _pageSize,
                           ),
                           PaginationControls(
                             currentPage: _currentPage,
-                            totalItems: _filtered.length,
+                            totalItems: _totalItems,
                             itemsPerPage: _pageSize,
                             isLoading: _isLoading,
-                            onPageChanged:
-                                (page) => setState(() => _currentPage = page),
+                            onPageChanged: (page) {
+                              setState(() => _currentPage = page);
+                              _load();
+                            },
                           ),
                           const SizedBox(width: 60),
                         ],
@@ -271,7 +341,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
     final width = MediaQuery.of(context).size.width;
     final isSmall = width < 900;
     final isXSmall = width < 700;
-    final count = _filtered.length;
+    final count = _totalItems;
 
     return Container(
       width: double.infinity,
@@ -374,11 +444,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                     child: TextField(
                       controller: _searchCtrl,
                       style: GoogleFonts.plusJakartaSans(fontSize: 12),
-                      onChanged:
-                          (v) => setState(() {
-                            _query = v;
-                            _currentPage = 1;
-                          }),
+                      onChanged: _onSearchChanged,
                       decoration: InputDecoration(
                         hintText: 'Search title, doc. code, section...',
                         hintStyle: TextStyle(
@@ -391,12 +457,10 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                                 ? null
                                 : IconButton(
                                   icon: const Icon(Icons.close, size: 16),
-                                  onPressed:
-                                      () => setState(() {
-                                        _searchCtrl.clear();
-                                        _query = '';
-                                        _currentPage = 1;
-                                      }),
+                                  onPressed: () {
+                                    _searchCtrl.clear();
+                                    _onSearchChanged('');
+                                  },
                                 ),
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
@@ -465,7 +529,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                   message: 'Edit',
                   child: IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 16),
-                    onPressed: () => _openEditor(doc: doc),
+                    onPressed: () => _openEditorById(doc.id),
                   ),
                 ),
                 Tooltip(
@@ -508,7 +572,7 @@ class _ProceduresListPageState extends State<ProceduresListPage> {
                 color: Theme.of(context).cardColor,
                 icon: const Icon(Icons.more_vert),
                 onSelected: (v) {
-                  if (v == 'edit') _openEditor(doc: doc);
+                  if (v == 'edit') _openEditorById(doc.id);
                   if (v == 'delete') _confirmDelete(doc);
                 },
                 itemBuilder:
