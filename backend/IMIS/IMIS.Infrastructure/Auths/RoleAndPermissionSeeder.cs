@@ -41,6 +41,7 @@ using IMIS.Application.TeamModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
+using IMIS.Application.PolicyAndProcedureModule;
 
 namespace IMIS.Infrastructure.Auths
 {
@@ -90,7 +91,8 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermission(),
                 new AuditSchedulePermission(),
                 new NonconformingActionReportPermission(),
-                new ISATPermission());
+                new ISATPermission(),
+                new PolicyAndProcedurePermission());
 
             // This will seed view only permissions for a role
             await PermissionSeeder.SeedViewOnlyPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
@@ -156,7 +158,18 @@ namespace IMIS.Infrastructure.Auths
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
                 new StrategicChangeAgendaPermissionSetting(),
+<<<<<<< Updated upstream
                 new StrategicChangeAgendaPermission());
+=======
+                new StrategicChangeAgendaPermission(),
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission(),
+                new PolicyAndProcedurePermission());
+>>>>>>> Stashed changes
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -232,7 +245,8 @@ namespace IMIS.Infrastructure.Auths
                 new ScoreCardPermission(),
                 new StrategicChangeAgendaPermissionSetting(),
                 new StrategicChangeAgendaPermission(),
-                new ISATPermission());
+                new ISATPermission(),
+                new PolicyAndProcedurePermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsHead, IdentityRole>(_roleManager, 
                 new PgsDeliverableAuditorPermission(),
@@ -298,7 +312,8 @@ namespace IMIS.Infrastructure.Auths
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
                 new StrategicChangeAgendaPermissionSetting(),
-                new StrategicChangeAgendaPermission());
+                new StrategicChangeAgendaPermission(),
+                new PolicyAndProcedurePermission());
 
             await PermissionSeeder.SeedPermissionForRole<OSM, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
@@ -737,6 +752,16 @@ namespace IMIS.Infrastructure.Auths
             // QMR / QMS are read-only across the IQA module: QMR additionally
             // approves or rejects submissions, QMS only adds notes.
             // -----------------------------------------------------------------
+
+            await PermissionSeeder.SeedPermissionForRole<QMR, IdentityRole>(_roleManager,
+                new AuditProgrammePermission(),
+                new AuditPlanPermission(),
+                new AuditSchedulePermission(),
+                new AuditChecklistPermission(),
+                new AuditReportPermission(),
+                new NonconformingActionReportPermission(),
+                new PolicyAndProcedurePermission());
+
             await PermissionSeeder.SeedViewOnlyPermissionForRole<QMR, IdentityRole>(_roleManager,
                 new AuditProgrammePermission(),
                 new AuditPlanPermission(),
@@ -753,7 +778,7 @@ namespace IMIS.Infrastructure.Auths
                 new AuditReportWorkflowPermission().CanApprove,
                 new AuditReportWorkflowPermission().CanReject,
                 new NonconformingActionReportWorkflowPermission().CanValidateAndClose);
-
+         
             await PermissionSeeder.SeedViewOnlyPermissionForRole<QMS, IdentityRole>(_roleManager,
                 new AuditProgrammePermission(),
                 new AuditPlanPermission(),

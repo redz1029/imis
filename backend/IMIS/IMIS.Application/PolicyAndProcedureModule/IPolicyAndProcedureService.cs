@@ -9,6 +9,9 @@ namespace IMIS.Application.PolicyAndProcedureModule
         Task<PolicyAndProcedureDto?> GetByIdAsync(long id, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         public Task<DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        Task<PolicyAndProcedureDto> SubmitAsync(PolicyAndProcedureDto dto, string userId, CancellationToken cancellationToken);
+        Task<PolicyAndProcedureDto> DraftAsync(PolicyAndProcedureDto dto, string userId, CancellationToken cancellationToken);
+        Task<DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>> GetFilteredAsync(PolicyAndProcedureFilter filter, string roleId, CancellationToken cancellationToken);
     }
 }
  

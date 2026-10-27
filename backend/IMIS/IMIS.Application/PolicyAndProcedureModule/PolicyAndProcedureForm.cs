@@ -4,6 +4,7 @@ namespace IMIS.Application.PolicyAndProcedureModule
 {
     public class PolicyAndProcedureForm
     {
+        public long Id { get; set; }
         public string? Title { get; set; }
         public string? ProcessOwner { get; set; }
         public string? RegulatoryStandard { get; set; }

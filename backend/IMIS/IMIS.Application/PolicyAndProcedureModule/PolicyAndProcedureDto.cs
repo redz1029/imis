@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
+using IMIS.Application.PolicyAndProcedureSignatoryModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PolicyAndProcedureModule
@@ -18,6 +19,11 @@ namespace IMIS.Application.PolicyAndProcedureModule
         public bool? IsMasterCopy { get; set; }
         public bool? IsControlledCopy { get; set; }
         public string? MinutesAttachmentPath { get; set; }
+       
+        public List<PolicyAndProcedureSignatoryDto>? PAPSignatories { get; set; }
+        public bool IsDraft { get; set; } = true;
+
+        public bool ForSignature { get; set; }
 
         public PolicyAndProcedureDto() { }
 
@@ -33,12 +39,14 @@ namespace IMIS.Application.PolicyAndProcedureModule
             this.OfficeName = policyAndProcedure.Section?.Name;
             this.DocumentCode = policyAndProcedure.DocumentCode;
             this.Revision = policyAndProcedure.Revision;
-            this.Content = policyAndProcedure.Content;         
+            this.Content = policyAndProcedure.Content;
             this.IsMasterCopy = policyAndProcedure.IsMasterCopy;
             this.IsControlledCopy = policyAndProcedure.IsControlledCopy;
-            this.MinutesAttachmentPath = policyAndProcedure.MinutesAttachmentPath;          
+            this.MinutesAttachmentPath = policyAndProcedure.MinutesAttachmentPath;
+            this.IsDeleted = policyAndProcedure.IsDeleted;
+            this.RowVersion = policyAndProcedure.RowVersion;
         }
-     
+
         public override PolicyAndProcedure ToEntity()
         {
             return new PolicyAndProcedure()
@@ -53,8 +61,9 @@ namespace IMIS.Application.PolicyAndProcedureModule
                 Revision = Revision,
                 Content = Content,
                 IsMasterCopy = IsMasterCopy,
-                IsControlledCopy = IsControlledCopy,            
-                MinutesAttachmentPath = MinutesAttachmentPath,            
+                IsControlledCopy = IsControlledCopy,
+                MinutesAttachmentPath = MinutesAttachmentPath,
+                RowVersion = this.RowVersion
             };
         }
     }

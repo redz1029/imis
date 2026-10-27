@@ -1,15 +1,10 @@
-﻿using System.Linq;
-using Azure;
-using Base.Auths.Permissions;
+﻿using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
-using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
-using IMIS.Application.StrategyReviewModule;
-using IMIS.Domain;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
