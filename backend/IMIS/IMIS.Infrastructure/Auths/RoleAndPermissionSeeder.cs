@@ -158,9 +158,7 @@ namespace IMIS.Infrastructure.Auths
                 new PgsSettingsPermission(),
                 new ScoreCardPermission(),
                 new StrategicChangeAgendaPermissionSetting(),
-<<<<<<< Updated upstream
-                new StrategicChangeAgendaPermission());
-=======
+                new StrategicChangeAgendaPermission(),
                 new StrategicChangeAgendaPermission(),
                 new AuditProgrammePermission(),
                 new AuditPlanPermission(),
@@ -169,7 +167,7 @@ namespace IMIS.Infrastructure.Auths
                 new AuditReportPermission(),
                 new NonconformingActionReportPermission(),
                 new PolicyAndProcedurePermission());
->>>>>>> Stashed changes
+
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
