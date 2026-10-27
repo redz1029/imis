@@ -100,6 +100,10 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
   int totalCount = 0;
   bool _isLoading = false;
 
+  int _deptCount = 0;
+  int _serviceCount = 0;
+  int _fetchSeq = 0;
+
   List<Swot> swotList = [];
   List<Swot> filteredList = [];
 
@@ -153,6 +157,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
               });
 
               fetchSwot(page: _currentPage);
+              _loadTabCounts();
             },
           ),
     );
@@ -176,6 +181,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
     });
 
     await fetchSwot();
+    _loadTabCounts();
   }
 
   Future<String> _getRoleId() async {
@@ -196,8 +202,10 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
   }
 
   Future<void> fetchSwot({int page = 1, String? searchQuery}) async {
-    if (_isLoading) return;
     if (_userId == null) return;
+
+    final seq = ++_fetchSeq;
+    final mode = _viewMode;
 
     setState(() {
       _isLoading = true;
@@ -209,7 +217,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
       final roleId = await _getRoleId();
 
       final pageList =
-          _isServiceHeadView
+          mode == SwotViewMode.serviceHead
               ? await _swotServiceHeadService.getSwotServiceHead(
                 page: page,
                 pageSize: _pageSize,
@@ -225,10 +233,18 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                 userId: _userId!,
                 officeId: _selectedOfficeId,
               );
-      if (!mounted) return;
+
+      // Kung may mas bago nang request (nag-switch ng tab), i-ignore 'to.
+      if (!mounted || seq != _fetchSeq) return;
+
       setState(() {
         _currentPage = pageList.page;
         totalCount = pageList.totalCount;
+        if (mode == SwotViewMode.serviceHead) {
+          _serviceCount = pageList.totalCount;
+        } else {
+          _deptCount = pageList.totalCount;
+        }
         swotList = pageList.items;
         filteredList = List.from(swotList);
       });
@@ -237,11 +253,43 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
     } catch (e) {
       debugPrint('Unexpected error: $e');
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      if (mounted && seq == _fetchSeq) {
+        setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _loadTabCounts() async {
+    if (_userId == null) return;
+
+    try {
+      final roleId = await _getRoleId();
+
+      final dept = await _swotService.getSwot(
+        page: 1,
+        pageSize: 1,
+        searchQuery: null,
+        roleId: roleId,
+        userId: _userId!,
+        officeId: null,
+      );
+
+      final svc = await _swotServiceHeadService.getSwotServiceHead(
+        page: 1,
+        pageSize: 1,
+        searchQuery: null,
+        roleId: roleId,
+        userId: _userId!,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _deptCount = dept.totalCount;
+        _serviceCount = svc.totalCount;
+      });
+    } catch (e) {
+      debugPrint('Failed to load tab counts: $e');
     }
   }
 
@@ -565,6 +613,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                   PermissionWidget(
                     permission: AppPermissions.addSWOTAnalysis,
                     child: FloatingActionButton.small(
+                      tooltip: 'New Department Head SWOT',
                       heroTag: 'addDeptHead',
                       backgroundColor: primaryColor,
                       onPressed: () => _openDialog(isServiceHead: false),
@@ -573,8 +622,9 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                   ),
                   const SizedBox(height: 10),
                   PermissionWidget(
-                    permission: AppPermissions.addSWOTAnalysis,
+                    permission: AppPermissions.addSWOTAnalysisServiceHead,
                     child: FloatingActionButton(
+                      tooltip: 'New Service Head SWOT',
                       heroTag: 'addServiceHead',
                       backgroundColor: primaryColor,
                       onPressed: () => _openDialog(isServiceHead: true),
@@ -682,13 +732,16 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
 
                 PermissionWidget(
                   permission: _deletePermission,
-                  child: IconButton(
-                    icon: const Icon(
-                      CupertinoIcons.delete_simple,
-                      size: 16,
-                      color: Colors.redAccent,
+                  child: Tooltip(
+                    message: 'Delete',
+                    child: IconButton(
+                      icon: const Icon(
+                        CupertinoIcons.delete_simple,
+                        size: 16,
+                        color: Colors.redAccent,
+                      ),
+                      onPressed: () => showDeleteDialog(swot.id.toString()),
                     ),
-                    onPressed: () => showDeleteDialog(swot.id.toString()),
                   ),
                 ),
               ],
@@ -730,11 +783,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                   }
 
                   if (value == 'preview') {
-                    if (_isServiceHeadView) {
-                      await _openPrintPreview(swot);
-                    } else {
-                      await _openPrintPreview(swot);
-                    }
+                    await _openPrintPreview(swot);
                   }
 
                   if (value == 'delete') {
@@ -837,9 +886,16 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
               Navigator.pop(ctx);
 
               try {
-                await _swotService.deleteSwot(id);
+                // FIX: dati laging _swotService.deleteSwot kahit nasa Service Head tab.
+                // I-adjust yung method name kung iba ang tawag sa service mo.
+                if (_isServiceHeadView) {
+                  await _swotServiceHeadService.deleteSwotServiceHead(id);
+                } else {
+                  await _swotService.deleteSwot(id);
+                }
 
                 await fetchSwot(page: 1);
+                _loadTabCounts();
 
                 if (mounted) {
                   MotionToast.success(
@@ -938,13 +994,13 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                         color: Colors.white,
                       ),
                       label: const Text(
-                        'Add New',
+                        'New Department Head SWOT',
                         style: TextStyle(fontSize: 13, color: Colors.white),
                       ),
                     ),
                   ),
                 ],
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 PermissionWidget(
                   permission: AppPermissions.addSWOTAnalysisServiceHead,
                   child: ElevatedButton.icon(
@@ -965,7 +1021,7 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                       size: 16,
                     ),
                     label: const Text(
-                      'Create SWOT',
+                      'New Service Head SWOT',
                       style: TextStyle(color: Colors.white, fontSize: 13),
                     ),
                   ),
@@ -985,56 +1041,110 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
           const Divider(height: 1, thickness: 1, color: Color(0xFFEEEFF2)),
 
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-            child: isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildSwotViewToggle(),
+                const SizedBox(height: 10),
+                _buildSwotInfoBanner(),
+                const SizedBox(height: 8),
+                isMobile ? _buildMobileFilters() : _buildDesktopFilters(),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDesktopFilters() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Center(child: _buildSwotViewToggle()),
+  Widget _buildSwotInfoBanner() {
+    final isService = _isServiceHeadView;
+
+    final String title =
+        isService ? 'For Service Heads only' : 'For Department Heads only';
+
+    final String message =
+        isService
+            ? 'Create a SWOT here only if you are a Service Head. '
+                'If you are a Department Head, go to the Department Heads tab instead.'
+            : 'Only Department Heads create the SWOT. '
+                'If you are a Section or Unit under a Department, you do not need to create one.';
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 180),
+      child: Container(
+        key: ValueKey(isService),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: primaryColor.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
         ),
-        gap4px,
-        Row(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                buildDropdown(
-                  child: PermissionWidget(
-                    permission: AppPermissions.viewOffice,
-                    child: _officeDropdown(),
+            Icon(Icons.info_outline, size: 16, color: primaryColor),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: primaryColor,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            if (_hasActiveFilters)
-              TextButton.icon(
-                onPressed: _resetFilters,
-                icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
-                label: Text(
-                  'Clear filters',
-                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                  const SizedBox(height: 2),
+                  Text(
+                    message,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      height: 1.4,
+                      color: Colors.grey.shade700,
+                    ),
                   ),
-                ),
+                ],
               ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopFilters() {
+    return Row(
+      children: [
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            buildDropdown(
+              child: PermissionWidget(
+                permission: AppPermissions.viewOffice,
+                child: _officeDropdown(),
+              ),
+            ),
+          ],
+        ),
+        const Spacer(),
+        if (_hasActiveFilters)
+          TextButton.icon(
+            onPressed: _resetFilters,
+            icon: Icon(Icons.refresh, size: 14, color: Colors.red.shade400),
+            label: Text(
+              'Clear filters',
+              style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            ),
+          ),
       ],
     );
   }
@@ -1137,13 +1247,6 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: _buildSwotViewToggle(),
-                        ),
-
-                        const SizedBox(height: 10),
-
                         SizedBox(
                           height: 38,
                           child: PermissionWidget(
@@ -1160,32 +1263,31 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
     );
   }
 
+  // Underline-style tabs na may count badge.
   Widget _buildSwotViewToggle() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildToggleItem(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildToggleItem(
               label: 'Department Heads',
               icon: Icons.groups_outlined,
               mode: SwotViewMode.departmentHeads,
+              count: _deptCount,
             ),
-          ),
-          Expanded(
-            child: _buildToggleItem(
+            _buildToggleItem(
               label: 'Service Head',
               icon: Icons.manage_accounts_outlined,
               mode: SwotViewMode.serviceHead,
+              count: _serviceCount,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1194,35 +1296,54 @@ class _SwotAnalysisPageState extends State<SwotAnalysisPage> {
     required String label,
     required IconData icon,
     required SwotViewMode mode,
+    required int count,
   }) {
     final selected = _viewMode == mode;
+    final color = selected ? primaryColor : Colors.grey.shade600;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(8),
       onTap: () => _changeViewMode(mode),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? primaryColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          border: Border(
+            bottom: BorderSide(
+              color: selected ? primaryColor : Colors.transparent,
+              width: 2,
+            ),
+          ),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: selected ? Colors.white : Colors.grey.shade600,
-            ),
+            Icon(icon, size: 18, color: color),
             const SizedBox(width: 8),
             Text(
               label,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : Colors.grey.shade700,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+              decoration: BoxDecoration(
+                color:
+                    selected
+                        ? primaryColor.withValues(alpha: 0.1)
+                        : Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
             ),
           ],
@@ -1926,10 +2047,12 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
       ),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Text(
-              'SWOT ANALYSIS',
-              style: TextStyle(
+              widget.isServiceHead
+                  ? 'SERVICE HEAD SWOT ANALYSIS'
+                  : 'DEPARTMENT HEAD SWOT ANALYSIS',
+              style: const TextStyle(
                 fontSize: 15,
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -1985,6 +2108,10 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (!_isOfficeLocked) ...[
+                  _buildTypeNotice(),
+                  const SizedBox(height: 12),
+                ],
                 _buildDepartmentSectionUnitDropdown(),
                 const SizedBox(height: 10),
                 _labeledField(
@@ -2013,6 +2140,52 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
           ),
           const SizedBox(height: 20),
           _buildSignatureBlock(isSmall),
+        ],
+      ),
+    );
+  }
+
+  // Paalala sa taas ng form para malaman agad kung tama ang binuksan.
+  Widget _buildTypeNotice() {
+    final isService = widget.isServiceHead;
+
+    final Color color = isService ? Colors.orange.shade800 : primaryColor;
+
+    final String message =
+        isService
+            ? 'You are creating a SERVICE HEAD SWOT. This is for Service Heads only. '
+                'If you are a Department Head, close this form and use '
+                '"New Department Head SWOT" instead.'
+            : 'You are creating a DEPARTMENT HEAD SWOT. Only Department Heads create this. '
+                'Sections and Units under a Department do not need to.';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            isService ? Icons.warning_amber_rounded : Icons.info_outline,
+            size: 16,
+            color: color,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11.5,
+                height: 1.4,
+                color: Colors.grey.shade800,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -2387,11 +2560,8 @@ class _SwotAnalysisDialogState extends State<SwotAnalysisDialog> {
     );
   }
 
-  // FIX: dropdown key is now stable (hindi na dependent sa selectedUserId),
-  // and the `validator` was removed — validation for these two fields is
-  // handled manually in `_saveSwot()` gamit yung _selectedQmrUserId /
-  // _selectedServiceHeadUserId state directly, kasi yung Form-based
-  // validator ay stale/out-of-sync tuwing nagbabago yung value.
+  // Dropdown key is stable (hindi dependent sa selectedUserId), at walang validator —
+  // validation ng QMR / Service Head ay manual sa `_saveSwot()`.
   Widget _userDropdownField({
     required String label,
     required String role,
