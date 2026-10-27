@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/pgs_isat/dialog/isat_approval_timeline_dialog.dart';
 import 'package:imis/performance_governance_system/pgs_isat/dialog/isat_dialog.dart';
@@ -19,6 +20,7 @@ import 'package:imis/widgets/common/filter_button_widget.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
 import 'package:imis/widgets/isat_widget/status_badge.dart';
+import 'package:imis/widgets/permission/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -711,10 +713,13 @@ class IsatPageState extends State<IsatPage> {
       ),
       floatingActionButton:
           isMobile
-              ? FloatingActionButton(
-                backgroundColor: primaryColor,
-                onPressed: _openIsat,
-                child: const Icon(Icons.add, color: Colors.white),
+              ? PermissionWidget(
+                permission: AppPermissions.addISAT,
+                child: FloatingActionButton(
+                  backgroundColor: primaryColor,
+                  onPressed: _openIsat,
+                  child: const Icon(Icons.add, color: Colors.white),
+                ),
               )
               : null,
     );
@@ -766,28 +771,31 @@ class IsatPageState extends State<IsatPage> {
             ),
           ),
           if (!isMobile)
-            ElevatedButton.icon(
-              onPressed: _openIsat,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                padding: EdgeInsets.symmetric(
-                  vertical: isXSmall ? 8 : 10,
-                  horizontal: isXSmall ? 10 : 16,
+            PermissionWidget(
+              permission: AppPermissions.addISAT,
+              child: ElevatedButton.icon(
+                onPressed: _openIsat,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  padding: EdgeInsets.symmetric(
+                    vertical: isXSmall ? 8 : 10,
+                    horizontal: isXSmall ? 10 : 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              icon: Icon(
-                Icons.add,
-                color: Colors.white,
-                size: isXSmall ? 14 : 16,
-              ),
-              label: Text(
-                isXSmall ? 'Add' : 'Add New',
-                style: TextStyle(
+                icon: Icon(
+                  Icons.add,
                   color: Colors.white,
-                  fontSize: isXSmall ? 11 : 13,
+                  size: isXSmall ? 14 : 16,
+                ),
+                label: Text(
+                  isXSmall ? 'Add' : 'Add New',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isXSmall ? 11 : 13,
+                  ),
                 ),
               ),
             ),
