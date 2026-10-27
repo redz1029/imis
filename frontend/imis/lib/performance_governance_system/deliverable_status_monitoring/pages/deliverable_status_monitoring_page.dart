@@ -2082,121 +2082,140 @@ Future<bool?> showAccomplishmentFormDialog(
                 child: Column(
                   mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    "Accomplishment Form — ${deliverable['Start Date']} to ${deliverable['End Date']}",
-                                    style: TextStyle(
-                                      fontSize: isMobile ? 15 : 17,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                    Flexible(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "Accomplishment Form — ${deliverable['Start Date']} to ${deliverable['End Date']}",
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 15 : 17,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () => Navigator.pop(dialogContext),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.grey.shade200),
                               ),
-                              child: Wrap(
-                                spacing: 24,
-                                runSpacing: 6,
-                                children: [
-                                  infoText(
-                                    "Office: ${deliverable['officeName'] ?? 'N/A'}",
-                                  ),
-                                  infoText(
-                                    "KRA: ${deliverable['kra'] ?? 'N/A'}",
-                                  ),
-                                  infoText(
-                                    "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
-                                  ),
-                                  infoText(
-                                    "Due: ${deliverable['byWhen'] ?? 'N/A'}",
-                                  ),
-                                  infoText(
-                                    "Periods: ${monthlyPeriods.length} month(s)",
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () => Navigator.pop(dialogContext),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: Wrap(
+                              spacing: 24,
+                              runSpacing: 6,
+                              children: [
+                                infoText(
+                                  "Office: ${deliverable['officeName'] ?? 'N/A'}",
+                                ),
+                                infoText("KRA: ${deliverable['kra'] ?? 'N/A'}"),
+                                infoText(
+                                  "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
+                                ),
+                                infoText(
+                                  "Due: ${deliverable['byWhen'] ?? 'N/A'}",
+                                ),
+                                infoText(
+                                  "Periods: ${monthlyPeriods.length} month(s)",
+                                  bold: true,
+                                ),
+                                SizedBox(
+                                  width: isMobile ? double.infinity : null,
+                                  child: infoText(
+                                    "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
                                     bold: true,
                                   ),
-                                  SizedBox(
-                                    width: isMobile ? double.infinity : null,
-                                    child: infoText(
-                                      "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
-                                      bold: true,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            const Row(
-                              children: [
-                                Icon(Icons.bar_chart_outlined, size: 18),
-                                SizedBox(width: 8),
-                                Text(
-                                  "Monthly Accomplishment Tracking",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            if (isMobile)
-                              // Mobile: stacked cards, walang table header
-                              Column(children: periodWidgets)
-                            else
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.black12),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 10,
-                                        horizontal: 8,
-                                      ),
+                          ),
+                          const SizedBox(height: 20),
+                          const Row(
+                            children: [
+                              Icon(Icons.bar_chart_outlined, size: 18),
+                              SizedBox(width: 8),
+                              Text(
+                                "Monthly Accomplishment Tracking",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Flexible(
+                            child:
+                                isMobile
+                                    ? AccomplishmentMonthsList(
+                                      children: periodWidgets,
+                                    )
+                                    : Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.grey.shade50,
-                                        borderRadius:
-                                            const BorderRadius.vertical(
-                                              top: Radius.circular(10),
-                                            ),
+                                        border: Border.all(
+                                          color: Colors.black12,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
-                                      child: Row(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          headerCell("Period", 2),
-                                          headerCell("Status", 2),
-                                          headerCell("% Accomplishment", 2),
-                                          headerCell("Remarks (Dept Head)", 3),
-                                          const SizedBox(width: 20),
-                                          headerCell("Proof", 2),
-                                          headerCell("Remarks (Evaluator)", 3),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 10,
+                                              horizontal: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade50,
+                                              borderRadius:
+                                                  const BorderRadius.vertical(
+                                                    top: Radius.circular(10),
+                                                  ),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                headerCell("Period", 2),
+                                                headerCell("Status", 2),
+                                                headerCell(
+                                                  "% Accomplishment",
+                                                  2,
+                                                ),
+                                                headerCell(
+                                                  "Remarks (Dept Head)",
+                                                  3,
+                                                ),
+                                                const SizedBox(width: 20),
+                                                headerCell("Proof", 2),
+                                                headerCell(
+                                                  "Remarks (Evaluator)",
+                                                  3,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Flexible(
+                                            child: AccomplishmentMonthsList(
+                                              children: periodWidgets,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
-                                    ...periodWidgets,
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
+                          ),
+                          AccomplishmentRulesBanner(
+                            deliverableId: deliverable['pgsDeliverableId'],
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 12),
