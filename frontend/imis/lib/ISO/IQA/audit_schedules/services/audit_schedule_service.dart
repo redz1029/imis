@@ -159,6 +159,34 @@ class AuditSchedulesService {
       );
     }
   }
+  Future<void> rescheduleAuditSchedule(
+  int id, {
+  required DateTime proposedDate,
+  String? comments,
+}) async {
+  final url = '${ApiEndpoint().auditSchedule}/$id/reschedule';
+  try {
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: {
+        'proposedDate': proposedDate.toIso8601String().split('T').first,
+        if (comments != null) 'comments': comments,
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to reschedule audit schedule.'),
+      );
+    }
+  } on DioException catch (e) {
+    final data = e.response?.data;
+    if (data is Map && data['error'] != null) {
+      throw Exception(data['error'].toString());
+    }
+    rethrow;
+  }
+}
 
   Future<void> decideAuditSchedule(
     int id, {

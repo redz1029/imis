@@ -590,6 +590,48 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+  Future<void> _handleRescheduleSchedule(_OfficeGroup group) async {
+  final schedId = group.schedule?.id;
+  if (schedId == null || schedId <= 0) return;
+
+  final today = DateTime.now();
+  final picked = await showDatePicker(
+    context: context,
+    helpText: 'Select a new audit date',
+    initialDate: _proposedDateForGroup(group).isBefore(
+            DateTime(today.year, today.month, today.day))
+        ? DateTime(today.year, today.month, today.day)
+        : _proposedDateForGroup(group),
+    firstDate: DateTime(today.year, today.month, today.day),
+    lastDate: DateTime(today.year + 2),
+  );
+  if (picked == null) return;
+
+  setState(() => _isLoading = true);
+  try {
+    await _scheduleService.rescheduleAuditSchedule(
+      schedId,
+      proposedDate: picked,
+    );
+    if (!mounted) return;
+    MotionToast.success(
+      toastAlignment: Alignment.topCenter,
+      description: Text(
+        'Audit schedule for ${group.officeName} moved to '
+        '${DateFormat('MMMM d, yyyy').format(picked)}.',
+      ),
+    ).show(context);
+    await _loadPlanDetail(_plan!);
+  } catch (e) {
+    if (!mounted) return;
+    MotionToast.error(
+      toastAlignment: Alignment.topCenter,
+      description: Text('${e.toString().replaceFirst('Exception: ', '')}'),
+    ).show(context);
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
+  }
+}
 
   Future<void> _handleResubmitSchedule(_OfficeGroup group) async {
     final schedId = group.schedule?.id;
@@ -988,7 +1030,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   // ===========================================================================
   // Footer (same bar as the Audit Programme page)
   // ===========================================================================
-  Widget _buildFooter(_OfficeGroup group) {
+    Widget _buildFooter(_OfficeGroup group) {
     final status =
         group.schedule?.effectiveStatusName ?? 'Pending Confirmation';
     final isRejected =
@@ -1128,26 +1170,55 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               ],
             );
           } else if (isRejected && canSubmit) {
-            rightActions = ElevatedButton.icon(
-              onPressed: () => _handleResubmitSchedule(group),
-              icon: const Icon(Icons.refresh, size: 16, color: Colors.white),
-              label: const Text(
-                'RESUBMIT SCHEDULE',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            rightActions = Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => _handleRescheduleSchedule(group),
+                  icon: const Icon(Icons.event_repeat,
+                      size: 16, color: primaryThemeColor),
+                  label: const Text(
+                    'RESCHEDULE',
+                    style: TextStyle(
+                      color: primaryThemeColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: primaryThemeColor),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
                 ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryThemeColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () => _handleResubmitSchedule(group),
+                  icon: const Icon(Icons.refresh,
+                      size: 16, color: Colors.white),
+                  label: const Text(
+                    'RESUBMIT SCHEDULE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryThemeColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
+              ],
             );
           }
 

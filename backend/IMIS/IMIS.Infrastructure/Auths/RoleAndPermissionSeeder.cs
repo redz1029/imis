@@ -695,6 +695,7 @@ namespace IMIS.Infrastructure.Auths
                 new StrategicChangeAgendaPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsEvaluatorRole, IdentityRole>(_roleManager,
+                
                 new KeyResultAreaPermission(),
                 new PgsDeliverableAuditorPermission(),
                 new PgsPeriodPermission(),

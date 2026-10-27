@@ -239,6 +239,56 @@ namespace IMIS.Application.AuditScheduleModule
             return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
         }
 
+        public async Task<(bool Success, string? Error)> RescheduleAsync(
+            int id, DateTime proposedDate, string? comments, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var entity = await dbContext.Set<AuditSchedule>()
+                .Include(s => s.AuditableOffices!)
+                    .ThenInclude(ao => ao.Office)
+                .Include(s => s.AuditPlanEntry!)
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive, cancellationToken);
+
+            if (entity == null)
+                return (false, "Audit schedule not found.");
+
+            var entry = entity.AuditPlanEntry;
+            if (entry == null)
+                return (false, "Audit schedule has no linked audit plan entry.");
+
+            // Reschedule keeps the audit plan entry's time; only the date moves.
+            var proposed = proposedDate.Date + entry.Time.TimeOfDay;
+
+            // Same-day, same-time conflict check for the same auditee office.
+            var officeId = entity.AuditableOffices
+                ?.Where(ao => !ao.IsDeleted)
+                .Select(ao => ao.OfficeId)
+                .FirstOrDefault();
+
+            if (officeId.HasValue)
+            {
+                var conflict = await dbContext.Set<AuditSchedule>()
+                    .Include(s => s.AuditableOffices!)
+                    .AnyAsync(s => s.Id != id && s.IsActive &&
+                        s.AuditableOffices!.Any(ao => !ao.IsDeleted && ao.OfficeId == officeId.Value) &&
+                        s.StartDate.Date == proposedDate.Date &&
+                        s.StartDate.TimeOfDay == entry.Time.TimeOfDay, cancellationToken);
+
+                if (conflict)
+                {
+                    return (false,
+                        "The audit plan entry time is not available on the selected day. Please choose another day.");
+                }
+            }
+
+            entity.StartDate = proposed;
+            entity.EndDate = proposed;
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return (true, null);
+        }
+
         private static async Task<(bool Success, string? Error)> SaveWorkflowChangesAsync(
             DbContext dbContext, CancellationToken cancellationToken)
         {

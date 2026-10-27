@@ -238,9 +238,35 @@ namespace IMIS.Presentation.AuditScheduleModule
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanConfirm) ||
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanReject)));
 
+            // RESCHEDULE — preparer picks a new date; time stays locked to the
+            // linked audit plan entry. Same-day same-time conflicts for the same
+            // auditee office are rejected.
+            app.MapPut("/{id:int}/reschedule", async (
+                int id,
+                [FromBody] RescheduleAuditScheduleRequest? body,
+                IAuditScheduleService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                if (body == null || !body.ProposedDate.HasValue)
+                    return Results.BadRequest("Proposed date is required.");
+
+                var (success, error) = await service.RescheduleAsync(
+                    id, body.ProposedDate.Value, body.Comments, cancellationToken);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
+                return Results.Ok(new { message = "Audit schedule rescheduled." });
+            })
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanSubmit));
+
         }
 
         public record SubmitAuditScheduleRequest(string? UserId, string? Comments);
         public record DecideAuditScheduleRequest(string ApproverId, bool? Approve, string? Action, string? Comments, string? OfficeName);
+        public record RescheduleAuditScheduleRequest(DateTime? ProposedDate, string? Comments);
     }
 }

@@ -39,5 +39,9 @@ namespace IMIS.Application.AuditScheduleModule
         Task<(bool Success, string? Error)> DecideAsync(int id, string approverId, string action, string? comments, string? officeName, CancellationToken cancellationToken);
         Task<(bool Success, string? Error)> SubmitAsync(int id, CancellationToken cancellationToken);
         Task<(bool Success, string? Error)> SubmitAsync(int id, string? userId, string? comments, CancellationToken cancellationToken);
+
+        // Reschedule a rejected/revision-required audit schedule. Only the date
+        // moves; the time stays locked to the linked audit plan entry.
+        Task<(bool Success, string? Error)> RescheduleAsync(int id, DateTime proposedDate, string? comments, CancellationToken cancellationToken);
     }
 }
