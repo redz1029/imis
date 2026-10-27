@@ -2841,10 +2841,10 @@ class _PerformanceGovernanceSystemPageState
         final data = response.data;
         return PerformanceGovernanceSystem.fromJson(data);
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.message}");
+    } on DioException {
+      debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     }
 
     return null;
