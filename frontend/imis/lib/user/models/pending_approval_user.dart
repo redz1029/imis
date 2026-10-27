@@ -30,25 +30,10 @@ class PendingApprovalUser {
     required this.isPendingApproval,
   });
 
-  factory PendingApprovalUser.fromJson(Map<String, dynamic> json) {
-    String s(String k) => (json[k] as String?)?.trim() ?? '';
-    final rawEnd = json['lockoutEnd'] as String?;
+  factory PendingApprovalUser.fromJson(Map<String, dynamic> json) =>
+      _$PendingApprovalUserFromJson(json);
 
-    return PendingApprovalUser(
-      id: json['id']?.toString() ?? '',
-      userName: s('userName'),
-      email: s('email'),
-      firstName: s('firstName'),
-      middleName: s('middleName'),
-      lastName: s('lastName'),
-      position: s('position'),
-      lockoutEnabled: json['lockoutEnabled'] as bool? ?? false,
-      isLockedOut: json['isLockedOut'] as bool? ?? false,
-      lockoutEnd:
-          (rawEnd == null || rawEnd.isEmpty) ? null : DateTime.tryParse(rawEnd),
-      isPendingApproval: json['isPendingApproval'] as bool? ?? false,
-    );
-  }
+  Map<String, dynamic> toJson() => _$PendingApprovalUserToJson(this);
 
   String get fullName =>
       '$firstName $middleName $lastName'.trim().replaceAll(RegExp(' +'), ' ');

@@ -1,6 +1,12 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:ui_web' as ui_web;
+import 'package:imis/qms_documents/models/procedures.dart';
+import 'package:imis/qms_documents/services.dart/procedures_service.dart';
 import 'package:imis/qms_documents/template/qms_template.dart';
+import 'package:dio/dio.dart';
+import 'package:imis/utils/auth_util.dart';
+import 'package:intl/intl.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,20 +17,26 @@ const String _logoAssetUrl = 'assets/assets/CRMC.png';
 
 class ProceduresPage extends StatefulWidget {
   final String? initialHtml;
-
   final Map<String, String>? initialHeader;
 
-  final Future<void> Function(String html)? onSave;
+  final ProceduresService? service;
 
+  final int? sectionId;
+
+  final int? id;
+
+  final Future<void> Function(String html)? onSave;
   final Future<void> Function(Map<String, String> header, String html)?
   onSaveDocument;
-
   final VoidCallback? onClose;
 
   const ProceduresPage({
     super.key,
+    this.service,
     this.initialHtml,
     this.initialHeader,
+    this.sectionId,
+    this.id,
     this.onSave,
     this.onSaveDocument,
     this.onClose,
@@ -39,10 +51,30 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     processInputHtml: false,
   );
   final _formKey = GlobalKey<FormState>();
-
+  String? _previewHtml;
   bool _saving = false;
   int _step = 0;
 
+  int _tab = 0;
+
+  static const _tabs = [
+    'Policy and Procedures',
+    'History Log',
+    'DCCRF',
+    'Document Master List',
+    'Overall Document Masterlist',
+    'Document Distribution List',
+  ];
+
+  DateTime? _effectivityDate;
+
+  String? _previewUrl;
+  String? _previewViewType;
+  int _previewSeq = 0;
+  bool _previewLoading = false;
+
+  String? _latestHtml;
+  String? _userId;
   static const _headerKeys = [
     'title',
     'section',
@@ -76,6 +108,11 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       Icons.description_outlined,
     ),
     ('Procedure', 'Write the procedure content.', Icons.edit_note_rounded),
+    (
+      'Preview',
+      'See how the document will look when printed.',
+      Icons.visibility_outlined,
+    ),
     ('Review', 'Check everything and save.', Icons.fact_check_outlined),
   ];
 
@@ -85,11 +122,29 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _latestHtml = widget.initialHtml;
+    _effectivityDate = _parseEffectivity(_hdr['effectivity']!.text);
+    _initialize();
+  }
+
+  @override
   void dispose() {
     for (final c in _hdr.values) {
       c.dispose();
     }
+    if (_previewUrl != null) html.Url.revokeObjectUrl(_previewUrl!);
     super.dispose();
+  }
+
+  DateTime? _parseEffectivity(String? s) {
+    if (s == null || s.trim().isEmpty) return null;
+    try {
+      return DateFormat('MMMM d, y').parse(s.trim());
+    } catch (_) {
+      return DateTime.tryParse(s.trim());
+    }
   }
 
   void _close() {
@@ -102,27 +157,97 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 
   void _syncListMarkers() {
     _controller.evaluateJavascriptWeb('syncListMarkers');
+    _controller.evaluateJavascriptWeb('imgFix');
+  }
+
+  Future<void> _captureEditor() async {
+    try {
+      final t = await _controller.getText();
+      _latestHtml = t;
+    } catch (e) {
+      debugPrint('Capture editor failed: $e');
+    }
+  }
+
+  Future<void> _initialize() async {
+    final user = await AuthUtil.fetchLoggedUser();
+
+    if (!mounted) return;
+
+    final fullName = [
+      user?.firstName,
+      user?.middleName,
+      user?.lastName,
+    ].where((e) => e != null && e.trim().isNotEmpty).join(' ');
+
+    setState(() {
+      _userId = user?.id;
+
+      // Huwag i-overwrite kung may laman na (edit mode)
+      if (_hdr['owner']!.text.trim().isEmpty) {
+        _hdr['owner']!.text = fullName;
+      }
+    });
+  }
+
+  Future<String> _currentHtml() async {
+    if (_tab == 0 && _step == 1) await _captureEditor();
+    return _latestHtml ?? widget.initialHtml ?? '';
+  }
+
+  late final ProceduresService _service =
+      widget.service ?? ProceduresService(Dio());
+
+  Procedures _buildProcedure(String htmlText) {
+    return Procedures(
+      id: widget.id,
+      title: _hdr['title']!.text.trim(),
+      processOwner: _hdr['owner']!.text.trim(),
+      regulatoryStandard: _hdr['reference']!.text.trim(),
+      effectiveDate: _effectivityDate,
+      sectionId: widget.sectionId ?? int.tryParse(_hdr['section']!.text.trim()),
+      documentCode: _hdr['docCode']!.text.trim(),
+      revision: _hdr['revision']!.text.trim(),
+      content: htmlText,
+      isMasterCopy: true,
+      isControlledCopy: true,
+      removeAttachment: false,
+    );
   }
 
   Future<void> _save({bool close = false}) async {
     if (_saving) return;
+    if (!_headerValid()) {
+      setState(() {
+        _tab = 0;
+        _step = 0;
+      });
+      return;
+    }
     setState(() => _saving = true);
     try {
-      final htmlText = await _controller.getText();
+      final htmlText = await _currentHtml();
+
+      debugPrint('>>> SAVING, sectionId=${widget.sectionId}');
+      await _service.createOrUpdatePolicy(_buildProcedure(htmlText));
+      debugPrint('>>> SAVE DONE');
+
       await widget.onSave?.call(htmlText);
       await widget.onSaveDocument?.call({
         for (final k in _headerKeys) k: _hdr[k]!.text.trim(),
       }, htmlText);
+
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Saved successfully')));
       if (close) _close();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Save error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to save')));
+      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -140,6 +265,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   <div>Department of Health</div>
   <div class="hdr-center">COTABATO REGIONAL AND MEDICAL CENTER</div>
 </div>
+<div style="height: 14pt;"></div>
 <table class="hdr">
   <colgroup>
     <col style="width: 15%">
@@ -168,11 +294,51 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
 </table>''';
   }
 
+  Future<void> _loadPreview() async {
+    setState(() => _previewLoading = true);
+    try {
+      final body = sanitize(await _currentHtml());
+      final fullHtml = buildPreviewDocument(_buildHeaderHtml(), body);
+      _previewHtml = fullHtml;
+
+      const hideToolbar = '''
+<script>
+(function () {
+  document.querySelectorAll('button, a, [role="button"]').forEach(function (el) {
+    var t = (el.textContent || '').trim();
+    if (t === 'Close' || t.indexOf('Print') === 0) el.style.display = 'none';
+  });
+})();
+</script>''';
+      final i = fullHtml.lastIndexOf('</body>');
+      final inlineHtml =
+          i == -1
+              ? fullHtml + hideToolbar
+              : fullHtml.substring(0, i) + hideToolbar + fullHtml.substring(i);
+
+      final viewType = 'procedure-preview-${_previewSeq++}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewType, (int _) {
+        return html.IFrameElement()
+          ..srcdoc = inlineHtml
+          ..style.border = 'none'
+          ..style.width = '100%'
+          ..style.height = '100%';
+      });
+
+      if (!mounted) return;
+      setState(() => _previewViewType = viewType);
+    } catch (e) {
+      debugPrint('Preview failed: $e');
+    } finally {
+      if (mounted) setState(() => _previewLoading = false);
+    }
+  }
+
   Future<void> _openPreview() async {
-    final body = sanitize(await _controller.getText());
-    final blob = html.Blob([
-      buildPreviewDocument(_buildHeaderHtml(), body),
-    ], 'text/html');
+    if (_previewHtml == null) await _loadPreview();
+    if (_previewHtml == null) return;
+    final blob = html.Blob([_previewHtml!], 'text/html');
     final url = html.Url.createObjectUrlFromBlob(blob);
     html.window.open(url, '_blank');
     Future.delayed(
@@ -190,20 +356,24 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   Future<void> _pickDate() async {
     final d = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _effectivityDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
     if (d == null) return;
+    _effectivityDate = d;
     _hdr['effectivity']!.text = '${_months[d.month - 1]} ${d.day}, ${d.year}';
   }
 
   bool _headerValid() => _formKey.currentState?.validate() ?? true;
 
-  void _goTo(int i) {
+  Future<void> _goTo(int i) async {
     if (i == _step) return;
     if (i > _step && !_headerValid()) return;
+    if (_step == 1) await _captureEditor();
+    if (!mounted) return;
     setState(() => _step = i);
+    if (i == 2) _loadPreview();
   }
 
   void _next() {
@@ -214,8 +384,13 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     }
   }
 
-  void _back() {
-    if (_step > 0) setState(() => _step--);
+  Future<void> _back() async {
+    if (_step > 0) {
+      if (_step == 1) await _captureEditor();
+      if (!mounted) return;
+      setState(() => _step--);
+      if (_step == 2) _loadPreview();
+    }
   }
 
   // ───────────────────────── build ─────────────────────────
@@ -243,34 +418,172 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
           ),
         ),
         title: Text(
-          'Procedures',
+          'Policy and Procedures',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
-      bottomNavigationBar: _buildFooter(isLast),
+      bottomNavigationBar: _tab == 0 ? _buildFooter(isLast) : null,
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child:
-            isSmall
-                ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildStepperHorizontal(),
-                    const SizedBox(height: 12),
-                    Expanded(child: _buildContent()),
-                  ],
-                )
-                : Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(width: 260, child: _buildStepperVertical()),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildContent()),
-                  ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildTopTabs(),
+            const SizedBox(height: 12),
+            Expanded(
+              child: IndexedStack(
+                index: _tab,
+                children: [
+                  _buildPolicyBody(isSmall),
+                  for (int i = 1; i < _tabs.length; i++)
+                    _buildPlaceholderTab(_tabs[i]),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _switchTab(int i) async {
+    if (i == _tab) return;
+    if (_tab == 0 && _step == 1) await _captureEditor();
+    if (!mounted) return;
+    setState(() => _tab = i);
+  }
+
+  Widget _buildTopTabs() {
+    const d = 14.0; // lalim ng arrow point
+    const gap = 4.0; // espasyo sa pagitan ng chevrons
+    const h = 44.0;
+    const minW = 190.0;
+
+    return LayoutBuilder(
+      builder: (context, c) {
+        final n = _tabs.length;
+        final fit = (c.maxWidth + (n - 1) * (d - gap)) / n;
+        final scroll = fit < minW;
+        final w = scroll ? minW : fit;
+        final total = n * w - (n - 1) * (d - gap);
+
+        final bar = SizedBox(
+          width: total,
+          height: h,
+          child: Stack(
+            children: [
+              for (int i = 0; i < n; i++)
+                Positioned(
+                  left: i * (w - d + gap),
+                  top: 0,
+                  width: w,
+                  height: h,
+                  child: _chevronTab(i, d),
                 ),
+            ],
+          ),
+        );
+
+        return SizedBox(
+          height: h,
+          child:
+              scroll
+                  ? SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: bar,
+                  )
+                  : bar,
+        );
+      },
+    );
+  }
+
+  Widget _chevronTab(int i, double d) {
+    final active = i == _tab;
+    return ClipPath(
+      clipper: _ChevronClipper(
+        first: i == 0,
+        last: i == _tabs.length - 1,
+        depth: d,
+      ),
+      child: Material(
+        color: active ? primaryColor : Colors.white,
+        child: InkWell(
+          onTap: () => _switchTab(i),
+          child: Padding(
+            padding: EdgeInsets.only(left: i == 0 ? 16 : d + 12, right: d + 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                _tabs[i],
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                  color: active ? Colors.white : Colors.black87,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ───────────────────────── tab bodies ─────────────────────────
+
+  /// Tab 1: Policy and Procedures (stepper + content)
+  Widget _buildPolicyBody(bool isSmall) {
+    return isSmall
+        ? Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildStepperHorizontal(),
+            const SizedBox(height: 12),
+            Expanded(child: _buildContent()),
+          ],
+        )
+        : Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(width: 260, child: _buildStepperVertical()),
+            const SizedBox(width: 16),
+            Expanded(child: _buildContent()),
+          ],
+        );
+  }
+
+  /// Tabs 2-5: placeholder muna (wala pang laman)
+  Widget _buildPlaceholderTab(String title) {
+    return _card(
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.table_chart_outlined,
+              size: 40,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Coming soon',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -291,7 +604,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
           runSpacing: 8,
           children: [
             if (_step > 0) _outlineBtn('Back', _back),
-            _outlineBtn('Preview', _openPreview),
             _outlineBtn('Save as Draft', _saving ? null : _save),
             ElevatedButton(
               onPressed: _saving ? null : _next,
@@ -494,12 +806,88 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
   }
 
   // ───────────────────────── content ─────────────────────────
-
   Widget _buildContent() {
-    // IndexedStack para hindi ma-destroy yung editor kapag nag-switch ng step
     return IndexedStack(
       index: _step,
-      children: [_buildHeaderStep(), _buildEditorStep(), _buildReviewStep()],
+      children: [
+        _buildHeaderStep(),
+        _buildEditorStep(),
+        _buildPreviewStep(),
+        _buildReviewStep(),
+      ],
+    );
+  }
+
+  Widget _buildPreviewStep() {
+    return _card(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Preview Document',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: _previewLoading ? null : _loadPreview,
+                icon: const Icon(Icons.refresh, size: 20),
+                label: const Text('Refresh', style: TextStyle(fontSize: 12)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black87,
+                  side: BorderSide(color: Colors.grey.shade300),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: _previewLoading ? null : _openPreview,
+                icon: const Icon(Icons.open_in_new, size: 20),
+                label: const Text(
+                  'Open in New Tab',
+                  style: TextStyle(fontSize: 12),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child:
+                    (_step == 2 && _previewViewType != null && !_previewLoading)
+                        ? HtmlElementView(
+                          key: ValueKey(_previewViewType),
+                          viewType: _previewViewType!,
+                        )
+                        : const Center(child: CircularProgressIndicator()),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -615,7 +1003,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     );
   }
 
-  // STEP 1 — Document Header
   Widget _buildHeaderStep() {
     return SingleChildScrollView(
       child: _card(
@@ -634,7 +1021,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
               const SizedBox(height: 14),
               _cols([
                 _field('section', 'Section'),
-                _field('owner', 'Process Owner'),
+                _field('owner', 'Process Owner', readOnly: true),
               ]),
               const SizedBox(height: 14),
               _cols([
@@ -663,7 +1050,7 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
                   readOnly: true,
                   onTap: _pickDate,
                   suffix: IconButton(
-                    icon: const Icon(Icons.calendar_today_outlined, size: 16),
+                    icon: const Icon(Icons.calendar_today_outlined, size: 20),
                     onPressed: _pickDate,
                   ),
                 ),
@@ -675,7 +1062,9 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     );
   }
 
-  // STEP 2 — Procedure editor
+  Widget _tbIcon(IconData icon, String tip, VoidCallback onTap) =>
+      IconButton(tooltip: tip, icon: Icon(icon, size: 20), onPressed: onTap);
+
   Widget _buildEditorStep() {
     return Container(
       decoration: BoxDecoration(
@@ -691,7 +1080,10 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
               controller: _controller,
               callbacks: Callbacks(
                 onInit: _syncListMarkers,
-                onChangeContent: (_) => _syncListMarkers(),
+                onChangeContent: (s) {
+                  if (s != null) _latestHtml = s;
+                  _syncListMarkers();
+                },
                 onChangeSelection: (_) => _syncListMarkers(),
               ),
               htmlEditorOptions: HtmlEditorOptions(
@@ -700,7 +1092,9 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
                 autoAdjustHeight: false,
                 webInitialScripts: UnmodifiableListView([
                   WebScript(name: 'syncListMarkers', script: syncListScript),
+                  WebScript(name: 'imgFix', script: imageFixScript),
                   ...paragraphScripts,
+                  ...imageScripts,
                 ]),
               ),
               htmlToolbarOptions: HtmlToolbarOptions(
@@ -720,10 +1114,10 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
                   OtherButtons(),
                 ],
                 customToolbarButtons: [
-                  IconButton(
-                    tooltip: 'Checkbox list',
-                    icon: const Icon(Icons.check_box_outline_blank, size: 20),
-                    onPressed: _insertBoxList,
+                  _tbIcon(
+                    Icons.check_box_outline_blank,
+                    'Checkbox list',
+                    _insertBoxList,
                   ),
                   PopupMenuButton<String>(
                     tooltip: 'Line spacing',
@@ -740,17 +1134,47 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
                           PopupMenuItem(value: 'lsp30', child: Text('3.0')),
                         ],
                   ),
-                  IconButton(
-                    tooltip: 'Remove space after paragraph',
-                    icon: const Icon(Icons.vertical_align_center, size: 20),
-                    onPressed:
-                        () => _controller.evaluateJavascriptWeb('spaceRemove'),
+                  _tbIcon(
+                    Icons.vertical_align_center,
+                    'Remove space after paragraph',
+                    () => _controller.evaluateJavascriptWeb('spaceRemove'),
                   ),
-                  IconButton(
-                    tooltip: 'Add space after paragraph',
-                    icon: const Icon(Icons.space_bar, size: 20),
-                    onPressed:
-                        () => _controller.evaluateJavascriptWeb('spaceAdd'),
+                  _tbIcon(
+                    Icons.space_bar,
+                    'Add space after paragraph',
+                    () => _controller.evaluateJavascriptWeb('spaceAdd'),
+                  ),
+                  // ── Image tools (i-click muna ang image sa editor) ──
+                  PopupMenuButton<String>(
+                    tooltip: 'Image size (click image first)',
+                    icon: const Icon(Icons.photo_size_select_large, size: 20),
+                    onSelected:
+                        (name) => _controller.evaluateJavascriptWeb(name),
+                    itemBuilder:
+                        (_) => const [
+                          PopupMenuItem(value: 'imgW25', child: Text('25%')),
+                          PopupMenuItem(value: 'imgW50', child: Text('50%')),
+                          PopupMenuItem(value: 'imgW75', child: Text('75%')),
+                          PopupMenuItem(value: 'imgW100', child: Text('100%')),
+                        ],
+                  ),
+                  PopupMenuButton<String>(
+                    tooltip: 'Image align (click image first)',
+                    icon: const Icon(Icons.align_horizontal_left, size: 20),
+                    onSelected:
+                        (name) => _controller.evaluateJavascriptWeb(name),
+                    itemBuilder:
+                        (_) => const [
+                          PopupMenuItem(value: 'imgLeft', child: Text('Left')),
+                          PopupMenuItem(
+                            value: 'imgCenter',
+                            child: Text('Center'),
+                          ),
+                          PopupMenuItem(
+                            value: 'imgRight',
+                            child: Text('Right'),
+                          ),
+                        ],
                   ),
                 ],
               ),
@@ -762,7 +1186,6 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
     );
   }
 
-  // STEP 3 — Review
   Widget _buildReviewStep() {
     const rows = [
       ('title', 'Title'),
@@ -816,4 +1239,33 @@ class _ProceduresEditorPageState extends State<ProceduresPage> {
       ),
     );
   }
+}
+
+class _ChevronClipper extends CustomClipper<Path> {
+  final bool first;
+  final bool last;
+  final double depth;
+
+  const _ChevronClipper({
+    required this.first,
+    required this.last,
+    required this.depth,
+  });
+
+  @override
+  Path getClip(Size s) {
+    final r = last ? s.width : s.width - depth;
+    final p = Path()..moveTo(0, 0);
+    p.lineTo(r, 0);
+    if (!last) p.lineTo(s.width, s.height / 2);
+    p.lineTo(r, s.height);
+    p.lineTo(0, s.height);
+    if (!first) p.lineTo(depth, s.height / 2);
+    p.close();
+    return p;
+  }
+
+  @override
+  bool shouldReclip(_ChevronClipper old) =>
+      old.first != first || old.last != last || old.depth != depth;
 }

@@ -1452,10 +1452,10 @@ class SidebarState extends State<Sidebar> {
             ],
           ),
           NavChild(
-            'ISPAM Modules',
+            'SPAM Modules',
             null,
             prefixTitle: false,
-            children: [NavChild('ISPAM Signatory Template', 24)],
+            children: [NavChild('SPAM Signatory Template', 24)],
           ),
         ],
       ),

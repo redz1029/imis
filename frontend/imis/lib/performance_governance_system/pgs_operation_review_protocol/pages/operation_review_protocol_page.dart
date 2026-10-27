@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -32,6 +33,80 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal_html/html.dart' as html;
+
+const String _allServicesLabel = 'All Services';
+const bool kPreloadProtocols = true;
+
+class _ProtocolCache {
+  static const int _maxConcurrent = 3;
+  static const Duration _ttl = Duration(minutes: 2);
+
+  static final Map<String, List<OperationsReviewProtocol>> _data = {};
+  static final Map<String, DateTime> _stamp = {};
+  static final Map<String, Future<List<OperationsReviewProtocol>>> _inflight =
+      {};
+  static final List<Completer<void>> _queue = [];
+  static int _active = 0;
+
+  static List<OperationsReviewProtocol>? peek(String id) {
+    final at = _stamp[id];
+    if (at == null || DateTime.now().difference(at) > _ttl) return null;
+    return _data[id];
+  }
+
+  static Future<List<OperationsReviewProtocol>> load(
+    String id,
+    Future<List<OperationsReviewProtocol>> Function() fetch, {
+    bool force = false,
+  }) {
+    if (!force) {
+      final cached = peek(id);
+      if (cached != null) return Future.value(cached);
+
+      final running = _inflight[id];
+      if (running != null) return running;
+    }
+
+    final future = _run(id, fetch);
+    _inflight[id] = future;
+    future.whenComplete(() => _inflight.remove(id)).ignore();
+    return future;
+  }
+
+  static Future<List<OperationsReviewProtocol>> _run(
+    String id,
+    Future<List<OperationsReviewProtocol>> Function() fetch,
+  ) async {
+    await _acquire();
+    try {
+      final result = await fetch();
+      _data[id] = result;
+      _stamp[id] = DateTime.now();
+      return result;
+    } finally {
+      _release();
+    }
+  }
+
+  static Future<void> _acquire() async {
+    if (_active < _maxConcurrent) {
+      _active++;
+      return;
+    }
+    final waiter = Completer<void>();
+    _queue.add(waiter);
+    await waiter.future;
+  }
+
+  static void _release() {
+    if (_queue.isNotEmpty) {
+      // Ipasa ang slot sa susunod sa pila (hindi nagbabago ang _active).
+      _queue.removeAt(0).complete();
+    } else {
+      _active--;
+    }
+  }
+}
 
 class OperationReviewProtocolPage extends StatefulWidget {
   const OperationReviewProtocolPage({super.key});
@@ -74,7 +149,6 @@ class OperationReviewProtocolPageState
   @override
   void initState() {
     super.initState();
-    // fetchOperationReview();
     _initialize();
   }
 
@@ -215,9 +289,9 @@ class OperationReviewProtocolPageState
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Container(
-                padding: const EdgeInsets.symmetric(
+                padding: EdgeInsets.symmetric(
                   vertical: 8,
-                  horizontal: 32,
+                  horizontal: isMobile ? 12 : 32,
                 ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
@@ -232,6 +306,7 @@ class OperationReviewProtocolPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (!_isLoading && filteredList.isNotEmpty) _buildLegend(),
                     const SizedBox(height: 5),
                     Expanded(
                       child:
@@ -270,6 +345,9 @@ class OperationReviewProtocolPageState
                                 itemBuilder: (context, index) {
                                   final pgs = filteredList[index];
                                   return _PgsReviewTile(
+                                    // FIX: may key para hindi mag-reuse ng state
+                                    // (expanded / protocols) ng ibang office pag nag-change ng page.
+                                    key: ValueKey('pgs_${pgs.id}'),
                                     pgs: pgs,
                                     pgsService: _pgsService,
                                     deliverableAccomplishmentService:
@@ -304,6 +382,39 @@ class OperationReviewProtocolPageState
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegend() {
+    Widget item(IconData icon, Color color, String label) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+          ),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 6, 4, 2),
+      child: Wrap(
+        spacing: 14,
+        runSpacing: 4,
+        children: [
+          item(Icons.check_circle, Colors.green.shade600, 'Submitted'),
+          item(Icons.edit_outlined, Colors.orange.shade700, 'Draft'),
+          item(
+            Icons.radio_button_unchecked,
+            Colors.grey.shade500,
+            'No operation review protocol yet',
           ),
         ],
       ),
@@ -353,14 +464,13 @@ class OperationReviewProtocolPageState
                         color: Color(0xFF1A1D23),
                       ),
                     ),
-                    // Text(
-                    //   "$_totalCount operation review protocol${_totalCount != 1 ? 's' : ''} found",
-
-                    //   style: TextStyle(
-                    //     fontSize: isXSmall ? 10 : 12,
-                    //     color: Colors.grey.shade600,
-                    //   ),
-                    // ),
+                    Text(
+                      '$_totalCount office${_totalCount != 1 ? 's' : ''} found',
+                      style: TextStyle(
+                        fontSize: isXSmall ? 10 : 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -372,12 +482,18 @@ class OperationReviewProtocolPageState
     );
   }
 
+  // FIX: kasama na ang office filter sa active filters.
   bool get _hasActiveFilters =>
-      _selectedServiceId != null || _selectedPeriodId != null;
+      _selectedServiceId != null ||
+      _selectedOfficeId != null ||
+      _selectedPeriodId != null;
+
   void _resetFilters() {
     setState(() {
       _selectedServiceId = null;
+      _selectedOfficeId = null;
       _selectedPeriodId = null;
+      officeList = [];
       filteredList = List.from(operationReviewprotocolList);
     });
     fetchFilter();
@@ -534,8 +650,7 @@ class OperationReviewProtocolPageState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (_roleName !=
-                            PermissionRoleString.roleStandardUser) ...[
+                        if (_canViewServiceOffice) ...[
                           SizedBox(
                             height: 38,
                             child: PermissionWidget(
@@ -543,6 +658,7 @@ class OperationReviewProtocolPageState
                               child: _serviceDropdown(),
                             ),
                           ),
+                          const SizedBox(height: 8),
                           SizedBox(
                             height: 38,
                             child: PermissionWidget(
@@ -550,6 +666,7 @@ class OperationReviewProtocolPageState
                               child: _officeDropdown(),
                             ),
                           ),
+                          const SizedBox(height: 8),
                         ],
                         SizedBox(
                           height: 38,
@@ -567,29 +684,31 @@ class OperationReviewProtocolPageState
     );
   }
 
+  // FIX: dati "All Service" ang nasa items pero "Select Service" ang chine-check sa
+  // onChanged, kaya nag-e-error (firstWhere walang match) pag pinili ang "All Service".
   Widget _serviceDropdown() {
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 150, maxWidth: 400),
       child: SizedBox(
         height: 38,
         child: SearchableDropdown(
-          items: ["All Service", ...serviceList.map((s) => s.officeName)],
+          items: [_allServicesLabel, ...serviceList.map((s) => s.officeName)],
           selectedItem:
               _selectedServiceId == null
-                  ? "Select Service"
+                  ? _allServicesLabel
                   : (serviceList
                           .where(
                             (s) => s.officeId.toString() == _selectedServiceId,
                           )
                           .firstOrNull
                           ?.officeName ??
-                      "Select Service"),
+                      _allServicesLabel),
           hintText: "Service",
           searchHint: "Search services...",
           prefixIcon: Icons.apartment_outlined,
           onChanged: (value) {
             final newId =
-                value == "Select Service"
+                value == _allServicesLabel
                     ? null
                     : serviceList
                         .firstWhere((s) => s.officeName == value)
@@ -745,6 +864,7 @@ class _PgsReviewTile extends StatefulWidget {
   final DeliverableStatusMonitoringService deliverableAccomplishmentService;
 
   const _PgsReviewTile({
+    super.key,
     required this.pgs,
     required this.pgsService,
     required this.deliverableAccomplishmentService,
@@ -754,7 +874,8 @@ class _PgsReviewTile extends StatefulWidget {
   State<_PgsReviewTile> createState() => _PgsReviewTileState();
 }
 
-class _PgsReviewTileState extends State<_PgsReviewTile> {
+class _PgsReviewTileState extends State<_PgsReviewTile>
+    with AutomaticKeepAliveClientMixin {
   static const _monthNames = [
     'January',
     'February',
@@ -770,24 +891,66 @@ class _PgsReviewTileState extends State<_PgsReviewTile> {
     'December',
   ];
 
+  static const _shortMonths = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
   bool _expanded = false;
   bool _loading = false;
   bool _loaded = false;
   List<OperationsReviewProtocol> _protocols = [];
 
+  // Hindi na idi-dispose ang tile pag na-scroll palabas, kaya hindi na uulit ng request
+  // at hindi nawawala ang expanded state.
+  @override
+  bool get wantKeepAlive => true;
+
   String get _pgsId => widget.pgs.id.toString();
 
-  Future<void> _loadProtocols() async {
-    setState(() => _loading = true);
-    final list = await widget.pgsService.fetchAllOperationReviewProtocols(
-      pgsId: _pgsId,
-    );
-    if (!mounted) return;
-    setState(() {
-      _protocols = list;
-      _loading = false;
+  @override
+  void initState() {
+    super.initState();
+    final cached = _ProtocolCache.peek(_pgsId);
+    if (cached != null) {
+      _protocols = cached;
       _loaded = true;
-    });
+    } else if (kPreloadProtocols) {
+      _loading = true;
+      // Auto-load para kita agad ang status ng bawat buwan kahit hindi pa naka-expand.
+      Future.microtask(() => _loadProtocols(force: false));
+    }
+  }
+
+  // force = true (default) pag may save/delete, para laging fresh ang data.
+  Future<void> _loadProtocols({bool force = true}) async {
+    if (mounted) setState(() => _loading = true);
+    try {
+      final list = await _ProtocolCache.load(
+        _pgsId,
+        () => widget.pgsService.fetchAllOperationReviewProtocols(pgsId: _pgsId),
+        force: force,
+      );
+      if (!mounted) return;
+      setState(() {
+        _protocols = list;
+        _loaded = true;
+      });
+    } catch (e) {
+      debugPrint('Failed to load protocols: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   bool _isSubmitted(OperationsReviewProtocol p) => p.isDraft != true;
@@ -815,6 +978,129 @@ class _PgsReviewTileState extends State<_PgsReviewTile> {
             .map((p) => DateTime(p.postingDate!.year, p.postingDate!.month))
             .toSet();
     return _allMonths.where((m) => !saved.contains(m)).toList();
+  }
+
+  Map<int, OperationsReviewProtocol> get _protocolByMonth {
+    final map = <int, OperationsReviewProtocol>{};
+    for (final p in _protocols) {
+      final d = p.postingDate;
+      if (d == null) continue;
+      map[d.year * 100 + d.month] = p;
+    }
+    return map;
+  }
+
+  int get _doneCount {
+    final keys = _protocolByMonth.keys.toSet();
+    return _allMonths
+        .where((m) => keys.contains(m.year * 100 + m.month))
+        .length;
+  }
+
+  int get _submittedCount => _protocols.where(_isSubmitted).length;
+
+  Widget _monthStrip() {
+    if (_loading && !_loaded) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: SizedBox(
+          height: 14,
+          width: 14,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    // Huwag magpakita ng chips kung wala pang data (iwas maling "No protocol yet").
+    if (!_loaded) return const SizedBox.shrink();
+
+    final byMonth = _protocolByMonth;
+    final start = widget.pgs.pgsPeriod.startDate;
+    final end = widget.pgs.pgsPeriod.endDate;
+    final crossYear = start.year != end.year;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children:
+            _allMonths.map((m) {
+              final p = byMonth[m.year * 100 + m.month];
+              return _monthChip(m, p, crossYear);
+            }).toList(),
+      ),
+    );
+  }
+
+  Widget _monthChip(
+    DateTime month,
+    OperationsReviewProtocol? protocol,
+    bool crossYear,
+  ) {
+    final label =
+        crossYear
+            ? "${_shortMonths[month.month - 1]} '${(month.year % 100).toString().padLeft(2, '0')}"
+            : _shortMonths[month.month - 1];
+
+    late final Color color;
+    late final IconData icon;
+    late final String tip;
+
+    if (protocol == null) {
+      color = Colors.grey.shade500;
+      icon = Icons.radio_button_unchecked;
+      tip = '${_monthLabel(month)}: no protocol yet';
+    } else if (_isSubmitted(protocol)) {
+      color = Colors.green.shade600;
+      icon = Icons.check_circle;
+      tip = '${_monthLabel(month)}: submitted (tap to view)';
+    } else {
+      color = Colors.orange.shade700;
+      icon = Icons.edit_outlined;
+      tip = '${_monthLabel(month)}: draft (tap to continue editing)';
+    }
+
+    final chip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color:
+            protocol == null
+                ? Colors.transparent
+                : color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withValues(alpha: protocol == null ? 0.4 : 0.5),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Tooltip(
+      message: tip,
+      child:
+          protocol == null
+              ? chip
+              : InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => _openSavedReview(protocol),
+                child: chip,
+              ),
+    );
   }
 
   Future<void> _showMonthPicker() async {
@@ -1200,8 +1486,9 @@ class _PgsReviewTileState extends State<_PgsReviewTile> {
       context: context,
       builder:
           (ctx) => DeleteDialog(
-            title: 'Performance Validation',
-            itemName: 'performance validation',
+            // FIX: dati 'Performance Validation' (nakopya sa ibang page).
+            title: 'Operation Review Protocol',
+            itemName: 'operation review protocol',
             onDelete: () async {
               Navigator.pop(ctx);
               await widget.pgsService.deleteOperationReviewProtocol(
@@ -1240,11 +1527,43 @@ class _PgsReviewTileState extends State<_PgsReviewTile> {
     );
   }
 
+  Widget _progressLabel() {
+    if (!_loaded) return const SizedBox.shrink();
+
+    final total = _allMonths.length;
+    final done = _doneCount;
+    final complete = total > 0 && done == total;
+    final color = complete ? Colors.green.shade600 : Colors.grey.shade700;
+
+    return Tooltip(
+      message:
+          '$done of $total months have a protocol '
+          '($_submittedCount submitted, ${_protocols.length - _submittedCount} draft)',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          '$done/$total',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final converter = LongDateOnlyConverter();
     final start = converter.toJson(widget.pgs.pgsPeriod.startDate);
     final end = converter.toJson(widget.pgs.pgsPeriod.endDate);
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
@@ -1256,7 +1575,7 @@ class _PgsReviewTileState extends State<_PgsReviewTile> {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           childrenPadding: EdgeInsets.zero,
           onExpansionChanged: (open) {
             setState(() => _expanded = open);
@@ -1279,13 +1598,20 @@ class _PgsReviewTileState extends State<_PgsReviewTile> {
             widget.pgs.office.name,
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           ),
-          subtitle: Text(
-            "$start - $end",
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "$start - $end",
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              ),
+              _monthStrip(),
+            ],
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (!isMobile) ...[_progressLabel(), const SizedBox(width: 4)],
               PermissionWidget(
                 permission: AppPermissions.addOperationReviewProtocol,
                 child: IconButton(
@@ -1296,15 +1622,14 @@ class _PgsReviewTileState extends State<_PgsReviewTile> {
                     size: 20,
                   ),
                   onPressed: () async {
-                    if (!_expanded) setState(() => _expanded = true);
                     if (!_loaded) await _loadProtocols();
                     await _showMonthPicker();
                   },
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 2),
               Tooltip(
-                message: 'Expand',
+                message: _expanded ? 'Collapse' : 'Show details',
                 child: const Icon(
                   Icons.expand_more_rounded,
                   color: kMuted,
@@ -1315,7 +1640,7 @@ class _PgsReviewTileState extends State<_PgsReviewTile> {
           ),
 
           children: [
-            if (_loading)
+            if (_loading && !_loaded)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
