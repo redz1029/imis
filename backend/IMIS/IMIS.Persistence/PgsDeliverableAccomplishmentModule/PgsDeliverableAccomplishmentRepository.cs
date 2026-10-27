@@ -14,7 +14,6 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
         {
             return await EntityPageList<PgsDeliverableAccomplishment, long>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
         }
-      
 
         public async Task<PgsDeliverableAccomplishmentFilterDto> GetByFilterAsync(int? periodId, int? officeId, long? pgsId, CancellationToken cancellationToken)
         {
@@ -51,7 +50,8 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
                     EndDate = d.PerfomanceGovernanceSystem.PgsPeriod.EndDate,
                     Accomplishments = d.PgsDeliverableAccomplishments!
                         .Where(a => !a.IsDeleted)
-                        .OrderBy(a => a.Id)
+                        .OrderBy(a => a.PostingDate)         
+                        .ThenBy(a => a.Id)
                         .Select(a => new
                         {
                             a.Id,
@@ -72,18 +72,17 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
             var firstRow = rows[0];
 
             string startMonth = firstRow.StartDate.ToString("MMMM", CultureInfo.InvariantCulture);
-
             string endMonth = firstRow.EndDate.ToString("MMMM", CultureInfo.InvariantCulture);
-
             string startYear = firstRow.StartDate.ToString("yyyy", CultureInfo.InvariantCulture);
-
             string endYear = firstRow.EndDate.ToString("yyyy", CultureInfo.InvariantCulture);
 
             string periodName;
 
             if (firstRow.StartDate.Year == firstRow.EndDate.Year)
             {
-                periodName = firstRow.StartDate.Month == firstRow.EndDate.Month ? $"{startMonth} {startYear}" : $"{startMonth} to {endMonth} {endYear}";
+                periodName = firstRow.StartDate.Month == firstRow.EndDate.Month
+                    ? $"{startMonth} {startYear}"
+                    : $"{startMonth} to {endMonth} {endYear}";
             }
             else
             {
@@ -102,6 +101,9 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
                         DeliverableName = r.DeliverableName,
 
                         Accomplishments = r.Accomplishments
+                            .OrderBy(a => a.PostingDate.Year)
+                            .ThenBy(a => a.PostingDate.Month)
+                            .ThenBy(a => a.Id)
                             .Select(a => new AccomplishmentItemDto
                             {
                                 Id = a.Id,
