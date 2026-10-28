@@ -37,7 +37,8 @@ class _NcarListPageState extends State<NcarListPage> {
     try {
       _currentUser = await AuthUtil.fetchLoggedUser();
       isAdmin = await AuthUtil.isCurrentUserAdmin();
-      final ncars = await _service.getAllNcars();
+      // One audit can raise many NCARs (one per non-conforming clause).
+      final ncars = await _service.getAllNcars(pageSize: 500);
       if (mounted) {
         setState(() {
           _allNcars = ncars;
@@ -199,6 +200,18 @@ class _NcarListPageState extends State<NcarListPage> {
     final isMobile = width < 600;
     final ncars = _filteredNcars;
 
+    // Grouped per office: an office can hold several NCARs from one audit.
+    final byOffice = <String, List<NonconformingActionReport>>{};
+    for (final n in ncars) {
+      byOffice.putIfAbsent(n.office, () => []).add(n);
+    }
+    final items = <Object>[
+      for (final office in byOffice.keys.toList()..sort()) ...[
+        office,
+        ...byOffice[office]!,
+      ],
+    ];
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -241,10 +254,24 @@ class _NcarListPageState extends State<NcarListPage> {
                   : ncars.isEmpty
                       ? const Center(child: Text('No NCAR records found.'))
                       : ListView.separated(
-                          itemCount: ncars.length,
+                          itemCount: items.length,
                           separatorBuilder: (_, __) => const Divider(height: 1),
                           itemBuilder: (context, index) {
-                            final n = ncars[index];
+                            final item = items[index];
+                            if (item is String) {
+                              return Padding(
+                                padding: const EdgeInsets.fromLTRB(4, 12, 4, 4),
+                                child: Text(
+                                  '${item.isEmpty ? 'No office' : item} • ${byOffice[item]!.length} NCAR(s)',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: primaryColor,
+                                  ),
+                                ),
+                              );
+                            }
+                            final n = item as NonconformingActionReport;
                             final dateStr = DateFormat('MMM d, yyyy').format(n.auditDate);
 
                             return Card(
@@ -299,6 +326,13 @@ class _NcarListPageState extends State<NcarListPage> {
                                     const SizedBox(height: 10),
                                     Text('Standard: ${n.relevantStandard} • Audit Date: $dateStr',
                                         style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                                    if (n.auditChecklistId != null) ...[
+                                      const SizedBox(height: 6),
+                                      Text('Source clause ${n.relevantStandard}: ${n.standardRequirement}',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                                    ],
                                     const SizedBox(height: 6),
                                     Text('Finding: ${n.auditFindings}',
                                         maxLines: 2,

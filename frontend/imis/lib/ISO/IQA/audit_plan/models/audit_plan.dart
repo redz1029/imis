@@ -35,6 +35,9 @@ class AuditPlan {
   @DateTimeConverter()
   final DateTime endDate;
 
+  @JsonKey(defaultValue: 0)
+  final int revision;
+
   @JsonKey(fromJson: _entriesFromJson, defaultValue: [])
   final List<AuditPlanEntry> entries;
 
@@ -69,6 +72,7 @@ class AuditPlan {
     this.statusName,
     required this.startDate,
     required this.endDate,
+    this.revision = 0,
     this.entries = const [],
     this.signatories = const [],
     this.approvalHistory = const [],
@@ -98,6 +102,7 @@ class AuditPlan {
       statusName: base.statusName,
       startDate: base.startDate,
       endDate: base.endDate,
+      revision: base.revision,
       entries: base.entries,
       signatories: base.signatories,
       approvalHistory: history,

@@ -9,6 +9,7 @@ import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart';
 import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_schedules/models/reschedule_request.dart';
 import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
 import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_page.dart'
@@ -81,6 +82,11 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
 
   UserRegistration? _currentUser;
   bool _isAdmin = false;
+
+  /// Latest reschedule request of the open office, and the requests that are
+  /// waiting on the signed-in Team Leader / Lead Auditor.
+  RescheduleRequest? _latestRequest;
+  List<RescheduleRequest> _pendingApprovals = [];
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -122,6 +128,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   void initState() {
     super.initState();
     _resolvedAuditPlanId = widget.auditPlanId;
+    _loadPendingApprovals();
     if (_resolvedAuditPlanId != null) {
       _loadAuditPlanList(selectAfterLoadId: _resolvedAuditPlanId);
     } else {
@@ -421,10 +428,20 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         .toList();
   }
 
-  /// AUDIT DATE: plan.startDate offset by the group's day number — matches
-  /// the backend's own FormattedProposedSchedule calculation exactly.
+  AuditPlanEntry _primaryEntry(_OfficeGroup group) {
+    final entryId = group.schedule?.auditPlanEntryId ?? 0;
+    if (entryId != 0) {
+      for (final e in group.entries) {
+        if (e.id == entryId) return e;
+      }
+    }
+    return group.entries.first;
+  }
+
+  /// AUDIT DATE: plan.startDate offset by the linked entry's day number —
+  /// matches the backend's own FormattedProposedSchedule calculation exactly.
   DateTime _proposedDateForGroup(_OfficeGroup group) {
-    return _dateForDay(group.entries.first.dayNumber);
+    return _dateForDay(_primaryEntry(group).dayNumber);
   }
 
   DateTime _dateForDay(int dayNumber) {
@@ -530,11 +547,35 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     }
   }
 
-  Future<void> _handleRejectSchedule(_OfficeGroup group) async {
+  // ===========================================================================
+  // Reschedule requests (Department Head -> Team Leader -> Lead Auditor)
+  // ===========================================================================
+  Future<void> _loadPendingApprovals() async {
+    try {
+      final pending = await _scheduleService.getPendingRescheduleRequests();
+      if (!mounted) return;
+      setState(() => _pendingApprovals = pending);
+    } catch (e) {
+      debugPrint('Failed to load pending reschedule requests: $e');
+    }
+  }
+
+  Future<void> _loadLatestRequest(_OfficeGroup group) async {
+    final schedId = group.schedule?.id ?? 0;
+    if (schedId <= 0) return;
+    try {
+      final latest = await _scheduleService.getLatestRescheduleRequest(schedId);
+      if (!mounted || _selectedOffice != group) return;
+      setState(() => _latestRequest = latest);
+    } catch (e) {
+      debugPrint('Failed to load reschedule request: $e');
+    }
+  }
+
+  Future<void> _handleRequestReschedule(_OfficeGroup group) async {
     var schedId = group.schedule?.id;
     if (schedId == null || schedId <= 0) {
       try {
-        final firstEntry = group.entries.first;
         final created = await _scheduleService.addAuditSchedule(
           AuditSchedules(
             purpose: _kFixedPurposeText,
@@ -543,7 +584,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             startDate: _plan!.startDate,
             endDate: _plan!.endDate,
             auditPlanId: _plan!.id,
-            auditPlanEntryId: firstEntry.id,
+            auditPlanEntryId: group.entries.first.id,
           ),
         );
         schedId = created.id;
@@ -552,44 +593,326 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         debugPrint('Failed to initialize schedule: $e');
       }
     }
-    if (schedId == null || schedId <= 0 || !mounted) return;
+    if (schedId == null || schedId <= 0 || !mounted) {
+      if (mounted) {
+        MotionToast.error(
+          toastAlignment: Alignment.topCenter,
+          description: const Text(
+            'Unable to reschedule: the audit schedule has no valid record.',
+          ),
+        ).show(context);
+      }
+      return;
+    }
 
-    final reason = await RejectionDialog.show(
-      context,
-      title: 'Reject Audit Schedule',
-      subtitle:
-          'Please provide the reason for rejecting the audit schedule for ${group.officeName}.',
+    final entry = _primaryEntry(group);
+    final day = _proposedDateForGroup(group);
+    final currentStart = DateTime(
+      day.year,
+      day.month,
+      day.day,
+      entry.time.hour,
+      entry.time.minute,
     );
-    if (reason == null) return;
+    final planStart = DateTime(
+      _plan!.startDate.year,
+      _plan!.startDate.month,
+      _plan!.startDate.day,
+    );
+    final planEnd = DateTime(
+      _plan!.endDate.year,
+      _plan!.endDate.month,
+      _plan!.endDate.day,
+    );
+
+    final input = await showDialog<_RescheduleRequestInput>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _RescheduleRequestDialog(
+        officeName: group.officeName,
+        currentStart: currentStart,
+        firstDate: planStart,
+        lastDate: planEnd,
+      ),
+    );
+    if (input == null || !mounted) return;
 
     setState(() => _isLoading = true);
     try {
-      final user = _currentUser ?? await AuthUtil.fetchLoggedUser();
-      await _scheduleService.decideAuditSchedule(
+      await _scheduleService.requestReschedule(
         schedId,
-        approverId: user?.id ?? '',
-        action: 'Reject',
-        comments: reason,
-        officeName: group.officeName,
+        proposedStart: input.start,
+        reason: input.reason,
       );
       if (!mounted) return;
       MotionToast.success(
         toastAlignment: Alignment.topCenter,
         description: Text(
-          'Audit schedule for ${group.officeName} rejected with comment.',
+          'Reschedule request for ${group.officeName} sent to the Auditor Team Leader.',
         ),
       ).show(context);
-      await _loadPlanDetail(_plan!);
+      final latest = await _scheduleService.getLatestRescheduleRequest(schedId);
+      if (!mounted) return;
+      setState(() => _latestRequest = latest);
     } catch (e) {
       if (!mounted) return;
       MotionToast.error(
         toastAlignment: Alignment.topCenter,
-        description: Text('Failed: $e'),
+        description: Text(e.toString().replaceFirst('Exception: ', '')),
       ).show(context);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  Future<void> _handleDecideRequest(
+    RescheduleRequest request, {
+    required bool approve,
+  }) async {
+    final office = request.officeName ?? 'this office';
+    final isLeadAuditorStep =
+        request.status == RescheduleRequest.pendingLeadAuditor;
+    String? remarks;
+
+    if (approve) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(isLeadAuditorStep ? 'Accept Reschedule' : 'Approve Reschedule'),
+          content: Text(
+            isLeadAuditorStep
+                ? 'Accept the reschedule request for $office? The audit '
+                    'schedule, Audit Plan and (if the day changes) Audit '
+                    'Programme will be revised.'
+                : 'Approve the reschedule request for $office and forward it '
+                    'to the Lead Auditor?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade700,
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(
+                isLeadAuditorStep ? 'Accept' : 'Approve',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    } else {
+      remarks = await RejectionDialog.show(
+        context,
+        title: 'Reject Reschedule Request',
+        subtitle:
+            'Please provide the reason for rejecting the reschedule request for $office.',
+      );
+      if (remarks == null) return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await _scheduleService.decideRescheduleRequest(
+        request.id,
+        approve: approve,
+        remarks: remarks,
+      );
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: Text(
+          approve
+              ? (isLeadAuditorStep
+                  ? 'Reschedule accepted. The audit schedule was revised.'
+                  : 'Reschedule request forwarded to the Lead Auditor.')
+              : 'Reschedule request rejected.',
+        ),
+      ).show(context);
+      await _loadPendingApprovals();
+      // An accepted request has revised the schedule, so reload the plan.
+      if (approve && isLeadAuditorStep && _plan != null) {
+        await _loadPlanDetail(_plan!);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text(e.toString().replaceFirst('Exception: ', '')),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// Notification panel for the Team Leader / Lead Auditor: the reschedule
+  /// requests that are waiting on the signed-in user.
+  Widget _buildPendingApprovalsPanel() {
+    final fmt = DateFormat('MMM d, yyyy h:mm a');
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(maxHeight: 260),
+      margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        border: Border.all(color: Colors.orange.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.notifications_active_outlined,
+                    size: 18, color: Colors.orange.shade800),
+                const SizedBox(width: 8),
+                Text(
+                  'Reschedule requests awaiting your decision '
+                  '(${_pendingApprovals.length})',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade900,
+                  ),
+                ),
+              ],
+            ),
+            for (final r in _pendingApprovals) ...[
+              const Divider(height: 20),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          (r.officeName ?? 'Audit Schedule').toUpperCase(),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${fmt.format(r.currentStartDate)}  →  '
+                          '${fmt.format(r.proposedStartDate)}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        if ((r.reason ?? '').isNotEmpty)
+                          Text(
+                            'Reason: ${r.reason}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        Text(
+                          '${r.status}'
+                          '${r.requestedBy != null ? ' • Requested by ${r.requestedBy}' : ''}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: () => _handleDecideRequest(r, approve: false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red.shade700,
+                      side: BorderSide(color: Colors.red.shade300),
+                    ),
+                    child: const Text('Reject'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _handleDecideRequest(r, approve: true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                    ),
+                    child: Text(
+                      r.status == RescheduleRequest.pendingLeadAuditor
+                          ? 'Accept'
+                          : 'Approve',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Status of the latest reschedule request, shown to the Department Head
+  /// on the office detail.
+  Widget _buildRescheduleRequestBanner(RescheduleRequest r) {
+    final fmt = DateFormat('MMM d, yyyy h:mm a');
+    final MaterialColor base;
+    final IconData icon;
+    final String headline;
+    if (r.isPending) {
+      base = Colors.orange;
+      icon = Icons.hourglass_top;
+      headline = 'Reschedule request pending — ${r.status.replaceFirst('Pending ', 'waiting on the ')}';
+    } else if (r.isRejected) {
+      base = Colors.red;
+      icon = Icons.cancel_outlined;
+      headline = 'Reschedule request denied — ${r.status}. The original schedule stays.';
+    } else {
+      base = Colors.green;
+      icon = Icons.check_circle_outline;
+      headline = 'Reschedule request accepted — the schedule was revised.';
+    }
+    final remarks = r.isRejected ? r.rejectionRemarks : null;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: base.shade50,
+        border: Border.all(color: base.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: base.shade800),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  headline,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: base.shade900,
+                  ),
+                ),
+                Text(
+                  'Requested: ${fmt.format(r.proposedStartDate)}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                if ((remarks ?? '').isNotEmpty)
+                  Text('Remarks: $remarks', style: const TextStyle(fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleRescheduleSchedule(_OfficeGroup group) async {
   final schedId = group.schedule?.id;
   if (schedId == null || schedId <= 0) return;
@@ -621,12 +944,18 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         '${DateFormat('MMMM d, yyyy').format(picked)}.',
       ),
     ).show(context);
-    await _loadPlanDetail(_plan!);
+    final officeName = group.officeName;
+    await _loadAuditPlanList(selectAfterLoadId: _plan!.id);
+    if (!mounted) return;
+    final reopened = _officeGroups
+        .where((g) => g.officeName == officeName)
+        .toList();
+    if (reopened.isNotEmpty) _openOffice(reopened.first);
   } catch (e) {
     if (!mounted) return;
     MotionToast.error(
       toastAlignment: Alignment.topCenter,
-      description: Text('${e.toString().replaceFirst('Exception: ', '')}'),
+      description: Text(e.toString().replaceFirst('Exception: ', '')),
     ).show(context);
   } finally {
     if (mounted) setState(() => _isLoading = false);
@@ -705,6 +1034,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   }
 
   void _openOffice(_OfficeGroup group) {
+    _latestRequest = null;
+    _loadLatestRequest(group);
     final text = _activityFor(group);
     setState(() {
       _selectedOffice = group;
@@ -1022,9 +1353,21 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         ),
       );
     }
-    if (_resolvedAuditPlanId == null) return _buildAuditPlanPicker();
-    if (_selectedOffice == null) return _buildOfficeList();
-    return _buildOfficeDetail(_selectedOffice!);
+    final Widget content;
+    if (_resolvedAuditPlanId == null) {
+      content = _buildAuditPlanPicker();
+    } else if (_selectedOffice == null) {
+      content = _buildOfficeList();
+    } else {
+      content = _buildOfficeDetail(_selectedOffice!);
+    }
+    if (_pendingApprovals.isEmpty) return content;
+    return Column(
+      children: [
+        _buildPendingApprovalsPanel(),
+        Expanded(child: content),
+      ],
+    );
   }
 
   // ===========================================================================
@@ -1116,21 +1459,23 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               children: [
                 if (canReject)
                   ElevatedButton.icon(
-                    onPressed: () => _handleRejectSchedule(group),
+                    onPressed: (_latestRequest?.isPending ?? false)
+                        ? null
+                        : () => _handleRequestReschedule(group),
                     icon: const Icon(
-                      Icons.cancel_outlined,
+                      Icons.event_repeat,
                       size: 16,
                       color: Colors.white,
                     ),
                     label: const Text(
-                      'REJECT',
+                      'RESCHEDULE',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: Colors.orange.shade800,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -1420,6 +1765,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_latestRequest != null)
+            _buildRescheduleRequestBanner(_latestRequest!),
           if (group.schedule?.latestRejection != null)
             RejectionBanner(
               rejection: group.schedule!.latestRejection!,
@@ -1733,5 +2080,159 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   String _joinedResponsibleNames(AuditPlanEntry entry) {
     final names = _responsibleNamesForEntry(entry);
     return names.isEmpty ? '—' : names.join('\n');
+  }
+}
+
+/// What the Department Head enters when asking to reschedule.
+class _RescheduleRequestInput {
+  final DateTime start;
+  final String reason;
+
+  const _RescheduleRequestInput(this.start, this.reason);
+}
+
+/// Date + time + reason form for a reschedule request.
+class _RescheduleRequestDialog extends StatefulWidget {
+  final String officeName;
+  final DateTime currentStart;
+  final DateTime firstDate;
+  final DateTime lastDate;
+
+  const _RescheduleRequestDialog({
+    required this.officeName,
+    required this.currentStart,
+    required this.firstDate,
+    required this.lastDate,
+  });
+
+  @override
+  State<_RescheduleRequestDialog> createState() =>
+      _RescheduleRequestDialogState();
+}
+
+class _RescheduleRequestDialogState extends State<_RescheduleRequestDialog> {
+  late DateTime _date;
+  late TimeOfDay _time;
+  final _reasonController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _date = DateTime(
+      widget.currentStart.year,
+      widget.currentStart.month,
+      widget.currentStart.day,
+    );
+    _time = TimeOfDay.fromDateTime(widget.currentStart);
+  }
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  DateTime get _proposed =>
+      DateTime(_date.year, _date.month, _date.day, _time.hour, _time.minute);
+
+  bool get _changed => _proposed != widget.currentStart;
+
+  bool get _valid => _changed && _reasonController.text.trim().isNotEmpty;
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      helpText: 'Select a new audit date',
+      initialDate: _date.isBefore(widget.firstDate)
+          ? widget.firstDate
+          : (_date.isAfter(widget.lastDate) ? widget.lastDate : _date),
+      firstDate: widget.firstDate,
+      lastDate: widget.lastDate,
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      helpText: 'Select a new audit time',
+      initialTime: _time,
+    );
+    if (picked != null) setState(() => _time = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateFmt = DateFormat('MMMM d, yyyy');
+    return AlertDialog(
+      title: const Text('Request Reschedule'),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Audit schedule for ${widget.officeName}\n'
+              'Current: ${dateFmt.format(widget.currentStart)} '
+              '${DateFormat('h:mm a').format(widget.currentStart)}',
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _pickDate,
+                    icon: const Icon(Icons.calendar_today, size: 16),
+                    label: Text(dateFmt.format(_date)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: _pickTime,
+                  icon: const Icon(Icons.access_time, size: 16),
+                  label: Text(_time.format(context)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _reasonController,
+              maxLines: 3,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                labelText: 'Reason for rescheduling',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'The request goes to the Auditor Team Leader, then the Lead '
+              'Auditor. The schedule changes only after the Lead Auditor accepts.',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _valid
+              ? () => Navigator.pop(
+                    context,
+                    _RescheduleRequestInput(
+                      _proposed,
+                      _reasonController.text.trim(),
+                    ),
+                  )
+              : null,
+          child: const Text('Send Request'),
+        ),
+      ],
+    );
   }
 }

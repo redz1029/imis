@@ -5,6 +5,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 
 import '../models/audit_checklist.dart';
+import '../models/checklist_assignment.dart';
 
 class AuditChecklistService {
   final Dio dio;
@@ -48,6 +49,52 @@ class AuditChecklistService {
     } catch (e) {
       rethrow;
     }
+  }
+
+  /// The clause assignment board (which auditor answers which clause). An
+  /// auditor only gets their own clauses and `canAssign == false`.
+  Future<ChecklistAssignments> getAssignments(int auditScheduleId) async {
+    final url =
+        '${ApiEndpoint().auditChecklist}/schedule/$auditScheduleId/assignments';
+    final response = await AuthenticatedRequest.get(dio, url);
+    if (response.statusCode == 200 && response.data is Map) {
+      return ChecklistAssignments.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+    }
+    throw Exception(
+      _errorMessage(response, 'Failed to load the clause assignments.'),
+    );
+  }
+
+  /// Saves clause -> auditor pairs (null auditor clears the assignment).
+  /// Only the Auditor Team Leader of the team (or an Administrator) may do it.
+  Future<void> saveAssignments(
+    int auditScheduleId,
+    Map<int, int?> auditorByClause,
+  ) async {
+    final url =
+        '${ApiEndpoint().auditChecklist}/schedule/$auditScheduleId/assignments';
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: [
+        for (final e in auditorByClause.entries)
+          {'isoStandardId': e.key, 'auditorId': e.value},
+      ],
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _errorMessage(response, 'Failed to save the clause assignments.'),
+      );
+    }
+  }
+
+  String _errorMessage(Response response, String fallback) {
+    final data = response.data;
+    if (data is Map && data['error'] != null) return data['error'].toString();
+    if (data is Map && data['message'] != null) return data['message'].toString();
+    return fallback;
   }
 
   /// Fetches the checklist for an audit plan entry, generating it
@@ -98,7 +145,9 @@ class AuditChecklistService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AuditChecklist.fromJson(response.data as Map<String, dynamic>);
       }
-      throw Exception('Failed to save Audit Checklist item.');
+      throw Exception(
+        _errorMessage(response, 'Failed to save Audit Checklist item.'),
+      );
     } catch (e) {
       rethrow;
     }

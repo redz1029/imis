@@ -45,6 +45,17 @@ namespace IMIS.Application.AuditChecklistModule
         // on save via AuditeeName.
         public string? Auditees { get; set; }
 
+        // ---- Clause assignment (Team Leader -> Auditor). Read-only: filled
+        // by the service for the checklist screen, never read back on save. ----
+        public long? PlanClauseId { get; set; }
+        public int? AssignedAuditorId { get; set; }
+        public string? AssignedAuditorName { get; set; }
+
+        // ---- NCAR raised from this row while it is non-conforming. Read-only:
+        // filled by the service, never read back on save. ----
+        public long? NcarId { get; set; }
+        public string? NcarReferenceNumber { get; set; }
+
         public AuditChecklistDto() { }
 
         [SetsRequiredMembers]

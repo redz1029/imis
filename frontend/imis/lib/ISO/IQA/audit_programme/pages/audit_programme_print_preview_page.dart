@@ -35,7 +35,7 @@ Future<void> openAuditProgrammePrintPreview(
 // =============================================================================
 const String _kLogoCrmc = 'assets/CRMCLogo.png';
 const String _kLogoIso = 'assets/TR-Testmark.jpg';
-const String _kFormCode = 'QP-03-F-04 Rev. 2';
+const String _kFormBase = 'QP-03-F-04';
 
 const double _kML = 48, _kMR = 48, _kMT = 30, _kMB = 30;
 const double _kBorderW = 0.8;
@@ -134,6 +134,7 @@ class _Data {
     required this.teamNames,
     required this.rosters,
     required this.signatories,
+    required this.revision,
   });
 
   final String forText;
@@ -154,6 +155,7 @@ class _Data {
   final Map<int, String> teamNames;
   final Map<int, List<String>> rosters;
   final List<_Sig> signatories;
+  final int revision;
 }
 
 class _PdfAssets {
@@ -409,6 +411,7 @@ Future<_Data> _loadPrintData(int programmeId) async {
       await programmeService.getAuditProgrammeById(programmeId);
   if (programme == null) throw Exception('Audit Programme not found');
   final json = programme.toJson();
+  final revision = programme.revision;
 
   final standardsById = <int, String>{};
   try {
@@ -527,6 +530,7 @@ Future<_Data> _loadPrintData(int programmeId) async {
     selection: _pick(json, 'selectionAndEvaluationOfAuditors'),
     reporting: _pick(json, 'reporting'),
     verification: _pick(json, 'verificationOfPreviousNonconformities'),
+    revision: revision,
     limitations: _pick(json, 'auditLimitations'),
     batches: batches,
     teamNames: teamNames,
@@ -1370,7 +1374,8 @@ class _ProgrammePdfBuilder {
             child: pw.Align(
               alignment: pw.Alignment.centerRight,
               child: isLast
-                  ? _t(_kFormCode, bold: true, size: 8.5)
+                  ? _t('$_kFormBase Rev. ${data.revision}',
+                      bold: true, size: 8.5)
                   : pw.SizedBox(),
             ),
           ),

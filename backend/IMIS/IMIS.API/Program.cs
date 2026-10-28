@@ -74,6 +74,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(new StandardUserRole().Name, policy => policy.RequireRole(new StandardUserRole().Name));
 
 builder.Services.AddAntiforgery();
+builder.Services.AddScoped<Base.Abstractions.AuditableDbContext<User>>(sp => sp.GetRequiredService<ImisDbContext>());
 builder.Services.AddScoped<IRoleAndPermissionSeeder, RoleAndPermissionSeeder>();
 builder.Services.AddAuthorization(options =>
 {

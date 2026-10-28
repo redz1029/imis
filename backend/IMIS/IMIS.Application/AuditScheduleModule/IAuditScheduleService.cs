@@ -43,5 +43,13 @@ namespace IMIS.Application.AuditScheduleModule
         // Reschedule a rejected/revision-required audit schedule. Only the date
         // moves; the time stays locked to the linked audit plan entry.
         Task<(bool Success, string? Error)> RescheduleAsync(int id, DateTime proposedDate, string? comments, CancellationToken cancellationToken);
+
+        // Department Head asks to move the schedule. Routed to the Auditor Team
+        // Leader, then the Lead Auditor; the schedule is only revised once the
+        // Lead Auditor accepts.
+        Task<(bool Success, string? Error)> RequestRescheduleAsync(int id, DateTime proposedStart, string? reason, string? userId, CancellationToken cancellationToken);
+        Task<AuditScheduleRescheduleRequestDto?> GetLatestRescheduleRequestAsync(int scheduleId, string? userId, CancellationToken cancellationToken);
+        Task<List<AuditScheduleRescheduleRequestDto>> GetPendingRescheduleRequestsAsync(string? userId, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> DecideRescheduleRequestAsync(int requestId, string? userId, bool approve, string? remarks, CancellationToken cancellationToken);
     }
 }

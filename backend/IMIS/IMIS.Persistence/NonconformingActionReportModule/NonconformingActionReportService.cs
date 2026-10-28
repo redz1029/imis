@@ -53,6 +53,10 @@ namespace IMIS.Persistence.NonconformingActionReportModule
                 var existing = await _repository.GetByIdWithDetailsAsync(entity.Id, cancellationToken).ConfigureAwait(false);
                 if (existing != null)
                 {
+                    // The checklist link is owned by the server (AuditChecklistService):
+                    // ToEntity() never carries it, so an update must not wipe it.
+                    var auditChecklistId = existing.AuditChecklistId;
+
                     if (existing.RootCauses?.Any() == true)
                         dbContext.Set<NcarRootCause>().RemoveRange(existing.RootCauses);
 
@@ -63,6 +67,7 @@ namespace IMIS.Persistence.NonconformingActionReportModule
                         dbContext.Set<NcarCorrectiveAction>().RemoveRange(existing.CorrectiveActions);
 
                     dbContext.Entry(existing).CurrentValues.SetValues(entity);
+                    existing.AuditChecklistId = auditChecklistId;
 
                     foreach (var rootCause in entity.RootCauses)
                         dbContext.Set<NcarRootCause>().Add(rootCause);

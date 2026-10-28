@@ -21,6 +21,12 @@ namespace IMIS.Domain
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? LastModifiedDate { get; set; }
 
+        /// <summary>
+        /// Revision counter printed on the Audit Plan form. Starts at 0 and is
+        /// bumped when an audit schedule is rescheduled.
+        /// </summary>
+        public int Revision { get; set; } = 0;
+
         public int AuditProgrammeId { get; set; }
         public AuditProgramme? AuditProgramme { get; set; }
 

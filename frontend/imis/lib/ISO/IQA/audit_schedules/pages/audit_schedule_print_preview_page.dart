@@ -44,7 +44,7 @@ const String _kLogoCrmc = 'assets/crmc_logo.png';
 const String _kLogoIso = 'assets/iso_tuv_certified.jpg';
 
 /// Form code printed at the bottom-right of the original form.
-const String _kFormCode = 'QP-03-F-03 Rev. 1';
+const String _kFormBase = 'QP-03-F-03';
 
 const String _kFixedPurposeText = 'Internal Quality Audit';
 const String _kFixedActivityText =
@@ -107,6 +107,7 @@ class _OfficePage {
     required this.auditDate,
     required this.rows,
     required this.signatories,
+    required this.revision,
   });
   final String office;
   final List<_TeamBlock> teams;
@@ -115,6 +116,7 @@ class _OfficePage {
   final DateTime auditDate;
   final List<_Row> rows;
   final List<_Sig> signatories;
+  final int revision;
 }
 
 class _PdfAssets {
@@ -415,6 +417,7 @@ Future<List<_OfficePage>> _loadPrintData(
           _Row(e.time, criteriaFor(e), personsFor(e)),
       ],
       signatories: _buildSignatories(sched),
+      revision: plan.revision,
     ));
   }
   return pages;
@@ -1053,18 +1056,19 @@ class _SchedulePdfBuilder {
   }
 
   // ------------------------------------------------------------- form code ---
-  pw.Widget _formCode() {
+  pw.Widget _formCode(int revision) {
     return pw.Container(
       width: _contentW,
       alignment: pw.Alignment.centerRight,
       padding: const pw.EdgeInsets.only(top: 6),
-      child: _t(_kFormCode, bold: true, size: 8),
+      child: _t('$_kFormBase Rev. $revision', bold: true, size: 8),
     );
   }
 
   pw.Widget _footer(pw.Context ctx) {
     final isLast = ctx.pageNumber == ctx.pagesCount;
-    return isLast ? _formCode() : pw.SizedBox();
+    final revision = pages.isEmpty ? 0 : pages.first.revision;
+    return isLast ? _formCode(revision) : pw.SizedBox();
   }
 
   // ------------------------------------------------------------------ body ---
@@ -1102,7 +1106,7 @@ class _SchedulePdfBuilder {
         _scheduleTable(p, fill: true),
         pw.Expanded(child: _filler()),
         _signatureBlock(p),
-        _formCode(),
+        _formCode(p.revision),
       ],
     );
   }

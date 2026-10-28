@@ -16,6 +16,10 @@ class NonconformingActionReport {
   final String legalOrPolicyReference;
   final String auditFindings;
   final int? auditReportId;
+
+  // Source checklist row when the NCAR was raised from a non-conforming
+  // clause (read-only: set by the server, never sent back on save).
+  final int? auditChecklistId;
   final String issuedByAuditorUserId;
   final String? issuedByAuditorName;
   final DateTime? issuedDate;
@@ -53,6 +57,7 @@ class NonconformingActionReport {
     required this.legalOrPolicyReference,
     required this.auditFindings,
     this.auditReportId,
+    this.auditChecklistId,
     required this.issuedByAuditorUserId,
     this.issuedByAuditorName,
     this.issuedDate,
@@ -106,6 +111,7 @@ class NonconformingActionReport {
       legalOrPolicyReference: (json['legalOrPolicyReference'] ?? json['LegalOrPolicyReference'] ?? '').toString(),
       auditFindings: (json['auditFindings'] ?? json['AuditFindings'] ?? '').toString(),
       auditReportId: json['auditReportId'] ?? json['AuditReportId'],
+      auditChecklistId: json['auditChecklistId'] ?? json['AuditChecklistId'],
       issuedByAuditorUserId: (json['issuedByAuditorUserId'] ?? json['IssuedByAuditorUserId'] ?? '').toString(),
       issuedByAuditorName: json['issuedByAuditorName'] ?? json['IssuedByAuditorName'],
       issuedDate: parseOptDt(json['issuedDate'] ?? json['IssuedDate']),

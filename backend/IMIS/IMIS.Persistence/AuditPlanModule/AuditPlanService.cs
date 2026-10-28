@@ -69,9 +69,11 @@ namespace IMIS.Application.AuditPlanModule
                 // SetValues copies every scalar from the freshly built entity,
                 // including CreatedDate (whatever the client sent). Preserve the real one.
                 var preservedCreatedDate = existing.CreatedDate;
+                var preservedRevision = existing.Revision;
 
                 dbContext.Entry(existing).CurrentValues.SetValues(entity);
                 existing.CreatedDate = preservedCreatedDate;
+                existing.Revision = preservedRevision;
                 existing.LastModifiedDate = DateTime.UtcNow;
 
                 // --- Sync AuditSchedules ---
@@ -132,6 +134,21 @@ namespace IMIS.Application.AuditPlanModule
                 // Push updated StartDate/EndDate onto every linked schedule
                 // right before the terminal save so plan and schedule dates never drift.
                 existing.SyncScheduleDates();
+
+                // After a revision, schedules keep the day/time of their audit
+                // plan entry, not the plan start date SyncScheduleDates applied.
+                if (existing.Revision > 0)
+                {
+                    foreach (var sched in existing.AuditSchedules)
+                    {
+                        var linked = existing.Entries.FirstOrDefault(e => e.Id == sched.AuditPlanEntryId);
+                        if (linked == null) continue;
+
+                        var when = existing.StartDate.Date.AddDays(linked.DayNumber - 1) + linked.Time.TimeOfDay;
+                        sched.StartDate = when;
+                        sched.EndDate = when;
+                    }
+                }
 
                 await dbContext.SaveChangesAsync(cancellationToken);
             }

@@ -14,7 +14,17 @@ namespace IMIS.Application.AuditChecklistModule
 
         Task<IEnumerable<AuditChecklistDto>> GetOrGenerateForAuditPlanEntryAsync(int auditPlanEntryId, CancellationToken cancellationToken);
 
-        Task<IEnumerable<AuditChecklistDto>> GetOrGenerateForAuditScheduleAsync(int auditScheduleId, CancellationToken cancellationToken);
+        // userId: the signed-in user. An auditor of the team only gets the rows
+        // of the clauses assigned to them; null returns every row.
+        Task<IEnumerable<AuditChecklistDto>> GetOrGenerateForAuditScheduleAsync(int auditScheduleId, CancellationToken cancellationToken, string? userId = null);
+
+        // --- Clause assignment (Auditor Team Leader -> team auditors) ---
+        Task<AuditChecklistAssignmentsDto> GetAssignmentsAsync(int auditScheduleId, string? userId, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> AssignClausesAsync(int auditScheduleId, IReadOnlyList<AuditChecklistAssignmentRequestItem> assignments, string? userId, CancellationToken cancellationToken);
+
+        // Saves one checklist row on behalf of userId. An auditor may only answer
+        // (Conforming / FindingAndRemarks) rows of the clauses assigned to them.
+        Task<(bool Success, string? Error)> SaveChecklistForUserAsync(AuditChecklistDto dto, string? userId, CancellationToken cancellationToken);
 
         // Audit Schedule is the source of truth for the checklist list —
         // returns every schedule (in schedule order) that has ISO clause /

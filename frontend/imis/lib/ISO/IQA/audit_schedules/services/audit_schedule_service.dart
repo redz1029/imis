@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_schedules/models/reschedule_request.dart';
+import 'package:intl/intl.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';
@@ -187,6 +189,74 @@ class AuditSchedulesService {
     rethrow;
   }
 }
+
+  static String _formatLocal(DateTime value) =>
+      DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(value);
+
+  /// Department Head asks to move the schedule to [proposedStart] (date and
+  /// time). It goes to the Auditor Team Leader first, then the Lead Auditor.
+  Future<void> requestReschedule(
+    int id, {
+    required DateTime proposedStart,
+    String? reason,
+  }) async {
+    final url = '${ApiEndpoint().auditSchedule}/$id/reschedule-request';
+    final response = await AuthenticatedRequest.post(
+      dio,
+      url,
+      data: {
+        'proposedStart': _formatLocal(proposedStart),
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to send reschedule request.'),
+      );
+    }
+  }
+
+  Future<RescheduleRequest?> getLatestRescheduleRequest(int id) async {
+    final url = '${ApiEndpoint().auditSchedule}/$id/reschedule-request';
+    final response = await AuthenticatedRequest.get(dio, url);
+    if (response.statusCode != 200 || response.data is! Map) return null;
+    return RescheduleRequest.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+  }
+
+  /// Reschedule requests currently waiting on the signed-in user.
+  Future<List<RescheduleRequest>> getPendingRescheduleRequests() async {
+    final url = '${ApiEndpoint().auditSchedule}/reschedule-requests/pending';
+    final response = await AuthenticatedRequest.get(dio, url);
+    if (response.statusCode != 200 || response.data is! List) return [];
+    return (response.data as List)
+        .map((e) => RescheduleRequest.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<void> decideRescheduleRequest(
+    int requestId, {
+    required bool approve,
+    String? remarks,
+  }) async {
+    final url =
+        '${ApiEndpoint().auditSchedule}/reschedule-requests/$requestId/decide';
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: {
+        'approve': approve,
+        if (remarks != null && remarks.trim().isNotEmpty)
+          'remarks': remarks.trim(),
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response, 'Failed to decide on reschedule request.'),
+      );
+    }
+  }
 
   Future<void> decideAuditSchedule(
     int id, {

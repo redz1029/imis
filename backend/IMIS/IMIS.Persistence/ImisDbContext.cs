@@ -16,6 +16,7 @@ namespace IMIS.Persistence
         public DbSet<Team> Teams { get; set; }
         public DbSet<AuditorTeams> AuditorTeams { get; set; }
         public DbSet<AuditSchedule> AuditSchedules { get; set; }
+        public DbSet<AuditScheduleRescheduleRequest> AuditScheduleRescheduleRequests { get; set; }
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
         public DbSet<PgsDeliverable> Deliverable { get; set; }  
         public DbSet<KeyResultArea> KeyResultArea { get; set; }
@@ -92,6 +93,7 @@ namespace IMIS.Persistence
         public DbSet<AuditProgramme> AuditProgramme { get; set; }
         public DbSet<AuditChecklist> AuditChecklist { get; set; }
         public DbSet<AuditChecklistQNA> AuditChecklistQNA { get; set; }
+        public DbSet<AuditChecklistClauseAssignment> AuditChecklistClauseAssignments { get; set; }
 
 
         // Audit Plan entities
@@ -294,6 +296,30 @@ namespace IMIS.Persistence
     .HasForeignKey(s => s.AuditPlanEntryId)
     .OnDelete(DeleteBehavior.NoAction); // Fix: avoid multiple cascade paths on AuditSchedules
 
+            builder.Entity<AuditChecklistClauseAssignment>()
+                .HasOne(a => a.AuditSchedule)
+                .WithMany()
+                .HasForeignKey(a => a.AuditScheduleId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<AuditChecklistClauseAssignment>()
+                .HasOne(a => a.IsoStandard)
+                .WithMany()
+                .HasForeignKey(a => a.IsoStandardId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<AuditChecklistClauseAssignment>()
+                .HasOne(a => a.Auditor)
+                .WithMany()
+                .HasForeignKey(a => a.AuditorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<AuditScheduleRescheduleRequest>()
+                .HasOne(r => r.AuditSchedule)
+                .WithMany()
+                .HasForeignKey(r => r.AuditScheduleId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());
                 builder.ApplyConfiguration(new UserConfiguration());
@@ -401,6 +427,19 @@ namespace IMIS.Persistence
                 .WithMany()
                 .HasForeignKey(n => n.AuditReportId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // One NCAR per source checklist row: the unique index is what keeps a
+            // re-saved checklist from raising a second NCAR for the same clause.
+            builder.Entity<NonconformingActionReport>()
+                .HasOne(n => n.AuditChecklist)
+                .WithMany()
+                .HasForeignKey(n => n.AuditChecklistId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<NonconformingActionReport>()
+                .HasIndex(n => n.AuditChecklistId)
+                .IsUnique()
+                .HasFilter("[AuditChecklistId] IS NOT NULL");
 
             builder.Entity<NonconformingActionReport>()
                 .HasOne(n => n.IssuedByAuditor)

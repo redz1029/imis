@@ -1765,11 +1765,27 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
     );
   }
 
+  /// Standards whose clause number or name contains every word typed
+  /// (case-insensitive); all of them when nothing is typed.
+  List<IsoStandardDto> _filteredStandards(String query) {
+    final words = query
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .toList();
+    if (words.isEmpty) return widget.standards;
+    return widget.standards.where((s) {
+      final haystack = '${s.clause} ${s.name ?? ''} ${s.displayLabel}'.toLowerCase();
+      return words.every(haystack.contains);
+    }).toList();
+  }
+
   Future<void> _selectStandards(
     BuildContext context,
     AuditPlanEntryRow entry,
   ) async {
     final List<int> tempSelected = List<int>.from(entry.selectedIsoStandardIds);
+    var query = '';
 
     final result = await showDialog<List<int>>(
       context: context,
@@ -1795,9 +1811,42 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                           style: TextStyle(fontSize: 12),
                         ),
                       )
-                    : ListView(
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Search by clause number or standard name.
+                          TextField(
+                            autofocus: true,
+                            onChanged: (v) =>
+                                setDialogState(() => query = v.trim()),
+                            style: const TextStyle(fontSize: 13),
+                            decoration: _dropdownDecoration('Search clause or standard')
+                                .copyWith(
+                              hintText: 'e.g. 8.5 or operation',
+                              prefixIcon: const Icon(Icons.search, size: 18),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${tempSelected.length} selected',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          Flexible(
+                            child: _filteredStandards(query).isEmpty
+                                ? const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: Text(
+                                      'No clause or standard matches your search.',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  )
+                                : ListView(
                         shrinkWrap: true,
-                        children: widget.standards.map((std) {
+                        children: _filteredStandards(query).map((std) {
                           final checked = tempSelected.contains(std.id);
                           return CheckboxListTile(
                             dense: true,
@@ -1821,6 +1870,9 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                             },
                           );
                         }).toList(),
+                      ),
+                          ),
+                        ],
                       ),
               ),
               actions: [

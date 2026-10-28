@@ -16,6 +16,7 @@ AuditPlan _$AuditPlanFromJson(Map<String, dynamic> json) => AuditPlan(
   statusName: json['statusName'] as String?,
   startDate: const DateTimeConverter().fromJson(json['startDate'] as String),
   endDate: const DateTimeConverter().fromJson(json['endDate'] as String),
+  revision: (json['revision'] as num?)?.toInt() ?? 0,
   entries:
       json['entries'] == null
           ? []
@@ -36,5 +37,6 @@ Map<String, dynamic> _$AuditPlanToJson(AuditPlan instance) => <String, dynamic>{
   'statusName': instance.statusName,
   'startDate': const DateTimeConverter().toJson(instance.startDate),
   'endDate': const DateTimeConverter().toJson(instance.endDate),
+  'revision': instance.revision,
   'entries': instance.entries.map((e) => e.toJson()).toList(),
 };

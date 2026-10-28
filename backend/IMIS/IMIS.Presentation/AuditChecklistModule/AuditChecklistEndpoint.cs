@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Generic;
 
 namespace IMIS.Presentation.AuditChecklistModule
 {
@@ -24,9 +25,13 @@ namespace IMIS.Presentation.AuditChecklistModule
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             // CREATE / UPDATE
-            app.MapPost("/", async ([FromBody] AuditChecklistDto dto, IAuditChecklistService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] AuditChecklistDto dto, IAuditChecklistService service, IOutputCacheStore cache, HttpContext httpContext, CancellationToken cancellationToken) =>
             {
-                await service.SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var (success, error) = await service.SaveChecklistForUserAsync(dto, userId, cancellationToken).ConfigureAwait(false);
+                if (!success)
+                    return Results.Json(new { error }, statusCode: StatusCodes.Status403Forbidden);
+
                 await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
                 return Results.Ok(dto);
             })
@@ -34,9 +39,13 @@ namespace IMIS.Presentation.AuditChecklistModule
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
             // UPDATE (Matches POST logic in your template)
-            app.MapPut("/", async ([FromBody] AuditChecklistDto dto, IAuditChecklistService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPut("/", async ([FromBody] AuditChecklistDto dto, IAuditChecklistService service, IOutputCacheStore cache, HttpContext httpContext, CancellationToken cancellationToken) =>
             {
-                await service.SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var (success, error) = await service.SaveChecklistForUserAsync(dto, userId, cancellationToken).ConfigureAwait(false);
+                if (!success)
+                    return Results.Json(new { error }, statusCode: StatusCodes.Status403Forbidden);
+
                 await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
                 return Results.Ok(dto);
             })
@@ -54,11 +63,12 @@ namespace IMIS.Presentation.AuditChecklistModule
 
             // GET OR GENERATE FROM AUDIT SCHEDULE — the ONLY reliable key for
             // the checklist flow. Preserves existing rows (never duplicates).
-            app.MapGet("/schedule/{auditScheduleId:int}", async (int auditScheduleId, IAuditChecklistService service, CancellationToken cancellationToken) =>
+            app.MapGet("/schedule/{auditScheduleId:int}", async (int auditScheduleId, IAuditChecklistService service, HttpContext httpContext, CancellationToken cancellationToken) =>
             {
                 try
                 {
-                    var result = await service.GetOrGenerateForAuditScheduleAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
+                    var userId = httpContext.User.FindFirst("UserId")?.Value;
+                    var result = await service.GetOrGenerateForAuditScheduleAsync(auditScheduleId, cancellationToken, userId).ConfigureAwait(false);
                     return Results.Ok(result);
                 }
                 catch (KeyNotFoundException)
@@ -71,8 +81,38 @@ namespace IMIS.Presentation.AuditChecklistModule
                 }
             })
             .WithTags(_auditChecklist)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditChecklist), true);
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            // CLAUSE ASSIGNMENT BOARD — the Team Leader divides the plan clauses
+            // among the team's auditors; an auditor only gets their own clauses.
+            app.MapGet("/schedule/{auditScheduleId:int}/assignments", async (int auditScheduleId, IAuditChecklistService service, HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var userId = httpContext.User.FindFirst("UserId")?.Value;
+                    var result = await service.GetAssignmentsAsync(auditScheduleId, userId, cancellationToken).ConfigureAwait(false);
+                    return Results.Ok(result);
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.NotFound(new { message = "Audit schedule not found." });
+                }
+            })
+            .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            app.MapPut("/schedule/{auditScheduleId:int}/assignments", async (int auditScheduleId, [FromBody] List<AuditChecklistAssignmentRequestItem>? body, IAuditChecklistService service, IOutputCacheStore cache, HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var (success, error) = await service.AssignClausesAsync(auditScheduleId, body ?? new List<AuditChecklistAssignmentRequestItem>(), userId, cancellationToken).ConfigureAwait(false);
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
+                return Results.Ok(new { message = "Clause assignments saved." });
+            })
+            .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
 
             // DYNAMIC CHECKLIST LIST — schedules ordered by schedule Id, each
             // with team name + office/process. Backs the team-list page.

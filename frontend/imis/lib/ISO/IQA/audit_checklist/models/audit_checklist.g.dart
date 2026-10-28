@@ -26,6 +26,11 @@ AuditChecklist _$AuditChecklistFromJson(Map<String, dynamic> json) =>
       auditorNames: json['auditorNames'] as String?,
       auditScope: json['auditScope'] as String?,
       auditees: json['auditees'] as String?,
+      planClauseId: (json['planClauseId'] as num?)?.toInt(),
+      assignedAuditorId: (json['assignedAuditorId'] as num?)?.toInt(),
+      assignedAuditorName: json['assignedAuditorName'] as String?,
+      ncarId: (json['ncarId'] as num?)?.toInt(),
+      ncarReferenceNumber: json['ncarReferenceNumber'] as String?,
     );
 
 Map<String, dynamic> _$AuditChecklistToJson(AuditChecklist instance) =>
@@ -48,6 +53,11 @@ Map<String, dynamic> _$AuditChecklistToJson(AuditChecklist instance) =>
       'auditorNames': instance.auditorNames,
       'auditScope': instance.auditScope,
       'auditees': instance.auditees,
+      'planClauseId': instance.planClauseId,
+      'assignedAuditorId': instance.assignedAuditorId,
+      'assignedAuditorName': instance.assignedAuditorName,
+      'ncarId': instance.ncarId,
+      'ncarReferenceNumber': instance.ncarReferenceNumber,
     };
 
 AuditChecklistSummary _$AuditChecklistSummaryFromJson(

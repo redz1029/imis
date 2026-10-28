@@ -15,6 +15,7 @@ namespace IMIS.Application.AuditReportModule
         Task<DtoPageList<AuditReportDto, AuditReport, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<AuditReportDto>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken);
+        Task<AuditReportClauseResultsDto> GetClauseResultsAsync(int auditScheduleId, CancellationToken cancellationToken);
         Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
             where TEntity : Entity<TId>;
     }

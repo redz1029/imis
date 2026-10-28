@@ -59,9 +59,11 @@ namespace IMIS.Application.AuditProgrammeModule
                 if (existing == null) throw new KeyNotFoundException("Audit Programme not found.");
 
                 var preservedCreatedDate = existing.CreatedDate;
+                var preservedRevision = existing.Revision;
 
                 dbContext.Entry(existing).CurrentValues.SetValues(entity);
                 existing.CreatedDate = preservedCreatedDate;
+                existing.Revision = preservedRevision;
                 existing.LastModifiedDate = DateTime.UtcNow;
 
                 // --- Sync Objectives ---
@@ -112,7 +114,9 @@ namespace IMIS.Application.AuditProgrammeModule
                     // from IQASignatory rows, which SetValues never touches
                     // (they are a navigation collection, not a scalar column).
                     // No special preservation needed here.
+                    var preservedPlanRevision = existingPlan.Revision;
                     dbContext.Entry(existingPlan).CurrentValues.SetValues(incomingPlan);
+                    existingPlan.Revision = preservedPlanRevision;
 
                     await SyncAuditPlanEntriesAsync(dbContext, existingPlan, incomingPlan, cancellationToken);
                 }

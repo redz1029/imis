@@ -10,6 +10,7 @@ using IMIS.Application.AuditReportModule;
 using IMIS.Application.AuditScopeModule;
 using IMIS.Application.AuditSummaryFindingsModule;
 using IMIS.Domain;
+using IMIS.Persistence.AuditChecklistModule;
 using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.AuditReportModule
@@ -171,6 +172,77 @@ namespace IMIS.Persistence.AuditReportModule
         {
             var entities = await _repository.GetByAuditScheduleIdAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
             return entities.Select(x => new AuditReportDto(x));
+        }
+
+        public async Task<AuditReportClauseResultsDto> GetClauseResultsAsync(int auditScheduleId, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var rows = await dbContext.Set<AuditChecklist>()
+                .AsNoTracking()
+                .Where(c => c.AuditScheduleId == auditScheduleId && !c.IsDeleted)
+                .Select(c => new
+                {
+                    c.Id,
+                    Question = c.AuditChecklistQNA!.Question,
+                    ClauseRef = c.AuditChecklistQNA.IsoStandard!.ClauseRef,
+                    c.Conforming,
+                    c.FindingAndRemarks
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var rowIds = rows.Select(r => r.Id).ToList();
+            var ncars = await dbContext.Set<NonconformingActionReport>()
+                .AsNoTracking()
+                .Where(n => n.AuditChecklistId != null && rowIds.Contains(n.AuditChecklistId.Value))
+                .Select(n => new
+                {
+                    ChecklistId = n.AuditChecklistId!.Value,
+                    n.Id,
+                    n.ReferenceNumber,
+                    n.IsClosed,
+                    n.ApprovedDate,
+                    n.AcknowledgedDate
+                })
+                .ToDictionaryAsync(n => n.ChecklistId, cancellationToken)
+                .ConfigureAwait(false);
+
+            var items = rows
+                .OrderBy(r => r.ClauseRef, new ClauseNumberComparer())
+                .Select(r =>
+                {
+                    var found = ncars.TryGetValue(r.Id, out var ncar);
+                    return new AuditReportClauseResultDto
+                    {
+                        AuditChecklistId = r.Id,
+                        ClauseRef = r.ClauseRef.Trim(),
+                        Question = r.Question,
+                        Conforming = r.Conforming,
+                        FindingAndRemarks = r.FindingAndRemarks,
+                        NcarId = found ? ncar!.Id : null,
+                        NcarReferenceNumber = found ? ncar!.ReferenceNumber : null,
+                        NcarStatus = found ? NcarStatusName(ncar!.IsClosed, ncar.ApprovedDate, ncar.AcknowledgedDate) : null
+                    };
+                })
+                .ToList();
+
+            return new AuditReportClauseResultsDto
+            {
+                AuditScheduleId = auditScheduleId,
+                ConformingCount = items.Count(i => i.Conforming == true),
+                NonConformingCount = items.Count(i => i.Conforming == false),
+                PendingCount = items.Count(i => i.Conforming == null),
+                Items = items
+            };
+        }
+
+        private static string NcarStatusName(bool isClosed, DateTime? approvedDate, DateTime? acknowledgedDate)
+        {
+            if (isClosed) return "Closed";
+            if (approvedDate != null) return "Under Monitoring";
+            if (acknowledgedDate != null) return "Acknowledged / Under Review";
+            return "Open / Issued";
         }
     }
 }

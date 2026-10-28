@@ -25,6 +25,9 @@ class AuditProgramme {
   String? statusName;
 
   @JsonKey(defaultValue: 0)
+  int revision;
+
+  @JsonKey(defaultValue: 0)
   int year;
 
   @JsonKey(name: 'for', defaultValue: '')
@@ -88,6 +91,7 @@ class AuditProgramme {
     this.auditStatusId = 1,
     this.statusCode,
     this.statusName,
+    this.revision = 0,
     this.year = 0,
     this.forUser = "",
     this.fromUser = "",

@@ -238,6 +238,86 @@ namespace IMIS.Presentation.AuditScheduleModule
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanConfirm) ||
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanReject)));
 
+            // RESCHEDULE REQUEST — Department Head asks to move the schedule. Goes to
+            // the Auditor Team Leader first, then the Lead Auditor.
+            app.MapPost("/{id:int}/reschedule-request", async (
+                int id,
+                [FromBody] RescheduleRequestBody? body,
+                IAuditScheduleService service,
+                IOutputCacheStore cache,
+                HttpContext httpContext,
+                CancellationToken cancellationToken) =>
+            {
+                if (body == null || !body.ProposedStart.HasValue)
+                    return Results.BadRequest(new { error = "Proposed date and time are required." });
+
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var (success, error) = await service.RequestRescheduleAsync(
+                    id, body.ProposedStart.Value, body.Reason, userId, cancellationToken);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
+                return Results.Ok(new { message = "Reschedule request sent to the Auditor Team Leader." });
+            })
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization(e => e.RequireAssertion(ctx =>
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanConfirm) ||
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanReject)));
+
+            // Latest reschedule request of one schedule.
+            app.MapGet("/{id:int}/reschedule-request", async (
+                int id,
+                IAuditScheduleService service,
+                HttpContext httpContext,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var result = await service.GetLatestRescheduleRequestAsync(id, userId, cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization();
+
+            // Reschedule requests waiting on the signed-in user (notifications).
+            app.MapGet("/reschedule-requests/pending", async (
+                IAuditScheduleService service,
+                HttpContext httpContext,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var result = await service.GetPendingRescheduleRequestsAsync(userId, cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization();
+
+            // Team Leader / Lead Auditor decision on a reschedule request.
+            app.MapPut("/reschedule-requests/{requestId:int}/decide", async (
+                int requestId,
+                [FromBody] RescheduleDecisionBody? body,
+                IAuditScheduleService service,
+                IOutputCacheStore cache,
+                HttpContext httpContext,
+                CancellationToken cancellationToken) =>
+            {
+                if (body == null)
+                    return Results.BadRequest(new { error = "Invalid request." });
+
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var (success, error) = await service.DecideRescheduleRequestAsync(
+                    requestId, userId, body.Approve, body.Remarks, cancellationToken);
+
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
+                return Results.Ok(new { message = body.Approve ? "Approved." : "Rejected." });
+            })
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization();
+
             // RESCHEDULE — preparer picks a new date; time stays locked to the
             // linked audit plan entry. Same-day same-time conflicts for the same
             // auditee office are rejected.
@@ -265,6 +345,8 @@ namespace IMIS.Presentation.AuditScheduleModule
 
         }
 
+        public record RescheduleRequestBody(DateTime? ProposedStart, string? Reason);
+        public record RescheduleDecisionBody(bool Approve, string? Remarks);
         public record SubmitAuditScheduleRequest(string? UserId, string? Comments);
         public record DecideAuditScheduleRequest(string ApproverId, bool? Approve, string? Action, string? Comments, string? OfficeName);
         public record RescheduleAuditScheduleRequest(DateTime? ProposedDate, string? Comments);

@@ -51,7 +51,7 @@ const List<String> kOpeningMeetingPersons = <String>[
 // =============================================================================
 const String _kLogoCrmc = 'assets/CRMCLogo.png';
 const String _kLogoIso = 'assets/TR-Testmark.jpg';
-const String _kFormCode = 'QP-03-F-02 Rev.1';
+const String _kFormBase = 'QP-03-F-02';
 
 const double _kML = 48, _kMR = 48, _kMT = 30, _kMB = 30;
 const double _kLineH = 12.6;
@@ -131,11 +131,13 @@ class _PrintData {
     required this.teamNames,
     required this.rosters,
     required this.signatories,
+    required this.revision,
   });
 
   final String objective;
   final String scope;
   final List<_PlanEntry> entries;
+  final int revision;
   final Map<int, String> teamNames;
   final Map<int, List<String>> rosters;
   final List<_Sig> signatories;
@@ -432,6 +434,8 @@ Future<_PrintData> _loadPrintData(int planId) async {
   }
   final rawEntries =
       (planJson['entries'] as List? ?? planJson['Entries'] as List? ?? []);
+  final revision =
+      _intOrNull(planJson['revision'] ?? planJson['Revision']) ?? 0;
 
   // Typed-text rows of the Audit Programme (e.g. "Reporting") are not part of
   // the Audit Plan, so they are never printed on it.
@@ -553,6 +557,7 @@ Future<_PrintData> _loadPrintData(int planId) async {
     teamNames: teamNames,
     rosters: rosters,
     signatories: _buildSignatories(plan),
+    revision: revision,
   );
 }
 
@@ -1542,7 +1547,8 @@ class _PlanPdfBuilder {
             child: pw.Align(
               alignment: pw.Alignment.centerRight,
               child: isLast
-                  ? pw.Text(_kFormCode, style: _st(bold: true, size: 8.5))
+                  ? pw.Text('$_kFormBase Rev.${data.revision}',
+                      style: _st(bold: true, size: 8.5))
                   : pw.SizedBox(),
             ),
           ),

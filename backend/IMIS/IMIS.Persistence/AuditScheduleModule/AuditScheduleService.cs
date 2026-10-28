@@ -3,6 +3,7 @@ using Base.Primitives;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.IQASignatoryModule;
 using IMIS.Domain;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -242,6 +243,54 @@ namespace IMIS.Application.AuditScheduleModule
         public async Task<(bool Success, string? Error)> RescheduleAsync(
             int id, DateTime proposedDate, string? comments, CancellationToken cancellationToken)
         {
+            // Reschedule keeps the audit plan entry's time; only the date moves.
+            var moved = await MoveScheduleAsync(id, proposedDate.Date, null, cancellationToken);
+            if (!moved.Success) return moved;
+
+            return await SaveWorkflowChangesAsync(_repository.GetDbContext(), cancellationToken);
+        }
+
+        /// <summary>
+        /// Validates the proposed date/time against the audit plan and the
+        /// auditee office's other schedules. Returns an error message, or null.
+        /// </summary>
+        private static async Task<string?> ValidateProposedMoveAsync(
+            DbContext dbContext, AuditSchedule schedule, AuditPlan plan,
+            DateTime date, TimeSpan time, CancellationToken cancellationToken)
+        {
+            if (date < plan.StartDate.Date || date > plan.EndDate.Date)
+                return "The selected date is outside the audit plan schedule.";
+
+            // Same-day, same-time conflict check for the same auditee office.
+            var officeId = schedule.AuditableOffices
+                ?.Where(ao => !ao.IsDeleted)
+                .Select(ao => ao.OfficeId)
+                .FirstOrDefault();
+
+            if (officeId.HasValue)
+            {
+                var conflict = await dbContext.Set<AuditSchedule>()
+                    .Include(s => s.AuditableOffices!)
+                    .AnyAsync(s => s.Id != schedule.Id && s.IsActive &&
+                        s.AuditableOffices!.Any(ao => !ao.IsDeleted && ao.OfficeId == officeId.Value) &&
+                        s.StartDate.Date == date &&
+                        s.StartDate.TimeOfDay == time, cancellationToken);
+
+                if (conflict)
+                    return "The selected time is not available on that day for this office. Please choose another time or day.";
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Applies a new date (and optionally time) to the schedule, its audit
+        /// plan entry and the revision counters. Does NOT save, so callers can
+        /// persist it together with their own changes.
+        /// </summary>
+        private async Task<(bool Success, string? Error)> MoveScheduleAsync(
+            int id, DateTime date, TimeSpan? time, CancellationToken cancellationToken)
+        {
             var dbContext = _repository.GetDbContext();
 
             var entity = await dbContext.Set<AuditSchedule>()
@@ -257,36 +306,305 @@ namespace IMIS.Application.AuditScheduleModule
             if (entry == null)
                 return (false, "Audit schedule has no linked audit plan entry.");
 
-            // Reschedule keeps the audit plan entry's time; only the date moves.
-            var proposed = proposedDate.Date + entry.Time.TimeOfDay;
+            var plan = await dbContext.Set<AuditPlan>()
+                .FirstOrDefaultAsync(p => p.Id == entity.AuditPlanId, cancellationToken);
+            if (plan == null)
+                return (false, "Audit plan not found.");
 
-            // Same-day, same-time conflict check for the same auditee office.
-            var officeId = entity.AuditableOffices
-                ?.Where(ao => !ao.IsDeleted)
-                .Select(ao => ao.OfficeId)
-                .FirstOrDefault();
+            var newTime = time ?? entry.Time.TimeOfDay;
+            var error = await ValidateProposedMoveAsync(dbContext, entity, plan, date, newTime, cancellationToken);
+            if (error != null)
+                return (false, error);
 
-            if (officeId.HasValue)
-            {
-                var conflict = await dbContext.Set<AuditSchedule>()
-                    .Include(s => s.AuditableOffices!)
-                    .AnyAsync(s => s.Id != id && s.IsActive &&
-                        s.AuditableOffices!.Any(ao => !ao.IsDeleted && ao.OfficeId == officeId.Value) &&
-                        s.StartDate.Date == proposedDate.Date &&
-                        s.StartDate.TimeOfDay == entry.Time.TimeOfDay, cancellationToken);
+            var proposed = date + newTime;
+            var dayNumber = (date - plan.StartDate.Date).Days + 1;
+            var dayChanged = dayNumber != entry.DayNumber;
 
-                if (conflict)
-                {
-                    return (false,
-                        "The audit plan entry time is not available on the selected day. Please choose another day.");
-                }
-            }
+            // The audit plan entry is the source of the day and the time.
+            entry.DayNumber = dayNumber;
+            entry.Time = entry.Time.Date + newTime;
 
             entity.StartDate = proposed;
             entity.EndDate = proposed;
 
-            await dbContext.SaveChangesAsync(cancellationToken);
+            // Time-only change (same day) revises the Audit Plan only. A day
+            // change revises the Audit Plan and its parent Audit Programme.
+            plan.Revision += 1;
+            plan.LastModifiedDate = DateTime.UtcNow;
+
+            if (dayChanged)
+            {
+                var programme = await dbContext.Set<AuditProgramme>()
+                    .FirstOrDefaultAsync(p => p.Id == plan.AuditProgrammeId, cancellationToken);
+                if (programme != null)
+                {
+                    programme.Revision += 1;
+                    programme.LastModifiedDate = DateTime.UtcNow;
+                }
+            }
+
             return (true, null);
+        }
+
+        // ------------------------------------------------------------------
+        // Reschedule request workflow: Department Head -> Auditor Team Leader
+        // -> Lead Auditor -> automatic Audit Plan / Audit Programme revision.
+        // ------------------------------------------------------------------
+        private const string TeamLeaderRoleName = "Auditor Team Leader";
+        private const string LeadAuditorRoleName = "Lead Auditor";
+        private const string AdministratorRoleName = "Administrator";
+
+        private static bool IsPending(string status) =>
+            status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader ||
+            status == AuditScheduleRescheduleRequest.Statuses.PendingLeadAuditor;
+
+        private static Task<bool> IsInRoleAsync(
+            DbContext dbContext, string userId, string roleName, CancellationToken cancellationToken)
+        {
+            return (from ur in dbContext.Set<IdentityUserRole<string>>()
+                    join r in dbContext.Set<IdentityRole>() on ur.RoleId equals r.Id
+                    where ur.UserId == userId && r.Name == roleName
+                    select ur.UserId).AnyAsync(cancellationToken);
+        }
+
+        private static async Task<bool> IsTeamLeaderForAsync(
+            DbContext dbContext, string userId, AuditSchedule schedule, CancellationToken cancellationToken)
+        {
+            var teamIds = await dbContext.Set<IsoAuditor>()
+                .Where(a => !a.IsDeleted && a.AuditPlanEntryId == schedule.AuditPlanEntryId && a.TeamId != null)
+                .Select(a => a.TeamId!.Value)
+                .ToListAsync(cancellationToken);
+            if (schedule.TeamId.HasValue)
+                teamIds.Add(schedule.TeamId.Value);
+
+            // No team could be resolved for the schedule: fall back to the role.
+            if (teamIds.Count == 0)
+                return await IsInRoleAsync(dbContext, userId, TeamLeaderRoleName, cancellationToken);
+
+            return await dbContext.Set<AuditorTeams>()
+                .AnyAsync(t => !t.IsDeleted && t.IsTeamLeader && teamIds.Contains(t.TeamId) &&
+                               t.Auditor != null && t.Auditor.UserId == userId, cancellationToken);
+        }
+
+        private static async Task<bool> CanDecideAsync(
+            DbContext dbContext, string? userId, AuditScheduleRescheduleRequest request, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId) || request.AuditSchedule == null)
+                return false;
+
+            // Administrators can do everything in IQA.
+            if (IsPending(request.Status) &&
+                await IsInRoleAsync(dbContext, userId, AdministratorRoleName, cancellationToken))
+                return true;
+
+            if (request.Status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader)
+                return await IsTeamLeaderForAsync(dbContext, userId, request.AuditSchedule, cancellationToken);
+
+            if (request.Status == AuditScheduleRescheduleRequest.Statuses.PendingLeadAuditor)
+                return await IsInRoleAsync(dbContext, userId, LeadAuditorRoleName, cancellationToken);
+
+            return false;
+        }
+
+        private static IQueryable<AuditScheduleRescheduleRequest> RequestsWithSchedule(DbContext dbContext) =>
+            dbContext.Set<AuditScheduleRescheduleRequest>()
+                .Include(r => r.AuditSchedule!)
+                    .ThenInclude(s => s.AuditableOffices!)
+                        .ThenInclude(ao => ao.Office);
+
+        private static async Task<List<AuditScheduleRescheduleRequestDto>> ToRequestDtosAsync(
+            DbContext dbContext, List<AuditScheduleRescheduleRequest> requests, string? userId,
+            bool onlyDecidable, CancellationToken cancellationToken)
+        {
+            var requesterIds = requests
+                .Select(r => r.RequestedByUserId)
+                .Where(u => !string.IsNullOrWhiteSpace(u))
+                .Select(u => u!)
+                .Distinct()
+                .ToList();
+            var names = requesterIds.Count == 0
+                ? new Dictionary<string, string?>()
+                : await dbContext.Set<User>()
+                    .Where(u => requesterIds.Contains(u.Id))
+                    .ToDictionaryAsync(u => u.Id, u => u.UserName, cancellationToken);
+
+            var list = new List<AuditScheduleRescheduleRequestDto>();
+            foreach (var r in requests)
+            {
+                var canDecide = await CanDecideAsync(dbContext, userId, r, cancellationToken);
+                if (onlyDecidable && !canDecide) continue;
+
+                string? requester = null;
+                if (r.RequestedByUserId != null)
+                    names.TryGetValue(r.RequestedByUserId, out requester);
+
+                list.Add(new AuditScheduleRescheduleRequestDto
+                {
+                    Id = r.Id,
+                    AuditScheduleId = r.AuditScheduleId,
+                    AuditPlanId = r.AuditSchedule?.AuditPlanId ?? 0,
+                    OfficeName = r.AuditSchedule?.AuditableOffices
+                        ?.FirstOrDefault(ao => !ao.IsDeleted)?.Office?.Name,
+                    CurrentStartDate = r.AuditSchedule?.StartDate ?? default,
+                    ProposedStartDate = r.ProposedStartDate,
+                    Reason = r.Reason,
+                    Status = r.Status,
+                    RequestedBy = requester,
+                    RequestedDate = r.RequestedDate,
+                    TeamLeaderRemarks = r.TeamLeaderRemarks,
+                    LeadAuditorRemarks = r.LeadAuditorRemarks,
+                    CanDecide = canDecide
+                });
+            }
+            return list;
+        }
+
+        public async Task<(bool Success, string? Error)> RequestRescheduleAsync(
+            int id, DateTime proposedStart, string? reason, string? userId, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var schedule = await dbContext.Set<AuditSchedule>()
+                .Include(s => s.AuditableOffices!)
+                    .ThenInclude(ao => ao.Office)
+                .Include(s => s.AuditPlanEntry!)
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive, cancellationToken);
+            if (schedule == null)
+                return (false, "Audit schedule not found.");
+
+            var entry = schedule.AuditPlanEntry;
+            if (entry == null)
+                return (false, "Audit schedule has no linked audit plan entry.");
+
+            var plan = await dbContext.Set<AuditPlan>()
+                .FirstOrDefaultAsync(p => p.Id == schedule.AuditPlanId, cancellationToken);
+            if (plan == null)
+                return (false, "Audit plan not found.");
+
+            var alreadyPending = await dbContext.Set<AuditScheduleRescheduleRequest>()
+                .AnyAsync(r => r.AuditScheduleId == id && !r.IsDeleted &&
+                    (r.Status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader ||
+                     r.Status == AuditScheduleRescheduleRequest.Statuses.PendingLeadAuditor), cancellationToken);
+            if (alreadyPending)
+                return (false, "A reschedule request for this audit schedule is already awaiting a decision.");
+
+            var date = proposedStart.Date;
+            var time = proposedStart.TimeOfDay;
+            var currentDate = plan.StartDate.Date.AddDays(entry.DayNumber - 1);
+            if (date == currentDate && time == entry.Time.TimeOfDay)
+                return (false, "The requested schedule is the same as the current schedule.");
+
+            var error = await ValidateProposedMoveAsync(dbContext, schedule, plan, date, time, cancellationToken);
+            if (error != null)
+                return (false, error);
+
+            dbContext.Set<AuditScheduleRescheduleRequest>().Add(new AuditScheduleRescheduleRequest
+            {
+                Id = 0,
+                AuditScheduleId = id,
+                ProposedStartDate = date + time,
+                Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim(),
+                Status = AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader,
+                RequestedByUserId = userId,
+                RequestedDate = DateTime.UtcNow
+            });
+
+            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+        }
+
+        public async Task<AuditScheduleRescheduleRequestDto?> GetLatestRescheduleRequestAsync(
+            int scheduleId, string? userId, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var request = await RequestsWithSchedule(dbContext)
+                .Where(r => r.AuditScheduleId == scheduleId && !r.IsDeleted)
+                .OrderByDescending(r => r.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (request == null) return null;
+
+            var dtos = await ToRequestDtosAsync(
+                dbContext, new List<AuditScheduleRescheduleRequest> { request }, userId, false, cancellationToken);
+            return dtos.FirstOrDefault();
+        }
+
+        public async Task<List<AuditScheduleRescheduleRequestDto>> GetPendingRescheduleRequestsAsync(
+            string? userId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return new List<AuditScheduleRescheduleRequestDto>();
+
+            var dbContext = _repository.GetDbContext();
+
+            var pending = await RequestsWithSchedule(dbContext)
+                .Where(r => !r.IsDeleted &&
+                    (r.Status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader ||
+                     r.Status == AuditScheduleRescheduleRequest.Statuses.PendingLeadAuditor))
+                .OrderBy(r => r.RequestedDate)
+                .ToListAsync(cancellationToken);
+
+            return await ToRequestDtosAsync(dbContext, pending, userId, true, cancellationToken);
+        }
+
+        public async Task<(bool Success, string? Error)> DecideRescheduleRequestAsync(
+            int requestId, string? userId, bool approve, string? remarks, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return (false, "Approver is required.");
+
+            var dbContext = _repository.GetDbContext();
+
+            var request = await RequestsWithSchedule(dbContext)
+                .FirstOrDefaultAsync(r => r.Id == requestId && !r.IsDeleted, cancellationToken);
+            if (request == null)
+                return (false, "Reschedule request not found.");
+
+            if (!IsPending(request.Status))
+                return (false, "This reschedule request has already been decided.");
+
+            if (!await CanDecideAsync(dbContext, userId, request, cancellationToken))
+                return (false, "You are not the approver this reschedule request is waiting on.");
+
+            var now = DateTime.UtcNow;
+            var cleanRemarks = string.IsNullOrWhiteSpace(remarks) ? null : remarks.Trim();
+
+            if (request.Status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader)
+            {
+                request.TeamLeaderUserId = userId;
+                request.TeamLeaderDecisionDate = now;
+                request.TeamLeaderRemarks = cleanRemarks;
+                // Approved -> forwarded to the Lead Auditor; rejected -> the
+                // original audit schedule stays as-is.
+                request.Status = approve
+                    ? AuditScheduleRescheduleRequest.Statuses.PendingLeadAuditor
+                    : AuditScheduleRescheduleRequest.Statuses.RejectedByTeamLeader;
+            }
+            else
+            {
+                request.LeadAuditorUserId = userId;
+                request.LeadAuditorDecisionDate = now;
+                request.LeadAuditorRemarks = cleanRemarks;
+
+                if (approve)
+                {
+                    // Accepted: revise the schedule, the Audit Plan and (on a
+                    // day change) the Audit Programme.
+                    var moved = await MoveScheduleAsync(
+                        request.AuditScheduleId,
+                        request.ProposedStartDate.Date,
+                        request.ProposedStartDate.TimeOfDay,
+                        cancellationToken);
+                    if (!moved.Success) return moved;
+
+                    request.Status = AuditScheduleRescheduleRequest.Statuses.Approved;
+                }
+                else
+                {
+                    request.Status = AuditScheduleRescheduleRequest.Statuses.RejectedByLeadAuditor;
+                }
+            }
+
+            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
         }
 
         private static async Task<(bool Success, string? Error)> SaveWorkflowChangesAsync(

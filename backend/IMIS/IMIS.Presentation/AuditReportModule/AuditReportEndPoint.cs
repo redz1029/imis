@@ -51,6 +51,16 @@ namespace IMIS.Presentation.AuditReportModule
             .WithTags(_auditReport)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
+            // CLAUSE RESULTS — every checklist result of the report's schedule,
+            // with the NCAR raised for each non-conforming clause.
+            app.MapGet("/schedule/{auditScheduleId:int}/clause-results", async (int auditScheduleId, IAuditReportService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetClauseResultsAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(result);
+            })
+            .WithTags(_auditReport)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
             // GET PAGINATED
             app.MapGet("/page", async (int page, int pageSize, IAuditReportService service, CancellationToken cancellationToken) =>
             {

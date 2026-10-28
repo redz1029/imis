@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/ISO/IQA/audit_checklist/models/audit_checklist.dart';
+import 'package:imis/ISO/IQA/audit_checklist/models/checklist_assignment.dart';
 import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_print_preview_page.dart';
 import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
 import 'package:imis/constant/constant.dart';
@@ -51,6 +52,12 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   bool _dirty = false;
   bool _saved = false;
   _RowFilter _filter = _RowFilter.all;
+
+  // Clause assignment (Team Leader -> Auditors). The draft maps a plan clause
+  // id to the auditor picked in the dropdown (null = unassigned).
+  ChecklistAssignments? _assignments;
+  final Map<int, int?> _assignDraft = {};
+  bool _isSavingAssignments = false;
 
   // ---------------------------------------------------------------------------
   // Derived values
@@ -171,6 +178,8 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
         }
       });
 
+      await _loadAssignments();
+
       // No list summary supplied: quietly load it for the
       // auditors / office / scope fallbacks.
       if (_summary == null && rows.isNotEmpty) {
@@ -199,6 +208,60 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   // ---------------------------------------------------------------------------
   // Actions
   // ---------------------------------------------------------------------------
+  Future<void> _loadAssignments() async {
+    try {
+      final loaded = await _service.getAssignments(widget.auditScheduleId);
+      if (!mounted) return;
+      setState(() {
+        _assignments = loaded;
+        _assignDraft
+          ..clear()
+          ..addEntries(
+            loaded.clauses.map((c) => MapEntry(c.isoStandardId, c.assignedAuditorId)),
+          );
+      });
+    } catch (e) {
+      // The assignment board is an add-on: the checklist itself still works.
+      debugPrint('Failed to load clause assignments: $e');
+    }
+  }
+
+  bool get _assignDirty {
+    final a = _assignments;
+    if (a == null) return false;
+    return a.clauses.any((c) => _assignDraft[c.isoStandardId] != c.assignedAuditorId);
+  }
+
+  Future<void> _saveAssignments() async {
+    final a = _assignments;
+    if (a == null || !_assignDirty) return;
+
+    final changes = <int, int?>{
+      for (final c in a.clauses)
+        if (_assignDraft[c.isoStandardId] != c.assignedAuditorId)
+          c.isoStandardId: _assignDraft[c.isoStandardId],
+    };
+
+    setState(() => _isSavingAssignments = true);
+    try {
+      await _service.saveAssignments(widget.auditScheduleId, changes);
+      await _loadAssignments();
+      if (!mounted) return;
+      MotionToast.success(
+        toastAlignment: Alignment.topCenter,
+        description: const Text('Clause assignments saved'),
+      ).show(context);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text(e.toString().replaceFirst('Exception: ', '')),
+      ).show(context);
+    } finally {
+      if (mounted) setState(() => _isSavingAssignments = false);
+    }
+  }
+
   Future<bool> _confirmDiscard() async {
     final result = await showDialog<bool>(
       context: context,
@@ -255,9 +318,13 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     try {
       final auditeeText = _auditeeTextController.text.trim();
       var itemsNotStored = 0;
+      var ncarsCreated = 0;
+      var ncarsUpdated = 0;
+      var ncarsWithdrawn = 0;
 
       for (var i = 0; i < _rows.length; i++) {
         final id = _rows[i].id;
+        final previous = _rows[i];
         final sentItems = _itemsControllers[id]?.text;
 
         var updated = _rows[i].copyWithResponse(
@@ -271,6 +338,18 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
 
         final saved = await _service.save(updated);
         _rows[i] = saved;
+
+        // The server raises one NCAR per non-conforming clause: count what
+        // this save did to it.
+        if (previous.ncarId == null && saved.ncarId != null) {
+          ncarsCreated++;
+        } else if (previous.ncarId != null && saved.ncarId == null) {
+          ncarsWithdrawn++;
+        } else if (saved.ncarId != null &&
+            (previous.findingAndRemarks ?? '').trim() !=
+                (updated.findingAndRemarks ?? '').trim()) {
+          ncarsUpdated++;
+        }
 
         // If the server did not keep the typed Items/Questions, show what it
         // really holds instead of pretending the edit was saved.
@@ -286,18 +365,24 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
         _dirty = false;
         _saved = true;
       });
+      final ncarNotes = [
+        if (ncarsCreated > 0) '$ncarsCreated NCAR(s) created',
+        if (ncarsUpdated > 0) '$ncarsUpdated NCAR(s) updated',
+        if (ncarsWithdrawn > 0) '$ncarsWithdrawn NCAR(s) withdrawn',
+      ];
+      final ncarSummary = ncarNotes.isEmpty ? '' : ' (${ncarNotes.join(', ')})';
       if (itemsNotStored > 0) {
         MotionToast.warning(
           toastAlignment: Alignment.topCenter,
           description: Text(
-            'Saved, but the server did not store edits to Items/Questions '
-            'on $itemsNotStored clause(s).',
+            'Saved$ncarSummary, but the server did not store edits to '
+            'Items/Questions on $itemsNotStored clause(s).',
           ),
         ).show(context);
       } else {
         MotionToast.success(
           toastAlignment: Alignment.topCenter,
-          description: const Text('Checklist saved'),
+          description: Text('Checklist saved$ncarSummary'),
         ).show(context);
       }
     } catch (e) {
@@ -562,7 +647,10 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     if (_noClauses) {
       return _messageView(
         icon: Icons.rule_folder_outlined,
-        message: 'No ISO clauses are assigned to this audit schedule.',
+        message: _assignments?.ownClausesOnly == true
+            ? 'No clauses have been assigned to you yet. Your Auditor Team '
+                'Leader assigns the clauses of this checklist.'
+            : 'No ISO clauses are assigned to this audit schedule.',
       );
     }
     if (_rows.isEmpty) {
@@ -583,10 +671,205 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
               child: _buildHeaderFields(),
             ),
             const SizedBox(height: 16),
+            if (_assignments != null &&
+                (_assignments!.canAssign || _assignments!.ownClausesOnly)) ...[
+              _buildAssignmentsCard(),
+              const SizedBox(height: 16),
+            ],
             _buildItemsCard(wide),
           ],
         );
       },
+    );
+  }
+
+  /// "Assign clauses" panel. The Team Leader divides the plan clauses among
+  /// the team's auditors; an auditor only sees the clauses assigned to them.
+  Widget _buildAssignmentsCard() {
+    final a = _assignments!;
+    final unassigned = a.clauses.where((c) => c.assignedAuditorId == null).length;
+
+    return _buildCard(
+      title: a.canAssign ? 'ASSIGN CLAUSES TO AUDITORS' : 'MY ASSIGNED CLAUSES',
+      trailing: a.canAssign && unassigned > 0
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$unassigned unassigned',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade900,
+                ),
+              ),
+            )
+          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final au in a.auditors)
+                Chip(
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: primaryColor.withValues(alpha: 0.08),
+                  side: BorderSide.none,
+                  label: Text(
+                    '${au.name}${au.isTeamLeader ? ' (Team Leader)' : ''}: '
+                    '${au.assignedClauseCount} clause(s) · '
+                    '${au.answeredCount}/${au.questionCount} answered',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (a.clauses.isEmpty)
+            const Text(
+              'No clauses have been assigned to you yet.',
+              style: TextStyle(fontSize: 12, color: kMuted),
+            ),
+          for (final c in a.clauses) _buildAssignmentRow(a, c),
+          if (a.canAssign) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: _assignDirty && !_isSavingAssignments
+                    ? _saveAssignments
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: _isSavingAssignments
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'SAVE ASSIGNMENTS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAssignmentRow(ChecklistAssignments a, ChecklistClauseAssignment c) {
+    final isUnassigned = c.assignedAuditorId == null;
+    final label = Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: primaryColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            c.clauseRef,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: primaryColor,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            '${c.particulars ?? ''}'
+            '${c.questionCount > 0 ? '  (${c.answeredCount}/${c.questionCount} answered)' : ''}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12),
+          ),
+        ),
+      ],
+    );
+
+    Widget trailing;
+    if (a.canAssign) {
+      trailing = SizedBox(
+        width: 230,
+        child: DropdownButtonFormField<int?>(
+          key: ValueKey('${c.isoStandardId}-${c.assignedAuditorId}'),
+          initialValue: _assignDraft[c.isoStandardId],
+          isExpanded: true,
+          decoration: _inputDecoration(null, dense: true),
+          hint: const Text('Unassigned', style: TextStyle(fontSize: 12)),
+          items: [
+            const DropdownMenuItem<int?>(
+              value: null,
+              child: Text('Unassigned', style: TextStyle(fontSize: 12)),
+            ),
+            for (final au in a.auditors)
+              DropdownMenuItem<int?>(
+                value: au.auditorId,
+                child: Text(
+                  au.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+          ],
+          onChanged: (v) => setState(() => _assignDraft[c.isoStandardId] = v),
+        ),
+      );
+    } else {
+      trailing = const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: isUnassigned && a.canAssign
+            ? Colors.orange.shade50
+            : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isUnassigned && a.canAssign
+              ? Colors.orange.shade300
+              : Colors.grey.shade300,
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (!a.canAssign) return label;
+          if (constraints.maxWidth < 560) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [label, const SizedBox(height: 8), trailing],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(child: label),
+              const SizedBox(width: 12),
+              trailing,
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -687,6 +970,8 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _auditeeTextController,
+          // The header is the Team Leader's: an auditor only answers clauses.
+          readOnly: _assignments?.ownClausesOnly == true,
           onChanged: (_) => _markDirty(),
           minLines: 1,
           maxLines: null,

@@ -4,6 +4,7 @@ import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
 import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart';
 import 'package:imis/ISO/IQA/audit_report/service/audit_report_service.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
+import 'package:imis/ISO/IQA/audit_report/model/audit_report_clause_results.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_com_findings.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_scope.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_summary_findings.dart';
@@ -149,6 +150,12 @@ class _AuditReportPageState extends State<AuditReportPage> {
   final List<_ScopeUI> _scopeRows = [];
   final List<_SummaryUI> _summaryRows = [];
 
+  // Checklist results of the selected schedule (read-only): conforming clauses
+  // are listed as such and each non-conforming clause shows its NCAR.
+  AuditReportClauseResults? _clauseResults;
+  bool _isLoadingResults = false;
+  String? _resultsError;
+
   bool _isLoading = true;
   bool _isSaving = false;
   String? _error;
@@ -265,6 +272,7 @@ class _AuditReportPageState extends State<AuditReportPage> {
           if (_selectedAuditPlanEntryId != null) {
             await _loadSchedules(_selectedAuditPlanEntryId!);
           }
+          await _loadClauseResults();
 
           _comFindings.addAll(
             (report.auditComFindings ?? []).map(
@@ -296,6 +304,31 @@ class _AuditReportPageState extends State<AuditReportPage> {
       _error = 'Error loading: $e';
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadClauseResults() async {
+    final scheduleId = _selectedScheduleId;
+    if (scheduleId == null) {
+      setState(() => _clauseResults = null);
+      return;
+    }
+    setState(() {
+      _isLoadingResults = true;
+      _resultsError = null;
+    });
+    try {
+      final results = await _service.getClauseResults(scheduleId);
+      if (!mounted || scheduleId != _selectedScheduleId) return;
+      setState(() => _clauseResults = results);
+    } catch (_) {
+      if (!mounted || scheduleId != _selectedScheduleId) return;
+      setState(() {
+        _clauseResults = null;
+        _resultsError = 'Could not load the checklist results.';
+      });
+    } finally {
+      if (mounted) setState(() => _isLoadingResults = false);
     }
   }
 
@@ -343,6 +376,7 @@ class _AuditReportPageState extends State<AuditReportPage> {
       _selectedPlanId = planId;
       _selectedAuditPlanEntryId = null;
       _selectedScheduleId = null;
+      _clauseResults = null;
       _entries = [];
       _schedules = [];
     });
@@ -362,6 +396,7 @@ class _AuditReportPageState extends State<AuditReportPage> {
     setState(() {
       _selectedAuditPlanEntryId = entryId;
       _selectedScheduleId = null;
+      _clauseResults = null;
       _schedules = [];
     });
     if (entryId != null) {
@@ -741,7 +776,10 @@ class _AuditReportPageState extends State<AuditReportPage> {
           onChanged:
               _schedules.isEmpty || _isLoadingLookups
                   ? null
-                  : (val) => setState(() => _selectedScheduleId = val),
+                  : (val) {
+                    setState(() => _selectedScheduleId = val);
+                    _loadClauseResults();
+                  },
         ),
         const SizedBox(height: 8),
         const Text(
@@ -1109,6 +1147,137 @@ class _AuditReportPageState extends State<AuditReportPage> {
     ),
   );
 
+  Widget _clauseResultsCard() {
+    final results = _clauseResults;
+    return _card(
+      title: 'AUDIT CHECKLIST RESULTS',
+      child:
+          _isLoadingResults
+              ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(8),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+              : _resultsError != null
+              ? Text(
+                _resultsError!,
+                style: const TextStyle(color: Colors.redAccent),
+              )
+              : results == null || results.items.isEmpty
+              ? const Text(
+                'No checklist results yet for this audit schedule.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              )
+              : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      _resultCountChip(
+                        'Conforming',
+                        results.conformingCount,
+                        Colors.green.shade700,
+                      ),
+                      _resultCountChip(
+                        'Non-conforming',
+                        results.nonConformingCount,
+                        Colors.red.shade700,
+                      ),
+                      _resultCountChip(
+                        'Pending',
+                        results.pendingCount,
+                        Colors.grey.shade700,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  for (final result in results.items) _clauseResultRow(result),
+                ],
+              ),
+    );
+  }
+
+  Widget _resultCountChip(String label, int count, Color color) => Chip(
+    label: Text(
+      '$label: $count',
+      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+    ),
+    backgroundColor: color.withValues(alpha: .1),
+    side: BorderSide.none,
+    visualDensity: VisualDensity.compact,
+  );
+
+  Widget _clauseResultRow(AuditReportClauseResult result) {
+    final (label, color) = switch (result.conforming) {
+      true => ('Conforming', Colors.green.shade700),
+      false => ('Non-conforming', Colors.red.shade700),
+      null => ('Pending', Colors.grey.shade700),
+    };
+    final remarks = (result.findingAndRemarks ?? '').trim();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 56,
+            child: Text(
+              result.clauseRef,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(result.question, style: const TextStyle(fontSize: 12)),
+                if (remarks.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      'Remarks: $remarks',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ),
+                if (result.ncarId != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      'NCAR ${result.ncarReferenceNumber} • ${result.ncarStatus}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red.shade800,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _conclusionsCard() => _card(
     title: 'IV. AUDIT CONCLUSIONS',
     child: TextFormField(
@@ -1182,6 +1351,8 @@ class _AuditReportPageState extends State<AuditReportPage> {
                               _scopeCard(),
                               _commendableFindingsCard(),
                               _summaryFindingsCard(),
+                              if (_selectedScheduleId != null)
+                                _clauseResultsCard(),
                               _conclusionsCard(),
                             ],
                           ),

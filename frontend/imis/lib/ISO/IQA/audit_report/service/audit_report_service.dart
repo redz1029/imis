@@ -6,6 +6,7 @@ import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
 import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart';
 import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
+import 'package:imis/ISO/IQA/audit_report/model/audit_report_clause_results.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
 import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_signatory.dart';
@@ -106,6 +107,19 @@ class AuditReportService {
       if (e.response?.statusCode == 404) return null;
       throw Exception(_errorMessage(e, 'Failed to load audit report.'));
     }
+  }
+
+  /// GET /auditreport/schedule/{id}/clause-results — every checklist result of
+  /// the schedule, with the NCAR raised for each non-conforming clause.
+  Future<AuditReportClauseResults> getClauseResults(int auditScheduleId) async {
+    final url = '$_baseUrl/schedule/$auditScheduleId/clause-results';
+    final response = await AuthenticatedRequest.get(dio, url);
+    if (response.statusCode == 200 && response.data is Map) {
+      return AuditReportClauseResults.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+    }
+    throw Exception('Failed to load the checklist results.');
   }
 
   /// GET /auditreport/page. The endpoint returns an empty body/null (not an envelope)

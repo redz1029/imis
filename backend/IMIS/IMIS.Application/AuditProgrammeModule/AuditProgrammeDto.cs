@@ -34,6 +34,8 @@ namespace IMIS.Application.AuditProgrammeModule
         public string? StatusCode { get; set; }
         public string? StatusName { get; set; }
 
+        public int Revision { get; set; }
+
         // Live approval chain, in signing order.
         public List<IQASignatoryDto> Signatories { get; set; } = new();
 
@@ -70,6 +72,8 @@ namespace IMIS.Application.AuditProgrammeModule
             Reporting = entity.Reporting;
             VerificationOfPreviousNonconformities = entity.VerificationOfPreviousNonconformities;
             AuditLimitations = entity.AuditLimitations;
+
+            Revision = entity.Revision;
 
             // Callers must load IQASignatories (non-deleted) or this reads as Draft.
             var signatories = IQAApprovalWorkflow.Ordered(entity.IQASignatories);

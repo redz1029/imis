@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace IMIS.Persistence.AuditChecklistModule
 {
-    public class AuditChecklistService : IAuditChecklistService
+    public partial class AuditChecklistService : IAuditChecklistService
     {
         private readonly IAuditChecklistRepository _repository;
         private readonly IAuditChecklistQNARepository _qnaRepository;
@@ -178,7 +178,7 @@ namespace IMIS.Persistence.AuditChecklistModule
         /// duplicate rows are created. Otherwise the rows are generated from
         /// the schedule's AuditPlanEntry ISO clauses.
         /// </summary>
-        public async Task<IEnumerable<AuditChecklistDto>> GetOrGenerateForAuditScheduleAsync(int auditScheduleId, CancellationToken cancellationToken)
+        private async Task<IEnumerable<AuditChecklistDto>> GetOrGenerateRowsForAuditScheduleAsync(int auditScheduleId, CancellationToken cancellationToken)
         {
             var existing = (await _repository.GetByAuditScheduleIdWithScheduleAsync(auditScheduleId, cancellationToken).ConfigureAwait(false)).ToList();
             if (existing.Any())
@@ -474,6 +474,7 @@ namespace IMIS.Persistence.AuditChecklistModule
             }
 
             await _repository.SaveOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
+            dto.Id = entity.Id;
             return true;
         }
 

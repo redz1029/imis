@@ -33,6 +33,10 @@ namespace IMIS.Application.NonconformingActionReportModule
         // Source Audit Report link
         public int? AuditReportId { get; set; }
 
+        // Source checklist row. Read-only: set by the server when the NCAR is
+        // raised from a non-conforming checklist clause, never read back on save.
+        public int? AuditChecklistId { get; set; }
+
         // Auditor / Auditee Sign-offs (Issuance)
         public required string IssuedByAuditorUserId { get; set; }
         public string? IssuedByAuditorName { get; set; }
@@ -94,6 +98,7 @@ namespace IMIS.Application.NonconformingActionReportModule
             AuditFindings = entity.AuditFindings;
 
             AuditReportId = entity.AuditReportId;
+            AuditChecklistId = entity.AuditChecklistId;
 
             IssuedByAuditorUserId = entity.IssuedByAuditorUserId;
             IssuedByAuditorName = entity.IssuedByAuditor?.ToString();

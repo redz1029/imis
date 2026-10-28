@@ -36,6 +36,8 @@ namespace IMIS.Application.AuditPlanModule
         public DateTime CreatedDate { get; set; }
         public DateTime? LastModifiedDate { get; set; }
 
+        public int Revision { get; set; }
+
         public List<AuditPlanEntryDto> Entries { get; set; } = new();
         public List<AuditScheduleDto> AuditSchedules { get; set; } = new();
 
@@ -57,6 +59,7 @@ namespace IMIS.Application.AuditPlanModule
             this.EndDate = entity.EndDate;
             this.CreatedDate = entity.CreatedDate;
             this.LastModifiedDate = entity.LastModifiedDate;
+            this.Revision = entity.Revision;
             this.AuditProgrammeId = entity.AuditProgrammeId;
 
             this.Entries = entity.Entries != null

@@ -31,6 +31,11 @@ namespace IMIS.Domain
         public int? AuditReportId { get; set; }
         public AuditReport? AuditReport { get; set; }
 
+        // Source audit checklist row (one NCAR per non-conforming clause row).
+        // Null for NCARs raised from an audit report.
+        public int? AuditChecklistId { get; set; }
+        public AuditChecklist? AuditChecklist { get; set; }
+
         // Auditor / Auditee Sign-offs (Issuance)
         public required string IssuedByAuditorUserId { get; set; }
         public User? IssuedByAuditor { get; set; }

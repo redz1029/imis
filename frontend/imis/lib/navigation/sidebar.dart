@@ -154,6 +154,7 @@ class SidebarState extends State<Sidebar> {
   }
 
   bool _hasPermission(String permission) {
+    if (selectedRole == PermissionRoleString.roleAdmin) return true;
     return permissionService.hasPermission(permission);
   }
 

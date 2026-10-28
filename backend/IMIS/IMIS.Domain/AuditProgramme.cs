@@ -28,6 +28,13 @@ namespace IMIS.Domain
         
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? LastModifiedDate { get; set; }
+
+        /// <summary>
+        /// Revision counter printed on the Audit Programme form. Starts at 0 and
+        /// is bumped when a day change is made to one of its audit plans.
+        /// </summary>
+        public int Revision { get; set; } = 0;
+
         public ICollection<AuditPlan> AuditPlans { get; set; } = new List<AuditPlan>();
 
         /// <summary>

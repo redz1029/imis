@@ -51,6 +51,17 @@ class AuditChecklist {
   // AUDITEE/S is a STRING on the form — never a list of objects.
   final String? auditees;
 
+  // Clause assignment (Team Leader -> Auditor), read-only: filled by the server.
+  // planClauseId is the audit-plan clause the row belongs to.
+  final int? planClauseId;
+  final int? assignedAuditorId;
+  final String? assignedAuditorName;
+
+  // The NCAR the server raised for this row while it is non-conforming
+  // (read-only, never sent back on save).
+  final int? ncarId;
+  final String? ncarReferenceNumber;
+
   const AuditChecklist({
     this.id = 0,
     this.isDeleted = false,
@@ -70,6 +81,11 @@ class AuditChecklist {
     this.auditorNames,
     this.auditScope,
     this.auditees,
+    this.planClauseId,
+    this.assignedAuditorId,
+    this.assignedAuditorName,
+    this.ncarId,
+    this.ncarReferenceNumber,
   });
 
   factory AuditChecklist.fromJson(Map<String, dynamic> json) =>
@@ -105,6 +121,11 @@ class AuditChecklist {
       auditorNames: auditorNames,
       auditScope: auditScope,
       auditees: auditees,
+      planClauseId: planClauseId,
+      assignedAuditorId: assignedAuditorId,
+      assignedAuditorName: assignedAuditorName,
+      ncarId: ncarId,
+      ncarReferenceNumber: ncarReferenceNumber,
       conforming: clearConforming ? null : (conforming ?? this.conforming),
       findingAndRemarks: findingAndRemarks ?? this.findingAndRemarks,
     );
@@ -131,6 +152,11 @@ class AuditChecklist {
       auditorNames: auditorNames,
       auditScope: auditScope,
       auditees: value,
+      planClauseId: planClauseId,
+      assignedAuditorId: assignedAuditorId,
+      assignedAuditorName: assignedAuditorName,
+      ncarId: ncarId,
+      ncarReferenceNumber: ncarReferenceNumber,
     );
   }
 
@@ -156,6 +182,11 @@ class AuditChecklist {
       auditorNames: auditorNames,
       auditScope: auditScope,
       auditees: auditeeName ?? auditees,
+      planClauseId: planClauseId,
+      assignedAuditorId: assignedAuditorId,
+      assignedAuditorName: assignedAuditorName,
+      ncarId: ncarId,
+      ncarReferenceNumber: ncarReferenceNumber,
     );
   }
 }
