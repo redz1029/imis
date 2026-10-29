@@ -1074,6 +1074,9 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
   List<OfficeDto> _offices = [];
   List<IsoStandardDto> _standards = [];
   List<TeamDto> _teams = [];
+  // Why _teams is empty when the list could not be loaded (e.g. the user may
+  // not view teams); shown in the team dropdown.
+  String? _teamsMessage;
   List<AuditorTeamDto> _auditorTeams = [];
 
   AuditPlan? _loadedPlan;
@@ -1386,14 +1389,16 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
 
   Future<void> _fetchMasterTeams() async {
     try {
-      final teams = await _service.getTeams();
+      final teams = await _service.getTeams(strict: true);
       final seen = <int>{};
       _teams = teams
           .map((t) => TeamDto.fromJson(t.toJson()))
           .where((t) => seen.add(t.id))
           .toList();
+      _teamsMessage = null;
     } catch (e) {
       debugPrint('Failed to load teams: $e');
+      _teamsMessage = e.toString().replaceFirst('Exception: ', '');
     }
   }
 
@@ -2760,13 +2765,17 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
           initialValue: safeTeamValue,
           isExpanded: true,
           hint: const Text('Select Team', style: TextStyle(fontSize: 12)),
-          decoration: _decoration('AUDIT TEAM'),
+          decoration: _decoration('AUDIT TEAM').copyWith(
+            errorText: _teamsMessage,
+            errorMaxLines: 4,
+          ),
           items: _teams.isEmpty
               ? [
                   const DropdownMenuItem<int>(
                     value: null,
                     child: Text(
-                      'No options available',
+                      'No audit teams yet — add one in Settings > Auditor Team',
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 12),
                     ),
                   ),

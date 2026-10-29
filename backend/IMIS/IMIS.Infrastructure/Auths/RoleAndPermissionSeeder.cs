@@ -14,6 +14,7 @@ using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadmapKpiAccomplishmentModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
+using IMIS.Application.IsoStandardModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;    
@@ -835,6 +836,24 @@ namespace IMIS.Infrastructure.Auths
             };
             await PermissionSeeder.SeedSpecificPermssionsToRole<DepartmentHead, IdentityRole>(_roleManager, departmentHeadPermissions);
             await SyncIqaPermissionsAsync(new DepartmentHead().Name, departmentHeadPermissions);
+
+            // The Audit Programme, Plan and Schedule forms fill their dropdowns
+            // (audit team, office, ISO clause) from these lookup lists. Without
+            // View access the lists come back 403 and the dropdowns are empty,
+            // so every IQA role that opens those forms gets view-only access.
+            // These are not IQA claims, so SyncIqaPermissionsAsync leaves them be.
+            var iqaLookups = new BaseOperationPermission[]
+            {
+                new TeamPermission(),
+                new AuditorTeamPermission(),
+                new OfficePermission(),
+                new IsoStandardPermission()
+            };
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<QMR, IdentityRole>(_roleManager, iqaLookups);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<QMS, IdentityRole>(_roleManager, iqaLookups);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<LeadAuditor, IdentityRole>(_roleManager, iqaLookups);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<AuditorTeamLeader, IdentityRole>(_roleManager, iqaLookups);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<DepartmentHead, IdentityRole>(_roleManager, iqaLookups);
 
             // Auditor works on checklists/NCARs/report drafts.
             await PermissionSeeder.SeedViewOnlyPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
