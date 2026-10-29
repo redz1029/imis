@@ -338,7 +338,9 @@ namespace IMIS.Application.AuditProgrammeModule
             if (dto.Objectives == null || !dto.Objectives.Any())
                 errors.Add("An audit programme must have at least one objective.");
 
-            errors.AddRange(await GetSelfAuditErrorsAsync(dto, cancellationToken));
+            // TEMPORARILY DISABLED: self-audit check, so last year's manual (paper)
+            // internal quality audits can be encoded. Re-enable afterwards.
+            // errors.AddRange(await GetSelfAuditErrorsAsync(dto, cancellationToken));
 
             return errors;
         }

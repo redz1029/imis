@@ -327,7 +327,9 @@ namespace IMIS.Application.AuditPlanModule
             // Gating Rule: NO SELF-AUDIT — a team member may not audit an office
             // they belong to (AuditorOffices). Team membership is read live from
             // AuditorTeams, office membership live from AuditorOffices.
-            errors.AddRange(await GetSelfAuditErrorsAsync(dto, cancellationToken));
+            // TEMPORARILY DISABLED: self-audit check, so last year's manual (paper)
+            // internal quality audits can be encoded. Re-enable afterwards.
+            // errors.AddRange(await GetSelfAuditErrorsAsync(dto, cancellationToken));
 
             return errors;
         }
