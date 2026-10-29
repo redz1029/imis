@@ -13,6 +13,11 @@ import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_print_preview
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/permission_service.dart';
 
+/// TEMPORARILY false so last year's paper audits can be encoded; the inline
+/// self-audit highlight is off. Set true (and restore the commented blocks)
+/// to re-enable the rule.
+const bool _kSelfAuditCheckEnabled = false;
+
 // =============================================================================
 // 1. DATA MODELS & DTO ADAPTERS MATCHING C# BACKEND
 // =============================================================================
@@ -288,6 +293,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   List<OfficeDto> _offices = [];
   List<IsoStandardDto> _standards = [];
   List<TeamDto> _teams = [];
+  String? _teamsMessage;
 
   /// Team -> home-offices map for inline self-audit detection (one fetch).
   TeamOfficeConflictMap _conflictMap = TeamOfficeConflictMap.empty();
@@ -547,14 +553,16 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
 
   Future<void> _fetchMasterTeams() async {
     try {
-      final teams = await _service.getTeams();
+      final teams = await _service.getTeams(strict: true);
       final seen = <int>{};
       _teams = teams
           .map((t) => TeamDto.fromJson(t.toJson()))
           .where((t) => seen.add(t.id))
           .toList();
+      _teamsMessage = null;
     } catch (e) {
       debugPrint('Failed to load teams: $e');
+      _teamsMessage = e.toString().replaceFirst('Exception: ', '');
     }
   }
 
@@ -1267,20 +1275,21 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   /// Every entry that pairs a team with one of that team's own offices.
   /// The authoritative copy of this rule lives on the backend; this mirrors it
   /// so the user gets the error inline, before a round trip.
-  List<String> _selfAuditConflicts() {
-    final messages = <String>[];
-    for (final entry in _entries) {
-      final teamId = entry.selectedTeamId;
-      final officeId = entry.selectedOfficeId;
-      if (teamId == null || officeId == null) continue;
-      if (_conflictMap.isSelfAudit(teamId: teamId, officeId: officeId)) {
-        messages.add(
-          _conflictMap.conflictMessage(teamId: teamId, officeId: officeId),
-        );
-      }
-    }
-    return messages;
-  }
+  // TEMPORARILY DISABLED (see _submitProgramme).
+  // List<String> _selfAuditConflicts() {
+  //   final messages = <String>[];
+  //   for (final entry in _entries) {
+  //     final teamId = entry.selectedTeamId;
+  //     final officeId = entry.selectedOfficeId;
+  //     if (teamId == null || officeId == null) continue;
+  //     if (_conflictMap.isSelfAudit(teamId: teamId, officeId: officeId)) {
+  //       messages.add(
+  //         _conflictMap.conflictMessage(teamId: teamId, officeId: officeId),
+  //       );
+  //     }
+  //   }
+  //   return messages;
+  // }
 
   /// The first input-only day left without text, or null when all are filled.
   int? _emptyTextOnlyDay() {
@@ -1315,17 +1324,18 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
   }
 
   Future<void> _submitProgramme({required bool isDraft}) async {
-    // Block the save outright on any self-audit, before asking to confirm.
-    final conflicts = _selfAuditConflicts();
-    if (conflicts.isNotEmpty) {
-      if (mounted) {
-        MotionToast.error(
-          toastAlignment: Alignment.topCenter,
-          description: Text(conflicts.first),
-        ).show(context);
-      }
-      return;
-    }
+    // TEMPORARILY DISABLED: self-audit check, so last year's manual (paper)
+    // internal quality audits can be encoded. Re-enable afterwards.
+    // final conflicts = _selfAuditConflicts();
+    // if (conflicts.isNotEmpty) {
+    //   if (mounted) {
+    //     MotionToast.error(
+    //       toastAlignment: Alignment.topCenter,
+    //       description: Text(conflicts.first),
+    //     ).show(context);
+    //   }
+    //   return;
+    // }
 
     // An input-only day must have its text (e.g. "Reporting").
     final emptyDay = _emptyTextOnlyDay();
@@ -1571,6 +1581,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                               offices: _offices,
                               standards: _standards,
                               teams: _teams,
+                              teamsMessage: _teamsMessage,
                               conflictMap: _conflictMap,
                               onAddDay: _addDay,
                               onAddRowToDay: _addRowToDay,
@@ -1703,6 +1714,11 @@ class AuditPlanEntriesSection extends StatefulWidget {
   final List<OfficeDto> offices;
   final List<IsoStandardDto> standards;
   final List<TeamDto> teams;
+
+  /// Why [teams] is empty, when the list could not be loaded (e.g. the user
+  /// may not view teams). Shown in the team dropdown instead of a bare
+  /// "No options available".
+  final String? teamsMessage;
   final TeamOfficeConflictMap conflictMap;
 
   /// Called with `true` to add an input-only day (e.g. Reporting) and with
@@ -1724,6 +1740,7 @@ class AuditPlanEntriesSection extends StatefulWidget {
     required this.offices,
     required this.standards,
     required this.teams,
+    this.teamsMessage,
     required this.conflictMap,
     required this.onAddDay,
     required this.onAddRowToDay,
@@ -1735,6 +1752,265 @@ class AuditPlanEntriesSection extends StatefulWidget {
   @override
   State<AuditPlanEntriesSection> createState() =>
       _AuditPlanEntriesSectionState();
+}
+
+/// The selected clauses as chips, followed by a text field. Typing narrows a
+/// suggestion list (by clause number or name); picking one, pressing Enter, or
+/// typing exact clause numbers separated by commas / spaces ("4.1, 4.2.a")
+/// adds them. The arrow still opens the full picker dialog.
+class _ClauseTypeAhead extends StatefulWidget {
+  const _ClauseTypeAhead({
+    super.key,
+    required this.standards,
+    required this.selected,
+    required this.onChanged,
+    required this.search,
+    required this.decoration,
+    required this.onOpenPicker,
+  });
+
+  final List<IsoStandardDto> standards;
+  final List<int> selected;
+  final ValueChanged<List<int>> onChanged;
+  final List<IsoStandardDto> Function(String query) search;
+  final InputDecoration decoration;
+  final VoidCallback onOpenPicker;
+
+  @override
+  State<_ClauseTypeAhead> createState() => _ClauseTypeAheadState();
+}
+
+class _ClauseTypeAheadState extends State<_ClauseTypeAhead> {
+  static const Color _accent = Color(0xFF883942);
+
+  final TextEditingController _controller = TextEditingController();
+  final FocusNode _focus = FocusNode();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  IsoStandardDto? _byId(int id) {
+    for (final s in widget.standards) {
+      if (s.id == id) return s;
+    }
+    return null;
+  }
+
+  void _add(Iterable<IsoStandardDto> items) {
+    final next = List<int>.from(widget.selected);
+    for (final s in items) {
+      if (!next.contains(s.id)) next.add(s.id);
+    }
+    if (next.length != widget.selected.length) widget.onChanged(next);
+  }
+
+  void _remove(int id) =>
+      widget.onChanged(widget.selected.where((e) => e != id).toList());
+
+  /// Beyond this many clauses the box shows the first few and a "+N more"
+  /// chip, so a row with every chapter ticked stays one short line or two.
+  static const int _kCollapsedCount = 8;
+  bool _expanded = false;
+
+  List<int> get _shown => _expanded || widget.selected.length <= _kCollapsedCount
+      ? widget.selected
+      : widget.selected.sublist(0, _kCollapsedCount);
+
+  int get _hiddenCount => widget.selected.length - _shown.length;
+
+  /// A plain container instead of Material's Chip: a form with many rows keeps
+  /// dozens of these on screen, and Chip is far heavier to build and paint.
+  Widget _clauseChip(int id) {
+    final standard = _byId(id);
+    final label = standard == null
+        ? '#$id'
+        : (standard.clause.isNotEmpty ? standard.clause : standard.displayLabel);
+    return Container(
+      key: ValueKey<int>(id),
+      height: 20,
+      padding: const EdgeInsets.only(left: 6, right: 2),
+      decoration: BoxDecoration(
+        color: _accent.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: _accent.withValues(alpha: .25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 10, color: _accent)),
+          const SizedBox(width: 2),
+          InkWell(
+            onTap: () => _remove(id),
+            child: const Padding(
+              padding: EdgeInsets.all(2),
+              child: Icon(Icons.close, size: 11, color: _accent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _moreChip(String text, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        height: 20,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: _accent.withValues(alpha: .5)),
+        ),
+        child: Text(text, style: const TextStyle(fontSize: 10, color: _accent)),
+      ),
+    );
+  }
+
+  /// Clauses named exactly by [text]; null when any word is not a clause, so
+  /// half-typed text falls back to the suggestion list instead.
+  List<IsoStandardDto>? _exactMatches(String text) {
+    final words = text
+        .split(RegExp(r'[,;\s]+'))
+        .map((w) => w.trim().toLowerCase())
+        .where((w) => w.isNotEmpty)
+        .toList();
+    if (words.isEmpty) return const [];
+    final found = <IsoStandardDto>[];
+    for (final w in words) {
+      final match = widget.standards
+          .where((s) => s.clause.trim().toLowerCase() == w)
+          .toList();
+      if (match.isEmpty) return null;
+      found.add(match.first);
+    }
+    return found;
+  }
+
+  void _commitText(String text, VoidCallback pickHighlighted) {
+    final exact = _exactMatches(text);
+    if (exact != null && exact.isNotEmpty) {
+      _add(exact);
+      _controller.clear();
+      return;
+    }
+    pickHighlighted();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RawAutocomplete<IsoStandardDto>(
+      textEditingController: _controller,
+      focusNode: _focus,
+      displayStringForOption: (o) => o.displayLabel,
+      optionsBuilder: (value) {
+        final query = value.text.trim();
+        if (query.isEmpty) return const Iterable<IsoStandardDto>.empty();
+        return widget
+            .search(query)
+            .where((s) => !widget.selected.contains(s.id))
+            .take(30);
+      },
+      onSelected: (option) {
+        _add([option]);
+        _controller.clear();
+        _focus.requestFocus();
+      },
+      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+        return InputDecorator(
+          decoration: widget.decoration.copyWith(
+            suffixIcon: IconButton(
+              tooltip: 'Browse all clauses',
+              icon: const Icon(Icons.arrow_drop_down, color: _accent),
+              onPressed: widget.onOpenPicker,
+            ),
+          ),
+          isFocused: focusNode.hasFocus,
+          child: Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              for (final id in _shown) _clauseChip(id),
+              if (_hiddenCount > 0)
+                _moreChip('+$_hiddenCount more', () {
+                  setState(() => _expanded = true);
+                })
+              else if (_expanded && widget.selected.length > _kCollapsedCount)
+                _moreChip('show less', () {
+                  setState(() => _expanded = false);
+                }),
+              SizedBox(
+                width: 130,
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  style: const TextStyle(fontSize: 12),
+                  decoration: InputDecoration.collapsed(
+                    hintText: widget.selected.isEmpty
+                        ? 'Type or select clause(s)'
+                        : 'Add clause…',
+                    hintStyle: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  onChanged: (text) {
+                    // A comma or semicolon ends a clause number.
+                    if (text.contains(',') || text.contains(';')) {
+                      _commitText(text, () {});
+                    }
+                  },
+                  onSubmitted: (text) => _commitText(text, onFieldSubmitted),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(6),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 220, maxWidth: 360),
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemCount: options.length,
+                itemBuilder: (context, i) {
+                  final option = options.elementAt(i);
+                  final highlighted =
+                      AutocompleteHighlightedOption.of(context) == i;
+                  return InkWell(
+                    onTap: () => onSelected(option),
+                    child: Container(
+                      color: highlighted ? _accent.withValues(alpha: .10) : null,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        option.displayLabel,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
@@ -1905,7 +2181,11 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
     }
   }
 
-  Widget _buildOfficeCombo(AuditPlanEntryRow entry, {String? errorText}) {
+  Widget _buildOfficeCombo(
+    AuditPlanEntryRow entry,
+    StateSetter setRowState, {
+    String? errorText,
+  }) {
     return RawAutocomplete<OfficeDto>(
       textEditingController: entry.officeTextController,
       focusNode: entry.officeFocusNode,
@@ -1918,7 +2198,7 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
       },
       displayStringForOption: (o) => o.name,
       onSelected: (OfficeDto selection) {
-        setState(() {
+        setRowState(() {
           entry.selectedOfficeId = selection.id;
           entry.officeText = selection.name;
         });
@@ -1939,12 +2219,12 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                   color: primaryThemeColor,
                 ),
               ),
+          // Per keystroke only the entry is updated; nothing on screen depends
+          // on it, so there is no rebuild while typing.
           onChanged: (val) {
-            setState(() {
-              entry.officeText = val;
-              final match = widget.offices.where((o) => o.name == val);
-              entry.selectedOfficeId = match.isNotEmpty ? match.first.id : null;
-            });
+            entry.officeText = val;
+            final match = widget.offices.where((o) => o.name == val);
+            entry.selectedOfficeId = match.isNotEmpty ? match.first.id : null;
           },
         );
       },
@@ -2213,8 +2493,18 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: dayEntries.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, i) =>
-                  _buildEntryRow(dayEntries[i], dayEntries.length),
+              // Each row repaints on its own: typing in one office box or
+              // adding a clause must not rebuild every other row.
+              itemBuilder: (context, i) => RepaintBoundary(
+                key: ObjectKey(dayEntries[i]),
+                child: StatefulBuilder(
+                  builder: (context, setRowState) => _buildEntryRow(
+                    dayEntries[i],
+                    dayEntries.length,
+                    setRowState,
+                  ),
+                ),
+              ),
             ),
 
             const SizedBox(height: 8),
@@ -2238,26 +2528,121 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
     );
   }
 
-  Widget _buildEntryRow(AuditPlanEntryRow entry, int rowsInThisDay) {
+  /// Clauses taken from a row with "Copy clauses", ready to paste elsewhere.
+  List<int> _copiedClauses = const [];
+
+  void _toast(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+      );
+  }
+
+  /// Rows that take clauses: every row except the input-only days (e.g.
+  /// Reporting), which carry no clause.
+  Iterable<AuditPlanEntryRow> get _clauseRows =>
+      widget.entries.where((e) => !widget.textOnlyDays.contains(e.dayNumber));
+
+  void _onClauseAction(String action, AuditPlanEntryRow entry) {
+    switch (action) {
+      case 'copy':
+        setState(() => _copiedClauses = List<int>.from(entry.selectedIsoStandardIds));
+        _toast(
+          'Copied ${_copiedClauses.length} clause(s). Use "Paste clauses" on another row.',
+        );
+        break;
+      case 'paste':
+        setState(() => entry.selectedIsoStandardIds = List<int>.from(_copiedClauses));
+        break;
+      case 'all':
+        final ids = List<int>.from(entry.selectedIsoStandardIds);
+        var rows = 0;
+        setState(() {
+          for (final other in _clauseRows) {
+            if (identical(other, entry)) continue;
+            other.selectedIsoStandardIds = List<int>.from(ids);
+            rows++;
+          }
+        });
+        _toast('Clauses copied to $rows other row(s).');
+        break;
+    }
+  }
+
+  Widget _clauseMenu(AuditPlanEntryRow entry) {
+    final hasClauses = entry.selectedIsoStandardIds.isNotEmpty;
+    final canPaste = _copiedClauses.isNotEmpty;
+    final hasOtherRows = _clauseRows.any((e) => !identical(e, entry));
+
+    PopupMenuItem<String> item(
+      String value,
+      IconData icon,
+      String text, {
+      required bool enabled,
+    }) => PopupMenuItem<String>(
+      value: value,
+      enabled: enabled,
+      child: Row(
+        children: [
+          Icon(icon, size: 18),
+          const SizedBox(width: 8),
+          Text(text, style: const TextStyle(fontSize: 13)),
+        ],
+      ),
+    );
+
+    return PopupMenuButton<String>(
+      tooltip: 'Copy clauses to other rows',
+      icon: const Icon(Icons.copy_all_outlined, size: 20, color: primaryThemeColor),
+      onSelected: (a) => _onClauseAction(a, entry),
+      itemBuilder: (_) => [
+        item('copy', Icons.copy_outlined, 'Copy clauses', enabled: hasClauses),
+        item(
+          'paste',
+          Icons.content_paste_outlined,
+          canPaste
+              ? 'Paste clauses (${_copiedClauses.length})'
+              : 'Paste clauses',
+          enabled: canPaste,
+        ),
+        item(
+          'all',
+          Icons.library_add_check_outlined,
+          'Copy to all other rows',
+          enabled: hasClauses && hasOtherRows,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEntryRow(
+    AuditPlanEntryRow entry,
+    int rowsInThisDay,
+    StateSetter setRowState,
+  ) {
     final safeTeamValue = widget.teams.any((t) => t.id == entry.selectedTeamId)
         ? entry.selectedTeamId
         : null;
 
     // Inline self-audit detection: both fields chosen + a team member whose
     // home office is the selected organizational unit.
-    final selfAudit =
-        entry.selectedTeamId != null &&
-        entry.selectedOfficeId != null &&
-        widget.conflictMap.isSelfAudit(
-          teamId: entry.selectedTeamId,
-          officeId: entry.selectedOfficeId,
-        );
-    final selfAuditMessage = selfAudit
-        ? widget.conflictMap.conflictMessage(
-            teamId: entry.selectedTeamId!,
-            officeId: entry.selectedOfficeId!,
-          )
-        : null;
+    // TEMPORARILY DISABLED so last year's paper audits can be encoded.
+    // final selfAudit =
+    //     entry.selectedTeamId != null &&
+    //     entry.selectedOfficeId != null &&
+    //     widget.conflictMap.isSelfAudit(
+    //       teamId: entry.selectedTeamId,
+    //       officeId: entry.selectedOfficeId,
+    //     );
+    // final selfAuditMessage = selfAudit
+    //     ? widget.conflictMap.conflictMessage(
+    //         teamId: entry.selectedTeamId!,
+    //         officeId: entry.selectedOfficeId!,
+    //       )
+    //     : null;
+    final bool selfAudit = _kSelfAuditCheckEnabled;
+    final String? selfAuditMessage = null;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -2275,67 +2660,36 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
 
           Widget officeCombo = _buildOfficeCombo(
             entry,
+            setRowState,
             errorText: selfAuditMessage,
           );
 
-          Widget standardMultiSelect = InkWell(
-            borderRadius: BorderRadius.circular(6),
-            onTap: () => _selectStandards(context, entry),
-            child: InputDecorator(
-              decoration: _dropdownDecoration('STANDARD CHAPTER').copyWith(
-                suffixIcon: const Icon(
-                  Icons.arrow_drop_down,
-                  color: primaryThemeColor,
-                ),
-              ),
-              child: entry.selectedIsoStandardIds.isEmpty
-                  ? Text(
-                      'Select Clause(s)',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    )
-                  : Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: entry.selectedIsoStandardIds.map((id) {
-                        final match = widget.standards.where((s) => s.id == id);
-                        final label = match.isNotEmpty
-                            ? match.first.displayLabel
-                            : 'Clause #$id';
-                        return Chip(
-                          label: Text(
-                            label,
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          backgroundColor: primaryThemeColor.withValues(
-                            alpha: .08,
-                          ),
-                          labelStyle: const TextStyle(color: primaryThemeColor),
-                        );
-                      }).toList(),
-                    ),
-            ),
+          Widget standardMultiSelect = _ClauseTypeAhead(
+            key: ObjectKey(entry),
+            standards: widget.standards,
+            selected: entry.selectedIsoStandardIds,
+            search: _filteredStandards,
+            decoration: _dropdownDecoration('STANDARD CHAPTER'),
+            onChanged: (ids) =>
+                setRowState(() => entry.selectedIsoStandardIds = ids),
+            onOpenPicker: () => _selectStandards(context, entry),
           );
 
           Widget teamDropdown = DropdownButtonFormField<int>(
             initialValue: safeTeamValue,
             isExpanded: true,
             hint: const Text('Select Team', style: TextStyle(fontSize: 12)),
-            decoration: _dropdownDecoration(
-              'AUDITORS',
-            ).copyWith(errorText: selfAuditMessage, errorMaxLines: 4),
+            decoration: _dropdownDecoration('AUDIT TEAM').copyWith(
+              errorText: selfAuditMessage ?? widget.teamsMessage,
+              errorMaxLines: 4,
+            ),
             items: widget.teams.isEmpty
                 ? [
                     const DropdownMenuItem<int>(
                       value: null,
                       child: Text(
-                        'No options available',
+                        'No audit teams yet — add one in Settings > Auditor Team',
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: 12),
                       ),
                     ),
@@ -2354,7 +2708,7 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                       .toList(),
             onChanged: widget.teams.isEmpty
                 ? null
-                : (val) => setState(() => entry.selectedTeamId = val),
+                : (val) => setRowState(() => entry.selectedTeamId = val),
           );
 
           Widget removeButton = IconButton(
@@ -2376,7 +2730,8 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
                 Expanded(flex: 3, child: officeCombo),
                 const SizedBox(width: 8),
                 Expanded(flex: 3, child: standardMultiSelect),
-                const SizedBox(width: 8),
+                _clauseMenu(entry),
+                const SizedBox(width: 4),
                 Expanded(flex: 3, child: teamDropdown),
                 const SizedBox(width: 4),
                 removeButton,
@@ -2388,7 +2743,7 @@ class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: [removeButton],
+                  children: [_clauseMenu(entry), removeButton],
                 ),
                 officeCombo,
                 const SizedBox(height: 8),
