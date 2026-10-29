@@ -16,6 +16,8 @@ namespace IMIS.Presentation.AuditChecklistModule
     public class AuditChecklistEndPoints : CarterModule
     {
         private const string _auditChecklist = "Audit Checklist";
+        private const string _auditReportTag = "Audit Report";
+        private const string _ncarTag = "Nonconforming Action Report";
         public readonly AuditChecklistPermission _permission = new();
 
         public AuditChecklistEndPoints() : base("/auditchecklist")
@@ -33,6 +35,8 @@ namespace IMIS.Presentation.AuditChecklistModule
                     return Results.Json(new { error }, statusCode: StatusCodes.Status403Forbidden);
 
                 await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
+                await cache.EvictByTagAsync(_auditReportTag, cancellationToken); // the report follows the checklist
+                await cache.EvictByTagAsync(_ncarTag, cancellationToken);        // and so does the NCAR
                 return Results.Ok(dto);
             })
             .WithTags(_auditChecklist)
@@ -47,6 +51,8 @@ namespace IMIS.Presentation.AuditChecklistModule
                     return Results.Json(new { error }, statusCode: StatusCodes.Status403Forbidden);
 
                 await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
+                await cache.EvictByTagAsync(_auditReportTag, cancellationToken);
+                await cache.EvictByTagAsync(_ncarTag, cancellationToken);
                 return Results.Ok(dto);
             })
             .WithTags(_auditChecklist)

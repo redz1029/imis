@@ -26,6 +26,10 @@ namespace IMIS.Application.AuditChecklistModule
         // (Conforming / FindingAndRemarks) rows of the clauses assigned to them.
         Task<(bool Success, string? Error)> SaveChecklistForUserAsync(AuditChecklistDto dto, string? userId, CancellationToken cancellationToken);
 
+        // Raises the audit report of every schedule whose checklist was saved
+        // before reports were automatic. Existing reports are left alone.
+        Task<int> SyncMissingAuditReportsAsync(CancellationToken cancellationToken);
+
         // Audit Schedule is the source of truth for the checklist list —
         // returns every schedule (in schedule order) that has ISO clause /
         // team data, so the frontend never shows a hardcoded team roster.

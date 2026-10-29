@@ -32,6 +32,9 @@ namespace IMIS.Persistence.AuditChecklistModule
             (success, error) = await SyncNcarAsync(dto, userId, cancellationToken).ConfigureAwait(false);
             if (!success) return (false, error);
 
+            // The schedule's audit report follows the checklist (auditees, NC findings, NCARs).
+            await SyncAuditReportForRowAsync(dto.Id, cancellationToken).ConfigureAwait(false);
+
             await AttachNcarsAsync(new[] { dto }, cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return (true, null);

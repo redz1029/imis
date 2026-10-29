@@ -2,13 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 
-import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
-import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart';
-import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report_clause_results.dart';
-import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
-import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
 import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_signatory.dart';
 import 'package:imis/ISO/IQA/iqa_signatory/services/iqa_signatory_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -27,10 +22,6 @@ class AuditReportService {
   AuditReportService(this.dio);
 
   late final IQASignatoryService _signatoryService = IQASignatoryService(dio);
-  late final AuditSchedulesService _schedulesService = AuditSchedulesService(
-    dio,
-  );
-  late final AuditPlanService _planService = AuditPlanService(dio);
 
   String get _baseUrl => ApiEndpoint().auditReport;
 
@@ -120,6 +111,42 @@ class AuditReportService {
       );
     }
     throw Exception('Failed to load the checklist results.');
+  }
+
+  /// POST /auditreport/sync-from-checklists — raises the report of every
+  /// schedule whose checklist was saved before reports were automatic. Safe to
+  /// call on every load; a failure only means the list shows what already exists.
+  Future<void> syncFromChecklists() async {
+    try {
+      await AuthenticatedRequest.post(dio, '$_baseUrl/sync-from-checklists');
+    } catch (e) {
+      debugPrint('Audit report backfill skipped: $e');
+    }
+  }
+
+  /// GET /auditreport/findings-summary — per schedule, how many clauses
+  /// conform / do not conform and how many NCARs were raised.
+  Future<Map<int, AuditReportFindingsSummary>> getFindingsSummaries() async {
+    try {
+      final response = await AuthenticatedRequest.get(
+        dio,
+        '$_baseUrl/findings-summary',
+      );
+      final data = response.data;
+      if (response.statusCode != 200 || data is! List) return {};
+      final result = <int, AuditReportFindingsSummary>{};
+      for (final e in data) {
+        if (e is! Map) continue;
+        final summary = AuditReportFindingsSummary.fromJson(
+          Map<String, dynamic>.from(e),
+        );
+        result[summary.auditScheduleId] = summary;
+      }
+      return result;
+    } catch (e) {
+      debugPrint('Failed to load audit report findings: $e');
+      return {};
+    }
   }
 
   /// GET /auditreport/page. The endpoint returns an empty body/null (not an envelope)
@@ -243,57 +270,6 @@ class AuditReportService {
     }
   }
 
-  // ===========================================================================
-  // PICKER LOOKUPS (plan -> plan entry -> schedule)
-  // ===========================================================================
-
-  Future<List<AuditPlan>> getAllAuditPlans() => _planService.getAllAuditPlans();
-
-  /// GET /auditPlanEntry/by-audit-plan/{auditPlanId} — the plan entries of one
-  /// plan, with their nested processes/auditors so the header can show the
-  /// office/process and audit team.
-  Future<List<AuditPlanEntry>> getPlanEntries(int auditPlanId) async {
-    final url = '${ApiEndpoint().auditPlanEntry}/by-audit-plan/$auditPlanId';
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-      if (response.statusCode == 200 && response.data is List) {
-        return (response.data as List)
-            .map(
-              (e) =>
-                  AuditPlanEntry.fromJson(Map<String, dynamic>.from(e as Map)),
-            )
-            .toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) return [];
-      throw Exception(_errorMessage(e, 'Failed to load audit plan entries.'));
-    }
-  }
-
-  /// Schedules belonging to one plan entry. The /auditSchedule module has no
-  /// by-plan-entry route, so the list is fetched and filtered client-side.
-  Future<List<AuditSchedules>> getSchedulesForPlanEntry(
-    int auditPlanEntryId,
-  ) async {
-    final all = await _schedulesService.getAuditSchedules();
-    return all.where((s) => s.auditPlanEntryId == auditPlanEntryId).toList();
-  }
-
-  /// Creates a linked NonconformingActionReport (NCAR) directly from an Audit
-  /// Report. [status] selects which findings are included ("NC" or "OFI").
-  Future<dynamic> createNcarFromAuditReport({
-    required int auditReportId,
-    required String status,
-    required String issuedByAuditorUserId,
-    required String acknowledgedByAuditeeUserId,
-  }) async {
-    final url =
-        '${ApiEndpoint.baseUrl}/ncar/from-audit-report/$auditReportId?status=$status&issuedByAuditorUserId=$issuedByAuditorUserId&acknowledgedByAuditeeUserId=$acknowledgedByAuditeeUserId';
-    final response = await AuthenticatedRequest.post(dio, url);
-    return response.data;
-  }
-
   /// Fetches NCAR status options (NC, OFI) for Summary of Findings.
   Future<List<Map<String, dynamic>>> getNcarStatuses() async {
     final url =
@@ -332,9 +308,10 @@ class AuditReportService {
   // APPROVAL WORKFLOW (IQA signatory chain)
   // ===========================================================================
 
-  /// All signatories of this report, in signing order (204 => empty list).
-  Future<List<IQASignatory>> getSignatories(int reportId) =>
-      _signatoryService.getByAuditEntityId(kAuditReportEntityType, reportId);
+  /// Every report's signatories in one request, ordered by report then signing
+  /// order (204 => empty list).
+  Future<List<IQASignatory>> getAllSignatories() =>
+      _signatoryService.getAllByAuditEntityType(kAuditReportEntityType);
 
   /// True while no signatory row exists yet — i.e. the report has never been
   /// submitted and can still be submitted/edited freely.

@@ -1,4 +1,6 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
+using IMIS.Application.AuditReportModule;
 using IMIS.Application.IQASignatoryModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
@@ -27,9 +29,28 @@ namespace IMIS.Presentation.IQASignatoryModule
     public class IQASignatoryEndpoints : CarterModule
     {
         private const string _iqaSignatory = "IQASignatory";
+        private const string _auditReportType = "AuditReport";
+        private readonly AuditReportWorkflowPermission _reportWorkflow = new();
 
         public IQASignatoryEndpoints() : base("IQASignatory")
         {
+        }
+
+        // The Audit Programme, Audit Plan and Audit Schedule have their own
+        // workflow endpoints that already require their permissions. The Audit
+        // Report has none, so its submit/approve/reject/note permissions are
+        // enforced here, on the generic signatory endpoints.
+        private static bool IsAuditReportDenied(HttpContext httpContext, string auditEntityType, params string[] anyOf)
+        {
+            return string.Equals(auditEntityType, _auditReportType, StringComparison.Ordinal) &&
+                   !anyOf.Any(permission => httpContext.User.HasClaim(PermissionClaimType.Claim, permission));
+        }
+
+        private static IResult AuditReportForbidden(string action)
+        {
+            return Results.Json(
+                new { message = $"You do not have permission to {action} an Audit Report." },
+                statusCode: StatusCodes.Status403Forbidden);
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
@@ -190,9 +211,13 @@ namespace IMIS.Presentation.IQASignatoryModule
                 [FromBody] SubmitForApprovalRequest request,
                 IIQAAuditSignatoryService service,
                 IOutputCacheStore cache,
+                HttpContext httpContext,
                 CancellationToken cancellationToken) =>
             {
                 if (request == null) return Results.BadRequest("Request body is required.");
+
+                if (IsAuditReportDenied(httpContext, request.AuditEntityType, _reportWorkflow.CanSubmit))
+                    return AuditReportForbidden("submit");
 
                 var success = await service.SubmitForApprovalAsync(
                     request.AuditEntityType, request.AuditEntityId, request.UserId, cancellationToken)
@@ -210,9 +235,17 @@ namespace IMIS.Presentation.IQASignatoryModule
                 [FromBody] ApproveOrDisapproveRequest request,
                 IIQAAuditSignatoryService service,
                 IOutputCacheStore cache,
+                HttpContext httpContext,
                 CancellationToken cancellationToken) =>
             {
                 if (request == null) return Results.BadRequest("Request body is required.");
+
+                // Approving (or noting) and rejecting are separate permissions.
+                var decisionPermissions = request.Approve
+                    ? new[] { _reportWorkflow.CanApprove, _reportWorkflow.CanNote }
+                    : new[] { _reportWorkflow.CanReject };
+                if (IsAuditReportDenied(httpContext, request.AuditEntityType, decisionPermissions))
+                    return AuditReportForbidden(request.Approve ? "approve or note" : "reject");
 
                 var success = await service.ApproveOrDisapproveAsync(
                     request.AuditEntityType,
@@ -236,9 +269,14 @@ namespace IMIS.Presentation.IQASignatoryModule
                 [FromBody] ResetOnDisapprovalRequest request,
                 IIQAAuditSignatoryService service,
                 IOutputCacheStore cache,
+                HttpContext httpContext,
                 CancellationToken cancellationToken) =>
             {
                 if (request == null) return Results.BadRequest("Request body is required.");
+
+                // Resetting a disapproved report is the first step of resubmitting it.
+                if (IsAuditReportDenied(httpContext, request.AuditEntityType, _reportWorkflow.CanSubmit))
+                    return AuditReportForbidden("resubmit");
 
                 var success = await service.ResetOnDisapprovalAsync(
                     request.AuditEntityType, request.AuditEntityId, cancellationToken)

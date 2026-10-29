@@ -51,7 +51,9 @@ class AuditReport {
 
   // Server-derived header fields, assembled by AuditReportDto from the linked
   // AuditPlanEntry. Read-only.
-  @IsoDateTimeConverter()
+  // The API sends the plan entry's wall-clock time; the time-zone converter
+  // would shift an evening audit onto the next day.
+  @NullableWallClockDateTimeConverter()
   DateTime? auditDate;
   String? planOfficeProcess;
   String? planAuditTeamName;

@@ -5,13 +5,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
+import 'package:imis/ISO/IQA/audit_report/model/audit_report_clause_results.dart';
 import 'package:imis/ISO/IQA/audit_report/pages/audit_report_page.dart';
+import 'package:imis/ISO/IQA/audit_report/pages/audit_report_print_preview_page.dart';
 import 'package:imis/ISO/IQA/audit_report/service/audit_report_service.dart';
 import 'package:imis/ISO/IQA/iqa_signatory/model/iqa_signatory.dart';
 import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
+import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 // import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/widgets/dialog/delete_dialog.dart';
@@ -70,11 +75,26 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
 
   List<AuditReport> _allReports = [];
   final Map<int, _ReportApproval> _approvalByReportId = {};
+
+  /// Checklist figures per audit schedule: conforming / non-conforming clauses
+  /// and the NCARs the non-conforming ones raised.
+  Map<int, AuditReportFindingsSummary> _findingsBySchedule = {};
+  String _selectedTab = IqaStatus.all;
+  DateTimeRange _range = IqaPeriod.currentYear();
   int _currentPage = 1;
   final int _pageSize = 15;
   bool _isLoading = false;
   bool _isAdmin = false;
   final Set<int> _busyReportIds = {};
+
+  // The workflow buttons follow the permissions switched on for the user in
+  // Settings > User Roles (the same switches the PGS screens use).
+  bool _can(String permission) =>
+      _isAdmin || permissionService.hasPermission(permission);
+  bool get _canSubmit => _can(AppPermissions.auditReportSubmit);
+  bool get _canApprove => _can(AppPermissions.auditReportApprove);
+  bool get _canReject => _can(AppPermissions.auditReportReject);
+  bool get _canNote => _can(AppPermissions.auditReportNote);
 
   @override
   void initState() {
@@ -85,17 +105,28 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
     });
   }
 
-  Future<void> _fetchReports() async {
-    setState(() => _isLoading = true);
+  /// [silent] refreshes the list in the background without swapping the rows
+  /// for a loading spinner.
+  Future<void> _fetchReports({bool silent = false}) async {
+    if (!silent) setState(() => _isLoading = true);
     try {
+      // Reports are raised by the audit checklist. Anything saved before that
+      // was automatic is raised here first, so the list below is complete.
+      await _service.syncFromChecklists();
+
+      // Requested together with the reports so the round trips overlap.
+      final chainsFuture = _loadSignatoryChains();
+      final findingsFuture = _service.getFindingsSummaries();
       final data = await _service.getAllAuditReports();
+      final findings = await findingsFuture;
       if (mounted) {
         setState(() {
           _allReports = data;
+          _findingsBySchedule = findings;
           _isLoading = false;
         });
       }
-      _loadApprovals(data);
+      _applyApprovals(data, await chainsFuture ?? {});
     } catch (e) {
       debugPrint(e.toString());
       if (mounted) {
@@ -111,45 +142,66 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
     }
   }
 
-  /// Fetches each report's signatory chain. One failed chain must not hide the
-  /// whole list, so errors degrade to "Draft" per report. The lookups run
-  /// concurrently — this is one request per report, so doing them in sequence
-  /// would make the list load time scale with the record count.
-  Future<void> _loadApprovals(List<AuditReport> reports) async {
-    final approvals = await Future.wait(
-      reports.map((report) async {
-        try {
-          final signatories = await _service.getSignatories(report.id);
-          final active = signatories.where((s) => s.id > 0).toList();
-          return MapEntry<int, _ReportApproval>(
-            report.id,
-            _ReportApproval(
-              isDraft: active.isEmpty,
-              signatories: active,
-              isFullyApproved:
-                  active.isNotEmpty &&
-                  active.every((s) => s.approvalStatus == 'Approved'),
-            ),
-          );
-        } catch (e) {
-          debugPrint('Failed to load signatories for report ${report.id}: $e');
-          return MapEntry<int, _ReportApproval>(
-            report.id,
-            const _ReportApproval(
-              isDraft: true,
-              signatories: [],
-              isFullyApproved: false,
-            ),
-          );
-        }
-      }),
-    );
+  /// Fetches every report's signatory chain in a single request (not one per
+  /// report, which made the list load time scale with the record count).
+  /// Returns null when the lookup fails, so callers decide what to show.
+  Future<Map<int, List<IQASignatory>>?> _loadSignatoryChains() async {
+    final chainByReportId = <int, List<IQASignatory>>{};
+    try {
+      for (final s in await _service.getAllSignatories()) {
+        if (s.id > 0) chainByReportId.putIfAbsent(s.auditEntityId, () => []).add(s);
+      }
+    } catch (e) {
+      debugPrint('Failed to load report signatories: $e');
+      return null;
+    }
+    return chainByReportId;
+  }
 
+  /// After a workflow action only the approval chains change, so just those
+  /// are re-read (one small request) instead of the whole report list. A failed
+  /// lookup keeps what is on screen.
+  Future<void> _refreshApprovals() async {
+    final chains = await _loadSignatoryChains();
+    if (chains == null) return;
+    _applyApprovals(_allReports, chains);
+  }
+
+  /// Shows "Pending" the moment a submit succeeds, before the chain is re-read.
+  void _markPending(int reportId) {
+    if (!mounted) return;
+    setState(() {
+      _approvalByReportId[reportId] = const _ReportApproval(
+        isDraft: false,
+        signatories: [],
+        isFullyApproved: false,
+      );
+    });
+  }
+
+  void _applyApprovals(
+    List<AuditReport> reports,
+    Map<int, List<IQASignatory>> chainByReportId,
+  ) {
     if (!mounted) return;
     setState(() {
       _approvalByReportId
         ..clear()
-        ..addEntries(approvals);
+        ..addEntries(
+          reports.map((report) {
+            final active = chainByReportId[report.id] ?? <IQASignatory>[];
+            return MapEntry<int, _ReportApproval>(
+              report.id,
+              _ReportApproval(
+                isDraft: active.isEmpty,
+                signatories: active,
+                isFullyApproved:
+                    active.isNotEmpty &&
+                    active.every((s) => s.approvalStatus == 'Approved'),
+              ),
+            );
+          }),
+        );
     });
   }
 
@@ -168,12 +220,13 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
       await _service.resetApprovalChain(report.id);
       await _service.submitForApproval(report.id, userId);
       _toastSuccess('Approval chain reset. Submitted for approval.');
+      _markPending(report.id);
     } catch (e) {
       _toastError('Resubmit failed: $e');
     } finally {
       if (mounted) {
         _setBusy(report.id, false);
-        _fetchReports();
+        _refreshApprovals();
       }
     }
   }
@@ -186,21 +239,65 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
         isFullyApproved: false,
       );
 
-  List<AuditReport> get _paged {
-    final start = (_currentPage - 1) * _pageSize;
-    if (start >= _allReports.length) return [];
-    final end = (start + _pageSize).clamp(0, _allReports.length);
-    return _allReports.sublist(start, end);
+  // A report belongs to the year of its audit date; one with no audit date
+  // cannot be placed on the timeline, so it is never hidden.
+  List<AuditReport> get _inRange =>
+      _allReports.where((r) => IqaPeriod.matches(_range, r.auditDate)).toList();
+
+  String _tabOf(AuditReport report) =>
+      IqaStatus.tabOf(_approvalFor(report).statusName);
+
+  int _countFor(String tab) {
+    if (tab == IqaStatus.all) return _inRange.length;
+    return _inRange.where((r) => _tabOf(r) == tab).length;
   }
 
-  Future<void> _openForm({int? reportId}) async {
+  List<AuditReport> get _filtered {
+    if (_selectedTab == IqaStatus.all) return _inRange;
+    return _inRange.where((r) => _tabOf(r) == _selectedTab).toList();
+  }
+
+  List<AuditReport> get _paged {
+    final filtered = _filtered;
+    final start = (_currentPage - 1) * _pageSize;
+    if (start >= filtered.length) return [];
+    final end = (start + _pageSize).clamp(0, filtered.length);
+    return filtered.sublist(start, end);
+  }
+
+  void _selectTab(String tab) {
+    setState(() {
+      _selectedTab = tab;
+      _currentPage = 1;
+    });
+  }
+
+  void _setRange(DateTimeRange range) {
+    setState(() {
+      _range = range;
+      _currentPage = 1;
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _range = IqaPeriod.currentYear();
+      _selectedTab = IqaStatus.all;
+      _currentPage = 1;
+    });
+  }
+
+  Future<void> _openForm({required int reportId}) async {
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => AuditReportPage(reportId: reportId),
     );
-    _fetchReports();
+    _fetchReports(silent: true);
   }
+
+  String _reference(AuditReport report) =>
+      iqaReference('Audit Report', report.auditDate?.year);
 
   String _displayOffice(AuditReport report) {
     if (report.officeAuditedName != null &&
@@ -244,7 +341,7 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
               Navigator.pop(ctx);
               try {
                 await _service.delete(report.id);
-                await _fetchReports();
+                await _fetchReports(silent: true);
                 if (mounted) {
                   MotionToast.success(
                     description: Text(
@@ -315,12 +412,13 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
     try {
       await _service.submitForApproval(report.id, userId);
       _toastSuccess('Submitted for approval.');
+      _markPending(report.id);
     } catch (e) {
       _toastError('Submit failed: $e');
     } finally {
       if (mounted) {
         _setBusy(report.id, false);
-        _fetchReports();
+        _refreshApprovals();
       }
     }
   }
@@ -404,7 +502,7 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Close'),
             ),
-            if (approval.isDraft)
+            if (approval.isDraft && _canSubmit)
               TextButton(
                 onPressed: () {
                   Navigator.pop(ctx);
@@ -416,23 +514,29 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                 !approval.isFullyApproved &&
                 !approval.isDisapproved &&
                 (next != null || _isAdmin)) ...[
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  _recordAdminDecision(report, next, false);
-                },
-                child: const Text('Reject', style: TextStyle(color: Colors.redAccent)),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  _recordAdminDecision(report, next, true);
-                },
-                child: const Text('Approve', style: TextStyle(color: Colors.white)),
-              ),
+              if (_canReject)
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _recordAdminDecision(report, next, false);
+                  },
+                  child: const Text('Reject', style: TextStyle(color: Colors.redAccent)),
+                ),
+              // Noting is recorded as the signatory's approval of their step.
+              if (_canApprove || _canNote)
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _recordAdminDecision(report, next, true);
+                  },
+                  child: Text(
+                    _canApprove ? 'Approve' : 'Note',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
             ],
-            if (approval.isDisapproved)
+            if (approval.isDisapproved && _canSubmit)
               TextButton(
                 onPressed: () {
                   Navigator.pop(ctx);
@@ -440,63 +544,9 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                 },
                 child: const Text('Reset & Resubmit'),
               ),
-            if (approval.isFullyApproved)
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple.shade700),
-                icon: const Icon(Icons.assignment_late_outlined, size: 16, color: Colors.white),
-                label: const Text('Create NCAR', style: TextStyle(color: Colors.white)),
-                onPressed: () async {
-                  Navigator.pop(ctx);
-                  final status = await _chooseNcarStatus();
-                  if (status == null) return;
-                  final user = await AuthUtil.fetchLoggedUser();
-                  try {
-                    await _service.createNcarFromAuditReport(
-                      auditReportId: report.id,
-                      status: status,
-                      issuedByAuditorUserId: user?.id ?? '',
-                      acknowledgedByAuditeeUserId: user?.id ?? '',
-                    );
-                    _toastSuccess(
-                      'NCAR ($status) successfully created from Audit Report #${report.id}.',
-                    );
-                  } catch (e) {
-                    _toastError('Failed to create NCAR: $e');
-                  }
-                },
-              ),
           ],
         );
       },
-    );
-  }
-
-  /// Prompts the user to pick which finding status the NCAR should be raised
-  /// for. Returns "NC" or "OFI", or null if cancelled.
-  Future<String?> _chooseNcarStatus() {
-    return showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Create NCAR'),
-        content: const Text(
-          'Which findings should this NCAR be raised for?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          OutlinedButton(
-            onPressed: () => Navigator.pop(ctx, 'OFI'),
-            child: const Text('OFI'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple.shade700),
-            onPressed: () => Navigator.pop(ctx, 'NC'),
-            child: const Text('NC', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -530,7 +580,7 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
       } finally {
         if (mounted) {
           _setBusy(report.id, false);
-          _fetchReports();
+          _refreshApprovals();
         }
       }
       return;
@@ -549,7 +599,7 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
     } finally {
       if (mounted) {
         _setBusy(report.id, false);
-        _fetchReports();
+        _refreshApprovals();
       }
     }
   }
@@ -568,6 +618,49 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(label, style: TextStyle(fontSize: 11, color: color)),
+    );
+  }
+
+  /// What the audit checklist found: the non-conforming clauses with the NCARs
+  /// already raised for them, or "All conforming" / "Checklist pending".
+  Widget _findingsCell(AuditReport report) {
+    final f = _findingsBySchedule[report.auditScheduleId];
+
+    Widget chip(String text, Color color) => Container(
+      margin: const EdgeInsets.only(right: 4, bottom: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+
+    if (f == null || f.totalCount == 0 || f.conformingCount + f.nonConformingCount == 0) {
+      return chip('Checklist pending', Colors.grey.shade600);
+    }
+    if (f.nonConformingCount == 0) {
+      return chip(
+        f.pendingCount > 0
+            ? '${f.conformingCount} conforming'
+            : 'All conforming',
+        Colors.green.shade700,
+      );
+    }
+    return Wrap(
+      children: [
+        chip('${f.nonConformingCount} NC', Colors.red.shade700),
+        chip('${f.ncarCount} NCAR', Colors.purple.shade700),
+        if (f.conformingCount > 0)
+          chip('${f.conformingCount} conforming', Colors.green.shade700),
+      ],
     );
   }
 
@@ -619,27 +712,22 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
             buildPageHeader(
               isMobile: isMobile,
               title: 'Audit Report',
-              totalCount: _allReports.length,
+              totalCount: _inRange.length,
               itemLabel: 'report',
               icon: Icons.fact_check_outlined,
-              actionButton: ElevatedButton.icon(
-                onPressed: () => _openForm(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text(
-                  'Add New',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
+            ),
+            const SizedBox(height: 6),
+            IqaPeriodFilter(
+              range: _range,
+              onChanged: _setRange,
+              onClear: _clearFilters,
+            ),
+            const SizedBox(height: 6),
+            IqaStatusTabs(
+              tabs: IqaStatus.withDraft,
+              selected: _selectedTab,
+              countOf: _countFor,
+              onSelected: _selectTab,
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -719,6 +807,16 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                             const Expanded(
                               flex: 2,
                               child: Text(
+                                'Findings',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ),
+                            const Expanded(
+                              flex: 2,
+                              child: Text(
                                 'Status',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
@@ -751,7 +849,8 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                               : paged.isEmpty
                               ? Center(
                                 child: Text(
-                                  'No audit reports found',
+                                  'No audit reports yet. A report appears here '
+                                  'automatically once an audit checklist is saved.',
                                   style: GoogleFonts.plusJakartaSans(
                                     color: kMuted,
                                   ),
@@ -787,11 +886,24 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                                           ),
                                           Expanded(
                                             flex: 2,
-                                            child: Text(
-                                              _displayOffice(report),
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                              ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  _displayOffice(report),
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  _reference(report),
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    color: kMuted,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                           Expanded(
@@ -816,6 +928,10 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                                           ),
                                           Expanded(
                                             flex: 2,
+                                            child: _findingsCell(report),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
                                             child: Align(
                                               alignment: Alignment.centerLeft,
                                               child: _approvalBadge(report),
@@ -836,20 +952,19 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                                                         reportId: report.id,
                                                       ),
                                                 ),
-                                                // IconButton(
-                                                //   icon: const Icon(
-                                                //     Icons
-                                                //         .picture_as_pdf_outlined,
-                                                //     size: 16,
-                                                //   ),
-                                                //   onPressed: () =>
-                                                //       openAuditReportPreview(
-                                                //         report.id,
-                                                //         report.officeAuditedName ??
-                                                //             '',
-                                                //         context: context,
-                                                //       ),
-                                                // ),
+                                                IconButton(
+                                                  tooltip: 'Print Preview',
+                                                  icon: const Icon(
+                                                    Icons.print_outlined,
+                                                    size: 16,
+                                                  ),
+                                                  onPressed:
+                                                      () =>
+                                                          openAuditReportPrintPreview(
+                                                            context,
+                                                            report.id,
+                                                          ),
+                                                ),
                                                 IconButton(
                                                   icon: const Icon(
                                                     CupertinoIcons
@@ -890,6 +1005,7 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
+Text(                                                _reference(report),                                                style: const TextStyle(                                                  fontSize: 11,                                                  color: kMuted,                                                ),                                              ),
                                               const SizedBox(height: 4),
                                               Text(
                                                 _displayAuditee(report),
@@ -907,6 +1023,8 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                                                 ),
                                               ),
                                               const SizedBox(height: 6),
+                                              _findingsCell(report),
+                                              const SizedBox(height: 4),
                                               _approvalBadge(report),
                                             ],
                                           ),
@@ -927,9 +1045,28 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                                             if (value == 'approval') {
                                               _showApprovalDialog(report);
                                             }
+                                            if (value == 'print') {
+                                              openAuditReportPrintPreview(
+                                                context,
+                                                report.id,
+                                              );
+                                            }
                                           },
                                           itemBuilder:
                                               (_) => [
+                                                const PopupMenuItem(
+                                                  value: 'print',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.print_outlined,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Print Preview'),
+                                                    ],
+                                                  ),
+                                                ),
                                                 const PopupMenuItem(
                                                   value: 'edit',
                                                   child: Row(
@@ -988,12 +1125,12 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
                         children: [
                           PaginationInfo(
                             currentPage: _currentPage,
-                            totalItems: _allReports.length,
+                            totalItems: _filtered.length,
                             itemsPerPage: _pageSize,
                           ),
                           PaginationControls(
                             currentPage: _currentPage,
-                            totalItems: _allReports.length,
+                            totalItems: _filtered.length,
                             itemsPerPage: _pageSize,
                             isLoading: _isLoading,
                             onPageChanged:
@@ -1010,14 +1147,6 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
           ],
         ),
       ),
-      floatingActionButton:
-          isMobile
-              ? FloatingActionButton(
-                backgroundColor: primaryColor,
-                onPressed: () => _openForm(),
-                child: const Icon(Icons.add, color: Colors.white),
-              )
-              : null,
     );
   }
 }

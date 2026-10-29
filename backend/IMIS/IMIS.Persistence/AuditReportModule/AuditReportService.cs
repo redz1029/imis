@@ -37,69 +37,33 @@ namespace IMIS.Persistence.AuditReportModule
             if (dto is not AuditReportDto aDto)
                 throw new InvalidOperationException("Invalid DTO type.");
 
-            var entity = aDto.ToEntity();
+            // A report is raised by the audit checklist (see AuditChecklistService.Report),
+            // never typed in, so there is nothing here that can add one.
+            if (aDto.Id == 0)
+                throw new InvalidOperationException("Audit reports are created automatically from the audit checklist.");
+
             var dbContext = _repository.GetDbContext();
 
-            if (entity.Id == 0)
-            {
-                dbContext.Add(entity);
+            var existing = await _repository.GetByIdWithDetailsAsync(aDto.Id, cancellationToken).ConfigureAwait(false);
+            if (existing == null)
+                throw new InvalidOperationException("Audit report not found.");
 
-                var addedEntry = dbContext.Entry(entity);
-                addedEntry.Property<int?>("AuditeeId").CurrentValue = aDto.AuditeeId;
-                addedEntry.Property<int?>("OfficeAuditedId").CurrentValue = aDto.OfficeAuditedId;
-                addedEntry.Property<long?>("AuditStandardISOId").CurrentValue = aDto.AuditStandardISOId;
-                addedEntry.Property<int?>("AuditPlanEntryId").CurrentValue = aDto.AuditPlanEntryId;
-            }
-            else
-            {
-                var existing = await _repository.GetByIdWithDetailsAsync(entity.Id, cancellationToken).ConfigureAwait(false);
-                if (existing != null)
-                {
-                    if (existing.AuditComFindings?.Any() == true)
-                        dbContext.Set<AuditComFindings>().RemoveRange(existing.AuditComFindings);
+            // Only what the auditor writes by hand is saved. The schedule, plan
+            // entry, office, standard, auditees and Summary of Findings come from
+            // the checklist, so whatever the client echoes for them is ignored.
+            if (existing.AuditComFindings?.Any() == true)
+                dbContext.Set<AuditComFindings>().RemoveRange(existing.AuditComFindings);
 
-                    if (existing.AuditScope?.Any() == true)
-                        dbContext.Set<AuditScope>().RemoveRange(existing.AuditScope);
-
-                    if (existing.AuditSummaryFIndings?.Any() == true)
-                        dbContext.Set<AuditSummaryFIndings>().RemoveRange(existing.AuditSummaryFIndings);
-
-                    dbContext.Entry(existing).CurrentValues.SetValues(entity);
-
-                    var existingEntry = dbContext.Entry(existing);
-                    existingEntry.Property<int?>("AuditeeId").CurrentValue = aDto.AuditeeId;
-                    existingEntry.Property<int?>("OfficeAuditedId").CurrentValue = aDto.OfficeAuditedId;
-                    existingEntry.Property<long?>("AuditStandardISOId").CurrentValue = aDto.AuditStandardISOId;
-                    existingEntry.Property<int?>("AuditPlanEntryId").CurrentValue = aDto.AuditPlanEntryId;
-                }
-            }
+            existing.AuditPurpose = aDto.AuditPurpose;
+            existing.AuditConclisions = aDto.AuditConclusions;
 
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            // The three child collections are nulled out in AuditReportDto.ToEntity()
-            // (the parent must be tracked without them), so the DTO's rows have to be
-            // re-attached here. This runs AFTER the parent insert so entity.Id is the
-            // real generated key, and it re-keys the children to that id rather than
-            // trusting whatever AuditReportId the client sent. AuditReportId is
-            // required + FK on all three child entities, so without this block the
-            // commendable findings / auditees / summary-of-findings rows were deleted
-            // on update and never re-created — silently discarding the user's input.
-            AddChildCollections(dbContext, aDto, entity.Id);
-
-            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            aDto.Id = entity.Id;
-        }
-
-        private static void AddChildCollections(DbContext dbContext, AuditReportDto dto, int auditReportId)
-        {
-            // Children are built with an object initializer rather than ToEntity()
-            // because Id/RowVersion are init-only and cannot be reset after the
-            // fact. Every child is re-inserted instead of updated: the existing rows
-            // were removed just above, so carrying the client's Id over would make
-            // EF issue an INSERT against a primary key that was deleted moments
-            // earlier and fail with a PK violation. The DTO's child Ids therefore
-            // only identify "which row this was", not what to persist.
-            foreach (var child in dto.AuditComFindings ?? new List<AuditComFindingsDto>())
+            // The parent is tracked without its children, so the commendable
+            // findings are re-attached here under the report's real id. Every
+            // row is re-inserted: the old ones were removed above, so keeping
+            // the client's Id would be an INSERT of a deleted primary key.
+            foreach (var child in aDto.AuditComFindings ?? new List<AuditComFindingsDto>())
             {
                 if (child == null) continue;
                 dbContext.Set<AuditComFindings>().Add(new AuditComFindings
@@ -107,37 +71,64 @@ namespace IMIS.Persistence.AuditReportModule
                     Id = 0,
                     CommendableFindings = child.CommendableFindings,
                     Area = child.AreasId ?? 0,
-                    AuditReportId = auditReportId,
+                    AuditReportId = existing.Id,
                     IsDeleted = false
                 });
             }
 
-            foreach (var child in dto.AuditScope ?? new List<AuditScopeDto>())
-            {
-                if (child == null) continue;
-                dbContext.Set<AuditScope>().Add(new AuditScope
-                {
-                    Id = 0,
-                    Auditee = child.Auditee,
-                    TeamId = child.TeamId,
-                    AuditReportId = auditReportId,
-                    IsDeleted = false
-                });
-            }
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
 
-            foreach (var child in dto.AuditSummaryFindings ?? new List<AuditSummaryFindingsDto>())
-            {
-                if (child == null) continue;
-                dbContext.Set<AuditSummaryFIndings>().Add(new AuditSummaryFIndings
+        /// <summary>
+        /// One line per audit report with the checklist figures behind it, so the
+        /// list can show how many clauses were non-conforming and how many NCARs
+        /// they raised without loading every checklist row.
+        /// </summary>
+        public async Task<List<AuditReportFindingsSummaryDto>> GetFindingsSummariesAsync(CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var scheduleIds = await dbContext.Set<AuditReport>()
+                .AsNoTracking()
+                .Select(r => r.AuditScheduleId)
+                .Distinct()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (scheduleIds.Count == 0) return new List<AuditReportFindingsSummaryDto>();
+
+            var counts = await dbContext.Set<AuditChecklist>()
+                .AsNoTracking()
+                .Where(c => scheduleIds.Contains(c.AuditScheduleId) && !c.IsDeleted)
+                .GroupBy(c => c.AuditScheduleId)
+                .Select(g => new
                 {
-                    Id = 0,
-                    No = child.No,
-                    Findings = child.Findings,
-                    AuditNcarStatusId = child.AuditNcarStatusId,
-                    AuditReportId = auditReportId,
-                    IsDeleted = false
-                });
-            }
+                    AuditScheduleId = g.Key,
+                    Total = g.Count(),
+                    Conforming = g.Count(c => c.Conforming == true),
+                    NonConforming = g.Count(c => c.Conforming == false)
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var ncarCounts = await (from n in dbContext.Set<NonconformingActionReport>().AsNoTracking()
+                                    join c in dbContext.Set<AuditChecklist>().AsNoTracking() on n.AuditChecklistId equals c.Id
+                                    where scheduleIds.Contains(c.AuditScheduleId)
+                                    group n by c.AuditScheduleId into g
+                                    select new { AuditScheduleId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.AuditScheduleId, x => x.Count, cancellationToken)
+                .ConfigureAwait(false);
+
+            return counts
+                .Select(c => new AuditReportFindingsSummaryDto
+                {
+                    AuditScheduleId = c.AuditScheduleId,
+                    TotalCount = c.Total,
+                    ConformingCount = c.Conforming,
+                    NonConformingCount = c.NonConforming,
+                    PendingCount = c.Total - c.Conforming - c.NonConforming,
+                    NcarCount = ncarCounts.TryGetValue(c.AuditScheduleId, out var n) ? n : 0
+                })
+                .ToList();
         }
 
         public async Task<AuditReportDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
