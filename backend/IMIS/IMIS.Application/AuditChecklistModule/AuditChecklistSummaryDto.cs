@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace IMIS.Application.AuditChecklistModule
@@ -19,6 +20,11 @@ namespace IMIS.Application.AuditChecklistModule
         public string? Auditees { get; set; }
         public int ClauseCount { get; set; }
         public string? StatusName { get; set; }
+
+        // The schedule's own period, so the list can place each checklist on the
+        // year timeline (and filter by a date range).
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
 
         public AuditChecklistSummaryDto() { }
     }

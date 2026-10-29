@@ -12,6 +12,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
+import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 
 class AuditPlanListPage extends StatefulWidget {
   const AuditPlanListPage({super.key});
@@ -21,19 +22,11 @@ class AuditPlanListPage extends StatefulWidget {
 }
 
 class _AuditPlanListPageState extends State<AuditPlanListPage> {
-  static const List<String> _statusTabs = [
-    'All',
-    'Draft',
-    'Pending',
-    'Approved',
-    'Revision Required',
-    'Rejected',
-  ];
-
   final _service = AuditPlanService(Dio());
 
   List<AuditPlan> _allPlans = [];
-  String _selectedTab = 'All';
+  String _selectedTab = IqaStatus.all;
+  DateTimeRange _range = IqaPeriod.currentYear();
   int _currentPage = 1;
   final int _pageSize = 15;
   bool _isLoading = false;
@@ -44,8 +37,10 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
     _fetchPlans();
   }
 
-  Future<void> _fetchPlans() async {
-    setState(() => _isLoading = true);
+  /// [silent] refreshes the list in the background (after a save) without
+  /// swapping the rows for a loading spinner.
+  Future<void> _fetchPlans({bool silent = false}) async {
+    if (!silent) setState(() => _isLoading = true);
     try {
       final data = await _service.getAllAuditPlans();
       if (mounted) setState(() => _allPlans = data);
@@ -64,20 +59,25 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
     }
   }
 
-  // FIX: AuditPlan.planStatus is a dead field the backend no longer
-  // populates (see the comment on AuditPlan itself). Tab counts must be
-  // driven by the real status, which is auditStatusId/statusName, exposed
-  // here via the effectiveStatusName getter (falls back to 'Draft' when
-  // statusName hasn't been resolved).
+  // A plan covers its start..end dates; the status tabs count what is inside
+  // the selected period. The status is the real workflow state
+  // (effectiveStatusName), grouped into the shared tabs.
+  bool _inPeriod(AuditPlan p) =>
+      IqaPeriod.matches(_range, p.startDate, p.endDate);
+
+  List<AuditPlan> get _inRange => _allPlans.where(_inPeriod).toList();
+
   int _countFor(String tab) {
-    if (tab == 'All') return _allPlans.length;
-    return _allPlans.where((p) => p.effectiveStatusName == tab).length;
+    if (tab == IqaStatus.all) return _inRange.length;
+    return _inRange
+        .where((p) => IqaStatus.tabOf(p.effectiveStatusName) == tab)
+        .length;
   }
 
   List<AuditPlan> get _filtered {
-    if (_selectedTab == 'All') return _allPlans;
-    return _allPlans
-        .where((p) => p.effectiveStatusName == _selectedTab)
+    if (_selectedTab == IqaStatus.all) return _inRange;
+    return _inRange
+        .where((p) => IqaStatus.tabOf(p.effectiveStatusName) == _selectedTab)
         .toList();
   }
 
@@ -96,6 +96,21 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
     });
   }
 
+  void _setRange(DateTimeRange range) {
+    setState(() {
+      _range = range;
+      _currentPage = 1;
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _range = IqaPeriod.currentYear();
+      _selectedTab = IqaStatus.all;
+      _currentPage = 1;
+    });
+  }
+
   /// Mirrors AuditProgrammeListPage._openForm exactly — a modal dialog, not
   /// a pushed route, so the ISO section's navigation style stays consistent.
   /// AuditPlanPage requires a programmeId to reload its parent Programme's
@@ -109,7 +124,7 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
         auditPlanId: plan?.id,
       ),
     );
-    _fetchPlans();
+    _fetchPlans(silent: true);
   }
 
   Future<void> _deletePlan(AuditPlan plan) async {
@@ -181,59 +196,6 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
     );
   }
 
-  Widget _buildTab(String tab) {
-    final isActive = tab == _selectedTab;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => _selectTab(tab),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isActive ? primaryColor.withValues(alpha: 0.1) : null,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isActive ? primaryColor : kBorder,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                tab,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? primaryColor : kMuted,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 1,
-                ),
-                decoration: BoxDecoration(
-                  color: isActive ? primaryColor : kBorder,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${_countFor(tab)}',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isActive ? Colors.white : kMuted,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -249,17 +211,23 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
             buildPageHeader(
               isMobile: isMobile,
               title: 'Audit Plan',
-              totalCount: _allPlans.length,
+              totalCount: _inRange.length,
               itemLabel: 'plan',
               icon: Icons.event_note_outlined,
               actionButton: const SizedBox.shrink(),
             ),
             const SizedBox(height: 6),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _statusTabs.map(_buildTab).toList(),
-              ),
+            IqaPeriodFilter(
+              range: _range,
+              onChanged: _setRange,
+              onClear: _clearFilters,
+            ),
+            const SizedBox(height: 6),
+            IqaStatusTabs(
+              tabs: IqaStatus.withDraft,
+              selected: _selectedTab,
+              countOf: _countFor,
+              onSelected: _selectTab,
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -299,7 +267,7 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
                             const Expanded(
                               flex: 2,
                               child: Text(
-                                'Plan',
+                                'Reference',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: kMuted,
@@ -387,7 +355,7 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            'Audit Plan #${plan.id}',
+                                            iqaReference('Audit Plan', IqaPeriod.yearOf(plan.startDate)),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -508,7 +476,7 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              'Audit Plan #${plan.id}',
+                                              iqaReference('Audit Plan', IqaPeriod.yearOf(plan.startDate)),
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                               ),

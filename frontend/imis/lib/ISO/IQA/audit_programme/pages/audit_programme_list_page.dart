@@ -8,6 +8,7 @@ import 'package:imis/ISO/IQA/audit_programme/models/audit_programme.dart';
 import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_page.dart';
 import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
+import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -23,19 +24,11 @@ class AuditProgrammeListPage extends StatefulWidget {
 }
 
 class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
-  static const List<String> _statusTabs = [
-    'All',
-    'Draft',
-    'Pending',
-    'Approved',
-    'Revision Required',
-    'Rejected',
-  ];
-
   final _service = AuditProgrammeService(Dio());
 
   List<AuditProgramme> _allProgrammes = [];
-  String _selectedTab = 'All';
+  String _selectedTab = IqaStatus.all;
+  DateTimeRange _range = IqaPeriod.currentYear();
   int _currentPage = 1;
   final int _pageSize = 15;
   bool _isLoading = false;
@@ -46,8 +39,10 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
     _fetchProgrammes();
   }
 
-  Future<void> _fetchProgrammes() async {
-    setState(() => _isLoading = true);
+  /// [silent] refreshes the list in the background (after a save) without
+  /// swapping the rows for a loading spinner.
+  Future<void> _fetchProgrammes({bool silent = false}) async {
+    if (!silent) setState(() => _isLoading = true);
     try {
       final data = await _service.getAllAuditProgrammes();
       if (mounted) setState(() => _allProgrammes = data);
@@ -66,15 +61,26 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
     }
   }
 
+  // A programme covers its whole year; one with no year cannot be placed on
+  // the timeline, so it is never hidden.
+  bool _inPeriod(AuditProgramme p) =>
+      p.year <= 0 ||
+      IqaPeriod.matches(_range, DateTime(p.year, 1, 1), DateTime(p.year, 12, 31));
+
+  List<AuditProgramme> get _inRange =>
+      _allProgrammes.where(_inPeriod).toList();
+
   int _countFor(String tab) {
-    if (tab == 'All') return _allProgrammes.length;
-    return _allProgrammes.where((p) => p.effectiveStatusName == tab).length;
+    if (tab == IqaStatus.all) return _inRange.length;
+    return _inRange
+        .where((p) => IqaStatus.tabOf(p.effectiveStatusName) == tab)
+        .length;
   }
 
   List<AuditProgramme> get _filtered {
-    if (_selectedTab == 'All') return _allProgrammes;
-    return _allProgrammes
-        .where((p) => p.effectiveStatusName == _selectedTab)
+    if (_selectedTab == IqaStatus.all) return _inRange;
+    return _inRange
+        .where((p) => IqaStatus.tabOf(p.effectiveStatusName) == _selectedTab)
         .toList();
   }
 
@@ -93,13 +99,28 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
     });
   }
 
+  void _setRange(DateTimeRange range) {
+    setState(() {
+      _range = range;
+      _currentPage = 1;
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _range = IqaPeriod.currentYear();
+      _selectedTab = IqaStatus.all;
+      _currentPage = 1;
+    });
+  }
+
   Future<void> _openForm({int? programmeId}) async {
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => AuditProgrammePage(programmeId: programmeId),
     );
-    _fetchProgrammes();
+    _fetchProgrammes(silent: true);
   }
 
   void _showDeleteDialog(AuditProgramme programme) {
@@ -164,59 +185,6 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
     );
   }
 
-  Widget _buildTab(String tab) {
-    final isActive = tab == _selectedTab;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => _selectTab(tab),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isActive ? primaryColor.withValues(alpha: 0.1) : null,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isActive ? primaryColor : kBorder,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                tab,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? primaryColor : kMuted,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 1,
-                ),
-                decoration: BoxDecoration(
-                  color: isActive ? primaryColor : kBorder,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${_countFor(tab)}',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isActive ? Colors.white : kMuted,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -232,7 +200,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
             buildPageHeader(
               isMobile: isMobile,
               title: 'Audit Programme',
-              totalCount: _allProgrammes.length,
+              totalCount: _inRange.length,
               itemLabel: 'programme',
               icon: Icons.fact_check_outlined,
               actionButton: ElevatedButton.icon(
@@ -255,11 +223,17 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
               ),
             ),
             const SizedBox(height: 6),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _statusTabs.map(_buildTab).toList(),
-              ),
+            IqaPeriodFilter(
+              range: _range,
+              onChanged: _setRange,
+              onClear: _clearFilters,
+            ),
+            const SizedBox(height: 6),
+            IqaStatusTabs(
+              tabs: IqaStatus.withDraft,
+              selected: _selectedTab,
+              countOf: _countFor,
+              onSelected: _selectTab,
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -299,7 +273,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                             const Expanded(
                               flex: 2,
                               child: Text(
-                                'For',
+                                'Reference',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: kMuted,
@@ -386,7 +360,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            programme.forUser,
+                                            iqaReference('Audit Programme', programme.year),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -447,7 +421,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                               //   onPressed: () =>
                                               //       openAuditProgrammeReportPreview(
                                               //         programme.id,
-                                              //         programme.forUser,
+                                              //         iqaReference('Audit Programme', programme.year),
                                               //         context: context,
                                               //       ),
                                               // ),
@@ -487,7 +461,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              programme.forUser,
+                                              iqaReference('Audit Programme', programme.year),
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -514,7 +488,7 @@ class _AuditProgrammeListPageState extends State<AuditProgrammeListPage> {
                                           // if (value == 'pdf') {
                                           //   openAuditProgrammeReportPreview(
                                           //     programme.id,
-                                          //     programme.forUser,
+                                          //     iqaReference('Audit Programme', programme.year),
                                           //     context: context,
                                           //   );
                                           // }

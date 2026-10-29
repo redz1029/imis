@@ -8,6 +8,7 @@ import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_page.dart';
 import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_print_preview_page.dart';
 import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
 import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -89,10 +90,8 @@ class AuditChecklistListPage extends StatefulWidget {
 }
 
 class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
-  static const List<String> _statusTabs = ['All', 'Confirmed', 'Approved'];
-
   /// Name shown on the top-level list.
-  static const String _bookTitle = 'IQA Checklist';
+  static const String _bookTitle = 'Audit Checklist';
 
   final AuditChecklistService _service = AuditChecklistService(Dio());
   final AuditProgrammeService _programmeService = AuditProgrammeService(Dio());
@@ -104,7 +103,8 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
   Map<int, int> _programmeYears = {};
 
   // Level 1 (checklists) state.
-  String _bookTab = 'All';
+  String _bookTab = IqaStatus.all;
+  DateTimeRange _range = IqaPeriod.currentYear();
   int _bookPage = 1;
 
   // Level 2 (team checklists inside one checklist) state.
@@ -128,25 +128,26 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
       _error = null;
     });
     try {
-      final schedules = await _service.getSchedulesWithChecklistData();
-
       // Best effort: programme years let a checklist show its year when the
-      // schedule data only carries the programme reference.
-      final years = <int, int>{};
-      try {
-        final programmes = await _programmeService.getAllAuditProgrammes();
-        for (final p in programmes) {
-          final j = p.toJson();
-          final y = int.tryParse('${j['year'] ?? j['Year'] ?? ''}');
-          if (y != null) years[p.id] = y;
-        }
-      } catch (e) {
-        debugPrint('Audit checklist: could not load programme years: $e');
-      }
+      // schedule data only carries the programme reference. Requested at the
+      // same time as the schedules, but the list never waits for it.
+      final yearsFuture = _loadProgrammeYears();
+
+      final schedules = await _service.getSchedulesWithChecklistData();
 
       if (mounted) {
         setState(() {
           _schedules = schedules;
+          _rebuildBooks();
+          _ensureBookPageInRange();
+          _ensurePageInRange();
+          _isLoading = false;
+        });
+      }
+
+      final years = await yearsFuture;
+      if (mounted && years.isNotEmpty) {
+        setState(() {
           _programmeYears = years;
           _rebuildBooks();
           _ensureBookPageInRange();
@@ -165,9 +166,26 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
     }
   }
 
+  Future<Map<int, int>> _loadProgrammeYears() async {
+    final years = <int, int>{};
+    try {
+      final programmes = await _programmeService.getAllAuditProgrammes();
+      for (final p in programmes) {
+        final j = p.toJson();
+        final y = int.tryParse('${j['year'] ?? j['Year'] ?? ''}');
+        if (y != null) years[p.id] = y;
+      }
+    } catch (e) {
+      debugPrint('Audit checklist: could not load programme years: $e');
+    }
+    return years;
+  }
+
   void _rebuildBooks() {
     final map = <String, _ChecklistBook>{};
     for (final s in _schedules) {
+      // Only the checklists whose schedule falls in the selected period.
+      if (!IqaPeriod.matches(_range, s.startDate, s.endDate)) continue;
       final json = _summaryJson(s);
       final ref = _refFromJson(json);
       var year = _yearFromJson(json);
@@ -213,6 +231,27 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
           : 'Confirmed';
 
   String _yearText(_ChecklistBook b) => b.year?.toString() ?? '—';
+
+  String _bookLabel(_ChecklistBook b) => iqaReference(_bookTitle, b.year);
+
+  void _setRange(DateTimeRange range) {
+    setState(() {
+      _range = range;
+      _bookPage = 1;
+      _rebuildBooks();
+      _ensureBookPageInRange();
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _range = IqaPeriod.currentYear();
+      _bookTab = IqaStatus.all;
+      _bookPage = 1;
+      _rebuildBooks();
+      _ensureBookPageInRange();
+    });
+  }
 
   _ChecklistBook? get _openBook {
     final key = _openBookKey;
@@ -369,59 +408,6 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
     );
   }
 
-  Widget _buildTab({
-    required String tab,
-    required int count,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isActive ? primaryColor.withValues(alpha: 0.1) : null,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: isActive ? primaryColor : kBorder),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                tab,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? primaryColor : kMuted,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                decoration: BoxDecoration(
-                  color: isActive ? primaryColor : kBorder,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '$count',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isActive ? Colors.white : kMuted,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _refreshButton() {
     return ElevatedButton.icon(
       onPressed: _isLoading ? null : _loadSchedules,
@@ -541,20 +527,17 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
             actionButton: _refreshButton(),
           ),
           const SizedBox(height: 6),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: _statusTabs
-                  .map(
-                    (tab) => _buildTab(
-                      tab: tab,
-                      count: _countForBookTab(tab),
-                      isActive: tab == _bookTab,
-                      onTap: () => _selectBookTab(tab),
-                    ),
-                  )
-                  .toList(),
-            ),
+          IqaPeriodFilter(
+            range: _range,
+            onChanged: _setRange,
+            onClear: _clearFilters,
+          ),
+          const SizedBox(height: 6),
+          IqaStatusTabs(
+            tabs: IqaStatus.checklist,
+            selected: _bookTab,
+            countOf: _countForBookTab,
+            onSelected: _selectBookTab,
           ),
           const SizedBox(height: 10),
           Expanded(
@@ -666,10 +649,10 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(width: 40, child: Text('$rowNumber')),
-            const Expanded(
+            Expanded(
               flex: 3,
               child: Text(
-                _bookTitle,
+                _bookLabel(b),
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
@@ -714,8 +697,8 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    _bookTitle,
+                  Text(
+                    _bookLabel(b),
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 3),
@@ -768,7 +751,7 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
         children: [
           buildPageHeader(
             isMobile: isMobile,
-            title: '$_bookTitle • Ref# ${book.refNo} • ${_yearText(book)}',
+            title: '${_bookLabel(book)} • Ref# ${book.refNo}',
             totalCount: book.items.length,
             itemLabel: 'team checklist',
             icon: Icons.checklist_rtl,
@@ -803,20 +786,11 @@ class _AuditChecklistListPageState extends State<AuditChecklistListPage> {
             ),
           ),
           const SizedBox(height: 6),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: _statusTabs
-                  .map(
-                    (tab) => _buildTab(
-                      tab: tab,
-                      count: _countFor(tab),
-                      isActive: tab == _selectedTab,
-                      onTap: () => _selectTab(tab),
-                    ),
-                  )
-                  .toList(),
-            ),
+          IqaStatusTabs(
+            tabs: IqaStatus.checklist,
+            selected: _selectedTab,
+            countOf: _countFor,
+            onSelected: _selectTab,
           ),
           const SizedBox(height: 10),
           Expanded(

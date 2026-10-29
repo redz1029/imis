@@ -211,6 +211,10 @@ class AuditChecklistSummary {
 
   final String? statusName;
 
+  /// The schedule's own period — places the checklist on the year timeline.
+  final DateTime? startDate;
+  final DateTime? endDate;
+
   const AuditChecklistSummary({
     this.auditScheduleId = 0,
     this.teamId,
@@ -221,6 +225,8 @@ class AuditChecklistSummary {
     this.auditees,
     this.clauseCount = 0,
     this.statusName,
+    this.startDate,
+    this.endDate,
   });
 
   factory AuditChecklistSummary.fromJson(Map<String, dynamic> json) =>

@@ -72,6 +72,14 @@ AuditChecklistSummary _$AuditChecklistSummaryFromJson(
   auditees: json['auditees'] as String?,
   clauseCount: (json['clauseCount'] as num?)?.toInt() ?? 0,
   statusName: json['statusName'] as String?,
+  startDate:
+      json['startDate'] == null
+          ? null
+          : DateTime.parse(json['startDate'] as String),
+  endDate:
+      json['endDate'] == null
+          ? null
+          : DateTime.parse(json['endDate'] as String),
 );
 
 Map<String, dynamic> _$AuditChecklistSummaryToJson(
@@ -86,4 +94,6 @@ Map<String, dynamic> _$AuditChecklistSummaryToJson(
   'auditees': instance.auditees,
   'clauseCount': instance.clauseCount,
   'statusName': instance.statusName,
+  'startDate': instance.startDate?.toIso8601String(),
+  'endDate': instance.endDate?.toIso8601String(),
 };
