@@ -13,6 +13,48 @@ class DateTimeConverter implements JsonConverter<DateTime, String> {
   String toJson(DateTime object) => dateFormat.format(object);
 }
 
+/// A date AND its time of day, as the API stores it (wall-clock, no time
+/// zone). [DateTimeConverter] keeps only the date, so anything read through it
+/// comes back at midnight and loses the hour the user picked.
+class WallClockDateTimeConverter implements JsonConverter<DateTime, String> {
+  const WallClockDateTimeConverter();
+
+  static final DateFormat _format = DateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+  @override
+  DateTime fromJson(String json) {
+    final parsed = DateTime.parse(json);
+    // A stray "Z" must not shift the wall-clock time the user chose.
+    return parsed.isUtc
+        ? DateTime(
+          parsed.year,
+          parsed.month,
+          parsed.day,
+          parsed.hour,
+          parsed.minute,
+          parsed.second,
+        )
+        : parsed;
+  }
+
+  @override
+  String toJson(DateTime object) => _format.format(object);
+}
+
+/// [WallClockDateTimeConverter] for a value that may be absent.
+class NullableWallClockDateTimeConverter
+    implements JsonConverter<DateTime?, String?> {
+  const NullableWallClockDateTimeConverter();
+
+  @override
+  DateTime? fromJson(String? json) =>
+      json == null ? null : const WallClockDateTimeConverter().fromJson(json);
+
+  @override
+  String? toJson(DateTime? object) =>
+      object == null ? null : const WallClockDateTimeConverter().toJson(object);
+}
+
 class ReadableDateTimeConverter implements JsonConverter<DateTime, String> {
   const ReadableDateTimeConverter();
 

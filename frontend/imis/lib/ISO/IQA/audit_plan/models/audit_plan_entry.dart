@@ -20,7 +20,9 @@ class AuditPlanEntry {
 
   int dayNumber;
 
-  @DateTimeConverter()
+  // The entry's time of day matters (it drives the schedule and its print), so
+  // it must not go through the date-only converter.
+  @WallClockDateTimeConverter()
   DateTime time;
 
   // Must be present for entry.standardText to compile.
