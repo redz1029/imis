@@ -82,17 +82,6 @@ class PaginationUtil {
           }, fromJson);
         }
 
-        // An empty result comes back as 200 with no body (null / ''), e.g.
-        // when no record exists yet: that is an empty page, not an error.
-        if (data == null || (data is String && data.trim().isEmpty)) {
-          return PageList.fromJSON({
-            'items': [],
-            'page': page,
-            'pageSize': pageSize,
-            'totalCount': 0,
-          }, fromJson);
-        }
-
         throw Exception('Unexpected response format');
       } else {
         throw Exception('Failed to load data');
