@@ -55,8 +55,7 @@ namespace IMIS.Persistence.OfficeModule
         }
         public async Task<IEnumerable<Office>?> GetAllOfficeAsync(CancellationToken cancellationToken)
         {
-            return await _entities
-                .Where(o => o.IsActive)
+            return await _entities            
                 .Include(o => o.AuditorOffices)  
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
