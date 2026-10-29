@@ -1,5 +1,4 @@
 import 'package:imis/user/services/roles_permission_service.dart';
-import 'package:imis/utils/permission_role_string.dart';
 
 class PermissionService {
   static final PermissionService _instance = PermissionService._internal();
@@ -21,9 +20,6 @@ class PermissionService {
   }
 
   bool hasPermission(String permission, {List<String>? allowedRoles}) {
-    // Administrators can see and do everything.
-    if (_roleName == PermissionRoleString.roleAdmin) return true;
-
     if (_permissions.isEmpty) return false;
 
     final isAssigned = _permissions[permission] == true;
