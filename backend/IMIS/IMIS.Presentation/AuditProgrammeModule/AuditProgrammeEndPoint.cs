@@ -22,8 +22,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
         // Confirm these two literal strings against those files; if either
         // differs even by casing, the eviction silently misses and this bug
         // persists for that one endpoint.
-        private const string _AuditPlan = "Audit Plan";
-        private const string _AuditSchedule = "Audit Schedule";
+        private const string _AuditPlan = "AuditPlan";
+        private const string _AuditSchedule = "AuditSchedule";
 
         public AuditProgrammeEndPoints() : base("/auditProgramme")
         {

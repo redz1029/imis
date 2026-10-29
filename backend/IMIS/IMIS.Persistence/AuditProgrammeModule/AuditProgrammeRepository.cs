@@ -80,7 +80,8 @@ namespace IMIS.Persistence.AuditProgrammeModule
             .Include(ap => ap.IQASignatories.Where(s => !s.IsDeleted))
                 .ThenInclude(s => s.IQASignatoryTemplate)
             .Include(ap => ap.ApprovalHistories.Where(h => !h.IsDeleted))
-                .ThenInclude(h => h.User);
+                .ThenInclude(h => h.User)
+            .AsSplitQuery();
         /// <summary>
         /// Retrieves all Audit Programmes for list views.
         /// Optimized: Status, Objectives, Signatories, and ApprovalHistories only.

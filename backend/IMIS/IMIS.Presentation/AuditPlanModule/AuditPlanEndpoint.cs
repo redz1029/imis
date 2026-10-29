@@ -16,6 +16,13 @@ namespace IMIS.Presentation.AuditPlanModule
     public class AuditPlanEndPoints : CarterModule
     {
         private const string _AuditPlan = "AuditPlan";
+
+        // A plan embeds its schedules (and the status derived from them) and the
+        // checklist list is built from the schedules, so a plan write must also
+        // drop those cached lists or they show stale data for up to 2 minutes.
+        // Must match the tags in AuditScheduleEndPoints / AuditChecklistEndpoint.
+        private const string _relatedScheduleTag = "AuditSchedule";
+        private const string _relatedChecklistTag = "Audit Checklist";
         public readonly AuditPlanPermission _permission = new();
         public readonly AuditPlanWorkflowPermission _workflowPermission = new();
 
@@ -42,6 +49,10 @@ namespace IMIS.Presentation.AuditPlanModule
                 var result = await service.SaveAuditPlanAsync(dto, cancellationToken);
 
                 await cache.EvictByTagAsync(_AuditPlan, cancellationToken);
+
+                await cache.EvictByTagAsync(_relatedScheduleTag, cancellationToken);
+
+                await cache.EvictByTagAsync(_relatedChecklistTag, cancellationToken);
 
                 return result ? Results.Ok(dto) : Results.BadRequest("Failed to save Audit Plan.");
             })
@@ -119,6 +130,10 @@ namespace IMIS.Presentation.AuditPlanModule
 
                 await cache.EvictByTagAsync(_AuditPlan, cancellationToken);
 
+                await cache.EvictByTagAsync(_relatedScheduleTag, cancellationToken);
+
+                await cache.EvictByTagAsync(_relatedChecklistTag, cancellationToken);
+
                 return result ? Results.Ok(dto) : Results.BadRequest("Failed to update Audit Plan.");
             })
             .WithTags(_AuditPlan)
@@ -174,6 +189,10 @@ namespace IMIS.Presentation.AuditPlanModule
 
                 await cache.EvictByTagAsync(_AuditPlan, cancellationToken);
 
+                await cache.EvictByTagAsync(_relatedScheduleTag, cancellationToken);
+
+                await cache.EvictByTagAsync(_relatedChecklistTag, cancellationToken);
+
                 return result
                     ? Results.Ok(new { message = "Audit Plan deleted successfully." })
                     : Results.NotFound(new { message = "Audit Plan not found." });
@@ -195,6 +214,10 @@ namespace IMIS.Presentation.AuditPlanModule
                     return Results.BadRequest(new { error });
 
                 await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+
+                await cache.EvictByTagAsync(_relatedScheduleTag, cancellationToken).ConfigureAwait(false);
+
+                await cache.EvictByTagAsync(_relatedChecklistTag, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(new { message = "Submitted for approval." });
             })
             .WithTags(_AuditPlan)
@@ -223,6 +246,10 @@ namespace IMIS.Presentation.AuditPlanModule
                     return Results.BadRequest(new { error });
 
                 await cache.EvictByTagAsync(_AuditPlan, cancellationToken).ConfigureAwait(false);
+
+                await cache.EvictByTagAsync(_relatedScheduleTag, cancellationToken).ConfigureAwait(false);
+
+                await cache.EvictByTagAsync(_relatedChecklistTag, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(new { message = action == "Reject" ? "Rejected." : $"{action}d." });
             })
             .WithTags(_AuditPlan)

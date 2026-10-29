@@ -32,7 +32,10 @@ namespace IMIS.Persistence.AuditPlanModule
                     .ThenInclude(h => h.User)
             .Include(x => x.AuditSchedules.Where(s => !s.IsDeleted))
                 .ThenInclude(s => s.AuditableOffices!.Where(ao => !ao.IsDeleted))
-                    .ThenInclude(ao => ao.Office);
+                    .ThenInclude(ao => ao.Office)
+            // Six collections (two levels deep) on one query would multiply every
+            // plan's rows; split queries fetch each collection on its own.
+            .AsSplitQuery();
 
         public override async Task<AuditPlan?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {

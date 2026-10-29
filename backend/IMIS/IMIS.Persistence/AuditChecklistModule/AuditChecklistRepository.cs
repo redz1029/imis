@@ -39,7 +39,10 @@ namespace IMIS.Persistence.AuditChecklistModule
             .Include(x => x.AuditSchedule)
                 .ThenInclude(s => s!.AuditPlan)
                     .ThenInclude(p => p!.AuditProgramme)
-            .Include(x => x.Auditee);
+            .Include(x => x.Auditee)
+            // Every row carries the entry's processes and auditors; without split
+            // queries a schedule's rows are multiplied by those collections.
+            .AsSplitQuery();
 
         public async Task<AuditChecklist?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
         {

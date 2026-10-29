@@ -55,8 +55,10 @@ namespace IMIS.Persistence.AuditChecklistModule
                 .Where(s => !s.IsDeleted && s.AuditPlanEntryId > 0)
                 .OrderBy(s => s.Id)
                 .Include(s => s.Team)
-                .Include(s => s.IQASignatories)
-                    .ThenInclude(sig => sig.IQASignatoryTemplate)
+                // The status is derived from the signatories' ApprovalStatus alone
+                // (order-independent), so only live rows are needed — no template,
+                // and no soft-deleted rows left behind by resubmissions.
+                .Include(s => s.IQASignatories.Where(sig => !sig.IsDeleted))
                 .Include(s => s.AuditableOffices!)
                     .ThenInclude(ao => ao.Office)
                 .Include(s => s.AuditPlanEntry!)
@@ -65,9 +67,9 @@ namespace IMIS.Persistence.AuditChecklistModule
                 .Include(s => s.AuditPlanEntry!)
                     .ThenInclude(e => e!.IsoAuditors)
                         .ThenInclude(a => a.Team)
+                // Only the number of live clauses is used, never the standard itself.
                 .Include(s => s.AuditPlanEntry!)
-                    .ThenInclude(e => e!.IsoStandardAuditPlans)
-                        .ThenInclude(sp => sp.IsoStandard)
+                    .ThenInclude(e => e!.IsoStandardAuditPlans.Where(sp => !sp.IsDeleted))
                 .Include(s => s.AuditPlan)
                     .ThenInclude(p => p!.AuditProgramme)
                 // Five collection includes on one query would otherwise produce a
@@ -163,7 +165,9 @@ namespace IMIS.Persistence.AuditChecklistModule
                     // Surface the real workflow status (Confirmed / Approved)
                     // so the UI can label the active checklist correctly.
                     StatusName = IQAApprovalWorkflow.StateName(
-                        stateCode, IQAApprovalWorkflow.EntityTypes.AuditSchedule)
+                        stateCode, IQAApprovalWorkflow.EntityTypes.AuditSchedule),
+                    StartDate = s.StartDate,
+                    EndDate = s.EndDate
                 });
             }
 

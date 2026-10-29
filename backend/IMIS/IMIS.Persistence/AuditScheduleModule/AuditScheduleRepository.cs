@@ -22,7 +22,11 @@ namespace IMIS.Persistence.AuditScheduleModule
             .Include(x => x.ApprovalHistories.Where(h => !h.IsDeleted))
                 .ThenInclude(h => h.User)
             .Include(x => x.AuditableOffices!.Where(ao => !ao.IsDeleted))
-                .ThenInclude(ao => ao.Office);
+                .ThenInclude(ao => ao.Office)
+            // Four collections on one query would multiply every schedule's rows
+            // (signatories x histories x offices x details); split queries fetch
+            // each collection on its own.
+            .AsSplitQuery();
 
         // --- Main entity retrieval ---//
         public async Task<AuditSchedule?> GetByIdAsync(int id, CancellationToken cancellationToken)
@@ -58,16 +62,26 @@ namespace IMIS.Persistence.AuditScheduleModule
 
         public async Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken)
         {
-            return await WithSignatories(_entities)
+            return await WithSignatories(_entities.AsNoTracking())
                 .Include(x => x.Team)
                 .Include(x => x.AuditSchduleDetails)
+                .Include(x => x.AuditPlanEntry!)
+                    .ThenInclude(e => e.AuditPlanProcesses)
+                        .ThenInclude(p => p.Office)
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<EntityPageList<AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
+            // The list row shows the office; auto-created schedules carry it on
+            // their plan entry's processes rather than on AuditableOffices.
             return await EntityPageList<AuditSchedule, int>
-                .CreateAsync(WithSignatories(_entities.AsNoTracking()), page, pageSize, cancellationToken)
+                .CreateAsync(
+                    WithSignatories(_entities.AsNoTracking())
+                        .Include(x => x.AuditPlanEntry!)
+                            .ThenInclude(e => e.AuditPlanProcesses)
+                                .ThenInclude(p => p.Office),
+                    page, pageSize, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -104,7 +118,7 @@ namespace IMIS.Persistence.AuditScheduleModule
 
         public async Task<IEnumerable<AuditSchedule>> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken)
         {
-            return await WithSignatories(_entities)
+            return await WithSignatories(_entities.AsNoTracking())
                 .Where(x => x.AuditPlanId == auditPlanId && !x.IsDeleted)
                 .Include(x => x.Team)
                 .Include(x => x.AuditSchduleDetails)
@@ -113,7 +127,7 @@ namespace IMIS.Persistence.AuditScheduleModule
 
         public async Task<IEnumerable<AuditSchedule>> GetByAuditPlanEntryIdAsync(int auditPlanEntryId, CancellationToken cancellationToken)
         {
-            return await WithSignatories(_entities)
+            return await WithSignatories(_entities.AsNoTracking())
                 .Where(x => x.AuditPlanEntryId == auditPlanEntryId && !x.IsDeleted)
                 .Include(x => x.Team)
                 .Include(x => x.AuditSchduleDetails)
