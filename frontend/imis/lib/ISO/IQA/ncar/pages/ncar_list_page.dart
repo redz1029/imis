@@ -3,11 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:imis/ISO/IQA/ncar/dialogs/ncar_attachments_dialog.dart';
 import 'package:imis/ISO/IQA/ncar/models/nonconforming_action_report.dart';
+import 'package:imis/ISO/IQA/ncar/pages/ncar_print_preview_page.dart';
 import 'package:imis/ISO/IQA/ncar/services/ncar_service.dart';
+import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 
 class NcarListPage extends StatefulWidget {
@@ -22,9 +27,15 @@ class _NcarListPageState extends State<NcarListPage> {
 
   List<NonconformingActionReport> _allNcars = [];
   bool _isLoading = true;
-  String _selectedFilter = 'All';
+  String _selectedFilter = IqaStatus.all;
+  DateTimeRange _range = IqaPeriod.currentYear();
   UserRegistration? _currentUser;
   bool isAdmin = false;
+
+  // Acknowledging and responding follow the permissions switched on for the
+  // user in Settings > User Roles.
+  bool _can(String permission) =>
+      isAdmin || permissionService.hasPermission(permission);
 
   @override
   void initState() {
@@ -32,8 +43,8 @@ class _NcarListPageState extends State<NcarListPage> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadData({bool silent = false}) async {
+    if (!silent) setState(() => _isLoading = true);
     try {
       _currentUser = await AuthUtil.fetchLoggedUser();
       isAdmin = await AuthUtil.isCurrentUserAdmin();
@@ -53,13 +64,35 @@ class _NcarListPageState extends State<NcarListPage> {
     }
   }
 
-  List<NonconformingActionReport> get _filteredNcars {
-    if (_selectedFilter == 'All') return _allNcars;
-    if (_selectedFilter == 'Open') return _allNcars.where((n) => !n.isClosed && n.approvedDate == null).toList();
-    if (_selectedFilter == 'Under Monitoring') return _allNcars.where((n) => !n.isClosed && n.approvedDate != null).toList();
-    if (_selectedFilter == 'Closed') return _allNcars.where((n) => n.isClosed).toList();
-    return _allNcars;
+  // An NCAR belongs to the year of the audit that raised it.
+  List<NonconformingActionReport> get _inRange =>
+      _allNcars.where((n) => IqaPeriod.matches(_range, n.auditDate)).toList();
+
+  bool _matchesTab(NonconformingActionReport n, String tab) {
+    switch (tab) {
+      case IqaStatus.open:
+        return !n.isClosed && n.approvedDate == null;
+      case IqaStatus.underMonitoring:
+        return !n.isClosed && n.approvedDate != null;
+      case IqaStatus.closed:
+        return n.isClosed;
+      default:
+        return true;
+    }
   }
+
+  int _countFor(String tab) =>
+      _inRange.where((n) => _matchesTab(n, tab)).length;
+
+  List<NonconformingActionReport> get _filteredNcars =>
+      _inRange.where((n) => _matchesTab(n, _selectedFilter)).toList();
+
+  void _setRange(DateTimeRange range) => setState(() => _range = range);
+
+  void _clearFilters() => setState(() {
+    _range = IqaPeriod.currentYear();
+    _selectedFilter = IqaStatus.all;
+  });
 
   Future<void> _acknowledgeNcar(NonconformingActionReport ncar) async {
     final confirmed = await showDialog<bool>(
@@ -80,7 +113,13 @@ class _NcarListPageState extends State<NcarListPage> {
     if (confirmed != true) return;
 
     try {
+      // The list rows carry no root causes / actions; saving them as-is would
+      // erase what is stored, so work from the full record.
+      ncar = await _service.getNcarById(ncar.id) ?? ncar;
       final updated = NonconformingActionReport(
+        rootCauses: ncar.rootCauses,
+        corrections: ncar.corrections,
+        correctiveActions: ncar.correctiveActions,
         id: ncar.id,
         referenceNumber: ncar.referenceNumber,
         office: ncar.office,
@@ -107,7 +146,7 @@ class _NcarListPageState extends State<NcarListPage> {
         isClosed: ncar.isClosed,
       );
       await _service.saveNcar(updated);
-      _loadData();
+      _loadData(silent: true);
       if (mounted) MotionToast.success(description: const Text('NCAR acknowledged.')).show(context);
     } catch (e) {
       if (mounted) MotionToast.error(description: Text('Failed: $e')).show(context);
@@ -152,7 +191,13 @@ class _NcarListPageState extends State<NcarListPage> {
     if (result == null || result.isEmpty) return;
 
     try {
+      // See _acknowledgeNcar: start from the full record so the stored root
+      // causes and actions survive the save.
+      ncar = await _service.getNcarById(ncar.id) ?? ncar;
       final updated = NonconformingActionReport(
+        rootCauses: ncar.rootCauses,
+        corrections: ncar.corrections,
+        correctiveActions: ncar.correctiveActions,
         id: ncar.id,
         referenceNumber: ncar.referenceNumber,
         office: ncar.office,
@@ -187,7 +232,7 @@ class _NcarListPageState extends State<NcarListPage> {
         itemNoRelevantStandard: ncar.relevantStandard,
         auditeeName: ncar.acknowledgedByAuditeeName ?? ncar.office,
       );
-      _loadData();
+      _loadData(silent: true);
       if (mounted) MotionToast.success(description: const Text('Response submitted & synced to monitoring.')).show(context);
     } catch (e) {
       if (mounted) MotionToast.error(description: Text('Failed: $e')).show(context);
@@ -221,31 +266,22 @@ class _NcarListPageState extends State<NcarListPage> {
             buildPageHeader(
               isMobile: isMobile,
               title: 'Nonconforming Action Reports (NCAR)',
-              totalCount: _allNcars.length,
+              totalCount: _inRange.length,
               itemLabel: 'report',
               icon: Icons.assignment_late_outlined,
             ),
-            const SizedBox(height: 10),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: ['All', 'Open', 'Under Monitoring', 'Closed'].map((tab) {
-                  final isActive = tab == _selectedFilter;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(tab),
-                      selected: isActive,
-                      selectedColor: primaryColor.withValues(alpha: 0.15),
-                      labelStyle: TextStyle(
-                        color: isActive ? primaryColor : Colors.grey.shade700,
-                        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      onSelected: (_) => setState(() => _selectedFilter = tab),
-                    ),
-                  );
-                }).toList(),
-              ),
+            const SizedBox(height: 6),
+            IqaPeriodFilter(
+              range: _range,
+              onChanged: _setRange,
+              onClear: _clearFilters,
+            ),
+            const SizedBox(height: 6),
+            IqaStatusTabs(
+              tabs: IqaStatus.ncar,
+              selected: _selectedFilter,
+              countOf: _countFor,
+              onSelected: (tab) => setState(() => _selectedFilter = tab),
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -324,7 +360,7 @@ class _NcarListPageState extends State<NcarListPage> {
                                       ],
                                     ),
                                     const SizedBox(height: 10),
-                                    Text('Standard: ${n.relevantStandard} • Audit Date: $dateStr',
+                                    Text('${iqaReference('NCAR', n.auditDate.year)} • Standard: ${n.relevantStandard} • Audit Date: $dateStr',
                                         style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                                     if (n.auditChecklistId != null) ...[
                                       const SizedBox(height: 6),
@@ -344,17 +380,35 @@ class _NcarListPageState extends State<NcarListPage> {
                                           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey.shade700)),
                                     ],
                                     const SizedBox(height: 12),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
+                                    Wrap(
+                                      alignment: WrapAlignment.end,
+                                      spacing: 8,
+                                      runSpacing: 8,
                                       children: [
-                                        if (n.acknowledgedDate == null)
-                                          ElevatedButton.icon(
-                                            style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-                                            onPressed: () => _acknowledgeNcar(n),
-                                            icon: const Icon(Icons.check, size: 16, color: Colors.white),
-                                            label: const Text('Acknowledge', style: TextStyle(color: Colors.white)),
-                                          )
-                                        else if (!n.isClosed) ...[
+                                        OutlinedButton.icon(
+                                          onPressed: () => showNcarAttachmentsDialog(
+                                            context,
+                                            service: _service,
+                                            ncar: n,
+                                            canEdit: _can(AppPermissions.nonconformingActionReportRespond),
+                                          ),
+                                          icon: const Icon(Icons.photo_library_outlined, size: 16),
+                                          label: const Text('Pictures'),
+                                        ),
+                                        OutlinedButton.icon(
+                                          onPressed: () => openNcarPrintPreview(context, n.id),
+                                          icon: const Icon(Icons.print_outlined, size: 16),
+                                          label: const Text('Print'),
+                                        ),
+                                        if (n.acknowledgedDate == null) ...[
+                                          if (_can(AppPermissions.nonconformingActionReportAcknowledge))
+                                            ElevatedButton.icon(
+                                              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+                                              onPressed: () => _acknowledgeNcar(n),
+                                              icon: const Icon(Icons.check, size: 16, color: Colors.white),
+                                              label: const Text('Acknowledge', style: TextStyle(color: Colors.white)),
+                                            ),
+                                        ] else if (!n.isClosed && _can(AppPermissions.nonconformingActionReportRespond)) ...[
                                           OutlinedButton.icon(
                                             onPressed: () => _respondNcar(n),
                                             icon: const Icon(Icons.reply, size: 16),

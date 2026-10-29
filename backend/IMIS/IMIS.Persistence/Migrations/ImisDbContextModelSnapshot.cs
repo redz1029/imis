@@ -13099,6 +13099,50 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("NcarCorrectionActions");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.NcarAttachment", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Caption")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("NonconformingActionReportId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("OrderNumber")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NonconformingActionReportId");
+
+                    b.ToTable("NcarAttachments");
+                });
+
             modelBuilder.Entity("IMIS.Domain.NcarCorrectiveAction", b =>
                 {
                     b.Property<long>("Id")
@@ -23901,6 +23945,17 @@ namespace IMIS.Persistence.Migrations
                 {
                     b.HasOne("IMIS.Domain.NonconformingActionReport", "NonconformingActionReport")
                         .WithMany("Corrections")
+                        .HasForeignKey("NonconformingActionReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NonconformingActionReport");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.NcarAttachment", b =>
+                {
+                    b.HasOne("IMIS.Domain.NonconformingActionReport", "NonconformingActionReport")
+                        .WithMany()
                         .HasForeignKey("NonconformingActionReportId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

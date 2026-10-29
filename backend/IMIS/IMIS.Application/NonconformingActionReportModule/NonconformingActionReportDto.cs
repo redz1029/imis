@@ -55,17 +55,21 @@ namespace IMIS.Application.NonconformingActionReportModule
 
         // Proposed Action Approval
         public string? ProposedByAuditeeUserId { get; set; }
+        public string? ProposedByAuditeeName { get; set; }
         public DateTime? ProposedDate { get; set; }
 
         public string? ApprovedByHeadUserId { get; set; }
+        public string? ApprovedByHeadName { get; set; }
         public DateTime? ApprovedDate { get; set; }
 
         // Verification & Closure
         public string? VerificationDetails { get; set; }
         public string? VerifiedByAuditorUserId { get; set; }
+        public string? VerifiedByAuditorName { get; set; }
         public DateTime? VerifiedDate { get; set; }
 
         public string? ValidatedByLeadAuditorUserId { get; set; }
+        public string? ValidatedByLeadAuditorName { get; set; }
         public DateTime? ValidatedDate { get; set; }
 
         // Status
@@ -109,16 +113,20 @@ namespace IMIS.Application.NonconformingActionReportModule
             AcknowledgedDate = entity.AcknowledgedDate;
 
             ProposedByAuditeeUserId = entity.ProposedByAuditeeUserId;
+            ProposedByAuditeeName = entity.ProposedByAuditee?.ToString();
             ProposedDate = entity.ProposedDate;
 
             ApprovedByHeadUserId = entity.ApprovedByHeadUserId;
+            ApprovedByHeadName = entity.ApprovedByHead?.ToString();
             ApprovedDate = entity.ApprovedDate;
 
             VerificationDetails = entity.VerificationDetails;
             VerifiedByAuditorUserId = entity.VerifiedByAuditorUserId;
+            VerifiedByAuditorName = entity.VerifiedByAuditor?.ToString();
             VerifiedDate = entity.VerifiedDate;
 
             ValidatedByLeadAuditorUserId = entity.ValidatedByLeadAuditorUserId;
+            ValidatedByLeadAuditorName = entity.ValidatedByLeadAuditor?.ToString();
             ValidatedDate = entity.ValidatedDate;
 
             IsActive = entity.IsActive;

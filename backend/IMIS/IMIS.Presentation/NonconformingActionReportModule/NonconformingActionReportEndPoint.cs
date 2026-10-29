@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
+using System.IO;
 using System.Threading;
 
 namespace IMIS.Presentation.NonconformingActionReportModule
@@ -96,6 +97,56 @@ namespace IMIS.Presentation.NonconformingActionReportModule
             .RequireAuthorization(e => e.RequireAssertion(ctx =>
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanVerify) ||
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanValidateAndClose)));
+
+            // ATTACHMENTS — pictures proving the nonconformity was resolved (page 2 of the form)
+            app.MapGet("/{id:long}/attachments", async (long id, INonconformingActionReportService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetAttachmentsAsync(id, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(result);
+            })
+            .WithTags(_ncarTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            app.MapPost("/{id:long}/attachments", async (long id, HttpRequest request, INonconformingActionReportService service, CancellationToken cancellationToken) =>
+            {
+                if (!request.HasFormContentType)
+                    return Results.BadRequest("Send the picture as multipart form data.");
+
+                var form = await request.ReadFormAsync(cancellationToken).ConfigureAwait(false);
+                var file = form.Files.GetFile("file");
+                if (file == null || file.Length == 0)
+                    return Results.BadRequest("Choose a picture to attach.");
+
+                if (file.Length > NcarAttachmentRules.MaxBytes)
+                    return Results.BadRequest($"The picture is larger than {NcarAttachmentRules.MaxBytes / (1024 * 1024)} MB.");
+
+                using var stream = new MemoryStream();
+                await file.CopyToAsync(stream, cancellationToken).ConfigureAwait(false);
+
+                var (attachment, error) = await service
+                    .AddAttachmentAsync(id, file.FileName, stream.ToArray(), form["caption"].ToString(), cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (attachment == null)
+                    return Results.BadRequest(error ?? "The picture could not be attached.");
+
+                return Results.Ok(attachment);
+            })
+            .WithTags(_ncarTag)
+            .DisableAntiforgery()
+            .RequireAuthorization(e => e.RequireAssertion(ctx =>
+                ctx.User.HasClaim(PermissionClaimType.Claim, _permission.Edit) ||
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanRespond)));
+
+            app.MapDelete("/{id:long}/attachments/{attachmentId:long}", async (long id, long attachmentId, INonconformingActionReportService service, CancellationToken cancellationToken) =>
+            {
+                var success = await service.DeleteAttachmentAsync(id, attachmentId, cancellationToken).ConfigureAwait(false);
+                return success ? Results.Ok(new { Message = "Deleted Successfully" }) : Results.NotFound();
+            })
+            .WithTags(_ncarTag)
+            .RequireAuthorization(e => e.RequireAssertion(ctx =>
+                ctx.User.HasClaim(PermissionClaimType.Claim, _permission.Edit) ||
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanRespond)));
 
             // SOFT DELETE
             app.MapDelete("/{id:long}", async (long id, INonconformingActionReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>

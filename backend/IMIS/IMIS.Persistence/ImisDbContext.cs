@@ -124,6 +124,7 @@ namespace IMIS.Persistence
         public DbSet<NcarCorrectionAction> NcarCorrectionActions { get; set; }
         public DbSet<NcarCorrectiveAction> NcarCorrectiveActions { get; set; }
         public DbSet<NcarMonitoringLog> NcarMonitoringLogs { get; set; }
+        public DbSet<NcarAttachment> NcarAttachments { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
@@ -493,6 +494,12 @@ namespace IMIS.Persistence
                 .HasOne(c => c.NonconformingActionReport)
                 .WithMany(n => n.CorrectiveActions)
                 .HasForeignKey(c => c.NonconformingActionReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<NcarAttachment>()
+                .HasOne(a => a.NonconformingActionReport)
+                .WithMany()
+                .HasForeignKey(a => a.NonconformingActionReportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<NcarMonitoringLog>()

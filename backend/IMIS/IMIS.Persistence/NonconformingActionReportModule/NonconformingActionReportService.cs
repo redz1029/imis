@@ -8,6 +8,7 @@ using Base.Primitives;
 using IMIS.Application.AuditReportModule;
 using IMIS.Application.NonconformingActionReportModule;
 using IMIS.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.NonconformingActionReportModule
 {
@@ -174,6 +175,78 @@ namespace IMIS.Persistence.NonconformingActionReportModule
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return new NonconformingActionReportDto(entity);
+        }
+
+        public async Task<List<NcarAttachmentDto>> GetAttachmentsAsync(long ncarId, CancellationToken cancellationToken)
+        {
+            var rows = await _repository.GetDbContext().Set<NcarAttachment>()
+                .AsNoTracking()
+                .Where(a => a.NonconformingActionReportId == ncarId)
+                .OrderBy(a => a.OrderNumber).ThenBy(a => a.Id)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return rows.Select(a => new NcarAttachmentDto(a)).ToList();
+        }
+
+        public async Task<(NcarAttachmentDto? Attachment, string? Error)> AddAttachmentAsync(long ncarId, string fileName, byte[] content, string? caption, CancellationToken cancellationToken)
+        {
+            if (content == null || content.Length == 0)
+                return (null, "The picture is empty.");
+
+            if (content.Length > NcarAttachmentRules.MaxBytes)
+                return (null, $"The picture is larger than {NcarAttachmentRules.MaxBytes / (1024 * 1024)} MB.");
+
+            var contentType = NcarAttachmentRules.DetectImageType(content);
+            if (contentType == null)
+                return (null, "Only PNG or JPEG pictures can be attached.");
+
+            var dbContext = _repository.GetDbContext();
+
+            var ncarExists = await dbContext.Set<NonconformingActionReport>()
+                .AnyAsync(n => n.Id == ncarId, cancellationToken)
+                .ConfigureAwait(false);
+            if (!ncarExists)
+                return (null, "Nonconforming action report not found.");
+
+            var existing = await dbContext.Set<NcarAttachment>()
+                .Where(a => a.NonconformingActionReportId == ncarId)
+                .Select(a => a.OrderNumber)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (existing.Count >= NcarAttachmentRules.MaxPerNcar)
+                return (null, $"An NCAR can hold at most {NcarAttachmentRules.MaxPerNcar} pictures.");
+
+            var safeName = string.IsNullOrWhiteSpace(fileName) ? "picture" : System.IO.Path.GetFileName(fileName.Trim());
+
+            var entity = new NcarAttachment
+            {
+                Id = 0,
+                NonconformingActionReportId = ncarId,
+                FileName = safeName,
+                ContentType = contentType,
+                Content = content,
+                Caption = string.IsNullOrWhiteSpace(caption) ? null : caption.Trim(),
+                OrderNumber = existing.Count == 0 ? 1 : existing.Max() + 1
+            };
+
+            dbContext.Add(entity);
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return (new NcarAttachmentDto(entity), null);
+        }
+
+        public async Task<bool> DeleteAttachmentAsync(long ncarId, long attachmentId, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+            var entity = await dbContext.Set<NcarAttachment>()
+                .FirstOrDefaultAsync(a => a.Id == attachmentId && a.NonconformingActionReportId == ncarId, cancellationToken)
+                .ConfigureAwait(false);
+            if (entity == null) return false;
+
+            entity.IsDeleted = true;
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return true;
         }
 
         public async Task<(bool Success, string? Error)> ChangeStatusAsync(long id, string status, string? comments, CancellationToken cancellationToken)

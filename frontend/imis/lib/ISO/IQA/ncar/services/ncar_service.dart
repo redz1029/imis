@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
+import '../models/ncar_attachment.dart';
 import '../models/nonconforming_action_report.dart';
 import '../models/ncar_monitoring_log.dart';
 
@@ -88,6 +89,71 @@ class NcarService {
           ? data['error'].toString()
           : 'Failed to change NCAR status.';
       throw Exception(message);
+    }
+  }
+
+  // ===========================================================================
+  // NCAR attachments (pictures printed on page 2 of the form)
+  // ===========================================================================
+
+  String _attachmentsUrl(int ncarId) => '${ApiEndpoint().ncar}/$ncarId/attachments';
+
+  String _errorText(DioException e, String fallback) {
+    final data = e.response?.data;
+    if (data is String && data.isNotEmpty) return data;
+    if (data is Map && data['error'] != null) return data['error'].toString();
+    return fallback;
+  }
+
+  Future<List<NcarAttachment>> getAttachments(int ncarId) async {
+    final response = await AuthenticatedRequest.get(dio, _attachmentsUrl(ncarId));
+    final data = response.data;
+    if (response.statusCode != 200 || data is! List) {
+      throw Exception('Failed to load the attached pictures.');
+    }
+    return [
+      for (final e in data)
+        if (e is Map) NcarAttachment.fromJson(Map<String, dynamic>.from(e)),
+    ];
+  }
+
+  Future<NcarAttachment> addAttachment(
+    int ncarId, {
+    required Uint8List bytes,
+    required String fileName,
+    String? caption,
+  }) async {
+    try {
+      final response = await AuthenticatedRequest.post(
+        dio,
+        _attachmentsUrl(ncarId),
+        data: FormData.fromMap({
+          'file': MultipartFile.fromBytes(bytes, filename: fileName),
+          if (caption != null && caption.trim().isNotEmpty) 'caption': caption.trim(),
+        }),
+      );
+      final data = response.data;
+      if ((response.statusCode == 200 || response.statusCode == 201) && data is Map) {
+        return NcarAttachment.fromJson(Map<String, dynamic>.from(data));
+      }
+      final body = response.data;
+      throw Exception(body is String && body.isNotEmpty ? body : 'Failed to attach the picture.');
+    } on DioException catch (e) {
+      throw Exception(_errorText(e, 'Failed to attach the picture.'));
+    }
+  }
+
+  Future<void> deleteAttachment(int ncarId, int attachmentId) async {
+    try {
+      final response = await AuthenticatedRequest.delete(
+        dio,
+        '${_attachmentsUrl(ncarId)}/$attachmentId',
+      );
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to remove the picture.');
+      }
+    } on DioException catch (e) {
+      throw Exception(_errorText(e, 'Failed to remove the picture.'));
     }
   }
 

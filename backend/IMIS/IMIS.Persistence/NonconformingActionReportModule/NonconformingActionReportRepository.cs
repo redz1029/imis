@@ -25,6 +25,7 @@ namespace IMIS.Persistence.NonconformingActionReportModule
                 .Include(x => x.RootCauses)
                 .Include(x => x.Corrections)
                 .Include(x => x.CorrectiveActions)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -55,6 +56,7 @@ namespace IMIS.Persistence.NonconformingActionReportModule
                 .Include(x => x.RootCauses)
                 .Include(x => x.Corrections)
                 .Include(x => x.CorrectiveActions)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(x => x.AuditReportId == auditReportId && x.IsNonconformity == isNonconformity && !x.IsDeleted, cancellationToken)
                 .ConfigureAwait(false);
         }

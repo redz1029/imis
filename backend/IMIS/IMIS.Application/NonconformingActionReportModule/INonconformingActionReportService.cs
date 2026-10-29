@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Base.Abstractions;
 using Base.Pagination;
 using Base.Primitives;
@@ -21,5 +22,10 @@ namespace IMIS.Application.NonconformingActionReportModule
 
         // Moves an NCAR through PENDING_VERIFICATION -> ACTIVE -> CLOSED.
         Task<(bool Success, string? Error)> ChangeStatusAsync(long id, string status, string? comments, CancellationToken cancellationToken);
+
+        // Pictures attached as proof the nonconformity was resolved (page 2 of the form).
+        Task<List<NcarAttachmentDto>> GetAttachmentsAsync(long ncarId, CancellationToken cancellationToken);
+        Task<(NcarAttachmentDto? Attachment, string? Error)> AddAttachmentAsync(long ncarId, string fileName, byte[] content, string? caption, CancellationToken cancellationToken);
+        Task<bool> DeleteAttachmentAsync(long ncarId, long attachmentId, CancellationToken cancellationToken);
     }
 }
