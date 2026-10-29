@@ -11,6 +11,7 @@ import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_list_page.dart';
 import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_list_page.dart';
 import 'package:imis/ISO/IQA/audit_report/pages/audit_report_list_page.dart';
 import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_list_page.dart';
+import 'package:imis/ISO/IQA/iqa_history/pages/iqa_history_page.dart';
 import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
 // import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_list_page.dart';
@@ -1203,6 +1204,7 @@ class SidebarState extends State<Sidebar> {
       if (selectedSubPage == 4) return const AuditReportListPage();
       if (selectedSubPage == 5) return const NcarListPage();
       if (selectedSubPage == 6) return const ClauseLibraryPage();
+      if (selectedSubPage == 7) return const IqaHistoryPage();
     }
 
     if (selectedPage == 2) {
@@ -1395,6 +1397,7 @@ class SidebarState extends State<Sidebar> {
             permLabel: 'NCAR',
           ),
           NavChild('Clause Library', 6),
+          NavChild('IQA History', 7),
         ],
       ),
       NavGroup(
