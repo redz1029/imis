@@ -54,6 +54,16 @@ namespace IMIS.Application.AuditScheduleModule
             {
                 this.OfficeName = entity.AuditableOffices.FirstOrDefault()?.Office?.Name;
             }
+            else if (entity.AuditPlanEntry?.AuditPlanProcesses is { Count: > 0 } processes)
+            {
+                // Auto-created schedules carry their office on the plan entry.
+                var names = processes
+                    .Select(p => p.Office?.Name ?? p.ProcessName)
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
+                    .Distinct()
+                    .ToList();
+                if (names.Count > 0) this.OfficeName = string.Join(", ", names);
+            }
 
             // Callers must load IQASignatories (non-deleted) or this reads as Draft.
             var signatories = IQAApprovalWorkflow.Ordered(entity.IQASignatories);

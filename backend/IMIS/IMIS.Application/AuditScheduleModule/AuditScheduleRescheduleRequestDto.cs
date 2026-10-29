@@ -18,7 +18,11 @@ namespace IMIS.Application.AuditScheduleModule
         public string Status { get; set; } = string.Empty;
         public string? RequestedBy { get; set; }
         public DateTime RequestedDate { get; set; }
+        public string? TeamLeaderName { get; set; }
+        public DateTime? TeamLeaderDecisionDate { get; set; }
         public string? TeamLeaderRemarks { get; set; }
+        public string? LeadAuditorName { get; set; }
+        public DateTime? LeadAuditorDecisionDate { get; set; }
         public string? LeadAuditorRemarks { get; set; }
         public bool CanDecide { get; set; }
     }

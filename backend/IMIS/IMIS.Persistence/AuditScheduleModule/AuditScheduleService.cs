@@ -412,12 +412,19 @@ namespace IMIS.Application.AuditScheduleModule
                     .ThenInclude(s => s.AuditableOffices!)
                         .ThenInclude(ao => ao.Office);
 
+        private static string? NameOf(Dictionary<string, string?> names, string? userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId)) return null;
+            return names.TryGetValue(userId, out var name) ? name : null;
+        }
+
         private static async Task<List<AuditScheduleRescheduleRequestDto>> ToRequestDtosAsync(
             DbContext dbContext, List<AuditScheduleRescheduleRequest> requests, string? userId,
             bool onlyDecidable, CancellationToken cancellationToken)
         {
+            // Requester and both approvers, resolved to names in one query.
             var requesterIds = requests
-                .Select(r => r.RequestedByUserId)
+                .SelectMany(r => new[] { r.RequestedByUserId, r.TeamLeaderUserId, r.LeadAuditorUserId })
                 .Where(u => !string.IsNullOrWhiteSpace(u))
                 .Select(u => u!)
                 .Distinct()
@@ -451,7 +458,11 @@ namespace IMIS.Application.AuditScheduleModule
                     Status = r.Status,
                     RequestedBy = requester,
                     RequestedDate = r.RequestedDate,
+                    TeamLeaderName = NameOf(names, r.TeamLeaderUserId),
+                    TeamLeaderDecisionDate = r.TeamLeaderDecisionDate,
                     TeamLeaderRemarks = r.TeamLeaderRemarks,
+                    LeadAuditorName = NameOf(names, r.LeadAuditorUserId),
+                    LeadAuditorDecisionDate = r.LeadAuditorDecisionDate,
                     LeadAuditorRemarks = r.LeadAuditorRemarks,
                     CanDecide = canDecide
                 });
@@ -544,6 +555,24 @@ namespace IMIS.Application.AuditScheduleModule
                 .ToListAsync(cancellationToken);
 
             return await ToRequestDtosAsync(dbContext, pending, userId, true, cancellationToken);
+        }
+
+        public async Task<List<AuditScheduleRescheduleRequestDto>> GetOpenRescheduleRequestsAsync(
+            string? userId, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            // Every request still waiting on an approver — lets the schedule list
+            // show where each one is, whoever is looking at it.
+            var open = await RequestsWithSchedule(dbContext)
+                .AsNoTracking()
+                .Where(r => !r.IsDeleted &&
+                    (r.Status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader ||
+                     r.Status == AuditScheduleRescheduleRequest.Statuses.PendingLeadAuditor))
+                .OrderBy(r => r.RequestedDate)
+                .ToListAsync(cancellationToken);
+
+            return await ToRequestDtosAsync(dbContext, open, userId, false, cancellationToken);
         }
 
         public async Task<(bool Success, string? Error)> DecideRescheduleRequestAsync(

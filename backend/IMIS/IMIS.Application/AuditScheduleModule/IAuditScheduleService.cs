@@ -50,6 +50,7 @@ namespace IMIS.Application.AuditScheduleModule
         Task<(bool Success, string? Error)> RequestRescheduleAsync(int id, DateTime proposedStart, string? reason, string? userId, CancellationToken cancellationToken);
         Task<AuditScheduleRescheduleRequestDto?> GetLatestRescheduleRequestAsync(int scheduleId, string? userId, CancellationToken cancellationToken);
         Task<List<AuditScheduleRescheduleRequestDto>> GetPendingRescheduleRequestsAsync(string? userId, CancellationToken cancellationToken);
+        Task<List<AuditScheduleRescheduleRequestDto>> GetOpenRescheduleRequestsAsync(string? userId, CancellationToken cancellationToken);
         Task<(bool Success, string? Error)> DecideRescheduleRequestAsync(int requestId, string? userId, bool approve, string? remarks, CancellationToken cancellationToken);
     }
 }

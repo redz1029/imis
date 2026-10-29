@@ -11,6 +11,7 @@ import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.da
 import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/reschedule_request.dart';
 import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
+import 'package:imis/ISO/IQA/audit_schedules/widgets/reschedule_progress.dart';
 import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_page.dart'
     show IsoStandardDto, AuditorTeamDto;
@@ -665,6 +666,34 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     }
   }
 
+  /// Old date -> requested date, plus the reason, for the people deciding.
+  Widget _rescheduleSummary(RescheduleRequest r) {
+    final fmt = DateFormat('MMM d, yyyy h:mm a');
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Current: ${fmt.format(r.currentStartDate)}',
+            style: const TextStyle(fontSize: 12),
+          ),
+          Text(
+            'Requested: ${fmt.format(r.proposedStartDate)}',
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          ),
+          if ((r.reason ?? '').isNotEmpty)
+            Text('Reason: ${r.reason}', style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleDecideRequest(
     RescheduleRequest request, {
     required bool approve,
@@ -679,13 +708,28 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(isLeadAuditorStep ? 'Accept Reschedule' : 'Approve Reschedule'),
-          content: Text(
-            isLeadAuditorStep
-                ? 'Accept the reschedule request for $office? The audit '
-                    'schedule, Audit Plan and (if the day changes) Audit '
-                    'Programme will be revised.'
-                : 'Approve the reschedule request for $office and forward it '
-                    'to the Lead Auditor?',
+          content: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isLeadAuditorStep
+                        ? 'Accept the reschedule request for $office? The audit '
+                            'schedule, Audit Plan and (if the day changes) Audit '
+                            'Programme will be revised.'
+                        : 'Approve the reschedule request for $office and forward it '
+                            'to the Lead Auditor?',
+                  ),
+                  const SizedBox(height: 12),
+                  _rescheduleSummary(request),
+                  const SizedBox(height: 12),
+                  RescheduleProgress(request: request),
+                ],
+              ),
+            ),
           ),
           actions: [
             TextButton(
@@ -811,14 +855,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
                             'Reason: ${r.reason}',
                             style: const TextStyle(fontSize: 12),
                           ),
-                        Text(
-                          '${r.status}'
-                          '${r.requestedBy != null ? ' • Requested by ${r.requestedBy}' : ''}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
+                        const SizedBox(height: 8),
+                        RescheduleProgress(request: r),
                       ],
                     ),
                   ),
@@ -873,7 +911,6 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       icon = Icons.check_circle_outline;
       headline = 'Reschedule request accepted — the schedule was revised.';
     }
-    final remarks = r.isRejected ? r.rejectionRemarks : null;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
@@ -900,11 +937,22 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
                   ),
                 ),
                 Text(
+                  'Current: ${fmt.format(r.currentStartDate)}  →  '
                   'Requested: ${fmt.format(r.proposedStartDate)}',
                   style: const TextStyle(fontSize: 12),
                 ),
-                if ((remarks ?? '').isNotEmpty)
-                  Text('Remarks: $remarks', style: const TextStyle(fontSize: 12)),
+                if ((r.reason ?? '').isNotEmpty)
+                  Text('Reason: ${r.reason}', style: const TextStyle(fontSize: 12)),
+                if (r.isRejected)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Text(
+                      'You can request a new date from this office.',
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                RescheduleProgress(request: r),
               ],
             ),
           ),
