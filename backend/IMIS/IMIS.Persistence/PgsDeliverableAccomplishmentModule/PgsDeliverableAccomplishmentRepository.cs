@@ -106,7 +106,7 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
                             .OrderBy(a => a.PostingDate.Year)
                             .ThenBy(a => a.PostingDate.Month)
                             .ThenBy(a => a.Id)
-                            .Select(a => new AccomplishmentItemDto
+                            .Select(a => new AccomplishmentItemDto  
                             {
                                 Id = a.Id,
                                 Status = a.Status.ToString(),

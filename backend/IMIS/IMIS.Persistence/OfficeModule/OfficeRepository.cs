@@ -43,11 +43,11 @@ namespace IMIS.Persistence.OfficeModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-        
+
         public async Task<IEnumerable<Office>?> GetAll(CancellationToken cancellationToken)
         {
             return await _entities
-                .Where(o => o.ParentOfficeId != null)
+                .Where(o => o.ParentOfficeId != null && o.IsActive)
                 .Include(o => o.AuditorOffices)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
@@ -55,8 +55,9 @@ namespace IMIS.Persistence.OfficeModule
         }
         public async Task<IEnumerable<Office>?> GetAllOfficeAsync(CancellationToken cancellationToken)
         {
-            return await _entities            
-                .Include(o => o.AuditorOffices)
+            return await _entities
+                .Where(o => o.IsActive)
+                .Include(o => o.AuditorOffices)  
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -86,18 +87,27 @@ namespace IMIS.Persistence.OfficeModule
         }
         public async Task<List<Office>> GetAllForPgsAuditorAsync(CancellationToken cancellationToken)
         {
-            // Admins can see all offices
+            // Admins can see all active offices
             return await _entities
+                .Where(o => o.IsActive)
                 .AsNoTracking()
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
         public async Task<List<Office>> GetOfficesForAuditorAsync(string userId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<AuditorOffices>()
-                .Where(ao => ao.Auditor != null && ao.Auditor.UserId == userId && ao.Auditor.IsActive)
+                .Where(ao =>
+                    ao.Auditor != null &&
+                    ao.Auditor.UserId == userId &&
+                    ao.Auditor.IsActive &&
+                    ao.Office != null &&
+                    ao.Office.IsActive)
                 .Select(ao => ao.Office!)
                 .Distinct()
-                .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
         public async Task<List<int>> GetAuditorOfficeIdsAsync(string userId, CancellationToken cancellationToken)
         {

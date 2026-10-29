@@ -50,7 +50,7 @@ namespace IMIS.Persistence.OfficeModule
             if (office == null)
                 return false;
 
-            office.IsDeleted = true;
+            office.IsActive = false;
 
             var context = _repository.GetDbContext();
             await context.SaveChangesAsync(cancellationToken);
