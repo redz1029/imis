@@ -57,7 +57,9 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
                             a.Id,
                             a.Status,
                             a.PercentAccomplished,
-                            a.PostingDate
+                            a.PostingDate,
+                            a.Remarks,
+                            a.AuditorRemarks
                         })
                         .ToList()
                 })
@@ -110,7 +112,9 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
                                 Status = a.Status.ToString(),
                                 DeliverableName = r.DeliverableName,
                                 PercentAccomplished = a.PercentAccomplished,
-                                PostingMonth = a.PostingDate.ToString("MMMM", CultureInfo.InvariantCulture)
+                                PostingMonth = a.PostingDate.ToString("MMMM", CultureInfo.InvariantCulture),
+                                Remarks = a.Remarks,
+                                AuditorRemarks = a.AuditorRemarks,
                             })
                             .ToList()
                     })

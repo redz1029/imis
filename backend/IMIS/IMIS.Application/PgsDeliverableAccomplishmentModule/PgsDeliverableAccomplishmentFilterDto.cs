@@ -23,5 +23,8 @@
         public string? DeliverableName { get; set; }
         public double PercentAccomplished { get; set; }
         public string? PostingMonth { get; set; }
+
+        public string? Remarks { get; set; }     
+        public string? AuditorRemarks { get; set; }
     }
 }
