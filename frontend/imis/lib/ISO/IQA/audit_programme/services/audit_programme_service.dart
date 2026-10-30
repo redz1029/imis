@@ -182,7 +182,13 @@ class AuditProgrammeService {
   Future<List<AuditProgramme>> getAllAuditProgrammes() async {
     final url = ApiEndpoint().auditProgramme;
     try {
-      final response = await AuthenticatedRequest.get(dio, url);
+      // The timestamp makes every load a fresh request, so a copy the server
+      // cached before a save can never be served in place of the saved list.
+      final response = await AuthenticatedRequest.get(
+        dio,
+        url,
+        queryParameters: {'_': DateTime.now().millisecondsSinceEpoch},
+      );
       if (response.statusCode == 200 && response.data != null) {
         final List list = response.data;
         final programmes = <AuditProgramme>[];

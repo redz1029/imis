@@ -69,7 +69,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 return result != null ? Results.Ok(result) : Results.Ok(new List<AuditProgrammeDto>());
             })
             .WithTags(_AuditProgramme)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
+            .CacheOutput(builder => builder.NoCache(), true);
 
             // GET APPROVED ONLY (Workflow Gate for Audit Plan)
             app.MapGet("/approved", async (
@@ -80,7 +81,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 return Results.Ok(result);
             })
             .WithTags(_AuditProgramme)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
+            .CacheOutput(builder => builder.NoCache(), true);
 
             // TEAM -> HOME-OFFICES MAP (client-side inline self-audit detection)
             app.MapGet("/team-office-map", async (
@@ -233,7 +235,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 return Results.Ok(result);
             })
             .WithTags(_AuditProgramme)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
+            .CacheOutput(builder => builder.NoCache(), true);
 
             // DELETE
             app.MapDelete("/{id:int}", async (
