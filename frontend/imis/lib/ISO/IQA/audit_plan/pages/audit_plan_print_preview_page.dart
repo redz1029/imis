@@ -75,6 +75,9 @@ const double _kObjGap = 8.0;
 const double _kLabelW = 104.0;
 const double _kSigGap = 16.0;
 const double _kSigSpace = 26.0;
+const double _kSigPadL = 22.0;
+const double _kSigPadR = 16.0;
+const double _kSigRowGap = 18.0;
 const List<double> _kColFr = [0.13, 0.29, 0.30, 0.28];
 
 // =============================================================================
@@ -1454,60 +1457,84 @@ class _PlanPdfBuilder {
   }
 
   double _computeSigHeight() {
+    // Same layout as the Audit Programme form: two signatories per row
+    // (Prepared by | Noted by, then Approved by), name and role left-aligned.
+    final colW = _contentW / 2;
+    final innerW = colW - _kSigPadL - _kSigPadR;
     final sigs = data.signatories;
-    final colW = _contentW / sigs.length;
-    final innerW = colW - 18;
-    var maxH = 0.0;
-    for (final s in sigs) {
-      final nameLines =
-          s.name.trim().isEmpty ? 0 : _wrap(s.name.trim(), innerW, bold: true).length;
-      final roleLines =
-          s.role.trim().isEmpty ? 0 : _wrap(s.role.trim(), innerW).length;
-      final h = _kLineH +
-          _kSigSpace +
-          math.max(1, nameLines) * _kLineH +
-          roleLines * _kLineH +
-          4 +
-          _kLineH;
-      maxH = math.max(maxH, h);
+    var total = 0.0;
+    for (var i = 0; i < sigs.length; i += 2) {
+      var rowH = 0.0;
+      for (final s in sigs.skip(i).take(2)) {
+        final nameLines = s.name.trim().isEmpty
+            ? 0
+            : _wrap(_s(s.name.trim().toUpperCase()), innerW, bold: true).length;
+        final roleLines =
+            s.role.trim().isEmpty ? 0 : _wrap(s.role.trim(), innerW).length;
+        final h = _kLineH +
+            _kSigSpace +
+            math.max(1, nameLines) * _kLineH +
+            roleLines * _kLineH +
+            3 +
+            _kLineH;
+        rowH = math.max(rowH, h);
+      }
+      total += rowH + (i + 2 < sigs.length ? _kSigRowGap : 0);
     }
-    return maxH;
+    return total;
   }
 
   pw.Widget _signatureBlock() {
     final sigs = data.signatories;
-    final colW = _contentW / sigs.length;
-    return pw.Row(
+    final colW = _contentW / 2;
+    final rows = <pw.Widget>[];
+    for (var i = 0; i < sigs.length; i += 2) {
+      rows.add(pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(width: colW, child: _sigColumn(sigs[i], colW)),
+          pw.SizedBox(
+            width: colW,
+            child: i + 1 < sigs.length ? _sigColumn(sigs[i + 1], colW) : null,
+          ),
+        ],
+      ));
+      if (i + 2 < sigs.length) rows.add(pw.SizedBox(height: _kSigRowGap));
+    }
+    return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        for (final s in sigs)
-          pw.SizedBox(width: colW, child: _sigColumn(s, colW)),
-      ],
+      children: rows,
     );
   }
 
   pw.Widget _sigColumn(_Sig s, double colW) {
-    final innerW = colW - 18;
-    final nameLines =
-        s.name.trim().isEmpty ? <String>[] : _wrap(s.name.trim(), innerW, bold: true);
+    final innerW = colW - _kSigPadL - _kSigPadR;
+    final nameLines = s.name.trim().isEmpty
+        ? <String>[]
+        : _wrap(_s(s.name.trim().toUpperCase()), innerW, bold: true);
     final roleLines =
         s.role.trim().isEmpty ? <String>[] : _wrap(s.role.trim(), innerW);
     final dateText =
         s.date == null ? '' : DateFormat('M/d/yyyy').format(s.date!);
 
     return pw.Padding(
-      padding: const pw.EdgeInsets.only(right: 18),
+      padding: const pw.EdgeInsets.only(left: _kSigPadL, right: _kSigPadR),
       child: pw.Column(
         mainAxisSize: pw.MainAxisSize.min,
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.SizedBox(
             height: _kLineH,
-            child: pw.Text(_s(s.heading), style: _st()),
+            child: pw.Text(
+              _s(s.heading.toUpperCase()),
+              style: _st(bold: true),
+              softWrap: false,
+            ),
           ),
           pw.SizedBox(height: _kSigSpace),
           if (nameLines.isEmpty)
             pw.Container(
+              width: innerW - 52,
               height: _kLineH,
               decoration: pw.BoxDecoration(border: pw.Border(bottom: _bs)),
             )
@@ -1515,39 +1542,30 @@ class _PlanPdfBuilder {
             for (final l in nameLines)
               pw.SizedBox(
                 height: _kLineH,
-                child: pw.Center(
-                  child: pw.Text(
-                    l,
-                    style: _st(bold: true, underline: true),
-                    softWrap: false,
-                  ),
-                ),
+                child: pw.Text(l, style: _st(bold: true), softWrap: false),
               ),
           for (final l in roleLines)
             pw.SizedBox(
               height: _kLineH,
-              child: pw.Center(
-                child: pw.Text(l, style: _st(), softWrap: false),
-              ),
+              child: pw.Text(l, style: _st(), softWrap: false),
             ),
-          pw.SizedBox(height: 4),
+          pw.SizedBox(height: 3),
           pw.SizedBox(
             height: _kLineH,
             child: pw.Row(
+              mainAxisSize: pw.MainAxisSize.min,
               crossAxisAlignment: pw.CrossAxisAlignment.end,
               children: [
                 pw.Text('Date:', style: _st()),
                 pw.SizedBox(width: 4),
-                pw.Expanded(
-                  child: pw.Container(
-                    height: _kLineH - 2,
-                    alignment: pw.Alignment.bottomCenter,
-                    decoration:
-                        pw.BoxDecoration(border: pw.Border(bottom: _bs)),
-                    child: dateText.isEmpty
-                        ? null
-                        : pw.Text(dateText, style: _st()),
-                  ),
+                pw.Container(
+                  width: 90,
+                  height: _kLineH - 2,
+                  alignment: pw.Alignment.bottomCenter,
+                  decoration: pw.BoxDecoration(border: pw.Border(bottom: _bs)),
+                  child: dateText.isEmpty
+                      ? null
+                      : pw.Text(dateText, style: _st()),
                 ),
               ],
             ),
