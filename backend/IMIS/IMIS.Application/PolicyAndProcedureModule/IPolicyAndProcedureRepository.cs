@@ -6,6 +6,7 @@ namespace IMIS.Application.PolicyAndProcedureModule
 {
     public interface IPolicyAndProcedureRepository : IRepository<PolicyAndProcedure, long>
     {
+        Task<List<PolicyAndProcedureSignatory>> GetByPgsIdForSoftDeleteAsync(long pgsid, CancellationToken cancellationToken);
         Task<PolicyAndProcedure?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<EntityPageList<PolicyAndProcedure, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<PolicyAndProcedure?> GetByIdAsync(long id, CancellationToken cancellationToken);

@@ -29,7 +29,27 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             _userManager = userManager;
             _roleManager = roleManager;
         }
-       
+        public async Task<bool> SoftDeleteSignatoryAsync(long papId, CancellationToken cancellationToken)
+        {
+            var signatories = await _repository.GetByPgsIdForSoftDeleteAsync(papId, cancellationToken);
+
+            var activeSignatories = signatories
+                .Where(x => !x.IsDeleted)
+                .ToList();
+
+            if (!activeSignatories.Any())
+                return false;
+
+            foreach (var signatory in activeSignatories)
+            {
+                signatory.IsDeleted = true;
+            }
+
+            await _repository.GetDbContext()
+                .SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         public async Task<DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>> GetFilteredAsync(PolicyAndProcedureFilter filter, string roleId, CancellationToken cancellationToken)
         {
             DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long> Empty() =>

@@ -2,6 +2,8 @@
 using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
+using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PolicyAndProcedureModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
@@ -113,7 +115,27 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
                 return Results.Ok(result);
             })
             .WithTags(_policyAndProcedureEndPoint)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.View));         
+
+            app.MapDelete("pgssignatory/{papid:long}", async (long papid, IPolicyAndProcedureService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteSignatoryAsync(papid, cancellationToken);
+
+                if (!result)
+                    return Results.NotFound(new
+                    {
+                        message = "No active signatories found."
+                    });
+
+                await cache.EvictByTagAsync(_policyAndProcedureEndPoint, cancellationToken);
+
+                return Results.Ok(new
+                {
+                    message = "PGS signatories deleted successfully."
+                });
+            })
+           .WithTags(_policyAndProcedureEndPoint)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.Delete));
         }
        
         private async Task<IResult> RunWorkflowAsync(PolicyAndProcedureDto dto, string userId, IPolicyAndProcedureService service, IOutputCacheStore cache, bool submit, CancellationToken cancellationToken)
