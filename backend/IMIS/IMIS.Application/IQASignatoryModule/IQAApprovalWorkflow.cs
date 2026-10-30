@@ -205,6 +205,17 @@ namespace IMIS.Application.IQASignatoryModule
                 .OrderBy(t => t.OrderLevel).ThenBy(t => t.Id)
                 .ToListAsync(ct);
 
+            // An Audit Plan is signed by the same people as its Audit Programme, so
+            // until a plan-specific chain is configured it follows the programme's.
+            if (templates.Count == 0 && entityType == EntityTypes.AuditPlan)
+            {
+                templates = await db.Set<IQASignatoryTemplate>()
+                    .AsNoTracking()
+                    .Where(t => t.AuditEntityType == EntityTypes.AuditProgramme && t.IsActive && !t.IsDeleted)
+                    .OrderBy(t => t.OrderLevel).ThenBy(t => t.Id)
+                    .ToListAsync(ct);
+            }
+
             if (templates.Count == 0 && entityType != EntityTypes.AuditSchedule)
                 return (false, $"No active approval signatory template is configured for {displayName}.");
 
