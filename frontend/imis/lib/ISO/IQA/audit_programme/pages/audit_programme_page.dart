@@ -947,6 +947,27 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
+          final currentUserId = _currentUser?.id ?? '';
+          final signatories = _loadedProgramme?.signatories ?? [];
+          final matchingSig = signatories.where(
+            (s) => s.signatoryId == currentUserId,
+          );
+          final sigLabel = matchingSig.isNotEmpty
+              ? (matchingSig.first.signatoryLabel ?? '').toUpperCase()
+              : '';
+
+          // A role that only notes / approves (e.g. QMS, QMR) can open the
+          // programme but must not see the author's buttons: saving needs the
+          // Add / Edit permission and submitting needs its own permission.
+          final canSaveDraft =
+              _isAdmin ||
+              _hasPermission(AppPermissions.addAuditProgramme) ||
+              (isEdit && _hasPermission(AppPermissions.editAuditProgramme));
+          final canSubmitForApproval =
+              _isAdmin ||
+              _hasPermission(AppPermissions.auditProgrammeSubmitForApproval) ||
+              sigLabel.contains('SUBMIT');
+
           final leftActions = Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -987,6 +1008,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                     ),
                   ),
                 ),
+                if (canSaveDraft) ...[
                 const SizedBox(width: 8),
                 OutlinedButton(
                   onPressed: _isSaving
@@ -1010,6 +1032,8 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                     ),
                   ),
                 ),
+                ],
+                if (canSubmitForApproval) ...[
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: _isSaving
@@ -1035,7 +1059,8 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
                     ),
                   ),
                 ),
-              ] else ...[
+                ],
+              ] else if (canSaveDraft) ...[
                 ElevatedButton(
                   onPressed: _isSaving
                       ? null
@@ -1061,15 +1086,6 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               ],
             ],
           );
-
-          final currentUserId = _currentUser?.id ?? '';
-          final signatories = _loadedProgramme?.signatories ?? [];
-          final matchingSig = signatories.where(
-            (s) => s.signatoryId == currentUserId,
-          );
-          final sigLabel = matchingSig.isNotEmpty
-              ? (matchingSig.first.signatoryLabel ?? '').toUpperCase()
-              : '';
 
           // The workflow actions are permission-driven. The signatory label
           // is only a fallback for signers that were configured before the
