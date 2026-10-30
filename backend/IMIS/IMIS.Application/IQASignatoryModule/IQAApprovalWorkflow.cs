@@ -306,7 +306,14 @@ namespace IMIS.Application.IQASignatoryModule
                     }
 
                     int stage = GetWorkflowOrder(template);
-                    bool isPreparer = stage == 1 && entityType != EntityTypes.AuditSchedule;
+                    // Only a real "Prepared by" / Lead Auditor step is signed by the
+                    // submitter. A step that merely sits first (e.g. QMS with
+                    // OrderLevel 1) is a normal step for its own signatory; the
+                    // submitter is still recorded in the approval history.
+                    var stepText = ((template.SignatoryLabel ?? "") + " " + (template.Position ?? "")).ToUpperInvariant();
+                    bool isPreparer = stage == 1
+                        && entityType != EntityTypes.AuditSchedule
+                        && (stepText.Contains("PREPAR") || stepText.Contains("LEAD AUDITOR"));
 
                     var finalSignatoryId = isPreparer && actorUserId != null ? actorUserId : targetSignatoryId;
                     // Same FK guard: a slot with no resolvable user is left
