@@ -8,6 +8,7 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
 import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_page.dart';
 import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
+import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
@@ -43,7 +44,16 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
     if (!silent) setState(() => _isLoading = true);
     try {
       final data = await _service.getAllAuditPlans();
-      if (mounted) setState(() => _allPlans = data);
+      // A plan is only visible once its Audit Programme is Approved; while the
+      // programme is a draft, pending or disapproved, its plan stays hidden.
+      final programmes = await AuditProgrammeService(Dio()).getAllAuditProgrammes();
+      final approvedProgrammeIds = {
+        for (final p in programmes)
+          if (p.effectiveStatusName == 'Approved') p.id,
+      };
+      final visible =
+          data.where((p) => approvedProgrammeIds.contains(p.auditProgrammeId));
+      if (mounted) setState(() => _allPlans = visible.toList());
     } catch (e) {
       debugPrint(e.toString());
       if (mounted) {
