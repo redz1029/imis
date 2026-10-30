@@ -240,7 +240,28 @@ String _roleFor(String label, String fallback) {
   return cleaned;
 }
 
-List<_Sig> _buildSignatories(AuditProgramme programme) {
+/// The preparer is the user who submitted the programme for approval. Until it
+/// is submitted nobody has prepared it, so the block stays blank.
+_Sig _preparerOf(AuditProgramme programme) {
+  const heading = 'Prepared by:';
+  const role = 'IQA Lead Auditor';
+
+  final submits = programme.approvalHistory
+      .where((h) => h.action.toLowerCase().startsWith('submit'))
+      .toList()
+    ..sort((a, b) => a.actionDate.compareTo(b.actionDate));
+  if (submits.isNotEmpty) {
+    final first = submits.first;
+    final name = first.effectiveUserName.trim();
+    if (name.isNotEmpty) {
+      return _Sig(heading, name, role, _signedLocal(first.actionDate));
+    }
+  }
+
+  return const _Sig(heading, '', role, null);
+}
+
+List<_Sig> _buildSignatories(AuditProgramme programme, _Sig preparer) {
   final prepared = <_Sig>[];
   final noted = <_Sig>[];
   final approved = <_Sig>[];
@@ -248,8 +269,13 @@ List<_Sig> _buildSignatories(AuditProgramme programme) {
   for (final s in programme.signatories) {
     final label = (s.signatoryLabel ?? '').toString().trim();
     final up = label.toUpperCase();
-    final name = (s.signatoryName ?? '').toString().trim();
-    final signed = s.dateSigned;
+    // A signatory's name and date print only once they have acted (noted,
+    // approved or confirmed). A step still waiting on them stays blank.
+    final status = (s.approvalStatus ?? '').toLowerCase();
+    final acted =
+        status == 'approved' || status == 'noted' || status == 'confirmed';
+    final name = acted ? (s.signatoryName ?? '').toString().trim() : '';
+    final signed = acted ? s.dateSigned : null;
     final date = signed == null ? null : _signedLocal(signed);
 
     if (up.contains('PREPAR')) {
@@ -278,7 +304,7 @@ List<_Sig> _buildSignatories(AuditProgramme programme) {
   }
 
   if (prepared.isEmpty) {
-    prepared.add(const _Sig('Prepared by:', '', 'IQA Lead Auditor', null));
+    prepared.add(preparer);
   }
   if (noted.isEmpty) {
     noted.add(const _Sig(
@@ -535,7 +561,7 @@ Future<_Data> _loadPrintData(int programmeId) async {
     batches: batches,
     teamNames: teamNames,
     rosters: rosters,
-    signatories: _buildSignatories(programme),
+    signatories: _buildSignatories(programme, _preparerOf(programme)),
   );
 }
 

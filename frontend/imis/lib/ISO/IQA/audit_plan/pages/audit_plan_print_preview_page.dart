@@ -196,7 +196,28 @@ String _roleFor(String label, String fallback) {
   return cleaned;
 }
 
-List<_Sig> _buildSignatories(AuditPlan plan) {
+/// The preparer is the user who submitted the plan for approval. Until it is
+/// submitted nobody has prepared it, so the block stays blank.
+_Sig _preparerOf(AuditPlan plan) {
+  const heading = 'Prepared by:';
+  const role = 'IQA Lead Auditor';
+
+  final submits = plan.approvalHistory
+      .where((h) => h.action.toLowerCase().startsWith('submit'))
+      .toList()
+    ..sort((a, b) => a.actionDate.compareTo(b.actionDate));
+  if (submits.isNotEmpty) {
+    final first = submits.first;
+    final name = first.effectiveUserName.trim();
+    if (name.isNotEmpty) {
+      return _Sig(heading, name, role, first.actionDate.toLocal());
+    }
+  }
+
+  return const _Sig(heading, '', role, null);
+}
+
+List<_Sig> _buildSignatories(AuditPlan plan, _Sig preparer) {
   final prepared = <_Sig>[];
   final noted = <_Sig>[];
   final approved = <_Sig>[];
@@ -204,8 +225,13 @@ List<_Sig> _buildSignatories(AuditPlan plan) {
   for (final s in plan.signatories) {
     final label = (s.signatoryLabel ?? '').toString().trim();
     final up = label.toUpperCase();
-    final name = (s.signatoryName ?? '').toString().trim();
-    final signed = s.dateSigned;
+    // A signatory's name and date print only once they have acted (noted,
+    // approved or confirmed). A step still waiting on them stays blank.
+    final status = (s.approvalStatus ?? '').toLowerCase();
+    final acted =
+        status == 'approved' || status == 'noted' || status == 'confirmed';
+    final name = acted ? (s.signatoryName ?? '').toString().trim() : '';
+    final signed = acted ? s.dateSigned : null;
     final date = signed?.toLocal();
 
     if (up.contains('PREPAR')) {
@@ -223,7 +249,7 @@ List<_Sig> _buildSignatories(AuditPlan plan) {
   }
 
   if (prepared.isEmpty) {
-    prepared.add(const _Sig('Prepared by:', '', 'IQA Lead Auditor', null));
+    prepared.add(preparer);
   }
   if (noted.isEmpty) {
     noted.add(const _Sig('Noted by:', '', '', null));
@@ -556,7 +582,7 @@ Future<_PrintData> _loadPrintData(int planId) async {
     entries: finalEntries,
     teamNames: teamNames,
     rosters: rosters,
-    signatories: _buildSignatories(plan),
+    signatories: _buildSignatories(plan, _preparerOf(plan)),
     revision: revision,
   );
 }
