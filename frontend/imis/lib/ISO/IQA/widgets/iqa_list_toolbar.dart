@@ -55,7 +55,9 @@ class IqaStatus {
   static String tabOf(String? statusName) {
     switch ((statusName ?? '').trim()) {
       case 'Pending':
+      case 'Pending Approval': // what the server calls a submitted programme / plan
       case 'Pending Confirmation':
+      case 'Resubmitted':
       case 'For Approval':
         return forApproval;
       case 'Approved':

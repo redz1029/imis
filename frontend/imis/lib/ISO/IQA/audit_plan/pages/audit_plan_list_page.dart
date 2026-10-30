@@ -171,7 +171,10 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
   }
 
   Widget _buildStatusChip(String status) {
-    final color = getStatusColor(status);
+    // The workflow names a pending chain "Pending Approval" / "Pending Confirmation";
+    // colour and icon follow the tab it belongs to so none falls back to grey.
+    final tone = IqaStatus.tabOf(status);
+    final color = getStatusColor(tone);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -181,7 +184,7 @@ class _AuditPlanListPageState extends State<AuditPlanListPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          getStatusIcon(status),
+          getStatusIcon(tone),
           const SizedBox(width: 6),
           Text(
             status,
