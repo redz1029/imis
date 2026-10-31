@@ -12,6 +12,19 @@ namespace IMIS.Application.AuditScheduleModule
     {
         // --- Retrieval ---
         Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// The schedules <paramref name="userId"/> may see. An Auditor Team Leader
+        /// sees only the schedules of the team(s) they lead, a plain Auditor only
+        /// those of the team(s) they belong to; every other IQA role sees all.
+        /// </summary>
+        Task<List<AuditScheduleDto>?> GetAllForUserAsync(string? userId, CancellationToken cancellationToken);
+
+        /// <summary>Same visibility rule, for the schedules of one audit plan.</summary>
+        Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanIdForUserAsync(int auditPlanId, string? userId, CancellationToken cancellationToken);
+
+        /// <summary>The teams the user may submit schedules for (leader flag, or the Auditor Team Leader role plus membership).</summary>
+        Task<List<int>> GetLedTeamIdsAsync(string? userId, CancellationToken cancellationToken);
         Task<List<AuditScheduleDto>> GetConfirmedAsync(CancellationToken cancellationToken);
         Task<AuditScheduleDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken);
@@ -30,6 +43,13 @@ namespace IMIS.Application.AuditScheduleModule
 
         // --- Validation ---
         Task<List<string>> GetConflictValidationsAsync(AuditScheduleDto dto, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// A schedule is submitted only by the Auditor Team Leader of the team
+        /// assigned to it (Administrators excepted). Returns the reason when
+        /// <paramref name="userId"/> may not, or null when it may.
+        /// </summary>
+        Task<string?> GetSubmitAuthorizationErrorAsync(AuditScheduleDto dto, string? userId, CancellationToken cancellationToken);
 
         // --- Generic Save for parent + child collections ---
         Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)

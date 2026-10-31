@@ -52,6 +52,13 @@ namespace IMIS.Presentation.AuditScheduleModule
                 // Actor for the workflow rows (history + signatory slots).
                 // Must be a real AspNetUsers id — placeholders violate the FK.
                 var actorUserId = httpContext.User.FindFirst("UserId")?.Value;
+
+                // A new schedule is submitted on creation, so only the Auditor
+                // Team Leader of the assigned team may create it.
+                var notAllowed = await service.GetSubmitAuthorizationErrorAsync(dto, actorUserId, cancellationToken);
+                if (notAllowed != null)
+                    return Results.BadRequest(new { Errors = new[] { notAllowed } });
+
                 var result = await service.SaveAuditScheduleAsync(dto, cancellationToken, actorUserId);
 
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
@@ -68,13 +75,17 @@ namespace IMIS.Presentation.AuditScheduleModule
             // GET ALL
             app.MapGet("/", async (
                 IAuditScheduleService service,
+                HttpContext httpContext,
                 CancellationToken cancellationToken) =>
             {
-                var result = await service.GetAllAsync(cancellationToken);
+                // An Auditor Team Leader sees only the schedules of the team they lead.
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var result = await service.GetAllForUserAsync(userId, cancellationToken);
                 return Results.Ok(result);
             })
             .WithTags(_AuditSchedule)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            // The list differs per user, so a cached copy is kept per signed-in user.
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule).SetVaryByHeader("Authorization"), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             // GET CONFIRMED ONLY (Workflow Gate for Audit Checklist)//
@@ -93,13 +104,29 @@ namespace IMIS.Presentation.AuditScheduleModule
             app.MapGet("/plan/{auditPlanId:int}", async (
                 int auditPlanId,
                 IAuditScheduleService service,
+                HttpContext httpContext,
                 CancellationToken cancellationToken) =>
             {
-                var result = await service.GetByAuditPlanIdAsync(auditPlanId, cancellationToken);
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var result = await service.GetByAuditPlanIdForUserAsync(auditPlanId, userId, cancellationToken);
                 return Results.Ok(result);
             })
             .WithTags(_AuditSchedule)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule).SetVaryByHeader("Authorization"), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            // THE TEAMS THE SIGNED-IN USER LEADS (which schedules they may submit)
+            app.MapGet("/my-teams", async (
+                IAuditScheduleService service,
+                HttpContext httpContext,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var result = await service.GetLedTeamIdsAsync(userId, cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditSchedule)
+            .CacheOutput(builder => builder.NoCache(), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             // GET BY ID
@@ -122,6 +149,7 @@ namespace IMIS.Presentation.AuditScheduleModule
                 [FromBody] AuditScheduleDto dto,
                 IAuditScheduleService service,
                 IOutputCacheStore cache,
+                HttpContext httpContext,
                 CancellationToken cancellationToken) =>
             {
                 if (dto == null)
@@ -132,6 +160,12 @@ namespace IMIS.Presentation.AuditScheduleModule
                     return Results.BadRequest(new { Errors = conflicts });
 
                 dto.Id = id;
+
+                // Only the Auditor Team Leader of the assigned team edits a schedule.
+                var actorUserId = httpContext.User.FindFirst("UserId")?.Value;
+                var notAllowed = await service.GetSubmitAuthorizationErrorAsync(dto, actorUserId, cancellationToken);
+                if (notAllowed != null)
+                    return Results.BadRequest(new { Errors = new[] { notAllowed.Replace("submit", "edit") } });
 
                 var result = await service.SaveAuditScheduleAsync(dto, cancellationToken);
 
@@ -214,9 +248,12 @@ namespace IMIS.Presentation.AuditScheduleModule
                 [FromBody] SubmitAuditScheduleRequest? body,
                 IAuditScheduleService service,
                 IOutputCacheStore cache,
+                HttpContext httpContext,
                 CancellationToken cancellationToken) =>
             {
-                var (success, error) = await service.SubmitAsync(id, body?.UserId, body?.Comments, cancellationToken);
+                // The signed-in user decides who is submitting, not the request body.
+                var actorUserId = httpContext.User.FindFirst("UserId")?.Value ?? body?.UserId;
+                var (success, error) = await service.SubmitAsync(id, actorUserId, body?.Comments, cancellationToken);
 
                 if (!success)
                     return Results.BadRequest(new { error });

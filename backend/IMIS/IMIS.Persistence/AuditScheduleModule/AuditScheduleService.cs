@@ -102,6 +102,68 @@ namespace IMIS.Application.AuditScheduleModule
             return entities?.Select(e => new AuditScheduleDto(e)).ToList();
         }
 
+        public async Task<List<AuditScheduleDto>?> GetAllForUserAsync(string? userId, CancellationToken cancellationToken)
+        {
+            var all = await GetAllAsync(cancellationToken);
+            return all == null ? null : await FilterForUserAsync(all, userId, cancellationToken);
+        }
+
+        public async Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanIdForUserAsync(
+            int auditPlanId, string? userId, CancellationToken cancellationToken)
+        {
+            var schedules = (await GetByAuditPlanIdAsync(auditPlanId, cancellationToken)).ToList();
+            return await FilterForUserAsync(schedules, userId, cancellationToken);
+        }
+
+        public async Task<List<int>> GetLedTeamIdsAsync(string? userId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return new List<int>();
+            return await LedTeamIdsAsync(_repository.GetDbContext(), userId, cancellationToken);
+        }
+
+        /// <summary>
+        /// Who sees which schedules: an Auditor Team Leader sees only the schedules
+        /// of the team(s) they lead (the offices their team audits); a plain Auditor
+        /// sees only the schedules of the team(s) they belong to; the other IQA
+        /// roles see everything.
+        /// </summary>
+        private async Task<List<AuditScheduleDto>> FilterForUserAsync(
+            List<AuditScheduleDto> schedules, string? userId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return schedules;
+
+            var dbContext = _repository.GetDbContext();
+            var roles = await (from ur in dbContext.Set<IdentityUserRole<string>>()
+                               join r in dbContext.Set<IdentityRole>() on ur.RoleId equals r.Id
+                               where ur.UserId == userId
+                               select r.Name).ToListAsync(cancellationToken);
+
+            var seesEverything = roles.Any(r =>
+                r == AdministratorRoleName || r == LeadAuditorRoleName ||
+                r == "QMS" || r == "QMR" || r == "Department Head");
+            if (seesEverything)
+                return schedules;
+
+            if (roles.Contains(TeamLeaderRoleName))
+            {
+                var ledTeamIds = await LedTeamIdsAsync(dbContext, userId, cancellationToken);
+                return schedules.Where(s => s.TeamId.HasValue && ledTeamIds.Contains(s.TeamId.Value)).ToList();
+            }
+
+            if (!roles.Contains(AuditorRoleName))
+                return schedules;
+
+            var memberTeamIds = await dbContext.Set<AuditorTeams>()
+                .Where(t => !t.IsDeleted && t.Auditor != null && t.Auditor.UserId == userId)
+                .Select(t => t.TeamId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            return schedules.Where(s => s.TeamId.HasValue && memberTeamIds.Contains(s.TeamId.Value)).ToList();
+        }
+
         public async Task<List<AuditScheduleDto>> GetConfirmedAsync(CancellationToken cancellationToken)
         {
             var all = await GetAllAsync(cancellationToken);
@@ -140,6 +202,34 @@ namespace IMIS.Application.AuditScheduleModule
             }
 
             return errors;
+        }
+
+        private const string NotTeamLeaderMessage =
+            "Only the Auditor Team Leader of the team assigned to this audit schedule can submit it.";
+
+        /// <summary>
+        /// The Auditor Team Leader submits only the schedules of the team (and so
+        /// the offices) assigned to them. Administrators may submit any; a call
+        /// with no user is an internal one and is not restricted.
+        /// </summary>
+        private static async Task<bool> CanSubmitScheduleAsync(
+            DbContext dbContext, string? userId, AuditSchedule schedule, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return true;
+
+            if (await IsInRoleAsync(dbContext, userId, AdministratorRoleName, cancellationToken))
+                return true;
+
+            return await IsTeamLeaderForAsync(dbContext, userId, schedule, cancellationToken);
+        }
+
+        public async Task<string?> GetSubmitAuthorizationErrorAsync(
+            AuditScheduleDto dto, string? userId, CancellationToken cancellationToken)
+        {
+            var ok = await CanSubmitScheduleAsync(
+                _repository.GetDbContext(), userId, dto.ToEntity(), cancellationToken);
+            return ok ? null : NotTeamLeaderMessage;
         }
 
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
@@ -198,6 +288,9 @@ namespace IMIS.Application.AuditScheduleModule
 
             if (string.IsNullOrWhiteSpace(entity.Purpose) || string.IsNullOrWhiteSpace(entity.Activity))
                 return (false, "Purpose and Activity are required before submitting.");
+
+            if (!await CanSubmitScheduleAsync(dbContext, userId, entity, cancellationToken))
+                return (false, NotTeamLeaderMessage);
 
             var result = await IQAApprovalWorkflow.SubmitAsync(
                 dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, entity.Id,
@@ -352,6 +445,7 @@ namespace IMIS.Application.AuditScheduleModule
         // ------------------------------------------------------------------
         private const string TeamLeaderRoleName = "Auditor Team Leader";
         private const string LeadAuditorRoleName = "Lead Auditor";
+        private const string AuditorRoleName = "Auditor";
         private const string AdministratorRoleName = "Administrator";
 
         private static bool IsPending(string status) =>
@@ -365,6 +459,24 @@ namespace IMIS.Application.AuditScheduleModule
                     join r in dbContext.Set<IdentityRole>() on ur.RoleId equals r.Id
                     where ur.UserId == userId && r.Name == roleName
                     select ur.UserId).AnyAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// The teams a user leads: every team they are marked as leader of and,
+        /// when they hold the Auditor Team Leader role, every team they are a
+        /// member of (the role is what makes them the leader of their own team).
+        /// </summary>
+        private static async Task<List<int>> LedTeamIdsAsync(
+            DbContext dbContext, string userId, CancellationToken cancellationToken)
+        {
+            var hasLeaderRole = await IsInRoleAsync(dbContext, userId, TeamLeaderRoleName, cancellationToken);
+
+            return await dbContext.Set<AuditorTeams>()
+                .Where(t => !t.IsDeleted && t.Auditor != null && t.Auditor.UserId == userId &&
+                            (t.IsTeamLeader || hasLeaderRole))
+                .Select(t => t.TeamId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
         }
 
         private static async Task<bool> IsTeamLeaderForAsync(
@@ -381,9 +493,8 @@ namespace IMIS.Application.AuditScheduleModule
             if (teamIds.Count == 0)
                 return await IsInRoleAsync(dbContext, userId, TeamLeaderRoleName, cancellationToken);
 
-            return await dbContext.Set<AuditorTeams>()
-                .AnyAsync(t => !t.IsDeleted && t.IsTeamLeader && teamIds.Contains(t.TeamId) &&
-                               t.Auditor != null && t.Auditor.UserId == userId, cancellationToken);
+            var ledTeamIds = await LedTeamIdsAsync(dbContext, userId, cancellationToken);
+            return teamIds.Any(ledTeamIds.Contains);
         }
 
         private static async Task<bool> CanDecideAsync(
