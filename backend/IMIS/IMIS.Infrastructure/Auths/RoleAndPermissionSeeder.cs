@@ -899,6 +899,10 @@ namespace IMIS.Infrastructure.Auths
             // the Administrator role holds all of the role's permissions.
             await GrantAdministratorUserClaimsAsync();
 
+            // Plans approved before schedules were created automatically get
+            // theirs now. Never blocks startup.
+            await CreateMissingSchedulesForApprovedPlansAsync();
+
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
                  _roleManager, _userManager, "castillano.mrb", "rama.emg");
@@ -1008,6 +1012,29 @@ namespace IMIS.Infrastructure.Auths
             }
 
             await _db.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Creates the audit schedules of every approved audit plan that has none
+        /// yet (offices that already have a schedule are skipped).
+        /// </summary>
+        private async Task CreateMissingSchedulesForApprovedPlansAsync()
+        {
+            try
+            {
+                var planIds = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                    _db.Set<AuditPlan>().Where(p => !p.IsDeleted).Select(p => p.Id));
+                foreach (var planId in planIds)
+                    await AuditScheduleGenerator.EnsureForPlanAsync(_db, planId, CancellationToken.None);
+
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Drop whatever was half-added so it cannot leak into later saves.
+                _db.ChangeTracker.Clear();
+                Console.WriteLine($"Could not create the missing audit schedules: {ex.Message}");
+            }
         }
 
         private async Task GrantAdministratorUserClaimsAsync()

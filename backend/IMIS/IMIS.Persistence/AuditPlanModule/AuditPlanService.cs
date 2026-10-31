@@ -2,6 +2,7 @@
 using Base.Primitives;
 using IMIS.Application.AuditPlanModule;
 using IMIS.Application.AuditProgrammeModule;
+using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.IQASignatoryModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -219,7 +220,16 @@ namespace IMIS.Application.AuditPlanModule
                 return result;
 
             entity.LastModifiedDate = DateTime.UtcNow;
-            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            var saved = await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            if (!saved.Success)
+                return saved;
+
+            // Once the plan is fully approved, its audit schedules are created
+            // (one per audited office) for the Auditor Team Leaders to submit.
+            if (await AuditScheduleGenerator.EnsureForPlanAsync(dbContext, entity.Id, cancellationToken) > 0)
+                return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+
+            return saved;
         }
 
         private static async Task<(bool Success, string? Error)> SaveWorkflowChangesAsync(DbContext dbContext, CancellationToken cancellationToken)
