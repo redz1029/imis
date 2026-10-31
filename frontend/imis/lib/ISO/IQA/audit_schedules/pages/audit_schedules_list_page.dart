@@ -11,6 +11,9 @@ import 'package:imis/ISO/IQA/audit_schedules/models/reschedule_request.dart';
 import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
 import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
+import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 
@@ -32,9 +35,18 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
   final int _pageSize = 15;
   bool _isLoading = false;
 
+  bool _isAdmin = false;
+  Set<int> _myTeamIds = {};
+
   @override
   void initState() {
     super.initState();
+    AuthUtil.isCurrentUserAdmin().then((admin) {
+      if (mounted) setState(() => _isAdmin = admin);
+    });
+    _service.getMyLedTeamIds().then((ids) {
+      if (mounted) setState(() => _myTeamIds = ids);
+    });
     _fetchSchedules();
   }
 
@@ -145,6 +157,43 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
       _selectedTab = IqaStatus.all;
       _currentPage = 1;
     });
+  }
+
+  /// A schedule created from an approved plan has no approval chain until the
+  /// Auditor Team Leader of its team submits it. A team leader sees every
+  /// schedule but is offered Submit only on the ones of the team they lead.
+  bool _canSubmit(AuditSchedules schedule) =>
+      schedule.signatories.isEmpty &&
+      (_isAdmin ||
+          (permissionService.hasPermission(AppPermissions.auditScheduleSubmit) &&
+              schedule.teamId != null &&
+              _myTeamIds.contains(schedule.teamId)));
+
+  Widget _submitButton(AuditSchedules schedule) {
+    return IconButton(
+      tooltip: 'Submit for confirmation',
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      icon: Icon(Icons.send_rounded, size: 16, color: primaryColor),
+      onPressed: _isLoading ? null : () => _submitSchedule(schedule),
+    );
+  }
+
+  Future<void> _submitSchedule(AuditSchedules schedule) async {
+    try {
+      final user = await AuthUtil.fetchLoggedUser();
+      await _service.submitAuditSchedule(schedule.id, userId: user?.id);
+      if (!mounted) return;
+      MotionToast.success(
+        description: const Text('Submitted for confirmation'),
+      ).show(context);
+      await _fetchSchedules(silent: true);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        description: Text(e.toString().replaceFirst('Exception: ', '')),
+      ).show(context);
+    }
   }
 
   /// Opens the read-only schedule viewer for the plan the schedule belongs
@@ -454,10 +503,12 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                           ),
                                         ),
                                         SizedBox(
-                                          width: 60,
+                                          width: _canSubmit(schedule) ? 100 : 60,
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
+                                              if (_canSubmit(schedule))
+                                                _submitButton(schedule),
                                               IconButton(
                                                 tooltip: 'View Schedule',
                                                 padding: EdgeInsets.zero,
@@ -524,6 +575,8 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                           ],
                                         ),
                                       ),
+                                      if (_canSubmit(schedule))
+                                        _submitButton(schedule),
                                       IconButton(
                                         tooltip: 'View Schedule',
                                         icon: Icon(

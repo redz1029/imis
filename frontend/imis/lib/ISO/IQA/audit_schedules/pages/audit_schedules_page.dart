@@ -84,6 +84,16 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
   UserRegistration? _currentUser;
   bool _isAdmin = false;
 
+  /// Teams the signed-in user leads. A team leader sees every office's
+  /// schedule but can act only on the ones assigned to their own team.
+  Set<int> _myTeamIds = {};
+
+  bool _isMine(_OfficeGroup group) {
+    if (_isAdmin) return true;
+    final teamId = group.schedule?.teamId;
+    return teamId != null && _myTeamIds.contains(teamId);
+  }
+
   /// Latest reschedule request of the open office, and the requests that are
   /// waiting on the signed-in Team Leader / Lead Auditor.
   RescheduleRequest? _latestRequest;
@@ -208,6 +218,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
 
       _currentUser = await AuthUtil.fetchLoggedUser();
       _isAdmin = await AuthUtil.isCurrentUserAdmin();
+      _myTeamIds = await _scheduleService.getMyLedTeamIds();
       final schedules = await _scheduleService.getAuditSchedulesByPlanId(planSummary.id);
 
       for (final g in _officeGroups) {
@@ -218,10 +229,11 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         );
         if (matched.id > 0) {
           g.schedule = matched;
-        } else if (_hasPermission(AppPermissions.addAuditSchedule)) {
-          // Only a role that may create schedules materialises the missing
-          // one. Read-only roles (QMR, QMS, Department Head) must not create
-          // rows as a side effect of opening the page.
+        } else if (_isAdmin) {
+          // The server now creates every office's schedule when the plan is
+          // approved, so only an Administrator (who sees all offices) fills a
+          // missing one. Everyone else must not create rows as a side effect of
+          // opening the page.
           try {
             final firstEntry = g.entries.first;
             final created = await _scheduleService.addAuditSchedule(
@@ -246,6 +258,13 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             debugPrint('Auto-schedule creation error: $e');
           }
         }
+      }
+
+      // The server returns only the schedules this user may see (a team leader:
+      // the offices their team audits), so an office with no schedule here is
+      // not theirs and is not listed.
+      if (!_isAdmin) {
+        _officeGroups.removeWhere((g) => g.schedule == null);
       }
     } catch (e) {
       _errorMessage = 'Error loading Audit Plan schedule: $e';
@@ -1435,7 +1454,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     // behaviour, so the page stays usable for support staff.
     final canConfirm = _isAdmin || _hasPermission(AppPermissions.auditScheduleConfirm);
     final canReject = _isAdmin || _hasPermission(AppPermissions.auditScheduleReject);
-    final canSubmit = _isAdmin || _hasPermission(AppPermissions.auditScheduleSubmit);
+    final canSubmit = _isAdmin ||
+        (_hasPermission(AppPermissions.auditScheduleSubmit) && _isMine(group));
 
     final showDecision =
         status == 'Pending' ||
@@ -1753,6 +1773,18 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
                                   : Colors.orange.shade800),
                     ),
                   ),
+                  if (_hasPermission(AppPermissions.auditScheduleSubmit) &&
+                      !_isMine(group))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        'View only — assigned to another team',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -2024,6 +2056,12 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             children: [
               TextField(
                 controller: _activityController,
+                // Only the leader of the assigned team (or an Administrator)
+                // edits the activity.
+                readOnly: activityGroup == null ||
+                    !(_isAdmin ||
+                        (_hasPermission(AppPermissions.editAuditSchedule) &&
+                            _isMine(activityGroup))),
                 minLines: 9,
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
