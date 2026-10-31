@@ -855,6 +855,13 @@ namespace IMIS.Infrastructure.Auths
             await PermissionSeeder.SeedViewOnlyPermissionForRole<AuditorTeamLeader, IdentityRole>(_roleManager, iqaLookups);
             await PermissionSeeder.SeedViewOnlyPermissionForRole<DepartmentHead, IdentityRole>(_roleManager, iqaLookups);
 
+            // The menu reads each user's own claims, not the role's pool. Give
+            // every Auditor Team Leader the permissions of the role so the ISO
+            // menu (Audit Schedule, Checklist, Report, NCAR ...) shows up.
+            await GrantRoleUserClaimsAsync(
+                new AuditorTeamLeader().Name,
+                teamLeaderPermissions.Concat(iqaLookups.Select(p => p.View)).ToArray());
+
             // Auditor works on checklists/NCARs/report drafts.
             await PermissionSeeder.SeedViewOnlyPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 programme,
@@ -957,6 +964,52 @@ namespace IMIS.Infrastructure.Auths
         /// set up (e.g. View Audit Programme) were never assigned to that admin,
         /// so the menu hid those modules. Assign every missing one.
         /// </summary>
+        /// <summary>
+        /// Adds the per-user claim for each permission in <paramref name="permissions"/>
+        /// that the role holds and a user in the role is still missing. It only
+        /// ever adds, and only permissions the role itself has.
+        /// </summary>
+        private async Task GrantRoleUserClaimsAsync(string roleName, string[] permissions)
+        {
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role == null)
+                return;
+
+            var rolePool = (await _roleManager.GetClaimsAsync(role))
+                .Where(c => c.Type == PermissionClaimType.Claim)
+                .Select(c => c.Value)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var toGrant = permissions
+                .Where(p => rolePool.Contains(p))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var users = await _userManager.GetUsersInRoleAsync(role.Name!);
+            foreach (var user in users)
+            {
+                var assigned = _db.Set<UserClaim<string>>()
+                    .Where(c => c.UserId == user.Id &&
+                                c.RoleId == role.Id &&
+                                c.ClaimType == PermissionClaimType.Claim)
+                    .Select(c => c.ClaimValue)
+                    .ToList()
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var permission in toGrant.Where(p => !assigned.Contains(p)))
+                {
+                    _db.Set<UserClaim<string>>().Add(new UserClaim<string>
+                    {
+                        UserId = user.Id,
+                        RoleId = role.Id,
+                        ClaimType = PermissionClaimType.Claim,
+                        ClaimValue = permission
+                    });
+                }
+            }
+
+            await _db.SaveChangesAsync();
+        }
+
         private async Task GrantAdministratorUserClaimsAsync()
         {
             var role = await _roleManager.FindByNameAsync(new AdministratorRole().Name!);
