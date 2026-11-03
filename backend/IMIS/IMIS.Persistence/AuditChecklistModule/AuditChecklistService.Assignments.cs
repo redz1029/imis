@@ -18,6 +18,7 @@ namespace IMIS.Persistence.AuditChecklistModule
     public partial class AuditChecklistService
     {
         private const string AdministratorRoleName = "Administrator";
+        private const string TeamLeaderRoleName = "Auditor Team Leader";
 
         private sealed class TeamMember
         {
@@ -146,6 +147,17 @@ namespace IMIS.Persistence.AuditChecklistModule
                 isAdmin = await IsInRoleAsync(userId, AdministratorRoleName, cancellationToken).ConfigureAwait(false);
                 var me = members.Values.FirstOrDefault(m => m.UserId == userId);
                 isLeader = me?.IsLeader ?? false;
+
+                // A member of the team who holds the Auditor Team Leader role is
+                // that team's leader, even when the roster's leader flag is not
+                // set on them (same rule as the Audit Schedule).
+                if (!isLeader && me != null &&
+                    await IsInRoleAsync(userId, TeamLeaderRoleName, cancellationToken).ConfigureAwait(false))
+                {
+                    isLeader = true;
+                    me.IsLeader = true;
+                }
+
                 if (!isAdmin && !isLeader && me != null)
                     restrictedAuditorId = me.AuditorId;
             }
