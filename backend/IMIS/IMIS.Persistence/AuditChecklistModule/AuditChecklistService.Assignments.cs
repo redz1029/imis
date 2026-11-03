@@ -86,6 +86,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                 var roster = await _dbContext.Set<AuditorTeams>()
                     .AsNoTracking()
                     .Include(t => t.Auditor)
+                        .ThenInclude(a => a!.User)
                     .Where(t => !t.IsDeleted && t.TeamId == teamId.Value && t.AuditorId != null && t.Auditor != null)
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
@@ -100,7 +101,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                     members[auditorId] = new TeamMember
                     {
                         AuditorId = auditorId,
-                        Name = row.Auditor!.Name,
+                        Name = AuditorName(row.Auditor!),
                         IsLeader = row.IsTeamLeader,
                         UserId = row.Auditor.UserId
                     };
@@ -116,12 +117,13 @@ namespace IMIS.Persistence.AuditChecklistModule
             {
                 var extras = await _dbContext.Set<Auditor>()
                     .AsNoTracking()
+                    .Include(a => a.User)
                     .Where(a => !a.IsDeleted && extraAuditorIds.Contains(a.Id))
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
                 foreach (var a in extras)
                 {
-                    members[a.Id] = new TeamMember { AuditorId = a.Id, Name = a.Name, IsLeader = false, UserId = a.UserId };
+                    members[a.Id] = new TeamMember { AuditorId = a.Id, Name = AuditorName(a), IsLeader = false, UserId = a.UserId };
                 }
             }
 
@@ -135,6 +137,7 @@ namespace IMIS.Persistence.AuditChecklistModule
             var assignments = await _dbContext.Set<AuditChecklistClauseAssignment>()
                 .AsNoTracking()
                 .Include(a => a.Auditor)
+                    .ThenInclude(x => x!.User)
                 .Where(a => a.AuditScheduleId == auditScheduleId && !a.IsDeleted)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -173,6 +176,23 @@ namespace IMIS.Persistence.AuditChecklistModule
                 IsLeader = isLeader,
                 RestrictedAuditorId = restrictedAuditorId
             };
+        }
+
+        /// <summary>
+        /// The auditor's real name, from their user account. The Auditor row's own
+        /// Name is only a placeholder ("Auditor 34"), so it is the fallback.
+        /// </summary>
+        private static string AuditorName(Auditor auditor)
+        {
+            var user = auditor.User;
+            if (user != null)
+            {
+                var full = string.Join(" ", new[] { user.Prefix, user.FirstName, user.MiddleName, user.LastName, user.Suffix }
+                    .Where(p => !string.IsNullOrWhiteSpace(p)));
+                if (!string.IsNullOrWhiteSpace(full)) return full;
+                if (!string.IsNullOrWhiteSpace(user.UserName)) return user.UserName!;
+            }
+            return auditor.Name;
         }
 
         private Task<bool> IsInRoleAsync(string userId, string roleName, CancellationToken cancellationToken)
@@ -223,7 +243,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                 if (assignment == null) continue;
 
                 row.AssignedAuditorId = assignment.AuditorId;
-                row.AssignedAuditorName = assignment.Auditor?.Name;
+                row.AssignedAuditorName = assignment.Auditor == null ? null : AuditorName(assignment.Auditor);
             }
 
             if (ctx.RestrictedAuditorId is int auditorId)
@@ -267,7 +287,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                         ClauseRef = c.IsoStandard!.ClauseRef.Trim(),
                         Particulars = c.IsoStandard.Particulars,
                         AssignedAuditorId = assignment?.AuditorId,
-                        AssignedAuditorName = assignment?.Auditor?.Name,
+                        AssignedAuditorName = assignment?.Auditor == null ? null : AuditorName(assignment.Auditor),
                         QuestionCount = mine.Count,
                         AnsweredCount = mine.Count(r => r.Answered)
                     };
