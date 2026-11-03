@@ -187,6 +187,11 @@ namespace IMIS.Persistence.AuditChecklistModule
             var existing = (await _repository.GetByAuditScheduleIdWithScheduleAsync(auditScheduleId, cancellationToken).ConfigureAwait(false)).ToList();
             if (existing.Any())
             {
+                if (await RemoveOutOfScopeRowsAsync(auditScheduleId, cancellationToken).ConfigureAwait(false))
+                {
+                    existing = (await _repository.GetByAuditScheduleIdWithScheduleAsync(auditScheduleId, cancellationToken).ConfigureAwait(false)).ToList();
+                }
+
                 return existing
                     .Select(x => new AuditChecklistDto(x))
                     .OrderBy(d => d.Criteria ?? string.Empty, new ClauseNumberComparer());
@@ -292,6 +297,51 @@ namespace IMIS.Persistence.AuditChecklistModule
         }
 
         /// <summary>
+        /// Checklists generated before the clause expansion was corrected still
+        /// hold questions of clauses the plan never assigned. Soft-deletes those
+        /// rows, but only while they are untouched (no answer, no remarks), so
+        /// nothing an auditor has filled in is ever lost. Returns true when any
+        /// row was removed.
+        /// </summary>
+        private async Task<bool> RemoveOutOfScopeRowsAsync(int auditScheduleId, CancellationToken cancellationToken)
+        {
+            var entryId = await _dbContext.Set<AuditSchedule>()
+                .AsNoTracking()
+                .Where(s => s.Id == auditScheduleId && !s.IsDeleted)
+                .Select(s => s.AuditPlanEntryId)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (entryId <= 0) return false;
+
+            var links = await _dbContext.Set<IsoStandardAuditPlan>()
+                .AsNoTracking()
+                .Include(sp => sp.IsoStandard)
+                .Where(sp => sp.AuditPlanEntryId == entryId && !sp.IsDeleted && sp.IsoStandardId != null)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (links.Count == 0) return false;
+
+            var allowed = new HashSet<long>(
+                await ExpandWithNestedStandardIdsAsync(links, cancellationToken).ConfigureAwait(false));
+
+            var stale = (await _dbContext.Set<AuditChecklist>()
+                    .Include(c => c.AuditChecklistQNA)
+                    .Where(c => c.AuditScheduleId == auditScheduleId && !c.IsDeleted &&
+                                c.Conforming == null && c.AuditChecklistQNA != null)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false))
+                .Where(c => string.IsNullOrWhiteSpace(c.FindingAndRemarks) &&
+                            c.AuditChecklistQNA!.IsoStandardId.HasValue &&
+                            !allowed.Contains(c.AuditChecklistQNA.IsoStandardId.Value))
+                .ToList();
+            if (stale.Count == 0) return false;
+
+            foreach (var row in stale) row.IsDeleted = true;
+            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return true;
+        }
+
+        /// <summary>
         /// Expands explicitly assigned ISO standard ids to include every
         /// standard nested under an assigned clause. Matching is done by
         /// ClauseRef prefix (e.g. assigning "4" also covers "4.1", "4.2",
@@ -349,6 +399,14 @@ namespace IMIS.Persistence.AuditChecklistModule
                     .ConfigureAwait(false);
                 foreach (var a in assignedRefs)
                 {
+                    // A parent clause whose own sub-clauses are assigned
+                    // explicitly (e.g. "4" next to "4.1", "4.2", "4.3") covers
+                    // only what is listed; expanding it would drag in every
+                    // other sub-clause of the chapter (4.4.x ...) that nobody
+                    // assigned.
+                    if (assignedRefs.Any(b => b.StartsWith(a + ".", StringComparison.OrdinalIgnoreCase)))
+                        continue;
+
                     foreach (var s in all)
                     {
                         if (string.IsNullOrWhiteSpace(s.ClauseRef)) continue;
