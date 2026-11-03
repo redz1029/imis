@@ -87,6 +87,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 }
             })
             .WithTags(_auditChecklist)
+            .CacheOutput(builder => builder.NoCache(), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             // CLAUSE ASSIGNMENT BOARD — the Team Leader divides the plan clauses
@@ -105,6 +106,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 }
             })
             .WithTags(_auditChecklist)
+            .CacheOutput(builder => builder.NoCache(), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             app.MapPut("/schedule/{auditScheduleId:int}/assignments", async (int auditScheduleId, [FromBody] List<AuditChecklistAssignmentRequestItem>? body, IAuditChecklistService service, IOutputCacheStore cache, HttpContext httpContext, CancellationToken cancellationToken) =>
