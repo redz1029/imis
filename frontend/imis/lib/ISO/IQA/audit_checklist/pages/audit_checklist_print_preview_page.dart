@@ -42,13 +42,9 @@ Future<void> openAuditChecklistPrintPreview(
 // =============================================================================
 // Layout constants (points)
 // =============================================================================
-const String _kLogoCrmc = 'assets/crmc_logo.png';
-const String _kLogoIso = 'assets/iso_tuv_certified.jpg';
+const String _kLogoCrmc = 'assets/CRMCLogo.png';
+const String _kLogoIso = 'assets/TR-Testmark.jpg';
 const String _kFormCode = 'QP-03-F-05 Rev. 0';
-
-/// The scanned checklist has no TÜV mark in the letterhead. Set to true to add
-/// it on the right, as in your Audit Programme preview.
-const bool _kShowIsoLogo = false;
 
 const double _kML = 38, _kMR = 38, _kMT = 26, _kMB = 26;
 const double _kBorderW = 0.8;
@@ -62,7 +58,7 @@ const double _kPadY = 3;
 
 /// Square crop box for the CRMC seal (seal ~3/4 of it). Change only this
 /// number to make the seal larger or smaller.
-const double _kLogoBox = 94;
+const double _kLogoBox = 86;
 const double _kTitleH = 30;
 const double _kTblHdrH = 32;
 const double _kMinRowH = 22;
@@ -207,7 +203,7 @@ Future<_PdfAssets> _loadAssets() async {
     bold: bold,
     unicode: unicode,
     crmc: await logo(_kLogoCrmc),
-    iso: _kShowIsoLogo ? await logo(_kLogoIso) : null,
+    iso: await logo(_kLogoIso),
   );
 }
 

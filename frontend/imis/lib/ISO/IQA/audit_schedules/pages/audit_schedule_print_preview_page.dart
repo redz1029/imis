@@ -40,8 +40,8 @@ Future<void> openAuditSchedulePrintPreview(
 // =============================================================================
 // Constants
 // =============================================================================
-const String _kLogoCrmc = 'assets/crmc_logo.png';
-const String _kLogoIso = 'assets/iso_tuv_certified.jpg';
+const String _kLogoCrmc = 'assets/CRMCLogo.png';
+const String _kLogoIso = 'assets/TR-Testmark.jpg';
 
 /// Form code printed at the bottom-right of the original form.
 const String _kFormBase = 'QP-03-F-03';
