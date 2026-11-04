@@ -71,6 +71,26 @@ class ChecklistClauseAssignment {
       );
 }
 
+/// A library question that can still be added under a clause (the dropdown).
+class ChecklistLibraryQuestion {
+  final int id;
+  final String question;
+  final String clauseRef;
+
+  const ChecklistLibraryQuestion({
+    required this.id,
+    required this.question,
+    this.clauseRef = '',
+  });
+
+  factory ChecklistLibraryQuestion.fromJson(Map<String, dynamic> json) =>
+      ChecklistLibraryQuestion(
+        id: (json['id'] as num?)?.toInt() ?? 0,
+        question: (json['question'] as String?) ?? '',
+        clauseRef: (json['clauseRef'] as String?) ?? '',
+      );
+}
+
 class ChecklistAuditor {
   final int auditorId;
   final String name;

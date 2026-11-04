@@ -1,4 +1,5 @@
 using IMIS.Application.AuditChecklistModule;
+using IMIS.Application.IQASignatoryModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -410,6 +411,302 @@ namespace IMIS.Persistence.AuditChecklistModule
             return (true, null);
         }
 
+        // ------------------------------------------------------------------
+        // Questions. The checklist is written by the auditors: each one adds the
+        // questions of the clauses assigned to them, picking from the library or
+        // typing their own. The same question is never added twice.
+        // ------------------------------------------------------------------
+        private const int MaxQuestionLength = 1000;
+
+        private static string NormalizeQuestion(string? text) =>
+            string.Join(' ', (text ?? string.Empty).Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+        private static bool SameQuestion(string? a, string? b) =>
+            string.Equals(NormalizeQuestion(a), NormalizeQuestion(b), StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>Null when the user may write the questions of the clause: an Administrator, the team leader, or the clause's own auditor.</summary>
+        private static string? ClauseWriteError(AssignmentContext ctx, IsoStandardAuditPlan clause)
+        {
+            if (ctx.CanAssign) return null;
+
+            var assignment = ctx.Assignments.FirstOrDefault(a => a.IsoStandardId == clause.IsoStandardId);
+            if (ctx.RestrictedAuditorId is int me && assignment != null && assignment.AuditorId == me)
+                return null;
+
+            return "This clause is not assigned to you.";
+        }
+
+        /// <summary>
+        /// The library standards whose questions belong to a plan clause: the clause
+        /// itself plus its sub-clauses, unless the plan lists sub-clauses of its own
+        /// (then each of those owns its questions, as in the checklist generation).
+        /// </summary>
+        private async Task<List<long>> ClauseStandardIdsAsync(
+            AssignmentContext ctx, IsoStandardAuditPlan clause, CancellationToken cancellationToken)
+        {
+            var own = clause.IsoStandard!.ClauseRef.Trim();
+            var hasListedChild = ctx.PlanClauses.Any(c =>
+                c.IsoStandard!.ClauseRef.Trim().StartsWith(own + ".", StringComparison.OrdinalIgnoreCase));
+            if (hasListedChild) return new List<long> { clause.IsoStandardId!.Value };
+
+            return await ExpandWithNestedStandardIdsAsync(new[] { clause }, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<(List<AuditChecklistLibraryQuestionDto>? Items, string? Error)> GetClauseQuestionsAsync(
+            int auditScheduleId, long isoStandardId, string? userId, CancellationToken cancellationToken)
+        {
+            var ctx = await LoadAssignmentContextAsync(auditScheduleId, userId, cancellationToken).ConfigureAwait(false);
+            if (ctx == null) return (null, "Audit schedule not found.");
+
+            var clause = ctx.PlanClauses.FirstOrDefault(c => c.IsoStandardId == isoStandardId);
+            if (clause == null) return (null, "The clause is not part of this audit plan entry.");
+
+            var error = ClauseWriteError(ctx, clause);
+            if (error != null) return (null, error);
+
+            var standardIds = await ClauseStandardIdsAsync(ctx, clause, cancellationToken).ConfigureAwait(false);
+
+            var inChecklist = await _dbContext.Set<AuditChecklist>()
+                .AsNoTracking()
+                .Where(c => c.AuditScheduleId == auditScheduleId && !c.IsDeleted && c.AuditChecklistQNA != null)
+                .Select(c => new { c.AuditChecklistQNAId, c.AuditChecklistQNA!.Question })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            var usedIds = inChecklist.Select(r => r.AuditChecklistQNAId).ToHashSet();
+            var usedTexts = inChecklist.Select(r => NormalizeQuestion(r.Question).ToLowerInvariant()).ToHashSet();
+
+            var library = await _dbContext.Set<AuditChecklistQNA>()
+                .AsNoTracking()
+                .Include(q => q.IsoStandard)
+                .Where(q => !q.IsDeleted && q.IsoStandardId != null && standardIds.Contains(q.IsoStandardId.Value))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var seenTexts = new HashSet<string>();
+            var items = library
+                .OrderBy(q => q.IsoStandard?.ClauseRef ?? string.Empty, new ClauseNumberComparer())
+                .ThenBy(q => q.Id)
+                .Where(q => !usedIds.Contains(q.Id))
+                .Where(q =>
+                {
+                    var text = NormalizeQuestion(q.Question).ToLowerInvariant();
+                    return !usedTexts.Contains(text) && seenTexts.Add(text);
+                })
+                .Select(q => new AuditChecklistLibraryQuestionDto
+                {
+                    Id = q.Id,
+                    Question = NormalizeQuestion(q.Question),
+                    ClauseRef = q.IsoStandard?.ClauseRef?.Trim() ?? string.Empty
+                })
+                .ToList();
+
+            return (items, null);
+        }
+
+        public async Task<(bool Success, string? Error)> AddQuestionAsync(
+            int auditScheduleId, AuditChecklistAddQuestionRequest request, string? userId, CancellationToken cancellationToken)
+        {
+            if (request == null) return (false, "No question was provided.");
+
+            var ctx = await LoadAssignmentContextAsync(auditScheduleId, userId, cancellationToken).ConfigureAwait(false);
+            if (ctx == null) return (false, "Audit schedule not found.");
+
+            var clause = ctx.PlanClauses.FirstOrDefault(c => c.IsoStandardId == request.IsoStandardId);
+            if (clause == null) return (false, "The clause is not part of this audit plan entry.");
+
+            var error = ClauseWriteError(ctx, clause);
+            if (error != null) return (false, error);
+
+            var scheduleState = await IQAApprovalWorkflow.GetStateCodeAsync(
+                _dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, auditScheduleId, cancellationToken)
+                .ConfigureAwait(false);
+            if (scheduleState != IQAApprovalWorkflow.StateCodes.Confirmed &&
+                scheduleState != IQAApprovalWorkflow.StateCodes.Approved)
+            {
+                return (false, "The audit schedule must be confirmed by the Department Head (or approved) before its checklist is written.");
+            }
+
+            var entryId = await _dbContext.Set<AuditSchedule>()
+                .AsNoTracking()
+                .Where(s => s.Id == auditScheduleId && !s.IsDeleted)
+                .Select(s => s.AuditPlanEntryId)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (entryId <= 0) return (false, "Audit schedule not found.");
+
+            var standardIds = await ClauseStandardIdsAsync(ctx, clause, cancellationToken).ConfigureAwait(false);
+
+            AuditChecklistQNA? question;
+            if (request.QuestionId is int questionId)
+            {
+                question = await _dbContext.Set<AuditChecklistQNA>()
+                    .FirstOrDefaultAsync(q => q.Id == questionId && !q.IsDeleted, cancellationToken)
+                    .ConfigureAwait(false);
+                if (question?.IsoStandardId == null || !standardIds.Contains(question.IsoStandardId.Value))
+                    return (false, "That question does not belong to this clause.");
+            }
+            else
+            {
+                var text = NormalizeQuestion(request.Question);
+                if (text.Length == 0) return (false, "Type the question to add.");
+                if (text.Length > MaxQuestionLength)
+                    return (false, $"A question can have at most {MaxQuestionLength} characters.");
+
+                // The same wording already in the library for this clause is reused.
+                var sameClause = await _dbContext.Set<AuditChecklistQNA>()
+                    .Where(q => !q.IsDeleted && q.IsoStandardId == clause.IsoStandardId)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                question = sameClause.FirstOrDefault(q => SameQuestion(q.Question, text));
+                if (question == null)
+                {
+                    question = new AuditChecklistQNA
+                    {
+                        Id = 0,
+                        Question = text,
+                        IsoStandardId = clause.IsoStandardId
+                    };
+                }
+            }
+
+            var inChecklist = await _dbContext.Set<AuditChecklist>()
+                .AsNoTracking()
+                .Where(c => c.AuditScheduleId == auditScheduleId && !c.IsDeleted && c.AuditChecklistQNA != null)
+                .Select(c => new
+                {
+                    c.AuditChecklistQNAId,
+                    c.AuditChecklistQNA!.Question,
+                    ClauseRef = c.AuditChecklistQNA!.IsoStandard!.ClauseRef
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            // A clause has one question: reword it instead of adding another.
+            if (inChecklist.Any(r => MatchPlanClause(r.ClauseRef, ctx.PlanClauses)?.IsoStandardId == clause.IsoStandardId))
+                return (false, "This clause already has its question. Edit it or pick another one from its dropdown.");
+
+            if (inChecklist.Any(r => (question.Id != 0 && r.AuditChecklistQNAId == question.Id) ||
+                                     SameQuestion(r.Question, question.Question)))
+            {
+                return (false, "This question is already in the checklist.");
+            }
+
+            if (question.Id == 0)
+                _dbContext.Set<AuditChecklistQNA>().Add(question);
+
+            _dbContext.Set<AuditChecklist>().Add(new AuditChecklist
+            {
+                Id = 0,
+                AuditPlanEntryId = entryId,
+                AuditScheduleId = auditScheduleId,
+                AuditChecklistQNA = question,
+                AuditChecklistQNAId = question.Id,
+                Conforming = null,
+                FindingAndRemarks = null
+            });
+
+            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return (true, null);
+        }
+
+        public async Task<(bool Success, string? Error)> RemoveQuestionAsync(
+            int auditScheduleId, int checklistId, string? userId, CancellationToken cancellationToken)
+        {
+            var ctx = await LoadAssignmentContextAsync(auditScheduleId, userId, cancellationToken).ConfigureAwait(false);
+            if (ctx == null) return (false, "Audit schedule not found.");
+
+            var row = await _dbContext.Set<AuditChecklist>()
+                .Include(c => c.AuditChecklistQNA)
+                    .ThenInclude(q => q!.IsoStandard)
+                .FirstOrDefaultAsync(c => c.Id == checklistId && c.AuditScheduleId == auditScheduleId && !c.IsDeleted,
+                    cancellationToken)
+                .ConfigureAwait(false);
+            if (row == null) return (false, "Checklist question not found.");
+
+            var clause = MatchPlanClause(row.AuditChecklistQNA?.IsoStandard?.ClauseRef, ctx.PlanClauses);
+            var error = clause != null
+                ? ClauseWriteError(ctx, clause)
+                : (ctx.CanAssign ? null : "This question is not part of a clause assigned to you.");
+            if (error != null) return (false, error);
+
+            if (row.Conforming != null || !string.IsNullOrWhiteSpace(row.FindingAndRemarks))
+                return (false, "Clear the answer and the remarks of this question first, then remove it.");
+
+            row.IsDeleted = true;
+            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return (true, null);
+        }
+
+        /// <summary>
+        /// An auditor may reword a question in the table. The shared library
+        /// question is never edited (other schedules use it): the row is pointed at
+        /// the library question of the same clause with that wording, or at a new
+        /// one. Returns an error message, or null when the row is fine to save.
+        /// </summary>
+        private async Task<string?> ApplyQuestionEditAsync(AuditChecklistDto dto, CancellationToken cancellationToken)
+        {
+            if (dto.Id <= 0 || dto.ItemsAndQuestions == null) return null;
+
+            var stored = await _dbContext.Set<AuditChecklist>()
+                .AsNoTracking()
+                .Where(c => c.Id == dto.Id && !c.IsDeleted)
+                .Select(c => new
+                {
+                    c.AuditScheduleId,
+                    c.AuditChecklistQNAId,
+                    Question = c.AuditChecklistQNA!.Question,
+                    IsoStandardId = c.AuditChecklistQNA!.IsoStandardId
+                })
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (stored == null) return "Checklist item not found.";
+
+            // The link to the library question is the server's to decide, not the client's.
+            dto.AuditChecklistQNAId = stored.AuditChecklistQNAId;
+
+            var text = NormalizeQuestion(dto.ItemsAndQuestions);
+            if (SameQuestion(text, stored.Question))
+            {
+                dto.ItemsAndQuestions = stored.Question;
+                return null;
+            }
+
+            if (text.Length == 0) return "The question cannot be empty.";
+            if (text.Length > MaxQuestionLength)
+                return $"A question can have at most {MaxQuestionLength} characters.";
+
+            var others = await _dbContext.Set<AuditChecklist>()
+                .AsNoTracking()
+                .Where(c => c.AuditScheduleId == stored.AuditScheduleId && c.Id != dto.Id &&
+                            !c.IsDeleted && c.AuditChecklistQNA != null)
+                .Select(c => c.AuditChecklistQNA!.Question)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (others.Any(q => SameQuestion(q, text)))
+                return "This question is already in the checklist.";
+
+            var sameClause = await _dbContext.Set<AuditChecklistQNA>()
+                .Where(q => !q.IsDeleted && q.IsoStandardId == stored.IsoStandardId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            var question = sameClause.FirstOrDefault(q => SameQuestion(q.Question, text));
+            if (question == null)
+            {
+                question = new AuditChecklistQNA
+                {
+                    Id = 0,
+                    Question = text,
+                    IsoStandardId = stored.IsoStandardId
+                };
+                _dbContext.Set<AuditChecklistQNA>().Add(question);
+                await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            dto.AuditChecklistQNAId = question.Id;
+            dto.ItemsAndQuestions = NormalizeQuestion(question.Question);
+            return null;
+        }
+
         private async Task<(bool Success, string? Error)> SaveChecklistRowForUserAsync(
             AuditChecklistDto dto, string? userId, CancellationToken cancellationToken)
         {
@@ -442,6 +739,9 @@ namespace IMIS.Persistence.AuditChecklistModule
             // Team Leader, Administrator and every non-auditor role: unchanged behavior.
             if (ctx?.RestrictedAuditorId is not int auditorId)
             {
+                var editError = await ApplyQuestionEditAsync(dto, cancellationToken).ConfigureAwait(false);
+                if (editError != null) return (false, editError);
+
                 var saved = await SaveChecklistAsync(dto, cancellationToken).ConfigureAwait(false);
                 return saved ? (true, null) : (false, "Checklist item not found.");
             }
@@ -463,6 +763,10 @@ namespace IMIS.Persistence.AuditChecklistModule
             if (entity == null)
                 return (false, "Checklist item not found.");
 
+            var questionError = await ApplyQuestionEditAsync(dto, cancellationToken).ConfigureAwait(false);
+            if (questionError != null) return (false, questionError);
+
+            entity.AuditChecklistQNAId = dto.AuditChecklistQNAId;
             entity.Conforming = dto.Conforming;
             entity.FindingAndRemarks = dto.FindingAndRemarks;
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

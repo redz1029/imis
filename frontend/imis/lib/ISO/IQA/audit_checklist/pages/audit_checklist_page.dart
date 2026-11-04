@@ -47,6 +47,8 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   List<AuditChecklist> _rows = [];
   final Map<int, TextEditingController> _remarksControllers = {};
   final Map<int, TextEditingController> _itemsControllers = {};
+  // Question typed for a clause that has none yet, by plan clause id.
+  final Map<int, TextEditingController> _draftControllers = {};
   final TextEditingController _auditeeTextController = TextEditingController();
   bool _isSaving = false;
   bool _dirty = false;
@@ -123,6 +125,9 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     for (final c in _itemsControllers.values) {
       c.dispose();
     }
+    for (final c in _draftControllers.values) {
+      c.dispose();
+    }
     _auditeeTextController.dispose();
     super.dispose();
   }
@@ -170,9 +175,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
           ..clear()
           ..addAll(items);
         _rows = rows;
-        if (rows.isEmpty) {
-          _noClauses = true;
-        } else {
+        if (rows.isNotEmpty) {
           _auditeeTextController.text =
               rows.first.auditees ?? rows.first.auditeeName ?? '';
         }
@@ -180,9 +183,16 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
 
       await _loadAssignments();
 
+      // A new checklist has no rows: the auditors write the questions of their
+      // clauses. Only when there is no clause at all is there nothing to show.
+      if (mounted && rows.isEmpty && (_assignments?.clauses.isEmpty ?? true)) {
+        setState(() => _noClauses = true);
+      }
+
       // No list summary supplied: quietly load it for the
-      // auditors / office / scope fallbacks.
-      if (_summary == null && rows.isNotEmpty) {
+      // auditors / office / scope fallbacks (also the only source of the
+      // header while the checklist has no rows yet).
+      if (_summary == null) {
         try {
           final all = await _service.getSchedulesWithChecklistData();
           final match = all.where((s) => s.auditScheduleId == auditScheduleId);
@@ -223,6 +233,101 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     } catch (e) {
       // The assignment board is an add-on: the checklist itself still works.
       debugPrint('Failed to load clause assignments: $e');
+    }
+  }
+
+  // ---- Questions: each auditor writes the questions of their own clauses ------
+  bool get _canWriteQuestions {
+    final a = _assignments;
+    if (a == null) return false;
+    final mayWrite =
+        permissionService.hasPermission(AppPermissions.addAuditChecklist) ||
+            permissionService.hasPermission(AppPermissions.editAuditChecklist);
+    // The Team Leader / Administrator (canAssign) write any clause, an auditor
+    // only the clauses assigned to them (the board only lists those).
+    return mayWrite && (a.canAssign || a.ownClausesOnly);
+  }
+
+  /// Reloads the rows after a question was added or removed, keeping what the
+  /// user already typed (unsaved answers and remarks) on the rows that stay.
+  Future<void> _reloadRows() async {
+    final fresh =
+        await _service.getOrGenerateForAuditSchedule(widget.auditScheduleId);
+    if (!mounted) return;
+    setState(() {
+      final current = {for (final r in _rows) r.id: r};
+      final freshIds = {for (final r in fresh) r.id};
+
+      for (final id in _remarksControllers.keys.toList()) {
+        if (!freshIds.contains(id)) _remarksControllers.remove(id)?.dispose();
+      }
+      for (final id in _itemsControllers.keys.toList()) {
+        if (!freshIds.contains(id)) _itemsControllers.remove(id)?.dispose();
+      }
+      for (final r in fresh) {
+        _remarksControllers.putIfAbsent(
+          r.id,
+          () => TextEditingController(text: r.findingAndRemarks ?? ''),
+        );
+        _itemsControllers.putIfAbsent(
+          r.id,
+          () => TextEditingController(text: r.itemsAndQuestions ?? ''),
+        );
+      }
+      _rows = [for (final r in fresh) current[r.id] ?? r];
+      _noClauses = false;
+      if (_auditeeTextController.text.isEmpty && fresh.isNotEmpty) {
+        _auditeeTextController.text =
+            fresh.first.auditees ?? fresh.first.auditeeName ?? '';
+      }
+    });
+    await _loadAssignments();
+  }
+
+  Future<void> _removeQuestion(int index) async {
+    final row = _rows[index];
+    final remarks = _remarksControllers[row.id]?.text.trim() ?? '';
+    if (row.conforming != null || remarks.isNotEmpty) {
+      MotionToast.warning(
+        toastAlignment: Alignment.topCenter,
+        description: const Text(
+          'Clear the answer and the remarks of this question first, then remove it.',
+        ),
+      ).show(context);
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove question?'),
+        content: Text(
+          (row.itemsAndQuestions ?? '').trim(),
+          style: const TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: primaryColor)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove', style: TextStyle(color: primaryColor)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await _service.removeQuestion(widget.auditScheduleId, row.id);
+      await _reloadRows();
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text(e.toString().replaceFirst('Exception: ', '')),
+      ).show(context);
     }
   }
 
@@ -321,6 +426,23 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
       var ncarsCreated = 0;
       var ncarsUpdated = 0;
       var ncarsWithdrawn = 0;
+
+      // Questions typed into the empty boxes of the clauses are created first.
+      final drafts = {
+        for (final e in _draftControllers.entries)
+          if (e.value.text.trim().isNotEmpty) e.key: e.value.text.trim(),
+      };
+      if (drafts.isNotEmpty) {
+        for (final e in drafts.entries) {
+          await _service.addQuestion(
+            widget.auditScheduleId,
+            e.key,
+            question: e.value,
+          );
+          _draftControllers.remove(e.key)?.dispose();
+        }
+        await _reloadRows();
+      }
 
       for (var i = 0; i < _rows.length; i++) {
         final id = _rows[i].id;
@@ -653,13 +775,6 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
             : 'No ISO clauses are assigned to this audit schedule.',
       );
     }
-    if (_rows.isEmpty) {
-      return _messageView(
-        icon: Icons.info_outline,
-        message: 'Unable to load audit checklist.',
-      );
-    }
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= _wideBreakpoint;
@@ -987,7 +1102,11 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
   }
 
   Widget _buildItemsCard(bool wide) {
-    final indices = _visibleIndices;
+    // Every clause is listed once with its questions under it. A clause with
+    // no question yet stays visible (to add one) only while nothing is filtered.
+    final groups = _clauseGroups(_visibleIndices)
+        .where((g) => g.rows.isNotEmpty || _filter == _RowFilter.all)
+        .toList();
     final total = _rows.length;
     final progress = total == 0 ? 0.0 : _answeredCount / total;
 
@@ -1042,13 +1161,13 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
             ],
           ),
           const SizedBox(height: 16),
-          if (indices.isEmpty)
+          if (groups.isEmpty)
             _buildNoMatch()
           else if (wide)
-            _buildWideTable(indices)
+            _buildWideGroups(groups)
           else
             Column(
-              children: [for (final i in indices) _buildClauseCard(i)],
+              children: [for (final g in groups) _buildNarrowGroup(g)],
             ),
         ],
       ),
@@ -1123,8 +1242,158 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     );
   }
 
+  // ---- Clause groups: every clause once, its questions under it --------------
+  List<_ClauseGroup> _clauseGroups(List<int> visible) {
+    final groups = <_ClauseGroup>[];
+    final placed = <int>{};
+    for (final c
+        in _assignments?.clauses ?? const <ChecklistClauseAssignment>[]) {
+      final rows = [
+        for (final i in visible)
+          if (_rows[i].planClauseId == c.isoStandardId) i,
+      ];
+      placed.addAll(rows);
+      groups.add(_ClauseGroup(c, rows));
+    }
+    final rest = [
+      for (final i in visible)
+        if (!placed.contains(i)) i,
+    ];
+    if (rest.isNotEmpty) groups.add(_ClauseGroup(null, rest));
+    return groups;
+  }
+
+  /// Band above the questions of a clause: the clause, who answers it and the
+  /// button that adds a question to it.
+  Widget _buildClauseBand(_ClauseGroup g) {
+    final c = g.clause!;
+    final auditor = (c.assignedAuditorName ?? '').trim();
+    final particulars = (c.particulars ?? '').trim();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: primaryColor.withValues(alpha: 0.06),
+        border: const Border(
+          top: BorderSide(color: kBorder),
+          bottom: BorderSide(color: kBorder),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              c.clauseRef,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (particulars.isNotEmpty)
+                  Text(
+                    particulars,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                Text(
+                  auditor.isEmpty
+                      ? 'Not assigned to an auditor yet'
+                      : 'Auditor: $auditor',
+                  style: const TextStyle(fontSize: 11, color: kMuted),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// A clause with no question yet: one empty question box (with its dropdown)
+  /// for those who may write it, a plain note for everyone else.
+  Widget _buildEmptyClause(_ClauseGroup g, {required bool wide}) {
+    final clause = g.clause;
+    if (clause == null || !_canWriteQuestions) {
+      return const Padding(
+        padding: EdgeInsets.all(14),
+        child: Text(
+          'No question yet for this clause.',
+          style: TextStyle(fontSize: 12, color: kMuted),
+        ),
+      );
+    }
+
+    if (!wide) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: _draftQuestionField(clause, label: 'ITEMS / QUESTIONS'),
+      );
+    }
+
+    return Table(
+      defaultVerticalAlignment: TableCellVerticalAlignment.top,
+      columnWidths: _wideColumns,
+      children: [
+        TableRow(
+          children: [
+            TableCell(
+              verticalAlignment: TableCellVerticalAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  clause.clauseRef,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: primaryColor,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: _draftQuestionField(clause, dense: true),
+            ),
+            const TableCell(
+              verticalAlignment: TableCellVerticalAlignment.middle,
+              child: Center(
+                child: Text(
+                  'Save to answer',
+                  style: TextStyle(fontSize: 11, color: kMuted),
+                ),
+              ),
+            ),
+            const SizedBox.shrink(),
+          ],
+        ),
+      ],
+    );
+  }
+
   // ---- WIDE layout: the CRMC form as an editable table ----------------------
-  Widget _buildWideTable(List<int> indices) {
+  static const Map<int, TableColumnWidth> _wideColumns = {
+    0: FixedColumnWidth(110),
+    1: FlexColumnWidth(3),
+    2: FixedColumnWidth(120),
+    3: FlexColumnWidth(2.2),
+  };
+
+  Widget _buildWideGroups(List<_ClauseGroup> groups) {
     Widget headerCell(String text) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           child: Text(
@@ -1138,42 +1407,204 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
           ),
         );
 
+    String criteriaOf(int index) => (_rows[index].criteria ?? '').trim();
+
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: kBorder),
       ),
-      child: Table(
-        defaultVerticalAlignment: TableCellVerticalAlignment.top,
-        columnWidths: const {
-          0: FixedColumnWidth(110),
-          1: FlexColumnWidth(3),
-          2: FixedColumnWidth(120),
-          3: FlexColumnWidth(2.2),
-        },
-        border: TableBorder(
-          horizontalInside: BorderSide(
-            color: Colors.grey.withValues(alpha: 0.2),
-          ),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TableRow(
-            decoration: const BoxDecoration(color: Color(0xFFF7F5F5)),
+          Table(
+            columnWidths: _wideColumns,
             children: [
-              headerCell('CRITERIA/\nCLAUSE'),
-              headerCell('ITEMS/QUESTIONS'),
-              headerCell('CONFORMING\nY/N'),
-              headerCell('FINDINGS/ REMARKS'),
+              TableRow(
+                decoration: const BoxDecoration(color: Color(0xFFF7F5F5)),
+                children: [
+                  headerCell('CRITERIA/\nCLAUSE'),
+                  headerCell('ITEMS/QUESTIONS'),
+                  headerCell('CONFORMING\nY/N'),
+                  headerCell('FINDINGS/ REMARKS'),
+                ],
+              ),
             ],
           ),
-          for (final i in indices) _buildWideRow(i),
+          for (final g in groups) ...[
+            if (g.clause != null) _buildClauseBand(g),
+            if (g.rows.isEmpty)
+              _buildEmptyClause(g, wide: true)
+            else
+              Table(
+                defaultVerticalAlignment: TableCellVerticalAlignment.top,
+                columnWidths: _wideColumns,
+                border: TableBorder(
+                  horizontalInside: BorderSide(
+                    color: Colors.grey.withValues(alpha: 0.2),
+                  ),
+                ),
+                children: [
+                  for (var p = 0; p < g.rows.length; p++)
+                    _buildWideRow(
+                      g.rows[p],
+                      // The clause is printed once per run of its questions,
+                      // like the CRMC form, instead of on every row.
+                      showClause: p == 0 ||
+                          criteriaOf(g.rows[p]) != criteriaOf(g.rows[p - 1]),
+                    ),
+                ],
+              ),
+          ],
         ],
       ),
     );
   }
 
-  TableRow _buildWideRow(int index) {
+  /// The question of a row: type to reword it, or open the dropdown to swap it
+  /// for another library question of the same clause.
+  Widget _questionField(int index, {String? label, bool dense = false}) {
+    final row = _rows[index];
+    return _questionInput(
+      _itemsControllers[row.id],
+      row.planClauseId,
+      label: label,
+      dense: dense,
+    );
+  }
+
+  /// The question box of a clause that has no question yet: filled in and saved
+  /// with the checklist, which creates the question.
+  Widget _draftQuestionField(
+    ChecklistClauseAssignment clause, {
+    String? label,
+    bool dense = false,
+  }) {
+    return _questionInput(
+      _draftFor(clause.isoStandardId),
+      clause.isoStandardId,
+      label: label,
+      dense: dense,
+      hint: 'Type the question, or pick one from the dropdown…',
+    );
+  }
+
+  TextEditingController _draftFor(int isoStandardId) =>
+      _draftControllers.putIfAbsent(isoStandardId, () => TextEditingController());
+
+  bool get _hasDrafts =>
+      _draftControllers.values.any((c) => c.text.trim().isNotEmpty);
+
+  Widget _questionInput(
+    TextEditingController? controller,
+    int? clauseId, {
+    String? label,
+    bool dense = false,
+    String? hint,
+  }) {
+    final decoration = _inputDecoration(label, dense: dense, hint: hint);
+
+    return TextField(
+      controller: controller,
+      readOnly: !_canWriteQuestions,
+      onChanged: (_) => _markDirty(),
+      minLines: 1,
+      maxLines: null,
+      maxLength: 1000,
+      buildCounter: (_, {required currentLength, required isFocused, maxLength}) =>
+          null,
+      keyboardType: TextInputType.multiline,
+      style: const TextStyle(fontSize: 13, height: 1.35),
+      decoration: decoration.copyWith(
+        suffixIcon: _canWriteQuestions && clauseId != null && controller != null
+            ? IconButton(
+                tooltip: 'Pick a question from the library',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _pickLibraryQuestion(clauseId, controller),
+                icon: const Icon(Icons.arrow_drop_down, color: primaryColor),
+              )
+            : null,
+      ),
+    );
+  }
+
+  /// Dropdown of the library questions of the row's clause that are not yet in
+  /// this checklist; the picked one replaces the text of the row.
+  Future<void> _pickLibraryQuestion(
+    int clauseId,
+    TextEditingController controller,
+  ) async {
+    List<ChecklistLibraryQuestion> library;
+    try {
+      library = await _service.getClauseQuestions(widget.auditScheduleId, clauseId);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        toastAlignment: Alignment.topCenter,
+        description: Text(e.toString().replaceFirst('Exception: ', '')),
+      ).show(context);
+      return;
+    }
+    if (!mounted) return;
+
+    if (library.isEmpty) {
+      MotionToast.info(
+        toastAlignment: Alignment.topCenter,
+        description: const Text(
+          'No other library question for this clause. Type your own in the field.',
+        ),
+      ).show(context);
+      return;
+    }
+
+    final picked = await showDialog<ChecklistLibraryQuestion>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(
+          'Pick a question',
+          style: const TextStyle(fontSize: 16, color: primaryColor),
+        ),
+        children: [
+          SizedBox(
+            width: 520,
+            height: 360,
+            child: ListView(
+              children: [
+                for (final q in library)
+                  ListTile(
+                    dense: true,
+                    title: Text(
+                      q.clauseRef.isEmpty ? q.question : '${q.clauseRef} · ${q.question}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    onTap: () => Navigator.pop(ctx, q),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() {
+      controller.text = picked.question;
+      _dirty = true;
+    });
+  }
+
+  Widget _removeButton(int index) {
+    return IconButton(
+      tooltip: 'Remove question',
+      visualDensity: VisualDensity.compact,
+      splashRadius: 18,
+      onPressed: () => _removeQuestion(index),
+      icon: Icon(Icons.delete_outline, size: 18, color: Colors.grey.shade600),
+    );
+  }
+
+  TableRow _buildWideRow(int index, {bool showClause = true}) {
     final row = _rows[index];
     final criteria = (row.criteria ?? '').trim();
 
@@ -1183,31 +1614,27 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
           verticalAlignment: TableCellVerticalAlignment.middle,
           child: Padding(
             padding: const EdgeInsets.all(8),
-            child: Text(
-              criteria.isEmpty ? '${index + 1}' : criteria,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-                color: primaryColor,
-              ),
-            ),
+            child: showClause
+                ? Text(
+                    criteria.isEmpty ? '${index + 1}' : criteria,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: primaryColor,
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
         ),
         Padding(
           padding: const EdgeInsets.all(8),
-          child: TextField(
-            controller: _itemsControllers[row.id],
-            onChanged: (_) => _markDirty(),
-            minLines: 1,
-            maxLines: null,
-            keyboardType: TextInputType.multiline,
-            style: const TextStyle(fontSize: 13, height: 1.35),
-            decoration: _inputDecoration(
-              null,
-              hint: 'Type the item / question…',
-              dense: true,
-            ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _questionField(index, dense: true)),
+              if (_canWriteQuestions) _removeButton(index),
+            ],
           ),
         ),
         TableCell(
@@ -1237,7 +1664,25 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
     );
   }
 
-  // ---- NARROW layout: one card per clause -----------------------------------
+  // ---- NARROW layout: one card per question ---------------------------------
+  Widget _buildNarrowGroup(_ClauseGroup g) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (g.clause != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: _buildClauseBand(g),
+            ),
+          ),
+        if (g.rows.isEmpty) _buildEmptyClause(g, wide: false),
+        for (final i in g.rows) _buildClauseCard(i),
+      ],
+    );
+  }
+
   Widget _buildClauseCard(int index) {
     final row = _rows[index];
     final criteria = (row.criteria ?? '').trim();
@@ -1289,21 +1734,11 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
                           '${index + 1}/${_rows.length}',
                           style: const TextStyle(fontSize: 11, color: kMuted),
                         ),
+                        if (_canWriteQuestions) _removeButton(index),
                       ],
                     ),
                     const SizedBox(height: 14),
-                    TextField(
-                      controller: _itemsControllers[row.id],
-                      onChanged: (_) => _markDirty(),
-                      minLines: 1,
-                      maxLines: null,
-                      keyboardType: TextInputType.multiline,
-                      style: const TextStyle(fontSize: 13, height: 1.35),
-                      decoration: _inputDecoration(
-                        'ITEMS / QUESTIONS',
-                        hint: 'Type the item / question…',
-                      ),
-                    ),
+                    _questionField(index, label: 'ITEMS / QUESTIONS'),
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
@@ -1341,7 +1776,10 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
         ) ||
         permissionService.hasPermission(AppPermissions.addAuditChecklist);
     final canSave =
-        canEdit && !_isSaving && !_isLoadingChecklist && _rows.isNotEmpty;
+        canEdit &&
+            !_isSaving &&
+            !_isLoadingChecklist &&
+            (_rows.isNotEmpty || _hasDrafts);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -1393,7 +1831,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
           Expanded(
             child: Align(
               alignment: Alignment.centerRight,
-              child: _rows.isEmpty
+              child: _rows.isEmpty && !_hasDrafts
                   ? const SizedBox.shrink()
                   : Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1426,4 +1864,12 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
       ),
     );
   }
+}
+/// One clause of the checklist with the rows (indexes into the page's rows) of
+/// its questions. [clause] is null for rows that match no listed clause.
+class _ClauseGroup {
+  const _ClauseGroup(this.clause, this.rows);
+
+  final ChecklistClauseAssignment? clause;
+  final List<int> rows;
 }

@@ -131,7 +131,10 @@ Future<_Data> _loadPrintData(int auditScheduleId) async {
   final all = await service.getOrGenerateForAuditSchedule(auditScheduleId);
   final rows = all.where((r) => !r.isDeleted).toList();
   if (rows.isEmpty) {
-    throw Exception('No ISO clauses are assigned to this audit schedule.');
+    throw Exception(
+      'No questions have been written in this checklist yet. The auditors '
+      'add the questions of their clauses before it can be printed.',
+    );
   }
 
   // Same fallback the checklist page uses: the schedule summary resolves the
@@ -380,6 +383,7 @@ class _AuditChecklistPrintPreviewPageState
 // =============================================================================
 class _RowSpec {
   const _RowSpec({
+    required this.key,
     required this.criteria,
     required this.items,
     required this.yn,
@@ -387,6 +391,8 @@ class _RowSpec {
     required this.h,
   });
 
+  /// The clause of the row; consecutive rows with the same key are one group.
+  final String key;
   final List<String> criteria;
   final List<String> items;
   final String yn;
@@ -603,6 +609,7 @@ class _ChecklistPdfBuilder {
             math.max(crit.length, math.max(items.length, rem.length)),
           );
           return _RowSpec(
+            key: c.criteria,
             criteria: crit,
             items: items,
             yn: c.conforming == null ? '' : (c.conforming! ? 'Y' : 'N'),
@@ -784,8 +791,9 @@ class _ChecklistPdfBuilder {
   pw.Widget _gridRow(
     double h,
     List<pw.Widget?> cells,
-    List<pw.Alignment> aligns,
-  ) {
+    List<pw.Alignment> aligns, {
+    bool openClauseBottom = false,
+  }) {
     return pw.Row(
       children: [
         for (var i = 0; i < 4; i++)
@@ -798,7 +806,8 @@ class _ChecklistPdfBuilder {
               border: pw.Border(
                 left: _bs,
                 right: i == 3 ? _bs : pw.BorderSide.none,
-                bottom: _bs,
+                // No line inside a clause: its cell runs down the group.
+                bottom: i == 0 && openClauseBottom ? pw.BorderSide.none : _bs,
               ),
             ),
             child: cells[i],
@@ -831,11 +840,15 @@ class _ChecklistPdfBuilder {
     );
   }
 
-  pw.Widget _dataRow(_RowSpec r) {
+  pw.Widget _dataRow(
+    _RowSpec r, {
+    bool showClause = true,
+    bool openClauseBottom = false,
+  }) {
     return _gridRow(
       r.h,
       [
-        r.criteria.isEmpty
+        r.criteria.isEmpty || !showClause
             ? null
             : _lines(r.criteria, align: pw.TextAlign.center),
         r.items.isEmpty ? null : _lines(r.items),
@@ -850,6 +863,7 @@ class _ChecklistPdfBuilder {
         pw.Alignment.center,
         pw.Alignment.centerLeft,
       ],
+      openClauseBottom: openClauseBottom,
     );
   }
 
@@ -957,7 +971,15 @@ class _ChecklistPdfBuilder {
         _title(),
         _headerBox(),
         _tableHeader(),
-        for (final r in rows) _dataRow(r),
+        // A clause is printed once, on the first row of its questions (and
+        // again at the top of a page its questions continue onto).
+        for (var i = 0; i < rows.length; i++)
+          _dataRow(
+            rows[i],
+            showClause: i == 0 || rows[i].key != rows[i - 1].key,
+            openClauseBottom:
+                i + 1 < rows.length && rows[i + 1].key == rows[i].key,
+          ),
         for (var i = 0; i < blanks; i++) _blankRow(),
         pw.Spacer(),
         _bottomBlock(),

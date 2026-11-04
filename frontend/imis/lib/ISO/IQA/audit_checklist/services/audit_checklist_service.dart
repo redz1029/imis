@@ -90,6 +90,57 @@ class AuditChecklistService {
     }
   }
 
+  /// Library questions of a clause that are not yet in this checklist.
+  Future<List<ChecklistLibraryQuestion>> getClauseQuestions(
+    int auditScheduleId,
+    int isoStandardId,
+  ) async {
+    final url = '${ApiEndpoint().auditChecklist}/schedule/$auditScheduleId'
+        '/clause/$isoStandardId/questions';
+    final response = await AuthenticatedRequest.get(dio, url);
+    if (response.statusCode == 200 && response.data is List) {
+      return (response.data as List)
+          .map((e) => ChecklistLibraryQuestion.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ))
+          .toList();
+    }
+    throw Exception(_errorMessage(response, 'Failed to load the questions.'));
+  }
+
+  /// Adds a question under a clause: a library question ([questionId]) or one
+  /// the auditor typed ([question]).
+  Future<void> addQuestion(
+    int auditScheduleId,
+    int isoStandardId, {
+    int? questionId,
+    String? question,
+  }) async {
+    final url = '${ApiEndpoint().auditChecklist}/schedule/$auditScheduleId/questions';
+    final response = await AuthenticatedRequest.post(
+      dio,
+      url,
+      data: {
+        'isoStandardId': isoStandardId,
+        'questionId': questionId,
+        'question': question,
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception(_errorMessage(response, 'Failed to add the question.'));
+    }
+  }
+
+  /// Removes an unanswered question from the checklist.
+  Future<void> removeQuestion(int auditScheduleId, int checklistId) async {
+    final url = '${ApiEndpoint().auditChecklist}/schedule/$auditScheduleId'
+        '/questions/$checklistId';
+    final response = await AuthenticatedRequest.delete(dio, url);
+    if (response.statusCode != 200) {
+      throw Exception(_errorMessage(response, 'Failed to remove the question.'));
+    }
+  }
+
   String _errorMessage(Response response, String fallback) {
     final data = response.data;
     if (data is Map && data['error'] != null) return data['error'].toString();

@@ -179,8 +179,8 @@ namespace IMIS.Persistence.AuditChecklistModule
         /// (the only reliable key for the whole flow). If checklist rows
         /// already exist for the schedule they are returned untouched —
         /// existing Conforming / FindingAndRemarks are preserved, no new
-        /// duplicate rows are created. Otherwise the rows are generated from
-        /// the schedule's AuditPlanEntry ISO clauses.
+        /// duplicate rows are created. A schedule with no rows yet returns an
+        /// empty checklist: the auditors add the questions of their clauses.
         /// </summary>
         private async Task<IEnumerable<AuditChecklistDto>> GetOrGenerateRowsForAuditScheduleAsync(int auditScheduleId, CancellationToken cancellationToken)
         {
@@ -236,64 +236,10 @@ namespace IMIS.Persistence.AuditChecklistModule
                     "A schedule must be confirmed by the Department Head (or approved) before generating its checklist.");
             }
 
-            var entry = schedule.AuditPlanEntry;
-            if (entry?.IsoStandardAuditPlans == null || !entry.IsoStandardAuditPlans.Any())
-            {
-                return Enumerable.Empty<AuditChecklistDto>();
-            }
-
-            // Expand the assigned clauses to every nested sub-clause
-            // (matched by ClauseRef prefix). The QNA library is keyed to
-            // specific standards, so a parent assignment like "4" or "4.4"
-            // would otherwise silently yield zero questions.
-            var standardIds = await ExpandWithNestedStandardIdsAsync(
-                entry.IsoStandardAuditPlans ?? Enumerable.Empty<IsoStandardAuditPlan>(),
-                cancellationToken).ConfigureAwait(false);
-
-            var questionsById = new Dictionary<int, (AuditChecklistQNA Question, string ClauseRef)>();
-            foreach (var stdId in standardIds)
-            {
-                var rawQuestions = await _qnaRepository.GetByIsoStandardIdAsync(stdId, cancellationToken).ConfigureAwait(false);
-                foreach (var q in rawQuestions.OfType<AuditChecklistQNA>())
-                {
-                    if (!questionsById.ContainsKey(q.Id))
-                        questionsById[q.Id] = (q, q.IsoStandard?.ClauseRef ?? string.Empty);
-                }
-            }
-
-            var newRows = new List<(AuditChecklist Row, string ClauseRef)>();
-            foreach (var kv in questionsById.Values)
-            {
-                newRows.Add((new AuditChecklist
-                {
-                    Id = 0,
-                    AuditPlanEntryId = entry.Id,
-                    AuditScheduleId = schedule.Id,
-                    AuditChecklistQNAId = kv.Question.Id,
-                    Conforming = null,
-                    FindingAndRemarks = null
-                }, kv.ClauseRef));
-            }
-
-            // Logical/numeric clause ordering (4.1 < 4.2 < ... < 10.3) — never
-            // alphabetical string sorting.
-            newRows = newRows
-                .OrderBy(t => t.ClauseRef, new ClauseNumberComparer())
-                .ToList();
-
-            foreach (var (row, _) in newRows)
-            {
-                _repository.Add(row);
-            }
-
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-            var saved = await _repository.GetByAuditScheduleIdWithScheduleAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
-            // Re-sort the returned rows the same numeric way so the form always
-            // prints clauses in logical order.
-            return saved
-                .Select(x => new AuditChecklistDto(x))
-                .OrderBy(d => d.Criteria ?? string.Empty, new ClauseNumberComparer());
+            // Nothing is generated: the checklist is written by the auditors,
+            // each adding the questions of the clauses assigned to them
+            // (AddQuestionAsync), so a new checklist starts empty.
+            return Enumerable.Empty<AuditChecklistDto>();
         }
 
         /// <summary>
@@ -324,16 +270,33 @@ namespace IMIS.Persistence.AuditChecklistModule
             var allowed = new HashSet<long>(
                 await ExpandWithNestedStandardIdsAsync(links, cancellationToken).ConfigureAwait(false));
 
-            var stale = (await _dbContext.Set<AuditChecklist>()
-                    .Include(c => c.AuditChecklistQNA)
-                    .Where(c => c.AuditScheduleId == auditScheduleId && !c.IsDeleted &&
-                                c.Conforming == null && c.AuditChecklistQNA != null)
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(false))
-                .Where(c => string.IsNullOrWhiteSpace(c.FindingAndRemarks) &&
+            var rows = await _dbContext.Set<AuditChecklist>()
+                .Include(c => c.AuditChecklistQNA)
+                    .ThenInclude(q => q!.IsoStandard)
+                .Where(c => c.AuditScheduleId == auditScheduleId && !c.IsDeleted && c.AuditChecklistQNA != null)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            bool Untouched(AuditChecklist c) =>
+                c.Conforming == null && string.IsNullOrWhiteSpace(c.FindingAndRemarks);
+
+            var stale = rows
+                .Where(c => Untouched(c) &&
                             c.AuditChecklistQNA!.IsoStandardId.HasValue &&
                             !allowed.Contains(c.AuditChecklistQNA.IsoStandardId.Value))
                 .ToList();
+
+            // A clause has one question. Checklists generated with several per
+            // clause keep the answered one (or else the first); the other
+            // untouched rows are removed.
+            foreach (var group in rows
+                .Except(stale)
+                .GroupBy(c => MatchPlanClause(c.AuditChecklistQNA!.IsoStandard?.ClauseRef, links)?.IsoStandardId)
+                .Where(g => g.Key != null))
+            {
+                var ordered = group.OrderBy(c => Untouched(c) ? 1 : 0).ThenBy(c => c.Id).ToList();
+                stale.AddRange(ordered.Skip(1).Where(Untouched));
+            }
             if (stale.Count == 0) return false;
 
             foreach (var row in stale) row.IsDeleted = true;
