@@ -13,6 +13,9 @@ namespace IMIS.Application.AuditChecklistModule
         public string? TeamName { get; set; }
         public bool CanAssign { get; set; }
 
+        /// <summary>The team leader(s) of the audit team: the preparer of the checklist.</summary>
+        public string? TeamLeaderName { get; set; }
+
         /// <summary>True for an auditor of the team: they only see and answer their own clauses.</summary>
         public bool OwnClausesOnly { get; set; }
         public List<AuditChecklistClauseAssignmentDto> Clauses { get; set; } = new();

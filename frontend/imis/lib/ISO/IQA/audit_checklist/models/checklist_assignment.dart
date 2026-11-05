@@ -7,6 +7,9 @@ class ChecklistAssignments {
   final String? teamName;
   final bool canAssign;
 
+  /// The team leader(s): the preparer of the checklist.
+  final String? teamLeaderName;
+
   /// True for an auditor of the team: they only see and answer their own clauses.
   final bool ownClausesOnly;
   final List<ChecklistClauseAssignment> clauses;
@@ -17,6 +20,7 @@ class ChecklistAssignments {
     this.teamId,
     this.teamName,
     this.canAssign = false,
+    this.teamLeaderName,
     this.ownClausesOnly = false,
     this.clauses = const [],
     this.auditors = const [],
@@ -33,6 +37,7 @@ class ChecklistAssignments {
       teamId: (json['teamId'] as num?)?.toInt(),
       teamName: json['teamName'] as String?,
       canAssign: json['canAssign'] == true,
+      teamLeaderName: json['teamLeaderName'] as String?,
       ownClausesOnly: json['ownClausesOnly'] == true,
       clauses: list(json['clauses'], ChecklistClauseAssignment.fromJson),
       auditors: list(json['auditors'], ChecklistAuditor.fromJson),

@@ -19,8 +19,8 @@ import 'package:imis/constant/constant.dart';
 /// Opens the native (Flutter) print preview of an Audit Checklist.
 ///
 /// [preparedByName] / [preparedByDate] fill the "PREPARED BY" block. The
-/// checklist data carries no preparer, so they default to a blank signature
-/// line, like the unsigned printed form.
+/// team leader prepares the checklist, so the name defaults to the team
+/// leader of the audit schedule; the date stays a blank signature line.
 Future<void> openAuditChecklistPrintPreview(
   BuildContext context,
   int auditScheduleId, {
@@ -92,6 +92,7 @@ class _Data {
     required this.auditors,
     required this.auditees,
     required this.clauses,
+    this.preparedBy = '',
   });
 
   final String office;
@@ -99,6 +100,9 @@ class _Data {
   final String auditors;
   final String auditees;
   final List<_Clause> clauses;
+
+  /// The team leader, who prepares the checklist.
+  final String preparedBy;
 }
 
 class _PdfAssets {
@@ -152,8 +156,18 @@ Future<_Data> _loadPrintData(int auditScheduleId) async {
     debugPrint('Checklist print preview: could not load schedule summary: $e');
   }
 
+  // The team leader is the preparer of the checklist, whoever prints it.
+  var preparedBy = '';
+  try {
+    final board = await service.getAssignments(auditScheduleId);
+    preparedBy = (board.teamLeaderName ?? '').trim();
+  } catch (e) {
+    debugPrint('Checklist print preview: could not load the team leader: $e');
+  }
+
   final head = rows.first;
   return _Data(
+    preparedBy: preparedBy,
     office: _firstNonEmpty([head.officeProcess, summary?.officeProcess]),
     scope: _firstNonEmpty([head.auditScope, summary?.auditScope]),
     auditors: _firstNonEmpty([head.auditorNames, summary?.auditorNames]),
@@ -309,7 +323,7 @@ class _AuditChecklistPrintPreviewPageState
       data: _data!,
       assets: _assets!,
       format: format,
-      preparedByName: widget.preparedByName,
+      preparedByName: _firstNonEmpty([widget.preparedByName, _data!.preparedBy]),
       preparedByDate: widget.preparedByDate,
     ).build();
   }

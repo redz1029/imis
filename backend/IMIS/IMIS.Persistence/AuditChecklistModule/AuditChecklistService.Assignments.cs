@@ -313,6 +313,19 @@ namespace IMIS.Persistence.AuditChecklistModule
                 })
                 .ToList();
 
+            // The team leader is the preparer of the checklist, whoever is looking
+            // at it: the roster's leader, else a member holding the leader role.
+            var leaderNames = ctx.Members.Where(m => m.IsLeader).Select(m => m.Name).ToList();
+            if (leaderNames.Count == 0)
+            {
+                foreach (var m in ctx.Members)
+                {
+                    if (!string.IsNullOrWhiteSpace(m.UserId) &&
+                        await IsInRoleAsync(m.UserId, TeamLeaderRoleName, cancellationToken).ConfigureAwait(false))
+                        leaderNames.Add(m.Name);
+                }
+            }
+
             // An auditor only gets their own clauses.
             if (ctx.RestrictedAuditorId is int me)
             {
@@ -326,6 +339,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                 TeamId = ctx.TeamId,
                 TeamName = ctx.TeamName,
                 CanAssign = ctx.CanAssign,
+                TeamLeaderName = leaderNames.Count == 0 ? null : string.Join(", ", leaderNames.Distinct()),
                 OwnClausesOnly = ctx.RestrictedAuditorId.HasValue,
                 Clauses = clauses,
                 Auditors = auditors
