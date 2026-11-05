@@ -258,6 +258,32 @@ class _AuditReportPageState extends State<AuditReportPage> {
       auditSummaryFindings: loaded.auditSummaryFindings,
     );
 
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Save as Draft'),
+        content: const Text(
+          'Save this audit report as a draft? You can still edit it, and '
+          'submit it for approval from the Audit Report list.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: primaryThemeColor),
+            child: const Text(
+              'Save as Draft',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
     setState(() => _isSaving = true);
     try {
       await _service.addOrUpdate(report);
@@ -865,8 +891,11 @@ class _AuditReportPageState extends State<AuditReportPage> {
                           backgroundColor: primaryThemeColor,
                         ),
                         child: const Text(
-                          'SAVE',
-                          style: TextStyle(color: Colors.white),
+                          'SAVE AS DRAFT',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                   ],

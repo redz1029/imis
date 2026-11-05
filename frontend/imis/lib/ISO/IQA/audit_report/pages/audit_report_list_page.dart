@@ -288,11 +288,17 @@ class _AuditReportListPageState extends State<AuditReportListPage> {
   }
 
   Future<void> _openForm({required int reportId}) async {
-    await showDialog(
+    final saved = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (_) => AuditReportPage(reportId: reportId),
     );
+    if (saved == true && mounted) {
+      MotionToast.success(
+        description: const Text('Audit report saved as draft.'),
+        toastAlignment: Alignment.topCenter,
+      ).show(context);
+    }
     _fetchReports(silent: true);
   }
 
