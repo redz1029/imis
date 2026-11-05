@@ -579,6 +579,11 @@ class _ReportPdfBuilder {
     final items = d.commendable.isEmpty
         ? <({String finding, String area})>[(finding: '', area: '')]
         : d.commendable;
+    // One area only (the office of the auditee), printed on the first row
+    // like the form.
+    final area = items
+        .map((e) => e.area)
+        .firstWhere((a) => a.isNotEmpty, orElse: () => '');
     return pw.Table(
       border: pw.TableBorder.all(width: _kBorderW),
       columnWidths: const {
@@ -593,7 +598,7 @@ class _ReportPdfBuilder {
           pw.TableRow(
             children: [
               _cell(_t(items[i].finding.isEmpty ? '' : '${i + 1}. ${items[i].finding}')),
-              _cell(_t(items[i].area)),
+              _cell(_t(i == 0 ? area : '')),
             ],
           ),
       ],

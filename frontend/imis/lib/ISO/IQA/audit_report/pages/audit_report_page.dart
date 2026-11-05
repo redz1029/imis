@@ -162,6 +162,12 @@ class _AuditReportPageState extends State<AuditReportPage> {
       if (_comFindings.isEmpty) {
         _comFindings.add(_ComFindingUI(area: _areaName));
       }
+      // The area is always the office of the auditee: one value, never typed.
+      if (_areaName.isNotEmpty) {
+        for (final r in _comFindings) {
+          r.areaController.text = _areaName;
+        }
+      }
 
       await _loadClauseResults();
     } catch (e) {
@@ -171,7 +177,11 @@ class _AuditReportPageState extends State<AuditReportPage> {
     }
   }
 
-  String get _areaName => _officeAuditedName ?? _planOfficeProcess ?? '';
+  String get _areaName {
+    final office = (_officeAuditedName ?? '').trim();
+    if (office.isNotEmpty) return office;
+    return (_planOfficeProcess ?? '').trim();
+  }
 
   Future<void> _loadClauseResults() async {
     final scheduleId = _report?.auditScheduleId ?? 0;
@@ -221,7 +231,10 @@ class _AuditReportPageState extends State<AuditReportPage> {
     final commendable =
         _comFindings
             .where((r) => r.findingController.text.trim().isNotEmpty)
-            .map((r) => r.toModel())
+            .map((r) {
+              if (_areaName.isNotEmpty) r.areaController.text = _areaName;
+              return r.toModel();
+            })
             .toList();
 
     final report = AuditReport(
@@ -438,26 +451,27 @@ class _AuditReportPageState extends State<AuditReportPage> {
     title: 'II. COMMENDABLE FINDINGS',
     child: Column(
       children: [
+        // The area is one only: the office of the auditee. Findings added
+        // below never add another area.
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: TextFormField(
+            key: ValueKey('com-area-$_areaName'),
+            initialValue: _areaName,
+            readOnly: true,
+            decoration: _decoration('Area (office of the auditee)'),
+          ),
+        ),
         for (final row in _comFindings)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(
               children: [
                 Expanded(
-                  flex: 3,
                   child: TextFormField(
                     controller: row.findingController,
                     readOnly: !_canEdit,
                     decoration: _decoration('Commendable Finding'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: TextFormField(
-                    controller: row.areaController,
-                    readOnly: !_canEdit,
-                    decoration: _decoration('Area'),
                   ),
                 ),
                 IconButton(
