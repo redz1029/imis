@@ -167,7 +167,7 @@ class ApiEndpoint {
     kraRoadMapRoleId = '$baseUrl/KRARoadmapRole/roleid';
     kraRoadMapReport = '$baseUrl/kraRoadMap/list-report/pdf';
     kraRoadmapRole = '$baseUrl/kraRoadmapRole/roleid';
-    standardVersion = '$baseUrl/api/standardVersion';
+    standardVersion = '$baseUrl/standardVersions';
     scorecardMonitoringFilter = '$baseUrl/kraRoadMap/filter';
     kraroadmapAccomplishment = '$baseUrl/kraRoadmapAccomplishment';
     kraroadmapkpiAccomplishment = '$baseUrl/kraRoadmapKpiAccomplishment';

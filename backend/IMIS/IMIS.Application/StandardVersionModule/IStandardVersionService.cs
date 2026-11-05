@@ -13,5 +13,11 @@ namespace IMIS.Application.StandardVersionModule
         Task<DtoPageList<StandardVersionDto, StandardVersion, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
 
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+
+        /// <summary>True when ISO clauses still belong to this standard.</summary>
+        Task<bool> IsInUseAsync(int id, CancellationToken cancellationToken);
+
+        /// <summary>True when another standard already has this name.</summary>
+        Task<bool> NameExistsAsync(string name, int exceptId, CancellationToken cancellationToken);
     }
 }

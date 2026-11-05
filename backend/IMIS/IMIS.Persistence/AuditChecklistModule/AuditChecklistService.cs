@@ -91,6 +91,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                 .ConfigureAwait(false);
 
             var result = new List<AuditChecklistSummaryDto>();
+            var entryOfSchedule = new Dictionary<int, int>();
             foreach (var s in schedules)
             {
                 // Gate on the workflow: only a CONFIRMED (or APPROVED) schedule
@@ -148,9 +149,9 @@ namespace IMIS.Persistence.AuditChecklistModule
                     }
                 }
 
-                string? scope = s.AuditPlan?.AuditProgramme?.ScopeOfAudit
-                    ?? s.AuditPlan?.AuditProgramme?.ScopeAndFreqAudit
-                    ?? s.AuditPlan?.PlanName;
+                // The AUDIT SCOPE is the audit standard (Settings -> Audit Standard);
+                // it is filled in once for all schedules after this loop.
+                entryOfSchedule[s.Id] = s.AuditPlanEntryId;
 
                 result.Add(new AuditChecklistSummaryDto
                 {
@@ -158,7 +159,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                     TeamId = teamId,
                     TeamName = team?.Name,
                     OfficeProcess = string.IsNullOrWhiteSpace(officeProcess) ? null : officeProcess,
-                    AuditScope = string.IsNullOrWhiteSpace(scope) ? null : scope.Trim(),
+                    AuditScope = null,
                     AuditorNames = team?.Name,
                     Auditees = null,
                     ClauseCount = clauseCount,
@@ -169,6 +170,14 @@ namespace IMIS.Persistence.AuditChecklistModule
                     StartDate = s.StartDate,
                     EndDate = s.EndDate
                 });
+            }
+
+            var standardNames = await GetAuditStandardNamesAsync(entryOfSchedule.Values, cancellationToken).ConfigureAwait(false);
+            foreach (var dto in result)
+            {
+                if (entryOfSchedule.TryGetValue(dto.AuditScheduleId, out var entryId) &&
+                    standardNames.TryGetValue(entryId, out var standardName))
+                    dto.AuditScope = standardName;
             }
 
             return result;

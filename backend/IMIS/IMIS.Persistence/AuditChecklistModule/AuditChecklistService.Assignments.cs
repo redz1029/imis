@@ -231,6 +231,8 @@ namespace IMIS.Persistence.AuditChecklistModule
             var rows = (await GetOrGenerateRowsForAuditScheduleAsync(auditScheduleId, cancellationToken).ConfigureAwait(false)).ToList();
             if (rows.Count == 0) return rows;
 
+            await ApplyAuditStandardAsync(rows, cancellationToken).ConfigureAwait(false);
+
             var ctx = await LoadAssignmentContextAsync(auditScheduleId, userId, cancellationToken).ConfigureAwait(false);
             if (ctx == null) return rows;
 

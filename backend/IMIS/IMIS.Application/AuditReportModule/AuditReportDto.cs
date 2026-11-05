@@ -60,7 +60,9 @@ namespace IMIS.Application.AuditReportModule
             if (entity.AuditStandardISO != null)
             {
                 AuditStandardISOId = entity.AuditStandardISO.Id;
-                AuditStandardISOName = entity.AuditStandardISO.Particulars ?? entity.AuditStandardISO.ClauseRef ?? entity.AuditStandardISO.ToString();
+                // The audit standard of the report is the standard its clauses
+                // belong to (Settings -> Audit Standard).
+                AuditStandardISOName = entity.AuditStandardISO.Version?.VersionName;
             }
 
             if (entity.Auditee != null)

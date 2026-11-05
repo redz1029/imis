@@ -17,6 +17,7 @@ namespace IMIS.Persistence.AuditReportModule
             return await ReadOnlyDbContext.Set<AuditReport>()
                 .Include(x => x.OfficeAudited)
                 .Include(x => x.AuditStandardISO)
+                    .ThenInclude(i => i!.Version)
                 .Include(x => x.Auditee)
                 .Include(x => x.AuditPlanEntry)
                     .ThenInclude(e => e!.AuditPlanProcesses)!
@@ -39,6 +40,7 @@ namespace IMIS.Persistence.AuditReportModule
                 _entities.AsNoTracking()
                     .Include(x => x.OfficeAudited)
                     .Include(x => x.AuditStandardISO)
+                    .ThenInclude(i => i!.Version)
                     .Include(x => x.Auditee)
                     .Include(x => x.AuditPlanEntry)
                         .ThenInclude(e => e!.AuditPlanProcesses)!
@@ -67,6 +69,7 @@ namespace IMIS.Persistence.AuditReportModule
             return await ReadOnlyDbContext.Set<AuditReport>()
                 .Include(x => x.OfficeAudited)
                 .Include(x => x.AuditStandardISO)
+                    .ThenInclude(i => i!.Version)
                 .Include(x => x.Auditee)
                 .Include(x => x.AuditPlanEntry)
                     .ThenInclude(e => e!.AuditPlanProcesses)!

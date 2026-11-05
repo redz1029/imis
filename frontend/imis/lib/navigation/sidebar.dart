@@ -12,6 +12,7 @@ import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_list_page.dar
 import 'package:imis/ISO/IQA/audit_report/pages/audit_report_list_page.dart';
 import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_list_page.dart';
 import 'package:imis/ISO/IQA/iqa_history/pages/iqa_history_page.dart';
+import 'package:imis/ISO/IQA/audit_standard/pages/audit_standard_page.dart';
 import 'package:imis/ISO/IQA/iqa_signatory/pages/iqa_signatory_template_page.dart';
 import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
@@ -1262,6 +1263,7 @@ class SidebarState extends State<Sidebar> {
         return const IsatSignatoryTemplatePage();
       }
       if (selectedSubPage == 25) return const IQASignatoryTemplatePage();
+      if (selectedSubPage == 26) return const AuditStandardPage();
     }
     return HomePage();
   }
@@ -1427,6 +1429,7 @@ class SidebarState extends State<Sidebar> {
           NavChild('Role', 10),
           NavChild('Team', 11),
           NavChild('IQA Signatory Template', 25),
+          NavChild('Audit Standard', 26),
 
           NavChild(
             'User Management',

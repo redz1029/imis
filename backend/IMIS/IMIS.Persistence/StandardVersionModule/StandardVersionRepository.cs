@@ -11,7 +11,7 @@ namespace IMIS.Persistence.StandardVersionModule
         public async Task<EntityPageList<StandardVersion, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             return await EntityPageList<StandardVersion, int>
-                .CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken)
+                .CreateAsync(_entities.AsNoTracking().OrderBy(x => x.Id), page, pageSize, cancellationToken)
                 .ConfigureAwait(false);
         }
 

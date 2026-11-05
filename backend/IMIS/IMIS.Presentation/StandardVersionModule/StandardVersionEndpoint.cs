@@ -25,6 +25,12 @@ namespace IMIS.Presentation.StandardVersionModule
             // --- CREATE / UPDATE ---
             app.MapPost("/", async ([FromBody] StandardVersionDto dto, IStandardVersionService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
+                dto.VersionName = (dto.VersionName ?? string.Empty).Trim();
+                if (dto.VersionName.Length == 0)
+                    return Results.Json(new { error = "The audit standard needs a name." }, statusCode: 400);
+                if (await service.NameExistsAsync(dto.VersionName, dto.Id, cancellationToken).ConfigureAwait(false))
+                    return Results.Json(new { error = "An audit standard with this name already exists." }, statusCode: 409);
+
                 await service.SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_tag, cancellationToken);
                 return Results.Ok(dto);
@@ -52,6 +58,12 @@ namespace IMIS.Presentation.StandardVersionModule
                 }
 
                 dto.Id = id; // Ensure ID consistency
+                dto.VersionName = (dto.VersionName ?? string.Empty).Trim();
+                if (dto.VersionName.Length == 0)
+                    return Results.Json(new { error = "The audit standard needs a name." }, statusCode: 400);
+                if (await service.NameExistsAsync(dto.VersionName, id, cancellationToken).ConfigureAwait(false))
+                    return Results.Json(new { error = "An audit standard with this name already exists." }, statusCode: 409);
+
                 await service.SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_tag, cancellationToken);
                 return Results.Ok(dto);
@@ -72,6 +84,11 @@ namespace IMIS.Presentation.StandardVersionModule
             // --- DELETE ---
             app.MapDelete("/{id:int}", async (int id, IStandardVersionService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
+                if (await service.IsInUseAsync(id, cancellationToken).ConfigureAwait(false))
+                    return Results.Json(
+                        new { error = "This audit standard still has ISO clauses, so it cannot be deleted. Mark it inactive instead." },
+                        statusCode: 409);
+
                 var result = await service.SoftDeleteAsync(id, cancellationToken);
                 await cache.EvictByTagAsync(_tag, cancellationToken);
 
