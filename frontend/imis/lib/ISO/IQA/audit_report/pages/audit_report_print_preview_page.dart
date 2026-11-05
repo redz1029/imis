@@ -11,6 +11,7 @@ import 'package:printing/printing.dart';
 
 import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
+import 'package:imis/ISO/IQA/audit_report/model/summary_finding_parts.dart';
 import 'package:imis/ISO/IQA/audit_report/service/audit_report_service.dart';
 import 'package:imis/constant/constant.dart';
 
@@ -95,14 +96,6 @@ List<String> _names(String? raw) => (raw ?? '')
     .where((e) => e.isNotEmpty)
     .toList();
 
-/// A stored finding reads "8.5.1 - the standard requires ... (NCAR 26-002)":
-/// the clause becomes the CRITERIA cell and the rest the FINDINGS cell.
-({String criteria, String findings}) _splitFinding(String text) {
-  final m = RegExp(r'^\s*(\S+)\s+-\s+([\s\S]*)$').firstMatch(text);
-  if (m == null) return (criteria: '', findings: text.trim());
-  return (criteria: m.group(1)!.trim(), findings: m.group(2)!.trim());
-}
-
 _Data _dataFrom(
   AuditReport r, {
   required Map<int, String> statusNames,
@@ -131,7 +124,7 @@ _Data _dataFrom(
     findings: [
       for (final f in summary)
         () {
-          final parts = _splitFinding(f.findings);
+          final parts = splitSummaryFinding(f.findings);
           return _Line(
             criteria: parts.criteria,
             findings: parts.findings,

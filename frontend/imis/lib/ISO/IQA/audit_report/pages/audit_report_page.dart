@@ -4,6 +4,8 @@ import 'package:imis/ISO/IQA/audit_report/service/audit_report_service.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report_clause_results.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_com_findings.dart';
+import 'package:imis/ISO/IQA/audit_report/model/audit_summary_findings.dart';
+import 'package:imis/ISO/IQA/audit_report/model/summary_finding_parts.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/permission_service.dart';
 
@@ -494,6 +496,103 @@ class _AuditReportPageState extends State<AuditReportPage> {
     return 'NC';
   }
 
+  /// Same table as the printed form: No. | CRITERIA | FINDINGS | Status.
+  Widget _summaryTable(List<AuditSummaryFindings> findings) {
+    final sorted = [...findings]..sort((a, b) => a.no.compareTo(b.no));
+    final border = BorderSide(color: Colors.grey.shade500, width: 0.8);
+
+    Widget head(String text, {String? sub}) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+          if (sub != null)
+            Text(
+              sub,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+        ],
+      ),
+    );
+
+    Widget cell(Widget child, {Alignment align = Alignment.topLeft}) => Container(
+      alignment: align,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: child,
+    );
+
+    return Table(
+      border: TableBorder.all(color: border.color, width: border.width),
+      columnWidths: const {
+        0: FixedColumnWidth(44),
+        1: FixedColumnWidth(86),
+        2: FlexColumnWidth(),
+        3: FixedColumnWidth(92),
+      },
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: [
+        TableRow(
+          decoration: BoxDecoration(color: Colors.grey.shade100),
+          children: [
+            head('No.'),
+            head('CRITERIA'),
+            head('FINDINGS'),
+            head('Status', sub: '(NC, OFI)'),
+          ],
+        ),
+        for (final row in sorted)
+          () {
+            final parts = splitSummaryFinding(row.findings);
+            return TableRow(
+              children: [
+                cell(
+                  Text('${row.no}', style: const TextStyle(fontSize: 13)),
+                  align: Alignment.center,
+                ),
+                cell(Text(parts.criteria, style: const TextStyle(fontSize: 13))),
+                cell(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        parts.findings,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      if (parts.ncarRef.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'NCAR ${parts.ncarRef}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                cell(
+                  _resultCountChip(
+                    _statusName(row.auditNcarStatusId),
+                    null,
+                    Colors.red.shade700,
+                  ),
+                  align: Alignment.center,
+                ),
+              ],
+            );
+          }(),
+      ],
+    );
+  }
+
   Widget _summaryFindingsCard() {
     final findings = _report?.auditSummaryFindings ?? [];
     return _card(
@@ -507,34 +606,7 @@ class _AuditReportPageState extends State<AuditReportPage> {
               style: TextStyle(fontSize: 12, color: Colors.grey),
             )
           else
-            for (final row in findings)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 32,
-                      child: Text(
-                        '${row.no}.',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        row.findings,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _resultCountChip(
-                      _statusName(row.auditNcarStatusId),
-                      null,
-                      Colors.red.shade700,
-                    ),
-                  ],
-                ),
-              ),
+            _summaryTable(findings),
           _autoNote(
             'One line per non-conforming clause, each with the NCAR already '
             'raised for it. It follows the audit checklist.',
