@@ -64,12 +64,12 @@ const double _kFooterH = 20.0;
 const double _kBorderW = 0.8;
 const double _kPadX = 4.0;
 const double _kFont = 10.0;
-const double _kLogoBox = 64.0;
+const double _kLogoBox = 86.0;
 const double _kSideW = 104.0;
 
 /// Letterhead block: logo row + double rule + a clear gap before whatever
 /// follows (the original form leaves a gap between the rule and the table).
-const double _kHeaderBlockH = 92.0;
+const double _kHeaderBlockH = 116.0;
 const double _kTitleH = 30.0;
 const double _kObjGap = 8.0;
 const double _kLabelW = 104.0;
@@ -1188,7 +1188,7 @@ class _PlanPdfBuilder {
         ? null
         : pw.SizedBox(
             width: _kSideW,
-            height: 50,
+            height: 56,
             child: pw.Image(
               iso,
               fit: pw.BoxFit.contain,
@@ -1213,7 +1213,7 @@ class _PlanPdfBuilder {
                     child: seal,
                   ),
                 ),
-                pw.SizedBox(width: 4),
+                pw.SizedBox(width: 2),
                 pw.Column(
                   mainAxisSize: pw.MainAxisSize.min,
                   mainAxisAlignment: pw.MainAxisAlignment.center,
@@ -1237,10 +1237,11 @@ class _PlanPdfBuilder {
               ],
             ),
           ),
-          pw.SizedBox(height: 5),
-          pw.Container(width: _contentW, height: 3, color: PdfColors.black),
-          pw.SizedBox(height: 2),
-          pw.Container(width: _contentW, height: 0.7, color: PdfColors.black),
+          pw.SizedBox(height: 12),
+          // Double rule of the original form: a thin line over a thick one.
+          pw.Container(width: _contentW, height: 0.8, color: PdfColors.black),
+          pw.SizedBox(height: 1.2),
+          pw.Container(width: _contentW, height: 2.4, color: PdfColors.black),
         ],
       ),
     );

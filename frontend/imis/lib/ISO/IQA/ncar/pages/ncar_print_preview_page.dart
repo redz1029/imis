@@ -28,14 +28,15 @@ Future<void> openNcarPrintPreview(BuildContext context, int ncarId) {
   );
 }
 
-const String _kLogoCrmc = 'assets/crmc_logo.png';
+const String _kLogoCrmc = 'assets/CRMCLogo.png';
+const String _kLogoIso = 'assets/TR-Testmark.jpg';
 
 const double _kMargin = 36;
 const double _kBorderW = 0.8;
 const double _kFont = 10;
 const double _kSmall = 8;
 const double _kPad = 4;
-const double _kSealBox = 64;
+const double _kSealBox = 86;
 
 /// Height of one picture frame; two columns x two rows fill an attachment page.
 const double _kPictureH = 300;
@@ -48,6 +49,7 @@ class _Loaded {
     required this.bold,
     required this.unicode,
     this.seal,
+    this.iso,
   });
 
   final NonconformingActionReport ncar;
@@ -56,6 +58,7 @@ class _Loaded {
   final pw.Font bold;
   final bool unicode;
   final pw.MemoryImage? seal;
+  final pw.MemoryImage? iso;
 }
 
 Future<_Loaded> _loadAll(int ncarId) async {
@@ -98,12 +101,22 @@ Future<_Loaded> _loadAll(int ncarId) async {
     debugPrint('NCAR print preview: cannot load "$_kLogoCrmc": $e');
   }
 
+  pw.MemoryImage? iso;
+  try {
+    final data = await rootBundle.load(_kLogoIso);
+    iso = pw.MemoryImage(data.buffer.asUint8List());
+  } catch (e) {
+    debugPrint('NCAR print preview: cannot load "$_kLogoIso": $e');
+  }
+
   return _Loaded(
     ncar: ncar,
     attachments: attachments,
     regular: regular,
     bold: bold,
     unicode: unicode,
+    seal: seal,
+    iso: iso,
   );
 }
 
@@ -394,28 +407,58 @@ class _NcarPdfBuilder {
 
   // --------------------------------------------------------- letterhead ----
   pw.Widget _letterhead() {
-    final seal = d.seal;
-    return pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.center,
-      crossAxisAlignment: pw.CrossAxisAlignment.center,
-      children: [
-        if (seal != null)
-          pw.SizedBox(
+    final crmc = d.seal;
+    final iso = d.iso;
+
+    final seal = crmc == null
+        ? null
+        : pw.SizedBox(
             width: _kSealBox,
             height: _kSealBox,
-            child: pw.ClipRect(child: pw.Image(seal, fit: pw.BoxFit.cover)),
+            child: pw.ClipRect(
+              child: pw.Image(crmc, fit: pw.BoxFit.cover),
+            ),
+          );
+
+    final tuv = iso == null
+        ? null
+        : pw.SizedBox(
+            width: 104,
+            height: 56,
+            child: pw.Image(
+              iso,
+              fit: pw.BoxFit.contain,
+              alignment: pw.Alignment.centerRight,
+            ),
+          );
+
+    // Same letterhead as the Audit Programme: the seal sits against the left of
+    // the centred three-line heading, the TUV certification mark on the right.
+    return pw.SizedBox(
+      height: _kSealBox,
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          pw.Expanded(
+            child: pw.Align(alignment: pw.Alignment.centerRight, child: seal),
           ),
-        pw.SizedBox(width: 10),
-        pw.Column(
-          mainAxisSize: pw.MainAxisSize.min,
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
-          children: [
-            _t('Republic of the Philippines'),
-            _t('Department of Health'),
-            _t('COTABATO REGIONAL AND MEDICAL CENTER', bold: true, size: 11),
-          ],
-        ),
-      ],
+          pw.SizedBox(width: 2),
+          pw.Column(
+            mainAxisSize: pw.MainAxisSize.min,
+            mainAxisAlignment: pw.MainAxisAlignment.center,
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              _t('Republic of the Philippines', size: 10),
+              _t('Department of Health', size: 10),
+              _t('COTABATO REGIONAL AND MEDICAL CENTER', bold: true, size: 11),
+            ],
+          ),
+          pw.SizedBox(width: 8),
+          pw.Expanded(
+            child: pw.Align(alignment: pw.Alignment.centerRight, child: tuv),
+          ),
+        ],
+      ),
     );
   }
 
