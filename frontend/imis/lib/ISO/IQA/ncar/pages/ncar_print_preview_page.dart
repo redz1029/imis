@@ -15,6 +15,7 @@ import 'package:imis/ISO/IQA/ncar/models/ncar_attachment.dart';
 import 'package:imis/ISO/IQA/ncar/models/nonconforming_action_report.dart';
 import 'package:imis/ISO/IQA/ncar/services/ncar_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/utils/pdf_download.dart';
 
 /// Opens the native print preview of a Nonconforming Action Report
 /// (QP-03-F-08). Page 1 is the form; the pictures attached to the NCAR as proof
@@ -211,6 +212,8 @@ class _NcarPrintPreviewPageState extends State<NcarPrintPreviewPage> {
                   canDebug: false,
                   maxPageWidth: 760,
                   pdfFileName: 'NCAR_${ref.isEmpty ? widget.ncarId : ref}.pdf',
+                  allowSharing: false,
+                  actions: [downloadPdfAction('NCAR_${ref.isEmpty ? widget.ncarId : ref}.pdf')],
                   onError: (context, error) => Center(
                     child: Text(
                       'Unable to build the preview: $error',

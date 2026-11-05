@@ -15,6 +15,7 @@ import 'package:printing/printing.dart';
 import 'package:imis/ISO/IQA/audit_checklist/models/audit_checklist.dart';
 import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/utils/pdf_download.dart';
 
 /// Opens the native (Flutter) print preview of an Audit Checklist.
 ///
@@ -381,6 +382,8 @@ class _AuditChecklistPrintPreviewPageState
                   canDebug: false,
                   maxPageWidth: 760,
                   pdfFileName: 'Audit_Checklist_${widget.auditScheduleId}.pdf',
+                  allowSharing: false,
+                  actions: [downloadPdfAction('Audit_Checklist_${widget.auditScheduleId}.pdf')],
                   onError: (context, error) => Center(
                     child: Text(
                       'Unable to build the preview: $error',

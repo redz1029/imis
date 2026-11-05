@@ -17,6 +17,7 @@ import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/utils/pdf_download.dart';
 
 /// Opens the native (Flutter) print preview of an Audit Plan.
 Future<void> openAuditPlanPrintPreview(BuildContext context, int auditPlanId) {
@@ -732,6 +733,8 @@ class _AuditPlanPrintPreviewPageState extends State<AuditPlanPrintPreviewPage> {
                   canDebug: false,
                   maxPageWidth: 760,
                   pdfFileName: 'Audit_Plan_${widget.auditPlanId}.pdf',
+                  allowSharing: false,
+                  actions: [downloadPdfAction('Audit_Plan_${widget.auditPlanId}.pdf')],
                   onError: (context, error) => Center(
                     child: Text(
                       'Unable to build the preview: $error',

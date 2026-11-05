@@ -14,6 +14,7 @@ import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
 import 'package:imis/ISO/IQA/audit_report/model/summary_finding_parts.dart';
 import 'package:imis/ISO/IQA/audit_report/service/audit_report_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/utils/pdf_download.dart';
 
 /// Opens the native print preview of an Audit Report (QP-03-F-06): office,
 /// date, purpose and standard; the auditors and auditees; the commendable
@@ -304,6 +305,8 @@ class _AuditReportPrintPreviewPageState
                   canDebug: false,
                   maxPageWidth: 760,
                   pdfFileName: 'Audit_Report_${widget.reportId}.pdf',
+                  allowSharing: false,
+                  actions: [downloadPdfAction('Audit_Report_${widget.reportId}.pdf')],
                   onError: (context, error) => Center(
                     child: Text(
                       'Unable to build the preview: $error',
