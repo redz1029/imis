@@ -20,11 +20,11 @@ namespace IMIS.Persistence.AuditChecklistModule
         public async Task<(bool Success, string? Error)> SaveChecklistForUserAsync(
             AuditChecklistDto dto, string? userId, CancellationToken cancellationToken)
         {
-            // The row and its NCAR are written together: a blocked NCAR change
-            // rolls the row change back with it.
-            await using var transaction = await _dbContext.Database
-                .BeginTransactionAsync(cancellationToken)
-                .ConfigureAwait(false);
+            // The context wraps every SaveChanges in its own transaction, so no outer
+            // one can be opened here. What could block the NCAR is checked first, so a
+            // blocked change never leaves the row half saved.
+            var blocked = await CheckNcarChangeAllowedAsync(dto, cancellationToken).ConfigureAwait(false);
+            if (blocked != null) return (false, blocked);
 
             var (success, error) = await SaveChecklistRowForUserAsync(dto, userId, cancellationToken).ConfigureAwait(false);
             if (!success) return (false, error);
@@ -36,8 +36,31 @@ namespace IMIS.Persistence.AuditChecklistModule
             await SyncAuditReportForRowAsync(dto.Id, cancellationToken).ConfigureAwait(false);
 
             await AttachNcarsAsync(new[] { dto }, cancellationToken).ConfigureAwait(false);
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return (true, null);
+        }
+
+        /// <summary>Error message when the NCAR of the row is already being worked on and this save would change it; otherwise null.</summary>
+        private async Task<string?> CheckNcarChangeAllowedAsync(AuditChecklistDto dto, CancellationToken cancellationToken)
+        {
+            if (dto.Id <= 0) return null;
+
+            var ncar = await _dbContext.Set<NonconformingActionReport>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(n => n.AuditChecklistId == dto.Id && !n.IsDeleted, cancellationToken)
+                .ConfigureAwait(false);
+            if (ncar == null || !await IsNcarProcessedAsync(ncar, cancellationToken).ConfigureAwait(false))
+                return null;
+
+            if (dto.Conforming != false)
+                return $"NCAR {ncar.ReferenceNumber} for this clause was already acknowledged or answered by the office, so the clause can no longer be changed back from Non-Conforming.";
+
+            var findings = string.IsNullOrWhiteSpace(dto.FindingAndRemarks)
+                ? ncar.StandardRequirement
+                : dto.FindingAndRemarks.Trim();
+            if (ncar.AuditFindings != findings)
+                return $"NCAR {ncar.ReferenceNumber} for this clause was already acknowledged or answered by the office, so its finding can no longer be edited.";
+
+            return null;
         }
 
         /// <summary>Fills NcarId / NcarReferenceNumber on the rows that have a live NCAR.</summary>
