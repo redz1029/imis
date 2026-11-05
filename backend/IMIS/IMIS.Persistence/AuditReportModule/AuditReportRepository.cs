@@ -47,7 +47,8 @@ namespace IMIS.Persistence.AuditReportModule
                         .ThenInclude(e => e!.IsoAuditors)!
                             .ThenInclude(a => a.Team)
                     .Include(x => x.AuditScope)
-                    .AsSplitQuery(),
+                    .AsSplitQuery()
+                    .OrderByDescending(x => x.Id),
                 page,
                 pageSize,
                 cancellationToken)
