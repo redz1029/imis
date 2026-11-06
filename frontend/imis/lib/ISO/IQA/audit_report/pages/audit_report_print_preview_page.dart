@@ -136,10 +136,13 @@ _Data _dataFrom(
     findings: [
       for (final f in summary)
         () {
-          final parts = splitSummaryFinding(f.findings);
+          // Saved before the Summary of Findings was editable, the clause is
+          // part of the stored text.
+          final legacy = f.criteriaText == null && f.auditChecklistId == null;
+          final parts = legacy ? splitSummaryFinding(f.findings) : null;
           return _Line(
-            criteria: parts.criteria,
-            findings: parts.findings,
+            criteria: (parts?.criteria ?? f.criteriaText ?? '').trim(),
+            findings: (parts?.findings ?? f.findings).trim(),
             status: statusNames[f.auditNcarStatusId] ?? '',
           );
         }(),

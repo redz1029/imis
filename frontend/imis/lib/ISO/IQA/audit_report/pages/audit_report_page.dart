@@ -46,6 +46,74 @@ class _ComFindingUI {
   }
 }
 
+/// One line of the Summary of Findings. A line fetched from the audit checklist
+/// (one per non-conforming clause) keeps its clause, its NC status and its NCAR
+/// fixed and only its findings text is typed. A line the auditor adds is typed
+/// whole and is either NC or OFI.
+class _SummaryRowUI {
+  int id;
+  final int? auditChecklistId;
+  final String ncarRef;
+
+  /// Saved before the Summary of Findings became editable: the clause is part
+  /// of the stored text and stays as it is until the checklist refreshes it.
+  final bool legacy;
+  int? statusId;
+  final TextEditingController criteriaController;
+  final TextEditingController findingsController;
+
+  _SummaryRowUI({
+    this.id = 0,
+    this.auditChecklistId,
+    this.ncarRef = '',
+    this.legacy = false,
+    this.statusId,
+    String? criteria,
+    String? findings,
+  }) : criteriaController = TextEditingController(text: criteria ?? ''),
+       findingsController = TextEditingController(text: findings ?? '');
+
+  /// From the checklist: clause and NCAR are not typed.
+  bool get fromChecklist => auditChecklistId != null || legacy;
+
+  factory _SummaryRowUI.fromModel(AuditSummaryFindings m) {
+    if (m.criteriaText == null && m.auditChecklistId == null) {
+      final parts = splitSummaryFinding(m.findings);
+      return _SummaryRowUI(
+        id: m.id,
+        legacy: true,
+        ncarRef: parts.ncarRef,
+        statusId: m.auditNcarStatusId,
+        criteria: parts.criteria,
+        findings: parts.findings,
+      );
+    }
+    return _SummaryRowUI(
+      id: m.id,
+      auditChecklistId: m.auditChecklistId,
+      ncarRef: (m.ncarReferenceNumber ?? '').trim(),
+      statusId: m.auditNcarStatusId,
+      criteria: m.criteriaText,
+      findings: m.findings,
+    );
+  }
+
+  AuditSummaryFindings toModel(int no) => AuditSummaryFindings(
+    id: id,
+    no: no,
+    findings: findingsController.text.trim(),
+    auditNcarStatusId: statusId,
+    auditChecklistId: auditChecklistId,
+    criteriaText: legacy ? null : criteriaController.text.trim(),
+    ncarReferenceNumber: ncarRef.isEmpty ? null : ncarRef,
+  );
+
+  void dispose() {
+    criteriaController.dispose();
+    findingsController.dispose();
+  }
+}
+
 // =============================================================================
 // AuditReportPage
 //
@@ -84,6 +152,7 @@ class _AuditReportPageState extends State<AuditReportPage> {
 
   List<Map<String, dynamic>> _ncarStatuses = [];
   final List<_ComFindingUI> _comFindings = [];
+  final List<_SummaryRowUI> _summaryRows = [];
 
   // Checklist results of the report's schedule (read-only): conforming clauses
   // are listed as such and each non-conforming clause shows its NCAR.
@@ -112,6 +181,9 @@ class _AuditReportPageState extends State<AuditReportPage> {
     _auditPurposeController.dispose();
     _auditConclusionsController.dispose();
     for (final r in _comFindings) {
+      r.dispose();
+    }
+    for (final r in _summaryRows) {
       r.dispose();
     }
     super.dispose();
@@ -169,6 +241,15 @@ class _AuditReportPageState extends State<AuditReportPage> {
         }
       }
 
+      for (final r in _summaryRows) {
+        r.dispose();
+      }
+      final summary = [...(report.auditSummaryFindings ?? <AuditSummaryFindings>[])]
+        ..sort((a, b) => a.no.compareTo(b.no));
+      _summaryRows
+        ..clear()
+        ..addAll(summary.map(_SummaryRowUI.fromModel));
+
       await _loadClauseResults();
     } catch (e) {
       _error = 'Error loading: $e';
@@ -225,6 +306,36 @@ class _AuditReportPageState extends State<AuditReportPage> {
     _comFindings.remove(r);
   });
 
+  /// The NC / OFI choices of the Summary of Findings: the lookup the server
+  /// holds, or its seeded values when it could not be read.
+  List<({int id, String name})> get _statusOptions {
+    final options = <({int id, String name})>[];
+    for (final s in _ncarStatuses) {
+      final id = (s['id'] as num?)?.toInt();
+      final name =
+          (s['ncarStatus'] ?? s['NcarStatus'])?.toString().trim().toUpperCase();
+      if (id != null && (name == 'NC' || name == 'OFI')) {
+        options.add((id: id, name: name!));
+      }
+    }
+    if (options.isEmpty) {
+      return const [(id: 1, name: 'NC'), (id: 2, name: 'OFI')];
+    }
+    return options;
+  }
+
+  int get _ncStatusId =>
+      _statusOptions.firstWhere((o) => o.name == 'NC').id;
+
+  void _addSummaryRow() => setState(
+    () => _summaryRows.add(_SummaryRowUI(statusId: _ncStatusId)),
+  );
+
+  void _removeSummaryRow(_SummaryRowUI r) => setState(() {
+    r.dispose();
+    _summaryRows.remove(r);
+  });
+
   Future<void> _save() async {
     final loaded = _report;
     if (loaded == null) return;
@@ -244,6 +355,18 @@ class _AuditReportPageState extends State<AuditReportPage> {
             })
             .toList();
 
+    // A line the auditor added and left empty is just an empty row. Lines
+    // fetched from the checklist are always sent: they hold their NCAR.
+    final summary = <AuditSummaryFindings>[];
+    for (final r in _summaryRows) {
+      if (!r.fromChecklist &&
+          r.criteriaController.text.trim().isEmpty &&
+          r.findingsController.text.trim().isEmpty) {
+        continue;
+      }
+      summary.add(r.toModel(summary.length + 1));
+    }
+
     final report = AuditReport(
       id: loaded.id,
       isDeleted: loaded.isDeleted,
@@ -262,7 +385,7 @@ class _AuditReportPageState extends State<AuditReportPage> {
       planAuditTeamName: loaded.planAuditTeamName,
       auditComFindings: commendable,
       auditScope: loaded.auditScope,
-      auditSummaryFindings: loaded.auditSummaryFindings,
+      auditSummaryFindings: summary,
     );
 
     final confirmed = await showDialog<bool>(
@@ -541,19 +664,19 @@ class _AuditReportPageState extends State<AuditReportPage> {
   );
 
   String _statusName(int? id) {
-    for (final s in _ncarStatuses) {
-      if ((s['id'] as num?)?.toInt() == id) {
-        final name = (s['ncarStatus'] ?? s['NcarStatus'])?.toString().trim();
-        if (name != null && name.isNotEmpty) return name;
-      }
+    for (final o in _statusOptions) {
+      if (o.id == id) return o.name;
     }
     return 'NC';
   }
 
   /// Same table as the printed form: No. | CRITERIA | FINDINGS | Status.
-  Widget _summaryTable(List<AuditSummaryFindings> findings) {
-    final sorted = [...findings]..sort((a, b) => a.no.compareTo(b.no));
+  /// The lines fetched from the checklist have a fixed clause and status (NC)
+  /// and an NCAR; the auditor types their findings. Lines added by hand are
+  /// typed whole and are NC or OFI.
+  Widget _summaryTable() {
     final border = BorderSide(color: Colors.grey.shade500, width: 0.8);
+    final editable = _canEdit;
 
     Widget head(String text, {String? sub}) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
@@ -575,19 +698,65 @@ class _AuditReportPageState extends State<AuditReportPage> {
       ),
     );
 
-    Widget cell(Widget child, {Alignment align = Alignment.topLeft}) => Container(
-      alignment: align,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: child,
+    Widget cell(Widget child, {Alignment align = Alignment.topLeft}) =>
+        Container(
+          alignment: align,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: child,
+        );
+
+    InputDecoration cellDecoration(String hint) => InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(4),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
     );
+
+    Widget statusCell(_SummaryRowUI row) {
+      // A line fetched from the checklist is a non-conformity: it stays NC.
+      if (row.fromChecklist || !editable) {
+        return _resultCountChip(
+          _statusName(row.statusId),
+          null,
+          _statusName(row.statusId) == 'OFI'
+              ? Colors.orange.shade800
+              : Colors.red.shade700,
+        );
+      }
+      final options = _statusOptions;
+      final value =
+          options.any((o) => o.id == row.statusId) ? row.statusId : _ncStatusId;
+      return DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: value,
+          isDense: true,
+          isExpanded: true,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
+          items: [
+            for (final o in options)
+              DropdownMenuItem<int>(value: o.id, child: Text(o.name)),
+          ],
+          onChanged: (v) => setState(() => row.statusId = v),
+        ),
+      );
+    }
 
     return Table(
       border: TableBorder.all(color: border.color, width: border.width),
-      columnWidths: const {
-        0: FixedColumnWidth(44),
-        1: FixedColumnWidth(86),
-        2: FlexColumnWidth(),
-        3: FixedColumnWidth(92),
+      columnWidths: {
+        0: const FixedColumnWidth(44),
+        1: const FixedColumnWidth(110),
+        2: const FlexColumnWidth(),
+        3: const FixedColumnWidth(104),
+        if (editable) 4: const FixedColumnWidth(44),
       },
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       children: [
@@ -598,31 +767,52 @@ class _AuditReportPageState extends State<AuditReportPage> {
             head('CRITERIA'),
             head('FINDINGS'),
             head('Status', sub: '(NC, OFI)'),
+            if (editable) const SizedBox.shrink(),
           ],
         ),
-        for (final row in sorted)
+        for (var i = 0; i < _summaryRows.length; i++)
           () {
-            final parts = splitSummaryFinding(row.findings);
+            final row = _summaryRows[i];
             return TableRow(
               children: [
                 cell(
-                  Text('${row.no}', style: const TextStyle(fontSize: 13)),
+                  Text('${i + 1}', style: const TextStyle(fontSize: 13)),
                   align: Alignment.center,
                 ),
-                cell(Text(parts.criteria, style: const TextStyle(fontSize: 13))),
+                cell(
+                  row.fromChecklist || !editable
+                      ? Text(
+                        row.criteriaController.text,
+                        style: const TextStyle(fontSize: 13),
+                      )
+                      : TextField(
+                        controller: row.criteriaController,
+                        style: const TextStyle(fontSize: 13),
+                        decoration: cellDecoration('Clause'),
+                      ),
+                ),
                 cell(
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        parts.findings,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      if (parts.ncarRef.isNotEmpty)
+                      editable
+                          ? TextField(
+                            controller: row.findingsController,
+                            style: const TextStyle(fontSize: 13),
+                            minLines: 1,
+                            maxLines: null,
+                            keyboardType: TextInputType.multiline,
+                            decoration: cellDecoration('Write the finding'),
+                          )
+                          : Text(
+                            row.findingsController.text,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                      if (row.ncarRef.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            'NCAR ${parts.ncarRef}',
+                            'NCAR ${row.ncarRef}',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey.shade600,
@@ -632,14 +822,24 @@ class _AuditReportPageState extends State<AuditReportPage> {
                     ],
                   ),
                 ),
-                cell(
-                  _resultCountChip(
-                    _statusName(row.auditNcarStatusId),
-                    null,
-                    Colors.red.shade700,
+                cell(statusCell(row), align: Alignment.center),
+                if (editable)
+                  cell(
+                    row.fromChecklist
+                        ? const SizedBox.shrink()
+                        : IconButton(
+                          tooltip: 'Remove this finding',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: Colors.redAccent,
+                          ),
+                          onPressed: () => _removeSummaryRow(row),
+                        ),
+                    align: Alignment.center,
                   ),
-                  align: Alignment.center,
-                ),
               ],
             );
           }(),
@@ -648,22 +848,38 @@ class _AuditReportPageState extends State<AuditReportPage> {
   }
 
   Widget _summaryFindingsCard() {
-    final findings = _report?.auditSummaryFindings ?? [];
     return _card(
       title: 'III. SUMMARY OF FINDINGS',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (findings.isEmpty)
-            const Text(
-              'No non-conforming clause on the audit checklist.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+          if (_summaryRows.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Text(
+                'No finding yet. A non-conforming clause on the audit '
+                'checklist is added here, or add a finding yourself.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
             )
           else
-            _summaryTable(findings),
+            _summaryTable(),
+          if (_canEdit)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _addSummaryRow,
+                  icon: const Icon(Icons.add, color: primaryThemeColor),
+                  label: const Text('Add Finding'),
+                ),
+              ),
+            ),
           _autoNote(
-            'One line per non-conforming clause, each with the NCAR already '
-            'raised for it. It follows the audit checklist.',
+            'A non-conforming clause with its NCAR comes from the audit '
+            'checklist; write its finding here. Add a finding to record an '
+            'NC or an OFI of your own.',
           ),
         ],
       ),

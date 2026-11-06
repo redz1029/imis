@@ -1720,6 +1720,9 @@ namespace IMIS.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AuditChecklistId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("AuditNcarStatusId")
                         .HasColumnType("int");
 
@@ -1729,12 +1732,18 @@ namespace IMIS.Persistence.Migrations
                     b.Property<long?>("CriteriaId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("CriteriaText")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Findings")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("NcarReferenceNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("No")
                         .HasColumnType("int");

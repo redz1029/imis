@@ -12,8 +12,9 @@ namespace IMIS.Persistence.AuditChecklistModule
     /// Checklist -> Audit Report: an audit report is never typed in. It is raised
     /// by the first saved checklist row of a schedule and then kept in step with
     /// the checklist: the auditees, and one Summary-of-Findings line per
-    /// non-conforming clause (each carrying its NCAR). Only the commendable
-    /// findings, the purpose and the conclusions are written by hand on the report.
+    /// non-conforming clause (its clause and NCAR; the finding itself is written
+    /// by the auditor). The commendable findings, the purpose, the conclusions,
+    /// the findings text and any extra NC / OFI line are written by hand.
     /// </summary>
     public partial class AuditChecklistService
     {
@@ -64,6 +65,20 @@ namespace IMIS.Persistence.AuditChecklistModule
 
             var missing = scheduleIds.Except(withReport).ToList();
             foreach (var scheduleId in missing)
+                await SyncAuditReportAsync(scheduleId, cancellationToken).ConfigureAwait(false);
+
+            // Reports whose Summary of Findings still holds lines from before it
+            // became editable (no checklist row, no criteria) are brought up to
+            // date once: the generated lines are replaced by the fetched ones.
+            var legacy = await _dbContext.Set<AuditSummaryFIndings>()
+                .AsNoTracking()
+                .Where(f => !f.IsDeleted && f.AuditChecklistId == null && f.CriteriaText == null
+                            && scheduleIds.Contains(f.AuditReport!.AuditScheduleId))
+                .Select(f => f.AuditReport!.AuditScheduleId)
+                .Distinct()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var scheduleId in legacy.Except(missing))
                 await SyncAuditReportAsync(scheduleId, cancellationToken).ConfigureAwait(false);
 
             return missing.Count;
@@ -194,30 +209,69 @@ namespace IMIS.Persistence.AuditChecklistModule
                 .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            _dbContext.Set<AuditSummaryFIndings>().RemoveRange(report.AuditSummaryFIndings ?? new List<AuditSummaryFIndings>());
+            // IgnoreQueryFilters above also brings back soft-deleted lines.
+            var current = (report.AuditSummaryFIndings ?? new List<AuditSummaryFIndings>())
+                .Where(f => !f.IsDeleted)
+                .ToList();
+
+            // Lines written before the report became editable carry no source
+            // (neither a checklist row nor a typed criteria): they were all
+            // generated, so they are replaced by the fetched lines below.
+            var legacy = current.Where(f => f.AuditChecklistId == null && f.CriteriaText == null).ToList();
+            _dbContext.Set<AuditSummaryFIndings>().RemoveRange(legacy);
+
+            // A fetched line follows its checklist row: it goes when the row is
+            // no longer non-conforming. What the auditor typed in Findings is
+            // never overwritten. Manual lines are not touched.
+            var fetched = current
+                .Where(f => f.AuditChecklistId != null)
+                .GroupBy(f => f.AuditChecklistId!.Value)
+                .ToDictionary(g => g.Key, g => g.OrderBy(f => f.Id).First());
+            var ncRowIdSet = ncRowIds.ToHashSet();
+            _dbContext.Set<AuditSummaryFIndings>().RemoveRange(
+                current.Where(f => f.AuditChecklistId != null
+                                   && (!ncRowIdSet.Contains(f.AuditChecklistId.Value)
+                                       || !ReferenceEquals(fetched[f.AuditChecklistId.Value], f))));
+
+            // Fetched lines come first, in clause order; manual lines follow in
+            // the order the auditor wrote them.
             var no = 1;
             foreach (var row in ncRows)
             {
-                var finding = string.IsNullOrWhiteSpace(row.FindingAndRemarks)
-                    ? row.Question
-                    : row.FindingAndRemarks.Trim();
-                var text = $"{row.ClauseRef.Trim()} - {finding}";
-                if (ncarByRow.TryGetValue(row.Id, out var ncar))
+                var clause = row.ClauseRef.Trim();
+                ncarByRow.TryGetValue(row.Id, out var ncar);
+                if (ncar != null) ncar.AuditReportId = report.Id;
+
+                if (fetched.TryGetValue(row.Id, out var line))
                 {
-                    text += $" (NCAR {ncar.ReferenceNumber})";
-                    ncar.AuditReportId = report.Id;
+                    line.No = no++;
+                    line.CriteriaText = clause;
+                    line.NcarReferenceNumber = ncar?.ReferenceNumber;
+                    line.AuditNcarStatusId = ncStatusId;
+                    continue;
                 }
 
                 _dbContext.Set<AuditSummaryFIndings>().Add(new AuditSummaryFIndings
                 {
                     Id = 0,
                     No = no++,
-                    Findings = text,
+                    // The auditor writes the finding; the checklist only supplies
+                    // the clause and the NCAR.
+                    Findings = string.Empty,
+                    CriteriaText = clause,
+                    NcarReferenceNumber = ncar?.ReferenceNumber,
+                    AuditChecklistId = row.Id,
                     AuditNcarStatusId = ncStatusId,
                     AuditReportId = report.Id,
                     IsDeleted = false
                 });
             }
+
+            foreach (var manual in current
+                         .Where(f => f.AuditChecklistId == null && f.CriteriaText != null)
+                         .OrderBy(f => f.No)
+                         .ThenBy(f => f.Id))
+                manual.No = no++;
 
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }

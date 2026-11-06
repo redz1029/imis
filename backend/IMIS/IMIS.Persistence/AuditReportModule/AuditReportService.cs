@@ -49,8 +49,9 @@ namespace IMIS.Persistence.AuditReportModule
                 throw new InvalidOperationException("Audit report not found.");
 
             // Only what the auditor writes by hand is saved. The schedule, plan
-            // entry, office, standard, auditees and Summary of Findings come from
-            // the checklist, so whatever the client echoes for them is ignored.
+            // entry, office, standard and auditees come from the checklist, so
+            // whatever the client echoes for them is ignored. The Summary of
+            // Findings is saved by SaveSummaryFindingsAsync.
             if (existing.AuditComFindings?.Any() == true)
                 dbContext.Set<AuditComFindings>().RemoveRange(existing.AuditComFindings);
 
@@ -76,8 +77,113 @@ namespace IMIS.Persistence.AuditReportModule
                 });
             }
 
+            await SaveSummaryFindingsAsync(existing.Id, aDto.AuditSummaryFindings, cancellationToken).ConfigureAwait(false);
+
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
+
+        /// <summary>
+        /// Summary of Findings. The lines fetched from the checklist (one per
+        /// non-conforming clause) keep their clause, status and NCAR; the auditor
+        /// only writes their Findings. Lines the auditor added are saved whole
+        /// (criteria, findings, NC or OFI) and removed when left out.
+        /// </summary>
+        private async Task SaveSummaryFindingsAsync(
+            int auditReportId,
+            ICollection<AuditSummaryFindingsDto>? incoming,
+            CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+            var sent = (incoming ?? new List<AuditSummaryFindingsDto>())
+                .Where(d => d != null)
+                .ToList();
+
+            var statuses = await dbContext.Set<AuditNcarStatus>()
+                .AsNoTracking()
+                .Where(s => s.ncarStatus != null)
+                .Select(s => new { s.Id, Name = s.ncarStatus!.Trim().ToUpper() })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            var ncId = statuses.FirstOrDefault(s => s.Name == "NC")?.Id;
+            var ofiId = statuses.FirstOrDefault(s => s.Name == "OFI")?.Id;
+
+            var current = await dbContext.Set<AuditSummaryFIndings>()
+                .Where(f => f.AuditReportId == auditReportId && !f.IsDeleted)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var sentById = sent.Where(d => d.Id > 0).GroupBy(d => d.Id).ToDictionary(g => g.Key, g => g.First());
+
+            foreach (var line in current)
+            {
+                var fetched = line.AuditChecklistId != null;
+                if (!sentById.TryGetValue(line.Id, out var dto))
+                {
+                    // Fetched lines follow the checklist and cannot be removed here.
+                    if (!fetched && line.CriteriaText != null)
+                        dbContext.Set<AuditSummaryFIndings>().Remove(line);
+                    continue;
+                }
+
+                line.Findings = (dto.Findings ?? string.Empty).Trim();
+                if (fetched || line.CriteriaText == null) continue;
+
+                line.CriteriaText = (dto.CriteriaText ?? string.Empty).Trim();
+                line.AuditNcarStatusId = ResolveStatus(dto.AuditNcarStatusId, ncId, ofiId);
+            }
+
+            // Manual lines in the order the form lists them, new ones included.
+            var manual = new List<(int Index, AuditSummaryFIndings Line)>();
+            var currentIds = current.Select(f => f.Id).ToHashSet();
+            for (var i = 0; i < sent.Count; i++)
+            {
+                var dto = sent[i];
+                if (currentIds.Contains(dto.Id))
+                {
+                    var line = current.First(f => f.Id == dto.Id);
+                    if (IsManualLine(line)) manual.Add((i, line));
+                    continue;
+                }
+
+                var criteria = (dto.CriteriaText ?? string.Empty).Trim();
+                var findings = (dto.Findings ?? string.Empty).Trim();
+                // A line with nothing written is just an empty row.
+                if (criteria.Length == 0 && findings.Length == 0) continue;
+
+                var added = new AuditSummaryFIndings
+                {
+                    Id = 0,
+                    No = 0,
+                    Findings = findings,
+                    CriteriaText = criteria,
+                    AuditChecklistId = null,
+                    NcarReferenceNumber = null,
+                    AuditNcarStatusId = ResolveStatus(dto.AuditNcarStatusId, ncId, ofiId),
+                    AuditReportId = auditReportId,
+                    IsDeleted = false
+                };
+                dbContext.Set<AuditSummaryFIndings>().Add(added);
+                manual.Add((i, added));
+            }
+
+            // Numbering: the lines from the checklist first, in the order they
+            // were raised, then the manual ones as listed on the form.
+            var no = 1;
+            foreach (var line in current.Where(f => !IsManualLine(f)).OrderBy(f => f.No).ThenBy(f => f.Id))
+                line.No = no++;
+            foreach (var m in manual.OrderBy(m => m.Index))
+                m.Line.No = no++;
+        }
+
+        /// <summary>
+        /// A line typed on the report: it has no checklist row, but it does have a
+        /// criteria (possibly empty). Lines with neither predate the editable report.
+        /// </summary>
+        private static bool IsManualLine(AuditSummaryFIndings line) =>
+            line.AuditChecklistId == null && line.CriteriaText != null;
+
+        private static int? ResolveStatus(int? requested, int? ncId, int? ofiId) =>
+            requested.HasValue && (requested == ncId || requested == ofiId) ? requested : ncId;
 
         /// <summary>
         /// One line per audit report with the checklist figures behind it, so the
