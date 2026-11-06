@@ -31,6 +31,8 @@ AuditReport _$AuditReportFromJson(Map<String, dynamic> json) => AuditReport(
   ),
   planOfficeProcess: json['planOfficeProcess'] as String?,
   planAuditTeamName: json['planAuditTeamName'] as String?,
+  auditorNames:
+      (json['auditorNames'] as List<dynamic>?)?.map((e) => e as String).toList(),
   auditComFindings:
       (json['auditComFindings'] as List<dynamic>?)
           ?.map((e) => AuditComFindings.fromJson(e as Map<String, dynamic>))
@@ -65,6 +67,7 @@ Map<String, dynamic> _$AuditReportToJson(AuditReport instance) =>
       ),
       'planOfficeProcess': instance.planOfficeProcess,
       'planAuditTeamName': instance.planAuditTeamName,
+      'auditorNames': instance.auditorNames,
       'auditComFindings':
           instance.auditComFindings?.map((e) => e.toJson()).toList(),
       'auditScope': instance.auditScope?.map((e) => e.toJson()).toList(),

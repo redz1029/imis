@@ -134,7 +134,82 @@ namespace IMIS.Persistence.AuditReportModule
         public async Task<AuditReportDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
-            return entity != null ? new AuditReportDto(entity) : null;
+            if (entity == null) return null;
+
+            var dto = new AuditReportDto(entity);
+            dto.AuditorNames = await GetAuditorNamesAsync(entity.AuditScheduleId, cancellationToken).ConfigureAwait(false);
+            return dto;
+        }
+
+        /// <summary>
+        /// The audit team of the schedule: every member of its team (the team
+        /// leader first), plus any auditor named on the plan entry who is not on
+        /// the roster. Real names come from the auditors' user accounts.
+        /// </summary>
+        private async Task<List<string>> GetAuditorNamesAsync(int auditScheduleId, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            var schedule = await dbContext.Set<AuditSchedule>()
+                .AsNoTracking()
+                .Include(s => s.AuditPlanEntry!)
+                    .ThenInclude(e => e!.IsoAuditors)
+                .FirstOrDefaultAsync(s => s.Id == auditScheduleId, cancellationToken)
+                .ConfigureAwait(false);
+            if (schedule == null) return new List<string>();
+
+            var entryAuditors = (schedule.AuditPlanEntry?.IsoAuditors ?? new List<IsoAuditor>())
+                .Where(a => !a.IsDeleted)
+                .ToList();
+            var teamId = schedule.TeamId ?? entryAuditors.FirstOrDefault(a => a.TeamId != null)?.TeamId;
+
+            var members = new List<(int AuditorId, string Name, bool Leader)>();
+            if (teamId.HasValue)
+            {
+                var roster = await dbContext.Set<AuditorTeams>()
+                    .AsNoTracking()
+                    .Include(t => t.Auditor)
+                        .ThenInclude(a => a!.User)
+                    .Where(t => !t.IsDeleted && t.TeamId == teamId.Value && t.AuditorId != null && t.Auditor != null)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                foreach (var row in roster)
+                {
+                    var auditorId = row.AuditorId!.Value;
+                    var existing = members.FindIndex(m => m.AuditorId == auditorId);
+                    if (existing >= 0)
+                    {
+                        if (row.IsTeamLeader) members[existing] = (auditorId, members[existing].Name, true);
+                        continue;
+                    }
+                    members.Add((auditorId, AuditChecklistService.AuditorName(row.Auditor!), row.IsTeamLeader));
+                }
+            }
+
+            var extraIds = entryAuditors
+                .Where(a => a.AuditorId != null && !members.Any(m => m.AuditorId == a.AuditorId))
+                .Select(a => a.AuditorId!.Value)
+                .Distinct()
+                .ToList();
+            if (extraIds.Count > 0)
+            {
+                var extras = await dbContext.Set<Auditor>()
+                    .AsNoTracking()
+                    .Include(a => a.User)
+                    .Where(a => !a.IsDeleted && extraIds.Contains(a.Id))
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                foreach (var a in extras)
+                    members.Add((a.Id, AuditChecklistService.AuditorName(a), false));
+            }
+
+            return members
+                .OrderByDescending(m => m.Leader)
+                .ThenBy(m => m.Name)
+                .Select(m => m.Name)
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct()
+                .ToList();
         }
 
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)

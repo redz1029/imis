@@ -183,7 +183,7 @@ namespace IMIS.Persistence.AuditChecklistModule
         /// The auditor's real name, from their user account. The Auditor row's own
         /// Name is only a placeholder ("Auditor 34"), so it is the fallback.
         /// </summary>
-        private static string AuditorName(Auditor auditor)
+        internal static string AuditorName(Auditor auditor)
         {
             var user = auditor.User;
             if (user != null)

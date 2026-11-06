@@ -58,6 +58,9 @@ class AuditReport {
   String? planOfficeProcess;
   String? planAuditTeamName;
 
+  /// Every member of the audit team, the team leader first.
+  List<String>? auditorNames;
+
   List<AuditComFindings>? auditComFindings;
   List<AuditScope>? auditScope;
   List<AuditSummaryFindings>? auditSummaryFindings;
@@ -80,6 +83,7 @@ class AuditReport {
     this.auditDate,
     this.planOfficeProcess,
     this.planAuditTeamName,
+    this.auditorNames,
     this.auditComFindings,
     this.auditScope,
     this.auditSummaryFindings,

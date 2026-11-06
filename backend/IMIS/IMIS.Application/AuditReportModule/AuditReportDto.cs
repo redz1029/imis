@@ -29,6 +29,9 @@ namespace IMIS.Application.AuditReportModule
         public string? PlanOfficeProcess { get; set; }
         public string? PlanAuditTeamName { get; set; }
 
+        /// <summary>Every member of the audit team, the team leader first.</summary>
+        public List<string> AuditorNames { get; set; } = new();
+
         // FIX: AuditReport.AuditScheduleId is required on the entity —
         // ToEntity() must set it or the object initializer fails.
         public required int AuditScheduleId { get; set; }

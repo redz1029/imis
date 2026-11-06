@@ -111,7 +111,18 @@ _Data _dataFrom(
     purpose: r.auditPurpose.trim(),
     standard: (r.auditStandardISOName ?? '').trim(),
     team: (r.planAuditTeamName ?? '').trim(),
-    auditors: _names(auditors),
+    // Every member of the audit team (the team leader first); the checklist
+    // summary's team name only stands in when the report carries none.
+    auditors: (r.auditorNames ?? const <String>[])
+            .map((n) => n.trim())
+            .where((n) => n.isNotEmpty)
+            .toList()
+            .isNotEmpty
+        ? [
+            for (final n in r.auditorNames!)
+              if (n.trim().isNotEmpty) n.trim(),
+          ]
+        : _names(auditors),
     auditees: [
       for (final s in r.auditScope ?? const [])
         if (s.auditee.trim().isNotEmpty) s.auditee.trim(),

@@ -177,6 +177,13 @@ class _AuditReportPageState extends State<AuditReportPage> {
     }
   }
 
+  /// Every member of the audit team, the team leader first.
+  List<String> get _auditorNames =>
+      (_report?.auditorNames ?? const <String>[])
+          .map((n) => n.trim())
+          .where((n) => n.isNotEmpty)
+          .toList();
+
   String get _areaName {
     final office = (_officeAuditedName ?? '').trim();
     if (office.isNotEmpty) return office;
@@ -438,7 +445,14 @@ class _AuditReportPageState extends State<AuditReportPage> {
               _officeAuditedName ?? _planOfficeProcess,
             ),
             const SizedBox(width: 16),
-            _fact('AUDITORS (TEAM)', _planAuditTeamName),
+            _fact(
+              (_planAuditTeamName ?? '').trim().isEmpty
+                  ? 'AUDITORS'
+                  : 'AUDITORS ($_planAuditTeamName)',
+              _auditorNames.isNotEmpty
+                  ? _auditorNames.join('\n')
+                  : _planAuditTeamName,
+            ),
           ]),
           const SizedBox(height: 12),
           const Text(
