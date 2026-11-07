@@ -361,28 +361,29 @@ class _NcarPdfBuilder {
       );
 
   /// Cells separated by vertical rules; every cell is as tall as the tallest.
+  ///
+  /// A table row does the equalising. A Row with CrossAxisAlignment.stretch
+  /// cannot be used here: inside a MultiPage the height is unbounded and
+  /// "stretch" turns that into an infinite height, which is what made the page
+  /// fail with "Widget won't fit into the page as its height (Infinity)".
   pw.Widget _cells(List<int> flex, List<pw.Widget> cells, {double minH = 0}) {
-    return pw.ConstrainedBox(
-      constraints: pw.BoxConstraints(minHeight: minH),
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < cells.length; i++)
-            pw.Expanded(
-              flex: flex[i],
-              child: pw.Container(
-                decoration: pw.BoxDecoration(
-                  border: pw.Border(
-                    right: i == cells.length - 1
-                        ? pw.BorderSide.none
-                        : _bs,
-                  ),
-                ),
-                child: _pad(cells[i]),
+    return pw.Table(
+      border: pw.TableBorder(verticalInside: _bs),
+      columnWidths: {
+        for (var i = 0; i < cells.length; i++)
+          i: pw.FlexColumnWidth(flex[i].toDouble()),
+      },
+      children: [
+        pw.TableRow(
+          children: [
+            for (final cell in cells)
+              pw.ConstrainedBox(
+                constraints: pw.BoxConstraints(minHeight: minH),
+                child: _pad(cell),
               ),
-            ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 
