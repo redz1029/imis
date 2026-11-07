@@ -4,12 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:imis/ISO/IQA/ncar/models/ncar_monitoring_log.dart';
+import 'package:imis/ISO/IQA/ncar/pages/ncar_form_page.dart';
 import 'package:imis/ISO/IQA/ncar/services/ncar_service.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/constant/permissions.dart';
-import 'package:imis/user/models/user_registration.dart';
-import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 
 class NcarMonitoringPage extends StatefulWidget {
@@ -24,16 +21,6 @@ class _NcarMonitoringPageState extends State<NcarMonitoringPage> {
 
   List<NcarMonitoringLog> _logs = [];
   bool _isLoading = true;
-  UserRegistration? _currentUser;
-  bool isAdmin = false;
-
-  /// True when the signed-in role holds [permission] (Administrators always
-  /// pass).
-  bool _hasPermission(String permission) {
-    if (isAdmin) return true;
-    return permissionService.hasPermission(permission);
-  }
-
   @override
   void initState() {
     super.initState();
@@ -43,8 +30,6 @@ class _NcarMonitoringPageState extends State<NcarMonitoringPage> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      _currentUser = await AuthUtil.fetchLoggedUser();
-      isAdmin = await AuthUtil.isCurrentUserAdmin();
       final logs = await _service.getMonitoringLogs();
       if (mounted) {
         setState(() {
@@ -60,66 +45,13 @@ class _NcarMonitoringPageState extends State<NcarMonitoringPage> {
     }
   }
 
-  Future<void> _verifyLog(NcarMonitoringLog log) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Verify NCAR Implementation'),
-        content: Text('Mark corrective action verified for NCAR ${log.ncarNo}?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Verify', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      final auditorName = _currentUser?.userName ?? 'Lead Auditor';
-      await _service.updateVerification(
-        monitoringLogId: log.id,
-        dateVerified: DateTime.now(),
-        verifiedByAuditorName: auditorName,
-      );
-      _loadData();
-      if (mounted) MotionToast.success(description: const Text('Verified successfully.')).show(context);
-    } catch (e) {
-      if (mounted) MotionToast.error(description: Text('Verification failed: $e')).show(context);
-    }
-  }
-
-  Future<void> _validateAndCloseLog(NcarMonitoringLog log) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Validate & Close NCAR'),
-        content: Text('Validate and officially CLOSE NCAR ${log.ncarNo}?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Validate & Close', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await _service.updateValidation(
-        monitoringLogId: log.id,
-        dateValidated: DateTime.now(),
-      );
-      _loadData();
-      if (mounted) MotionToast.success(description: const Text('NCAR validated and closed.')).show(context);
-    } catch (e) {
-      if (mounted) MotionToast.error(description: Text('Closure failed: $e')).show(context);
-    }
+  /// Verification and closing are written in the NCAR form itself (the auditor
+  /// writes what was observed, the lead auditor validates), so the log opens it.
+  Future<void> _openNcar(NcarMonitoringLog log) async {
+    final id = log.nonconformingActionReportId;
+    if (id == null) return;
+    final changed = await showNcarForm(context, id);
+    if (changed && mounted) _loadData();
   }
 
   @override
@@ -222,23 +154,15 @@ class _NcarMonitoringPageState extends State<NcarMonitoringPage> {
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
-                                        if (isClosed) ...[
-                                          Text(
-                                            'Closed: ${log.dateValidated != null ? DateFormat('MMM d, yyyy').format(log.dateValidated!) : 'Yes'}',
-                                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
-                                          ),
-                                        ] else if (log.dateVerified == null) ...[
-                                          if (_hasPermission(
-                                            AppPermissions
-                                                .nonconformingActionReportVerify,
-                                          ))
-                                            ElevatedButton.icon(
-                                              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-                                              onPressed: () => _verifyLog(log),
-                                              icon: const Icon(Icons.rule, size: 16, color: Colors.white),
-                                              label: const Text('Verify Action', style: TextStyle(color: Colors.white)),
+                                        if (isClosed)
+                                          Padding(
+                                            padding: const EdgeInsets.only(right: 12),
+                                            child: Text(
+                                              'Closed: ${log.dateValidated != null ? DateFormat('MMM d, yyyy').format(log.dateValidated!) : 'Yes'}',
+                                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
                                             ),
-                                        ] else ...[
+                                          )
+                                        else if (log.dateVerified != null)
                                           Padding(
                                             padding: const EdgeInsets.only(right: 12),
                                             child: Text(
@@ -246,17 +170,12 @@ class _NcarMonitoringPageState extends State<NcarMonitoringPage> {
                                               style: TextStyle(fontSize: 12, color: Colors.green.shade700, fontWeight: FontWeight.w600),
                                             ),
                                           ),
-                                          if (_hasPermission(
-                                            AppPermissions
-                                                .nonconformingActionReportValidateAndClose,
-                                          ))
-                                            ElevatedButton.icon(
-                                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
-                                              onPressed: () => _validateAndCloseLog(log),
-                                              icon: const Icon(Icons.check_circle, size: 16, color: Colors.white),
-                                              label: const Text('Validate & Close', style: TextStyle(color: Colors.white)),
-                                            ),
-                                        ],
+                                        if (log.nonconformingActionReportId != null)
+                                          OutlinedButton.icon(
+                                            onPressed: () => _openNcar(log),
+                                            icon: const Icon(Icons.edit_note, size: 18),
+                                            label: Text(isClosed ? 'View NCAR' : 'Open NCAR (verify / close)'),
+                                          ),
                                       ],
                                     ),
                                   ],

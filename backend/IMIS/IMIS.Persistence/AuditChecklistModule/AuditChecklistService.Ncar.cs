@@ -54,10 +54,11 @@ namespace IMIS.Persistence.AuditChecklistModule
             if (dto.Conforming != false)
                 return $"NCAR {ncar.ReferenceNumber} for this clause was already acknowledged or answered by the office, so the clause can no longer be changed back from Non-Conforming.";
 
+            // A finding the auditor wrote on the NCAR itself is not the checklist's to change.
             var findings = string.IsNullOrWhiteSpace(dto.FindingAndRemarks)
                 ? ncar.StandardRequirement
                 : dto.FindingAndRemarks.Trim();
-            if (ncar.AuditFindings != findings)
+            if (!ncar.FindingEditedByAuditor && ncar.AuditFindings != findings)
                 return $"NCAR {ncar.ReferenceNumber} for this clause was already acknowledged or answered by the office, so its finding can no longer be edited.";
 
             return null;
@@ -116,12 +117,14 @@ namespace IMIS.Persistence.AuditChecklistModule
 
             if (ncar != null)
             {
-                if (hasLiveNcar && ncar.AuditFindings != findings &&
+                if (hasLiveNcar && !ncar.FindingEditedByAuditor && ncar.AuditFindings != findings &&
                     await IsNcarProcessedAsync(ncar, cancellationToken).ConfigureAwait(false))
                     return (false, $"NCAR {ncar.ReferenceNumber} for this clause was already acknowledged or answered by the office, so its finding can no longer be edited.");
 
                 ncar.IsDeleted = false;
-                ncar.AuditFindings = findings;
+                // The auditor may have rewritten the finding on the NCAR: keep it.
+                if (!ncar.FindingEditedByAuditor)
+                    ncar.AuditFindings = findings;
                 await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 return (true, null);
             }

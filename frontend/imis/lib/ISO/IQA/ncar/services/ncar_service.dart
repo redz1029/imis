@@ -93,6 +93,130 @@ class NcarService {
   }
 
   // ===========================================================================
+  // The NCAR form, step by step. Each step is written by one side only and the
+  // server refuses it when the form is not at that point; the saved NCAR comes
+  // back, or an Exception carrying the server's reason.
+  //   auditor : issuance -> verification -> validate and close
+  //   auditee : acknowledge -> response -> approval (department head)
+  // ===========================================================================
+
+  Future<NonconformingActionReport> _step(
+    Future<Response<dynamic>> Function() send,
+    String fallback,
+  ) async {
+    try {
+      final response = await send();
+      final data = response.data;
+      if (response.statusCode == 200 && data is Map) {
+        return NonconformingActionReport.fromJson(Map<String, dynamic>.from(data));
+      }
+      if (data is Map && data['error'] != null) {
+        throw Exception(data['error'].toString());
+      }
+      if (response.statusCode == 403) {
+        throw Exception('You are not allowed to do this.');
+      }
+      throw Exception(fallback);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        throw Exception('You are not allowed to do this.');
+      }
+      throw Exception(_errorText(e, fallback));
+    }
+  }
+
+  /// Auditor: the nature of the report, the clause, the requirement, the
+  /// policy reference and the finding.
+  Future<NonconformingActionReport> saveIssuance(
+    int id, {
+    required String relevantStandard,
+    required String standardRequirement,
+    required String legalOrPolicyReference,
+    required String auditFindings,
+    required bool isInternalAudit,
+    required bool isExternalAudit,
+    required bool isNonconformity,
+    required bool isInternalCustomer,
+    required bool isExternalCustomer,
+    required bool isComplaint,
+    required bool isResponseRate,
+    required bool isOperations,
+  }) =>
+      _step(
+        () => AuthenticatedRequest.put(
+          dio,
+          '${ApiEndpoint().ncar}/$id/issuance',
+          data: {
+            'relevantStandard': relevantStandard,
+            'standardRequirement': standardRequirement,
+            'legalOrPolicyReference': legalOrPolicyReference,
+            'auditFindings': auditFindings,
+            'isInternalAudit': isInternalAudit,
+            'isExternalAudit': isExternalAudit,
+            'isNonconformity': isNonconformity,
+            'isInternalCustomer': isInternalCustomer,
+            'isExternalCustomer': isExternalCustomer,
+            'isComplaint': isComplaint,
+            'isResponseRate': isResponseRate,
+            'isOperations': isOperations,
+          },
+        ),
+        'Failed to save the auditor section.',
+      );
+
+  /// Auditee: receives the NCAR.
+  Future<NonconformingActionReport> acknowledge(int id) => _step(
+        () => AuthenticatedRequest.post(dio, '${ApiEndpoint().ncar}/$id/acknowledge'),
+        'Failed to acknowledge the NCAR.',
+      );
+
+  /// Auditee: the root causes and the proposed actions.
+  Future<NonconformingActionReport> saveResponse(
+    int id, {
+    required List<String> rootCauses,
+    required List<String> corrections,
+    required List<String> correctiveActions,
+  }) =>
+      _step(
+        () => AuthenticatedRequest.put(
+          dio,
+          '${ApiEndpoint().ncar}/$id/response',
+          data: {
+            'rootCauses': rootCauses,
+            'corrections': corrections,
+            'correctiveActions': correctiveActions,
+          },
+        ),
+        'Failed to save the response.',
+      );
+
+  /// Department / section head: approves the proposed actions.
+  Future<NonconformingActionReport> approve(int id) => _step(
+        () => AuthenticatedRequest.post(dio, '${ApiEndpoint().ncar}/$id/approve'),
+        'Failed to approve the proposed actions.',
+      );
+
+  /// Auditor: what was observed when the actions were verified.
+  Future<NonconformingActionReport> saveVerification(
+    int id, {
+    required String verificationDetails,
+  }) =>
+      _step(
+        () => AuthenticatedRequest.put(
+          dio,
+          '${ApiEndpoint().ncar}/$id/verification',
+          data: {'verificationDetails': verificationDetails},
+        ),
+        'Failed to save the verification.',
+      );
+
+  /// Lead auditor: validates the verification and closes the NCAR.
+  Future<NonconformingActionReport> validateAndClose(int id) => _step(
+        () => AuthenticatedRequest.post(dio, '${ApiEndpoint().ncar}/$id/close'),
+        'Failed to close the NCAR.',
+      );
+
+  // ===========================================================================
   // NCAR attachments (pictures printed on page 2 of the form)
   // ===========================================================================
 

@@ -5,12 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:imis/ISO/IQA/ncar/dialogs/ncar_attachments_dialog.dart';
 import 'package:imis/ISO/IQA/ncar/models/nonconforming_action_report.dart';
+import 'package:imis/ISO/IQA/ncar/pages/ncar_form_page.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_print_preview_page.dart';
 import 'package:imis/ISO/IQA/ncar/services/ncar_service.dart';
 import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
-import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
@@ -29,7 +29,6 @@ class _NcarListPageState extends State<NcarListPage> {
   bool _isLoading = true;
   String _selectedFilter = IqaStatus.all;
   DateTimeRange _range = IqaPeriod.currentYear();
-  UserRegistration? _currentUser;
   bool isAdmin = false;
 
   // Acknowledging and responding follow the permissions switched on for the
@@ -46,7 +45,6 @@ class _NcarListPageState extends State<NcarListPage> {
   Future<void> _loadData({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      _currentUser = await AuthUtil.fetchLoggedUser();
       isAdmin = await AuthUtil.isCurrentUserAdmin();
       // One audit can raise many NCARs (one per non-conforming clause).
       final ncars = await _service.getAllNcars(pageSize: 500);
@@ -94,6 +92,13 @@ class _NcarListPageState extends State<NcarListPage> {
     _selectedFilter = IqaStatus.all;
   });
 
+  /// Opens the NCAR form: the auditor writes the finding and verifies, the
+  /// auditee acknowledges and answers, each in their own section.
+  Future<void> _openForm(NonconformingActionReport ncar) async {
+    final changed = await showNcarForm(context, ncar.id);
+    if (changed && mounted) _loadData(silent: true);
+  }
+
   Future<void> _acknowledgeNcar(NonconformingActionReport ncar) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -113,129 +118,16 @@ class _NcarListPageState extends State<NcarListPage> {
     if (confirmed != true) return;
 
     try {
-      // The list rows carry no root causes / actions; saving them as-is would
-      // erase what is stored, so work from the full record.
-      ncar = await _service.getNcarById(ncar.id) ?? ncar;
-      final updated = NonconformingActionReport(
-        rootCauses: ncar.rootCauses,
-        corrections: ncar.corrections,
-        correctiveActions: ncar.correctiveActions,
-        id: ncar.id,
-        referenceNumber: ncar.referenceNumber,
-        office: ncar.office,
-        relevantStandard: ncar.relevantStandard,
-        auditDate: ncar.auditDate,
-        standardRequirement: ncar.standardRequirement,
-        legalOrPolicyReference: ncar.legalOrPolicyReference,
-        auditFindings: ncar.auditFindings,
-        auditReportId: ncar.auditReportId,
-        issuedByAuditorUserId: ncar.issuedByAuditorUserId,
-        issuedDate: ncar.issuedDate,
-        acknowledgedByAuditeeUserId: _currentUser?.id ?? ncar.acknowledgedByAuditeeUserId,
-        acknowledgedDate: DateTime.now(),
-        proposedByAuditeeUserId: ncar.proposedByAuditeeUserId,
-        proposedDate: ncar.proposedDate,
-        approvedByHeadUserId: ncar.approvedByHeadUserId,
-        approvedDate: ncar.approvedDate,
-        verificationDetails: ncar.verificationDetails,
-        verifiedByAuditorUserId: ncar.verifiedByAuditorUserId,
-        verifiedDate: ncar.verifiedDate,
-        validatedByLeadAuditorUserId: ncar.validatedByLeadAuditorUserId,
-        validatedDate: ncar.validatedDate,
-        isActive: ncar.isActive,
-        isClosed: ncar.isClosed,
-      );
-      await _service.saveNcar(updated);
+      // The server records the signed-in user and today's date.
+      await _service.acknowledge(ncar.id);
       _loadData(silent: true);
       if (mounted) MotionToast.success(description: const Text('NCAR acknowledged.')).show(context);
     } catch (e) {
-      if (mounted) MotionToast.error(description: Text('Failed: $e')).show(context);
-    }
-  }
-
-  Future<void> _respondNcar(NonconformingActionReport ncar) async {
-    final responseController = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Office Response - ${ncar.referenceNumber}'),
-        content: SizedBox(
-          width: 440,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Enter corrective action plan / proposed response:', style: GoogleFonts.plusJakartaSans(fontSize: 13)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: responseController,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  hintText: 'Proposed root cause correction and action plan...',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-            onPressed: () => Navigator.pop(ctx, responseController.text.trim()),
-            child: const Text('Submit Response', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (result == null || result.isEmpty) return;
-
-    try {
-      // See _acknowledgeNcar: start from the full record so the stored root
-      // causes and actions survive the save.
-      ncar = await _service.getNcarById(ncar.id) ?? ncar;
-      final updated = NonconformingActionReport(
-        rootCauses: ncar.rootCauses,
-        corrections: ncar.corrections,
-        correctiveActions: ncar.correctiveActions,
-        id: ncar.id,
-        referenceNumber: ncar.referenceNumber,
-        office: ncar.office,
-        relevantStandard: ncar.relevantStandard,
-        auditDate: ncar.auditDate,
-        standardRequirement: ncar.standardRequirement,
-        legalOrPolicyReference: ncar.legalOrPolicyReference,
-        auditFindings: ncar.auditFindings,
-        auditReportId: ncar.auditReportId,
-        issuedByAuditorUserId: ncar.issuedByAuditorUserId,
-        issuedDate: ncar.issuedDate,
-        acknowledgedByAuditeeUserId: ncar.acknowledgedByAuditeeUserId,
-        acknowledgedDate: ncar.acknowledgedDate ?? DateTime.now(),
-        proposedByAuditeeUserId: _currentUser?.id,
-        proposedDate: DateTime.now(),
-        approvedByHeadUserId: _currentUser?.id,
-        approvedDate: DateTime.now(),
-        verificationDetails: result,
-        verifiedByAuditorUserId: ncar.verifiedByAuditorUserId,
-        verifiedDate: ncar.verifiedDate,
-        validatedByLeadAuditorUserId: ncar.validatedByLeadAuditorUserId,
-        validatedDate: ncar.validatedDate,
-        isActive: true,
-        isClosed: false,
-      );
-      await _service.saveNcar(updated);
-      await _service.syncFromNcar(
-        ncarId: ncar.id,
-        deptSectionUnit: ncar.office,
-        dateIssued: ncar.issuedDate ?? DateTime.now(),
-        issuedByName: ncar.issuedByAuditorName ?? 'Auditor',
-        itemNoRelevantStandard: ncar.relevantStandard,
-        auditeeName: ncar.acknowledgedByAuditeeName ?? ncar.office,
-      );
-      _loadData(silent: true);
-      if (mounted) MotionToast.success(description: const Text('Response submitted & synced to monitoring.')).show(context);
-    } catch (e) {
-      if (mounted) MotionToast.error(description: Text('Failed: $e')).show(context);
+      if (mounted) {
+        MotionToast.error(
+          description: Text(e.toString().replaceFirst('Exception: ', '')),
+        ).show(context);
+      }
     }
   }
 
@@ -400,21 +292,20 @@ class _NcarListPageState extends State<NcarListPage> {
                                           icon: const Icon(Icons.print_outlined, size: 16),
                                           label: const Text('Print'),
                                         ),
-                                        if (n.acknowledgedDate == null) ...[
-                                          if (_can(AppPermissions.nonconformingActionReportAcknowledge))
-                                            ElevatedButton.icon(
-                                              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-                                              onPressed: () => _acknowledgeNcar(n),
-                                              icon: const Icon(Icons.check, size: 16, color: Colors.white),
-                                              label: const Text('Acknowledge', style: TextStyle(color: Colors.white)),
-                                            ),
-                                        ] else if (!n.isClosed && _can(AppPermissions.nonconformingActionReportRespond)) ...[
+                                        if (!n.isClosed &&
+                                            n.acknowledgedDate == null &&
+                                            _can(AppPermissions.nonconformingActionReportAcknowledge))
                                           OutlinedButton.icon(
-                                            onPressed: () => _respondNcar(n),
-                                            icon: const Icon(Icons.reply, size: 16),
-                                            label: const Text('Respond / Action Plan'),
+                                            onPressed: () => _acknowledgeNcar(n),
+                                            icon: const Icon(Icons.check, size: 16),
+                                            label: const Text('Acknowledge'),
                                           ),
-                                        ],
+                                        ElevatedButton.icon(
+                                          style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+                                          onPressed: () => _openForm(n),
+                                          icon: const Icon(Icons.edit_note, size: 18, color: Colors.white),
+                                          label: const Text('Open Form', style: TextStyle(color: Colors.white)),
+                                        ),
                                       ],
                                     ),
                                   ],

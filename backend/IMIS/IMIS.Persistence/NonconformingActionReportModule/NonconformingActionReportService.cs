@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditReportModule;
+using IMIS.Application.NcarMonitoringLogModule;
 using IMIS.Application.NonconformingActionReportModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,16 @@ namespace IMIS.Persistence.NonconformingActionReportModule
     {
         private readonly INonconformingActionReportRepository _repository;
         private readonly IAuditReportRepository _auditReportRepository;
+        private readonly INcarMonitoringLogService _monitoringLogService;
 
-        public NonconformingActionReportService(INonconformingActionReportRepository repository, IAuditReportRepository auditReportRepository)
+        public NonconformingActionReportService(
+            INonconformingActionReportRepository repository,
+            IAuditReportRepository auditReportRepository,
+            INcarMonitoringLogService monitoringLogService)
         {
             _repository = repository;
             _auditReportRepository = auditReportRepository;
+            _monitoringLogService = monitoringLogService;
         }
 
         public async Task<NonconformingActionReportDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
@@ -57,6 +63,7 @@ namespace IMIS.Persistence.NonconformingActionReportModule
                     // The checklist link is owned by the server (AuditChecklistService):
                     // ToEntity() never carries it, so an update must not wipe it.
                     var auditChecklistId = existing.AuditChecklistId;
+                    var findingEdited = existing.FindingEditedByAuditor;
 
                     if (existing.RootCauses?.Any() == true)
                         dbContext.Set<NcarRootCause>().RemoveRange(existing.RootCauses);
@@ -69,6 +76,7 @@ namespace IMIS.Persistence.NonconformingActionReportModule
 
                     dbContext.Entry(existing).CurrentValues.SetValues(entity);
                     existing.AuditChecklistId = auditChecklistId;
+                    existing.FindingEditedByAuditor = findingEdited;
 
                     foreach (var rootCause in entity.RootCauses)
                         dbContext.Set<NcarRootCause>().Add(rootCause);
@@ -247,6 +255,253 @@ namespace IMIS.Persistence.NonconformingActionReportModule
             entity.IsDeleted = true;
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return true;
+        }
+
+        // =====================================================================
+        // The NCAR form, step by step
+        //
+        // The form is written by two sides. The auditor writes the finding
+        // (issuance), later verifies the actions and the lead auditor validates
+        // and closes. The auditee acknowledges, writes the root causes and the
+        // proposed actions, and the department head approves them. Each step is
+        // only open at the right point of the form, so neither side can change
+        // what the other one signed.
+        // =====================================================================
+
+        private const string NotFound = "Nonconforming action report not found.";
+
+        private static string? ClosedError(NonconformingActionReport n) =>
+            n.IsClosed ? $"NCAR {n.ReferenceNumber} is already closed." : null;
+
+        private async Task<(NonconformingActionReportDto? Ncar, string? Error)> Saved(long id, CancellationToken cancellationToken)
+        {
+            var dto = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return dto == null ? (null, NotFound) : (dto, null);
+        }
+
+        private static List<string> Clean(IEnumerable<string>? items) =>
+            (items ?? Enumerable.Empty<string>())
+                .Select(i => (i ?? string.Empty).Trim())
+                .Where(i => i.Length > 0)
+                .ToList();
+
+        public async Task<(NonconformingActionReportDto? Ncar, string? Error)> UpdateIssuanceAsync(
+            long id, NcarIssuanceRequest request, CancellationToken cancellationToken)
+        {
+            if (request == null) return (null, "Nothing to save.");
+
+            var entity = await _repository.GetByIdForDeleteAsync(id, cancellationToken).ConfigureAwait(false);
+            if (entity == null) return (null, NotFound);
+            var closed = ClosedError(entity);
+            if (closed != null) return (null, closed);
+
+            var standard = (request.RelevantStandard ?? string.Empty).Trim();
+            var requirement = (request.StandardRequirement ?? string.Empty).Trim();
+            var findings = (request.AuditFindings ?? string.Empty).Trim();
+            if (standard.Length == 0) return (null, "The relevant standard is required.");
+            if (requirement.Length == 0) return (null, "The standard requirement is required.");
+            if (findings.Length == 0) return (null, "The audit finding is required.");
+
+            // A finding rewritten here is the auditor's: the checklist stops replacing it.
+            if (!string.Equals(entity.AuditFindings, findings, StringComparison.Ordinal))
+                entity.FindingEditedByAuditor = true;
+
+            entity.RelevantStandard = standard;
+            entity.StandardRequirement = requirement;
+            entity.LegalOrPolicyReference = (request.LegalOrPolicyReference ?? string.Empty).Trim();
+            entity.AuditFindings = findings;
+
+            entity.IsInternalAudit = request.IsInternalAudit;
+            entity.IsExternalAudit = request.IsExternalAudit;
+            entity.IsNonconformity = request.IsNonconformity;
+            entity.IsInternalCustomer = request.IsInternalCustomer;
+            entity.IsExternalCustomer = request.IsExternalCustomer;
+            entity.IsComplaint = request.IsComplaint;
+            entity.IsResponseRate = request.IsResponseRate;
+            entity.IsOperations = request.IsOperations;
+
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await Saved(id, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<(NonconformingActionReportDto? Ncar, string? Error)> AcknowledgeAsync(
+            long id, string userId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId)) return (null, "Unable to identify the signed-in user.");
+
+            var entity = await _repository.GetByIdForDeleteAsync(id, cancellationToken).ConfigureAwait(false);
+            if (entity == null) return (null, NotFound);
+            var closed = ClosedError(entity);
+            if (closed != null) return (null, closed);
+            if (entity.AcknowledgedDate != null)
+                return (null, $"NCAR {entity.ReferenceNumber} was already acknowledged.");
+
+            entity.AcknowledgedByAuditeeUserId = userId;
+            entity.AcknowledgedDate = DateTime.UtcNow;
+
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await Saved(id, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<(NonconformingActionReportDto? Ncar, string? Error)> SaveResponseAsync(
+            long id, NcarResponseRequest request, string userId, CancellationToken cancellationToken)
+        {
+            if (request == null) return (null, "Nothing to save.");
+            if (string.IsNullOrWhiteSpace(userId)) return (null, "Unable to identify the signed-in user.");
+
+            var entity = await _repository.GetByIdForDeleteAsync(id, cancellationToken).ConfigureAwait(false);
+            if (entity == null) return (null, NotFound);
+            var closed = ClosedError(entity);
+            if (closed != null) return (null, closed);
+            if (entity.AcknowledgedDate == null)
+                return (null, "Acknowledge the NCAR before answering it.");
+            if (entity.ApprovedDate != null)
+                return (null, "The proposed actions were already approved, so the response can no longer be changed.");
+
+            var rootCauses = Clean(request.RootCauses);
+            var corrections = Clean(request.Corrections);
+            var correctives = Clean(request.CorrectiveActions);
+            if (rootCauses.Count == 0) return (null, "Write at least one root cause.");
+            if (corrections.Count == 0 && correctives.Count == 0)
+                return (null, "Write at least one correction or corrective action.");
+
+            var dbContext = _repository.GetDbContext();
+
+            dbContext.Set<NcarRootCause>().RemoveRange(
+                await dbContext.Set<NcarRootCause>().Where(x => x.NonconformingActionReportId == id).ToListAsync(cancellationToken).ConfigureAwait(false));
+            dbContext.Set<NcarCorrectionAction>().RemoveRange(
+                await dbContext.Set<NcarCorrectionAction>().Where(x => x.NonconformingActionReportId == id).ToListAsync(cancellationToken).ConfigureAwait(false));
+            dbContext.Set<NcarCorrectiveAction>().RemoveRange(
+                await dbContext.Set<NcarCorrectiveAction>().Where(x => x.NonconformingActionReportId == id).ToListAsync(cancellationToken).ConfigureAwait(false));
+
+            for (var i = 0; i < rootCauses.Count; i++)
+                dbContext.Set<NcarRootCause>().Add(new NcarRootCause { Id = 0, NonconformingActionReportId = id, CauseDescription = rootCauses[i], OrderNumber = i + 1 });
+            for (var i = 0; i < corrections.Count; i++)
+                dbContext.Set<NcarCorrectionAction>().Add(new NcarCorrectionAction { Id = 0, NonconformingActionReportId = id, ActionDescription = corrections[i], OrderNumber = i + 1 });
+            for (var i = 0; i < correctives.Count; i++)
+                dbContext.Set<NcarCorrectiveAction>().Add(new NcarCorrectiveAction { Id = 0, NonconformingActionReportId = id, ActionDescription = correctives[i], OrderNumber = i + 1 });
+
+            entity.ProposedByAuditeeUserId = userId;
+            entity.ProposedDate = DateTime.UtcNow;
+
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await Saved(id, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<(NonconformingActionReportDto? Ncar, string? Error)> ApproveAsync(
+            long id, string userId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId)) return (null, "Unable to identify the signed-in user.");
+
+            var entity = await _repository.GetByIdForDeleteAsync(id, cancellationToken).ConfigureAwait(false);
+            if (entity == null) return (null, NotFound);
+            var closed = ClosedError(entity);
+            if (closed != null) return (null, closed);
+            if (entity.ProposedDate == null)
+                return (null, "The office has not written its response yet, so there is nothing to approve.");
+            if (entity.ApprovedDate != null)
+                return (null, $"NCAR {entity.ReferenceNumber} was already approved.");
+
+            entity.ApprovedByHeadUserId = userId;
+            entity.ApprovedDate = DateTime.UtcNow;
+
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            // The approved NCAR goes on the monitoring log (QP-03-F-09).
+            await SyncMonitoringLogAsync(id, cancellationToken).ConfigureAwait(false);
+            return await Saved(id, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<(NonconformingActionReportDto? Ncar, string? Error)> SaveVerificationAsync(
+            long id, NcarVerificationRequest request, string userId, CancellationToken cancellationToken)
+        {
+            if (request == null) return (null, "Nothing to save.");
+            if (string.IsNullOrWhiteSpace(userId)) return (null, "Unable to identify the signed-in user.");
+
+            var entity = await _repository.GetByIdForDeleteAsync(id, cancellationToken).ConfigureAwait(false);
+            if (entity == null) return (null, NotFound);
+            var closed = ClosedError(entity);
+            if (closed != null) return (null, closed);
+            if (entity.ApprovedDate == null)
+                return (null, "The proposed actions are not approved yet, so they cannot be verified.");
+
+            var details = (request.VerificationDetails ?? string.Empty).Trim();
+            if (details.Length == 0) return (null, "Write what was observed when the actions were verified.");
+
+            var dbContext = _repository.GetDbContext();
+            var now = DateTime.UtcNow;
+            entity.VerificationDetails = details;
+            entity.VerifiedByAuditorUserId = userId;
+            entity.VerifiedDate = now;
+
+            var log = await dbContext.Set<NcarMonitoringLog>()
+                .FirstOrDefaultAsync(l => l.NonconformingActionReportId == id, cancellationToken)
+                .ConfigureAwait(false);
+            if (log != null)
+            {
+                log.DateVerified = now;
+                log.VerifiedByAuditorName = await UserNameAsync(userId, cancellationToken).ConfigureAwait(false);
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await Saved(id, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<(NonconformingActionReportDto? Ncar, string? Error)> ValidateAndCloseAsync(
+            long id, string userId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId)) return (null, "Unable to identify the signed-in user.");
+
+            var entity = await _repository.GetByIdForDeleteAsync(id, cancellationToken).ConfigureAwait(false);
+            if (entity == null) return (null, NotFound);
+            var closed = ClosedError(entity);
+            if (closed != null) return (null, closed);
+            if (entity.VerifiedDate == null)
+                return (null, "The actions have not been verified yet, so the NCAR cannot be closed.");
+
+            var dbContext = _repository.GetDbContext();
+            var now = DateTime.UtcNow;
+            entity.ValidatedByLeadAuditorUserId = userId;
+            entity.ValidatedDate = now;
+            entity.IsClosed = true;
+            entity.IsActive = false;
+
+            var log = await dbContext.Set<NcarMonitoringLog>()
+                .FirstOrDefaultAsync(l => l.NonconformingActionReportId == id, cancellationToken)
+                .ConfigureAwait(false);
+            if (log != null)
+            {
+                log.DateValidated = now;
+                log.Remarks = "Closed";
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await Saved(id, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>Raises (or refreshes) the monitoring log line of an approved NCAR.</summary>
+        private async Task SyncMonitoringLogAsync(long ncarId, CancellationToken cancellationToken)
+        {
+            var ncar = await _repository.GetByIdWithDetailsAsync(ncarId, cancellationToken).ConfigureAwait(false);
+            if (ncar == null) return;
+
+            await _monitoringLogService.SyncFromNcarAsync(
+                ncarId,
+                ncar.Office,
+                ncar.IssuedDate ?? ncar.AuditDate,
+                NonconformingActionReportDto.FullName(ncar.IssuedByAuditor) ?? "Auditor",
+                ncar.RelevantStandard,
+                NonconformingActionReportDto.FullName(ncar.AcknowledgedByAuditee) ?? ncar.Office,
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        private async Task<string> UserNameAsync(string userId, CancellationToken cancellationToken)
+        {
+            var user = await _repository.GetDbContext().Set<User>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+                .ConfigureAwait(false);
+            return NonconformingActionReportDto.FullName(user) ?? "Auditor";
         }
 
         public async Task<(bool Success, string? Error)> ChangeStatusAsync(long id, string status, string? comments, CancellationToken cancellationToken)

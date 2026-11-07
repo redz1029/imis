@@ -27,6 +27,10 @@ namespace IMIS.Domain
         public required string LegalOrPolicyReference { get; set; }
         public required string AuditFindings { get; set; }
 
+        // True once the auditor wrote the finding on the NCAR itself. From then
+        // on a checklist save no longer replaces it with the checklist remark.
+        public bool FindingEditedByAuditor { get; set; }
+
         // Source Audit Report link
         public int? AuditReportId { get; set; }
         public AuditReport? AuditReport { get; set; }

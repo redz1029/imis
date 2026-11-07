@@ -105,28 +105,28 @@ namespace IMIS.Application.NonconformingActionReportModule
             AuditChecklistId = entity.AuditChecklistId;
 
             IssuedByAuditorUserId = entity.IssuedByAuditorUserId;
-            IssuedByAuditorName = entity.IssuedByAuditor?.ToString();
+            IssuedByAuditorName = FullName(entity.IssuedByAuditor);
             IssuedDate = entity.IssuedDate;
 
             AcknowledgedByAuditeeUserId = entity.AcknowledgedByAuditeeUserId;
-            AcknowledgedByAuditeeName = entity.AcknowledgedByAuditee?.ToString();
+            AcknowledgedByAuditeeName = FullName(entity.AcknowledgedByAuditee);
             AcknowledgedDate = entity.AcknowledgedDate;
 
             ProposedByAuditeeUserId = entity.ProposedByAuditeeUserId;
-            ProposedByAuditeeName = entity.ProposedByAuditee?.ToString();
+            ProposedByAuditeeName = FullName(entity.ProposedByAuditee);
             ProposedDate = entity.ProposedDate;
 
             ApprovedByHeadUserId = entity.ApprovedByHeadUserId;
-            ApprovedByHeadName = entity.ApprovedByHead?.ToString();
+            ApprovedByHeadName = FullName(entity.ApprovedByHead);
             ApprovedDate = entity.ApprovedDate;
 
             VerificationDetails = entity.VerificationDetails;
             VerifiedByAuditorUserId = entity.VerifiedByAuditorUserId;
-            VerifiedByAuditorName = entity.VerifiedByAuditor?.ToString();
+            VerifiedByAuditorName = FullName(entity.VerifiedByAuditor);
             VerifiedDate = entity.VerifiedDate;
 
             ValidatedByLeadAuditorUserId = entity.ValidatedByLeadAuditorUserId;
-            ValidatedByLeadAuditorName = entity.ValidatedByLeadAuditor?.ToString();
+            ValidatedByLeadAuditorName = FullName(entity.ValidatedByLeadAuditor);
             ValidatedDate = entity.ValidatedDate;
 
             IsActive = entity.IsActive;
@@ -144,6 +144,20 @@ namespace IMIS.Application.NonconformingActionReportModule
 
             if (entity.CorrectiveActions != null)
                 CorrectiveActions = entity.CorrectiveActions.OrderBy(x => x.OrderNumber).Select(x => new NcarCorrectiveActionDto(x)).ToList();
+        }
+
+        /// <summary>
+        /// The name as printed on the form: the user's prefix, first, middle and
+        /// last name and suffix. The login name only stands in for an account
+        /// that has no name filled in.
+        /// </summary>
+        public static string? FullName(User? user)
+        {
+            if (user == null) return null;
+            var full = string.Join(" ", new[] { user.Prefix, user.FirstName, user.MiddleName, user.LastName, user.Suffix }
+                .Where(p => !string.IsNullOrWhiteSpace(p)));
+            if (!string.IsNullOrWhiteSpace(full)) return full;
+            return string.IsNullOrWhiteSpace(user.UserName) ? null : user.UserName;
         }
 
         public override NonconformingActionReport ToEntity()

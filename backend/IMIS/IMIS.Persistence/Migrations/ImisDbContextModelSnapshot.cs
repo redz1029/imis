@@ -13320,6 +13320,9 @@ namespace IMIS.Persistence.Migrations
                     b.Property<int?>("AuditReportId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("FindingEditedByAuditor")
+                        .HasColumnType("bit");
+
                     b.Property<string>("FormRevision")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
