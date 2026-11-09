@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
@@ -16,6 +17,8 @@ import 'package:imis/ISO/IQA/audit_standard/pages/audit_standard_page.dart';
 import 'package:imis/ISO/IQA/iqa_signatory/pages/iqa_signatory_template_page.dart';
 import 'package:imis/ISO/IQA/iso_standard/page/iso_standard_page.dart';
 import 'package:imis/ISO/IQA/ncar/pages/ncar_list_page.dart';
+import 'package:imis/ISO/IQA/notifications/models/iqa_notification.dart';
+import 'package:imis/ISO/IQA/notifications/services/iqa_notification_service.dart';
 // import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_list_page.dart';
 // import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_list_page.dart';
 // import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_list_page.dart';
@@ -111,6 +114,15 @@ class SidebarState extends State<Sidebar> {
   final AnnouncementService _announcementService = AnnouncementService(Dio());
   final GlobalKey _notificationKey = GlobalKey();
   List<Announcement> _unreadAnnouncements = [];
+
+  // IQA notifications (ISO): submissions waiting on the user, decisions,
+  // NCAR steps, ... They are asked for again every minute.
+  final IqaNotificationService _iqaNotificationService = IqaNotificationService(
+    Dio(),
+  );
+  List<IqaNotification> _iqaNotifications = [];
+  int _iqaUnread = 0;
+  Timer? _iqaTimer;
   int selectedPage = 0;
   int selectedSubPage = 0;
   final permissionService = PermissionService();
@@ -133,10 +145,16 @@ class SidebarState extends State<Sidebar> {
     _searchController.addListener(() {
       setState(() => _searchQuery = _searchController.text.trim());
     });
+    _loadIqaNotifications();
+    _iqaTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _loadIqaNotifications(),
+    );
   }
 
   @override
   void dispose() {
+    _iqaTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -431,6 +449,157 @@ class SidebarState extends State<Sidebar> {
     );
   }
 
+  /// Asks the server for the user's IQA notifications. A failed refresh keeps
+  /// what the bell already shows.
+  Future<void> _loadIqaNotifications() async {
+    try {
+      final result = await _iqaNotificationService.getNotifications();
+      if (!mounted) return;
+      setState(() {
+        _iqaNotifications = result.items;
+        _iqaUnread = result.unreadCount;
+      });
+    } catch (_) {}
+  }
+
+  /// The permission that lets the user see an ISO sub-page (see the ISO group
+  /// of the menu), so a notification never opens a page the user cannot use.
+  String? _iqaViewPermission(int subPage) {
+    switch (subPage) {
+      case 0:
+        return AppPermissions.viewAuditProgramme;
+      case 1:
+        return AppPermissions.viewAuditPlan;
+      case 2:
+        return AppPermissions.viewAuditSchedule;
+      case 3:
+        return AppPermissions.viewAuditChecklist;
+      case 4:
+        return AppPermissions.viewAuditReport;
+      case 5:
+        return AppPermissions.viewNonconformingActionReport;
+    }
+    return null;
+  }
+
+  /// Opens the ISO page a notification is about and marks it as read.
+  Future<void> _openIqaNotification(IqaNotification n) async {
+    if (!n.isRead) {
+      setState(() {
+        n.isRead = true;
+        if (_iqaUnread > 0) _iqaUnread--;
+      });
+      try {
+        await _iqaNotificationService.markRead(n.id);
+      } catch (_) {}
+    }
+    if (!mounted) return;
+
+    final permission = _iqaViewPermission(n.targetPage);
+    if (permission != null && !_hasPermission(permission)) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('You do not have access to that page.')),
+        );
+      return;
+    }
+
+    setState(() {
+      selectedPage = 2; // ISO
+      selectedSubPage = n.targetPage;
+      _expandedKeys.add('g2');
+      _searchController.clear();
+    });
+  }
+
+  Future<void> _markAllIqaRead() async {
+    setState(() {
+      for (final n in _iqaNotifications) {
+        n.isRead = true;
+      }
+      _iqaUnread = 0;
+    });
+    try {
+      await _iqaNotificationService.markAllRead();
+    } catch (_) {}
+  }
+
+  String _timeAgo(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} h ago';
+    if (diff.inDays < 7) return '${diff.inDays} d ago';
+    return '${time.month}/${time.day}/${time.year}';
+  }
+
+  Widget _iqaNotificationTile(
+    BuildContext menuContext,
+    IqaNotification n,
+    void Function(void Function()) setMenuState,
+  ) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(menuContext);
+        _openIqaNotification(n);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 5),
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: n.isRead ? Colors.transparent : primaryColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    n.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: n.isRead ? FontWeight.w500 : FontWeight.w700,
+                      color: kText,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    n.message,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: kMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'IQA • ${_timeAgo(n.createdAt)}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: kMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _loadUnreadAnnouncements() async {
     try {
       final unread = await _announcementService.getUnreadAnnouncements();
@@ -442,7 +611,11 @@ class SidebarState extends State<Sidebar> {
     } catch (_) {}
   }
 
-  void _showNotificationMenu(BuildContext context) {
+  Future<void> _showNotificationMenu(BuildContext context) async {
+    // Up to date when it opens, not up to a minute old.
+    await _loadIqaNotifications();
+    if (!mounted) return;
+
     final RenderBox renderBox =
         _notificationKey.currentContext!.findRenderObject() as RenderBox;
     final Offset offset = renderBox.localToGlobal(Offset.zero);
@@ -471,23 +644,66 @@ class SidebarState extends State<Sidebar> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _unreadAnnouncements.isEmpty
-                          ? 'Notifications'
-                          : '${_unreadAnnouncements.length} New Notifications',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: kText,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _unreadAnnouncements.length + _iqaUnread == 0
+                                ? 'Notifications'
+                                : '${_unreadAnnouncements.length + _iqaUnread} New Notifications',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: kText,
+                            ),
+                          ),
+                        ),
+                        if (_iqaUnread > 0)
+                          TextButton(
+                            onPressed: () async {
+                              await _markAllIqaRead();
+                              setMenuState(() {});
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              minimumSize: const Size(0, 28),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              'Mark all read',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                color: primaryColor,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Divider(color: kBorder, height: 1),
                     const SizedBox(height: 4),
+                    if (_iqaNotifications.isNotEmpty)
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 300),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: _iqaNotifications.length,
+                          separatorBuilder:
+                              (_, __) => Divider(color: kBorder, height: 1),
+                          itemBuilder:
+                              (context, index) => _iqaNotificationTile(
+                                context,
+                                _iqaNotifications[index],
+                                setMenuState,
+                              ),
+                        ),
+                      ),
                     Flexible(
                       child:
                           _unreadAnnouncements.isEmpty
-                              ? Padding(
+                              ? (_iqaNotifications.isNotEmpty
+                                  ? const SizedBox.shrink()
+                                  : Padding(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 24,
                                 ),
@@ -498,7 +714,7 @@ class SidebarState extends State<Sidebar> {
                                     color: kMuted,
                                   ),
                                 ),
-                              )
+                              ))
                               : ListView.separated(
                                 shrinkWrap: true,
                                 itemCount: _unreadAnnouncements.length,
@@ -1594,7 +1810,7 @@ class SidebarState extends State<Sidebar> {
                             ),
                             onPressed: () => _showNotificationMenu(context),
                           ),
-                          if (_unreadAnnouncements.isNotEmpty)
+                          if (_unreadAnnouncements.length + _iqaUnread > 0)
                             Positioned(
                               right: 6,
                               top: 6,
@@ -1609,7 +1825,7 @@ class SidebarState extends State<Sidebar> {
                                   minHeight: 16,
                                 ),
                                 child: Text(
-                                  '${_unreadAnnouncements.length}',
+                                  '${_unreadAnnouncements.length + _iqaUnread}',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     color: Colors.white,

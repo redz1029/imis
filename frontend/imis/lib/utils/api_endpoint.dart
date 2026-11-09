@@ -106,6 +106,7 @@ class ApiEndpoint {
   late String iqaSignatory;
   late String ncar;
   late String ncarMonitoring;
+  late String iqaNotifications;
   late String isatPeriod;
   late String isat;
   late String iSATSignatoryTemplate;
@@ -222,6 +223,7 @@ class ApiEndpoint {
     iqaSignatory = '$baseUrl/IQASignatory';
     ncar = '$baseUrl/ncar';
     ncarMonitoring = '$baseUrl/api/NcarMonitoring';
+    iqaNotifications = '$baseUrl/iqaNotifications';
     isatPeriod = '$baseUrl/ISATPeriod';
     isat = '$baseUrl/ISAT';
     iSATSignatoryTemplate = '$baseUrl/iSATSignatoryTemplate';
