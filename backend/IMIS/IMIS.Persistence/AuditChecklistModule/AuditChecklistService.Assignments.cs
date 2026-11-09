@@ -1,5 +1,6 @@
 using IMIS.Application.AuditChecklistModule;
 using IMIS.Application.IQASignatoryModule;
+using IMIS.Application.IqaNotificationModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -386,6 +387,9 @@ namespace IMIS.Persistence.AuditChecklistModule
                 .ConfigureAwait(false);
 
             var now = DateTime.UtcNow;
+            // Clauses newly given to an auditor (not ones that stay as they were),
+            // so each auditor is told only about what changed for them.
+            var newlyAssigned = new List<(int AuditorId, long IsoStandardId)>();
             foreach (var (isoStandardId, auditorId) in requested)
             {
                 var current = tracked.FirstOrDefault(a => a.IsoStandardId == isoStandardId);
@@ -395,6 +399,9 @@ namespace IMIS.Persistence.AuditChecklistModule
                     if (current != null) current.IsDeleted = true;
                     continue;
                 }
+
+                if (current == null || current.AuditorId != auditorId.Value)
+                    newlyAssigned.Add((auditorId.Value, isoStandardId));
 
                 if (current != null)
                 {
@@ -424,7 +431,48 @@ namespace IMIS.Persistence.AuditChecklistModule
                 return (false, "The assignments were changed by someone else. Please refresh and try again.");
             }
 
+            await NotifyAssignedAuditorsAsync(ctx, auditScheduleId, newlyAssigned, userId, cancellationToken).ConfigureAwait(false);
             return (true, null);
+        }
+
+        /// <summary>Tells each auditor which clauses were given to them. Never fails the assignment.</summary>
+        private async Task NotifyAssignedAuditorsAsync(
+            AssignmentContext ctx, int auditScheduleId, List<(int AuditorId, long IsoStandardId)> assigned,
+            string? assignedByUserId, CancellationToken cancellationToken)
+        {
+            if (assigned.Count == 0) return;
+
+            try
+            {
+                var who = await IqaNotifier.NameOfAsync(_dbContext, assignedByUserId, cancellationToken).ConfigureAwait(false);
+
+                foreach (var group in assigned.GroupBy(a => a.AuditorId))
+                {
+                    var userId = ctx.Members.FirstOrDefault(m => m.AuditorId == group.Key)?.UserId;
+                    var clauses = group
+                        .Select(a => ctx.PlanClauses.FirstOrDefault(c => c.IsoStandardId == a.IsoStandardId)?.IsoStandard?.ClauseRef?.Trim())
+                        .Where(c => !string.IsNullOrWhiteSpace(c))
+                        .Distinct()
+                        .ToList();
+                    var which = clauses.Count == 0
+                        ? $"{group.Count()} clause(s)"
+                        : (clauses.Count == 1 ? $"clause {clauses[0]}" : $"clauses {string.Join(", ", clauses)}");
+
+                    await IqaNotifier.AddAsync(
+                        _dbContext, new[] { userId }, assignedByUserId,
+                        IqaNotifier.Types.ClauseAssigned,
+                        "Checklist clauses assigned to you",
+                        $"{who} assigned you {which} of the audit checklist. Write its questions and answer them.",
+                        IqaNotifier.Entities.AuditChecklist, auditScheduleId, IqaNotifier.Pages.Checklist, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
+                await IqaNotifier.SaveSafelyAsync(_dbContext, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the assignment
+            }
         }
 
         // ------------------------------------------------------------------

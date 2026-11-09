@@ -1,4 +1,5 @@
 using IMIS.Application.AuditChecklistModule;
+using IMIS.Application.IqaNotificationModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -137,7 +138,7 @@ namespace IMIS.Persistence.AuditChecklistModule
             // it acknowledges).
             var auditeeUserId = await FindOfficeHeadUserIdAsync(source.OfficeIds, cancellationToken).ConfigureAwait(false);
 
-            _dbContext.Set<NonconformingActionReport>().Add(new NonconformingActionReport
+            var raised = new NonconformingActionReport
             {
                 Id = 0,
                 ReferenceNumber = $"NCAR-{DateTime.UtcNow:yyyy}-{source.AuditScheduleId:D4}-{dto.Id:D5}",
@@ -160,9 +161,36 @@ namespace IMIS.Persistence.AuditChecklistModule
 
                 IsActive = true,
                 IsClosed = false
-            });
+            };
+            _dbContext.Set<NonconformingActionReport>().Add(raised);
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            await NotifyNcarRaisedAsync(raised, source, userId, cancellationToken).ConfigureAwait(false);
             return (true, null);
+        }
+
+        /// <summary>The audited office is told it has an NCAR to acknowledge. Never fails the checklist save.</summary>
+        private async Task NotifyNcarRaisedAsync(
+            NonconformingActionReport ncar, NcarSource source, string? issuerUserId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var heads = await IqaNotifier.OfficeHeadsAsync(_dbContext, source.OfficeIds, cancellationToken).ConfigureAwait(false);
+                var recipients = new List<string?>(heads) { ncar.AcknowledgedByAuditeeUserId };
+                var who = await IqaNotifier.NameOfAsync(_dbContext, issuerUserId, cancellationToken).ConfigureAwait(false);
+
+                await IqaNotifier.AddAsync(
+                    _dbContext, recipients, issuerUserId,
+                    IqaNotifier.Types.NcarRaised,
+                    "NCAR raised for your office",
+                    $"{who} raised NCAR {ncar.ReferenceNumber} for {source.OfficeName} on clause {source.ClauseRef}. Please acknowledge it.",
+                    IqaNotifier.Entities.Ncar, ncar.Id, IqaNotifier.Pages.Ncar, cancellationToken).ConfigureAwait(false);
+                await IqaNotifier.SaveSafelyAsync(_dbContext, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the checklist save
+            }
         }
 
         /// <summary>An NCAR the office has started working on is no longer the auditor's to change.</summary>

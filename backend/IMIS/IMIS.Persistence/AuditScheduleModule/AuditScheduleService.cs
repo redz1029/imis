@@ -2,6 +2,7 @@
 using Base.Primitives;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.IQASignatoryModule;
+using IMIS.Application.IqaNotificationModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -620,7 +621,7 @@ namespace IMIS.Application.AuditScheduleModule
             if (error != null)
                 return (false, error);
 
-            dbContext.Set<AuditScheduleRescheduleRequest>().Add(new AuditScheduleRescheduleRequest
+            var newRequest = new AuditScheduleRescheduleRequest
             {
                 Id = 0,
                 AuditScheduleId = id,
@@ -629,9 +630,100 @@ namespace IMIS.Application.AuditScheduleModule
                 Status = AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader,
                 RequestedByUserId = userId,
                 RequestedDate = DateTime.UtcNow
-            });
+            };
+            dbContext.Set<AuditScheduleRescheduleRequest>().Add(newRequest);
 
-            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            var requested = await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            if (requested.Success)
+            {
+                var officeName = schedule.AuditableOffices?.FirstOrDefault(ao => !ao.IsDeleted)?.Office?.Name;
+                await NotifyRescheduleRequestedAsync(dbContext, newRequest, officeName, userId, cancellationToken);
+            }
+            return requested;
+        }
+
+        // ------------------------------------------------------------------
+        // Notifications (the IQA bell). Raised after the request is saved; a
+        // failure here never fails the request.
+        // ------------------------------------------------------------------
+
+        private static async Task NotifyRescheduleRequestedAsync(
+            DbContext dbContext, AuditScheduleRescheduleRequest request, string? officeName,
+            string? userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var teamIds = await IqaNotifier.ScheduleTeamIdsAsync(dbContext, request.AuditScheduleId, cancellationToken);
+                var leaders = await IqaNotifier.TeamLeadersAsync(dbContext, teamIds, cancellationToken);
+                var who = await IqaNotifier.NameOfAsync(dbContext, userId, cancellationToken);
+                var office = string.IsNullOrWhiteSpace(officeName) ? "the audited office" : officeName;
+                var reason = string.IsNullOrWhiteSpace(request.Reason) ? "" : $" Reason: {request.Reason}";
+
+                await IqaNotifier.AddAsync(
+                    dbContext, leaders, userId,
+                    IqaNotifier.Types.RescheduleRequested,
+                    "Reschedule request waiting for you",
+                    $"{who} asked to move the audit of {office} to {request.ProposedStartDate:MMM d, yyyy h:mm tt}.{reason}",
+                    IqaNotifier.Entities.RescheduleRequest, request.Id, IqaNotifier.Pages.Schedule, cancellationToken);
+                await IqaNotifier.SaveSafelyAsync(dbContext, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the request
+            }
+        }
+
+        private static async Task NotifyRescheduleDecidedAsync(
+            DbContext dbContext, AuditScheduleRescheduleRequest request, string userId,
+            bool approve, bool teamLeaderStage, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var office = request.AuditSchedule?.AuditableOffices
+                    ?.FirstOrDefault(ao => !ao.IsDeleted)?.Office?.Name ?? "the audited office";
+                var proposed = request.ProposedStartDate.ToString("MMM d, yyyy h:mm tt");
+                var who = await IqaNotifier.NameOfAsync(dbContext, userId, cancellationToken);
+                var remarks = teamLeaderStage ? request.TeamLeaderRemarks : request.LeadAuditorRemarks;
+                var because = string.IsNullOrWhiteSpace(remarks) ? "" : $" Remarks: {remarks}";
+
+                if (teamLeaderStage && approve)
+                {
+                    // Forwarded: the Lead Auditor decides next, the requester is told where it is.
+                    var leads = await IqaNotifier.UsersInRoleAsync(dbContext, IqaNotifier.LeadAuditorRoleName, cancellationToken);
+                    await IqaNotifier.AddAsync(
+                        dbContext, leads, userId,
+                        IqaNotifier.Types.RescheduleForwarded,
+                        "Reschedule request waiting for you",
+                        $"{who} approved the request to move the audit of {office} to {proposed} and forwarded it to you.{because}",
+                        IqaNotifier.Entities.RescheduleRequest, request.Id, IqaNotifier.Pages.Schedule, cancellationToken);
+                    await IqaNotifier.AddAsync(
+                        dbContext, new[] { request.RequestedByUserId }, userId,
+                        IqaNotifier.Types.RescheduleForwarded,
+                        "Reschedule request forwarded",
+                        $"{who} approved your request to move the audit of {office} to {proposed}. It now waits for the Lead Auditor.",
+                        IqaNotifier.Entities.RescheduleRequest, request.Id, IqaNotifier.Pages.Schedule, cancellationToken);
+                }
+                else
+                {
+                    var recipients = new List<string?> { request.RequestedByUserId };
+                    if (!teamLeaderStage) recipients.Add(request.TeamLeaderUserId);
+
+                    await IqaNotifier.AddAsync(
+                        dbContext, recipients, userId,
+                        approve ? IqaNotifier.Types.RescheduleApproved : IqaNotifier.Types.RescheduleRejected,
+                        approve ? "Reschedule approved" : "Reschedule rejected",
+                        approve
+                            ? $"{who} approved the request to move the audit of {office} to {proposed}. The schedule was updated.{because}"
+                            : $"{who} rejected the request to move the audit of {office} to {proposed}.{because}",
+                        IqaNotifier.Entities.RescheduleRequest, request.Id, IqaNotifier.Pages.Schedule, cancellationToken);
+                }
+
+                await IqaNotifier.SaveSafelyAsync(dbContext, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the decision
+            }
         }
 
         public async Task<AuditScheduleRescheduleRequestDto?> GetLatestRescheduleRequestAsync(
@@ -707,6 +799,7 @@ namespace IMIS.Application.AuditScheduleModule
 
             var now = DateTime.UtcNow;
             var cleanRemarks = string.IsNullOrWhiteSpace(remarks) ? null : remarks.Trim();
+            var teamLeaderStage = request.Status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader;
 
             if (request.Status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader)
             {
@@ -744,7 +837,10 @@ namespace IMIS.Application.AuditScheduleModule
                 }
             }
 
-            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            var decided = await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            if (decided.Success)
+                await NotifyRescheduleDecidedAsync(dbContext, request, userId, approve, teamLeaderStage, cancellationToken);
+            return decided;
         }
 
         private static async Task<(bool Success, string? Error)> SaveWorkflowChangesAsync(

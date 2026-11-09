@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditReportModule;
+using IMIS.Application.IqaNotificationModule;
 using IMIS.Application.NcarMonitoringLogModule;
 using IMIS.Application.NonconformingActionReportModule;
 using IMIS.Domain;
@@ -340,6 +341,11 @@ namespace IMIS.Persistence.NonconformingActionReportModule
             entity.AcknowledgedDate = DateTime.UtcNow;
 
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            await NotifyAsync(entity, userId, IqaNotifier.Types.NcarAcknowledged,
+                "NCAR acknowledged",
+                "{who} acknowledged NCAR {ref}. The office will now write its response.",
+                new[] { entity.IssuedByAuditorUserId }, cancellationToken).ConfigureAwait(false);
             return await Saved(id, cancellationToken).ConfigureAwait(false);
         }
 
@@ -385,6 +391,12 @@ namespace IMIS.Persistence.NonconformingActionReportModule
             entity.ProposedDate = DateTime.UtcNow;
 
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            var heads = await IqaNotifier.OfficeHeadsByNameAsync(dbContext, entity.Office, cancellationToken).ConfigureAwait(false);
+            await NotifyAsync(entity, userId, IqaNotifier.Types.NcarResponded,
+                "NCAR response waiting for your approval",
+                "{who} wrote the root causes and proposed actions for NCAR {ref}. Please approve them.",
+                heads, cancellationToken).ConfigureAwait(false);
             return await Saved(id, cancellationToken).ConfigureAwait(false);
         }
 
@@ -409,6 +421,11 @@ namespace IMIS.Persistence.NonconformingActionReportModule
 
             // The approved NCAR goes on the monitoring log (QP-03-F-09).
             await SyncMonitoringLogAsync(id, cancellationToken).ConfigureAwait(false);
+
+            await NotifyAsync(entity, userId, IqaNotifier.Types.NcarApproved,
+                "NCAR actions approved - ready to verify",
+                "{who} approved the proposed actions of NCAR {ref}. Verify that they were carried out.",
+                new[] { entity.IssuedByAuditorUserId, entity.ProposedByAuditeeUserId }, cancellationToken).ConfigureAwait(false);
             return await Saved(id, cancellationToken).ConfigureAwait(false);
         }
 
@@ -444,6 +461,11 @@ namespace IMIS.Persistence.NonconformingActionReportModule
             }
 
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            await NotifyAsync(entity, userId, IqaNotifier.Types.NcarVerified,
+                "NCAR verified - waiting for your validation",
+                "{who} verified the actions of NCAR {ref}. Validate it to close the NCAR.",
+                await LeadAuditorsOfAsync(entity, cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
             return await Saved(id, cancellationToken).ConfigureAwait(false);
         }
 
@@ -476,7 +498,75 @@ namespace IMIS.Persistence.NonconformingActionReportModule
             }
 
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            var officeHeads = await IqaNotifier.OfficeHeadsByNameAsync(dbContext, entity.Office, cancellationToken).ConfigureAwait(false);
+            var closedFor = new List<string?>(officeHeads) { entity.IssuedByAuditorUserId, entity.ProposedByAuditeeUserId };
+            await NotifyAsync(entity, userId, IqaNotifier.Types.NcarClosed,
+                "NCAR closed",
+                "{who} validated and closed NCAR {ref}.",
+                closedFor, cancellationToken).ConfigureAwait(false);
             return await Saved(id, cancellationToken).ConfigureAwait(false);
+        }
+
+        // ------------------------------------------------------------------
+        // Notifications (the IQA bell). Raised once the step is saved; a failure
+        // here never fails the step. "{who}" and "{ref}" are filled in here.
+        // ------------------------------------------------------------------
+
+        private async Task NotifyAsync(
+            NonconformingActionReport ncar, string actorUserId, string type, string title, string message,
+            IEnumerable<string?> recipients, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var dbContext = _repository.GetDbContext();
+                var who = await IqaNotifier.NameOfAsync(dbContext, actorUserId, cancellationToken).ConfigureAwait(false);
+
+                await IqaNotifier.AddAsync(
+                    dbContext, recipients, actorUserId, type, title,
+                    message.Replace("{who}", who).Replace("{ref}", ncar.ReferenceNumber),
+                    IqaNotifier.Entities.Ncar, ncar.Id, IqaNotifier.Pages.Ncar, cancellationToken).ConfigureAwait(false);
+                await IqaNotifier.SaveSafelyAsync(dbContext, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the step
+            }
+        }
+
+        /// <summary>
+        /// Who validates and closes an NCAR: the Lead Auditors and the leaders of
+        /// the audit team the NCAR came from.
+        /// </summary>
+        private async Task<List<string?>> LeadAuditorsOfAsync(NonconformingActionReport ncar, CancellationToken cancellationToken)
+        {
+            var result = new List<string?>();
+            try
+            {
+                var dbContext = _repository.GetDbContext();
+                result.AddRange(await IqaNotifier.UsersInRoleAsync(dbContext, IqaNotifier.LeadAuditorRoleName, cancellationToken).ConfigureAwait(false));
+
+                if (ncar.AuditChecklistId != null)
+                {
+                    var scheduleId = await dbContext.Set<AuditChecklist>()
+                        .AsNoTracking()
+                        .Where(c => c.Id == ncar.AuditChecklistId)
+                        .Select(c => (int?)c.AuditScheduleId)
+                        .FirstOrDefaultAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                    if (scheduleId != null)
+                    {
+                        var teams = await IqaNotifier.ScheduleTeamIdsAsync(dbContext, scheduleId.Value, cancellationToken).ConfigureAwait(false);
+                        if (teams.Count > 0)
+                            result.AddRange(await IqaNotifier.TeamLeadersAsync(dbContext, teams, cancellationToken).ConfigureAwait(false));
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // recipients are best effort
+            }
+            return result;
         }
 
         /// <summary>Raises (or refreshes) the monitoring log line of an approved NCAR.</summary>

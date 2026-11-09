@@ -2,6 +2,7 @@ using Base.Abstractions;
 using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.IQASignatoryModule;
+using IMIS.Application.IqaNotificationModule;
 using IMIS.Application.IQASignatoryTemplateModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Domain;
@@ -207,6 +208,7 @@ namespace IMIS.Persistence.IQASignatoryModule
                 .Where(t => !t.IsDeleted)
                 .OrderBy(t => t.OrderLevel)
                 .ToList();
+            var reportApprovers = new List<string>();
 
             foreach (var template in templates)
             {
@@ -237,9 +239,101 @@ namespace IMIS.Persistence.IQASignatoryModule
                 }
 
                 await _signatoryRepository.SaveOrUpdateAsync(signatory, cancellationToken);
+                if (string.Equals(auditEntityType, IqaNotifier.Entities.AuditReport, StringComparison.Ordinal))
+                    reportApprovers.Add(template.DefaultSignatoryId);
             }
 
+            if (reportApprovers.Count > 0)
+                await NotifyReportApproversAsync(auditEntityId, reportApprovers, userId, cancellationToken);
+
             return true;
+        }
+
+        // ------------------------------------------------------------------
+        // Notifications (the IQA bell) for the Audit Report, which is approved
+        // through this service. They never fail the submission or the decision.
+        // ------------------------------------------------------------------
+
+        private async Task<string> ReportOfficeAsync(int reportId, CancellationToken cancellationToken)
+        {
+            var office = await _dbContext.Set<AuditReport>()
+                .AsNoTracking()
+                .Where(r => r.Id == reportId)
+                .Select(r => r.OfficeAudited == null ? null : (r.OfficeAudited.Office != null ? r.OfficeAudited.Office.Name : r.OfficeAudited.ProcessName))
+                .FirstOrDefaultAsync(cancellationToken);
+            return string.IsNullOrWhiteSpace(office) ? "" : $" of {office}";
+        }
+
+        private async Task NotifyReportApproversAsync(
+            int reportId, List<string> approvers, string userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var resubmitted = await _dbContext.Set<IqaNotification>()
+                    .AsNoTracking()
+                    .AnyAsync(n => n.EntityType == IqaNotifier.Entities.AuditReport && n.EntityId == reportId &&
+                                   (n.Type == IqaNotifier.Types.Submitted || n.Type == IqaNotifier.Types.Resubmitted),
+                              cancellationToken);
+                var who = await IqaNotifier.NameOfAsync(_dbContext, userId, cancellationToken);
+                var office = await ReportOfficeAsync(reportId, cancellationToken);
+                var verb = resubmitted ? "resubmitted" : "submitted";
+
+                await IqaNotifier.AddAsync(
+                    _dbContext, approvers, userId,
+                    resubmitted ? IqaNotifier.Types.Resubmitted : IqaNotifier.Types.Submitted,
+                    $"Audit Report {verb} for approval",
+                    $"{who} {verb} the audit report{office} for your approval.",
+                    IqaNotifier.Entities.AuditReport, reportId, IqaNotifier.Pages.Report, cancellationToken);
+                await IqaNotifier.SaveSafelyAsync(_dbContext, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the submission
+            }
+        }
+
+        private async Task NotifyReportDecisionAsync(
+            int reportId, string approverId, bool approve, string? remarks,
+            bool stillPending, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var submitter = await IqaNotifier.SubmitterAsync(
+                    _dbContext, IqaNotifier.Entities.AuditReport, reportId, cancellationToken);
+                if (string.IsNullOrWhiteSpace(submitter)) return;
+
+                var who = await IqaNotifier.NameOfAsync(_dbContext, approverId, cancellationToken);
+                var office = await ReportOfficeAsync(reportId, cancellationToken);
+
+                string type, title, message;
+                if (!approve)
+                {
+                    type = IqaNotifier.Types.Rejected;
+                    title = "Audit Report rejected";
+                    message = $"{who} rejected the audit report{office}. Reason: {remarks}";
+                }
+                else if (stillPending)
+                {
+                    type = IqaNotifier.Types.Approved;
+                    title = $"Audit Report approved by {who}";
+                    message = $"{who} approved the audit report{office}. It is still waiting on the other approvers.";
+                }
+                else
+                {
+                    type = IqaNotifier.Types.FullyApproved;
+                    title = "Audit Report approved";
+                    message = $"{who} approved the audit report{office}. It is fully approved.";
+                }
+
+                await IqaNotifier.AddAsync(
+                    _dbContext, new[] { submitter }, approverId, type, title, message,
+                    IqaNotifier.Entities.AuditReport, reportId, IqaNotifier.Pages.Report, cancellationToken);
+                await IqaNotifier.SaveSafelyAsync(_dbContext, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the decision
+            }
         }
 
         public async Task<bool> ApproveOrDisapproveAsync(
@@ -266,6 +360,12 @@ namespace IMIS.Persistence.IQASignatoryModule
                 currentSig.Remarks = remarks;
 
                 await SaveOrUpdateAsync(currentSig, cancellationToken);
+
+                if (string.Equals(auditEntityType, IqaNotifier.Entities.AuditReport, StringComparison.Ordinal))
+                {
+                    var stillPending = signatories.Any(s => s.Id != currentSig.Id && s.ApprovalStatus == "Pending");
+                    await NotifyReportDecisionAsync(auditEntityId, signatoryId, true, remarks, stillPending, cancellationToken);
+                }
             }
             else
             {
@@ -288,6 +388,9 @@ namespace IMIS.Persistence.IQASignatoryModule
                     sig.IsDeleted = true;
                     await SaveOrUpdateAsync(sig, cancellationToken);
                 }
+
+                if (string.Equals(auditEntityType, IqaNotifier.Entities.AuditReport, StringComparison.Ordinal))
+                    await NotifyReportDecisionAsync(auditEntityId, signatoryId, false, remarks, false, cancellationToken);
             }
 
             return true;
