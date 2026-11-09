@@ -124,6 +124,9 @@ namespace IMIS.Persistence
         public DbSet<NcarCorrectionAction> NcarCorrectionActions { get; set; }
         public DbSet<NcarCorrectiveAction> NcarCorrectiveActions { get; set; }
         public DbSet<NcarMonitoringLog> NcarMonitoringLogs { get; set; }
+
+        // IQA notifications (the bell)
+        public DbSet<IqaNotification> IqaNotifications { get; set; }
         public DbSet<NcarAttachment> NcarAttachments { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
@@ -477,6 +480,18 @@ namespace IMIS.Persistence
                 .WithMany()
                 .HasForeignKey(n => n.ValidatedByLeadAuditorUserId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<IqaNotification>(n =>
+            {
+                n.Property(x => x.RecipientUserId).HasMaxLength(450);
+                n.Property(x => x.ActorUserId).HasMaxLength(450);
+                n.Property(x => x.Type).HasMaxLength(50);
+                n.Property(x => x.Title).HasMaxLength(200);
+                n.Property(x => x.Message).HasMaxLength(1000);
+                n.Property(x => x.EntityType).HasMaxLength(50);
+                n.HasIndex(x => new { x.RecipientUserId, x.ReadAt });
+                n.HasIndex(x => new { x.EntityType, x.EntityId });
+            });
 
             builder.Entity<NcarRootCause>()
                 .HasOne(r => r.NonconformingActionReport)
