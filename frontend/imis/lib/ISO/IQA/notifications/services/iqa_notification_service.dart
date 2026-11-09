@@ -1,9 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:imis/ISO/IQA/notifications/models/iqa_notification.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/http_util.dart';
+import 'package:imis/utils/auth_util.dart';
 
 /// The IQA notifications of the signed-in user (the bell).
+///
+/// These calls run quietly in the background (the bell asks again every
+/// minute), so they deliberately do not go through AuthenticatedRequest: that
+/// helper sends the whole app to the "No Connection" page on any connection
+/// error, which must never happen because of a notification refresh.
 class IqaNotificationService {
   IqaNotificationService(this.dio);
 
@@ -11,13 +16,27 @@ class IqaNotificationService {
 
   String get _base => ApiEndpoint().iqaNotifications;
 
+  Future<Options?> _authorized() async {
+    final user = await AuthUtil.processTokenValidity(dio);
+    final token = user?.accessToken;
+    if (token == null || token.isEmpty) return null;
+    return Options(
+      headers: {'Authorization': 'Bearer $token'},
+      // Never throw for an HTTP status; the caller checks it.
+      validateStatus: (_) => true,
+      receiveTimeout: const Duration(seconds: 15),
+      sendTimeout: const Duration(seconds: 15),
+    );
+  }
+
   /// GET /iqaNotifications — the newest notifications and the unread count.
   /// Throws when they cannot be loaded, so the bell can keep what it shows.
   Future<IqaNotificationList> getNotifications({int limit = 30}) async {
-    final response = await AuthenticatedRequest.get(
-      dio,
-      '$_base?limit=$limit',
-    );
+    final options = await _authorized();
+    if (options == null) {
+      throw Exception('Not signed in.');
+    }
+    final response = await dio.get('$_base?limit=$limit', options: options);
     final data = response.data;
     if (response.statusCode != 200 || data is! Map) {
       throw Exception('Could not load the IQA notifications.');
@@ -36,11 +55,15 @@ class IqaNotificationService {
 
   /// PUT /iqaNotifications/{id}/read
   Future<void> markRead(int id) async {
-    await AuthenticatedRequest.put(dio, '$_base/$id/read');
+    final options = await _authorized();
+    if (options == null) return;
+    await dio.put('$_base/$id/read', options: options);
   }
 
   /// PUT /iqaNotifications/read-all
   Future<void> markAllRead() async {
-    await AuthenticatedRequest.put(dio, '$_base/read-all');
+    final options = await _authorized();
+    if (options == null) return;
+    await dio.put('$_base/read-all', options: options);
   }
 }

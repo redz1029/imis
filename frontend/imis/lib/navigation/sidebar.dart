@@ -123,6 +123,9 @@ class SidebarState extends State<Sidebar> {
   List<IqaNotification> _iqaNotifications = [];
   int _iqaUnread = 0;
   Timer? _iqaTimer;
+  // Bumped when a notification opens, so the page it is about loads again
+  // (even if it is the page already showing) and shows the new item.
+  int _iqaReload = 0;
   int selectedPage = 0;
   int selectedSubPage = 0;
   final permissionService = PermissionService();
@@ -508,6 +511,7 @@ class SidebarState extends State<Sidebar> {
     setState(() {
       selectedPage = 2; // ISO
       selectedSubPage = n.targetPage;
+      _iqaReload++;
       _expandedKeys.add('g2');
       _searchController.clear();
     });
@@ -1415,12 +1419,12 @@ class SidebarState extends State<Sidebar> {
     }
 
     if (selectedPage == 2) {
-      if (selectedSubPage == 0) return const AuditProgrammeListPage();
-      if (selectedSubPage == 1) return const AuditPlanListPage();
-      if (selectedSubPage == 2) return const AuditScheduleListPage();
-      if (selectedSubPage == 3) return const AuditChecklistListPage();
-      if (selectedSubPage == 4) return const AuditReportListPage();
-      if (selectedSubPage == 5) return const NcarListPage();
+      if (selectedSubPage == 0) return AuditProgrammeListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 1) return AuditPlanListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 2) return AuditScheduleListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 3) return AuditChecklistListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 4) return AuditReportListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 5) return NcarListPage(key: ValueKey('iqa$_iqaReload'));
       if (selectedSubPage == 6) return const ClauseLibraryPage();
       if (selectedSubPage == 7) return const IqaHistoryPage();
     }
