@@ -8,9 +8,13 @@ import 'package:intl/intl.dart';
 import 'package:imis/ISO/IQA/audit_checklist/models/audit_checklist.dart';
 import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
 import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
+import 'package:imis/ISO/IQA/audit_checklist/pages/audit_checklist_print_preview_page.dart';
+import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_print_preview_page.dart';
 import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/ISO/IQA/audit_programme/models/audit_programme.dart';
+import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_print_preview_page.dart';
 import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
+import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedule_print_preview_page.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report_clause_results.dart';
 import 'package:imis/ISO/IQA/audit_report/pages/audit_report_print_preview_page.dart';
@@ -503,6 +507,7 @@ class _AuditCard extends StatelessWidget {
                   'Programme',
                   p.statusName ?? 'Draft',
                   color: _statusColor(p.statusName),
+                  onTap: () => openAuditProgrammePrintPreview(context, p.id),
                 ),
                 _Chip(
                   'Plan',
@@ -512,10 +517,22 @@ class _AuditCard extends StatelessWidget {
                   color: audit.plans.isEmpty
                       ? null
                       : _statusColor(audit.plans.first.plan.statusName),
+                  onTap: audit.plans.isEmpty
+                      ? null
+                      : () => openAuditPlanPrintPreview(
+                          context,
+                          audit.plans.first.plan.id,
+                        ),
                 ),
                 _Chip(
                   'Schedules',
                   '${schedules.where((s) => _isApproved(s.schedule.effectiveStatusName)).length}/${schedules.length} confirmed',
+                  onTap: audit.plans.isEmpty || schedules.isEmpty
+                      ? null
+                      : () => openAuditSchedulePrintPreview(
+                          context,
+                          audit.plans.first.plan.id,
+                        ),
                 ),
                 _Chip(
                   'Checklists',
@@ -565,7 +582,20 @@ class _PlanSection extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
             ),
-            _Chip('Status', p.effectiveStatusName, color: _statusColor(p.statusName)),
+            _Chip(
+              'Status',
+              p.effectiveStatusName,
+              color: _statusColor(p.statusName),
+              onTap: () => openAuditPlanPrintPreview(context, p.id),
+            ),
+            if (plan.schedules.isNotEmpty) ...[
+              const SizedBox(width: 6),
+              _Chip(
+                'Schedule form',
+                'All offices',
+                onTap: () => openAuditSchedulePrintPreview(context, p.id),
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 8),
@@ -626,6 +656,11 @@ class _ScheduleRow extends StatelessWidget {
                 'Schedule',
                 s.effectiveStatusName,
                 color: _statusColor(s.effectiveStatusName),
+                onTap: () => openAuditSchedulePrintPreview(
+                  context,
+                  s.auditPlanId,
+                  officeName: history.office.isEmpty ? null : history.office,
+                ),
               ),
               _Chip(
                 'Checklist',
@@ -633,6 +668,9 @@ class _ScheduleRow extends StatelessWidget {
                     ? 'Not started'
                     : '${checklist.clauseCount} clause(s)',
                 color: checklist == null ? null : Colors.blue.shade600,
+                onTap: checklist == null
+                    ? null
+                    : () => openAuditChecklistPrintPreview(context, s.id),
               ),
               if (report == null)
                 const _Chip('Report', 'Not raised')
