@@ -36,7 +36,6 @@ class AuditChecklistPage extends StatefulWidget {
 class _AuditChecklistPageState extends State<AuditChecklistPage> {
   static const double _wideBreakpoint = 860;
   static const String _formCode = 'QP-03-F-05 Rev. 0';
-  static const Color _panelBg = Color(0xFFF4F6F8);
 
   final AuditChecklistService _service = AuditChecklistService(Dio());
 
@@ -733,8 +732,8 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: _panelBg,
-              borderRadius: BorderRadius.circular(8),
+              color: mainBgColor,
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -995,7 +994,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: const BoxDecoration(
         color: primaryColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
       ),
       child: Row(
         children: [
@@ -1008,8 +1007,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    letterSpacing: 0.5,
+                    fontSize: 15,
                   ),
                 ),
                 if (office.isNotEmpty)
@@ -1786,7 +1784,7 @@ class _AuditChecklistPageState extends State<AuditChecklistPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
       ),
       child: Row(
         children: [

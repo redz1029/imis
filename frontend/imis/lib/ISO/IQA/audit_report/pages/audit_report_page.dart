@@ -8,6 +8,7 @@ import 'package:imis/ISO/IQA/audit_report/model/audit_summary_findings.dart';
 import 'package:imis/ISO/IQA/audit_report/model/summary_finding_parts.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/permission_service.dart';
+import 'package:imis/constant/constant.dart';
 
 // =============================================================================
 // UI-only row wrapper — holds a TextEditingController per editable field and
@@ -133,7 +134,7 @@ class AuditReportPage extends StatefulWidget {
 }
 
 class _AuditReportPageState extends State<AuditReportPage> {
-  static const Color primaryThemeColor = Color(0xFF883942);
+  static const Color primaryThemeColor = primaryColor;
   final _service = AuditReportService(Dio());
 
   final _auditPurposeController = TextEditingController();
@@ -1038,8 +1039,8 @@ class _AuditReportPageState extends State<AuditReportPage> {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF4F6F8),
-            borderRadius: BorderRadius.circular(8),
+            color: mainBgColor,
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1052,7 +1053,7 @@ class _AuditReportPageState extends State<AuditReportPage> {
                 ),
                 decoration: const BoxDecoration(
                   color: primaryThemeColor,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
                 ),
                 child: Row(
                   children: [
@@ -1062,7 +1063,7 @@ class _AuditReportPageState extends State<AuditReportPage> {
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 15,
                         ),
                       ),
                     ),
