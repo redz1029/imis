@@ -15,6 +15,7 @@ namespace IMIS.Application.PolicyAndProcedureModule
         public string? Content { get; set; }
         public bool? IsMasterCopy { get; set; }
         public bool? IsControlledCopy { get; set; }
+        public bool? IsReceived { get; set; }
         public IFormFile? MinutesAttachmentPath { get; set; }
         public bool RemoveAttachment { get; set; }
     }

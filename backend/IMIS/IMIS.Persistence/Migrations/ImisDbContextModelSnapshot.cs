@@ -16408,6 +16408,9 @@ namespace IMIS.Persistence.Migrations
                     b.Property<bool?>("IsMasterCopy")
                         .HasColumnType("bit");
 
+                    b.Property<bool?>("IsReceived")
+                        .HasColumnType("bit");
+
                     b.Property<string>("MinutesAttachmentPath")
                         .HasColumnType("nvarchar(max)");
 

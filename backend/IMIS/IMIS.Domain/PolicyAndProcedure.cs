@@ -16,6 +16,7 @@ namespace IMIS.Domain
         public bool? IsMasterCopy { get; set; }
         public bool? IsControlledCopy { get; set; }
         public string? MinutesAttachmentPath { get; set; }
+        public bool? IsReceived { get; set; }
         public virtual ICollection<PolicyAndProcedureSignatory> PAPSignatories { get; set; } = new List<PolicyAndProcedureSignatory>();
         public virtual ICollection<PolicyAndProcedureHistoryLog> HistoryLogs { get; set; } = new List<PolicyAndProcedureHistoryLog>();
     }

@@ -18,6 +18,7 @@ namespace IMIS.Application.PolicyAndProcedureModule
         public string? Content { get; set; }
         public bool? IsMasterCopy { get; set; }
         public bool? IsControlledCopy { get; set; }
+        public bool? IsReceived { get; set; }
         public string? MinutesAttachmentPath { get; set; }
        
         public List<PolicyAndProcedureSignatoryDto>? PAPSignatories { get; set; }
@@ -42,6 +43,7 @@ namespace IMIS.Application.PolicyAndProcedureModule
             this.Content = policyAndProcedure.Content;
             this.IsMasterCopy = policyAndProcedure.IsMasterCopy;
             this.IsControlledCopy = policyAndProcedure.IsControlledCopy;
+            this.IsReceived = policyAndProcedure.IsReceived;
             this.MinutesAttachmentPath = policyAndProcedure.MinutesAttachmentPath;
             this.IsDeleted = policyAndProcedure.IsDeleted;
             this.RowVersion = policyAndProcedure.RowVersion;
@@ -62,6 +64,7 @@ namespace IMIS.Application.PolicyAndProcedureModule
                 Content = Content,
                 IsMasterCopy = IsMasterCopy,
                 IsControlledCopy = IsControlledCopy,
+                IsReceived = IsReceived,
                 MinutesAttachmentPath = MinutesAttachmentPath,
                 RowVersion = this.RowVersion
             };

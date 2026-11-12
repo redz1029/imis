@@ -248,6 +248,7 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
             Content = form.Content,
             IsMasterCopy = form.IsMasterCopy,
             IsControlledCopy = form.IsControlledCopy,
+            IsReceived = form.IsReceived,
             MinutesAttachmentPath = attachmentPath
         };
     }

@@ -360,6 +360,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 pap.Content = dto.Content;
                 pap.IsMasterCopy = dto.IsMasterCopy;
                 pap.IsControlledCopy = dto.IsControlledCopy;
+                pap.IsReceived = dto.IsReceived;
                 pap.MinutesAttachmentPath = dto.MinutesAttachmentPath;
             }
 
@@ -483,7 +484,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     Id = s.Id,
                     PAPId = pap.Id,
                     PAPSignatoryTemplateId = s.PAPSignatoryTemplateId,
-                    SignatoryId = s.SignatoryId,
+                    SignatoryId = s.SignatoryId, 
                     SignatoryName = FullName(s.SignatoryId),
                     Label = label,
                     OrderLevel = order,
