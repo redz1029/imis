@@ -997,8 +997,8 @@ class _NcarFormPageState extends State<NcarFormPage> {
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFF4F6F8),
-              borderRadius: BorderRadius.circular(8),
+              color: mainBgColor,
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1008,7 +1008,7 @@ class _NcarFormPageState extends State<NcarFormPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: const BoxDecoration(
                     color: primaryColor,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
                   ),
                   child: Row(
                     children: [
@@ -1020,7 +1020,7 @@ class _NcarFormPageState extends State<NcarFormPage> {
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontSize: 15,
                           ),
                         ),
                       ),

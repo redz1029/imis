@@ -9,6 +9,7 @@ import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart';
 import 'package:imis/ISO/IQA/audit_plan/services/AuditPlanService.dart';
 import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_schedules/models/audit_slot_availability.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/reschedule_request.dart';
 import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
 import 'package:imis/ISO/IQA/audit_schedules/widgets/reschedule_progress.dart';
@@ -21,6 +22,7 @@ import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
+import 'package:imis/constant/constant.dart';
 
 /// Fixed boilerplate shown in the ACTIVITY column for every entry — the
 /// backend has no per-entry "activity" text field. Typed only, never
@@ -75,7 +77,7 @@ class AuditSchedulePage extends StatefulWidget {
 }
 
 class _AuditSchedulePageState extends State<AuditSchedulePage> {
-  static const Color primaryThemeColor = Color(0xFF883942);
+  static const Color primaryThemeColor = primaryColor;
 
   final AuditPlanService _auditPlanService = AuditPlanService(Dio());
   final AuditProgrammeService _programmeService = AuditProgrammeService(Dio());
@@ -634,25 +636,15 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       entry.time.hour,
       entry.time.minute,
     );
-    final planStart = DateTime(
-      _plan!.startDate.year,
-      _plan!.startDate.month,
-      _plan!.startDate.day,
-    );
-    final planEnd = DateTime(
-      _plan!.endDate.year,
-      _plan!.endDate.month,
-      _plan!.endDate.day,
-    );
 
     final input = await showDialog<_RescheduleRequestInput>(
       context: context,
       barrierDismissible: false,
       builder: (_) => _RescheduleRequestDialog(
+        service: _scheduleService,
+        scheduleId: schedId!,
         officeName: group.officeName,
         currentStart: currentStart,
-        firstDate: planStart,
-        lastDate: planEnd,
       ),
     );
     if (input == null || !mounted) return;
@@ -1308,8 +1300,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF4F6F8),
-            borderRadius: BorderRadius.circular(8),
+            color: mainBgColor,
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1338,7 +1330,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: const BoxDecoration(
         color: primaryThemeColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
       ),
       child: Row(
         children: [
@@ -1359,8 +1351,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
-                letterSpacing: 0.5,
+                fontSize: 15,
               ),
             ),
           ),
@@ -1468,7 +1459,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -2177,18 +2168,21 @@ class _RescheduleRequestInput {
   const _RescheduleRequestInput(this.start, this.reason);
 }
 
-/// Date + time + reason form for a reschedule request.
+/// The reschedule request form. The Department Head does not type a date or a
+/// time: the system lists when the audit team (and the office) are free and they
+/// pick one of those. When the team has no free time there is nothing to pick,
+/// the request cannot be sent and the current schedule stays.
 class _RescheduleRequestDialog extends StatefulWidget {
+  final AuditSchedulesService service;
+  final int scheduleId;
   final String officeName;
   final DateTime currentStart;
-  final DateTime firstDate;
-  final DateTime lastDate;
 
   const _RescheduleRequestDialog({
+    required this.service,
+    required this.scheduleId,
     required this.officeName,
     required this.currentStart,
-    required this.firstDate,
-    required this.lastDate,
   });
 
   @override
@@ -2197,19 +2191,17 @@ class _RescheduleRequestDialog extends StatefulWidget {
 }
 
 class _RescheduleRequestDialogState extends State<_RescheduleRequestDialog> {
-  late DateTime _date;
-  late TimeOfDay _time;
   final _reasonController = TextEditingController();
+
+  AuditSlotAvailability? _availability;
+  String? _loadError;
+  bool _loading = true;
+  AuditSlot? _selected;
 
   @override
   void initState() {
     super.initState();
-    _date = DateTime(
-      widget.currentStart.year,
-      widget.currentStart.month,
-      widget.currentStart.day,
-    );
-    _time = TimeOfDay.fromDateTime(widget.currentStart);
+    _load();
   }
 
   @override
@@ -2218,106 +2210,245 @@ class _RescheduleRequestDialogState extends State<_RescheduleRequestDialog> {
     super.dispose();
   }
 
-  DateTime get _proposed =>
-      DateTime(_date.year, _date.month, _date.day, _time.hour, _time.minute);
-
-  bool get _changed => _proposed != widget.currentStart;
-
-  bool get _valid => _changed && _reasonController.text.trim().isNotEmpty;
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      helpText: 'Select a new audit date',
-      initialDate: _date.isBefore(widget.firstDate)
-          ? widget.firstDate
-          : (_date.isAfter(widget.lastDate) ? widget.lastDate : _date),
-      firstDate: widget.firstDate,
-      lastDate: widget.lastDate,
-    );
-    if (picked != null) setState(() => _date = picked);
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _loadError = null;
+    });
+    try {
+      final availability = await widget.service.getAvailableSlots(
+        widget.scheduleId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _availability = availability;
+        _selected = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadError = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
-  Future<void> _pickTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      helpText: 'Select a new audit time',
-      initialTime: _time,
+  bool get _valid =>
+      _selected != null && _reasonController.text.trim().isNotEmpty;
+
+  DateTime _dayOf(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  Widget _slotChip(AuditSlot slot) {
+    final selected = _selected?.start == slot.start;
+    return ChoiceChip(
+      label: Text(slot.label),
+      avatar: Icon(
+        slot.period == 'Morning'
+            ? Icons.wb_sunny_outlined
+            : Icons.wb_twilight_outlined,
+        size: 16,
+        color: selected ? Colors.white : primaryColor,
+      ),
+      selected: selected,
+      showCheckmark: false,
+      selectedColor: primaryColor,
+      backgroundColor: primaryColor.withValues(alpha: 0.06),
+      side: BorderSide(color: primaryColor.withValues(alpha: 0.5)),
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: selected ? Colors.white : primaryColor,
+      ),
+      onSelected: (_) => setState(() => _selected = slot),
     );
-    if (picked != null) setState(() => _time = picked);
+  }
+
+  Widget _group(String title, List<AuditSlotDay> days, {bool showDate = true}) {
+    if (days.isEmpty) return const SizedBox.shrink();
+    final dayFmt = DateFormat('EEEE, MMM d, yyyy');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: kText,
+            ),
+          ),
+          const SizedBox(height: 6),
+          for (final day in days)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (showDate)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        'Day ${day.dayNumber} - ${dayFmt.format(day.date)}',
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                      ),
+                    ),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [for (final s in day.slots) _slotChip(s)],
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _body() {
+    if (_loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(child: CircularProgressIndicator(color: primaryColor)),
+      );
+    }
+    if (_loadError != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_loadError!, style: const TextStyle(color: Colors.red)),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh, size: 16),
+            label: const Text('Try again'),
+          ),
+        ],
+      );
+    }
+
+    final availability = _availability!;
+    if (!availability.hasFreeSlots) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.orange.shade200),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.event_busy_outlined, size: 18, color: Colors.orange.shade800),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                availability.message ??
+                    'The audit team has no free time. The current schedule stays.',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final today = _dayOf(availability.currentStart);
+    final tomorrow = today.add(const Duration(days: 1));
+    final sameDay = [
+      for (final d in availability.days)
+        if (_dayOf(d.date) == today) d,
+    ];
+    final nextDay = [
+      for (final d in availability.days)
+        if (_dayOf(d.date) == tomorrow) d,
+    ];
+    final otherDays = [
+      for (final d in availability.days)
+        if (_dayOf(d.date) != today && _dayOf(d.date) != tomorrow) d,
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Choose one of the times the audit team is free:',
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade800),
+        ),
+        const SizedBox(height: 10),
+        _group('Same day', sameDay, showDate: false),
+        _group('Next day', nextDay),
+        _group('Other days', otherDays),
+        const SizedBox(height: 4),
+        TextField(
+          controller: _reasonController,
+          maxLines: 3,
+          onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(
+            labelText: 'Reason for rescheduling',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'The request goes to the Auditor Team Leader, then the Lead '
+          'Auditor. The schedule changes only after the Lead Auditor accepts.',
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final dateFmt = DateFormat('MMMM d, yyyy');
+    final teamName = _availability?.teamName;
+    final canSend = !_loading &&
+        _loadError == null &&
+        (_availability?.hasFreeSlots ?? false);
+
     return AlertDialog(
       title: const Text('Request Reschedule'),
       content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Audit schedule for ${widget.officeName}\n'
-              'Current: ${dateFmt.format(widget.currentStart)} '
-              '${DateFormat('h:mm a').format(widget.currentStart)}',
-              style: const TextStyle(fontSize: 13),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _pickDate,
-                    icon: const Icon(Icons.calendar_today, size: 16),
-                    label: Text(dateFmt.format(_date)),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: _pickTime,
-                  icon: const Icon(Icons.access_time, size: 16),
-                  label: Text(_time.format(context)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _reasonController,
-              maxLines: 3,
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Reason for rescheduling',
-                border: OutlineInputBorder(),
+        width: 460,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Audit schedule for ${widget.officeName}\n'
+                'Current: ${dateFmt.format(widget.currentStart)} '
+                '${DateFormat('h:mm a').format(widget.currentStart)}'
+                '${teamName == null || teamName.isEmpty ? '' : '\nAudit team: $teamName'}',
+                style: const TextStyle(fontSize: 13),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'The request goes to the Auditor Team Leader, then the Lead '
-              'Auditor. The schedule changes only after the Lead Auditor accepts.',
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
-            ),
-          ],
+              const SizedBox(height: 16),
+              _body(),
+            ],
+          ),
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(canSend ? 'Cancel' : 'Close'),
         ),
-        ElevatedButton(
-          onPressed: _valid
-              ? () => Navigator.pop(
+        if (canSend)
+          ElevatedButton(
+            onPressed: _valid
+                ? () => Navigator.pop(
                     context,
                     _RescheduleRequestInput(
-                      _proposed,
+                      _selected!.start,
                       _reasonController.text.trim(),
                     ),
                   )
-              : null,
-          child: const Text('Send Request'),
-        ),
+                : null,
+            child: const Text('Send Request'),
+          ),
       ],
     );
   }

@@ -12,6 +12,7 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/ISO/IQA/audit_programme/pages/audit_programme_print_preview_page.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/permission_service.dart';
+import 'package:imis/constant/constant.dart';
 
 /// TEMPORARILY false so last year's paper audits can be encoded; the inline
 /// self-audit highlight is off. Set true (and restore the commented blocks)
@@ -208,7 +209,7 @@ class AuditProgrammePage extends StatefulWidget {
 }
 
 class _AuditProgrammePageState extends State<AuditProgrammePage> {
-  static const Color primaryThemeColor = Color(0xFF883942);
+  static const Color primaryThemeColor = primaryColor;
 
   final AuditProgrammeService _service = AuditProgrammeService(Dio());
 
@@ -693,7 +694,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: const BoxDecoration(
         color: primaryThemeColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
       ),
       child: Row(
         children: [
@@ -705,8 +706,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
-                letterSpacing: 0.5,
+                fontSize: 15,
               ),
             ),
           ),
@@ -943,7 +943,7 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -1483,8 +1483,8 @@ class _AuditProgrammePageState extends State<AuditProgrammePage> {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF4F6F8),
-            borderRadius: BorderRadius.circular(8),
+            color: mainBgColor,
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1797,7 +1797,7 @@ class _ClauseTypeAhead extends StatefulWidget {
 }
 
 class _ClauseTypeAheadState extends State<_ClauseTypeAhead> {
-  static const Color _accent = Color(0xFF883942);
+  static const Color _accent = primaryColor;
 
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focus = FocusNode();
@@ -2030,7 +2030,7 @@ class _ClauseTypeAheadState extends State<_ClauseTypeAhead> {
 }
 
 class _AuditPlanEntriesSectionState extends State<AuditPlanEntriesSection> {
-  static const Color primaryThemeColor = Color(0xFF883942);
+  static const Color primaryThemeColor = primaryColor;
 
   InputDecoration _dropdownDecoration(String label) {
     return InputDecoration(

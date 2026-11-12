@@ -75,7 +75,7 @@ class IsatPageState extends State<IsatPage> {
   @override
   void initState() {
     super.initState();
-    _commonService.fetchOffices().then((o) {
+    _commonService.fetchAlloffices().then((o) {
       if (mounted) setState(() => officeList = o);
     });
 
@@ -481,6 +481,7 @@ class IsatPageState extends State<IsatPage> {
         children: [
           _cell('$no', 1),
           _cell(isat.office?.name ?? '', 3),
+          _cell(isat.employeeName, 3),
           _cell(_periodText(isat), 3),
           Expanded(
             flex: 2,
@@ -566,16 +567,17 @@ class IsatPageState extends State<IsatPage> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(isat.office?.name ?? '', style: _cellStyle),
-          const SizedBox(height: 4),
-          Text(_periodText(isat), style: _cellStyle),
-          const SizedBox(height: 4),
+
           StatusBadge(
             label: st.label,
             awaiting: st.awaiting,
             onTap: () => _showTimeLine(isat),
           ),
+          const SizedBox(height: 6),
+          Text(isat.office?.name ?? '', style: _cellStyle),
+          Text(isat.employeeName ?? '', style: _cellStyle),
+          const SizedBox(height: 4),
+          Text(_periodText(isat), style: _cellStyle),
         ],
       ),
     );
@@ -669,6 +671,7 @@ class IsatPageState extends State<IsatPage> {
                               child: Text("#", style: _boldStyle),
                             ),
                             _sortHeader("Office", 'office', 3),
+                            _sortHeader("Contributor", 'contributor', 3),
                             _sortHeader("Period", 'period', 3),
                             _sortHeader("Status", 'status', 2),
                             const Expanded(
@@ -698,7 +701,7 @@ class IsatPageState extends State<IsatPage> {
                             totalItems: _totalCount,
                             itemsPerPage: _pageSize,
                             isLoading: _isLoading,
-                            onPageChanged: _applyView, // local paging na
+                            onPageChanged: _applyView,
                           ),
                           const SizedBox(width: 60),
                         ],
@@ -753,7 +756,7 @@ class IsatPageState extends State<IsatPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Individual Strategic Alignment Management (ISPAM)",
+                  "Strategic Alignment Management Matrix (SPAM)",
                   style: TextStyle(
                     fontSize: isXSmall ? 12 : (isSmall ? 14 : 16),
                     fontWeight: FontWeight.bold,
@@ -761,7 +764,7 @@ class IsatPageState extends State<IsatPage> {
                   ),
                 ),
                 Text(
-                  "$_totalCount ISPAM${_totalCount != 1 ? 's' : ''} found",
+                  "$_totalCount SPAM${_totalCount != 1 ? 's' : ''} found",
                   style: TextStyle(
                     fontSize: isXSmall ? 10 : 12,
                     color: Colors.grey.shade600,

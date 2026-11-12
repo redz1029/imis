@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/ISO/IQA/iso_standard/models/clause_item.dart';
 import 'package:imis/ISO/IQA/iso_standard/service/iso_standard_service.dart';
+import 'package:imis/constant/constant.dart';
 
 class ClauseLibraryPage extends StatefulWidget {
   final int? versionId;
@@ -14,7 +15,7 @@ class ClauseLibraryPage extends StatefulWidget {
 }
 
 class _ClauseLibraryPageState extends State<ClauseLibraryPage> {
-  static const Color primaryThemeColor = Color(0xFF883942);
+  static const Color primaryThemeColor = primaryColor;
 
   final IsoStandardService _service = IsoStandardService(Dio());
   final TextEditingController _searchController = TextEditingController();

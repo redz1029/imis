@@ -77,6 +77,13 @@ namespace IMIS.Application.NonconformingActionReportModule
         public bool IsClosed { get; set; } = false;
         public string FormRevision { get; set; } = "QP-03-F-08 Rev. 5";
 
+        /// <summary>
+        /// The Service(s) the audited office belongs to (e.g. "Medical Service",
+        /// "Nursing Service"), found by following the office up its parents.
+        /// Read-only: filled in when NCARs are listed, never saved.
+        /// </summary>
+        public List<string> Services { get; set; } = new();
+
         public NonconformingActionReportDto() { }
 
         [SetsRequiredMembers]

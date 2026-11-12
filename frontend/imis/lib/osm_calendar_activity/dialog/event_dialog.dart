@@ -636,7 +636,7 @@ class _AddEditEventDialogState extends State<AddEditEventDialog> {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
       if (user == null) return;
       setState(() => userId = user.id ?? "");
-      final offices = await _commonService.fetchOffices();
+      final offices = await _commonService.fetchAlloffices();
       if (!mounted) return;
       setState(() {
         _officeList = offices;

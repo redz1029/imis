@@ -1052,7 +1052,7 @@ class AuditPlanPage extends StatefulWidget {
 }
 
 class _AuditPlanPageState extends State<AuditPlanPage> {
-  static const Color primaryThemeColor = Color(0xFF883942);
+  static const Color primaryThemeColor = primaryColor;
   static const Color headerFillColor = Color(0xFFF3E9EA);
 
   final AuditProgrammeService _service = AuditProgrammeService(Dio());
@@ -1828,8 +1828,8 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF4F6F8),
-            borderRadius: BorderRadius.circular(8),
+            color: mainBgColor,
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1853,7 +1853,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: const BoxDecoration(
         color: primaryThemeColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
       ),
       child: Row(
         children: [
@@ -1872,8 +1872,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
-                letterSpacing: 0.5,
+                fontSize: 15,
               ),
             ),
           ),
@@ -1997,7 +1996,7 @@ class _AuditPlanPageState extends State<AuditPlanPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
