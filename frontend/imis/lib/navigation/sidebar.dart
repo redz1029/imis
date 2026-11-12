@@ -116,16 +116,12 @@ class SidebarState extends State<Sidebar> {
   final GlobalKey _notificationKey = GlobalKey();
   List<Announcement> _unreadAnnouncements = [];
 
-  // IQA notifications (ISO): submissions waiting on the user, decisions,
-  // NCAR steps, ... They are asked for again every minute.
   final IqaNotificationService _iqaNotificationService = IqaNotificationService(
     Dio(),
   );
   List<IqaNotification> _iqaNotifications = [];
   int _iqaUnread = 0;
   Timer? _iqaTimer;
-  // Bumped when a notification opens, so the page it is about loads again
-  // (even if it is the page already showing) and shows the new item.
   int _iqaReload = 0;
   int selectedPage = 0;
   int selectedSubPage = 0;
@@ -453,8 +449,6 @@ class SidebarState extends State<Sidebar> {
     );
   }
 
-  /// Asks the server for the user's IQA notifications. A failed refresh keeps
-  /// what the bell already shows.
   Future<void> _loadIqaNotifications() async {
     try {
       final result = await _iqaNotificationService.getNotifications();
@@ -466,8 +460,6 @@ class SidebarState extends State<Sidebar> {
     } catch (_) {}
   }
 
-  /// The permission that lets the user see an ISO sub-page (see the ISO group
-  /// of the menu), so a notification never opens a page the user cannot use.
   String? _iqaViewPermission(int subPage) {
     switch (subPage) {
       case 0:
@@ -486,7 +478,6 @@ class SidebarState extends State<Sidebar> {
     return null;
   }
 
-  /// Opens the ISO page a notification is about and marks it as read.
   Future<void> _openIqaNotification(IqaNotification n) async {
     if (!n.isRead) {
       setState(() {
@@ -510,7 +501,7 @@ class SidebarState extends State<Sidebar> {
     }
 
     setState(() {
-      selectedPage = 2; // ISO
+      selectedPage = 2;
       selectedSubPage = n.targetPage;
       _iqaReload++;
       _expandedKeys.add('g2');
@@ -1422,18 +1413,24 @@ class SidebarState extends State<Sidebar> {
     }
 
     if (selectedPage == 2) {
-      if (selectedSubPage == 0)
+      if (selectedSubPage == 0) {
         return AuditProgrammeListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 1)
+      }
+      if (selectedSubPage == 1) {
         return AuditPlanListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 2)
+      }
+      if (selectedSubPage == 2) {
         return AuditScheduleListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 3)
+      }
+      if (selectedSubPage == 3) {
         return AuditChecklistListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 4)
+      }
+      if (selectedSubPage == 4) {
         return AuditReportListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 5)
+      }
+      if (selectedSubPage == 5) {
         return NcarListPage(key: ValueKey('iqa$_iqaReload'));
+      }
       if (selectedSubPage == 6) return const ClauseLibraryPage();
       if (selectedSubPage == 7) return const IqaHistoryPage();
     }
@@ -1634,17 +1631,17 @@ class SidebarState extends State<Sidebar> {
           NavChild('IQA History', 7),
         ],
       ),
-      NavGroup(
-        icon: Icons.fact_check_outlined,
-        label: 'QMS Documents',
-        pageIndex: 3,
-        children: const [
-          NavChild('Procedures', 0),
-          // NavChild('Auditor Offices', 1),
-          // NavChild('Auditor Team', 2),
-          // NavChild('ISO Announcements', 3),
-        ],
-      ),
+      // NavGroup(
+      //   icon: Icons.fact_check_outlined,
+      //   label: 'QMS Documents',
+      //   pageIndex: 3,
+      //   children: const [
+      //     NavChild('Procedures', 0),
+      //     // NavChild('Auditor Offices', 1),
+      //     // NavChild('Auditor Team', 2),
+      //     // NavChild('ISO Announcements', 3),
+      //   ],
+      // ),
       NavGroup(
         icon: Icons.settings_outlined,
         label: 'Settings',
