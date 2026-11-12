@@ -68,6 +68,12 @@ namespace IMIS.Application.AuditScheduleModule
         // Leader, then the Lead Auditor; the schedule is only revised once the
         // Lead Auditor accepts.
         Task<(bool Success, string? Error)> RequestRescheduleAsync(int id, DateTime proposedStart, string? reason, string? userId, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// The times the audit team and the office are free, day by day. The
+        /// Department Head can only ask to move the audit to one of these.
+        /// </summary>
+        Task<AuditScheduleAvailabilityDto?> GetAvailableSlotsAsync(int scheduleId, CancellationToken cancellationToken);
         Task<AuditScheduleRescheduleRequestDto?> GetLatestRescheduleRequestAsync(int scheduleId, string? userId, CancellationToken cancellationToken);
         Task<List<AuditScheduleRescheduleRequestDto>> GetPendingRescheduleRequestsAsync(string? userId, CancellationToken cancellationToken);
         Task<List<AuditScheduleRescheduleRequestDto>> GetOpenRescheduleRequestsAsync(string? userId, CancellationToken cancellationToken);

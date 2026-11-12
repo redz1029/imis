@@ -334,6 +334,21 @@ namespace IMIS.Presentation.AuditScheduleModule
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanConfirm) ||
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanReject)));
 
+            // The free times of the audit team (and the office) for one schedule: the
+            // only times a reschedule request may ask for.
+            app.MapGet("/{id:int}/available-slots", async (
+                int id,
+                IAuditScheduleService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetAvailableSlotsAsync(id, cancellationToken);
+                return result is null
+                    ? Results.NotFound(new { error = "Audit schedule not found." })
+                    : Results.Ok(result);
+            })
+            .WithTags(_AuditSchedule)
+            .RequireAuthorization();
+
             // Latest reschedule request of one schedule.
             app.MapGet("/{id:int}/reschedule-request", async (
                 int id,

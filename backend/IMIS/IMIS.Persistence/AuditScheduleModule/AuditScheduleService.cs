@@ -355,26 +355,26 @@ namespace IMIS.Application.AuditScheduleModule
             if (date < plan.StartDate.Date || date > plan.EndDate.Date)
                 return "The selected date is outside the audit plan schedule.";
 
-            // Same-day, same-time conflict check for the same auditee office.
-            var officeId = schedule.AuditableOffices
-                ?.Where(ao => !ao.IsDeleted)
-                .Select(ao => ao.OfficeId)
-                .FirstOrDefault();
+            // The audit team (and its members), the office, the opening / closing
+            // meetings and other pending requests must all be free at that time.
+            var availability = await AuditScheduleAvailability
+                .LoadAsync(dbContext, schedule.Id, cancellationToken)
+                .ConfigureAwait(false);
+            var conflict = availability?.ConflictFor(date + time);
+            return conflict == null ? null : conflict + " Please choose one of the free times.";
+        }
 
-            if (officeId.HasValue)
-            {
-                var conflict = await dbContext.Set<AuditSchedule>()
-                    .Include(s => s.AuditableOffices!)
-                    .AnyAsync(s => s.Id != schedule.Id && s.IsActive &&
-                        s.AuditableOffices!.Any(ao => !ao.IsDeleted && ao.OfficeId == officeId.Value) &&
-                        s.StartDate.Date == date &&
-                        s.StartDate.TimeOfDay == time, cancellationToken);
-
-                if (conflict)
-                    return "The selected time is not available on that day for this office. Please choose another time or day.";
-            }
-
-            return null;
+        /// <summary>
+        /// The times the audit team and the office are free, from which the
+        /// Department Head must choose when asking to reschedule.
+        /// </summary>
+        public async Task<AuditScheduleAvailabilityDto?> GetAvailableSlotsAsync(
+            int scheduleId, CancellationToken cancellationToken)
+        {
+            var availability = await AuditScheduleAvailability
+                .LoadAsync(_repository.GetDbContext(), scheduleId, cancellationToken)
+                .ConfigureAwait(false);
+            return availability?.Build(DateTime.Now);
         }
 
         /// <summary>
@@ -616,6 +616,13 @@ namespace IMIS.Application.AuditScheduleModule
             var currentDate = plan.StartDate.Date.AddDays(entry.DayNumber - 1);
             if (date == currentDate && time == entry.Time.TimeOfDay)
                 return (false, "The requested schedule is the same as the current schedule.");
+
+            // The Department Head chooses from the free times the system offers; a
+            // time of their own making is not accepted.
+            if (!AuditSlotPolicy.IsSlot(time))
+                return (false, "Please choose one of the free times offered for the audit team.");
+            if (proposedStart <= DateTime.Now)
+                return (false, "The requested time has already passed. Please choose one of the free times offered.");
 
             var error = await ValidateProposedMoveAsync(dbContext, schedule, plan, date, time, cancellationToken);
             if (error != null)
