@@ -49,6 +49,10 @@ class NonconformingActionReport {
   final List<String> corrections;
   final List<String> correctiveActions;
 
+  /// The Service(s) the audited office belongs to (Medical Service, Nursing
+  /// Service, ...). Worked out by the server, so it is read-only here.
+  final List<String> services;
+
   const NonconformingActionReport({
     this.id = 0,
     required this.referenceNumber,
@@ -93,6 +97,7 @@ class NonconformingActionReport {
     this.rootCauses = const [],
     this.corrections = const [],
     this.correctiveActions = const [],
+    this.services = const [],
   });
 
   factory NonconformingActionReport.fromJson(Map<String, dynamic> json) {
@@ -170,6 +175,12 @@ class NonconformingActionReport {
       rootCauses: texts(json['rootCauses'] ?? json['RootCauses'], 'causeDescription'),
       corrections: texts(json['corrections'] ?? json['Corrections'], 'actionDescription'),
       correctiveActions: texts(json['correctiveActions'] ?? json['CorrectiveActions'], 'actionDescription'),
+      services: [
+        for (final s in (json['services'] ?? json['Services']) is List
+            ? (json['services'] ?? json['Services']) as List
+            : const [])
+          if (s != null && s.toString().trim().isNotEmpty) s.toString().trim(),
+      ],
     );
   }
 
