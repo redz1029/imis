@@ -33,7 +33,28 @@ namespace IMIS.Persistence.NonconformingActionReportModule
         public async Task<NonconformingActionReportDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
-            return entity == null ? null : new NonconformingActionReportDto(entity);
+            if (entity == null) return null;
+            var dto = new NonconformingActionReportDto(entity);
+            await AttachServicesAsync(new[] { dto }, cancellationToken).ConfigureAwait(false);
+            return dto;
+        }
+
+        /// <summary>Fills in the Service(s) of each NCAR's office (for filtering and display).</summary>
+        private async Task AttachServicesAsync(IReadOnlyCollection<NonconformingActionReportDto> dtos, CancellationToken cancellationToken)
+        {
+            if (dtos.Count == 0) return;
+            try
+            {
+                var services = await _repository
+                    .GetServiceNamesAsync(dtos.Select(d => d.Id).ToList(), cancellationToken)
+                    .ConfigureAwait(false);
+                foreach (var dto in dtos)
+                    dto.Services = services.TryGetValue(dto.Id, out var names) ? names : new List<string>();
+            }
+            catch (Exception)
+            {
+                // The services only drive a filter; the NCARs themselves must still load.
+            }
         }
 
         public async Task<bool> SaveNcarAsync(NonconformingActionReportDto dto, CancellationToken cancellationToken)
@@ -99,11 +120,13 @@ namespace IMIS.Persistence.NonconformingActionReportModule
             var result = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
             if (result.TotalCount == 0) return null!;
 
-            return DtoPageList<NonconformingActionReportDto, NonconformingActionReport, long>.Create(
+            var list = DtoPageList<NonconformingActionReportDto, NonconformingActionReport, long>.Create(
                 result.Items,
                 page,
                 pageSize,
                 result.TotalCount);
+            await AttachServicesAsync(list.Items, cancellationToken).ConfigureAwait(false);
+            return list;
         }
 
         public async Task<bool> SoftDeleteAsync(long id, CancellationToken cancellationToken)
