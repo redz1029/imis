@@ -141,6 +141,8 @@ class _IsatDialogState extends State<IsatDialog> {
   bool get _canShowCommitments => _selectedPeriod != null && _officeId != null;
   List<IsatEmployeeOffice> _offices = [];
   bool _loadingOffices = false;
+  bool officesLoaded = false;
+  bool pgsDeliverablesLoaded = false;
 
   @override
   void initState() {
@@ -234,7 +236,10 @@ class _IsatDialogState extends State<IsatDialog> {
       });
       _loadDeliverablesFor(entry);
     }
-    setState(() => _selectedContributions.clear());
+    setState(() {
+      _selectedContributions.clear();
+      pgsDeliverablesLoaded = false;
+    });
     _loadPgsDeliverables();
   }
 
@@ -401,7 +406,10 @@ class _IsatDialogState extends State<IsatDialog> {
 
   Future<void> _loadOffices() async {
     final uid = _employeeUserId;
-    if (uid == null || uid.isEmpty) return;
+    if (uid == null || uid.isEmpty) {
+      if (mounted) setState(() => officesLoaded = true);
+      return;
+    }
     setState(() => _loadingOffices = true);
     try {
       final offices = await _isatService.fetchEmployeeOffices(userId: uid);
@@ -411,8 +419,19 @@ class _IsatDialogState extends State<IsatDialog> {
         final match = offices.firstWhereOrNull((o) => o.id == _officeId);
         if (match != null) _departmentUnitCtrl.text = match.name;
       });
+    } catch (e) {
+      if (mounted) {
+        MotionToast.error(
+          description: Text('Failed to load offices: ${e.toString()}'),
+        ).show(context);
+      }
     } finally {
-      if (mounted) setState(() => _loadingOffices = false);
+      if (mounted) {
+        setState(() {
+          _loadingOffices = false;
+          officesLoaded = true;
+        });
+      }
     }
   }
 
@@ -426,6 +445,7 @@ class _IsatDialogState extends State<IsatDialog> {
       _serviceCtrl.text = o.parentOfficeName;
       _selectedContributions.clear();
       _pgsDeliverableOptions = [];
+      pgsDeliverablesLoaded = false;
       // clear napiling contribution sa rows kasi iba na ang office
       for (final r in _commitmentRows) {
         r.kraId = null;
@@ -441,9 +461,13 @@ class _IsatDialogState extends State<IsatDialog> {
     if (_loadingOffices) {
       return const LinearProgressIndicator(minHeight: 2, color: primaryColor);
     }
-    // fallback kung walang nakuhang offices
     if (_offices.isEmpty) {
-      return _inputField(_departmentUnitCtrl, required: true, readOnly: true);
+      if (!officesLoaded) {
+        return _inputField(_departmentUnitCtrl, readOnly: true);
+      }
+      return _buildWarningBox(
+        'No office is assigned to you. Please contact the admin.',
+      );
     }
 
     final value = _offices.any((o) => o.id == _officeId) ? _officeId : null;
@@ -483,7 +507,10 @@ class _IsatDialogState extends State<IsatDialog> {
 
   Future<void> _loadPgsDeliverables() async {
     if (_officeId == null || _selectedPeriod == null) return;
-    setState(() => _loadingPgsDeliverables = true);
+    setState(() {
+      _loadingPgsDeliverables = true;
+      pgsDeliverablesLoaded = false;
+    });
     try {
       final items = await _isatService.fetchPgsDeliverables(
         officeId: _officeId.toString(),
@@ -500,7 +527,12 @@ class _IsatDialogState extends State<IsatDialog> {
         ).show(context);
       }
     } finally {
-      if (mounted) setState(() => _loadingPgsDeliverables = false);
+      if (mounted) {
+        setState(() {
+          _loadingPgsDeliverables = false;
+          pgsDeliverablesLoaded = true;
+        });
+      }
     }
   }
 
@@ -771,6 +803,8 @@ class _IsatDialogState extends State<IsatDialog> {
 
   Future<void> _saveIsat({required bool isSubmit}) async {
     if (!_formKey.currentState!.validate()) return;
+    if (_offices.isEmpty) return;
+    if (_pgsDeliverableOptions.isEmpty && !_isLocked) return;
 
     if (_selectedPeriod == null ||
         _officeId == null ||
@@ -819,6 +853,7 @@ class _IsatDialogState extends State<IsatDialog> {
         _existingId ?? 0,
         _selectedPeriod!.id,
         _employeeUserId!,
+        '',
         _officeId!,
         _supervisorUserId,
         _positionCtrl.text.trim(),
@@ -1146,7 +1181,10 @@ class _IsatDialogState extends State<IsatDialog> {
   }
 
   Widget _buildFooter(bool isMobile) {
-    final showActions = _initialized && !_isLocked; // draft / new only
+    final hasBlocker =
+        _offices.isEmpty || (_pgsDeliverableOptions.isEmpty && !_isLocked);
+    final showActions =
+        _initialized && !_isLocked && !hasBlocker; // draft / new only
     final showConfirm = _initialized && _isPending; // pending only
 
     return Container(
@@ -1268,7 +1306,7 @@ class _IsatDialogState extends State<IsatDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Individual Strategic Alignment Tree (ISAT)',
+                          'Strategic Performance Alignment Matrix (SPAM)',
                           style: GoogleFonts.plusJakartaSans(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
@@ -1308,18 +1346,24 @@ class _IsatDialogState extends State<IsatDialog> {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-
-                    // children: [
-                    //   _buildGeneralInfo(isMobile),
-                    //   _buildCommitmentsTable(isMobile),
-                    //   const SizedBox(height: 8),
-                    // ],
                     children: [
                       _buildGeneralInfo(isMobile),
-                      if (_canShowCommitments)
-                        _buildCommitmentsTable(isMobile)
+                      if (!_canShowCommitments)
+                        _buildCommitmentsPlaceholder()
+                      else if (_loadingPgsDeliverables)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 18),
+                          child: LinearProgressIndicator(
+                            minHeight: 2,
+                            color: primaryColor,
+                          ),
+                        )
+                      else if (pgsDeliverablesLoaded &&
+                          _pgsDeliverableOptions.isEmpty &&
+                          !_isLocked)
+                        _buildNoDeliverablesNotice()
                       else
-                        _buildCommitmentsPlaceholder(),
+                        _buildCommitmentsTable(isMobile),
                       const SizedBox(height: 8),
                     ],
                   ),
@@ -1329,6 +1373,49 @@ class _IsatDialogState extends State<IsatDialog> {
             _buildFooter(isMobile),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildWarningBox(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        border: Border.all(color: const Color(0xFFFFCC80)),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            size: 18,
+            color: Color(0xFFF57C00),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFE65100),
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoDeliverablesNotice() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: _buildWarningBox(
+        'No deliverables available. The head of your office has not created deliverables yet.',
       ),
     );
   }
