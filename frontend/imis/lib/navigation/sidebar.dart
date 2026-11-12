@@ -56,6 +56,7 @@ import 'package:imis/performance_governance_system/pgs_performance_validation_to
 import 'package:imis/performance_governance_system/pgs_roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
 import 'package:imis/performance_governance_system/pgs_roadmap/pages/roadmap_page.dart';
 import 'package:imis/qms_documents/pages/procedures_list_page.dart';
+import 'package:imis/qms_documents/policy_signatory_template/pages/policy_signatory_template_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/impact_strategic_goal_scorecard_period/pages/impact_strategic_goal_scorecard_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_scorecard/pages/impact_strategy_goal_scorecard_page.dart';
@@ -669,7 +670,9 @@ class SidebarState extends State<Sidebar> {
                               setMenuState(() {});
                             },
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
                               minimumSize: const Size(0, 28),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
@@ -708,17 +711,17 @@ class SidebarState extends State<Sidebar> {
                               ? (_iqaNotifications.isNotEmpty
                                   ? const SizedBox.shrink()
                                   : Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 24,
-                                ),
-                                child: Text(
-                                  'No new notifications.',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    color: kMuted,
-                                  ),
-                                ),
-                              ))
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 24,
+                                    ),
+                                    child: Text(
+                                      'No new notifications.',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12,
+                                        color: kMuted,
+                                      ),
+                                    ),
+                                  ))
                               : ListView.separated(
                                 shrinkWrap: true,
                                 itemCount: _unreadAnnouncements.length,
@@ -1419,12 +1422,18 @@ class SidebarState extends State<Sidebar> {
     }
 
     if (selectedPage == 2) {
-      if (selectedSubPage == 0) return AuditProgrammeListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 1) return AuditPlanListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 2) return AuditScheduleListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 3) return AuditChecklistListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 4) return AuditReportListPage(key: ValueKey('iqa$_iqaReload'));
-      if (selectedSubPage == 5) return NcarListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 0)
+        return AuditProgrammeListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 1)
+        return AuditPlanListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 2)
+        return AuditScheduleListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 3)
+        return AuditChecklistListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 4)
+        return AuditReportListPage(key: ValueKey('iqa$_iqaReload'));
+      if (selectedSubPage == 5)
+        return NcarListPage(key: ValueKey('iqa$_iqaReload'));
       if (selectedSubPage == 6) return const ClauseLibraryPage();
       if (selectedSubPage == 7) return const IqaHistoryPage();
     }
@@ -1484,6 +1493,7 @@ class SidebarState extends State<Sidebar> {
       }
       if (selectedSubPage == 25) return const IQASignatoryTemplatePage();
       if (selectedSubPage == 26) return const AuditStandardPage();
+      if (selectedSubPage == 27) return const PolicySignatoryTemplatePage();
     }
     return HomePage();
   }
@@ -1686,6 +1696,12 @@ class SidebarState extends State<Sidebar> {
             null,
             prefixTitle: false,
             children: [NavChild('SPAM Signatory Template', 24)],
+          ),
+          NavChild(
+            'QMS Modules',
+            null,
+            prefixTitle: false,
+            children: [NavChild('Policy and Procedure Template', 27)],
           ),
         ],
       ),

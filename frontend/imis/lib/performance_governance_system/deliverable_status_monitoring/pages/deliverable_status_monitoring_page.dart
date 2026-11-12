@@ -1039,7 +1039,7 @@ class _DeliverableStatusMonitoringPageState
                   ),
                 ),
                 Expanded(
-                  child: Text(
+                  child: SelectableText(
                     d['deliverableName'] ?? '',
                     style: const TextStyle(
                       fontSize: 12,
@@ -1057,7 +1057,7 @@ class _DeliverableStatusMonitoringPageState
                 color: primaryColor.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(
+              child: SelectableText(
                 d['officeName'] ?? '',
                 style: TextStyle(
                   fontSize: 11,
@@ -1077,11 +1077,7 @@ class _DeliverableStatusMonitoringPageState
                   Colors.lightBlue,
                 ),
                 _infoChip(Icons.adjust_outlined, d['kra'] ?? '', Colors.green),
-                _infoChip(
-                  Icons.insights,
-                  d['kraDescription'] ?? '',
-                  Colors.orange,
-                ),
+
                 _infoChip(
                   d['isDirect'] == true
                       ? Icons.arrow_right_alt
@@ -1137,7 +1133,7 @@ class _DeliverableStatusMonitoringPageState
             color: primaryColor.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text(
+          child: SelectableText(
             d['officeName'] ?? '',
 
             style: TextStyle(
@@ -1148,7 +1144,7 @@ class _DeliverableStatusMonitoringPageState
           ),
         ),
         const SizedBox(height: 10),
-        Text(
+        SelectableText(
           d['deliverableName'] ?? '',
           style: const TextStyle(
             fontSize: 14,
@@ -1167,7 +1163,6 @@ class _DeliverableStatusMonitoringPageState
               Colors.blue,
             ),
             _infoChip(Icons.adjust_outlined, d['kra'] ?? '', Colors.green),
-            _infoChip(Icons.insights, d['kraDescription'] ?? '', Colors.orange),
             _infoChip(
               d['isDirect'] == true ? Icons.arrow_right_alt : Icons.alt_route,
               d['isDirect'] == true ? 'Direct' : 'Indirect',
@@ -1189,10 +1184,10 @@ class _DeliverableStatusMonitoringPageState
         const SizedBox(width: 4),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 200),
-          child: Text(
+          child: SelectableText(
             label,
             style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-            overflow: TextOverflow.ellipsis,
+            // overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -2039,7 +2034,7 @@ Future<bool?> showAccomplishmentFormDialog(
         ),
       );
 
-      Widget infoText(String text, {bool bold = false}) => Text(
+      Widget infoText(String text, {bool bold = false}) => SelectableText(
         text,
         style: TextStyle(
           fontSize: 13,
@@ -2154,6 +2149,39 @@ Future<bool?> showAccomplishmentFormDialog(
                             ],
                           ),
                           const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.07),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: primaryColor.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 16,
+                                  color: primaryColor,
+                                ),
+                                const SizedBox(width: 8),
+                                const Expanded(
+                                  child: Text(
+                                    'Status, % accomplishment, and proof are submitted by the department. '
+                                    'Review them, then add your findings under "Remarks (Evaluator)".',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           Flexible(
                             child:
                                 isMobile
@@ -2182,12 +2210,33 @@ Future<bool?> showAccomplishmentFormDialog(
                                                     top: Radius.circular(10),
                                                   ),
                                             ),
+
+                                            // child: Row(
+                                            //   children: [
+                                            //     headerCell("Period", 2),
+                                            //     headerCell("Status", 2),
+                                            //     headerCell(
+                                            //       "% Accomplishment",
+                                            //       2,
+                                            //     ),
+                                            //     headerCell(
+                                            //       "Remarks (Dept Head)",
+                                            //       3,
+                                            //     ),
+                                            //     const SizedBox(width: 20),
+                                            //     headerCell("Proof", 2),
+                                            //     headerCell(
+                                            //       "Remarks (Evaluator)",
+                                            //       3,
+                                            //     ),
+                                            //   ],
+                                            // ),
                                             child: Row(
                                               children: [
                                                 headerCell("Period", 2),
-                                                headerCell("Status", 2),
+                                                headerCell("Status (Dept)", 2),
                                                 headerCell(
-                                                  "% Accomplishment",
+                                                  "% Accomplishment (Dept)",
                                                   2,
                                                 ),
                                                 headerCell(
@@ -2472,7 +2521,7 @@ Future<bool?> showBreakthroughFormDialog(
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
+                                SelectableText(
                                   "Office: ${deliverable['officeName'] ?? 'N/A'}",
                                 ),
                               ],
@@ -2481,7 +2530,9 @@ Future<bool?> showBreakthroughFormDialog(
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text("KRA: ${deliverable['kra'] ?? 'N/A'}"),
+                                SelectableText(
+                                  "KRA: ${deliverable['kra'] ?? 'N/A'}",
+                                ),
                               ],
                             ),
                             const SizedBox(height: 4),
@@ -2489,7 +2540,7 @@ Future<bool?> showBreakthroughFormDialog(
                               "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
                             ),
                             const SizedBox(height: 4),
-                            Text(
+                            SelectableText(
                               "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,

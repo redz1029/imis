@@ -13,6 +13,7 @@ import 'package:imis/performance_governance_system/dialog/pgs_form_dialog.dart';
 import 'package:imis/performance_governance_system/enum/pgs_action_type.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
+import 'package:imis/performance_governance_system/pages/pgs_accomplishment_preview.dart';
 import 'package:imis/utils/print_preview_util.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
@@ -2498,14 +2499,7 @@ class _PerformanceGovernanceSystemPageState
                                 context: context,
                               );
                             }
-                            if (value == 'AccomplishmentReport') {
-                              await openPgsDeliverableAccomplishmentReport(
-                                periodId: pgs.pgsPeriod.id,
-                                officeId: pgs.office.id,
-                                pgsId: pgs.id,
-                                context: context,
-                              );
-                            }
+
                             if (value == 'AccomplishmentReport') {
                               await openPgsDeliverableAccomplishmentReport(
                                 periodId: pgs.pgsPeriod.id,

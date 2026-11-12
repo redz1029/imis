@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
@@ -47,7 +48,7 @@ void enforceAccomplishmentConsistency(List<TrackingRowData> rows) {
     }
 
     if (status == PgsStatus.completed) {
-      percent = percent.clamp(100, 999).toInt();
+      percent = 100;
     } else if (status == PgsStatus.onGoing) {
       final floor =
           (prevStatus == PgsStatus.onGoing && prevPercent > 1)
@@ -302,50 +303,6 @@ class AccomplishmentStandarduserDialogState
     return _serverImageCache;
   }
 
-  void _showTooltip(BuildContext context, String message) {
-    _removeTooltip();
-
-    final renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final offset = renderBox.localToGlobal(Offset.zero);
-
-    _overlayEntry = OverlayEntry(
-      builder:
-          (context) => Positioned(
-            left: offset.dx < 8 ? 8 : offset.dx,
-            top: offset.dy - 40,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  message,
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-            ),
-          ),
-    );
-
-    Overlay.of(context).insert(_overlayEntry!);
-
-    Future.delayed(const Duration(seconds: 2), _removeTooltip);
-  }
-
   void _removeTooltip() {
     _overlayEntry?.remove();
     _overlayEntry = null;
@@ -371,7 +328,7 @@ class AccomplishmentStandarduserDialogState
       "Can't go back: previous month is already ${_statusDisplayNames[widget.minStatus]}";
 
   String _rangeHint(PgsStatus status) {
-    if (status == PgsStatus.completed) return 'Enter score from 100–999 only';
+    if (status == PgsStatus.completed) return 'Fixed at 100%';
     final floor = widget.minPercent < 1 ? 1 : widget.minPercent;
     return floor > 1
         ? 'Enter $floor–99 (not lower than previous month)'
@@ -388,7 +345,7 @@ class AccomplishmentStandarduserDialogState
     widget.row.status.value = newValue;
 
     if (newValue == PgsStatus.completed) {
-      pc.text = cur >= 100 ? cur.toString() : '100';
+      pc.text = '100';
     } else if (newValue == PgsStatus.notStarted) {
       pc.text = '0';
     } else {
@@ -598,127 +555,158 @@ class AccomplishmentStandarduserDialogState
         return ValueListenableBuilder<TextEditingValue>(
           valueListenable: percentageController,
           builder: (context, value, __) {
-            int progress = int.tryParse(value.text) ?? 0;
-            double progressFraction;
-            Color progressColor;
+            final progress = int.tryParse(value.text) ?? 0;
+            final Color color =
+                progress >= 100
+                    ? Colors.green
+                    : progress == 0
+                    ? Colors.red
+                    : Colors.orange;
+            final fraction = (progress / 100).clamp(0.0, 1.0).toDouble();
+            final editableNow = canEdit && status == PgsStatus.onGoing;
+            Widget bar() => ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress == 0 ? 1.0 : fraction,
+                minHeight: 6,
+                backgroundColor: Colors.grey.shade200,
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
+            );
 
-            if (progress >= 100) {
-              progressFraction = 1.0;
-              progressColor = Colors.green;
-            } else if (progress == 0) {
-              progressFraction = 1.0;
-              progressColor = Colors.red;
-            } else {
-              progressFraction = progress / 100.0;
-              progressColor = Colors.orange;
+            if (!editableNow) {
+              return SizedBox(
+                width: 120,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Text(
+                        '${value.text.isEmpty ? 0 : value.text}%',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    bar(),
+                    if (canEdit && !widget.locked) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        status == PgsStatus.completed
+                            ? 'Completed is fixed at 100%'
+                            : 'Set status to On Going to enter %',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 10, color: grey),
+                      ),
+                    ],
+                  ],
+                ),
+              );
             }
 
-            final editableNow = canEdit && status != PgsStatus.notStarted;
+            return SizedBox(
+              width: 120,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Focus(
+                    onFocusChange: (hasFocus) {
+                      if (!hasFocus) widget.onProgressCommitted?.call();
+                    },
+                    child: TextField(
+                      controller: percentageController,
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(3),
+                      ],
+                      decoration: InputDecoration(
+                        isDense: true,
+                        filled: true,
+                        fillColor: primaryColor.withValues(alpha: 0.05),
+                        hintText: '0',
+                        suffixText: '%',
+                        suffixStyle: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: primaryColor,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.edit_outlined,
+                          size: 14,
+                          color: primaryColor,
+                        ),
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 30,
+                          minHeight: 30,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 10,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: primaryColor,
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: primaryColor,
+                            width: 2.5,
+                          ),
+                        ),
+                      ),
+                      onChanged: (val) {
+                        if (val.isEmpty) return;
+                        final parsed = int.tryParse(val) ?? 0;
+                        if (parsed > 99) percentageController.text = '99';
 
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 60,
-                  height: 60,
-                  child: CircularProgressIndicator(
-                    value: progressFraction,
-                    strokeWidth: 6,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                        percentageController
+                            .selection = TextSelection.fromPosition(
+                          TextPosition(
+                            offset: percentageController.text.length,
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-                SizedBox(
-                  width: 44,
-                  height: 40,
-                  child: Center(
-                    child:
-                        editableNow
-                            ? Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Focus(
-                                  onFocusChange: (hasFocus) {
-                                    if (hasFocus) {
-                                      _showTooltip(context, _rangeHint(status));
-                                    } else {
-                                      widget.onProgressCommitted?.call();
-                                    }
-                                  },
-                                  child: SizedBox(
-                                    width: 34,
-                                    child: TextField(
-                                      controller: percentageController,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      keyboardType: TextInputType.number,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly,
-                                        LengthLimitingTextInputFormatter(3),
-                                      ],
-                                      decoration: const InputDecoration(
-                                        border: InputBorder.none,
-                                        isDense: true,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 0,
-                                          vertical: 12,
-                                        ),
-                                      ),
-                                      onTap:
-                                          () => _showTooltip(
-                                            context,
-                                            _rangeHint(status),
-                                          ),
-                                      onChanged: (val) {
-                                        if (val.isEmpty) return;
-                                        final parsed = int.tryParse(val) ?? 0;
-
-                                        if (status == PgsStatus.onGoing &&
-                                            parsed > 99) {
-                                          percentageController.text = '99';
-                                        } else if (status ==
-                                                PgsStatus.completed &&
-                                            parsed > 999) {
-                                          percentageController.text = '999';
-                                        }
-
-                                        percentageController.selection =
-                                            TextSelection.fromPosition(
-                                              TextPosition(
-                                                offset:
-                                                    percentageController
-                                                        .text
-                                                        .length,
-                                              ),
-                                            );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                const Text(
-                                  '%',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            )
-                            : Text(
-                              '${value.text}%',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                  const SizedBox(height: 6),
+                  bar(),
+                  const SizedBox(height: 4),
+                  Text(
+                    _rangeHint(status),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: primaryColor,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         );
@@ -736,6 +724,12 @@ class AccomplishmentStandarduserDialogState
         keyboardType: TextInputType.multiline,
         style: const TextStyle(fontSize: 14.0),
         decoration: InputDecoration(
+          hintText: 'Please provide a brief description of your proof',
+          hintStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 11,
+            fontStyle: FontStyle.italic,
+            color: grey,
+          ),
           border: OutlineInputBorder(borderSide: BorderSide(color: grey)),
           contentPadding: const EdgeInsets.all(8.0),
           focusedBorder: OutlineInputBorder(
@@ -1165,15 +1159,22 @@ class AccomplishmentListView extends StatefulWidget {
 
 class _AccomplishmentListViewState extends State<AccomplishmentListView> {
   final ScrollController _scrollController = ScrollController();
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    loadAccomplishments(widget.deliverableId, widget.startAndEndDates).then((
-      _,
-    ) {
-      if (mounted) setState(() {});
-    });
+    // loadAccomplishments(widget.deliverableId, widget.startAndEndDates).then((
+    //   _,
+    // ) {
+    //   if (mounted) setState(() {});
+    // });
+    _load();
+  }
+
+  Future<void> _load() async {
+    await loadAccomplishments(widget.deliverableId, widget.startAndEndDates);
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override
@@ -1190,6 +1191,24 @@ class _AccomplishmentListViewState extends State<AccomplishmentListView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return SizedBox(
+        height: 160,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: primaryColor),
+              const SizedBox(height: 12),
+              Text(
+                'Loading accomplishments...',
+                style: TextStyle(fontSize: 12, color: grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     achievementsList.putIfAbsent(
       widget.deliverableId,
       () => AchievementPeriodData(rows: []),
