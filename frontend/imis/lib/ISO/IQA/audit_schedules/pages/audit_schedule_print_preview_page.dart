@@ -17,6 +17,7 @@ import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/utils/pdf_download.dart';
 
 /// Opens the print preview for one Audit Plan's schedule.
 /// Pass [officeName] to print a single office's schedule; leave it null to
@@ -40,8 +41,8 @@ Future<void> openAuditSchedulePrintPreview(
 // =============================================================================
 // Constants
 // =============================================================================
-const String _kLogoCrmc = 'assets/crmc_logo.png';
-const String _kLogoIso = 'assets/iso_tuv_certified.jpg';
+const String _kLogoCrmc = 'assets/CRMCLogo.png';
+const String _kLogoIso = 'assets/TR-Testmark.jpg';
 
 /// Form code printed at the bottom-right of the original form.
 const String _kFormBase = 'QP-03-F-03';
@@ -607,6 +608,8 @@ class _AuditSchedulePrintPreviewPageState
                   canDebug: false,
                   maxPageWidth: 760,
                   pdfFileName: 'Audit_Schedule_${widget.auditPlanId}.pdf',
+                  allowSharing: false,
+                  actions: [downloadPdfAction('Audit_Schedule_${widget.auditPlanId}.pdf')],
                   onError: (context, error) => Center(
                     child: Text(
                       'Unable to build the preview: $error',

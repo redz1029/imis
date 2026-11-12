@@ -13,6 +13,17 @@ class AuditSummaryFindings {
   String findings;
   int? auditNcarStatusId;
 
+  /// The audit checklist row a fetched line was raised from; null on a line
+  /// the auditor added by hand.
+  int? auditChecklistId;
+
+  /// The criteria as printed (the clause). Null on lines saved before the
+  /// Summary of Findings became editable.
+  String? criteriaText;
+
+  /// Reference number of the NCAR raised for a fetched line.
+  String? ncarReferenceNumber;
+
   AuditSummaryFindings({
     this.id = 0,
     this.isDeleted = false,
@@ -20,6 +31,9 @@ class AuditSummaryFindings {
     required this.no,
     required this.findings,
     this.auditNcarStatusId,
+    this.auditChecklistId,
+    this.criteriaText,
+    this.ncarReferenceNumber,
   });
 
   factory AuditSummaryFindings.fromJson(Map<String, dynamic> json) =>

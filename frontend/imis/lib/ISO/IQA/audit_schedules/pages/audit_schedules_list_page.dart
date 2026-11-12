@@ -7,8 +7,13 @@ import 'package:imis/ISO/IQA/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_schedules/models/reschedule_request.dart';
 import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
+import 'package:imis/ISO/IQA/widgets/iqa_list_toolbar.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
+import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/common/build_page_header.dart';
 import 'package:imis/widgets/common/pagination_controls.dart';
 
@@ -20,34 +25,46 @@ class AuditScheduleListPage extends StatefulWidget {
 }
 
 class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
-  // An Audit Schedule has no Draft stage — it starts at Pending.
-  static const List<String> _statusTabs = [
-    'All',
-    'Pending Confirmation',
-    'Confirmed',
-    'Revision Required',
-    'Rejected',
-  ];
-
   final _service = AuditSchedulesService(Dio());
 
   List<AuditSchedules> _allSchedules = [];
-  String _selectedTab = 'All';
+  Map<int, RescheduleRequest> _openRequests = const {};
+  String _selectedTab = IqaStatus.all;
+  DateTimeRange _range = IqaPeriod.currentYear();
   int _currentPage = 1;
   final int _pageSize = 15;
   bool _isLoading = false;
 
+  bool _isAdmin = false;
+  Set<int> _myTeamIds = {};
+
   @override
   void initState() {
     super.initState();
+    AuthUtil.isCurrentUserAdmin().then((admin) {
+      if (mounted) setState(() => _isAdmin = admin);
+    });
+    _service.getMyLedTeamIds().then((ids) {
+      if (mounted) setState(() => _myTeamIds = ids);
+    });
     _fetchSchedules();
   }
 
-  Future<void> _fetchSchedules() async {
-    setState(() => _isLoading = true);
+  /// [silent] refreshes in the background without swapping the rows for a
+  /// loading spinner.
+  Future<void> _fetchSchedules({bool silent = false}) async {
+    if (!silent) setState(() => _isLoading = true);
     try {
+      // Requested together with the schedules so the round trips overlap.
+      final requestsFuture = _loadOpenRequests();
       final data = await _service.getAuditSchedules();
-      if (mounted) setState(() => _allSchedules = data);
+      final requests = await requestsFuture;
+      if (mounted) {
+        setState(() {
+          _allSchedules = data;
+          _openRequests = requests;
+        });
+      }
     } catch (e) {
       debugPrint(e.toString());
       if (mounted) {
@@ -60,6 +77,18 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// Open reschedule requests by schedule id. A failed lookup only hides the
+  /// badges — the list itself must still load.
+  Future<Map<int, RescheduleRequest>> _loadOpenRequests() async {
+    try {
+      final requests = await _service.getOpenRescheduleRequests();
+      return {for (final r in requests) r.auditScheduleId: r};
+    } catch (e) {
+      debugPrint('Failed to load open reschedule requests: $e');
+      return const {};
     }
   }
 
@@ -77,15 +106,24 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
     return list;
   }
 
+  // A schedule covers its start..end dates; the status tabs count what is
+  // inside the selected period.
+  List<AuditSchedules> get _inRange =>
+      _sortedSchedules
+          .where((s) => IqaPeriod.matches(_range, s.startDate, s.endDate))
+          .toList();
+
   int _countFor(String tab) {
-    final schedules = _sortedSchedules;
-    if (tab == 'All') return schedules.length;
-    return schedules.where((s) => s.effectiveStatusName == tab).length;
+    final schedules = _inRange;
+    if (tab == IqaStatus.all) return schedules.length;
+    return schedules
+        .where((s) => s.effectiveStatusName == tab)
+        .length;
   }
 
   List<AuditSchedules> get _filtered {
-    final schedules = _sortedSchedules;
-    if (_selectedTab == 'All') return schedules;
+    final schedules = _inRange;
+    if (_selectedTab == IqaStatus.all) return schedules;
     return schedules
         .where((s) => s.effectiveStatusName == _selectedTab)
         .toList();
@@ -106,6 +144,58 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
     });
   }
 
+  void _setRange(DateTimeRange range) {
+    setState(() {
+      _range = range;
+      _currentPage = 1;
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _range = IqaPeriod.currentYear();
+      _selectedTab = IqaStatus.all;
+      _currentPage = 1;
+    });
+  }
+
+  /// A schedule created from an approved plan has no approval chain until the
+  /// Auditor Team Leader of its team submits it. A team leader sees every
+  /// schedule but is offered Submit only on the ones of the team they lead.
+  bool _canSubmit(AuditSchedules schedule) =>
+      schedule.signatories.isEmpty &&
+      (_isAdmin ||
+          (permissionService.hasPermission(AppPermissions.auditScheduleSubmit) &&
+              schedule.teamId != null &&
+              _myTeamIds.contains(schedule.teamId)));
+
+  Widget _submitButton(AuditSchedules schedule) {
+    return IconButton(
+      tooltip: 'Submit for confirmation',
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      icon: Icon(Icons.send_rounded, size: 16, color: primaryColor),
+      onPressed: _isLoading ? null : () => _submitSchedule(schedule),
+    );
+  }
+
+  Future<void> _submitSchedule(AuditSchedules schedule) async {
+    try {
+      final user = await AuthUtil.fetchLoggedUser();
+      await _service.submitAuditSchedule(schedule.id, userId: user?.id);
+      if (!mounted) return;
+      MotionToast.success(
+        description: const Text('Submitted for confirmation'),
+      ).show(context);
+      await _fetchSchedules(silent: true);
+    } catch (e) {
+      if (!mounted) return;
+      MotionToast.error(
+        description: Text(e.toString().replaceFirst('Exception: ', '')),
+      ).show(context);
+    }
+  }
+
   /// Opens the read-only schedule viewer for the plan the schedule belongs
   /// to, in a modal dialog — same navigation style as
   /// AuditPlanListPage._openForm.
@@ -116,10 +206,55 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
       barrierDismissible: false,
       builder: (_) => AuditSchedulePage(auditPlanId: schedule.auditPlanId),
     );
+    // A confirmation, rejection or reschedule decision may have been made in
+    // the dialog; bring the rows and badges up to date without a spinner.
+    if (mounted) _fetchSchedules(silent: true);
+  }
+
+  /// "Reschedule: awaiting Team Leader / Lead Auditor" under the status, for a
+  /// schedule that has an open reschedule request.
+  Widget _rescheduleBadge(AuditSchedules schedule) {
+    final request = _openRequests[schedule.id];
+    if (request == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Tooltip(
+        message: 'Requested ${DateFormat('MMM d, yyyy h:mm a').format(request.proposedStartDate)}'
+            '${(request.reason ?? '').isNotEmpty ? ' — ${request.reason}' : ''}',
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.event_repeat, size: 12, color: Colors.orange.shade800),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  request.badgeLabel,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildStatusChip(String status) {
-    final color = getStatusColor(status);
+    // The workflow names a pending chain "Pending Approval" / "Pending Confirmation";
+    // colour and icon follow the tab it belongs to so none falls back to grey.
+    final tone = IqaStatus.tabOf(status);
+    final color = getStatusColor(tone);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -129,7 +264,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          getStatusIcon(status),
+          getStatusIcon(tone),
           const SizedBox(width: 6),
           Text(
             status,
@@ -140,59 +275,6 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTab(String tab) {
-    final isActive = tab == _selectedTab;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => _selectTab(tab),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isActive ? primaryColor.withValues(alpha: 0.1) : null,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isActive ? primaryColor : kBorder,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                tab,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? primaryColor : kMuted,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 1,
-                ),
-                decoration: BoxDecoration(
-                  color: isActive ? primaryColor : kBorder,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${_countFor(tab)}',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isActive ? Colors.white : kMuted,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -212,7 +294,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
             buildPageHeader(
               isMobile: isMobile,
               title: 'Audit Schedule',
-              totalCount: _sortedSchedules.length,
+              totalCount: _inRange.length,
               itemLabel: 'schedule',
               icon: Icons.calendar_month_outlined,
               actionButton: ElevatedButton.icon(
@@ -235,11 +317,17 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
               ),
             ),
             const SizedBox(height: 6),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _statusTabs.map(_buildTab).toList(),
-              ),
+            IqaPeriodFilter(
+              range: _range,
+              onChanged: _setRange,
+              onClear: _clearFilters,
+            ),
+            const SizedBox(height: 6),
+            IqaStatusTabs(
+              tabs: IqaStatus.schedule,
+              selected: _selectedTab,
+              countOf: _countFor,
+              onSelected: _selectTab,
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -289,7 +377,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                             const Expanded(
                               flex: 2,
                               child: Text(
-                                'Audit Plan',
+                                'Reference',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: kMuted,
@@ -390,7 +478,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            'Audit Plan #${schedule.auditPlanId}',
+                                            iqaReference('Audit Schedule', schedule.startDate.year),
                                           ),
                                         ),
                                         Expanded(
@@ -401,16 +489,26 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                           flex: 2,
                                           child: Align(
                                             alignment: Alignment.centerLeft,
-                                            child: _buildStatusChip(
-                                              schedule.effectiveStatusName,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                _buildStatusChip(
+                                                  schedule.effectiveStatusName,
+                                                ),
+                                                _rescheduleBadge(schedule),
+                                              ],
                                             ),
                                           ),
                                         ),
                                         SizedBox(
-                                          width: 60,
+                                          width: _canSubmit(schedule) ? 100 : 60,
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
+                                              if (_canSubmit(schedule))
+                                                _submitButton(schedule),
                                               IconButton(
                                                 tooltip: 'View Schedule',
                                                 padding: EdgeInsets.zero,
@@ -456,7 +554,7 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              'Audit Plan #${schedule.auditPlanId}',
+                                              iqaReference('Audit Schedule', schedule.startDate.year),
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.grey.shade600,
@@ -473,9 +571,12 @@ class _AuditScheduleListPageState extends State<AuditScheduleListPage> {
                                             _buildStatusChip(
                                               schedule.effectiveStatusName,
                                             ),
+                                            _rescheduleBadge(schedule),
                                           ],
                                         ),
                                       ),
+                                      if (_canSubmit(schedule))
+                                        _submitButton(schedule),
                                       IconButton(
                                         tooltip: 'View Schedule',
                                         icon: Icon(

@@ -1720,6 +1720,9 @@ namespace IMIS.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AuditChecklistId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("AuditNcarStatusId")
                         .HasColumnType("int");
 
@@ -1729,12 +1732,18 @@ namespace IMIS.Persistence.Migrations
                     b.Property<long?>("CriteriaId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("CriteriaText")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Findings")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("NcarReferenceNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("No")
                         .HasColumnType("int");
@@ -13099,6 +13108,50 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("NcarCorrectionActions");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.NcarAttachment", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Caption")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("NonconformingActionReportId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("OrderNumber")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NonconformingActionReportId");
+
+                    b.ToTable("NcarAttachments");
+                });
+
             modelBuilder.Entity("IMIS.Domain.NcarCorrectiveAction", b =>
                 {
                     b.Property<long>("Id")
@@ -13200,6 +13253,72 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("NcarMonitoringLogs");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.IqaNotification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ActorUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("EntityId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RecipientUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("TargetPage")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType", "EntityId");
+
+                    b.HasIndex("RecipientUserId", "ReadAt");
+
+                    b.ToTable("IqaNotifications");
+                });
+
             modelBuilder.Entity("IMIS.Domain.NcarRootCause", b =>
                 {
                     b.Property<long>("Id")
@@ -13266,6 +13385,9 @@ namespace IMIS.Persistence.Migrations
 
                     b.Property<int?>("AuditReportId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("FindingEditedByAuditor")
+                        .HasColumnType("bit");
 
                     b.Property<string>("FormRevision")
                         .IsRequired()
@@ -23901,6 +24023,17 @@ namespace IMIS.Persistence.Migrations
                 {
                     b.HasOne("IMIS.Domain.NonconformingActionReport", "NonconformingActionReport")
                         .WithMany("Corrections")
+                        .HasForeignKey("NonconformingActionReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NonconformingActionReport");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.NcarAttachment", b =>
+                {
+                    b.HasOne("IMIS.Domain.NonconformingActionReport", "NonconformingActionReport")
+                        .WithMany()
                         .HasForeignKey("NonconformingActionReportId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

@@ -7,6 +7,9 @@ class ChecklistAssignments {
   final String? teamName;
   final bool canAssign;
 
+  /// The team leader(s): the preparer of the checklist.
+  final String? teamLeaderName;
+
   /// True for an auditor of the team: they only see and answer their own clauses.
   final bool ownClausesOnly;
   final List<ChecklistClauseAssignment> clauses;
@@ -17,6 +20,7 @@ class ChecklistAssignments {
     this.teamId,
     this.teamName,
     this.canAssign = false,
+    this.teamLeaderName,
     this.ownClausesOnly = false,
     this.clauses = const [],
     this.auditors = const [],
@@ -33,6 +37,7 @@ class ChecklistAssignments {
       teamId: (json['teamId'] as num?)?.toInt(),
       teamName: json['teamName'] as String?,
       canAssign: json['canAssign'] == true,
+      teamLeaderName: json['teamLeaderName'] as String?,
       ownClausesOnly: json['ownClausesOnly'] == true,
       clauses: list(json['clauses'], ChecklistClauseAssignment.fromJson),
       auditors: list(json['auditors'], ChecklistAuditor.fromJson),
@@ -68,6 +73,26 @@ class ChecklistClauseAssignment {
         assignedAuditorName: json['assignedAuditorName'] as String?,
         questionCount: (json['questionCount'] as num?)?.toInt() ?? 0,
         answeredCount: (json['answeredCount'] as num?)?.toInt() ?? 0,
+      );
+}
+
+/// A library question that can still be added under a clause (the dropdown).
+class ChecklistLibraryQuestion {
+  final int id;
+  final String question;
+  final String clauseRef;
+
+  const ChecklistLibraryQuestion({
+    required this.id,
+    required this.question,
+    this.clauseRef = '',
+  });
+
+  factory ChecklistLibraryQuestion.fromJson(Map<String, dynamic> json) =>
+      ChecklistLibraryQuestion(
+        id: (json['id'] as num?)?.toInt() ?? 0,
+        question: (json['question'] as String?) ?? '',
+        clauseRef: (json['clauseRef'] as String?) ?? '',
       );
 }
 

@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:imis/ISO/IQA/audit_plan/models/audit_plan.dart';
-import 'package:imis/ISO/IQA/audit_plan/models/audit_plan_entry.dart';
 import 'package:imis/ISO/IQA/audit_report/service/audit_report_service.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_report_clause_results.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_com_findings.dart';
-import 'package:imis/ISO/IQA/audit_report/model/audit_scope.dart';
 import 'package:imis/ISO/IQA/audit_report/model/audit_summary_findings.dart';
-import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_report/model/summary_finding_parts.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/utils/permission_service.dart';
 
 // =============================================================================
-// UI-only row wrappers — hold a TextEditingController per editable field and
-// convert to/from the real generated models on load/save. The generated
-// models themselves have no controllers, so these are not a duplicate model,
-// just a thin adapter for the form.
+// UI-only row wrapper — holds a TextEditingController per editable field and
+// converts to/from the real generated model on load/save. The generated model
+// itself has no controllers, so this is not a duplicate model, just a thin
+// adapter for the form.
 // =============================================================================
 
 class _ComFindingUI {
@@ -49,59 +46,87 @@ class _ComFindingUI {
   }
 }
 
-class _ScopeUI {
-  int? id;
-  final TextEditingController auditeeController;
+/// One line of the Summary of Findings. A line fetched from the audit checklist
+/// (one per non-conforming clause) keeps its clause, its NC status and its NCAR
+/// fixed and only its findings text is typed. A line the auditor adds is typed
+/// whole and is either NC or OFI.
+class _SummaryRowUI {
+  int id;
+  final int? auditChecklistId;
+  final String ncarRef;
 
-  _ScopeUI({this.id, String? auditee})
-    : auditeeController = TextEditingController(text: auditee ?? '');
+  /// Saved before the Summary of Findings became editable: the clause is part
+  /// of the stored text and stays as it is until the checklist refreshes it.
+  final bool legacy;
+  int? statusId;
+  final TextEditingController criteriaController;
+  final TextEditingController findingsController;
 
-  factory _ScopeUI.fromModel(AuditScope m) =>
-      _ScopeUI(id: m.id, auditee: m.auditee);
+  _SummaryRowUI({
+    this.id = 0,
+    this.auditChecklistId,
+    this.ncarRef = '',
+    this.legacy = false,
+    this.statusId,
+    String? criteria,
+    String? findings,
+  }) : criteriaController = TextEditingController(text: criteria ?? ''),
+       findingsController = TextEditingController(text: findings ?? '');
 
-  AuditScope toModel() =>
-      AuditScope(id: id ?? 0, auditee: auditeeController.text);
+  /// From the checklist: clause and NCAR are not typed.
+  bool get fromChecklist => auditChecklistId != null || legacy;
 
-  void dispose() => auditeeController.dispose();
-}
+  factory _SummaryRowUI.fromModel(AuditSummaryFindings m) {
+    if (m.criteriaText == null && m.auditChecklistId == null) {
+      final parts = splitSummaryFinding(m.findings);
+      return _SummaryRowUI(
+        id: m.id,
+        legacy: true,
+        ncarRef: parts.ncarRef,
+        statusId: m.auditNcarStatusId,
+        criteria: parts.criteria,
+        findings: parts.findings,
+      );
+    }
+    return _SummaryRowUI(
+      id: m.id,
+      auditChecklistId: m.auditChecklistId,
+      ncarRef: (m.ncarReferenceNumber ?? '').trim(),
+      statusId: m.auditNcarStatusId,
+      criteria: m.criteriaText,
+      findings: m.findings,
+    );
+  }
 
-class _SummaryUI {
-  int? id;
-  int no;
-  final TextEditingController findingController;
-  int? auditNcarStatusId;
-
-  _SummaryUI({
-    this.id,
-    required this.no,
-    String? finding,
-    this.auditNcarStatusId,
-  }) : findingController = TextEditingController(text: finding ?? '');
-
-  factory _SummaryUI.fromModel(AuditSummaryFindings m) => _SummaryUI(
-    id: m.id,
-    no: m.no,
-    finding: m.findings,
-    auditNcarStatusId: m.auditNcarStatusId,
-  );
-
-  AuditSummaryFindings toModel() => AuditSummaryFindings(
-    id: id ?? 0,
+  AuditSummaryFindings toModel(int no) => AuditSummaryFindings(
+    id: id,
     no: no,
-    findings: findingController.text,
-    auditNcarStatusId: auditNcarStatusId,
+    findings: findingsController.text.trim(),
+    auditNcarStatusId: statusId,
+    auditChecklistId: auditChecklistId,
+    criteriaText: legacy ? null : criteriaController.text.trim(),
+    ncarReferenceNumber: ncarRef.isEmpty ? null : ncarRef,
   );
 
-  void dispose() => findingController.dispose();
+  void dispose() {
+    criteriaController.dispose();
+    findingsController.dispose();
+  }
 }
 
 // =============================================================================
 // AuditReportPage
+//
+// An audit report is never created here: it is raised by saving the audit
+// checklist and kept in step with it (office, date, auditors, auditees, the
+// non-conforming findings and their NCARs). The auditor only writes what the
+// checklist cannot supply — the purpose, the commendable findings and the
+// conclusions.
 // =============================================================================
 
 class AuditReportPage extends StatefulWidget {
-  final int? reportId;
-  const AuditReportPage({super.key, this.reportId});
+  final int reportId;
+  const AuditReportPage({super.key, required this.reportId});
 
   @override
   State<AuditReportPage> createState() => _AuditReportPageState();
@@ -114,43 +139,22 @@ class _AuditReportPageState extends State<AuditReportPage> {
   final _auditPurposeController = TextEditingController();
   final _auditConclusionsController = TextEditingController();
 
-  int? _existingId;
-  String _rowVersion = '';
-  bool _isDeleted = false;
+  /// The report as the server holds it. The checklist-owned parts (schedule,
+  /// plan entry, office, auditees, summary of findings) are sent back untouched
+  /// and ignored by the server; only the hand-written parts are changed.
+  AuditReport? _report;
 
-  int? _officeAuditedId;
   String? _officeAuditedName;
-  int? _auditStandardISOId;
   String? _auditStandardISOName;
-  int?
-  _selectedAuditeeId; // no picker endpoint yet — left null unless you add one
-  String? _auditeeName;
-
-  // Source selection: an AuditReport belongs to an AuditSchedule (required FK),
-  // and schedules hang off an audit plan entry, which hangs off an audit plan.
-  List<AuditPlan> _plans = [];
-  int? _selectedPlanId;
-
-  List<AuditPlanEntry> _entries = [];
-  int? _selectedAuditPlanEntryId;
-
-  List<AuditSchedules> _schedules = [];
-  int? _selectedScheduleId;
-
-  List<Map<String, dynamic>> _ncarStatuses = [];
-  bool _isLoadingLookups = false;
-
-  // Derived read-only display strings, computed from the loaded
-  // AuditPlanEntry (mirrors AuditReportDto's constructor on the backend).
   String? _planDate;
   String? _planOfficeProcess;
   String? _planAuditTeamName;
 
+  List<Map<String, dynamic>> _ncarStatuses = [];
   final List<_ComFindingUI> _comFindings = [];
-  final List<_ScopeUI> _scopeRows = [];
-  final List<_SummaryUI> _summaryRows = [];
+  final List<_SummaryRowUI> _summaryRows = [];
 
-  // Checklist results of the selected schedule (read-only): conforming clauses
+  // Checklist results of the report's schedule (read-only): conforming clauses
   // are listed as such and each non-conforming clause shows its NCAR.
   AuditReportClauseResults? _clauseResults;
   bool _isLoadingResults = false;
@@ -179,9 +183,6 @@ class _AuditReportPageState extends State<AuditReportPage> {
     for (final r in _comFindings) {
       r.dispose();
     }
-    for (final r in _scopeRows) {
-      r.dispose();
-    }
     for (final r in _summaryRows) {
       r.dispose();
     }
@@ -196,110 +197,60 @@ class _AuditReportPageState extends State<AuditReportPage> {
       _error = null;
     });
     try {
-      await _loadPlans();
       try {
         _ncarStatuses = await _service.getNcarStatuses();
       } catch (_) {}
 
-      if (widget.reportId != null) {
-        final report = await _service.getById(widget.reportId!);
-        if (report != null) {
-          _existingId = report.id;
-          _rowVersion = report.rowVersion ?? '';
-          _isDeleted = report.isDeleted ?? false;
-          _auditPurposeController.text =
-              report.auditPurpose.isNotEmpty
-                  ? report.auditPurpose
-                  : 'INTERNAL QUALITY AUDIT';
-          _auditConclusionsController.text = report.auditConclusions;
-
-          _officeAuditedId = report.officeAuditedId;
-          _officeAuditedName = report.officeAuditedName;
-          _auditStandardISOId = report.auditStandardISOId;
-          _auditStandardISOName =
-              report.auditStandardISOName ?? 'ISO 9001:2015';
-          _selectedAuditeeId = report.auditeeId;
-          _auditeeName = report.auditeeName;
-          _selectedAuditPlanEntryId = report.auditPlanEntryId;
-          _selectedScheduleId =
-              report.auditScheduleId > 0 ? report.auditScheduleId : null;
-
-          final entry = report.auditPlanEntry;
-
-          // The server already assembled the header fields off the plan entry;
-          // prefer those and fall back to deriving them from the nested entry
-          // (used when the entry is not eagerly loaded).
-          _planOfficeProcess = report.planOfficeProcess;
-          _planAuditTeamName = report.planAuditTeamName;
-          _planDate =
-              report.auditDate != null ? _formatDay(report.auditDate!) : null;
-
-          if (entry != null) {
-            _planDate ??= _formatDay(entry.time);
-
-            final processes = entry.auditPlanProcesses;
-            if (_planOfficeProcess == null &&
-                processes != null &&
-                processes.isNotEmpty) {
-              _planOfficeProcess = processes
-                  .map((p) => p.office?.name ?? p.processName)
-                  .where((n) => n != null && n.isNotEmpty)
-                  .join(', ');
-            }
-            if (_officeAuditedName == null && _planOfficeProcess != null) {
-              _officeAuditedName = _planOfficeProcess;
-            }
-
-            final auditors = entry.isoAuditors;
-            if (_planAuditTeamName == null &&
-                auditors != null &&
-                auditors.isNotEmpty) {
-              final withTeam = auditors.where((a) => a.team != null).toList();
-              if (withTeam.isNotEmpty) {
-                _planAuditTeamName = withTeam.first.team?.name;
-              }
-            }
-
-            _selectedPlanId = entry.auditPlanId > 0 ? entry.auditPlanId : null;
-          }
-
-          // The list page's picker data is loaded from the plan the report was
-          // generated from; without it the dropdowns would come up empty and
-          // silently overwrite the saved schedule on save.
-          if (_selectedPlanId != null) {
-            await _loadEntries(_selectedPlanId!);
-          }
-          if (_selectedAuditPlanEntryId != null) {
-            await _loadSchedules(_selectedAuditPlanEntryId!);
-          }
-          await _loadClauseResults();
-
-          _comFindings.addAll(
-            (report.auditComFindings ?? []).map(
-              (m) => _ComFindingUI.fromModel(m),
-            ),
-          );
-          _scopeRows.addAll(
-            (report.auditScope ?? []).map((m) => _ScopeUI.fromModel(m)),
-          );
-          _summaryRows.addAll(
-            (report.auditSummaryFindings ?? []).map(
-              (m) => _SummaryUI.fromModel(m),
-            ),
-          );
-        }
-      } else {
-        _auditPurposeController.text = 'INTERNAL QUALITY AUDIT';
-        _auditStandardISOName = 'ISO 9001:2015';
+      final report = await _service.getById(widget.reportId);
+      if (report == null) {
+        _error = 'This audit report no longer exists.';
+        return;
       }
 
-      if (_comFindings.isEmpty) {
-        _comFindings.add(
-          _ComFindingUI(area: _officeAuditedName ?? _planOfficeProcess ?? ''),
+      _report = report;
+      _auditPurposeController.text =
+          report.auditPurpose.isNotEmpty
+              ? report.auditPurpose
+              : 'INTERNAL QUALITY AUDIT';
+      _auditConclusionsController.text = report.auditConclusions;
+
+      _officeAuditedName = report.officeAuditedName;
+      _auditStandardISOName = report.auditStandardISOName ?? 'ISO 9001:2015';
+      _planOfficeProcess = report.planOfficeProcess;
+      _planAuditTeamName = report.planAuditTeamName;
+      _planDate =
+          report.auditDate != null ? _formatDay(report.auditDate!) : null;
+
+      for (final r in _comFindings) {
+        r.dispose();
+      }
+      _comFindings
+        ..clear()
+        ..addAll(
+          (report.auditComFindings ?? []).map(
+            (m) => _ComFindingUI.fromModel(m),
+          ),
         );
+      if (_comFindings.isEmpty) {
+        _comFindings.add(_ComFindingUI(area: _areaName));
       }
-      if (_scopeRows.isEmpty) _scopeRows.add(_ScopeUI());
-      if (_summaryRows.isEmpty) _summaryRows.add(_SummaryUI(no: 1));
+      // The area is always the office of the auditee: one value, never typed.
+      if (_areaName.isNotEmpty) {
+        for (final r in _comFindings) {
+          r.areaController.text = _areaName;
+        }
+      }
+
+      for (final r in _summaryRows) {
+        r.dispose();
+      }
+      final summary = [...(report.auditSummaryFindings ?? <AuditSummaryFindings>[])]
+        ..sort((a, b) => a.no.compareTo(b.no));
+      _summaryRows
+        ..clear()
+        ..addAll(summary.map(_SummaryRowUI.fromModel));
+
+      await _loadClauseResults();
     } catch (e) {
       _error = 'Error loading: $e';
     } finally {
@@ -307,22 +258,37 @@ class _AuditReportPageState extends State<AuditReportPage> {
     }
   }
 
+  /// Every member of the audit team, the team leader first.
+  List<String> get _auditorNames =>
+      (_report?.auditorNames ?? const <String>[])
+          .map((n) => n.trim())
+          .where((n) => n.isNotEmpty)
+          .toList();
+
+  String get _areaName {
+    final office = (_officeAuditedName ?? '').trim();
+    if (office.isNotEmpty) return office;
+    return (_planOfficeProcess ?? '').trim();
+  }
+
   Future<void> _loadClauseResults() async {
-    final scheduleId = _selectedScheduleId;
-    if (scheduleId == null) {
-      setState(() => _clauseResults = null);
+    final scheduleId = _report?.auditScheduleId ?? 0;
+    if (scheduleId <= 0) {
+      _clauseResults = null;
       return;
     }
-    setState(() {
-      _isLoadingResults = true;
-      _resultsError = null;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoadingResults = true;
+        _resultsError = null;
+      });
+    }
     try {
       final results = await _service.getClauseResults(scheduleId);
-      if (!mounted || scheduleId != _selectedScheduleId) return;
+      if (!mounted) return;
       setState(() => _clauseResults = results);
     } catch (_) {
-      if (!mounted || scheduleId != _selectedScheduleId) return;
+      if (!mounted) return;
       setState(() {
         _clauseResults = null;
         _resultsError = 'Could not load the checklist results.';
@@ -332,252 +298,121 @@ class _AuditReportPageState extends State<AuditReportPage> {
     }
   }
 
-  Future<void> _loadPlans() async {
-    final all = await _service.getAllAuditPlans();
-    if (!mounted) return;
-    // Workflow Gate: Only APPROVED Audit Plans can be consumed by Audit Report
-    final plans = all.where((p) => p.effectiveStatusName == 'Approved').toList();
-    setState(() => _plans = plans);
-  }
+  void _addComFinding() =>
+      setState(() => _comFindings.add(_ComFindingUI(area: _areaName)));
 
-  Future<void> _loadEntries(int planId) async {
-    setState(() => _isLoadingLookups = true);
-    try {
-      final entries = await _service.getPlanEntries(planId);
-      if (!mounted) return;
-      setState(() {
-        _entries = entries;
-        _schedules = [];
-      });
-    } finally {
-      if (mounted) setState(() => _isLoadingLookups = false);
-    }
-  }
-
-  Future<void> _loadSchedules(int planEntryId) async {
-    setState(() => _isLoadingLookups = true);
-    try {
-      final schedules = await _service.getSchedulesForPlanEntry(planEntryId);
-      if (!mounted) return;
-      // Workflow Gate: Only CONFIRMED or APPROVED schedules can be selected
-      final confirmedSchedules = schedules
-          .where((s) =>
-              s.effectiveStatusName == 'Confirmed' ||
-              s.effectiveStatusName == 'Approved')
-          .toList();
-      setState(() => _schedules = confirmedSchedules.isNotEmpty ? confirmedSchedules : schedules);
-    } finally {
-      if (mounted) setState(() => _isLoadingLookups = false);
-    }
-  }
-
-  void _onPlanChanged(int? planId) {
-    setState(() {
-      _selectedPlanId = planId;
-      _selectedAuditPlanEntryId = null;
-      _selectedScheduleId = null;
-      _clauseResults = null;
-      _entries = [];
-      _schedules = [];
-    });
-    if (planId != null) {
-      _loadEntries(planId).then((_) {
-        if (!mounted) return;
-        setState(() {
-          _planOfficeProcess = null;
-          _planAuditTeamName = null;
-          _planDate = null;
-        });
-      });
-    }
-  }
-
-  void _onEntryChanged(int? entryId) {
-    setState(() {
-      _selectedAuditPlanEntryId = entryId;
-      _selectedScheduleId = null;
-      _clauseResults = null;
-      _schedules = [];
-    });
-    if (entryId != null) {
-      _loadSchedules(entryId).then((_) {
-        if (!mounted) return;
-        setState(() {
-          AuditPlanEntry? entry;
-          for (final e in _entries) {
-            if (e.id == entryId) {
-              entry = e;
-              break;
-            }
-          }
-          if (entry == null) return;
-          _planDate = _formatDay(entry.time);
-
-          final processes = entry.auditPlanProcesses;
-          _planOfficeProcess =
-              (processes != null && processes.isNotEmpty)
-                  ? processes
-                      .map((p) => p.office?.name ?? p.processName)
-                      .where((n) => n != null && n.isNotEmpty)
-                      .join(', ')
-                  : null;
-
-          if (processes != null && processes.isNotEmpty) {
-            _officeAuditedId = processes.first.officeId ?? processes.first.id;
-            _officeAuditedName =
-                processes.first.office?.name ??
-                processes.first.processName ??
-                _planOfficeProcess;
-          }
-
-          final auditors = entry.isoAuditors;
-          if (auditors != null && auditors.isNotEmpty) {
-            final withTeam = auditors.where((a) => a.team != null).toList();
-            _planAuditTeamName =
-                withTeam.isNotEmpty ? withTeam.first.team?.name : null;
-          }
-
-          if (entry.standardText != null &&
-              entry.standardText!.trim().isNotEmpty) {
-            _auditStandardISOName = entry.standardText;
-          } else if (entry.isoStandardAuditPlans != null &&
-              entry.isoStandardAuditPlans!.isNotEmpty) {
-            final firstStandard = entry.isoStandardAuditPlans!.first;
-            _auditStandardISOId = firstStandard.isoStandardId;
-            _auditStandardISOName =
-                firstStandard.isoStandard?.particulars ??
-                firstStandard.isoStandard?.clauseRef ??
-                'ISO 9001:2015';
-          } else if (_auditStandardISOName == null ||
-              _auditStandardISOName!.isEmpty) {
-            _auditStandardISOName = 'ISO 9001:2015';
-          }
-
-          if (_auditPurposeController.text.trim().isEmpty) {
-            _auditPurposeController.text = 'INTERNAL QUALITY AUDIT';
-          }
-
-          // Populate auditees from entry responsiblePersons
-          final responsible = entry.responsiblePersons;
-          if (responsible != null && responsible.isNotEmpty) {
-            final bool hasCustomScope = _scopeRows.any(
-              (s) => s.auditeeController.text.trim().isNotEmpty,
-            );
-            if (!hasCustomScope || _existingId == null) {
-              for (final r in _scopeRows) {
-                r.dispose();
-              }
-              _scopeRows.clear();
-              for (final p in responsible) {
-                if (p.name.trim().isNotEmpty) {
-                  _scopeRows.add(_ScopeUI(auditee: p.name.trim()));
-                }
-              }
-              if (_scopeRows.isEmpty) _scopeRows.add(_ScopeUI());
-            }
-            _auditeeName = _scopeRows
-                .map((s) => s.auditeeController.text.trim())
-                .where((t) => t.isNotEmpty)
-                .join(', ');
-          }
-
-          // Default area for commendable findings
-          final areaName = _officeAuditedName ?? _planOfficeProcess ?? '';
-          for (final com in _comFindings) {
-            if (com.areaController.text.trim().isEmpty) {
-              com.areaController.text = areaName;
-            }
-          }
-        });
-      });
-    }
-  }
-
-  void _addComFinding() => setState(
-    () => _comFindings.add(
-      _ComFindingUI(area: _officeAuditedName ?? _planOfficeProcess ?? ''),
-    ),
-  );
   void _removeComFinding(_ComFindingUI r) => setState(() {
     r.dispose();
     _comFindings.remove(r);
   });
 
-  void _addScopeRow() => setState(() => _scopeRows.add(_ScopeUI()));
-  void _removeScopeRow(_ScopeUI r) => setState(() {
-    r.dispose();
-    _scopeRows.remove(r);
-  });
+  /// The NC / OFI choices of the Summary of Findings: the lookup the server
+  /// holds, or its seeded values when it could not be read.
+  List<({int id, String name})> get _statusOptions {
+    final options = <({int id, String name})>[];
+    for (final s in _ncarStatuses) {
+      final id = (s['id'] as num?)?.toInt();
+      final name =
+          (s['ncarStatus'] ?? s['NcarStatus'])?.toString().trim().toUpperCase();
+      if (id != null && (name == 'NC' || name == 'OFI')) {
+        options.add((id: id, name: name!));
+      }
+    }
+    if (options.isEmpty) {
+      return const [(id: 1, name: 'NC'), (id: 2, name: 'OFI')];
+    }
+    return options;
+  }
 
-  void _addSummaryRow() => setState(() {
-    final nextNo = _summaryRows.isEmpty ? 1 : _summaryRows.last.no + 1;
-    _summaryRows.add(_SummaryUI(no: nextNo));
-  });
-  void _removeSummaryRow(_SummaryUI r) => setState(() {
+  int get _ncStatusId =>
+      _statusOptions.firstWhere((o) => o.name == 'NC').id;
+
+  void _addSummaryRow() => setState(
+    () => _summaryRows.add(_SummaryRowUI(statusId: _ncStatusId)),
+  );
+
+  void _removeSummaryRow(_SummaryRowUI r) => setState(() {
     r.dispose();
     _summaryRows.remove(r);
   });
 
   Future<void> _save() async {
-    // AuditScheduleId is a required, non-nullable FK on AuditReportDto and on
-    // the AuditReports table, so a report cannot be saved without a real
-    // schedule — the DB rejects both a missing value and an id that doesn't
-    // resolve. Validate here rather than letting the save fail server-side.
-    if (_selectedAuditPlanEntryId == null) {
-      _showMessage('Please select an audit plan entry.');
-      return;
-    }
-    if (_selectedScheduleId == null) {
-      _showMessage('Please select an audit schedule.');
-      return;
-    }
+    final loaded = _report;
+    if (loaded == null) return;
+
     if (_auditPurposeController.text.trim().isEmpty) {
       _showMessage('Audit purpose is required.');
       return;
     }
-    // Every summary finding must be classified as NC or OFI; the status dropdown
-    // no longer offers a blank "None" choice.
-    for (final row in _summaryRows) {
-      if (row.findingController.text.trim().isNotEmpty &&
-          row.auditNcarStatusId == null) {
-        _showMessage(
-          'Please select NC or OFI for finding ${row.no} in the Summary of Findings.',
-        );
-        return;
+
+    // A commendable finding with no text is just an empty row.
+    final commendable =
+        _comFindings
+            .where((r) => r.findingController.text.trim().isNotEmpty)
+            .map((r) {
+              if (_areaName.isNotEmpty) r.areaController.text = _areaName;
+              return r.toModel();
+            })
+            .toList();
+
+    // A line the auditor added and left empty is just an empty row. Lines
+    // fetched from the checklist are always sent: they hold their NCAR.
+    final summary = <AuditSummaryFindings>[];
+    for (final r in _summaryRows) {
+      if (!r.fromChecklist &&
+          r.criteriaController.text.trim().isEmpty &&
+          r.findingsController.text.trim().isEmpty) {
+        continue;
       }
+      summary.add(r.toModel(summary.length + 1));
     }
 
-    final auditees =
-        _scopeRows
-            .map((r) => r.auditeeController.text.trim())
-            .where((t) => t.isNotEmpty)
-            .toList();
-    final effectiveAuditeeName =
-        auditees.isNotEmpty ? auditees.join(', ') : _auditeeName;
-
     final report = AuditReport(
-      id: _existingId ?? 0,
-      isDeleted: _isDeleted,
-      rowVersion: _rowVersion,
-      auditPurpose:
-          _auditPurposeController.text.trim().isNotEmpty
-              ? _auditPurposeController.text.trim()
-              : 'INTERNAL QUALITY AUDIT',
+      id: loaded.id,
+      isDeleted: loaded.isDeleted,
+      rowVersion: loaded.rowVersion,
+      auditPurpose: _auditPurposeController.text.trim(),
       auditConclusions: _auditConclusionsController.text,
-      officeAuditedId: _officeAuditedId,
-      officeAuditedName: _officeAuditedName ?? _planOfficeProcess,
-      auditStandardISOId: _auditStandardISOId,
-      auditStandardISOName: _auditStandardISOName ?? 'ISO 9001:2015',
-      auditeeId: _selectedAuditeeId,
-      auditeeName: effectiveAuditeeName,
-      auditPlanEntryId: _selectedAuditPlanEntryId,
-      auditScheduleId: _selectedScheduleId!,
-      planOfficeProcess: _planOfficeProcess,
-      planAuditTeamName: _planAuditTeamName,
-      auditComFindings: _comFindings.map((r) => r.toModel()).toList(),
-      auditScope: _scopeRows.map((r) => r.toModel()).toList(),
-      auditSummaryFindings: _summaryRows.map((r) => r.toModel()).toList(),
+      officeAuditedId: loaded.officeAuditedId,
+      officeAuditedName: loaded.officeAuditedName,
+      auditStandardISOId: loaded.auditStandardISOId,
+      auditStandardISOName: loaded.auditStandardISOName,
+      auditeeId: loaded.auditeeId,
+      auditeeName: loaded.auditeeName,
+      auditPlanEntryId: loaded.auditPlanEntryId,
+      auditScheduleId: loaded.auditScheduleId,
+      planOfficeProcess: loaded.planOfficeProcess,
+      planAuditTeamName: loaded.planAuditTeamName,
+      auditComFindings: commendable,
+      auditScope: loaded.auditScope,
+      auditSummaryFindings: summary,
     );
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Save as Draft'),
+        content: const Text(
+          'Save this audit report as a draft? You can still edit it, and '
+          'submit it for approval from the Audit Report list.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: primaryThemeColor),
+            child: const Text(
+              'Save as Draft',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
 
     setState(() => _isSaving = true);
     try {
@@ -615,181 +450,6 @@ class _AuditReportPageState extends State<AuditReportPage> {
     ),
   );
 
-  InputDecoration _dropdownDecoration(String label) => _decoration(label);
-
-  /// DropdownButtonFormField asserts that exactly one item matches its value, so
-  /// a selection that isn't present in the freshly-loaded option list would throw
-  /// rather than render. The lookup lists are loaded per-selection (and can come
-  /// back empty if a plan/entry/schedule was removed or is filtered by
-  /// permission), so the current selection is only fed back once it is known to
-  /// be a valid option.
-  int? _safeSelection(int? value, Iterable<int?> availableIds) {
-    if (value == null) return null;
-    for (final id in availableIds) {
-      if (id == value) return value;
-    }
-    return null;
-  }
-
-  String _entryLabel(AuditPlanEntry e) {
-    final parts = <String>['Day ${e.dayNumber}', _formatDay(e.time)];
-    final process = e.auditPlanProcesses
-        ?.map((p) => p.office?.name ?? p.processName)
-        .where((n) => n != null && n.isNotEmpty)
-        .join(', ');
-    if (process != null && process.isNotEmpty) parts.add(process);
-    return parts.join(' — ');
-  }
-
-  String _scheduleLabel(AuditSchedules s) {
-    final activity = s.activity.isNotEmpty ? s.activity : 'Schedule ${s.id}';
-    return '$activity — ${_formatDay(s.startDate)} to ${_formatDay(s.endDate)}';
-  }
-
-  Widget _sourceCard() => _card(
-    title: 'AUDIT REPORT SOURCE',
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: DropdownButtonFormField<int>(
-                initialValue: _safeSelection(
-                  _selectedPlanId,
-                  _plans.map((p) => p.id),
-                ),
-                isExpanded: true,
-                hint: const Text(
-                  'Select Audit Plan',
-                  style: TextStyle(fontSize: 12),
-                ),
-                decoration: _dropdownDecoration('AUDIT PLAN'),
-                items:
-                    _plans.isEmpty
-                        ? const [
-                          DropdownMenuItem<int>(
-                            value: null,
-                            child: Text(
-                              'No options available',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        ]
-                        : _plans
-                            .map(
-                              (p) => DropdownMenuItem<int>(
-                                value: p.id,
-                                child: Text(
-                                  p.planName.isNotEmpty
-                                      ? p.planName
-                                      : 'Plan ${p.id}',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                onChanged:
-                    _plans.isEmpty || _isLoadingLookups ? null : _onPlanChanged,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: DropdownButtonFormField<int>(
-                initialValue: _safeSelection(
-                  _selectedAuditPlanEntryId,
-                  _entries.map((e) => e.id),
-                ),
-                isExpanded: true,
-                hint: const Text(
-                  'Select Plan Entry',
-                  style: TextStyle(fontSize: 12),
-                ),
-                decoration: _dropdownDecoration('AUDIT PLAN ENTRY'),
-                items:
-                    _entries.isEmpty
-                        ? const [
-                          DropdownMenuItem<int>(
-                            value: null,
-                            child: Text(
-                              'Select a plan first',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        ]
-                        : _entries
-                            .map(
-                              (e) => DropdownMenuItem<int>(
-                                value: e.id,
-                                child: Text(
-                                  _entryLabel(e),
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                onChanged:
-                    _entries.isEmpty || _isLoadingLookups
-                        ? null
-                        : _onEntryChanged,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<int>(
-          initialValue: _safeSelection(
-            _selectedScheduleId,
-            _schedules.map((s) => s.id),
-          ),
-          isExpanded: true,
-          hint: const Text(
-            'Select Audit Schedule',
-            style: TextStyle(fontSize: 12),
-          ),
-          decoration: _dropdownDecoration('AUDIT SCHEDULE'),
-          items:
-              _schedules.isEmpty
-                  ? const [
-                    DropdownMenuItem<int>(
-                      value: null,
-                      child: Text(
-                        'No schedules for this entry',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ]
-                  : _schedules
-                      .map(
-                        (s) => DropdownMenuItem<int>(
-                          value: s.id,
-                          child: Text(
-                            _scheduleLabel(s),
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      )
-                      .toList(),
-          onChanged:
-              _schedules.isEmpty || _isLoadingLookups
-                  ? null
-                  : (val) {
-                    setState(() => _selectedScheduleId = val);
-                    _loadClauseResults();
-                  },
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'A report must belong to an audit schedule.',
-          style: TextStyle(fontSize: 11, color: Colors.grey),
-        ),
-      ],
-    ),
-  );
-
   Widget _card({required String title, required Widget child}) => Container(
     margin: const EdgeInsets.only(bottom: 16),
     padding: const EdgeInsets.all(16),
@@ -817,231 +477,164 @@ class _AuditReportPageState extends State<AuditReportPage> {
     ),
   );
 
+  /// A label over a value the checklist supplies; shown, never edited.
+  Widget _fact(String label, String? value) => Expanded(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value != null && value.trim().isNotEmpty ? value : '—',
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  );
+
+  Widget _factsPanel(List<Widget> children) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFBFBFB),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: Colors.grey.shade200),
+    ),
+    child: Row(children: children),
+  );
+
+  Widget _autoNote(String text) => Padding(
+    padding: const EdgeInsets.only(top: 8),
+    child: Row(
+      children: [
+        const Icon(Icons.sync_alt, size: 14, color: Colors.grey),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 11, color: Colors.grey),
+          ),
+        ),
+      ],
+    ),
+  );
+
   Widget _headerCard() => _card(
     title: 'AUDIT REPORT HEADER',
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFBFBFB),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'OFFICE AUDITED',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _officeAuditedName ??
-                          _planOfficeProcess ??
-                          'Select an audit plan entry above',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            (_officeAuditedName != null ||
-                                    _planOfficeProcess != null)
-                                ? Colors.black87
-                                : Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'DATE OF AUDIT',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _planDate ?? 'Select an audit plan entry above',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _planDate != null ? Colors.black87 : Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        _factsPanel([
+          _fact('OFFICE AUDITED', _officeAuditedName ?? _planOfficeProcess),
+          const SizedBox(width: 16),
+          _fact('DATE OF AUDIT', _planDate),
+          const SizedBox(width: 16),
+          _fact('AUDIT STANDARD', _auditStandardISOName),
+        ]),
+        _autoNote(
+          'Office, date and standard come from the audit plan and checklist.',
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _auditPurposeController,
-                decoration: _decoration('AUDIT PURPOSE'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextFormField(
-                initialValue: _auditStandardISOName ?? 'ISO 9001:2015',
-                decoration: _decoration('AUDIT STANDARD'),
-                onChanged: (val) => _auditStandardISOName = val,
-              ),
-            ),
-          ],
+        TextFormField(
+          controller: _auditPurposeController,
+          readOnly: !_canEdit,
+          decoration: _decoration('AUDIT PURPOSE'),
         ),
       ],
     ),
   );
 
-  Widget _scopeCard() => _card(
-    title: 'I. AUDIT SCOPE, AUDITORS AND AUDITEES',
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFBFBFB),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'AREA / PROCESS AUDITED',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _officeAuditedName ?? _planOfficeProcess ?? '—',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'AUDITORS (TEAM)',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _planAuditTeamName ?? '—',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const Text(
-          'AUDITEES',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: primaryThemeColor,
-          ),
-        ),
-        const SizedBox(height: 8),
-        for (final row in _scopeRows)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: row.auditeeController,
-                    decoration: _decoration('Auditee Name'),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.redAccent,
-                  ),
-                  onPressed:
-                      _scopeRows.length > 1 ? () => _removeScopeRow(row) : null,
-                ),
-              ],
+  Widget _scopeCard() {
+    final auditees =
+        (_report?.auditScope ?? [])
+            .map((s) => s.auditee.trim())
+            .where((a) => a.isNotEmpty)
+            .toList();
+
+    return _card(
+      title: 'I. AUDIT SCOPE, AUDITORS AND AUDITEES',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _factsPanel([
+            _fact(
+              'AREA / PROCESS AUDITED',
+              _officeAuditedName ?? _planOfficeProcess,
+            ),
+            const SizedBox(width: 16),
+            _fact(
+              (_planAuditTeamName ?? '').trim().isEmpty
+                  ? 'AUDITORS'
+                  : 'AUDITORS ($_planAuditTeamName)',
+              _auditorNames.isNotEmpty
+                  ? _auditorNames.join('\n')
+                  : _planAuditTeamName,
+            ),
+          ]),
+          const SizedBox(height: 12),
+          const Text(
+            'AUDITEES',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: primaryThemeColor,
             ),
           ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: _addScopeRow,
-            icon: const Icon(Icons.add, color: primaryThemeColor),
-            label: const Text('Add Auditee'),
-          ),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 8),
+          if (auditees.isEmpty)
+            const Text(
+              'No auditee has been named on the audit checklist yet.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final name in auditees)
+                  Chip(
+                    label: Text(name, style: const TextStyle(fontSize: 12)),
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ],
+            ),
+          _autoNote('Auditors and auditees are taken from the audit checklist.'),
+        ],
+      ),
+    );
+  }
 
   Widget _commendableFindingsCard() => _card(
     title: 'II. COMMENDABLE FINDINGS',
     child: Column(
       children: [
+        // The area is one only: the office of the auditee. Findings added
+        // below never add another area.
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: TextFormField(
+            key: ValueKey('com-area-$_areaName'),
+            initialValue: _areaName,
+            readOnly: true,
+            decoration: _decoration('Area (office of the auditee)'),
+          ),
+        ),
         for (final row in _comFindings)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(
               children: [
                 Expanded(
-                  flex: 3,
                   child: TextFormField(
                     controller: row.findingController,
+                    readOnly: !_canEdit,
                     decoration: _decoration('Commendable Finding'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: TextFormField(
-                    controller: row.areaController,
-                    decoration: _decoration('Area'),
                   ),
                 ),
                 IconButton(
@@ -1050,102 +643,248 @@ class _AuditReportPageState extends State<AuditReportPage> {
                     color: Colors.redAccent,
                   ),
                   onPressed:
-                      _comFindings.length > 1
+                      _canEdit && _comFindings.length > 1
                           ? () => _removeComFinding(row)
                           : null,
                 ),
               ],
             ),
           ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: _addComFinding,
-            icon: const Icon(Icons.add, color: primaryThemeColor),
-            label: const Text('Add Finding'),
+        if (_canEdit)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _addComFinding,
+              icon: const Icon(Icons.add, color: primaryThemeColor),
+              label: const Text('Add Finding'),
+            ),
           ),
-        ),
       ],
     ),
   );
 
-  Widget _summaryFindingsCard() => _card(
-    title: 'III. SUMMARY OF FINDINGS',
-    child: Column(
+  String _statusName(int? id) {
+    for (final o in _statusOptions) {
+      if (o.id == id) return o.name;
+    }
+    return 'NC';
+  }
+
+  /// Same table as the printed form: No. | CRITERIA | FINDINGS | Status.
+  /// The lines fetched from the checklist have a fixed clause and status (NC)
+  /// and an NCAR; the auditor types their findings. Lines added by hand are
+  /// typed whole and are NC or OFI.
+  Widget _summaryTable() {
+    final border = BorderSide(color: Colors.grey.shade500, width: 0.8);
+    final editable = _canEdit;
+
+    Widget head(String text, {String? sub}) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+          if (sub != null)
+            Text(
+              sub,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+        ],
+      ),
+    );
+
+    Widget cell(Widget child, {Alignment align = Alignment.topLeft}) =>
+        Container(
+          alignment: align,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: child,
+        );
+
+    InputDecoration cellDecoration(String hint) => InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(4),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+    );
+
+    Widget statusCell(_SummaryRowUI row) {
+      // A line fetched from the checklist is a non-conformity: it stays NC.
+      if (row.fromChecklist || !editable) {
+        return _resultCountChip(
+          _statusName(row.statusId),
+          null,
+          _statusName(row.statusId) == 'OFI'
+              ? Colors.orange.shade800
+              : Colors.red.shade700,
+        );
+      }
+      final options = _statusOptions;
+      final value =
+          options.any((o) => o.id == row.statusId) ? row.statusId : _ncStatusId;
+      return DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: value,
+          isDense: true,
+          isExpanded: true,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
+          items: [
+            for (final o in options)
+              DropdownMenuItem<int>(value: o.id, child: Text(o.name)),
+          ],
+          onChanged: (v) => setState(() => row.statusId = v),
+        ),
+      );
+    }
+
+    return Table(
+      border: TableBorder.all(color: border.color, width: border.width),
+      columnWidths: {
+        0: const FixedColumnWidth(44),
+        1: const FixedColumnWidth(110),
+        2: const FlexColumnWidth(),
+        3: const FixedColumnWidth(104),
+        if (editable) 4: const FixedColumnWidth(44),
+      },
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       children: [
-        for (final row in _summaryRows)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        TableRow(
+          decoration: BoxDecoration(color: Colors.grey.shade100),
+          children: [
+            head('No.'),
+            head('CRITERIA'),
+            head('FINDINGS'),
+            head('Status', sub: '(NC, OFI)'),
+            if (editable) const SizedBox.shrink(),
+          ],
+        ),
+        for (var i = 0; i < _summaryRows.length; i++)
+          () {
+            final row = _summaryRows[i];
+            return TableRow(
               children: [
-                Container(
-                  width: 32,
-                  padding: const EdgeInsets.only(top: 14),
-                  child: Text(
-                    '${row.no}.',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                cell(
+                  Text('${i + 1}', style: const TextStyle(fontSize: 13)),
+                  align: Alignment.center,
                 ),
-                Expanded(
-                  flex: 3,
-                  child: TextFormField(
-                    controller: row.findingController,
-                    maxLines: 2,
-                    decoration: _decoration('Finding'),
-                  ),
+                cell(
+                  row.fromChecklist || !editable
+                      ? Text(
+                        row.criteriaController.text,
+                        style: const TextStyle(fontSize: 13),
+                      )
+                      : TextField(
+                        controller: row.criteriaController,
+                        style: const TextStyle(fontSize: 13),
+                        decoration: cellDecoration('Clause'),
+                      ),
                 ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 140,
-                  child: DropdownButtonFormField<int?>(
-                    initialValue: row.auditNcarStatusId,
-                    decoration: _dropdownDecoration('STATUS'),
-                    isExpanded: true,
-                    hint: const Text('NC / OFI', style: TextStyle(fontSize: 12)),
-                    items: _ncarStatuses
-                        .map(
-                          (s) => DropdownMenuItem<int?>(
-                            value: (s['id'] as num?)?.toInt(),
-                            child: Text(
-                              (s['ncarStatus'] ??
-                                      s['NcarStatus'] ??
-                                      'Status ${s['id']}')
-                                  .toString(),
-                              style: const TextStyle(fontSize: 12),
+                cell(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      editable
+                          ? TextField(
+                            controller: row.findingsController,
+                            style: const TextStyle(fontSize: 13),
+                            minLines: 1,
+                            maxLines: null,
+                            keyboardType: TextInputType.multiline,
+                            decoration: cellDecoration('Write the finding'),
+                          )
+                          : Text(
+                            row.findingsController.text,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                      if (row.ncarRef.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'NCAR ${row.ncarRef}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
                             ),
                           ),
-                        )
-                        .toList(),
-                    onChanged: (val) {
-                      setState(() => row.auditNcarStatusId = val);
-                    },
+                        ),
+                    ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.redAccent,
+                cell(statusCell(row), align: Alignment.center),
+                if (editable)
+                  cell(
+                    row.fromChecklist
+                        ? const SizedBox.shrink()
+                        : IconButton(
+                          tooltip: 'Remove this finding',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: Colors.redAccent,
+                          ),
+                          onPressed: () => _removeSummaryRow(row),
+                        ),
+                    align: Alignment.center,
                   ),
-                  onPressed:
-                      _summaryRows.length > 1
-                          ? () => _removeSummaryRow(row)
-                          : null,
-                ),
               ],
-            ),
-          ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: _addSummaryRow,
-            icon: const Icon(Icons.add, color: primaryThemeColor),
-            label: const Text('Add Finding Row'),
-          ),
-        ),
+            );
+          }(),
       ],
-    ),
-  );
+    );
+  }
+
+  Widget _summaryFindingsCard() {
+    return _card(
+      title: 'III. SUMMARY OF FINDINGS',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_summaryRows.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Text(
+                'No finding yet. A non-conforming clause on the audit '
+                'checklist is added here, or add a finding yourself.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            )
+          else
+            _summaryTable(),
+          if (_canEdit)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _addSummaryRow,
+                  icon: const Icon(Icons.add, color: primaryThemeColor),
+                  label: const Text('Add Finding'),
+                ),
+              ),
+            ),
+          _autoNote(
+            'A non-conforming clause with its NCAR comes from the audit '
+            'checklist; write its finding here. Add a finding to record an '
+            'NC or an OFI of your own.',
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _clauseResultsCard() {
     final results = _clauseResults;
@@ -1200,9 +939,9 @@ class _AuditReportPageState extends State<AuditReportPage> {
     );
   }
 
-  Widget _resultCountChip(String label, int count, Color color) => Chip(
+  Widget _resultCountChip(String label, int? count, Color color) => Chip(
     label: Text(
-      '$label: $count',
+      count == null ? label : '$label: $count',
       style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
     ),
     backgroundColor: color.withValues(alpha: .1),
@@ -1282,6 +1021,7 @@ class _AuditReportPageState extends State<AuditReportPage> {
     title: 'IV. AUDIT CONCLUSIONS',
     child: TextFormField(
       controller: _auditConclusionsController,
+      readOnly: !_canEdit,
       maxLines: 4,
       decoration: _decoration('AUDIT CONCLUSIONS'),
     ),
@@ -1316,12 +1056,10 @@ class _AuditReportPageState extends State<AuditReportPage> {
                 ),
                 child: Row(
                   children: [
-                    Expanded(
+                    const Expanded(
                       child: Text(
-                        widget.reportId == null
-                            ? 'CREATE AUDIT REPORT'
-                            : 'EDIT AUDIT REPORT',
-                        style: const TextStyle(
+                        'AUDIT REPORT',
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -1346,12 +1084,11 @@ class _AuditReportPageState extends State<AuditReportPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _sourceCard(),
                               _headerCard(),
                               _scopeCard(),
                               _commendableFindingsCard(),
                               _summaryFindingsCard(),
-                              if (_selectedScheduleId != null)
+                              if ((_report?.auditScheduleId ?? 0) > 0)
                                 _clauseResultsCard(),
                               _conclusionsCard(),
                             ],
@@ -1377,15 +1114,18 @@ class _AuditReportPageState extends State<AuditReportPage> {
                       child: const Text('Cancel'),
                     ),
                     const SizedBox(width: 8),
-                    if (_canEdit)
+                    if (_canEdit && _report != null)
                       ElevatedButton(
                         onPressed: _isSaving ? null : _save,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryThemeColor,
                         ),
                         child: const Text(
-                          'SAVE',
-                          style: TextStyle(color: Colors.white),
+                          'SAVE AS DRAFT',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                   ],

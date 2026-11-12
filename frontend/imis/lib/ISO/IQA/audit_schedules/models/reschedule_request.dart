@@ -18,7 +18,11 @@ class RescheduleRequest {
   final String status;
   final String? requestedBy;
   final DateTime? requestedDate;
+  final String? teamLeaderName;
+  final DateTime? teamLeaderDecisionDate;
   final String? teamLeaderRemarks;
+  final String? leadAuditorName;
+  final DateTime? leadAuditorDecisionDate;
   final String? leadAuditorRemarks;
 
   /// True when the signed-in user is the approver the request is waiting on.
@@ -35,10 +39,26 @@ class RescheduleRequest {
     required this.status,
     this.requestedBy,
     this.requestedDate,
+    this.teamLeaderName,
+    this.teamLeaderDecisionDate,
     this.teamLeaderRemarks,
+    this.leadAuditorName,
+    this.leadAuditorDecisionDate,
     this.leadAuditorRemarks,
     this.canDecide = false,
   });
+
+  /// Short label for the schedule list badge.
+  String get badgeLabel {
+    switch (status) {
+      case pendingTeamLeader:
+        return 'Reschedule: awaiting Team Leader';
+      case pendingLeadAuditor:
+        return 'Reschedule: awaiting Lead Auditor';
+      default:
+        return 'Reschedule: $status';
+    }
+  }
 
   bool get isPending =>
       status == pendingTeamLeader || status == pendingLeadAuditor;
@@ -65,7 +85,15 @@ class RescheduleRequest {
       requestedBy: json['requestedBy'] as String?,
       requestedDate:
           json['requestedDate'] == null ? null : parse(json['requestedDate']),
+      teamLeaderName: json['teamLeaderName'] as String?,
+      teamLeaderDecisionDate: json['teamLeaderDecisionDate'] == null
+          ? null
+          : parse(json['teamLeaderDecisionDate']),
       teamLeaderRemarks: json['teamLeaderRemarks'] as String?,
+      leadAuditorName: json['leadAuditorName'] as String?,
+      leadAuditorDecisionDate: json['leadAuditorDecisionDate'] == null
+          ? null
+          : parse(json['leadAuditorDecisionDate']),
       leadAuditorRemarks: json['leadAuditorRemarks'] as String?,
       canDecide: json['canDecide'] == true,
     );

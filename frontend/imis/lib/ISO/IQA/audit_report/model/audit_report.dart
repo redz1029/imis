@@ -51,10 +51,15 @@ class AuditReport {
 
   // Server-derived header fields, assembled by AuditReportDto from the linked
   // AuditPlanEntry. Read-only.
-  @IsoDateTimeConverter()
+  // The API sends the plan entry's wall-clock time; the time-zone converter
+  // would shift an evening audit onto the next day.
+  @NullableWallClockDateTimeConverter()
   DateTime? auditDate;
   String? planOfficeProcess;
   String? planAuditTeamName;
+
+  /// Every member of the audit team, the team leader first.
+  List<String>? auditorNames;
 
   List<AuditComFindings>? auditComFindings;
   List<AuditScope>? auditScope;
@@ -78,6 +83,7 @@ class AuditReport {
     this.auditDate,
     this.planOfficeProcess,
     this.planAuditTeamName,
+    this.auditorNames,
     this.auditComFindings,
     this.auditScope,
     this.auditSummaryFindings,

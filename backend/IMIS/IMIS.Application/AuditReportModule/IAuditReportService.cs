@@ -16,6 +16,7 @@ namespace IMIS.Application.AuditReportModule
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<AuditReportDto>> GetByAuditScheduleIdAsync(int auditScheduleId, CancellationToken cancellationToken);
         Task<AuditReportClauseResultsDto> GetClauseResultsAsync(int auditScheduleId, CancellationToken cancellationToken);
+        Task<List<AuditReportFindingsSummaryDto>> GetFindingsSummariesAsync(CancellationToken cancellationToken);
         Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
             where TEntity : Entity<TId>;
     }

@@ -1,4 +1,5 @@
-﻿using IMIS.Domain;
+﻿using IMIS.Application.IqaNotificationModule;
+using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -205,6 +206,17 @@ namespace IMIS.Application.IQASignatoryModule
                 .OrderBy(t => t.OrderLevel).ThenBy(t => t.Id)
                 .ToListAsync(ct);
 
+            // An Audit Plan is signed by the same people as its Audit Programme, so
+            // until a plan-specific chain is configured it follows the programme's.
+            if (templates.Count == 0 && entityType == EntityTypes.AuditPlan)
+            {
+                templates = await db.Set<IQASignatoryTemplate>()
+                    .AsNoTracking()
+                    .Where(t => t.AuditEntityType == EntityTypes.AuditProgramme && t.IsActive && !t.IsDeleted)
+                    .OrderBy(t => t.OrderLevel).ThenBy(t => t.Id)
+                    .ToListAsync(ct);
+            }
+
             if (templates.Count == 0 && entityType != EntityTypes.AuditSchedule)
                 return (false, $"No active approval signatory template is configured for {displayName}.");
 
@@ -306,7 +318,14 @@ namespace IMIS.Application.IQASignatoryModule
                     }
 
                     int stage = GetWorkflowOrder(template);
-                    bool isPreparer = stage == 1 && entityType != EntityTypes.AuditSchedule;
+                    // Only a real "Prepared by" / Lead Auditor step is signed by the
+                    // submitter. A step that merely sits first (e.g. QMS with
+                    // OrderLevel 1) is a normal step for its own signatory; the
+                    // submitter is still recorded in the approval history.
+                    var stepText = ((template.SignatoryLabel ?? "") + " " + (template.Position ?? "")).ToUpperInvariant();
+                    bool isPreparer = stage == 1
+                        && entityType != EntityTypes.AuditSchedule
+                        && (stepText.Contains("PREPAR") || stepText.Contains("LEAD AUDITOR"));
 
                     var finalSignatoryId = isPreparer && actorUserId != null ? actorUserId : targetSignatoryId;
                     // Same FK guard: a slot with no resolvable user is left
@@ -363,7 +382,109 @@ namespace IMIS.Application.IQASignatoryModule
 
             db.Set<IQAApprovalHistory>().Add(historyRecord);
 
+            await NotifyApproversAsync(db, entityType, entityId, actorUserId, actionName == Actions.Resubmitted, scheduledOfficeName, ct)
+                .ConfigureAwait(false);
+
             return (true, null);
+        }
+
+        // ------------------------------------------------------------------
+        // Notifications (the IQA bell). They are tracked on the same context, so
+        // they are saved with the action that raised them, and they can never
+        // fail it.
+        // ------------------------------------------------------------------
+
+        private static string ItemName(string entityType) => IqaNotifier.Label(entityType).ToLowerInvariant();
+
+        /// <summary>The approvers a submission is now waiting on.</summary>
+        private static async Task NotifyApproversAsync(
+            DbContext db, string entityType, int entityId, string? actorUserId, bool resubmitted,
+            string? officeName, CancellationToken ct)
+        {
+            try
+            {
+                var approvers = db.ChangeTracker.Entries<IQASignatory>()
+                    .Where(e => e.State == EntityState.Added &&
+                                e.Entity.AuditEntityType == entityType && e.Entity.AuditEntityId == entityId &&
+                                Is(e.Entity.ApprovalStatus, Decisions.Pending))
+                    .Select(e => e.Entity.SignatoryId)
+                    .ToList();
+                if (approvers.Count == 0) return;
+
+                var label = IqaNotifier.Label(entityType);
+                var who = await IqaNotifier.NameOfAsync(db, actorUserId, ct).ConfigureAwait(false);
+                var forWhat = entityType == EntityTypes.AuditSchedule ? "confirmation" : "approval";
+                var office = string.IsNullOrWhiteSpace(officeName) ? "" : $" of {officeName}";
+                var verb = resubmitted ? "resubmitted" : "submitted";
+
+                await IqaNotifier.AddAsync(
+                    db, approvers, actorUserId,
+                    resubmitted ? IqaNotifier.Types.Resubmitted : IqaNotifier.Types.Submitted,
+                    $"{label} {verb} for {forWhat}",
+                    $"{who} {verb} the {ItemName(entityType)}{office} for your {forWhat}.",
+                    entityType, entityId, null, ct).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // a notification must never block the submission
+            }
+        }
+
+        /// <summary>The decision of an approver, told to whoever submitted the item (and, once a schedule is confirmed, to its audit team).</summary>
+        private static async Task NotifySubmitterOfDecisionAsync(
+            DbContext db, string entityType, int entityId, string approverId, IQASignatory slot,
+            bool rejected, bool fullyApproved, string normalizedAction, string? comments, string? officeName,
+            CancellationToken ct)
+        {
+            try
+            {
+                var label = IqaNotifier.Label(entityType);
+                var item = ItemName(entityType);
+                var office = string.IsNullOrWhiteSpace(officeName) ? "" : $" of {officeName}";
+                var who = await IqaNotifier.NameOfAsync(db, approverId, ct).ConfigureAwait(false);
+                var role = slot.IQASignatoryTemplate?.SignatoryLabel;
+                var by = string.IsNullOrWhiteSpace(role) ? who : $"{who} ({role})";
+
+                var recipients = new List<string?>
+                {
+                    await IqaNotifier.SubmitterAsync(db, entityType, entityId, ct).ConfigureAwait(false)
+                };
+
+                string type, title, message;
+                if (rejected)
+                {
+                    type = IqaNotifier.Types.Rejected;
+                    title = $"{label} rejected";
+                    message = $"{by} rejected the {item}{office}. Reason: {comments}";
+                }
+                else if (fullyApproved)
+                {
+                    var confirmed = entityType == EntityTypes.AuditSchedule;
+                    type = confirmed ? IqaNotifier.Types.Confirmed : IqaNotifier.Types.FullyApproved;
+                    title = confirmed ? $"{label} confirmed" : $"{label} approved";
+                    message = $"{by} {(confirmed ? "confirmed" : "approved")} the {item}{office}.";
+
+                    if (confirmed)
+                    {
+                        var teams = await IqaNotifier.ScheduleTeamIdsAsync(db, entityId, ct).ConfigureAwait(false);
+                        recipients.AddRange(await IqaNotifier.TeamMembersAsync(db, teams, ct).ConfigureAwait(false));
+                    }
+                }
+                else
+                {
+                    var noted = Is(normalizedAction, Actions.Noted);
+                    type = noted ? IqaNotifier.Types.Noted : IqaNotifier.Types.Approved;
+                    title = $"{label} {(noted ? "noted" : "approved")} by {who}";
+                    message = $"{by} {(noted ? "noted" : "approved")} the {item}{office}. It is still waiting on the other approvers.";
+                }
+
+                await IqaNotifier.AddAsync(db, recipients, approverId, type, title, message, entityType, entityId, null, ct)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // a notification must never block the decision
+            }
         }
 
         public static Task<(bool Success, string? Error)> SubmitAsync(
@@ -521,6 +642,9 @@ namespace IMIS.Application.IQASignatoryModule
                 };
                 db.Set<IQAApprovalHistory>().Add(rejectionRecord);
 
+                await NotifySubmitterOfDecisionAsync(db, entityType, entityId, approverId, targetSlot, rejected: true,
+                    fullyApproved: false, normalizedAction: Actions.Rejected, comments, officeName, ct).ConfigureAwait(false);
+
                 return (true, null);
             }
 
@@ -610,6 +734,9 @@ namespace IMIS.Application.IQASignatoryModule
                 RoleOrPosition = targetSlot.IQASignatoryTemplate?.SignatoryLabel ?? (isAdmin ? "Administrator" : "Approver")
             };
             db.Set<IQAApprovalHistory>().Add(historyRecord);
+
+            await NotifySubmitterOfDecisionAsync(db, entityType, entityId, approverId, targetSlot, rejected: false,
+                fullyApproved: isFullyApproved, normalizedAction: normalizedAction, comments, officeName, ct).ConfigureAwait(false);
 
             return (true, null);
         }

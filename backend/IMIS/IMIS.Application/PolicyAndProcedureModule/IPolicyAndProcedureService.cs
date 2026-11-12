@@ -6,6 +6,7 @@ namespace IMIS.Application.PolicyAndProcedureModule
 {
     public interface IPolicyAndProcedureService : IService
     {
+        Task<bool> SoftDeleteSignatoryAsync(long pgsid, CancellationToken cancellationToken);
         Task<PolicyAndProcedureDto?> GetByIdAsync(long id, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         public Task<DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);

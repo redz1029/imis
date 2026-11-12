@@ -6,7 +6,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
+using System;
+using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace IMIS.Presentation.NonconformingActionReportModule
 {
@@ -97,6 +100,89 @@ namespace IMIS.Presentation.NonconformingActionReportModule
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanVerify) ||
                 ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanValidateAndClose)));
 
+            // THE NCAR FORM, STEP BY STEP — each step is written by one side only.
+            // Auditor: issuance (the finding), verification, validate and close.
+            // Auditee: acknowledge, response (root causes and actions), approval.
+            app.MapPut("/{id:long}/issuance", async (long id, [FromBody] NcarIssuanceRequest request, INonconformingActionReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+                await Step(cache, cancellationToken, () => service.UpdateIssuanceAsync(id, request, cancellationToken)))
+            .WithTags(_ncarTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+
+            app.MapPost("/{id:long}/acknowledge", async (long id, HttpContext httpContext, INonconformingActionReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+                await Step(cache, cancellationToken, () => service.AcknowledgeAsync(id, UserIdOf(httpContext), cancellationToken)))
+            .WithTags(_ncarTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanAcknowledge));
+
+            app.MapPut("/{id:long}/response", async (long id, [FromBody] NcarResponseRequest request, HttpContext httpContext, INonconformingActionReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+                await Step(cache, cancellationToken, () => service.SaveResponseAsync(id, request, UserIdOf(httpContext), cancellationToken)))
+            .WithTags(_ncarTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanRespond));
+
+            app.MapPost("/{id:long}/approve", async (long id, HttpContext httpContext, INonconformingActionReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+                await Step(cache, cancellationToken, () => service.ApproveAsync(id, UserIdOf(httpContext), cancellationToken)))
+            .WithTags(_ncarTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanRespond));
+
+            app.MapPut("/{id:long}/verification", async (long id, [FromBody] NcarVerificationRequest request, HttpContext httpContext, INonconformingActionReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+                await Step(cache, cancellationToken, () => service.SaveVerificationAsync(id, request, UserIdOf(httpContext), cancellationToken)))
+            .WithTags(_ncarTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanVerify));
+
+            app.MapPost("/{id:long}/close", async (long id, HttpContext httpContext, INonconformingActionReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+                await Step(cache, cancellationToken, () => service.ValidateAndCloseAsync(id, UserIdOf(httpContext), cancellationToken)))
+            .WithTags(_ncarTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _workflowPermission.CanValidateAndClose));
+
+            // ATTACHMENTS — pictures proving the nonconformity was resolved (page 2 of the form)
+            app.MapGet("/{id:long}/attachments", async (long id, INonconformingActionReportService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetAttachmentsAsync(id, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(result);
+            })
+            .WithTags(_ncarTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            app.MapPost("/{id:long}/attachments", async (long id, HttpRequest request, INonconformingActionReportService service, CancellationToken cancellationToken) =>
+            {
+                if (!request.HasFormContentType)
+                    return Results.BadRequest("Send the picture as multipart form data.");
+
+                var form = await request.ReadFormAsync(cancellationToken).ConfigureAwait(false);
+                var file = form.Files.GetFile("file");
+                if (file == null || file.Length == 0)
+                    return Results.BadRequest("Choose a picture to attach.");
+
+                if (file.Length > NcarAttachmentRules.MaxBytes)
+                    return Results.BadRequest($"The picture is larger than {NcarAttachmentRules.MaxBytes / (1024 * 1024)} MB.");
+
+                using var stream = new MemoryStream();
+                await file.CopyToAsync(stream, cancellationToken).ConfigureAwait(false);
+
+                var (attachment, error) = await service
+                    .AddAttachmentAsync(id, file.FileName, stream.ToArray(), form["caption"].ToString(), cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (attachment == null)
+                    return Results.BadRequest(error ?? "The picture could not be attached.");
+
+                return Results.Ok(attachment);
+            })
+            .WithTags(_ncarTag)
+            .DisableAntiforgery()
+            .RequireAuthorization(e => e.RequireAssertion(ctx =>
+                ctx.User.HasClaim(PermissionClaimType.Claim, _permission.Edit) ||
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanRespond)));
+
+            app.MapDelete("/{id:long}/attachments/{attachmentId:long}", async (long id, long attachmentId, INonconformingActionReportService service, CancellationToken cancellationToken) =>
+            {
+                var success = await service.DeleteAttachmentAsync(id, attachmentId, cancellationToken).ConfigureAwait(false);
+                return success ? Results.Ok(new { Message = "Deleted Successfully" }) : Results.NotFound();
+            })
+            .WithTags(_ncarTag)
+            .RequireAuthorization(e => e.RequireAssertion(ctx =>
+                ctx.User.HasClaim(PermissionClaimType.Claim, _permission.Edit) ||
+                ctx.User.HasClaim(PermissionClaimType.Claim, _workflowPermission.CanRespond)));
+
             // SOFT DELETE
             app.MapDelete("/{id:long}", async (long id, INonconformingActionReportService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -108,6 +194,27 @@ namespace IMIS.Presentation.NonconformingActionReportModule
             })
             .WithTags(_ncarTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+        }
+
+        private static string UserIdOf(HttpContext httpContext) =>
+            httpContext.User.FindFirst("UserId")?.Value ?? string.Empty;
+
+        /// <summary>Runs one step of the form and answers with the saved NCAR, or the reason it was refused.</summary>
+        private static async Task<IResult> Step(
+            IOutputCacheStore cache,
+            CancellationToken cancellationToken,
+            Func<Task<(NonconformingActionReportDto? Ncar, string? Error)>> run)
+        {
+            var (ncar, error) = await run().ConfigureAwait(false);
+            if (ncar == null)
+            {
+                return string.Equals(error, "Nonconforming action report not found.", StringComparison.Ordinal)
+                    ? Results.NotFound(new { error })
+                    : Results.BadRequest(new { error });
+            }
+
+            await cache.EvictByTagAsync(_ncarTag, cancellationToken);
+            return Results.Ok(ncar);
         }
 
         public record ChangeNcarStatusRequest(string Status, string? Comments);

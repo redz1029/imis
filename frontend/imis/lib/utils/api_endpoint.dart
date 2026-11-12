@@ -106,6 +106,7 @@ class ApiEndpoint {
   late String iqaSignatory;
   late String ncar;
   late String ncarMonitoring;
+  late String iqaNotifications;
   late String isatPeriod;
   late String isat;
   late String iSATSignatoryTemplate;
@@ -168,7 +169,7 @@ class ApiEndpoint {
     kraRoadMapRoleId = '$baseUrl/KRARoadmapRole/roleid';
     kraRoadMapReport = '$baseUrl/kraRoadMap/list-report/pdf';
     kraRoadmapRole = '$baseUrl/kraRoadmapRole/roleid';
-    standardVersion = '$baseUrl/api/standardVersion';
+    standardVersion = '$baseUrl/standardVersions';
     scorecardMonitoringFilter = '$baseUrl/kraRoadMap/filter';
     kraroadmapAccomplishment = '$baseUrl/kraRoadmapAccomplishment';
     kraroadmapkpiAccomplishment = '$baseUrl/kraRoadmapKpiAccomplishment';
@@ -223,6 +224,7 @@ class ApiEndpoint {
     iqaSignatory = '$baseUrl/IQASignatory';
     ncar = '$baseUrl/ncar';
     ncarMonitoring = '$baseUrl/api/NcarMonitoring';
+    iqaNotifications = '$baseUrl/iqaNotifications';
     isatPeriod = '$baseUrl/ISATPeriod';
     isat = '$baseUrl/ISAT';
     iSATSignatoryTemplate = '$baseUrl/iSATSignatoryTemplate';

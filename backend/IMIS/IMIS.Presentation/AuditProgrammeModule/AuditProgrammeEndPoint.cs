@@ -22,8 +22,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
         // Confirm these two literal strings against those files; if either
         // differs even by casing, the eviction silently misses and this bug
         // persists for that one endpoint.
-        private const string _AuditPlan = "Audit Plan";
-        private const string _AuditSchedule = "Audit Schedule";
+        private const string _AuditPlan = "AuditPlan";
+        private const string _AuditSchedule = "AuditSchedule";
 
         public AuditProgrammeEndPoints() : base("/auditProgramme")
         {
@@ -69,7 +69,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 return result != null ? Results.Ok(result) : Results.Ok(new List<AuditProgrammeDto>());
             })
             .WithTags(_AuditProgramme)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
+            .CacheOutput(builder => builder.NoCache(), true);
 
             // GET APPROVED ONLY (Workflow Gate for Audit Plan)
             app.MapGet("/approved", async (
@@ -80,7 +81,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 return Results.Ok(result);
             })
             .WithTags(_AuditProgramme)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
+            .CacheOutput(builder => builder.NoCache(), true);
 
             // TEAM -> HOME-OFFICES MAP (client-side inline self-audit detection)
             app.MapGet("/team-office-map", async (
@@ -233,7 +235,8 @@ namespace IMIS.Presentation.AuditProgrammeModule
                 return Results.Ok(result);
             })
             .WithTags(_AuditProgramme)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View))
+            .CacheOutput(builder => builder.NoCache(), true);
 
             // DELETE
             app.MapDelete("/{id:int}", async (

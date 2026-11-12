@@ -18,7 +18,7 @@ AuditPlanEntry _$AuditPlanEntryFromJson(
           ? null
           : AuditPlan.fromJson(json['auditPlan'] as Map<String, dynamic>),
   dayNumber: (json['dayNumber'] as num).toInt(),
-  time: const DateTimeConverter().fromJson(json['time'] as String),
+  time: const WallClockDateTimeConverter().fromJson(json['time'] as String),
   standardText: json['standardText'] as String?,
   isoAuditProcesses:
       (json['isoAuditProcesses'] as List<dynamic>?)
@@ -53,7 +53,7 @@ Map<String, dynamic> _$AuditPlanEntryToJson(AuditPlanEntry instance) =>
       'auditPlanId': instance.auditPlanId,
       'auditPlan': instance.auditPlan?.toJson(),
       'dayNumber': instance.dayNumber,
-      'time': const DateTimeConverter().toJson(instance.time),
+      'time': const WallClockDateTimeConverter().toJson(instance.time),
       'standardText': instance.standardText,
       'isoAuditProcesses':
           instance.isoAuditProcesses?.map((e) => e.toJson()).toList(),

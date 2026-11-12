@@ -29,6 +29,9 @@ namespace IMIS.Application.AuditReportModule
         public string? PlanOfficeProcess { get; set; }
         public string? PlanAuditTeamName { get; set; }
 
+        /// <summary>Every member of the audit team, the team leader first.</summary>
+        public List<string> AuditorNames { get; set; } = new();
+
         // FIX: AuditReport.AuditScheduleId is required on the entity —
         // ToEntity() must set it or the object initializer fails.
         public required int AuditScheduleId { get; set; }
@@ -60,7 +63,9 @@ namespace IMIS.Application.AuditReportModule
             if (entity.AuditStandardISO != null)
             {
                 AuditStandardISOId = entity.AuditStandardISO.Id;
-                AuditStandardISOName = entity.AuditStandardISO.Particulars ?? entity.AuditStandardISO.ClauseRef ?? entity.AuditStandardISO.ToString();
+                // The audit standard of the report is the standard its clauses
+                // belong to (Settings -> Audit Standard).
+                AuditStandardISOName = entity.AuditStandardISO.Version?.VersionName;
             }
 
             if (entity.Auditee != null)

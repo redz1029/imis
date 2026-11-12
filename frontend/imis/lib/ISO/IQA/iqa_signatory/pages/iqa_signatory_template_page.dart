@@ -150,6 +150,7 @@ class _IQASignatoryTemplatePageState extends State<IQASignatoryTemplatePage>
     'AuditProgramme',
     'AuditPlan',
     'AuditSchedule',
+    'AuditReport',
   ];
 
     final IQASignatoryTemplateService _service =

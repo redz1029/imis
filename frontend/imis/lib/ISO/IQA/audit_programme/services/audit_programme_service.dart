@@ -117,11 +117,22 @@ class AuditProgrammeService {
     }
   }
 
-  /// Fetch all Teams for dropdown options
-  Future<List<Team>> getTeams() async {
+  /// Fetch all Teams for dropdown options.
+  ///
+  /// A user without the "View Team" permission gets a 403, which used to come
+  /// back as an empty list and left the form's team dropdown blank with no
+  /// explanation. With [strict] that case throws a message the form can show.
+  Future<List<Team>> getTeams({bool strict = false}) async {
     final url = ApiEndpoint().team;
     try {
       final response = await AuthenticatedRequest.get(dio, url);
+      if (strict &&
+          (response.statusCode == 401 || response.statusCode == 403)) {
+        throw Exception(
+          'You do not have permission to view teams. Ask an administrator to '
+          'turn on "View Team" for you in Settings > User Roles.',
+        );
+      }
       if (response.statusCode == 200 && response.data != null) {
         final List list = response.data;
         return list
@@ -171,7 +182,13 @@ class AuditProgrammeService {
   Future<List<AuditProgramme>> getAllAuditProgrammes() async {
     final url = ApiEndpoint().auditProgramme;
     try {
-      final response = await AuthenticatedRequest.get(dio, url);
+      // The timestamp makes every load a fresh request, so a copy the server
+      // cached before a save can never be served in place of the saved list.
+      final response = await AuthenticatedRequest.get(
+        dio,
+        url,
+        queryParameters: {'_': DateTime.now().millisecondsSinceEpoch},
+      );
       if (response.statusCode == 200 && response.data != null) {
         final List list = response.data;
         final programmes = <AuditProgramme>[];

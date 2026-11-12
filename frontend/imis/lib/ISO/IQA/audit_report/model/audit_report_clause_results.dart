@@ -68,3 +68,33 @@ class AuditReportClauseResult {
         ncarStatus: json['ncarStatus'] as String?,
       );
 }
+
+/// The checklist figures behind one audit report (by schedule), for the report
+/// list: how many clauses conform, how many do not and how many NCARs they raised.
+class AuditReportFindingsSummary {
+  final int auditScheduleId;
+  final int totalCount;
+  final int conformingCount;
+  final int nonConformingCount;
+  final int pendingCount;
+  final int ncarCount;
+
+  const AuditReportFindingsSummary({
+    required this.auditScheduleId,
+    this.totalCount = 0,
+    this.conformingCount = 0,
+    this.nonConformingCount = 0,
+    this.pendingCount = 0,
+    this.ncarCount = 0,
+  });
+
+  factory AuditReportFindingsSummary.fromJson(Map<String, dynamic> json) =>
+      AuditReportFindingsSummary(
+        auditScheduleId: (json['auditScheduleId'] as num?)?.toInt() ?? 0,
+        totalCount: (json['totalCount'] as num?)?.toInt() ?? 0,
+        conformingCount: (json['conformingCount'] as num?)?.toInt() ?? 0,
+        nonConformingCount: (json['nonConformingCount'] as num?)?.toInt() ?? 0,
+        pendingCount: (json['pendingCount'] as num?)?.toInt() ?? 0,
+        ncarCount: (json['ncarCount'] as num?)?.toInt() ?? 0,
+      );
+}

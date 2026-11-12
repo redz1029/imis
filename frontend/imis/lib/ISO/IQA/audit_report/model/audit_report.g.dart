@@ -26,11 +26,13 @@ AuditReport _$AuditReportFromJson(Map<String, dynamic> json) => AuditReport(
             json['auditPlanEntry'] as Map<String, dynamic>,
           ),
   auditScheduleId: (json['auditScheduleId'] as num?)?.toInt() ?? 0,
-  auditDate: const IsoDateTimeConverter().fromJson(
+  auditDate: const NullableWallClockDateTimeConverter().fromJson(
     json['auditDate'] as String?,
   ),
   planOfficeProcess: json['planOfficeProcess'] as String?,
   planAuditTeamName: json['planAuditTeamName'] as String?,
+  auditorNames:
+      (json['auditorNames'] as List<dynamic>?)?.map((e) => e as String).toList(),
   auditComFindings:
       (json['auditComFindings'] as List<dynamic>?)
           ?.map((e) => AuditComFindings.fromJson(e as Map<String, dynamic>))
@@ -60,9 +62,12 @@ Map<String, dynamic> _$AuditReportToJson(AuditReport instance) =>
       'auditeeName': instance.auditeeName,
       'auditPlanEntryId': instance.auditPlanEntryId,
       'auditScheduleId': instance.auditScheduleId,
-      'auditDate': const IsoDateTimeConverter().toJson(instance.auditDate),
+      'auditDate': const NullableWallClockDateTimeConverter().toJson(
+        instance.auditDate,
+      ),
       'planOfficeProcess': instance.planOfficeProcess,
       'planAuditTeamName': instance.planAuditTeamName,
+      'auditorNames': instance.auditorNames,
       'auditComFindings':
           instance.auditComFindings?.map((e) => e.toJson()).toList(),
       'auditScope': instance.auditScope?.map((e) => e.toJson()).toList(),

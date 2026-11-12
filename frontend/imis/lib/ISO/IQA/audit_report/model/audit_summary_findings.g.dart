@@ -15,6 +15,9 @@ AuditSummaryFindings _$AuditSummaryFindingsFromJson(
   no: (json['no'] as num).toInt(),
   findings: json['findings'] as String,
   auditNcarStatusId: (json['auditNcarStatusId'] as num?)?.toInt(),
+  auditChecklistId: (json['auditChecklistId'] as num?)?.toInt(),
+  criteriaText: json['criteriaText'] as String?,
+  ncarReferenceNumber: json['ncarReferenceNumber'] as String?,
 );
 
 Map<String, dynamic> _$AuditSummaryFindingsToJson(
@@ -26,4 +29,7 @@ Map<String, dynamic> _$AuditSummaryFindingsToJson(
   'no': instance.no,
   'findings': instance.findings,
   'auditNcarStatusId': instance.auditNcarStatusId,
+  'auditChecklistId': instance.auditChecklistId,
+  'criteriaText': instance.criteriaText,
+  'ncarReferenceNumber': instance.ncarReferenceNumber,
 };

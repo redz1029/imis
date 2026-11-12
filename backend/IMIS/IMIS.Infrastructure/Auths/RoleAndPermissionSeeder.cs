@@ -14,6 +14,7 @@ using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadmapKpiAccomplishmentModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
+using IMIS.Application.IsoStandardModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OperationReviewProtocolModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;    
@@ -836,6 +837,31 @@ namespace IMIS.Infrastructure.Auths
             await PermissionSeeder.SeedSpecificPermssionsToRole<DepartmentHead, IdentityRole>(_roleManager, departmentHeadPermissions);
             await SyncIqaPermissionsAsync(new DepartmentHead().Name, departmentHeadPermissions);
 
+            // The Audit Programme, Plan and Schedule forms fill their dropdowns
+            // (audit team, office, ISO clause) from these lookup lists. Without
+            // View access the lists come back 403 and the dropdowns are empty,
+            // so every IQA role that opens those forms gets view-only access.
+            // These are not IQA claims, so SyncIqaPermissionsAsync leaves them be.
+            var iqaLookups = new BaseOperationPermission[]
+            {
+                new TeamPermission(),
+                new AuditorTeamPermission(),
+                new OfficePermission(),
+                new IsoStandardPermission()
+            };
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<QMR, IdentityRole>(_roleManager, iqaLookups);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<QMS, IdentityRole>(_roleManager, iqaLookups);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<LeadAuditor, IdentityRole>(_roleManager, iqaLookups);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<AuditorTeamLeader, IdentityRole>(_roleManager, iqaLookups);
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<DepartmentHead, IdentityRole>(_roleManager, iqaLookups);
+
+            // The menu reads each user's own claims, not the role's pool. Give
+            // every Auditor Team Leader the permissions of the role so the ISO
+            // menu (Audit Schedule, Checklist, Report, NCAR ...) shows up.
+            await GrantRoleUserClaimsAsync(
+                new AuditorTeamLeader().Name,
+                teamLeaderPermissions.Concat(iqaLookups.Select(p => p.View)).ToArray());
+
             // Auditor works on checklists/NCARs/report drafts.
             await PermissionSeeder.SeedViewOnlyPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 programme,
@@ -872,6 +898,10 @@ namespace IMIS.Infrastructure.Auths
             // Administrators must see and do everything in IQA, so every user in
             // the Administrator role holds all of the role's permissions.
             await GrantAdministratorUserClaimsAsync();
+
+            // Plans approved before schedules were created automatically get
+            // theirs now. Never blocks startup.
+            await CreateMissingSchedulesForApprovedPlansAsync();
 
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
@@ -938,6 +968,75 @@ namespace IMIS.Infrastructure.Auths
         /// set up (e.g. View Audit Programme) were never assigned to that admin,
         /// so the menu hid those modules. Assign every missing one.
         /// </summary>
+        /// <summary>
+        /// Adds the per-user claim for each permission in <paramref name="permissions"/>
+        /// that the role holds and a user in the role is still missing. It only
+        /// ever adds, and only permissions the role itself has.
+        /// </summary>
+        private async Task GrantRoleUserClaimsAsync(string roleName, string[] permissions)
+        {
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role == null)
+                return;
+
+            var rolePool = (await _roleManager.GetClaimsAsync(role))
+                .Where(c => c.Type == PermissionClaimType.Claim)
+                .Select(c => c.Value)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var toGrant = permissions
+                .Where(p => rolePool.Contains(p))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var users = await _userManager.GetUsersInRoleAsync(role.Name!);
+            foreach (var user in users)
+            {
+                var assigned = _db.Set<UserClaim<string>>()
+                    .Where(c => c.UserId == user.Id &&
+                                c.RoleId == role.Id &&
+                                c.ClaimType == PermissionClaimType.Claim)
+                    .Select(c => c.ClaimValue)
+                    .ToList()
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var permission in toGrant.Where(p => !assigned.Contains(p)))
+                {
+                    _db.Set<UserClaim<string>>().Add(new UserClaim<string>
+                    {
+                        UserId = user.Id,
+                        RoleId = role.Id,
+                        ClaimType = PermissionClaimType.Claim,
+                        ClaimValue = permission
+                    });
+                }
+            }
+
+            await _db.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Creates the audit schedules of every approved audit plan that has none
+        /// yet (offices that already have a schedule are skipped).
+        /// </summary>
+        private async Task CreateMissingSchedulesForApprovedPlansAsync()
+        {
+            try
+            {
+                var planIds = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                    _db.Set<AuditPlan>().Where(p => !p.IsDeleted).Select(p => p.Id));
+                foreach (var planId in planIds)
+                    await AuditScheduleGenerator.EnsureForPlanAsync(_db, planId, CancellationToken.None);
+
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Drop whatever was half-added so it cannot leak into later saves.
+                _db.ChangeTracker.Clear();
+                Console.WriteLine($"Could not create the missing audit schedules: {ex.Message}");
+            }
+        }
+
         private async Task GrantAdministratorUserClaimsAsync()
         {
             var role = await _roleManager.FindByNameAsync(new AdministratorRole().Name!);

@@ -41,6 +41,7 @@ using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.KraRoadmapProcessKraAssignmentModule;
 using IMIS.Application.KraRoadMapRoleAssignmentModule;
+using IMIS.Application.IqaNotificationModule;
 using IMIS.Application.NcarMonitoringLogModule;
 using IMIS.Application.NonconformingActionReportModule;
 using IMIS.Application.OfficeModule;
@@ -118,6 +119,7 @@ using IMIS.Persistence.KraRoadMapModule;
 using IMIS.Persistence.KraRoadMapPeriodModule;
 using IMIS.Persistence.KraRoadmapProcessKraAssignmentModule;
 using IMIS.Persistence.KraRoadMapRoleModule;
+using IMIS.Persistence.IqaNotificationModule;
 using IMIS.Persistence.NcarMonitoringLogModule;
 using IMIS.Persistence.NonconformingActionReportModule;
 using IMIS.Persistence.OfficeModule;
@@ -413,6 +415,7 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<INcarCorrectiveActionService, NcarCorrectiveActionService>();
             services.AddScoped<INcarCorrectiveActionRepository, NcarCorrectiveActionRepository>();
 
+            services.AddScoped<IIqaNotificationService, IqaNotificationService>();
             services.AddScoped<INcarMonitoringLogService, NcarMonitoringLogService>();
             services.AddScoped<INcarMonitoringLogRepository, NcarMonitoringLogRepository>();
 

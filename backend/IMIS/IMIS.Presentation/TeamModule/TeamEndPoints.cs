@@ -36,7 +36,7 @@ namespace IMIS.Presentation.TeamModule
             })
             .WithTags(_teamTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_teamTag), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
+            .RequireAuthorization(); // any signed-in user may view teams
 
             app.MapGet("/filter/{name}", async (string name, ITeamService service, CancellationToken cancellationToken) =>
             {
@@ -46,7 +46,7 @@ namespace IMIS.Presentation.TeamModule
             })
             .WithTags(_teamTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_teamTag), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
+            .RequireAuthorization(); // any signed-in user may view teams
 
             app.MapGet("/{id}", async (int id, ITeamService service, CancellationToken cancellationToken) =>
             {
@@ -55,7 +55,7 @@ namespace IMIS.Presentation.TeamModule
             })
             .WithTags(_teamTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_teamTag), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
+            .RequireAuthorization(); // any signed-in user may view teams
 
             app.MapPut("/{id}", async (int id, [FromBody] TeamDto teamDto, ITeamService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

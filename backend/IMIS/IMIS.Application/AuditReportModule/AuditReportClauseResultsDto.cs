@@ -15,6 +15,19 @@ namespace IMIS.Application.AuditReportModule
         public List<AuditReportClauseResultDto> Items { get; set; } = new();
     }
 
+    /// <summary>The checklist figures behind one audit report, for the report list.</summary>
+    public class AuditReportFindingsSummaryDto
+    {
+        public int AuditScheduleId { get; set; }
+        public int TotalCount { get; set; }
+        public int ConformingCount { get; set; }
+        public int NonConformingCount { get; set; }
+        public int PendingCount { get; set; }
+
+        /// <summary>NCARs raised from the schedule's non-conforming clauses.</summary>
+        public int NcarCount { get; set; }
+    }
+
     public class AuditReportClauseResultDto
     {
         public int AuditChecklistId { get; set; }

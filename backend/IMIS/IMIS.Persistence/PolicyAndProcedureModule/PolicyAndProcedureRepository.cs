@@ -11,7 +11,13 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
         public PolicyAndProcedureRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
-
+        public async Task<List<PolicyAndProcedureSignatory>> GetByPgsIdForSoftDeleteAsync(long papId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext
+                .Set<PolicyAndProcedureSignatory>()
+                .Where(x => x.PAPId == papId)
+                .ToListAsync(cancellationToken);
+        }
         public async Task<List<PolicyAndProcedure>> GetFilteredCandidatesAsync(PolicyAndProcedureFilter filter,  string userId, bool viewAll, bool includeChildOffices, CancellationToken cancellationToken)
         {
             IQueryable<PolicyAndProcedure> query = _entities

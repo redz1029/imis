@@ -15,12 +15,13 @@ import 'package:printing/printing.dart';
 import 'package:imis/ISO/IQA/audit_checklist/models/audit_checklist.dart';
 import 'package:imis/ISO/IQA/audit_checklist/services/audit_checklist_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/utils/pdf_download.dart';
 
 /// Opens the native (Flutter) print preview of an Audit Checklist.
 ///
 /// [preparedByName] / [preparedByDate] fill the "PREPARED BY" block. The
-/// checklist data carries no preparer, so they default to a blank signature
-/// line, like the unsigned printed form.
+/// team leader prepares the checklist, so the name defaults to the team
+/// leader of the audit schedule; the date stays a blank signature line.
 Future<void> openAuditChecklistPrintPreview(
   BuildContext context,
   int auditScheduleId, {
@@ -42,13 +43,9 @@ Future<void> openAuditChecklistPrintPreview(
 // =============================================================================
 // Layout constants (points)
 // =============================================================================
-const String _kLogoCrmc = 'assets/crmc_logo.png';
-const String _kLogoIso = 'assets/iso_tuv_certified.jpg';
+const String _kLogoCrmc = 'assets/CRMCLogo.png';
+const String _kLogoIso = 'assets/TR-Testmark.jpg';
 const String _kFormCode = 'QP-03-F-05 Rev. 0';
-
-/// The scanned checklist has no TÜV mark in the letterhead. Set to true to add
-/// it on the right, as in your Audit Programme preview.
-const bool _kShowIsoLogo = false;
 
 const double _kML = 38, _kMR = 38, _kMT = 26, _kMB = 26;
 const double _kBorderW = 0.8;
@@ -62,7 +59,7 @@ const double _kPadY = 3;
 
 /// Square crop box for the CRMC seal (seal ~3/4 of it). Change only this
 /// number to make the seal larger or smaller.
-const double _kLogoBox = 94;
+const double _kLogoBox = 86;
 const double _kTitleH = 30;
 const double _kTblHdrH = 32;
 const double _kMinRowH = 22;
@@ -96,6 +93,7 @@ class _Data {
     required this.auditors,
     required this.auditees,
     required this.clauses,
+    this.preparedBy = '',
   });
 
   final String office;
@@ -103,6 +101,9 @@ class _Data {
   final String auditors;
   final String auditees;
   final List<_Clause> clauses;
+
+  /// The team leader, who prepares the checklist.
+  final String preparedBy;
 }
 
 class _PdfAssets {
@@ -135,7 +136,10 @@ Future<_Data> _loadPrintData(int auditScheduleId) async {
   final all = await service.getOrGenerateForAuditSchedule(auditScheduleId);
   final rows = all.where((r) => !r.isDeleted).toList();
   if (rows.isEmpty) {
-    throw Exception('No ISO clauses are assigned to this audit schedule.');
+    throw Exception(
+      'No questions have been written in this checklist yet. The auditors '
+      'add the questions of their clauses before it can be printed.',
+    );
   }
 
   // Same fallback the checklist page uses: the schedule summary resolves the
@@ -153,8 +157,18 @@ Future<_Data> _loadPrintData(int auditScheduleId) async {
     debugPrint('Checklist print preview: could not load schedule summary: $e');
   }
 
+  // The team leader is the preparer of the checklist, whoever prints it.
+  var preparedBy = '';
+  try {
+    final board = await service.getAssignments(auditScheduleId);
+    preparedBy = (board.teamLeaderName ?? '').trim();
+  } catch (e) {
+    debugPrint('Checklist print preview: could not load the team leader: $e');
+  }
+
   final head = rows.first;
   return _Data(
+    preparedBy: preparedBy,
     office: _firstNonEmpty([head.officeProcess, summary?.officeProcess]),
     scope: _firstNonEmpty([head.auditScope, summary?.auditScope]),
     auditors: _firstNonEmpty([head.auditorNames, summary?.auditorNames]),
@@ -207,7 +221,7 @@ Future<_PdfAssets> _loadAssets() async {
     bold: bold,
     unicode: unicode,
     crmc: await logo(_kLogoCrmc),
-    iso: _kShowIsoLogo ? await logo(_kLogoIso) : null,
+    iso: await logo(_kLogoIso),
   );
 }
 
@@ -310,7 +324,7 @@ class _AuditChecklistPrintPreviewPageState
       data: _data!,
       assets: _assets!,
       format: format,
-      preparedByName: widget.preparedByName,
+      preparedByName: _firstNonEmpty([widget.preparedByName, _data!.preparedBy]),
       preparedByDate: widget.preparedByDate,
     ).build();
   }
@@ -368,6 +382,8 @@ class _AuditChecklistPrintPreviewPageState
                   canDebug: false,
                   maxPageWidth: 760,
                   pdfFileName: 'Audit_Checklist_${widget.auditScheduleId}.pdf',
+                  allowSharing: false,
+                  actions: [downloadPdfAction('Audit_Checklist_${widget.auditScheduleId}.pdf')],
                   onError: (context, error) => Center(
                     child: Text(
                       'Unable to build the preview: $error',
@@ -384,6 +400,7 @@ class _AuditChecklistPrintPreviewPageState
 // =============================================================================
 class _RowSpec {
   const _RowSpec({
+    required this.key,
     required this.criteria,
     required this.items,
     required this.yn,
@@ -391,6 +408,8 @@ class _RowSpec {
     required this.h,
   });
 
+  /// The clause of the row; consecutive rows with the same key are one group.
+  final String key;
   final List<String> criteria;
   final List<String> items;
   final String yn;
@@ -607,6 +626,7 @@ class _ChecklistPdfBuilder {
             math.max(crit.length, math.max(items.length, rem.length)),
           );
           return _RowSpec(
+            key: c.criteria,
             criteria: crit,
             items: items,
             yn: c.conforming == null ? '' : (c.conforming! ? 'Y' : 'N'),
@@ -788,8 +808,9 @@ class _ChecklistPdfBuilder {
   pw.Widget _gridRow(
     double h,
     List<pw.Widget?> cells,
-    List<pw.Alignment> aligns,
-  ) {
+    List<pw.Alignment> aligns, {
+    bool openClauseBottom = false,
+  }) {
     return pw.Row(
       children: [
         for (var i = 0; i < 4; i++)
@@ -802,7 +823,8 @@ class _ChecklistPdfBuilder {
               border: pw.Border(
                 left: _bs,
                 right: i == 3 ? _bs : pw.BorderSide.none,
-                bottom: _bs,
+                // No line inside a clause: its cell runs down the group.
+                bottom: i == 0 && openClauseBottom ? pw.BorderSide.none : _bs,
               ),
             ),
             child: cells[i],
@@ -835,11 +857,15 @@ class _ChecklistPdfBuilder {
     );
   }
 
-  pw.Widget _dataRow(_RowSpec r) {
+  pw.Widget _dataRow(
+    _RowSpec r, {
+    bool showClause = true,
+    bool openClauseBottom = false,
+  }) {
     return _gridRow(
       r.h,
       [
-        r.criteria.isEmpty
+        r.criteria.isEmpty || !showClause
             ? null
             : _lines(r.criteria, align: pw.TextAlign.center),
         r.items.isEmpty ? null : _lines(r.items),
@@ -854,6 +880,7 @@ class _ChecklistPdfBuilder {
         pw.Alignment.center,
         pw.Alignment.centerLeft,
       ],
+      openClauseBottom: openClauseBottom,
     );
   }
 
@@ -961,7 +988,15 @@ class _ChecklistPdfBuilder {
         _title(),
         _headerBox(),
         _tableHeader(),
-        for (final r in rows) _dataRow(r),
+        // A clause is printed once, on the first row of its questions (and
+        // again at the top of a page its questions continue onto).
+        for (var i = 0; i < rows.length; i++)
+          _dataRow(
+            rows[i],
+            showClause: i == 0 || rows[i].key != rows[i - 1].key,
+            openClauseBottom:
+                i + 1 < rows.length && rows[i + 1].key == rows[i].key,
+          ),
         for (var i = 0; i < blanks; i++) _blankRow(),
         pw.Spacer(),
         _bottomBlock(),

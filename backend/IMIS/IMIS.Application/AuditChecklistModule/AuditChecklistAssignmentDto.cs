@@ -13,6 +13,9 @@ namespace IMIS.Application.AuditChecklistModule
         public string? TeamName { get; set; }
         public bool CanAssign { get; set; }
 
+        /// <summary>The team leader(s) of the audit team: the preparer of the checklist.</summary>
+        public string? TeamLeaderName { get; set; }
+
         /// <summary>True for an auditor of the team: they only see and answer their own clauses.</summary>
         public bool OwnClausesOnly { get; set; }
         public List<AuditChecklistClauseAssignmentDto> Clauses { get; set; } = new();
@@ -38,6 +41,25 @@ namespace IMIS.Application.AuditChecklistModule
         public int AssignedClauseCount { get; set; }
         public int QuestionCount { get; set; }
         public int AnsweredCount { get; set; }
+    }
+
+    /// <summary>A question of the library that can still be added under a clause.</summary>
+    public class AuditChecklistLibraryQuestionDto
+    {
+        public int Id { get; set; }
+        public string Question { get; set; } = string.Empty;
+        public string ClauseRef { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Adds one question under a plan clause: either a library question
+    /// (<see cref="QuestionId"/>) or a question the auditor typed.
+    /// </summary>
+    public class AuditChecklistAddQuestionRequest
+    {
+        public long IsoStandardId { get; set; }
+        public int? QuestionId { get; set; }
+        public string? Question { get; set; }
     }
 
     /// <summary>One clause -> auditor pair; a null auditor clears the assignment.</summary>

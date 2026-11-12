@@ -225,6 +225,33 @@ class AuditSchedulesService {
     );
   }
 
+  /// Ids of the teams the signed-in user leads, i.e. whose schedules they may
+  /// submit. A failed lookup returns none, so nothing is offered to submit.
+  Future<Set<int>> getMyLedTeamIds() async {
+    try {
+      final url = '${ApiEndpoint().auditSchedule}/my-teams';
+      final response = await AuthenticatedRequest.get(dio, url);
+      if (response.statusCode != 200 || response.data is! List) return {};
+      return (response.data as List)
+          .map((e) => (e as num).toInt())
+          .toSet();
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Every reschedule request still waiting on an approver, for the status
+  /// badges on the schedule list. A failed lookup returns an empty list so the
+  /// list itself still loads.
+  Future<List<RescheduleRequest>> getOpenRescheduleRequests() async {
+    final url = '${ApiEndpoint().auditSchedule}/reschedule-requests/open';
+    final response = await AuthenticatedRequest.get(dio, url);
+    if (response.statusCode != 200 || response.data is! List) return [];
+    return (response.data as List)
+        .map((e) => RescheduleRequest.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
   /// Reschedule requests currently waiting on the signed-in user.
   Future<List<RescheduleRequest>> getPendingRescheduleRequests() async {
     final url = '${ApiEndpoint().auditSchedule}/reschedule-requests/pending';

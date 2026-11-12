@@ -834,61 +834,120 @@ class UserRolePageState extends State<UserRolePage> {
     );
   }
 
+  // Action words that start a permission name ("View Audit Plan",
+  // "Confirm Performance Governance System").
+  static const _prefixActions = [
+    'View ',
+    'Add ',
+    'Create ',
+    'Edit ',
+    'Update ',
+    'Delete ',
+    'Remove ',
+    'Manage ',
+    'Confirm',
+    'Draft',
+    'Submit',
+    'Disapprove',
+  ];
+
+  // Action words that end a permission name ("Audit Plan Approve"): the IQA
+  // workflow permissions. Longer words come first so "View All" is never read
+  // as a shorter match.
+  static const _suffixActions = [
+    'Submit For Approval',
+    'Validate And Close',
+    'Acknowledge',
+    'View Own',
+    'View All',
+    'Approve',
+    'Confirm',
+    'Respond',
+    'Reject',
+    'Verify',
+    'Submit',
+    'Note',
+  ];
+
+  // How the actions are listed inside a module card.
+  static const _actionOrder = [
+    'view',
+    'add',
+    'create',
+    'edit',
+    'update',
+    'delete',
+    'remove',
+    'manage',
+    'draft',
+    'submit',
+    'submit for approval',
+    'note',
+    'acknowledge',
+    'respond',
+    'verify',
+    'approve',
+    'confirm',
+    'validate and close',
+    'reject',
+    'disapprove',
+    'view all',
+    'view own',
+  ];
+
+  /// Splits a permission name into the module it belongs to and its action, so
+  /// "View Audit Plan" and "Audit Plan Approve" land in the same "Audit Plan"
+  /// card. A name with no known action is its own module (empty action).
+  ({String module, String action}) _splitPermission(String name) {
+    final lower = name.toLowerCase();
+
+    for (final prefix in _prefixActions) {
+      if (lower.startsWith(prefix.toLowerCase())) {
+        final module = name.substring(prefix.length).trim();
+        return (
+          module: module.isEmpty ? name : module,
+          action: prefix.trim().toLowerCase(),
+        );
+      }
+    }
+
+    for (final suffix in _suffixActions) {
+      if (lower.endsWith(' ${suffix.toLowerCase()}')) {
+        final module = name.substring(0, name.length - suffix.length).trim();
+        return (
+          module: module.isEmpty ? name : module,
+          action: suffix.toLowerCase(),
+        );
+      }
+    }
+
+    return (module: name, action: '');
+  }
+
   Map<String, List<dynamic>> _groupPermissions(List<dynamic> permissions) {
     final Map<String, List<dynamic>> grouped = {};
 
-    const actionPrefixes = [
-      'View ',
-      'Add ',
-      'Create ',
-      'Edit ',
-      'Update ',
-      'Delete ',
-      'Remove ',
-      'Manage ',
-      'Confirm',
-      'Draft',
-      'Submit',
-      'Disapprove',
-    ];
-
     for (var item in permissions) {
-      final name = item['permission'].toString();
-      String module = name;
-
-      for (final prefix in actionPrefixes) {
-        if (name.toLowerCase().startsWith(prefix.toLowerCase())) {
-          module = name.substring(prefix.length).trim();
-          break;
-        }
-      }
+      var module = _splitPermission(item['permission'].toString()).module;
       if (module.toLowerCase() == 'settings') {
         module = 'Settings';
       }
 
-      if (module.isEmpty) module = name;
-
       grouped.putIfAbsent(module, () => []).add(item);
     }
 
-    const order = [
-      'view',
-      'add',
-      'create',
-      'edit',
-      'update',
-      'delete',
-      'remove',
-      'manage',
-      'confirm',
-    ];
+    int rankOf(dynamic item) {
+      final rank = _actionOrder.indexOf(
+        _splitPermission(item['permission'].toString()).action,
+      );
+      return rank == -1 ? 999 : rank;
+    }
+
     for (final list in grouped.values) {
       list.sort((a, b) {
-        final an = a['permission'].toString().toLowerCase();
-        final bn = b['permission'].toString().toLowerCase();
-        final ai = order.indexWhere((o) => an.startsWith(o));
-        final bi = order.indexWhere((o) => bn.startsWith(o));
-        return (ai == -1 ? 999 : ai).compareTo(bi == -1 ? 999 : bi);
+        final byAction = rankOf(a).compareTo(rankOf(b));
+        if (byAction != 0) return byAction;
+        return a['permission'].toString().compareTo(b['permission'].toString());
       });
     }
 
@@ -896,21 +955,53 @@ class UserRolePageState extends State<UserRolePage> {
   }
 
   ({IconData icon, Color color}) _actionVisualFor(String permissionName) {
-    final n = permissionName.toLowerCase();
-    if (n.startsWith('view')) {
-      return (icon: Icons.visibility_outlined, color: const Color(0xFF2E90FA));
+    const blue = Color(0xFF2E90FA);
+    const green = Color(0xFF12B76A);
+    const orange = Color(0xFFF79009);
+    const red = Color(0xFFF04438);
+    const purple = Color(0xFF7A5AF8);
+
+    switch (_splitPermission(permissionName).action) {
+      case 'view':
+      case 'view all':
+      case 'view own':
+        return (icon: Icons.visibility_outlined, color: blue);
+      case 'add':
+      case 'create':
+        return (icon: Icons.add_circle_outline, color: green);
+      case 'edit':
+      case 'update':
+        return (icon: Icons.edit_outlined, color: orange);
+      case 'delete':
+      case 'remove':
+        return (icon: Icons.delete_outline, color: red);
+      case 'manage':
+        return (icon: Icons.settings_outlined, color: purple);
+      case 'draft':
+        return (icon: Icons.edit_note_outlined, color: kMuted);
+      case 'submit':
+      case 'submit for approval':
+        return (icon: Icons.send_outlined, color: blue);
+      case 'note':
+        return (icon: Icons.sticky_note_2_outlined, color: orange);
+      case 'acknowledge':
+        return (icon: Icons.how_to_reg_outlined, color: blue);
+      case 'respond':
+        return (icon: Icons.reply_outlined, color: blue);
+      case 'verify':
+        return (icon: Icons.fact_check_outlined, color: green);
+      case 'approve':
+      case 'confirm':
+        return (icon: Icons.check_circle_outline, color: green);
+      case 'validate and close':
+        return (icon: Icons.task_alt_outlined, color: green);
+      case 'reject':
+      case 'disapprove':
+        return (icon: Icons.cancel_outlined, color: red);
     }
-    if (n.startsWith('add') || n.startsWith('create')) {
-      return (icon: Icons.add_circle_outline, color: const Color(0xFF12B76A));
-    }
-    if (n.startsWith('edit') || n.startsWith('update')) {
-      return (icon: Icons.edit_outlined, color: const Color(0xFFF79009));
-    }
-    if (n.startsWith('delete') || n.startsWith('remove')) {
-      return (icon: Icons.delete_outline, color: const Color(0xFFF04438));
-    }
-    if (n.startsWith('manage') || n.contains('settings')) {
-      return (icon: Icons.settings_outlined, color: const Color(0xFF7A5AF8));
+
+    if (permissionName.toLowerCase().contains('settings')) {
+      return (icon: Icons.settings_outlined, color: purple);
     }
 
     return (icon: Icons.check_circle_outline, color: kMuted);

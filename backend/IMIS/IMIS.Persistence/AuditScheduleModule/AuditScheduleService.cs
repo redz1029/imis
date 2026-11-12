@@ -2,6 +2,7 @@
 using Base.Primitives;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.IQASignatoryModule;
+using IMIS.Application.IqaNotificationModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -102,6 +103,68 @@ namespace IMIS.Application.AuditScheduleModule
             return entities?.Select(e => new AuditScheduleDto(e)).ToList();
         }
 
+        public async Task<List<AuditScheduleDto>?> GetAllForUserAsync(string? userId, CancellationToken cancellationToken)
+        {
+            var all = await GetAllAsync(cancellationToken);
+            return all == null ? null : await FilterForUserAsync(all, userId, cancellationToken);
+        }
+
+        public async Task<IEnumerable<AuditScheduleDto>> GetByAuditPlanIdForUserAsync(
+            int auditPlanId, string? userId, CancellationToken cancellationToken)
+        {
+            var schedules = (await GetByAuditPlanIdAsync(auditPlanId, cancellationToken)).ToList();
+            return await FilterForUserAsync(schedules, userId, cancellationToken);
+        }
+
+        public async Task<List<int>> GetLedTeamIdsAsync(string? userId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return new List<int>();
+            return await LedTeamIdsAsync(_repository.GetDbContext(), userId, cancellationToken);
+        }
+
+        /// <summary>
+        /// Who sees which schedules: an Auditor Team Leader sees only the schedules
+        /// of the team(s) they lead (the offices their team audits); a plain Auditor
+        /// sees only the schedules of the team(s) they belong to; the other IQA
+        /// roles see everything.
+        /// </summary>
+        private async Task<List<AuditScheduleDto>> FilterForUserAsync(
+            List<AuditScheduleDto> schedules, string? userId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return schedules;
+
+            var dbContext = _repository.GetDbContext();
+            var roles = await (from ur in dbContext.Set<IdentityUserRole<string>>()
+                               join r in dbContext.Set<IdentityRole>() on ur.RoleId equals r.Id
+                               where ur.UserId == userId
+                               select r.Name).ToListAsync(cancellationToken);
+
+            var seesEverything = roles.Any(r =>
+                r == AdministratorRoleName || r == LeadAuditorRoleName ||
+                r == "QMS" || r == "QMR" || r == "Department Head");
+            if (seesEverything)
+                return schedules;
+
+            if (roles.Contains(TeamLeaderRoleName))
+            {
+                var ledTeamIds = await LedTeamIdsAsync(dbContext, userId, cancellationToken);
+                return schedules.Where(s => s.TeamId.HasValue && ledTeamIds.Contains(s.TeamId.Value)).ToList();
+            }
+
+            if (!roles.Contains(AuditorRoleName))
+                return schedules;
+
+            var memberTeamIds = await dbContext.Set<AuditorTeams>()
+                .Where(t => !t.IsDeleted && t.Auditor != null && t.Auditor.UserId == userId)
+                .Select(t => t.TeamId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            return schedules.Where(s => s.TeamId.HasValue && memberTeamIds.Contains(s.TeamId.Value)).ToList();
+        }
+
         public async Task<List<AuditScheduleDto>> GetConfirmedAsync(CancellationToken cancellationToken)
         {
             var all = await GetAllAsync(cancellationToken);
@@ -140,6 +203,34 @@ namespace IMIS.Application.AuditScheduleModule
             }
 
             return errors;
+        }
+
+        private const string NotTeamLeaderMessage =
+            "Only the Auditor Team Leader of the team assigned to this audit schedule can submit it.";
+
+        /// <summary>
+        /// The Auditor Team Leader submits only the schedules of the team (and so
+        /// the offices) assigned to them. Administrators may submit any; a call
+        /// with no user is an internal one and is not restricted.
+        /// </summary>
+        private static async Task<bool> CanSubmitScheduleAsync(
+            DbContext dbContext, string? userId, AuditSchedule schedule, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return true;
+
+            if (await IsInRoleAsync(dbContext, userId, AdministratorRoleName, cancellationToken))
+                return true;
+
+            return await IsTeamLeaderForAsync(dbContext, userId, schedule, cancellationToken);
+        }
+
+        public async Task<string?> GetSubmitAuthorizationErrorAsync(
+            AuditScheduleDto dto, string? userId, CancellationToken cancellationToken)
+        {
+            var ok = await CanSubmitScheduleAsync(
+                _repository.GetDbContext(), userId, dto.ToEntity(), cancellationToken);
+            return ok ? null : NotTeamLeaderMessage;
         }
 
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
@@ -198,6 +289,9 @@ namespace IMIS.Application.AuditScheduleModule
 
             if (string.IsNullOrWhiteSpace(entity.Purpose) || string.IsNullOrWhiteSpace(entity.Activity))
                 return (false, "Purpose and Activity are required before submitting.");
+
+            if (!await CanSubmitScheduleAsync(dbContext, userId, entity, cancellationToken))
+                return (false, NotTeamLeaderMessage);
 
             var result = await IQAApprovalWorkflow.SubmitAsync(
                 dbContext, IQAApprovalWorkflow.EntityTypes.AuditSchedule, entity.Id,
@@ -352,6 +446,7 @@ namespace IMIS.Application.AuditScheduleModule
         // ------------------------------------------------------------------
         private const string TeamLeaderRoleName = "Auditor Team Leader";
         private const string LeadAuditorRoleName = "Lead Auditor";
+        private const string AuditorRoleName = "Auditor";
         private const string AdministratorRoleName = "Administrator";
 
         private static bool IsPending(string status) =>
@@ -365,6 +460,24 @@ namespace IMIS.Application.AuditScheduleModule
                     join r in dbContext.Set<IdentityRole>() on ur.RoleId equals r.Id
                     where ur.UserId == userId && r.Name == roleName
                     select ur.UserId).AnyAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// The teams a user leads: every team they are marked as leader of and,
+        /// when they hold the Auditor Team Leader role, every team they are a
+        /// member of (the role is what makes them the leader of their own team).
+        /// </summary>
+        private static async Task<List<int>> LedTeamIdsAsync(
+            DbContext dbContext, string userId, CancellationToken cancellationToken)
+        {
+            var hasLeaderRole = await IsInRoleAsync(dbContext, userId, TeamLeaderRoleName, cancellationToken);
+
+            return await dbContext.Set<AuditorTeams>()
+                .Where(t => !t.IsDeleted && t.Auditor != null && t.Auditor.UserId == userId &&
+                            (t.IsTeamLeader || hasLeaderRole))
+                .Select(t => t.TeamId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
         }
 
         private static async Task<bool> IsTeamLeaderForAsync(
@@ -381,9 +494,8 @@ namespace IMIS.Application.AuditScheduleModule
             if (teamIds.Count == 0)
                 return await IsInRoleAsync(dbContext, userId, TeamLeaderRoleName, cancellationToken);
 
-            return await dbContext.Set<AuditorTeams>()
-                .AnyAsync(t => !t.IsDeleted && t.IsTeamLeader && teamIds.Contains(t.TeamId) &&
-                               t.Auditor != null && t.Auditor.UserId == userId, cancellationToken);
+            var ledTeamIds = await LedTeamIdsAsync(dbContext, userId, cancellationToken);
+            return teamIds.Any(ledTeamIds.Contains);
         }
 
         private static async Task<bool> CanDecideAsync(
@@ -412,12 +524,19 @@ namespace IMIS.Application.AuditScheduleModule
                     .ThenInclude(s => s.AuditableOffices!)
                         .ThenInclude(ao => ao.Office);
 
+        private static string? NameOf(Dictionary<string, string?> names, string? userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId)) return null;
+            return names.TryGetValue(userId, out var name) ? name : null;
+        }
+
         private static async Task<List<AuditScheduleRescheduleRequestDto>> ToRequestDtosAsync(
             DbContext dbContext, List<AuditScheduleRescheduleRequest> requests, string? userId,
             bool onlyDecidable, CancellationToken cancellationToken)
         {
+            // Requester and both approvers, resolved to names in one query.
             var requesterIds = requests
-                .Select(r => r.RequestedByUserId)
+                .SelectMany(r => new[] { r.RequestedByUserId, r.TeamLeaderUserId, r.LeadAuditorUserId })
                 .Where(u => !string.IsNullOrWhiteSpace(u))
                 .Select(u => u!)
                 .Distinct()
@@ -451,7 +570,11 @@ namespace IMIS.Application.AuditScheduleModule
                     Status = r.Status,
                     RequestedBy = requester,
                     RequestedDate = r.RequestedDate,
+                    TeamLeaderName = NameOf(names, r.TeamLeaderUserId),
+                    TeamLeaderDecisionDate = r.TeamLeaderDecisionDate,
                     TeamLeaderRemarks = r.TeamLeaderRemarks,
+                    LeadAuditorName = NameOf(names, r.LeadAuditorUserId),
+                    LeadAuditorDecisionDate = r.LeadAuditorDecisionDate,
                     LeadAuditorRemarks = r.LeadAuditorRemarks,
                     CanDecide = canDecide
                 });
@@ -498,7 +621,7 @@ namespace IMIS.Application.AuditScheduleModule
             if (error != null)
                 return (false, error);
 
-            dbContext.Set<AuditScheduleRescheduleRequest>().Add(new AuditScheduleRescheduleRequest
+            var newRequest = new AuditScheduleRescheduleRequest
             {
                 Id = 0,
                 AuditScheduleId = id,
@@ -507,9 +630,100 @@ namespace IMIS.Application.AuditScheduleModule
                 Status = AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader,
                 RequestedByUserId = userId,
                 RequestedDate = DateTime.UtcNow
-            });
+            };
+            dbContext.Set<AuditScheduleRescheduleRequest>().Add(newRequest);
 
-            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            var requested = await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            if (requested.Success)
+            {
+                var officeName = schedule.AuditableOffices?.FirstOrDefault(ao => !ao.IsDeleted)?.Office?.Name;
+                await NotifyRescheduleRequestedAsync(dbContext, newRequest, officeName, userId, cancellationToken);
+            }
+            return requested;
+        }
+
+        // ------------------------------------------------------------------
+        // Notifications (the IQA bell). Raised after the request is saved; a
+        // failure here never fails the request.
+        // ------------------------------------------------------------------
+
+        private static async Task NotifyRescheduleRequestedAsync(
+            DbContext dbContext, AuditScheduleRescheduleRequest request, string? officeName,
+            string? userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var teamIds = await IqaNotifier.ScheduleTeamIdsAsync(dbContext, request.AuditScheduleId, cancellationToken);
+                var leaders = await IqaNotifier.TeamLeadersAsync(dbContext, teamIds, cancellationToken);
+                var who = await IqaNotifier.NameOfAsync(dbContext, userId, cancellationToken);
+                var office = string.IsNullOrWhiteSpace(officeName) ? "the audited office" : officeName;
+                var reason = string.IsNullOrWhiteSpace(request.Reason) ? "" : $" Reason: {request.Reason}";
+
+                await IqaNotifier.AddAsync(
+                    dbContext, leaders, userId,
+                    IqaNotifier.Types.RescheduleRequested,
+                    "Reschedule request waiting for you",
+                    $"{who} asked to move the audit of {office} to {request.ProposedStartDate:MMM d, yyyy h:mm tt}.{reason}",
+                    IqaNotifier.Entities.RescheduleRequest, request.Id, IqaNotifier.Pages.Schedule, cancellationToken);
+                await IqaNotifier.SaveSafelyAsync(dbContext, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the request
+            }
+        }
+
+        private static async Task NotifyRescheduleDecidedAsync(
+            DbContext dbContext, AuditScheduleRescheduleRequest request, string userId,
+            bool approve, bool teamLeaderStage, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var office = request.AuditSchedule?.AuditableOffices
+                    ?.FirstOrDefault(ao => !ao.IsDeleted)?.Office?.Name ?? "the audited office";
+                var proposed = request.ProposedStartDate.ToString("MMM d, yyyy h:mm tt");
+                var who = await IqaNotifier.NameOfAsync(dbContext, userId, cancellationToken);
+                var remarks = teamLeaderStage ? request.TeamLeaderRemarks : request.LeadAuditorRemarks;
+                var because = string.IsNullOrWhiteSpace(remarks) ? "" : $" Remarks: {remarks}";
+
+                if (teamLeaderStage && approve)
+                {
+                    // Forwarded: the Lead Auditor decides next, the requester is told where it is.
+                    var leads = await IqaNotifier.UsersInRoleAsync(dbContext, IqaNotifier.LeadAuditorRoleName, cancellationToken);
+                    await IqaNotifier.AddAsync(
+                        dbContext, leads, userId,
+                        IqaNotifier.Types.RescheduleForwarded,
+                        "Reschedule request waiting for you",
+                        $"{who} approved the request to move the audit of {office} to {proposed} and forwarded it to you.{because}",
+                        IqaNotifier.Entities.RescheduleRequest, request.Id, IqaNotifier.Pages.Schedule, cancellationToken);
+                    await IqaNotifier.AddAsync(
+                        dbContext, new[] { request.RequestedByUserId }, userId,
+                        IqaNotifier.Types.RescheduleForwarded,
+                        "Reschedule request forwarded",
+                        $"{who} approved your request to move the audit of {office} to {proposed}. It now waits for the Lead Auditor.",
+                        IqaNotifier.Entities.RescheduleRequest, request.Id, IqaNotifier.Pages.Schedule, cancellationToken);
+                }
+                else
+                {
+                    var recipients = new List<string?> { request.RequestedByUserId };
+                    if (!teamLeaderStage) recipients.Add(request.TeamLeaderUserId);
+
+                    await IqaNotifier.AddAsync(
+                        dbContext, recipients, userId,
+                        approve ? IqaNotifier.Types.RescheduleApproved : IqaNotifier.Types.RescheduleRejected,
+                        approve ? "Reschedule approved" : "Reschedule rejected",
+                        approve
+                            ? $"{who} approved the request to move the audit of {office} to {proposed}. The schedule was updated.{because}"
+                            : $"{who} rejected the request to move the audit of {office} to {proposed}.{because}",
+                        IqaNotifier.Entities.RescheduleRequest, request.Id, IqaNotifier.Pages.Schedule, cancellationToken);
+                }
+
+                await IqaNotifier.SaveSafelyAsync(dbContext, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the decision
+            }
         }
 
         public async Task<AuditScheduleRescheduleRequestDto?> GetLatestRescheduleRequestAsync(
@@ -546,6 +760,24 @@ namespace IMIS.Application.AuditScheduleModule
             return await ToRequestDtosAsync(dbContext, pending, userId, true, cancellationToken);
         }
 
+        public async Task<List<AuditScheduleRescheduleRequestDto>> GetOpenRescheduleRequestsAsync(
+            string? userId, CancellationToken cancellationToken)
+        {
+            var dbContext = _repository.GetDbContext();
+
+            // Every request still waiting on an approver — lets the schedule list
+            // show where each one is, whoever is looking at it.
+            var open = await RequestsWithSchedule(dbContext)
+                .AsNoTracking()
+                .Where(r => !r.IsDeleted &&
+                    (r.Status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader ||
+                     r.Status == AuditScheduleRescheduleRequest.Statuses.PendingLeadAuditor))
+                .OrderBy(r => r.RequestedDate)
+                .ToListAsync(cancellationToken);
+
+            return await ToRequestDtosAsync(dbContext, open, userId, false, cancellationToken);
+        }
+
         public async Task<(bool Success, string? Error)> DecideRescheduleRequestAsync(
             int requestId, string? userId, bool approve, string? remarks, CancellationToken cancellationToken)
         {
@@ -567,6 +799,7 @@ namespace IMIS.Application.AuditScheduleModule
 
             var now = DateTime.UtcNow;
             var cleanRemarks = string.IsNullOrWhiteSpace(remarks) ? null : remarks.Trim();
+            var teamLeaderStage = request.Status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader;
 
             if (request.Status == AuditScheduleRescheduleRequest.Statuses.PendingTeamLeader)
             {
@@ -604,7 +837,10 @@ namespace IMIS.Application.AuditScheduleModule
                 }
             }
 
-            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            var decided = await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            if (decided.Success)
+                await NotifyRescheduleDecidedAsync(dbContext, request, userId, approve, teamLeaderStage, cancellationToken);
+            return decided;
         }
 
         private static async Task<(bool Success, string? Error)> SaveWorkflowChangesAsync(

@@ -1,4 +1,5 @@
 using IMIS.Application.AuditChecklistModule;
+using IMIS.Application.IqaNotificationModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -20,11 +21,11 @@ namespace IMIS.Persistence.AuditChecklistModule
         public async Task<(bool Success, string? Error)> SaveChecklistForUserAsync(
             AuditChecklistDto dto, string? userId, CancellationToken cancellationToken)
         {
-            // The row and its NCAR are written together: a blocked NCAR change
-            // rolls the row change back with it.
-            await using var transaction = await _dbContext.Database
-                .BeginTransactionAsync(cancellationToken)
-                .ConfigureAwait(false);
+            // The context wraps every SaveChanges in its own transaction, so no outer
+            // one can be opened here. What could block the NCAR is checked first, so a
+            // blocked change never leaves the row half saved.
+            var blocked = await CheckNcarChangeAllowedAsync(dto, cancellationToken).ConfigureAwait(false);
+            if (blocked != null) return (false, blocked);
 
             var (success, error) = await SaveChecklistRowForUserAsync(dto, userId, cancellationToken).ConfigureAwait(false);
             if (!success) return (false, error);
@@ -32,9 +33,36 @@ namespace IMIS.Persistence.AuditChecklistModule
             (success, error) = await SyncNcarAsync(dto, userId, cancellationToken).ConfigureAwait(false);
             if (!success) return (false, error);
 
+            // The schedule's audit report follows the checklist (auditees, NC findings, NCARs).
+            await SyncAuditReportForRowAsync(dto.Id, cancellationToken).ConfigureAwait(false);
+
             await AttachNcarsAsync(new[] { dto }, cancellationToken).ConfigureAwait(false);
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return (true, null);
+        }
+
+        /// <summary>Error message when the NCAR of the row is already being worked on and this save would change it; otherwise null.</summary>
+        private async Task<string?> CheckNcarChangeAllowedAsync(AuditChecklistDto dto, CancellationToken cancellationToken)
+        {
+            if (dto.Id <= 0) return null;
+
+            var ncar = await _dbContext.Set<NonconformingActionReport>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(n => n.AuditChecklistId == dto.Id && !n.IsDeleted, cancellationToken)
+                .ConfigureAwait(false);
+            if (ncar == null || !await IsNcarProcessedAsync(ncar, cancellationToken).ConfigureAwait(false))
+                return null;
+
+            if (dto.Conforming != false)
+                return $"NCAR {ncar.ReferenceNumber} for this clause was already acknowledged or answered by the office, so the clause can no longer be changed back from Non-Conforming.";
+
+            // A finding the auditor wrote on the NCAR itself is not the checklist's to change.
+            var findings = string.IsNullOrWhiteSpace(dto.FindingAndRemarks)
+                ? ncar.StandardRequirement
+                : dto.FindingAndRemarks.Trim();
+            if (!ncar.FindingEditedByAuditor && ncar.AuditFindings != findings)
+                return $"NCAR {ncar.ReferenceNumber} for this clause was already acknowledged or answered by the office, so its finding can no longer be edited.";
+
+            return null;
         }
 
         /// <summary>Fills NcarId / NcarReferenceNumber on the rows that have a live NCAR.</summary>
@@ -90,12 +118,14 @@ namespace IMIS.Persistence.AuditChecklistModule
 
             if (ncar != null)
             {
-                if (hasLiveNcar && ncar.AuditFindings != findings &&
+                if (hasLiveNcar && !ncar.FindingEditedByAuditor && ncar.AuditFindings != findings &&
                     await IsNcarProcessedAsync(ncar, cancellationToken).ConfigureAwait(false))
                     return (false, $"NCAR {ncar.ReferenceNumber} for this clause was already acknowledged or answered by the office, so its finding can no longer be edited.");
 
                 ncar.IsDeleted = false;
-                ncar.AuditFindings = findings;
+                // The auditor may have rewritten the finding on the NCAR: keep it.
+                if (!ncar.FindingEditedByAuditor)
+                    ncar.AuditFindings = findings;
                 await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 return (true, null);
             }
@@ -108,7 +138,7 @@ namespace IMIS.Persistence.AuditChecklistModule
             // it acknowledges).
             var auditeeUserId = await FindOfficeHeadUserIdAsync(source.OfficeIds, cancellationToken).ConfigureAwait(false);
 
-            _dbContext.Set<NonconformingActionReport>().Add(new NonconformingActionReport
+            var raised = new NonconformingActionReport
             {
                 Id = 0,
                 ReferenceNumber = $"NCAR-{DateTime.UtcNow:yyyy}-{source.AuditScheduleId:D4}-{dto.Id:D5}",
@@ -131,9 +161,36 @@ namespace IMIS.Persistence.AuditChecklistModule
 
                 IsActive = true,
                 IsClosed = false
-            });
+            };
+            _dbContext.Set<NonconformingActionReport>().Add(raised);
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            await NotifyNcarRaisedAsync(raised, source, userId, cancellationToken).ConfigureAwait(false);
             return (true, null);
+        }
+
+        /// <summary>The audited office is told it has an NCAR to acknowledge. Never fails the checklist save.</summary>
+        private async Task NotifyNcarRaisedAsync(
+            NonconformingActionReport ncar, NcarSource source, string? issuerUserId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var heads = await IqaNotifier.OfficeHeadsAsync(_dbContext, source.OfficeIds, cancellationToken).ConfigureAwait(false);
+                var recipients = new List<string?>(heads) { ncar.AcknowledgedByAuditeeUserId };
+                var who = await IqaNotifier.NameOfAsync(_dbContext, issuerUserId, cancellationToken).ConfigureAwait(false);
+
+                await IqaNotifier.AddAsync(
+                    _dbContext, recipients, issuerUserId,
+                    IqaNotifier.Types.NcarRaised,
+                    "NCAR raised for your office",
+                    $"{who} raised NCAR {ncar.ReferenceNumber} for {source.OfficeName} on clause {source.ClauseRef}. Please acknowledge it.",
+                    IqaNotifier.Entities.Ncar, ncar.Id, IqaNotifier.Pages.Ncar, cancellationToken).ConfigureAwait(false);
+                await IqaNotifier.SaveSafelyAsync(_dbContext, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the checklist save
+            }
         }
 
         /// <summary>An NCAR the office has started working on is no longer the auditor's to change.</summary>

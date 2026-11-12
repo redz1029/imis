@@ -16,6 +16,8 @@ namespace IMIS.Presentation.AuditChecklistModule
     public class AuditChecklistEndPoints : CarterModule
     {
         private const string _auditChecklist = "Audit Checklist";
+        private const string _auditReportTag = "Audit Report";
+        private const string _ncarTag = "Nonconforming Action Report";
         public readonly AuditChecklistPermission _permission = new();
 
         public AuditChecklistEndPoints() : base("/auditchecklist")
@@ -33,6 +35,8 @@ namespace IMIS.Presentation.AuditChecklistModule
                     return Results.Json(new { error }, statusCode: StatusCodes.Status403Forbidden);
 
                 await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
+                await cache.EvictByTagAsync(_auditReportTag, cancellationToken); // the report follows the checklist
+                await cache.EvictByTagAsync(_ncarTag, cancellationToken);        // and so does the NCAR
                 return Results.Ok(dto);
             })
             .WithTags(_auditChecklist)
@@ -47,6 +51,8 @@ namespace IMIS.Presentation.AuditChecklistModule
                     return Results.Json(new { error }, statusCode: StatusCodes.Status403Forbidden);
 
                 await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
+                await cache.EvictByTagAsync(_auditReportTag, cancellationToken);
+                await cache.EvictByTagAsync(_ncarTag, cancellationToken);
                 return Results.Ok(dto);
             })
             .WithTags(_auditChecklist)
@@ -81,6 +87,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 }
             })
             .WithTags(_auditChecklist)
+            .CacheOutput(builder => builder.NoCache(), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             // CLAUSE ASSIGNMENT BOARD — the Team Leader divides the plan clauses
@@ -99,6 +106,7 @@ namespace IMIS.Presentation.AuditChecklistModule
                 }
             })
             .WithTags(_auditChecklist)
+            .CacheOutput(builder => builder.NoCache(), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             app.MapPut("/schedule/{auditScheduleId:int}/assignments", async (int auditScheduleId, [FromBody] List<AuditChecklistAssignmentRequestItem>? body, IAuditChecklistService service, IOutputCacheStore cache, HttpContext httpContext, CancellationToken cancellationToken) =>
@@ -113,6 +121,50 @@ namespace IMIS.Presentation.AuditChecklistModule
             })
             .WithTags(_auditChecklist)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+
+            // QUESTIONS — the auditor of a clause writes its checklist questions:
+            // the library questions still available under the clause (dropdown),
+            // then add / remove one. Per-user, so never cached.
+            app.MapGet("/schedule/{auditScheduleId:int}/clause/{isoStandardId:long}/questions", async (int auditScheduleId, long isoStandardId, IAuditChecklistService service, HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var (items, error) = await service.GetClauseQuestionsAsync(auditScheduleId, isoStandardId, userId, cancellationToken).ConfigureAwait(false);
+                if (items == null)
+                    return Results.Json(new { error }, statusCode: StatusCodes.Status403Forbidden);
+
+                return Results.Ok(items);
+            })
+            .WithTags(_auditChecklist)
+            .CacheOutput(builder => builder.NoCache(), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
+
+            app.MapPost("/schedule/{auditScheduleId:int}/questions", async (int auditScheduleId, [FromBody] AuditChecklistAddQuestionRequest request, IAuditChecklistService service, IOutputCacheStore cache, HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var (success, error) = await service.AddQuestionAsync(auditScheduleId, request, userId, cancellationToken).ConfigureAwait(false);
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
+                await cache.EvictByTagAsync(_auditReportTag, cancellationToken);
+                return Results.Ok(new { message = "Question added." });
+            })
+            .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
+
+            app.MapDelete("/schedule/{auditScheduleId:int}/questions/{checklistId:int}", async (int auditScheduleId, int checklistId, IAuditChecklistService service, IOutputCacheStore cache, HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst("UserId")?.Value;
+                var (success, error) = await service.RemoveQuestionAsync(auditScheduleId, checklistId, userId, cancellationToken).ConfigureAwait(false);
+                if (!success)
+                    return Results.BadRequest(new { error });
+
+                await cache.EvictByTagAsync(_auditChecklist, cancellationToken);
+                await cache.EvictByTagAsync(_auditReportTag, cancellationToken);
+                return Results.Ok(new { message = "Question removed." });
+            })
+            .WithTags(_auditChecklist)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
             // DYNAMIC CHECKLIST LIST — schedules ordered by schedule Id, each
             // with team name + office/process. Backs the team-list page.

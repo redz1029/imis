@@ -27,17 +27,27 @@ class NonconformingActionReport {
   final String? acknowledgedByAuditeeName;
   final DateTime? acknowledgedDate;
   final String? proposedByAuditeeUserId;
+  final String? proposedByAuditeeName;
   final DateTime? proposedDate;
   final String? approvedByHeadUserId;
+  final String? approvedByHeadName;
   final DateTime? approvedDate;
   final String? verificationDetails;
   final String? verifiedByAuditorUserId;
+  final String? verifiedByAuditorName;
   final DateTime? verifiedDate;
   final String? validatedByLeadAuditorUserId;
+  final String? validatedByLeadAuditorName;
   final DateTime? validatedDate;
   final bool isActive;
   final bool isClosed;
   final String formRevision;
+
+  // Root cause analysis and the proposed actions, in their printed order.
+  // Only the single-NCAR fetch returns them; the paged list leaves them empty.
+  final List<String> rootCauses;
+  final List<String> corrections;
+  final List<String> correctiveActions;
 
   const NonconformingActionReport({
     this.id = 0,
@@ -65,17 +75,24 @@ class NonconformingActionReport {
     this.acknowledgedByAuditeeName,
     this.acknowledgedDate,
     this.proposedByAuditeeUserId,
+    this.proposedByAuditeeName,
     this.proposedDate,
     this.approvedByHeadUserId,
+    this.approvedByHeadName,
     this.approvedDate,
     this.verificationDetails,
     this.verifiedByAuditorUserId,
+    this.verifiedByAuditorName,
     this.verifiedDate,
     this.validatedByLeadAuditorUserId,
+    this.validatedByLeadAuditorName,
     this.validatedDate,
     this.isActive = true,
     this.isClosed = false,
     this.formRevision = "QP-03-F-08 Rev. 5",
+    this.rootCauses = const [],
+    this.corrections = const [],
+    this.correctiveActions = const [],
   });
 
   factory NonconformingActionReport.fromJson(Map<String, dynamic> json) {
@@ -91,6 +108,22 @@ class NonconformingActionReport {
         return DateTime.tryParse(val);
       }
       return null;
+    }
+
+    // The API orders each list; keep that order and drop blank entries.
+    List<String> texts(dynamic raw, String field) {
+      if (raw is! List) return const [];
+      return [
+        for (final e in raw)
+          if (e is Map)
+            if ((e[field] ?? e[field[0].toUpperCase() + field.substring(1)] ?? '')
+                .toString()
+                .trim()
+                .isNotEmpty)
+              (e[field] ?? e[field[0].toUpperCase() + field.substring(1)])
+                  .toString()
+                  .trim(),
+      ];
     }
 
     return NonconformingActionReport(
@@ -119,17 +152,24 @@ class NonconformingActionReport {
       acknowledgedByAuditeeName: json['acknowledgedByAuditeeName'] ?? json['AcknowledgedByAuditeeName'],
       acknowledgedDate: parseOptDt(json['acknowledgedDate'] ?? json['AcknowledgedDate']),
       proposedByAuditeeUserId: json['proposedByAuditeeUserId'] ?? json['ProposedByAuditeeUserId'],
+      proposedByAuditeeName: json['proposedByAuditeeName'] ?? json['ProposedByAuditeeName'],
       proposedDate: parseOptDt(json['proposedDate'] ?? json['ProposedDate']),
       approvedByHeadUserId: json['approvedByHeadUserId'] ?? json['ApprovedByHeadUserId'],
+      approvedByHeadName: json['approvedByHeadName'] ?? json['ApprovedByHeadName'],
       approvedDate: parseOptDt(json['approvedDate'] ?? json['ApprovedDate']),
       verificationDetails: json['verificationDetails'] ?? json['VerificationDetails'],
       verifiedByAuditorUserId: json['verifiedByAuditorUserId'] ?? json['VerifiedByAuditorUserId'],
+      verifiedByAuditorName: json['verifiedByAuditorName'] ?? json['VerifiedByAuditorName'],
       verifiedDate: parseOptDt(json['verifiedDate'] ?? json['VerifiedDate']),
       validatedByLeadAuditorUserId: json['validatedByLeadAuditorUserId'] ?? json['ValidatedByLeadAuditorUserId'],
+      validatedByLeadAuditorName: json['validatedByLeadAuditorName'] ?? json['ValidatedByLeadAuditorName'],
       validatedDate: parseOptDt(json['validatedDate'] ?? json['ValidatedDate']),
       isActive: (json['isActive'] ?? json['IsActive'] ?? true) == true,
       isClosed: (json['isClosed'] ?? json['IsClosed'] ?? false) == true,
       formRevision: (json['formRevision'] ?? json['FormRevision'] ?? 'QP-03-F-08 Rev. 5').toString(),
+      rootCauses: texts(json['rootCauses'] ?? json['RootCauses'], 'causeDescription'),
+      corrections: texts(json['corrections'] ?? json['Corrections'], 'actionDescription'),
+      correctiveActions: texts(json['correctiveActions'] ?? json['CorrectiveActions'], 'actionDescription'),
     );
   }
 
@@ -167,6 +207,32 @@ class NonconformingActionReport {
         'isActive': isActive,
         'isClosed': isClosed,
         'formRevision': formRevision,
+        // The server replaces the stored lists with whatever is sent, so they
+        // must travel back or a save would erase them.
+        'rootCauses': [
+          for (var i = 0; i < rootCauses.length; i++)
+            {
+              'nonconformingActionReportId': id,
+              'causeDescription': rootCauses[i],
+              'orderNumber': i + 1,
+            },
+        ],
+        'corrections': [
+          for (var i = 0; i < corrections.length; i++)
+            {
+              'nonconformingActionReportId': id,
+              'actionDescription': corrections[i],
+              'orderNumber': i + 1,
+            },
+        ],
+        'correctiveActions': [
+          for (var i = 0; i < correctiveActions.length; i++)
+            {
+              'nonconformingActionReportId': id,
+              'actionDescription': correctiveActions[i],
+              'orderNumber': i + 1,
+            },
+        ],
       };
 
   String get statusDisplay {

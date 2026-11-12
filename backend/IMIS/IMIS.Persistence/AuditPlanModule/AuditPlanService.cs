@@ -2,7 +2,9 @@
 using Base.Primitives;
 using IMIS.Application.AuditPlanModule;
 using IMIS.Application.AuditProgrammeModule;
+using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.IQASignatoryModule;
+using IMIS.Application.IqaNotificationModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -219,7 +221,52 @@ namespace IMIS.Application.AuditPlanModule
                 return result;
 
             entity.LastModifiedDate = DateTime.UtcNow;
-            return await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            var saved = await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+            if (!saved.Success)
+                return saved;
+
+            // Once the plan is fully approved, its audit schedules are created
+            // (one per audited office) for the Auditor Team Leaders to submit.
+            if (await AuditScheduleGenerator.EnsureForPlanAsync(dbContext, entity.Id, cancellationToken) > 0)
+            {
+                var created = await SaveWorkflowChangesAsync(dbContext, cancellationToken);
+                if (created.Success)
+                    await NotifyTeamLeadersOfSchedulesAsync(dbContext, entity.Id, approverId, cancellationToken);
+                return created;
+            }
+
+            return saved;
+        }
+
+        /// <summary>
+        /// The approved plan's schedules were just created: the Auditor Team
+        /// Leader of each audit team is told to submit them. Never fails the approval.
+        /// </summary>
+        private static async Task NotifyTeamLeadersOfSchedulesAsync(
+            DbContext dbContext, int planId, string approverId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var teamIds = await dbContext.Set<AuditSchedule>()
+                    .AsNoTracking()
+                    .Where(s => s.AuditPlanId == planId && s.IsActive && !s.IsDeleted && s.TeamId != null)
+                    .Select(s => s.TeamId!.Value)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+
+                var leaders = await IqaNotifier.TeamLeadersAsync(dbContext, teamIds, cancellationToken);
+                await IqaNotifier.AddAsync(
+                    dbContext, leaders, approverId,
+                    IqaNotifier.Types.SchedulesCreated,
+                    "Audit schedules ready to submit",
+                    "The audit plan was approved and its audit schedules were created. Review and submit the schedules of your audit team.",
+                    IqaNotifier.Entities.AuditPlan, planId, IqaNotifier.Pages.Schedule, cancellationToken);
+                await IqaNotifier.SaveSafelyAsync(dbContext, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // a notification must never fail the approval
+            }
         }
 
         private static async Task<(bool Success, string? Error)> SaveWorkflowChangesAsync(DbContext dbContext, CancellationToken cancellationToken)
@@ -327,7 +374,9 @@ namespace IMIS.Application.AuditPlanModule
             // Gating Rule: NO SELF-AUDIT — a team member may not audit an office
             // they belong to (AuditorOffices). Team membership is read live from
             // AuditorTeams, office membership live from AuditorOffices.
-            errors.AddRange(await GetSelfAuditErrorsAsync(dto, cancellationToken));
+            // TEMPORARILY DISABLED: self-audit check, so last year's manual (paper)
+            // internal quality audits can be encoded. Re-enable afterwards.
+            // errors.AddRange(await GetSelfAuditErrorsAsync(dto, cancellationToken));
 
             return errors;
         }

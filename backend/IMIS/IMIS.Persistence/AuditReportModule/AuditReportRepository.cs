@@ -17,6 +17,7 @@ namespace IMIS.Persistence.AuditReportModule
             return await ReadOnlyDbContext.Set<AuditReport>()
                 .Include(x => x.OfficeAudited)
                 .Include(x => x.AuditStandardISO)
+                    .ThenInclude(i => i!.Version)
                 .Include(x => x.Auditee)
                 .Include(x => x.AuditPlanEntry)
                     .ThenInclude(e => e!.AuditPlanProcesses)!
@@ -28,6 +29,7 @@ namespace IMIS.Persistence.AuditReportModule
                 .Include(x => x.AuditScope)
                 .Include(x => x.AuditSummaryFIndings)
                     .ThenInclude(f => f!.NcarStatus)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -38,6 +40,7 @@ namespace IMIS.Persistence.AuditReportModule
                 _entities.AsNoTracking()
                     .Include(x => x.OfficeAudited)
                     .Include(x => x.AuditStandardISO)
+                    .ThenInclude(i => i!.Version)
                     .Include(x => x.Auditee)
                     .Include(x => x.AuditPlanEntry)
                         .ThenInclude(e => e!.AuditPlanProcesses)!
@@ -45,7 +48,9 @@ namespace IMIS.Persistence.AuditReportModule
                     .Include(x => x.AuditPlanEntry)
                         .ThenInclude(e => e!.IsoAuditors)!
                             .ThenInclude(a => a.Team)
-                    .Include(x => x.AuditScope),
+                    .Include(x => x.AuditScope)
+                    .AsSplitQuery()
+                    .OrderByDescending(x => x.Id),
                 page,
                 pageSize,
                 cancellationToken)
@@ -64,6 +69,7 @@ namespace IMIS.Persistence.AuditReportModule
             return await ReadOnlyDbContext.Set<AuditReport>()
                 .Include(x => x.OfficeAudited)
                 .Include(x => x.AuditStandardISO)
+                    .ThenInclude(i => i!.Version)
                 .Include(x => x.Auditee)
                 .Include(x => x.AuditPlanEntry)
                     .ThenInclude(e => e!.AuditPlanProcesses)!
@@ -74,6 +80,7 @@ namespace IMIS.Persistence.AuditReportModule
                 .Include(x => x.AuditComFindings)
                 .Include(x => x.AuditScope)
                 .Include(x => x.AuditSummaryFIndings)
+                .AsSplitQuery()
                 .Where(x => x.AuditScheduleId == auditScheduleId && !x.IsDeleted)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);

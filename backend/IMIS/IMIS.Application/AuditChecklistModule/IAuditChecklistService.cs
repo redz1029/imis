@@ -22,9 +22,19 @@ namespace IMIS.Application.AuditChecklistModule
         Task<AuditChecklistAssignmentsDto> GetAssignmentsAsync(int auditScheduleId, string? userId, CancellationToken cancellationToken);
         Task<(bool Success, string? Error)> AssignClausesAsync(int auditScheduleId, IReadOnlyList<AuditChecklistAssignmentRequestItem> assignments, string? userId, CancellationToken cancellationToken);
 
+        // --- Questions: the auditor of a clause writes its checklist questions ---
+        // Library questions of the clause not yet in this checklist (the dropdown).
+        Task<(List<AuditChecklistLibraryQuestionDto>? Items, string? Error)> GetClauseQuestionsAsync(int auditScheduleId, long isoStandardId, string? userId, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> AddQuestionAsync(int auditScheduleId, AuditChecklistAddQuestionRequest request, string? userId, CancellationToken cancellationToken);
+        Task<(bool Success, string? Error)> RemoveQuestionAsync(int auditScheduleId, int checklistId, string? userId, CancellationToken cancellationToken);
+
         // Saves one checklist row on behalf of userId. An auditor may only answer
         // (Conforming / FindingAndRemarks) rows of the clauses assigned to them.
         Task<(bool Success, string? Error)> SaveChecklistForUserAsync(AuditChecklistDto dto, string? userId, CancellationToken cancellationToken);
+
+        // Raises the audit report of every schedule whose checklist was saved
+        // before reports were automatic. Existing reports are left alone.
+        Task<int> SyncMissingAuditReportsAsync(CancellationToken cancellationToken);
 
         // Audit Schedule is the source of truth for the checklist list —
         // returns every schedule (in schedule order) that has ISO clause /

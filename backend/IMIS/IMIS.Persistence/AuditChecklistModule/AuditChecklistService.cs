@@ -55,8 +55,10 @@ namespace IMIS.Persistence.AuditChecklistModule
                 .Where(s => !s.IsDeleted && s.AuditPlanEntryId > 0)
                 .OrderBy(s => s.Id)
                 .Include(s => s.Team)
-                .Include(s => s.IQASignatories)
-                    .ThenInclude(sig => sig.IQASignatoryTemplate)
+                // The status is derived from the signatories' ApprovalStatus alone
+                // (order-independent), so only live rows are needed — no template,
+                // and no soft-deleted rows left behind by resubmissions.
+                .Include(s => s.IQASignatories.Where(sig => !sig.IsDeleted))
                 .Include(s => s.AuditableOffices!)
                     .ThenInclude(ao => ao.Office)
                 .Include(s => s.AuditPlanEntry!)
@@ -65,9 +67,9 @@ namespace IMIS.Persistence.AuditChecklistModule
                 .Include(s => s.AuditPlanEntry!)
                     .ThenInclude(e => e!.IsoAuditors)
                         .ThenInclude(a => a.Team)
+                // Only the number of live clauses is used, never the standard itself.
                 .Include(s => s.AuditPlanEntry!)
-                    .ThenInclude(e => e!.IsoStandardAuditPlans)
-                        .ThenInclude(sp => sp.IsoStandard)
+                    .ThenInclude(e => e!.IsoStandardAuditPlans.Where(sp => !sp.IsDeleted))
                 .Include(s => s.AuditPlan)
                     .ThenInclude(p => p!.AuditProgramme)
                 // Five collection includes on one query would otherwise produce a
@@ -89,6 +91,7 @@ namespace IMIS.Persistence.AuditChecklistModule
                 .ConfigureAwait(false);
 
             var result = new List<AuditChecklistSummaryDto>();
+            var entryOfSchedule = new Dictionary<int, int>();
             foreach (var s in schedules)
             {
                 // Gate on the workflow: only a CONFIRMED (or APPROVED) schedule
@@ -146,9 +149,9 @@ namespace IMIS.Persistence.AuditChecklistModule
                     }
                 }
 
-                string? scope = s.AuditPlan?.AuditProgramme?.ScopeOfAudit
-                    ?? s.AuditPlan?.AuditProgramme?.ScopeAndFreqAudit
-                    ?? s.AuditPlan?.PlanName;
+                // The AUDIT SCOPE is the audit standard (Settings -> Audit Standard);
+                // it is filled in once for all schedules after this loop.
+                entryOfSchedule[s.Id] = s.AuditPlanEntryId;
 
                 result.Add(new AuditChecklistSummaryDto
                 {
@@ -156,15 +159,25 @@ namespace IMIS.Persistence.AuditChecklistModule
                     TeamId = teamId,
                     TeamName = team?.Name,
                     OfficeProcess = string.IsNullOrWhiteSpace(officeProcess) ? null : officeProcess,
-                    AuditScope = string.IsNullOrWhiteSpace(scope) ? null : scope.Trim(),
+                    AuditScope = null,
                     AuditorNames = team?.Name,
                     Auditees = null,
                     ClauseCount = clauseCount,
                     // Surface the real workflow status (Confirmed / Approved)
                     // so the UI can label the active checklist correctly.
                     StatusName = IQAApprovalWorkflow.StateName(
-                        stateCode, IQAApprovalWorkflow.EntityTypes.AuditSchedule)
+                        stateCode, IQAApprovalWorkflow.EntityTypes.AuditSchedule),
+                    StartDate = s.StartDate,
+                    EndDate = s.EndDate
                 });
+            }
+
+            var standardNames = await GetAuditStandardNamesAsync(entryOfSchedule.Values, cancellationToken).ConfigureAwait(false);
+            foreach (var dto in result)
+            {
+                if (entryOfSchedule.TryGetValue(dto.AuditScheduleId, out var entryId) &&
+                    standardNames.TryGetValue(entryId, out var standardName))
+                    dto.AuditScope = standardName;
             }
 
             return result;
@@ -175,14 +188,19 @@ namespace IMIS.Persistence.AuditChecklistModule
         /// (the only reliable key for the whole flow). If checklist rows
         /// already exist for the schedule they are returned untouched —
         /// existing Conforming / FindingAndRemarks are preserved, no new
-        /// duplicate rows are created. Otherwise the rows are generated from
-        /// the schedule's AuditPlanEntry ISO clauses.
+        /// duplicate rows are created. A schedule with no rows yet returns an
+        /// empty checklist: the auditors add the questions of their clauses.
         /// </summary>
         private async Task<IEnumerable<AuditChecklistDto>> GetOrGenerateRowsForAuditScheduleAsync(int auditScheduleId, CancellationToken cancellationToken)
         {
             var existing = (await _repository.GetByAuditScheduleIdWithScheduleAsync(auditScheduleId, cancellationToken).ConfigureAwait(false)).ToList();
             if (existing.Any())
             {
+                if (await RemoveOutOfScopeRowsAsync(auditScheduleId, cancellationToken).ConfigureAwait(false))
+                {
+                    existing = (await _repository.GetByAuditScheduleIdWithScheduleAsync(auditScheduleId, cancellationToken).ConfigureAwait(false)).ToList();
+                }
+
                 return existing
                     .Select(x => new AuditChecklistDto(x))
                     .OrderBy(d => d.Criteria ?? string.Empty, new ClauseNumberComparer());
@@ -227,64 +245,72 @@ namespace IMIS.Persistence.AuditChecklistModule
                     "A schedule must be confirmed by the Department Head (or approved) before generating its checklist.");
             }
 
-            var entry = schedule.AuditPlanEntry;
-            if (entry?.IsoStandardAuditPlans == null || !entry.IsoStandardAuditPlans.Any())
-            {
-                return Enumerable.Empty<AuditChecklistDto>();
-            }
+            // Nothing is generated: the checklist is written by the auditors,
+            // each adding the questions of the clauses assigned to them
+            // (AddQuestionAsync), so a new checklist starts empty.
+            return Enumerable.Empty<AuditChecklistDto>();
+        }
 
-            // Expand the assigned clauses to every nested sub-clause
-            // (matched by ClauseRef prefix). The QNA library is keyed to
-            // specific standards, so a parent assignment like "4" or "4.4"
-            // would otherwise silently yield zero questions.
-            var standardIds = await ExpandWithNestedStandardIdsAsync(
-                entry.IsoStandardAuditPlans ?? Enumerable.Empty<IsoStandardAuditPlan>(),
-                cancellationToken).ConfigureAwait(false);
+        /// <summary>
+        /// Checklists generated before the clause expansion was corrected still
+        /// hold questions of clauses the plan never assigned. Soft-deletes those
+        /// rows, but only while they are untouched (no answer, no remarks), so
+        /// nothing an auditor has filled in is ever lost. Returns true when any
+        /// row was removed.
+        /// </summary>
+        private async Task<bool> RemoveOutOfScopeRowsAsync(int auditScheduleId, CancellationToken cancellationToken)
+        {
+            var entryId = await _dbContext.Set<AuditSchedule>()
+                .AsNoTracking()
+                .Where(s => s.Id == auditScheduleId && !s.IsDeleted)
+                .Select(s => s.AuditPlanEntryId)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (entryId <= 0) return false;
 
-            var questionsById = new Dictionary<int, (AuditChecklistQNA Question, string ClauseRef)>();
-            foreach (var stdId in standardIds)
-            {
-                var rawQuestions = await _qnaRepository.GetByIsoStandardIdAsync(stdId, cancellationToken).ConfigureAwait(false);
-                foreach (var q in rawQuestions.OfType<AuditChecklistQNA>())
-                {
-                    if (!questionsById.ContainsKey(q.Id))
-                        questionsById[q.Id] = (q, q.IsoStandard?.ClauseRef ?? string.Empty);
-                }
-            }
+            var links = await _dbContext.Set<IsoStandardAuditPlan>()
+                .AsNoTracking()
+                .Include(sp => sp.IsoStandard)
+                .Where(sp => sp.AuditPlanEntryId == entryId && !sp.IsDeleted && sp.IsoStandardId != null)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (links.Count == 0) return false;
 
-            var newRows = new List<(AuditChecklist Row, string ClauseRef)>();
-            foreach (var kv in questionsById.Values)
-            {
-                newRows.Add((new AuditChecklist
-                {
-                    Id = 0,
-                    AuditPlanEntryId = entry.Id,
-                    AuditScheduleId = schedule.Id,
-                    AuditChecklistQNAId = kv.Question.Id,
-                    Conforming = null,
-                    FindingAndRemarks = null
-                }, kv.ClauseRef));
-            }
+            var allowed = new HashSet<long>(
+                await ExpandWithNestedStandardIdsAsync(links, cancellationToken).ConfigureAwait(false));
 
-            // Logical/numeric clause ordering (4.1 < 4.2 < ... < 10.3) — never
-            // alphabetical string sorting.
-            newRows = newRows
-                .OrderBy(t => t.ClauseRef, new ClauseNumberComparer())
+            var rows = await _dbContext.Set<AuditChecklist>()
+                .Include(c => c.AuditChecklistQNA)
+                    .ThenInclude(q => q!.IsoStandard)
+                .Where(c => c.AuditScheduleId == auditScheduleId && !c.IsDeleted && c.AuditChecklistQNA != null)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            bool Untouched(AuditChecklist c) =>
+                c.Conforming == null && string.IsNullOrWhiteSpace(c.FindingAndRemarks);
+
+            var stale = rows
+                .Where(c => Untouched(c) &&
+                            c.AuditChecklistQNA!.IsoStandardId.HasValue &&
+                            !allowed.Contains(c.AuditChecklistQNA.IsoStandardId.Value))
                 .ToList();
 
-            foreach (var (row, _) in newRows)
+            // A clause has one question. Checklists generated with several per
+            // clause keep the answered one (or else the first); the other
+            // untouched rows are removed.
+            foreach (var group in rows
+                .Except(stale)
+                .GroupBy(c => MatchPlanClause(c.AuditChecklistQNA!.IsoStandard?.ClauseRef, links)?.IsoStandardId)
+                .Where(g => g.Key != null))
             {
-                _repository.Add(row);
+                var ordered = group.OrderBy(c => Untouched(c) ? 1 : 0).ThenBy(c => c.Id).ToList();
+                stale.AddRange(ordered.Skip(1).Where(Untouched));
             }
+            if (stale.Count == 0) return false;
 
+            foreach (var row in stale) row.IsDeleted = true;
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-            var saved = await _repository.GetByAuditScheduleIdWithScheduleAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
-            // Re-sort the returned rows the same numeric way so the form always
-            // prints clauses in logical order.
-            return saved
-                .Select(x => new AuditChecklistDto(x))
-                .OrderBy(d => d.Criteria ?? string.Empty, new ClauseNumberComparer());
+            return true;
         }
 
         /// <summary>
@@ -345,6 +371,14 @@ namespace IMIS.Persistence.AuditChecklistModule
                     .ConfigureAwait(false);
                 foreach (var a in assignedRefs)
                 {
+                    // A parent clause whose own sub-clauses are assigned
+                    // explicitly (e.g. "4" next to "4.1", "4.2", "4.3") covers
+                    // only what is listed; expanding it would drag in every
+                    // other sub-clause of the chapter (4.4.x ...) that nobody
+                    // assigned.
+                    if (assignedRefs.Any(b => b.StartsWith(a + ".", StringComparison.OrdinalIgnoreCase)))
+                        continue;
+
                     foreach (var s in all)
                     {
                         if (string.IsNullOrWhiteSpace(s.ClauseRef)) continue;

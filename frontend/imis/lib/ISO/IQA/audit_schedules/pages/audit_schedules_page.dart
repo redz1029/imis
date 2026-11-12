@@ -11,6 +11,7 @@ import 'package:imis/ISO/IQA/audit_programme/services/audit_programme_service.da
 import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/reschedule_request.dart';
 import 'package:imis/ISO/IQA/audit_schedules/services/audit_schedule_service.dart';
+import 'package:imis/ISO/IQA/audit_schedules/widgets/reschedule_progress.dart';
 import 'package:imis/ISO/IQA/widgets/approval_workflow_widgets.dart';
 import 'package:imis/ISO/IQA/audit_plan/pages/audit_plan_page.dart'
     show IsoStandardDto, AuditorTeamDto;
@@ -82,6 +83,16 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
 
   UserRegistration? _currentUser;
   bool _isAdmin = false;
+
+  /// Teams the signed-in user leads. A team leader sees every office's
+  /// schedule but can act only on the ones assigned to their own team.
+  Set<int> _myTeamIds = {};
+
+  bool _isMine(_OfficeGroup group) {
+    if (_isAdmin) return true;
+    final teamId = group.schedule?.teamId;
+    return teamId != null && _myTeamIds.contains(teamId);
+  }
 
   /// Latest reschedule request of the open office, and the requests that are
   /// waiting on the signed-in Team Leader / Lead Auditor.
@@ -207,6 +218,7 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
 
       _currentUser = await AuthUtil.fetchLoggedUser();
       _isAdmin = await AuthUtil.isCurrentUserAdmin();
+      _myTeamIds = await _scheduleService.getMyLedTeamIds();
       final schedules = await _scheduleService.getAuditSchedulesByPlanId(planSummary.id);
 
       for (final g in _officeGroups) {
@@ -217,10 +229,11 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         );
         if (matched.id > 0) {
           g.schedule = matched;
-        } else if (_hasPermission(AppPermissions.addAuditSchedule)) {
-          // Only a role that may create schedules materialises the missing
-          // one. Read-only roles (QMR, QMS, Department Head) must not create
-          // rows as a side effect of opening the page.
+        } else if (_isAdmin) {
+          // The server now creates every office's schedule when the plan is
+          // approved, so only an Administrator (who sees all offices) fills a
+          // missing one. Everyone else must not create rows as a side effect of
+          // opening the page.
           try {
             final firstEntry = g.entries.first;
             final created = await _scheduleService.addAuditSchedule(
@@ -245,6 +258,13 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             debugPrint('Auto-schedule creation error: $e');
           }
         }
+      }
+
+      // The server returns only the schedules this user may see (a team leader:
+      // the offices their team audits), so an office with no schedule here is
+      // not theirs and is not listed.
+      if (!_isAdmin) {
+        _officeGroups.removeWhere((g) => g.schedule == null);
       }
     } catch (e) {
       _errorMessage = 'Error loading Audit Plan schedule: $e';
@@ -665,6 +685,34 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     }
   }
 
+  /// Old date -> requested date, plus the reason, for the people deciding.
+  Widget _rescheduleSummary(RescheduleRequest r) {
+    final fmt = DateFormat('MMM d, yyyy h:mm a');
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Current: ${fmt.format(r.currentStartDate)}',
+            style: const TextStyle(fontSize: 12),
+          ),
+          Text(
+            'Requested: ${fmt.format(r.proposedStartDate)}',
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          ),
+          if ((r.reason ?? '').isNotEmpty)
+            Text('Reason: ${r.reason}', style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleDecideRequest(
     RescheduleRequest request, {
     required bool approve,
@@ -679,13 +727,28 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(isLeadAuditorStep ? 'Accept Reschedule' : 'Approve Reschedule'),
-          content: Text(
-            isLeadAuditorStep
-                ? 'Accept the reschedule request for $office? The audit '
-                    'schedule, Audit Plan and (if the day changes) Audit '
-                    'Programme will be revised.'
-                : 'Approve the reschedule request for $office and forward it '
-                    'to the Lead Auditor?',
+          content: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isLeadAuditorStep
+                        ? 'Accept the reschedule request for $office? The audit '
+                            'schedule, Audit Plan and (if the day changes) Audit '
+                            'Programme will be revised.'
+                        : 'Approve the reschedule request for $office and forward it '
+                            'to the Lead Auditor?',
+                  ),
+                  const SizedBox(height: 12),
+                  _rescheduleSummary(request),
+                  const SizedBox(height: 12),
+                  RescheduleProgress(request: request),
+                ],
+              ),
+            ),
           ),
           actions: [
             TextButton(
@@ -811,14 +874,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
                             'Reason: ${r.reason}',
                             style: const TextStyle(fontSize: 12),
                           ),
-                        Text(
-                          '${r.status}'
-                          '${r.requestedBy != null ? ' • Requested by ${r.requestedBy}' : ''}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
+                        const SizedBox(height: 8),
+                        RescheduleProgress(request: r),
                       ],
                     ),
                   ),
@@ -873,7 +930,6 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
       icon = Icons.check_circle_outline;
       headline = 'Reschedule request accepted — the schedule was revised.';
     }
-    final remarks = r.isRejected ? r.rejectionRemarks : null;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
@@ -900,11 +956,22 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
                   ),
                 ),
                 Text(
+                  'Current: ${fmt.format(r.currentStartDate)}  →  '
                   'Requested: ${fmt.format(r.proposedStartDate)}',
                   style: const TextStyle(fontSize: 12),
                 ),
-                if ((remarks ?? '').isNotEmpty)
-                  Text('Remarks: $remarks', style: const TextStyle(fontSize: 12)),
+                if ((r.reason ?? '').isNotEmpty)
+                  Text('Reason: ${r.reason}', style: const TextStyle(fontSize: 12)),
+                if (r.isRejected)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Text(
+                      'You can request a new date from this office.',
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                RescheduleProgress(request: r),
               ],
             ),
           ),
@@ -1387,7 +1454,8 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
     // behaviour, so the page stays usable for support staff.
     final canConfirm = _isAdmin || _hasPermission(AppPermissions.auditScheduleConfirm);
     final canReject = _isAdmin || _hasPermission(AppPermissions.auditScheduleReject);
-    final canSubmit = _isAdmin || _hasPermission(AppPermissions.auditScheduleSubmit);
+    final canSubmit = _isAdmin ||
+        (_hasPermission(AppPermissions.auditScheduleSubmit) && _isMine(group));
 
     final showDecision =
         status == 'Pending' ||
@@ -1705,6 +1773,18 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
                                   : Colors.orange.shade800),
                     ),
                   ),
+                  if (_hasPermission(AppPermissions.auditScheduleSubmit) &&
+                      !_isMine(group))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        'View only — assigned to another team',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1976,6 +2056,12 @@ class _AuditSchedulePageState extends State<AuditSchedulePage> {
             children: [
               TextField(
                 controller: _activityController,
+                // Only the leader of the assigned team (or an Administrator)
+                // edits the activity.
+                readOnly: activityGroup == null ||
+                    !(_isAdmin ||
+                        (_hasPermission(AppPermissions.editAuditSchedule) &&
+                            _isMine(activityGroup))),
                 minLines: 9,
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
