@@ -112,6 +112,7 @@ class ApiEndpoint {
   late String filterAccomplishmentReport;
   late String deliverable;
   late String policyAndProcedure;
+  late String papSignatoryTemplate;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -227,6 +228,7 @@ class ApiEndpoint {
     iSATSignatoryTemplate = '$baseUrl/iSATSignatoryTemplate';
     filterAccomplishmentReport = '$baseUrl/filter-accomplishment-report';
     policyAndProcedure = '$baseUrl/PolicyAndProcedure';
+    papSignatoryTemplate = '$baseUrl/papSignatoryTemplate';
   }
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
