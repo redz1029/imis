@@ -200,12 +200,9 @@ class IqaPeriodFilter extends StatelessWidget {
   static final DateFormat _fmt = DateFormat('MMMM dd, yyyy');
 
   Future<void> _pick(BuildContext context) async {
-    final picked = await showDateRangePicker(
+    final picked = await showDialog<DateTimeRange>(
       context: context,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(DateTime.now().year + 10, 12, 31),
-      initialDateRange: range,
-      helpText: 'Select period',
+      builder: (_) => _PeriodDialog(initial: range),
     );
     if (picked != null) onChanged(picked);
   }
@@ -369,6 +366,311 @@ class IqaStatusTabs extends StatelessWidget {
                   ),
                 );
               }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+/// The "Select period" dialog of the IQA lists: quick choices, a year stepper
+/// and plain From / To dates, instead of the full-screen range calendar.
+class _PeriodDialog extends StatefulWidget {
+  const _PeriodDialog({required this.initial});
+
+  final DateTimeRange initial;
+
+  @override
+  State<_PeriodDialog> createState() => _PeriodDialogState();
+}
+
+class _PeriodDialogState extends State<_PeriodDialog> {
+  static final DateTime _first = DateTime(2000);
+  static final DateTime _last = DateTime(DateTime.now().year + 10, 12, 31);
+  static final DateFormat _fmt = DateFormat('MMM d, yyyy');
+  static final DateFormat _long = DateFormat('MMMM d, yyyy');
+
+  late DateTime _from;
+  late DateTime _to;
+
+  @override
+  void initState() {
+    super.initState();
+    _from = _day(widget.initial.start);
+    _to = _day(widget.initial.end);
+  }
+
+  static DateTime _day(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  static DateTimeRange _month(int year, int month) => DateTimeRange(
+    start: DateTime(year, month, 1),
+    end: DateTime(year, month + 1, 0),
+  );
+
+  static DateTimeRange _quarter(int year, int startMonth) => DateTimeRange(
+    start: DateTime(year, startMonth, 1),
+    end: DateTime(year, startMonth + 3, 0),
+  );
+
+  List<MapEntry<String, DateTimeRange>> get _presets {
+    final now = DateTime.now();
+    final quarterStart = ((now.month - 1) ~/ 3) * 3 + 1;
+    return [
+      MapEntry('This month', _month(now.year, now.month)),
+      MapEntry('Last month', _month(now.year, now.month - 1)),
+      MapEntry('This quarter', _quarter(now.year, quarterStart)),
+      MapEntry('Last quarter', _quarter(now.year, quarterStart - 3)),
+      MapEntry('This year', IqaPeriod.year(now.year)),
+      MapEntry('Last year', IqaPeriod.year(now.year - 1)),
+      MapEntry('All time', DateTimeRange(start: _first, end: _last)),
+    ];
+  }
+
+  bool _is(DateTimeRange r) => _from == _day(r.start) && _to == _day(r.end);
+
+  void _set(DateTimeRange r) => setState(() {
+    _from = _day(r.start);
+    _to = _day(r.end);
+  });
+
+  /// The year the stepper shows: that of the chosen start date.
+  int get _year => _from.year;
+
+  void _stepYear(int by) {
+    final year = _year + by;
+    if (year < _first.year || year > _last.year) return;
+    _set(IqaPeriod.year(year));
+  }
+
+  Future<void> _pickDate({required bool isFrom}) async {
+    final current = isFrom ? _from : _to;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: _first,
+      lastDate: _last,
+      helpText: isFrom ? 'Start date' : 'End date',
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: Theme.of(context).colorScheme.copyWith(
+            primary: primaryColor,
+            onPrimary: Colors.white,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked == null) return;
+    setState(() {
+      final d = _day(picked);
+      if (isFrom) {
+        _from = d;
+        if (_to.isBefore(_from)) _to = _from;
+      } else {
+        _to = d;
+        if (_from.isAfter(_to)) _from = _to;
+      }
+    });
+  }
+
+  Widget _dateField(String label, DateTime value, bool isFrom) {
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => _pickDate(isFrom: isFrom),
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: label,
+            isDense: true,
+            prefixIcon: const Icon(Icons.calendar_today_outlined, size: 16),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: Text(
+            _fmt.format(value),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label = GoogleFonts.plusJakartaSans(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: kText,
+    );
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.date_range_outlined,
+                      color: primaryColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Select period',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: kText,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close',
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text('Year', style: label),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  IconButton.outlined(
+                    tooltip: 'Previous year',
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _year > _first.year ? () => _stepYear(-1) : null,
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => _set(IqaPeriod.year(_year)),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _is(IqaPeriod.year(_year))
+                              ? primaryColor.withValues(alpha: 0.12)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Whole year $_year',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton.outlined(
+                    tooltip: 'Next year',
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _year < _last.year ? () => _stepYear(1) : null,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text('Quick choice', style: label),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final p in _presets)
+                    ChoiceChip(
+                      label: Text(p.key),
+                      selected: _is(p.value),
+                      showCheckmark: false,
+                      selectedColor: primaryColor,
+                      backgroundColor: primaryColor.withValues(alpha: 0.06),
+                      side: BorderSide(
+                        color: primaryColor.withValues(alpha: 0.4),
+                      ),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _is(p.value) ? Colors.white : primaryColor,
+                      ),
+                      onSelected: (_) => _set(p.value),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text('Or pick the dates', style: label),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _dateField('From', _from, true),
+                  const SizedBox(width: 10),
+                  _dateField('To', _to, false),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${_long.format(_from)} - ${_long.format(_to)}',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: primaryColor,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(
+                      context,
+                      DateTimeRange(start: _from, end: _to),
+                    ),
+                    child: const Text('Apply'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
