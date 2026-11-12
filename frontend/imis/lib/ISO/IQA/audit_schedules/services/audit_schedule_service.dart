@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/audit_schedules.dart';
+import 'package:imis/ISO/IQA/audit_schedules/models/audit_slot_availability.dart';
 import 'package:imis/ISO/IQA/audit_schedules/models/reschedule_request.dart';
 import 'package:intl/intl.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -192,6 +193,21 @@ class AuditSchedulesService {
 
   static String _formatLocal(DateTime value) =>
       DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(value);
+
+  /// When the audit team (and the office) of schedule [id] are free: the only
+  /// times a Department Head may ask the audit to be moved to. Throws when it
+  /// cannot be loaded, so a request is never offered without it.
+  Future<AuditSlotAvailability> getAvailableSlots(int id) async {
+    final url = '${ApiEndpoint().auditSchedule}/$id/available-slots';
+    final response = await AuthenticatedRequest.get(dio, url);
+    final data = response.data;
+    if (response.statusCode != 200 || data is! Map) {
+      throw Exception(
+        _extractErrorMessage(response, 'Could not load the free times of the audit team.'),
+      );
+    }
+    return AuditSlotAvailability.fromJson(Map<String, dynamic>.from(data));
+  }
 
   /// Department Head asks to move the schedule to [proposedStart] (date and
   /// time). It goes to the Auditor Team Leader first, then the Lead Auditor.
