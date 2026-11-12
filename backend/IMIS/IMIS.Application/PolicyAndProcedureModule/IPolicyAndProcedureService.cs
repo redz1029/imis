@@ -1,5 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.PolicyAndProcedureHistoryLogModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PolicyAndProcedureModule

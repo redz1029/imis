@@ -3,6 +3,7 @@ using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
+using IMIS.Application.PolicyAndProcedureHistoryLogModule;
 using IMIS.Application.PolicyAndProcedureModule;
 using IMIS.Application.PolicyAndProcedureSignatoryModule;
 using IMIS.Application.PolicyAndProcedureSignatoryTemplateModule;
@@ -29,6 +30,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             _userManager = userManager;
             _roleManager = roleManager;
         }
+
         public async Task<bool> SoftDeleteSignatoryAsync(long papId, CancellationToken cancellationToken)
         {
             var signatories = await _repository.GetByPgsIdForSoftDeleteAsync(papId, cancellationToken);
@@ -50,6 +52,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
             return true;
         }
+
         public async Task<DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>> GetFilteredAsync(PolicyAndProcedureFilter filter, string roleId, CancellationToken cancellationToken)
         {
             DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long> Empty() =>
@@ -73,7 +76,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             var uid = currentUser.Id;
             var roleName = role.Name;
 
-            bool Is(string name) =>  roleName.Equals(name, StringComparison.OrdinalIgnoreCase);
+            bool Is(string name) => roleName.Equals(name, StringComparison.OrdinalIgnoreCase);
 
             var isAdmin = Is(new AdministratorRole().Name);
             var isPgsManager = Is(new PgsManagerRole().Name);
@@ -121,17 +124,17 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
                 var isNext = mine.Any(s => s.IsNextStatus && s.Status == PolicyAndProcedureStatus.Pending);
 
-                var allSignatoriesCompleted = all.Count > 0 &&  all.All(s => s.Status == PolicyAndProcedureStatus.Prepared);
+                var allSignatoriesCompleted = all.Count > 0 && all.All(s => s.Status == PolicyAndProcedureStatus.Prepared);
 
                 var canViewCompletedAsSignatory = isSignatory && allSignatoriesCompleted;
 
-                var canViewAsParent = isPgsServiceHead && (pap.Section?.ParentOffice?.UserOffices?.Any(u =>  u.UserId == uid &&  u.IsActive && !u.IsDeleted) ?? false);
+                var canViewAsParent = isPgsServiceHead && (pap.Section?.ParentOffice?.UserOffices?.Any(u => u.UserId == uid && u.IsActive && !u.IsDeleted) ?? false);
 
                 var isAssignedToSection = pap.Section?.UserOffices?.Any(u => u.UserId == uid && u.IsActive && !u.IsDeleted) ?? false;
 
                 var canViewAsSectionUser = isAssignedToSection && !isSignatory;
 
-                var canView = isFirstSignatory ||  isNext || canViewCompletedAsSignatory || canViewAsParent || canViewAsSectionUser;
+                var canView = isFirstSignatory || isNext || canViewCompletedAsSignatory || canViewAsParent || canViewAsSectionUser;
 
                 if (!canView)
                     continue;
@@ -148,7 +151,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
             var pageEntities = ordered.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize).ToList();
 
-            var result = DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>.Create(pageEntities, filter.Page,  filter.PageSize, totalCount);
+            var result = DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>.Create(pageEntities, filter.Page, filter.PageSize, totalCount);
 
             var byId = pageEntities.ToDictionary(e => e.Id);
 
@@ -160,7 +163,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     continue;
 
                 await ApplySignatoriesAsync(item, entity, cancellationToken);
-             
+
                 item.ForSignature = item.PAPSignatories?.Any(s =>
                         s.SignatoryId == uid &&
                         s.IsNextStatus &&
@@ -175,7 +178,6 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return await currentUserService!.GetCurrentUserAsync();
         }
-
 
         public async Task<DtoPageList<PolicyAndProcedureDto, PolicyAndProcedure, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
@@ -198,7 +200,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             var entity = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return entity != null ? await BuildDtoAsync(entity, cancellationToken) : null;
         }
-
+     
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
@@ -225,6 +227,8 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             }
         }
 
+        // ================= DRAFT =================
+
         public async Task<PolicyAndProcedureDto> DraftAsync(PolicyAndProcedureDto dto, string userId, CancellationToken cancellationToken)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
@@ -234,13 +238,15 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             foreach (var s in pap.PAPSignatories.Where(s => !s.IsDeleted))
                 s.IsDeleted = true;
 
+            EnsureHistoryLog(pap);
+
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
 
             return await BuildDtoAsync(await ReloadAsync(pap.Id, cancellationToken), cancellationToken);
         }
 
         // ================= SUBMIT =================
-       
+
         public async Task<PolicyAndProcedureDto> SubmitAsync(PolicyAndProcedureDto dto, string userId, CancellationToken cancellationToken)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
@@ -278,7 +284,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     DateSigned = now
                 });
             }
-           
+
             var hasRemainingSignatory = all.Any(s =>
                 !ReferenceEquals(s, current) &&
                 s.Status == PolicyAndProcedureStatus.Pending);
@@ -291,6 +297,8 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 pap.IsControlledCopy = true;
             }
 
+            EnsureHistoryLog(pap);
+
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
 
             return await BuildDtoAsync(await ReloadAsync(pap.Id, cancellationToken), cancellationToken);
@@ -301,6 +309,29 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
         private async Task<PolicyAndProcedure> ReloadAsync(long id, CancellationToken ct)
             => await _repository.GetWithIncludesAsync(id, ct)
                ?? throw new InvalidOperationException("Policy and Procedure record not found.");
+      
+        private PolicyAndProcedureHistoryLog EnsureHistoryLog(PolicyAndProcedure pap)
+        {
+            pap.HistoryLogs ??= new List<PolicyAndProcedureHistoryLog>();
+
+            var header = pap.HistoryLogs
+                .Where(h => !h.IsDeleted)
+                .OrderByDescending(h => h.Id)
+                .FirstOrDefault();
+
+            if (header == null)
+            {
+                header = new PolicyAndProcedureHistoryLog
+                {
+                    Id = 0,
+                    PolicyAndProcedureId = pap.Id
+                };
+
+                pap.HistoryLogs.Add(header);
+            }
+
+            return header;
+        }
 
         private async Task<PolicyAndProcedure> SaveFieldsAsync(PolicyAndProcedureDto dto, CancellationToken ct)
         {
@@ -311,6 +342,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             {
                 pap = dto.ToEntity();
                 pap.PAPSignatories = new List<PolicyAndProcedureSignatory>();
+                pap.HistoryLogs = new List<PolicyAndProcedureHistoryLog>();
                 context.Set<PolicyAndProcedure>().Add(pap);
             }
             else
@@ -342,7 +374,6 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
             await ApplySignatoriesAsync(dto, entity, ct);
             return dto;
         }
-       
 
         private async Task ApplySignatoriesAsync(PolicyAndProcedureDto dto, PolicyAndProcedure entity, CancellationToken ct)
         {
@@ -357,10 +388,10 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
 
             dto.IsDraft = isDraft;
         }
-     
+
         private async Task<(List<PolicyAndProcedureSignatoryDto> All, bool IsDraft)> ResolveAsync(PolicyAndProcedure pap, CancellationToken ct)
         {
-            var saved = pap.PAPSignatories?                
+            var saved = pap.PAPSignatories?
                 .Where(s => !s.IsDeleted)
                 .OrderBy(s => s.Id)
                 .ToList()
@@ -416,11 +447,11 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                     " ",
                     new[]
                     {
-                user.Prefix,
-                user.FirstName,
-                user.MiddleName,
-                user.LastName,
-                user.Suffix
+                        user.Prefix,
+                        user.FirstName,
+                        user.MiddleName,
+                        user.LastName,
+                        user.Suffix
                     }.Where(x => !string.IsNullOrWhiteSpace(x)));
             }
 

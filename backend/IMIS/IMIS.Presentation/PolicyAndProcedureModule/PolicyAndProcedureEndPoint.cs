@@ -2,8 +2,7 @@
 using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
-using IMIS.Application.PerfomanceGovernanceSystemModule;
-using IMIS.Application.PgsSignatoryModule;
+using IMIS.Application.PolicyAndProcedureHistoryLogModule;
 using IMIS.Application.PolicyAndProcedureModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
@@ -115,7 +114,8 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
                 return Results.Ok(result);
             })
             .WithTags(_policyAndProcedureEndPoint)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.View));         
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.View))
+             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_policyAndProcedureEndPoint), true);
 
             app.MapDelete("pgssignatory/{papid:long}", async (long papid, IPolicyAndProcedureService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -136,6 +136,7 @@ namespace IMIS.Presentation.PolicyAndProcedureModule
             })
            .WithTags(_policyAndProcedureEndPoint)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _policyAndProcedurePermission.Delete));
+           
         }
        
         private async Task<IResult> RunWorkflowAsync(PolicyAndProcedureDto dto, string userId, IPolicyAndProcedureService service, IOutputCacheStore cache, bool submit, CancellationToken cancellationToken)

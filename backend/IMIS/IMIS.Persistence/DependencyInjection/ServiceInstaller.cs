@@ -157,6 +157,8 @@ using Microsoft.Extensions.DependencyInjection;
 using IMIS.Application.AuditeeModule;
 using IMIS.Application.PolicyAndProcedureSignatoryTemplateModule;
 using IMIS.Persistence.PolicyAndProcedureSignatoryTemplateModule;
+using IMIS.Application.PolicyAndProcedureHistoryLogModule;
+using IMIS.Persistence.PolicyAndProcedureHistoryLogModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -340,6 +342,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IPolicyAndProcedureSignatoryTemplateRepository, PolicyAndProcedureSignatoryTemplateRepository>();
             services.AddScoped<IPolicyAndProcedureSignatoryTemplateService, PolicyAndProcedureSignatoryTemplateService>();
+
+            services.AddScoped<IPolicyAndProcedureHistoryLogRepository, PolicyAndProcedureHistoryLogRepository>();
+            services.AddScoped<IPolicyAndProcedureHistoryLogService, PolicyAndProcedureHistoryLogService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

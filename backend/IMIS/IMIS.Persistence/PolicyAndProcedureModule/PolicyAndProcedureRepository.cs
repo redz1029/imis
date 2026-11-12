@@ -6,11 +6,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PolicyAndProcedureModule
 {
-    public class PolicyAndProcedureRepository : BaseRepository<PolicyAndProcedure, long, ImisDbContext, User>,  IPolicyAndProcedureRepository
+    public class PolicyAndProcedureRepository : BaseRepository<PolicyAndProcedure, long, ImisDbContext, User>, IPolicyAndProcedureRepository
     {
         public PolicyAndProcedureRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+
         public async Task<List<PolicyAndProcedureSignatory>> GetByPgsIdForSoftDeleteAsync(long papId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext
@@ -18,7 +19,8 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 .Where(x => x.PAPId == papId)
                 .ToListAsync(cancellationToken);
         }
-        public async Task<List<PolicyAndProcedure>> GetFilteredCandidatesAsync(PolicyAndProcedureFilter filter,  string userId, bool viewAll, bool includeChildOffices, CancellationToken cancellationToken)
+        
+        public async Task<List<PolicyAndProcedure>> GetFilteredCandidatesAsync(PolicyAndProcedureFilter filter, string userId, bool viewAll, bool includeChildOffices, CancellationToken cancellationToken)
         {
             IQueryable<PolicyAndProcedure> query = _entities
                 .AsNoTracking()
@@ -83,6 +85,7 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 .ConfigureAwait(false);
         }
 
+        // HistoryLogs + HistoryLogLists included here (tracked) because EnsureHistoryLog / SaveHistoryLogEntryAsync use this
         public async Task<PolicyAndProcedure?> GetWithIncludesAsync(long id, CancellationToken cancellationToken)
         {
             return await _entities
@@ -91,6 +94,8 @@ namespace IMIS.Persistence.PolicyAndProcedureModule
                 .Include(p => p.Section)
                     .ThenInclude(o => o!.ParentOffice)
                 .Include(p => p.PAPSignatories)
+                .Include(p => p.HistoryLogs)
+                    .ThenInclude(h => h.HistoryLogLists)
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken)
                 .ConfigureAwait(false);
         }

@@ -70,7 +70,7 @@ namespace IMIS.Persistence.OfficeModule
                     o.ParentOfficeId == parentOfficeId)
                 .Include(o => o.AuditorOffices)
                 .AsNoTracking()
-                .ToListAsync(cancellationToken)
+                .ToListAsync(cancellationToken) 
                 .ConfigureAwait(false);
         }
         public async Task<IEnumerable<Office>?> GetAllSpecificServicesAsync(CancellationToken cancellationToken)
