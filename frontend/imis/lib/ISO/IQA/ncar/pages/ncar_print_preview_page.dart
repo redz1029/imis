@@ -342,7 +342,12 @@ class _NcarPdfBuilder {
   /// One full-width row of the form. Left/right edges are always drawn; the top
   /// edge only on the first row, so stacked rows share one border.
   pw.Widget _row(pw.Widget child, {bool top = false, bool bottom = true}) {
+    // Always the full width of the form: a Container sizes itself to its child,
+    // so a row holding only a paragraph (the finding, "Root Cause Analysis:",
+    // the blank writing space) drew its side rules just as wide as the text and
+    // left gaps in the form's right edge.
     return pw.Container(
+      width: double.infinity,
       decoration: pw.BoxDecoration(
         border: pw.Border(
           top: top ? _bs : pw.BorderSide.none,
